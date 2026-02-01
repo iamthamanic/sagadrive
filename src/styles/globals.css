@@ -1,0 +1,424 @@
+@custom-variant dark (&:is(.dark *));
+
+/* Import Google Fonts for Modern RPG Theme */
+@import url('https://fonts.googleapis.com/css2?family=Darker+Grotesque:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --font-size: 16px;
+  
+  /* Make My Saga CI - Light Mode (Clean White with Teal & Gold) */
+  --background: #FFFFFF;           /* Reines Weiß */
+  --foreground: #0F172A;           /* Slate-900 für Text */
+  --card: #FFFFFF;                 /* Weiß für Cards */
+  --card-foreground: #0F172A;      /* Dunkler Text */
+  --popover: #FFFFFF;              /* Weiß */
+  --popover-foreground: #0F172A;   /* Dunkler Text */
+  --primary: #0891B2;              /* Türkis/Cyan-600 (Logo) */
+  --primary-foreground: #FFFFFF;   /* Weißer Text auf Türkis */
+  --secondary: #F1F5F9;            /* Slate-100 für Hintergründe */
+  --secondary-foreground: #0F172A; /* Dunkler Text */
+  --muted: #F8FAFC;                /* Slate-50 gedämpft */
+  --muted-foreground: #64748B;     /* Slate-500 für gedämpften Text */
+  --accent: #E8A641;               /* Gold/Amber (Logo) */
+  --accent-foreground: #0F172A;    /* Dunkler Text auf Gold */
+  --destructive: #EF4444;          /* Rot */
+  --destructive-foreground: #FFFFFF; /* Weißer Text */
+  --border: #E2E8F0;               /* Slate-200 für Borders */
+  --input: #F8FAFC;                /* Heller Input-Hintergrund */
+  --input-background: #F8FAFC;     /* Input-Hintergrund */
+  --switch-background: #E2E8F0;    /* Switch-Hintergrund */
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #0891B2;                 /* Türkis Ring */
+  --chart-1: #0891B2;              /* Türkis */
+  --chart-2: #E8A641;              /* Gold */
+  --chart-3: #06B6D4;              /* Cyan-500 */
+  --chart-4: #F59E0B;              /* Amber */
+  --chart-5: #8B5CF6;              /* Violet */
+  --radius: 0.5rem;
+  
+  /* Sidebar - Sauberes Design */
+  --sidebar: #F8FAFC;              /* Sehr helles Grau */
+  --sidebar-foreground: #0F172A;   /* Dunkler Text */
+  --sidebar-primary: #0891B2;      /* Türkis */
+  --sidebar-primary-foreground: #FFFFFF; /* Weißer Text */
+  --sidebar-accent: #FFFFFF;       /* Weiß für Akzent */
+  --sidebar-accent-foreground: #0F172A; /* Dunkler Text */
+  --sidebar-border: #E2E8F0;       /* Border */
+  --sidebar-ring: #0891B2;         /* Türkis Ring */
+}
+
+.dark {
+  /* Make My Saga CI - Dark Mode (Modern Dark with Teal & Gold) */
+  --background: #0F172A;           /* Slate-900 */
+  --foreground: #F1F5F9;           /* Slate-100 für Text */
+  --card: #1E293B;                 /* Slate-800 für Cards */
+  --card-foreground: #F1F5F9;      /* Heller Text */
+  --popover: #1E293B;              /* Slate-800 */
+  --popover-foreground: #F1F5F9;   /* Heller Text */
+  --primary: #06B6D4;              /* Helleres Türkis/Cyan-500 für Dark Mode */
+  --primary-foreground: #0F172A;   /* Dunkler Text auf Türkis */
+  --secondary: #334155;            /* Slate-700 */
+  --secondary-foreground: #F1F5F9; /* Heller Text */
+  --muted: #1E293B;                /* Slate-800 gedämpft */
+  --muted-foreground: #94A3B8;     /* Slate-400 für gedämpften Text */
+  --accent: #F59E0B;               /* Helleres Gold/Amber-500 für Dark Mode */
+  --accent-foreground: #0F172A;    /* Dunkler Text auf Gold */
+  --destructive: #F87171;          /* Helles Rot */
+  --destructive-foreground: #FFFFFF; /* Weißer Text */
+  --border: #334155;               /* Slate-700 für Borders */
+  --input: #1E293B;                /* Dunkler Input-Hintergrund */
+  --input-background: #1E293B;     /* Input-Hintergrund */
+  --switch-background: #334155;    /* Switch-Hintergrund */
+  --ring: #06B6D4;                 /* Türkis Ring */
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: #06B6D4;              /* Cyan-500 */
+  --chart-2: #F59E0B;              /* Amber-500 */
+  --chart-3: #14B8A6;              /* Teal-500 */
+  --chart-4: #FBBF24;              /* Yellow */
+  --chart-5: #A78BFA;              /* Violet */
+  
+  /* Sidebar - Dunkles Design */
+  --sidebar: #1E293B;              /* Slate-800 */
+  --sidebar-foreground: #F1F5F9;   /* Heller Text */
+  --sidebar-primary: #06B6D4;      /* Helleres Türkis */
+  --sidebar-primary-foreground: #0F172A; /* Dunkler Text */
+  --sidebar-accent: #334155;       /* Slate-700 */
+  --sidebar-accent-foreground: #F1F5F9; /* Heller Text */
+  --sidebar-border: #334155;       /* Border */
+  --sidebar-ring: #06B6D4;         /* Türkis Ring */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    /* Subtle modern texture with Teal accent */
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(8, 145, 178, 0.015) 2px,
+        rgba(8, 145, 178, 0.015) 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(8, 145, 178, 0.015) 2px,
+        rgba(8, 145, 178, 0.015) 4px
+      );
+  }
+
+  .dark body {
+    /* Premium texture for dark mode with Teal accent */
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(6, 182, 212, 0.02) 2px,
+        rgba(6, 182, 212, 0.02) 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(6, 182, 212, 0.02) 2px,
+        rgba(6, 182, 212, 0.02) 4px
+      );
+  }
+}
+
+/**
+ * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h4 {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    p {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+
+    label {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    button {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    input {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+  font-family: 'Darker Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Headings use same font with heavier weight for hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Darker Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+
+/* Safe area for mobile devices (notch support) */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-area-pb {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Ensure full height on mobile */
+@media (max-width: 768px) {
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+/* Custom Scrollbar for Parchment Theme */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 6px;
+  border: 2px solid var(--muted);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted-foreground) var(--muted);
+}
+
+/* Make My Saga Theme Enhancements */
+@layer utilities {
+  /* Premium card effect with Teal & Gold shimmer */
+  .parchment-card {
+    background-image: 
+      linear-gradient(
+        135deg,
+        rgba(8, 145, 178, 0.05) 0%,
+        transparent 50%,
+        rgba(232, 166, 65, 0.03) 100%
+      );
+  }
+
+  /* Modern shadow for depth */
+  .ink-shadow {
+    box-shadow: 
+      0 1px 3px rgba(0, 0, 0, 0.1),
+      0 4px 8px rgba(8, 145, 178, 0.08);
+  }
+
+  .dark .ink-shadow {
+    box-shadow: 
+      0 1px 3px rgba(0, 0, 0, 0.3),
+      0 4px 8px rgba(6, 182, 212, 0.12);
+  }
+
+  /* Gold text and outline utilities */
+  .gold-text {
+    color: var(--accent);
+  }
+
+  .gold-outline {
+    border: 1px solid var(--accent);
+  }
+
+  .gold-outline-thick {
+    border: 2px solid var(--accent);
+  }
+
+  .gold-glow {
+    box-shadow: 0 0 20px rgba(232, 166, 65, 0.3);
+  }
+
+  .dark .gold-glow {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+  }
+
+  /* Cyan button and tab utilities */
+  .cyan-button {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .cyan-button:hover {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  .cyan-tab-active {
+    border-bottom: 2px solid var(--primary);
+    color: var(--primary);
+  }
+
+  .cyan-tab-active:hover {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Achievement/Success styling with gold */
+  .achievement-badge {
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    box-shadow: 0 2px 8px rgba(232, 166, 65, 0.2);
+  }
+
+  .achievement-badge:hover {
+    background: var(--accent);
+    color: var(--accent-foreground);
+    box-shadow: 0 2px 12px rgba(232, 166, 65, 0.4);
+  }
+
+  .dark .achievement-badge {
+    border-color: #F59E0B;
+    color: #F59E0B;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+  }
+
+  .dark .achievement-badge:hover {
+    background: #F59E0B;
+    color: var(--accent-foreground);
+    box-shadow: 0 2px 12px rgba(245, 158, 11, 0.5);
+  }
+}
+
+/* Responsive Container Improvements */
+@layer utilities {
+  .container-responsive {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  @media (min-width: 640px) {
+    .container-responsive {
+      max-width: 640px;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .container-responsive {
+      max-width: 768px;
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .container-responsive {
+      max-width: 1024px;
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .container-responsive {
+      max-width: 1280px;
+    }
+  }
+  
+  @media (min-width: 1536px) {
+    .container-responsive {
+      max-width: 1536px;
+    }
+  }
+}
