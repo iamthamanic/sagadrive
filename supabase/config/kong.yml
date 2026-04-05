@@ -1,0 +1,69 @@
+_format_version: '2.1'
+
+consumers:
+  - username: anon
+    keyauth_credentials:
+      - key: ${SUPABASE_ANON_KEY}
+  - username: service_role
+    keyauth_credentials:
+      - key: ${SUPABASE_SERVICE_ROLE_KEY}
+
+acls:
+  - consumer: anon
+    group: anon
+  - consumer: service_role
+    group: admin
+
+services:
+  - name: auth-v1
+    url: http://supabase-auth:9999/verify
+    routes:
+      - name: auth-v1-route
+        paths:
+          - /auth/v1
+    plugins:
+      - name: cors
+
+  - name: rest-v1
+    url: http://supabase-rest:3000
+    routes:
+      - name: rest-v1-route
+        paths:
+          - /rest/v1
+    plugins:
+      - name: cors
+
+  - name: storage-v1
+    url: http://supabase-storage:5000
+    routes:
+      - name: storage-v1-route
+        paths:
+          - /storage/v1
+    plugins:
+      - name: cors
+
+  - name: realtime-v1
+    url: http://supabase-realtime:4000
+    routes:
+      - name: realtime-v1-route
+        paths:
+          - /realtime/v1
+    plugins:
+      - name: cors
+
+  - name: functions-v1
+    url: http://supabase-edge:9998
+    routes:
+      - name: functions-v1-route
+        paths:
+          - /functions/v1
+        strip_path: true
+    plugins:
+      - name: cors
+
+  - name: meta-v1
+    url: http://supabase-meta:8080
+    routes:
+      - name: meta-v1-route
+        paths:
+          - /meta/v1

@@ -1,0 +1,285 @@
+version: '3.8'
+
+# ===========================================
+# MakeMySaga Self-Host Stack
+# - Supabase (Auth, DB, Storage, Realtime, Functions)
+# - Ollama (LLM)
+# - Neo4j (Knowledge Graph)
+# - Redis (Session Cache)
+# ===========================================
+
+x-supabase-env: &supabase-env
+  SUPABASE_URL: http://supabase-kong:8000
+  SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+  SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+
+services:
+  # ===========================================
+  # SUPABASE STACK
+  # ===========================================
+  
+  # PostgreSQL Database
+  supabase-db:
+    image: supabase/postgres:15.1.0.147
+    container_name: makemysaga-db
+    healthcheck:
+      test: pg_isready -U postgres -h localhost
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-password}
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - makemysaga-network
+
+  # Kong API Gateway
+  supabase-kong:
+    image: kong:2.8.1
+    container_name: makemysaga-kong
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: last,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
+      KONG_NGINX_PROXY_INCLUDE: /etc/kong/nginx-proxy.template
+    volumes:
+      - ./supabase/config/kong.yml:/home/kong/kong.yml:ro
+      - ./supabase/config/nginx-proxy.template:/etc/kong/nginx-proxy.template:ro
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+    depends_on:
+      supabase-auth:
+        condition: service_healthy
+    networks:
+      - makemysaga-network
+
+  # GoTrue Auth Service
+  supabase-auth:
+    image: supabase/gotrue:v2.143.0
+    container_name: makemysaga-auth
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:9999/health
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-password}@supabase-db:5432/postgres?search_path=auth
+      GOTRUE_SITE_URL: ${SITE_URL:-http://localhost:3000}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-}
+      GOTRUE_MAILER_AUTOCONFIRM: ${MAILER_AUTOCONFIRM:-true}
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    networks:
+      - makemysaga-network
+
+  # PostgREST API
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.1
+    container_name: makemysaga-rest
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-password}@supabase-db:5432/postgres
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    networks:
+      - makemysaga-network
+
+  # Realtime WebSocket
+  supabase-realtime:
+    image: supabase/realtime:v2.25.15
+    container_name: makemysaga-realtime
+    environment:
+      DB_HOST: supabase-db
+      DB_PORT: 5432
+      DB_NAME: postgres
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-password}
+      DB_SSL: "off"
+      PORT: 4000
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
+      REPLICATION_MODE: RLS
+      REPLICATION_POLL_INTERVAL: 100
+      SECURE_CHANNELS: "true"
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    networks:
+      - makemysaga-network
+
+  # Storage API
+  supabase-storage:
+    image: supabase/storage-api:v0.40.4
+    container_name: makemysaga-storage
+    environment:
+      ANON_KEY: ${SUPABASE_ANON_KEY}
+      SERVICE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      POSTGREST_URL: http://supabase-rest:3000
+      PGRST_JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-password}@supabase-db:5432/postgres
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      GLOBAL_S3_BUCKET: stub
+    volumes:
+      - supabase-storage-data:/var/lib/storage
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      supabase-rest:
+        condition: service_started
+    networks:
+      - makemysaga-network
+
+  # Meta API (for Studio)
+  supabase-meta:
+    image: supabase/postgres-meta:v0.75.0
+    container_name: makemysaga-meta
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: supabase-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: postgres
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-password}
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    networks:
+      - makemysaga-network
+
+  # Edge Runtime (Functions)
+  supabase-edge:
+    image: supabase/edge-runtime:v1.29.0
+    container_name: makemysaga-edge
+    environment:
+      <<: *supabase-env
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
+      VERIFY_JWT: "false"
+    volumes:
+      - ./supabase/functions:/home/deno/functions:ro
+      - ./supabase/config/import_map.json:/home/deno/import_map.json:ro
+    ports:
+      - "9998:9998"
+    depends_on:
+      supabase-auth:
+        condition: service_healthy
+      supabase-db:
+        condition: service_healthy
+    networks:
+      - makemysaga-network
+
+  # Studio Dashboard
+  supabase-studio:
+    image: supabase/studio:20240318-6cf0f6f
+    container_name: makemysaga-studio
+    environment:
+      STUDIO_PG_META_URL: http://supabase-meta:8080
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-password}
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
+    ports:
+      - "3000:3000"
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      supabase-meta:
+        condition: service_started
+      supabase-edge:
+        condition: service_started
+    networks:
+      - makemysaga-network
+
+  # ===========================================
+  # AI SERVICES
+  # ===========================================
+
+  # Ollama (LLM for AI Game Master)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: makemysaga-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+    networks:
+      - makemysaga-network
+    # Optional: GPU Support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Neo4j (Knowledge Graph for Lorekeeper)
+  neo4j:
+    image: neo4j:5.13.0
+    container_name: makemysaga-neo4j
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-password}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_memory_heap_initial__size: 512m
+      NEO4J_dbms_memory_heap_max__size: 1G
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+    networks:
+      - makemysaga-network
+
+  # Redis (Session Cache for DM Tools)
+  redis:
+    image: redis:7-alpine
+    container_name: makemysaga-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - makemysaga-network
+
+volumes:
+  supabase-db-data:
+  supabase-storage-data:
+  ollama-data:
+  neo4j-data:
+  neo4j-logs:
+  redis-data:
+
+networks:
+  makemysaga-network:
+    driver: bridge

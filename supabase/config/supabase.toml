@@ -1,0 +1,29 @@
+# A string to use as an ID for the project
+project_id = "makemysaga"
+
+[api]
+enabled = true
+port = 9998
+schemas = ["public", "auth"]
+extra_search_path = ["public"]
+max_rows = 1000
+
+[db]
+port = 5432
+major_version = 15
+
+[studio]
+enabled = true
+port = 3000
+
+[functions.ai-gm]
+verify_jwt = false
+
+[functions.lorekeeper]
+verify_jwt = false
+
+[functions.dm-tools]
+verify_jwt = false
+
+[functions.sessions]
+verify_jwt = false
