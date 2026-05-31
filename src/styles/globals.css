@@ -256,6 +256,136 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Login Logo Animation */
+.login-logo-wrap {
+  overflow: hidden;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--primary) 12%, transparent));
+}
+
+.login-logo-wrap::before,
+.login-logo-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  pointer-events: none;
+}
+
+.login-logo-wrap::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 84deg,
+    color-mix(in srgb, var(--accent) 18%, transparent) 98deg 118deg,
+    transparent 140deg 360deg
+  );
+  mix-blend-mode: screen;
+  opacity: 0.22;
+  animation: logoAuraSpin 14s linear infinite;
+}
+
+.login-logo-wrap::after {
+  display: none;
+}
+
+.login-logo-image {
+  position: relative;
+  z-index: 1;
+  animation: logoMysticPulse 4s ease-in-out infinite;
+}
+
+.login-logo-sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--accent) 82%, white);
+  box-shadow:
+    0 0 3px color-mix(in srgb, var(--accent) 26%, transparent),
+    0 0 5px color-mix(in srgb, var(--primary) 18%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.login-logo-sparkle-1 {
+  top: 16%;
+  left: 24%;
+  animation: logoSparkle 2.7s ease-in-out infinite;
+}
+
+.login-logo-sparkle-2 {
+  top: 28%;
+  right: 18%;
+  width: 5px;
+  height: 5px;
+  animation: logoSparkle 3.1s ease-in-out infinite 0.8s;
+}
+
+.login-logo-sparkle-3 {
+  bottom: 19%;
+  left: 46%;
+  width: 4px;
+  height: 4px;
+  animation: logoSparkle 2.9s ease-in-out infinite 1.4s;
+}
+
+.login-logo-sparkle-4 {
+  top: 52%;
+  left: 12%;
+  width: 5px;
+  height: 5px;
+  animation: logoSparkle 2.4s ease-in-out infinite 0.4s;
+}
+
+.login-logo-sparkle-5 {
+  bottom: 24%;
+  right: 14%;
+  width: 6px;
+  height: 6px;
+  animation: logoSparkle 3.2s ease-in-out infinite 1.1s;
+}
+
+.login-logo-sparkle-6 {
+  top: 10%;
+  left: 58%;
+  width: 4px;
+  height: 4px;
+  animation: logoSparkle 2.2s ease-in-out infinite 1.8s;
+}
+
+@keyframes logoMysticPulse {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.03) translateY(-1px);
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes logoSparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  35% {
+    opacity: 0.95;
+    transform: translateY(-5px) scale(1);
+  }
+  60% {
+    opacity: 0.45;
+    transform: translateY(-8px) scale(0.85);
+  }
+}
+
+@keyframes logoAuraSpin {
+  from {
+    transform: rotate(0deg) scale(0.92);
+  }
+  to {
+    transform: rotate(360deg) scale(0.96);
+  }
+}
+
 /* Custom Scrollbar for Parchment Theme */
 ::-webkit-scrollbar {
   width: 12px;

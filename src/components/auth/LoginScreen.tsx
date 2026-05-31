@@ -1,23 +1,31 @@
 import { useState } from 'react';
 import { useAuth } from '../../lib/auth-context';
+import { useTheme } from '../../lib/theme-provider';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { Switch } from '../ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Alert, AlertDescription } from '../ui/alert';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Moon, Sun } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import logoImage from 'figma:asset/5cdcbab5ea0860d6cbb920fecd888377cdc015a0.png';
 
 export function LoginScreen() {
   const { signIn, signUp } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const isDarkMode = theme === 'dark' || (
+    theme === 'system' &&
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,16 +64,33 @@ export function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="absolute right-4 top-4">
+        <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
+          <Sun className="h-4 w-4 text-muted-foreground" />
+          <Switch
+            checked={isDarkMode}
+            onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+            aria-label="Dark Mode umschalten"
+          />
+          <Moon className="h-4 w-4 text-muted-foreground" />
+        </div>
+      </div>
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center mb-2">
-            <div className="w-32 h-32">
+            <div className="login-logo-wrap relative w-32 h-32">
+              <span className="login-logo-sparkle login-logo-sparkle-1" aria-hidden="true" />
+              <span className="login-logo-sparkle login-logo-sparkle-2" aria-hidden="true" />
+              <span className="login-logo-sparkle login-logo-sparkle-3" aria-hidden="true" />
+              <span className="login-logo-sparkle login-logo-sparkle-4" aria-hidden="true" />
+              <span className="login-logo-sparkle login-logo-sparkle-5" aria-hidden="true" />
+              <span className="login-logo-sparkle login-logo-sparkle-6" aria-hidden="true" />
               <ImageWithFallback
                 src={logoImage}
                 alt="SagaDrive Logo"
-                className="w-full h-full object-contain"
+                className="login-logo-image w-full h-full object-contain"
               />
             </div>
           </div>
