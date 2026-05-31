@@ -1,5 +1,5 @@
 -- ============================================
--- RPC FUNCTIONS for MMS V3
+-- RPC FUNCTIONS for SagaDrive V3
 -- These allow secure operations that bypass RLS
 -- ============================================
 

@@ -1,4 +1,4 @@
-# MakeMySaga Self-Host
+# SagaDrive Self-Host
 
 **Self-hosted TTRPG platform with Supabase, Edge Functions, and AI Game Master.**
 
@@ -53,8 +53,8 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/iamthamanic/makemysaga-selfhost.git
-cd makemysaga-selfhost
+git clone https://github.com/iamthamanic/sagadrive-selfhost.git
+cd sagadrive-selfhost
 
 # Run setup script
 chmod +x setup.sh
@@ -70,10 +70,10 @@ docker-compose up -d
 
 ```bash
 # Small model (fast, less capable)
-docker exec -it makemysaga-ollama ollama pull llama3.2
+docker exec -it sagadrive-ollama ollama pull llama3.2
 
 # Large model (slower, more capable)
-docker exec -it makemysaga-ollama ollama pull llama3.1:8b
+docker exec -it sagadrive-ollama ollama pull llama3.1:8b
 ```
 
 ## 📱 Access Points
@@ -128,7 +128,7 @@ curl -X POST http://localhost:9998/functions/v1/lorekeeper/graph \
 ## 🗂️ Directory Structure
 
 ```
-makemysaga-selfhost/
+sagadrive-selfhost/
 ├── docker-compose.yml          # Main compose file
 ├── .env                        # Environment variables
 ├── setup.sh                    # Setup script
@@ -173,7 +173,7 @@ All tables have RLS policies for:
 
 ## 🎮 Frontend Integration
 
-### Connect from MakeMySaga
+### Connect from SagaDrive
 
 ```typescript
 // src/lib/supabase.ts

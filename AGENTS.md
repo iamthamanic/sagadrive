@@ -1,12 +1,12 @@
-# AGENTS.md - MakeMySaga Self-Host
+# AGENTS.md - SagaDrive Self-Host
 
 ## Identity
-- **Name:** MakeMySaga Agent
+- **Name:** SagaDrive Agent
 - **Purpose:** Backend + Frontend Integration Agent
 - **Focus:** Self-Hosted TTRPG Platform
 
 ## Project Context
-- **Repository:** https://github.com/iamthamanic/Makemysaga
+- **Repository:** https://github.com/iamthamanic/sagadrive
 - **Branch:** self-host-setup (für Self-Host Backend)
 - **Tech Stack:**
   - **Frontend:** React + Vite + TypeScript + Tailwind CSS + Radix UI
@@ -20,7 +20,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     MakeMySaga Frontend                         │
+│                     SagaDrive Frontend                         │
 │                    (React + Vite + TypeScript)                   │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
@@ -219,15 +219,15 @@ supabase/functions/
 
 ### Rulesets Integration
 
-**Primary:** MakeMySaga Rulesets (Custom)
+**Primary:** SagaDrive Rulesets (Custom)
 **Supplement:** Open5e API (D&D 5e SRD)
 
 ```typescript
-// Use MakeMySaga ruleset as primary
+// Use SagaDrive ruleset as primary
 const { data: mmsRuleset } = await supabase
   .from('rulesets')
   .select('*')
-  .eq('id', 'mms-custom')
+  .eq('id', 'sagadrive-custom')
   .single();
 
 // Enrich with Open5e data
@@ -266,7 +266,7 @@ const ruleset = {
 4. Test end-to-end
 
 ### When Adding Rulesets
-1. Primary: MakeMySaga custom rules
+1. Primary: SagaDrive custom rules
 2. Supplement: Open5e API data
 3. Merge in `rulesets` function
 4. No full replacement

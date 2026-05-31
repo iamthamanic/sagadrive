@@ -1,4 +1,4 @@
-# 🔍 MMS Adapter-Audit Report (Vollversion)
+# 🔍 SagaDrive Adapter-Audit Report (Vollversion)
 
 **Datum:** 2025-10-23  
 **Status:** ❌ Direkte Supabase-Kopplung  
@@ -10,7 +10,7 @@
 
 **Kurzfazit:** ❌ **Direkte Supabase-Kopplung** – Kein Adapter-Layer vorhanden.
 
-Das MMS-Projekt ist **stark an Supabase gekoppelt**. Alle Module (Characters, Sessions, Projects, Marketplace) greifen direkt auf `supabase.from()`, `supabase.auth.*` und `supabase.storage.*` zu. Es existiert **kein Abstraktions-Layer** (Ports/Adapters/BFF für DB-Operationen). Ein rudimentärer Edge Function Server (`/supabase/functions/server/`) existiert nur für Storage-Uploads und RLS-Bypassing bei Project-Joins, **nicht** für generelle API-Abstraktion.
+Das SagaDrive-Projekt ist **stark an Supabase gekoppelt**. Alle Module (Characters, Sessions, Projects, Marketplace) greifen direkt auf `supabase.from()`, `supabase.auth.*` und `supabase.storage.*` zu. Es existiert **kein Abstraktions-Layer** (Ports/Adapters/BFF für DB-Operationen). Ein rudimentärer Edge Function Server (`/supabase/functions/server/`) existiert nur für Storage-Uploads und RLS-Bypassing bei Project-Joins, **nicht** für generelle API-Abstraktion.
 
 **Gesamtscore Supabase-Kopplung:** **4.2 / 5.0** (stark gekoppelt)
 
@@ -1375,7 +1375,7 @@ VITE_SUPABASE_URL=https://dnhotyjazjnhneqbqocq.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGci...
 
 # .env.production (nachher - Self-Hosted)
-VITE_SUPABASE_URL=https://supabase.mms-platform.com
+VITE_SUPABASE_URL=https://supabase.sagadrive-platform.com
 VITE_SUPABASE_ANON_KEY=new_self_hosted_key
 ```
 

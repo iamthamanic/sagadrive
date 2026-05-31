@@ -1,4 +1,4 @@
-# Supabase Setup für MMS
+# Supabase Setup für SagaDrive
 
 ## 🚀 Quick Start
 

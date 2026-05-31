@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # ===========================================
-# MakeMySaga Self-Host Setup Script
+# SagaDrive Self-Host Setup Script
 # ===========================================
 
 set -e
 
-echo "🚀 MakeMySaga Self-Host Setup"
+echo "🚀 SagaDrive Self-Host Setup"
 echo "=============================="
 
 # Check prerequisites
@@ -50,7 +50,7 @@ if [ ! -f .env ]; then
     
     cat > .env << EOF
 # ===========================================
-# MakeMySaga Self-Host Configuration
+# SagaDrive Self-Host Configuration
 # GENERATED - Keep this file secure!
 # ===========================================
 
@@ -91,10 +91,10 @@ echo "--------------------"
 echo "You need to download the LLM model for AI Game Master."
 echo ""
 echo "After starting the services, run:"
-echo "  docker exec -it makemysaga-ollama ollama pull llama3.2"
+echo "  docker exec -it sagadrive-ollama ollama pull llama3.2"
 echo ""
 echo "Or for a larger model:"
-echo "  docker exec -it makemysaga-ollama ollama pull llama3.1:8b"
+echo "  docker exec -it sagadrive-ollama ollama pull llama3.1:8b"
 echo ""
 
 # Start services
@@ -118,7 +118,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "🔍 Checking service health..."
     
     # PostgreSQL
-    if docker exec makemysaga-db pg_isready -U postgres &>/dev/null; then
+    if docker exec sagadrive-db pg_isready -U postgres &>/dev/null; then
         echo "✅ PostgreSQL: Running"
     else
         echo "⏳ PostgreSQL: Starting..."
@@ -139,7 +139,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     fi
     
     # Redis
-    if docker exec makemysaga-redis redis-cli ping &>/dev/null; then
+    if docker exec sagadrive-redis redis-cli ping &>/dev/null; then
         echo "✅ Redis: Running"
     else
         echo "⏳ Redis: Starting..."
@@ -167,7 +167,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo ""
     echo "📚 Next Steps:"
     echo "   1. Download LLM model:"
-    echo "      docker exec -it makemysaga-ollama ollama pull llama3.2"
+    echo "      docker exec -it sagadrive-ollama ollama pull llama3.2"
     echo ""
     echo "   2. Set Neo4j password:"
     echo "      Change NEO4J_PASSWORD in .env"

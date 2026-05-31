@@ -1,7 +1,7 @@
 version: '3.8'
 
 # ===========================================
-# MakeMySaga Self-Host Stack
+# SagaDrive Self-Host Stack
 # - Supabase (Auth, DB, Storage, Realtime, Functions)
 # - Ollama (LLM)
 # - Neo4j (Knowledge Graph)
@@ -21,7 +21,7 @@ services:
   # PostgreSQL Database
   supabase-db:
     image: supabase/postgres:15.1.0.147
-    container_name: makemysaga-db
+    container_name: sagadrive-db
     healthcheck:
       test: pg_isready -U postgres -h localhost
       interval: 5s
@@ -37,12 +37,12 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - makemysaga-network
+      - sagadrive-network
 
   # Kong API Gateway
   supabase-kong:
     image: kong:2.8.1
-    container_name: makemysaga-kong
+    container_name: sagadrive-kong
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
@@ -59,12 +59,12 @@ services:
       supabase-auth:
         condition: service_healthy
     networks:
-      - makemysaga-network
+      - sagadrive-network
 
   # GoTrue Auth Service
   supabase-auth:
     image: supabase/gotrue:v2.143.0
-    container_name: makemysaga-auth
+    container_name: sagadrive-auth
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:9999/health
       interval: 5s
@@ -91,12 +91,12 @@ services:
       supabase-db:
         condition: service_healthy
     networks:
-      - makemysaga-network
+      - sagadrive-network
 
   # PostgREST API
   supabase-rest:
     image: postgrest/postgrest:v12.0.1
-    container_name: makemysaga-rest
+    container_name: sagadrive-rest
     environment:
       PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-password}@supabase-db:5432/postgres
       PGRST_DB_SCHEMA: public
@@ -106,12 +106,12 @@ services:
       supabase-db:
         condition: service_healthy
     networks:
-      - makemysaga-network
+      - sagadrive-network
 
   # Realtime WebSocket
   supabase-realtime:
     image: supabase/realtime:v2.25.15
-    container_name: makemysaga-realtime
+    container_name: sagadrive-realtime
     environment:
       DB_HOST: supabase-db
       DB_PORT: 5432
@@ -128,12 +128,12 @@ services:
       supabase-db:
         condition: service_healthy
     networks:
-      - makemysaga-network
+      - sagadrive-network
 
   # Storage API
   supabase-storage:
     image: supabase/storage-api:v0.40.4
-    container_name: makemysaga-storage
+    container_name: sagadrive-storage
     environment:
       ANON_KEY: ${SUPABASE_ANON_KEY}
       SERVICE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
@@ -154,12 +154,12 @@ services:
       supabase-rest:
         condition: service_started
     networks:
-      - makemysaga-network
+      - sagadrive-network
 
   # Meta API (for Studio)
   supabase-meta:
     image: supabase/postgres-meta:v0.75.0
-    container_name: makemysaga-meta
+    container_name: sagadrive-meta
     environment:
       PG_META_PORT: 8080
       PG_META_DB_HOST: supabase-db
@@ -171,12 +171,12 @@ services:
       supabase-db:
         condition: service_healthy
     networks:
-      - makemysaga-network
+      - sagadrive-network
 
   # Edge Runtime (Functions)
   supabase-edge:
     image: supabase/edge-runtime:v1.29.0
-    container_name: makemysaga-edge
+    container_name: sagadrive-edge
     environment:
       <<: *supabase-env
       JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
@@ -192,12 +192,12 @@ services:
       supabase-db:
         condition: service_healthy
     networks:
-      - makemysaga-network
+      - sagadrive-network
 
   # Studio Dashboard
   supabase-studio:
     image: supabase/studio:20240318-6cf0f6f
-    container_name: makemysaga-studio
+    container_name: sagadrive-studio
     environment:
       STUDIO_PG_META_URL: http://supabase-meta:8080
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-password}
@@ -215,7 +215,7 @@ services:
       supabase-edge:
         condition: service_started
     networks:
-      - makemysaga-network
+      - sagadrive-network
 
   # ===========================================
   # AI SERVICES
@@ -224,7 +224,7 @@ services:
   # Ollama (LLM for AI Game Master)
   ollama:
     image: ollama/ollama:latest
-    container_name: makemysaga-ollama
+    container_name: sagadrive-ollama
     ports:
       - "11434:11434"
     volumes:
@@ -232,7 +232,7 @@ services:
     environment:
       OLLAMA_HOST: 0.0.0.0:11434
     networks:
-      - makemysaga-network
+      - sagadrive-network
     # Optional: GPU Support
     # deploy:
     #   resources:
@@ -245,7 +245,7 @@ services:
   # Neo4j (Knowledge Graph for Lorekeeper)
   neo4j:
     image: neo4j:5.13.0
-    container_name: makemysaga-neo4j
+    container_name: sagadrive-neo4j
     ports:
       - "7474:7474"  # HTTP
       - "7687:7687"  # Bolt
@@ -258,19 +258,19 @@ services:
       - neo4j-data:/data
       - neo4j-logs:/logs
     networks:
-      - makemysaga-network
+      - sagadrive-network
 
   # Redis (Session Cache for DM Tools)
   redis:
     image: redis:7-alpine
-    container_name: makemysaga-redis
+    container_name: sagadrive-redis
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
     networks:
-      - makemysaga-network
+      - sagadrive-network
 
 volumes:
   supabase-db-data:
@@ -281,5 +281,5 @@ volumes:
   redis-data:
 
 networks:
-  makemysaga-network:
+  sagadrive-network:
     driver: bridge

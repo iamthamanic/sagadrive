@@ -1,12 +1,10 @@
-@custom-variant dark (&:is(.dark *));
 
-/* Import Google Fonts for Modern RPG Theme */
-@import url('https://fonts.googleapis.com/css2?family=Darker+Grotesque:wght@400;500;600;700;800;900&display=swap');
+@custom-variant dark (&:is(.dark *));
 
 :root {
   --font-size: 16px;
   
-  /* Make My Saga CI - Light Mode (Clean White with Teal & Gold) */
+  /* SagaDrive CI - Light Mode (Clean White with Teal & Gold) */
   --background: #FFFFFF;           /* Reines Weiß */
   --foreground: #0F172A;           /* Slate-900 für Text */
   --card: #FFFFFF;                 /* Weiß für Cards */
@@ -49,7 +47,7 @@
 }
 
 .dark {
-  /* Make My Saga CI - Dark Mode (Modern Dark with Teal & Gold) */
+  /* SagaDrive CI - Dark Mode (Modern Dark with Teal & Gold) */
   --background: #0F172A;           /* Slate-900 */
   --foreground: #F1F5F9;           /* Slate-100 für Text */
   --card: #1E293B;                 /* Slate-800 für Cards */
@@ -285,7 +283,7 @@ h1, h2, h3, h4, h5, h6 {
   scrollbar-color: var(--muted-foreground) var(--muted);
 }
 
-/* Make My Saga Theme Enhancements */
+/* SagaDrive Theme Enhancements */
 @layer utilities {
   /* Premium card effect with Teal & Gold shimmer */
   .parchment-card {

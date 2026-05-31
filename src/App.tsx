@@ -15,7 +15,7 @@ import { MarketplaceTest } from "./components/MarketplaceTest";
 import { Toaster } from "./components/ui/sonner";
 
 // ═══════════════════════════════════════════════════════════════
-// 📊 DevTrack Snippet - MMS (DEBUG VERSION)
+// 📊 DevTrack Snippet - SagaDrive (DEBUG VERSION)
 // ═══════════════════════════════════════════════════════════════
 // Automatisches Tracking für Figma Make/Lovable Projekte
 // Trackt: Arbeitszeit + Chat-Eingaben + Aktivitäten

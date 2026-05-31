@@ -13,7 +13,8 @@ import logoImage from 'figma:asset/5cdcbab5ea0860d6cbb920fecd888377cdc015a0.png'
 
 export function LoginScreen() {
   const { signIn, signUp } = useAuth();
-  const [email, setEmail] = useState('');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,7 +25,7 @@ export function LoginScreen() {
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
+      await signIn(loginIdentifier.trim(), password);
       toast.success('Erfolgreich eingeloggt!');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login fehlgeschlagen';
@@ -41,7 +42,7 @@ export function LoginScreen() {
     setIsLoading(true);
 
     try {
-      await signUp(email, password);
+      await signUp(signupEmail.trim(), password);
       toast.success('Account erstellt! Bitte logge dich ein.');
       // Auto switch to login tab after signup
       setPassword('');
@@ -63,13 +64,13 @@ export function LoginScreen() {
             <div className="w-32 h-32">
               <ImageWithFallback
                 src={logoImage}
-                alt="Make My Saga Logo"
+                alt="SagaDrive Logo"
                 className="w-full h-full object-contain"
               />
             </div>
           </div>
           <div>
-            <h1 className="text-3xl">Make My Saga</h1>
+            <h1 className="text-3xl">SagaDrive</h1>
             <p className="text-muted-foreground mt-2">
               Erstelle epische Rollenspiel-Abenteuer
             </p>
@@ -102,16 +103,19 @@ export function LoginScreen() {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">E-Mail</Label>
+                    <Label htmlFor="login-identifier">Benutzername oder E-Mail</Label>
                     <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="deine@email.de"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      id="login-identifier"
+                      type="text"
+                      placeholder="admin oder deine@email.de"
+                      value={loginIdentifier}
+                      onChange={(e) => setLoginIdentifier(e.target.value)}
                       required
                       disabled={isLoading}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Demo-Login: <span className="font-mono">admin</span> / <span className="font-mono">1234</span>
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -156,8 +160,8 @@ export function LoginScreen() {
                       id="signup-email"
                       type="email"
                       placeholder="deine@email.de"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
                       required
                       disabled={isLoading}
                     />

@@ -1,7 +1,7 @@
-# 🎲 MMS - Complete Architecture
+# 🎲 SagaDrive - Complete Architecture
 
 ## Vision
-**Make My Saga** ist eine D&D Beyond + Roll20 Alternative mit maximaler Flexibilität für alle TTRPG-Systeme.
+**SagaDrive** ist eine D&D Beyond + Roll20 Alternative mit maximaler Flexibilität für alle TTRPG-Systeme.
 
 ---
 

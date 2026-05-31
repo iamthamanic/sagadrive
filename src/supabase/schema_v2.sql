@@ -1,4 +1,4 @@
--- MMS Database Schema V2
+-- SagaDrive Database Schema V2
 -- Updated terminology: Projects (campaigns) contain Sessions (individual play sessions)
 
 -- ============================================

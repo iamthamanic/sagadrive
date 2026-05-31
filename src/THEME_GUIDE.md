@@ -1,8 +1,8 @@
-# 🎨 Make My Saga - Corporate Identity Guide
+# 🎨 SagaDrive - Corporate Identity Guide
 
 ## Overview
 
-MMS verwendet eine **moderne, saubere Corporate Identity** basierend auf dem offiziellen Logo mit **Türkis (Teal)** und **Gold (Amber)** als Hauptfarben.
+SagaDrive verwendet eine **moderne, saubere Corporate Identity** basierend auf dem offiziellen Logo mit **Türkis (Teal)** und **Gold (Amber)** als Hauptfarben.
 
 ---
 
@@ -38,7 +38,7 @@ MMS verwendet eine **moderne, saubere Corporate Identity** basierend auf dem off
 
 ### Warum Cyan + Gold?
 
-1. **Logo-Konformität**: Beide Farben stammen direkt aus dem offiziellen MMS-Logo
+1. **Logo-Konformität**: Beide Farben stammen direkt aus dem offiziellen SagaDrive-Logo
 2. **Klare Rollen**:
    - **Cyan (#0891B2)**: Funktionale Aktionen – Buttons, Tabs, Call-to-Actions
    - **Gold (#E8A641)**: Emotionale Akzente – Text-Highlights, Outlines, Hover-States
@@ -435,4 +435,4 @@ BEISPIEL:
 
 ---
 
-**Designed with 🎨 for Make My Saga - Where Stories Come to Life** ✨🎭🎲
+**Designed with 🎨 for SagaDrive - Where Stories Come to Life** ✨🎭🎲

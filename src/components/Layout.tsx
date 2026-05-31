@@ -57,13 +57,13 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
               <div className="w-12 h-12 flex-shrink-0">
                 <ImageWithFallback
                   src={logoImage}
-                  alt="Make My Saga Logo"
+                  alt="SagaDrive Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
               <div>
-                <h1 className="text-sidebar-foreground">MMS</h1>
-                <p className="text-sm text-sidebar-foreground/60 font-[Darker_Grotesque]">Make My Saga</p>
+                <h1 className="text-sidebar-foreground">SagaDrive</h1>
+                <p className="text-sm text-sidebar-foreground/60 font-[Darker_Grotesque]">SagaDrive</p>
               </div>
             </div>
           </div>
@@ -143,13 +143,13 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
               <div className="w-8 h-8 flex-shrink-0">
                 <ImageWithFallback
                   src={logoImage}
-                  alt="Make My Saga Logo"
+                  alt="SagaDrive Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
               <div>
-                <h1 className="text-base">MMS</h1>
-                <p className="text-xs text-muted-foreground">Make My Saga</p>
+                <h1 className="text-base">SagaDrive</h1>
+                <p className="text-xs text-muted-foreground">SagaDrive</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

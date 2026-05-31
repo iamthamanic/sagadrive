@@ -1,4 +1,4 @@
-# MMS Adapter-Audit (Kurzversion)
+# SagaDrive Adapter-Audit (Kurzversion)
 
 **Datum:** 2025-10-23  
 **Status:** ❌ Direkte Supabase-Kopplung  
@@ -8,7 +8,7 @@
 
 ## 🎯 Executive Summary
 
-MMS nutzt **direkt** den Supabase SDK in allen Services. **Kein** Adapter-Pattern vorhanden. Migration zu anderem Backend (Auth0, Convex, Self-Hosted Postgres) erfordert **vollständiges Refactoring** aller Services.
+SagaDrive nutzt **direkt** den Supabase SDK in allen Services. **Kein** Adapter-Pattern vorhanden. Migration zu anderem Backend (Auth0, Convex, Self-Hosted Postgres) erfordert **vollständiges Refactoring** aller Services.
 
 ---
 
@@ -206,4 +206,4 @@ constructor(private db: IDbAdapter, private auth: IAuthAdapter) {}
 
 **Erstellt:** 2025-10-23  
 **Version:** 1.0  
-**Autor:** MMS Development Team
+**Autor:** SagaDrive Development Team

@@ -1,5 +1,5 @@
 -- ===========================================
--- MakeMySaga Database Schema
+-- SagaDrive Database Schema
 -- ===========================================
 
 -- Enable Extensions

@@ -1,4 +1,4 @@
--- MMS Database Schema for Supabase
+-- SagaDrive Database Schema for Supabase
 -- Run this in your Supabase SQL Editor
 
 -- Enable UUID extension

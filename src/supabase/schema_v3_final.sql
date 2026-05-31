@@ -1,5 +1,5 @@
 -- ============================================
--- MMS - COMPLETE DATABASE SCHEMA V3 FINAL
+-- SagaDrive - COMPLETE DATABASE SCHEMA V3 FINAL
 -- D&D-Style TTRPG Platform with flexible rulesets
 -- ============================================
 

@@ -1,4 +1,4 @@
-# MMS - Make My Saga
+# SagaDrive - SagaDrive
 
 Enterprise-level platform for interactive tabletop RPG sessions with AI support.
 
@@ -141,4 +141,4 @@ npm run build
 
 ## 📄 License
 
-Proprietary - MMS Platform
+Proprietary - SagaDrive Platform
