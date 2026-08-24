@@ -38,6 +38,9 @@ Das bestehende GitHub-Actions-Gate soll Feature-Branches zuverlässig verifizier
 Keine UI-Änderung in diesem Slice; Browser-Screenshots sind nicht erforderlich.
 
 ## Implementation Notes
-- Files touched: pending.
-- Tests/checks: pending.
-- Known limitations: pending.
+- Files touched: `scripts/changed-typescript.mjs`, `scripts/lint.mjs`, `scripts/typecheck.mjs`, `.github/workflows/verify.yml`, `package.json`.
+- Diff basis: Push-/Branch-Runs verwenden `origin/main`; PR-Runs verwenden `GITHUB_BASE_REF`; `fetch-depth: 0` stellt die benötigte Historie bereit.
+- Typed-strict: Der Lint prüft nur geänderte `.ts`/`.tsx`-Dateien, aber jeweils den vollständigen Dateiinhalt. Gelöschte Dateien werden via `--diff-filter=ACMR` ausgeschlossen.
+- Typecheck: Der temporäre Verify-tsconfig verwendet nur die geänderten TypeScript-Dateien als Roots und folgt deren Imports, sodass Legacy-Fehler in unberührten, nicht importierten Bereichen den Feature-Gate nicht mehr blockieren.
+- Verification: GitHub Actions Verify run `32783706458` auf Commit `b89830a93f821a410a081dc4aec4e0e1415fdafb` ist PASS. `npm ci` PASS; `npm run lint` PASS (9 geänderte TypeScript-Dateien); `npm run typecheck` PASS (9 geänderte TypeScript-Dateien); `npm run build` PASS (`vite v6.3.5`, 1781 Module, Build in 4.29 s).
+- Known limitations: Der Repository-weite historische TypeScript-Debt bleibt außerhalb dieses Tickets bestehen. `npm ci` meldet aktuell 6 Audit-Findings (5 high, 1 critical); deren Herkunft wurde in diesem Slice nicht bereinigt. Vite meldet außerdem einen großen Hauptchunk (~1.41 MB minifiziert), was ein Performance-Follow-up und kein Build-Blocker ist.
