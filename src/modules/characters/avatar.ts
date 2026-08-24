@@ -27,10 +27,9 @@ export function normalizeHexColor(value: string, fallback: string): string {
   return /^#[0-9a-fA-F]{6}$/.test(value) ? value.toUpperCase() : fallback;
 }
 
-export function normalizeAvatarModelUrl(value: string): string | undefined {
+export function normalizeSafeUrl(value: string): string | undefined {
   const trimmed = value.trim();
   if (!trimmed) return undefined;
-
   if (trimmed.startsWith('/')) return trimmed;
 
   try {
@@ -41,9 +40,18 @@ export function normalizeAvatarModelUrl(value: string): string | undefined {
   }
 }
 
+export function normalizeAvatarModelUrl(value: string): string | undefined {
+  const safeUrl = normalizeSafeUrl(value);
+  if (!safeUrl) return undefined;
+
+  const path = safeUrl.replace(/[?#].*$/, '').toLowerCase();
+  return path.endsWith('.vrm') || path.endsWith('.glb') ? safeUrl : undefined;
+}
+
 function inferAvatarFormat(modelUrl?: string): CharacterAvatarFormat {
   if (!modelUrl) return 'vrm';
-  return modelUrl.toLowerCase().split(/[?#]/, 1)[0].endsWith('.glb') ? 'glb' : 'vrm';
+  const path = modelUrl.replace(/[?#].*$/, '').toLowerCase();
+  return path.endsWith('.glb') ? 'glb' : 'vrm';
 }
 
 export function createCharacterStudioAvatar(input: {
