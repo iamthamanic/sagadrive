@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { ExternalLink, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { CHARACTER_STUDIO_DEMO_URL, normalizeAvatarModelUrl } from './avatar';
+import { CHARACTER_STUDIO_DEMO_URL, normalizeSafeUrl } from './avatar';
 
 function getCharacterStudioUrl(): string {
   const configuredUrl = import.meta.env.VITE_CHARACTER_STUDIO_URL;
-  return normalizeAvatarModelUrl(configuredUrl ?? '') ?? CHARACTER_STUDIO_DEMO_URL;
+  return normalizeSafeUrl(configuredUrl ?? '') ?? CHARACTER_STUDIO_DEMO_URL;
 }
 
 export function CharacterStudioPanel() {
