@@ -1,28 +1,55 @@
-import { useState, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
+import { Eye, Plus, Save, Upload, X } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
+import {
+  CharacterStudioPanel,
+  characterService,
+  createCharacterStudioAvatar,
+  getAvatarPresetForRace,
+  normalizeAvatarModelUrl,
+} from '../modules/characters';
 import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Separator } from './ui/separator';
 import { Slider } from './ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Separator } from './ui/separator';
-import { Plus, Save, Eye, Upload, X } from 'lucide-react';
-import { characterService } from '../modules/characters';
-import { toast } from 'sonner@2.0.3';
+import { Textarea } from './ui/textarea';
 
-// DevTrack helper - safe fallback if not available
+type ActivityTrackingWindow = Window & {
+  trackActivity?: (description: string) => void;
+};
+
 const trackActivity = (description: string) => {
-  if (typeof window !== 'undefined' && (window as any).trackActivity) {
-    (window as any).trackActivity(description);
-  }
+  if (typeof window === 'undefined') return;
+  (window as ActivityTrackingWindow).trackActivity?.(description);
+};
+
+const archetypeLabels: Record<string, string> = {
+  fighter: 'Kämpfer',
+  thinker: 'Denker',
+  healer: 'Heiler',
+  rebel: 'Rebell',
+  diplomat: 'Diplomat',
+};
+
+const essenceLabels: Record<string, string> = {
+  physical: 'Körperlich',
+  mental: 'Mental',
+  spiritual: 'Spirituell',
+  practical: 'Paktbasiert',
+  technological: 'Technologisch',
+};
+
+const settingLabels: Record<string, string> = {
+  fantasy: 'Fantasy',
+  real: 'Real',
+  scifi: 'Sci-Fi',
 };
 
 export function CharacterEditor() {
-  // Log component mount
-  console.log('✅ CharacterEditor: Component mounted and rendering!');
-  
   const [characterName, setCharacterName] = useState('');
   const [characterArchetype, setCharacterArchetype] = useState('');
   const [characterRace, setCharacterRace] = useState('');
@@ -31,88 +58,59 @@ export function CharacterEditor() {
   const [customSetting, setCustomSetting] = useState('');
   const [description, setDescription] = useState('');
 
-  // Label mappings
-  const archetypeLabels: Record<string, string> = {
-    fighter: 'Kämpfer',
-    thinker: 'Denker',
-    healer: 'Heiler',
-    rebel: 'Rebell',
-    diplomat: 'Diplomat'
-  };
-
-  const essenceLabels: Record<string, string> = {
-    physical: 'Körperlich',
-    mental: 'Mental',
-    spiritual: 'Spirituell',
-    practical: 'Paktbasiert',
-    technological: 'Technologisch'
-  };
-
-  const settingLabels: Record<string, string> = {
-    fantasy: 'Fantasy',
-    real: 'Real',
-    scifi: 'Sci-Fi'
-  };
-
-  // Build preview subtitle
-  const getPreviewSubtitle = () => {
-    if (!characterArchetype || !essenceProfile) {
-      return 'Keine Details gewählt';
-    }
-    
-    const archetypeLabel = archetypeLabels[characterArchetype] || characterArchetype;
-    const essenceLabel = essenceLabels[essenceProfile] || essenceProfile;
-    const settingLabel = setting === 'custom' 
-      ? customSetting 
-      : settingLabels[setting] || '';
-    
-    return `${archetypeLabel} ${essenceLabel}${settingLabel ? ` (${settingLabel})` : ''}`;
-  };
-  
-  // Appearance
   const [bodySize, setBodySize] = useState([50]);
   const [height, setHeight] = useState([50]);
+  const [hairStyle, setHairStyle] = useState('short');
   const [hairColor, setHairColor] = useState('#000000');
-  
-  // Attributes
+  const [skinTone, setSkinTone] = useState('#F5E6D3');
+  const [clothing, setClothing] = useState('casual');
+  const [avatarModelUrl, setAvatarModelUrl] = useState('');
+
   const [strength, setStrength] = useState([10]);
   const [dexterity, setDexterity] = useState([10]);
   const [constitution, setConstitution] = useState([10]);
   const [intelligence, setIntelligence] = useState([10]);
   const [wisdom, setWisdom] = useState([10]);
   const [charisma, setCharisma] = useState([10]);
-
-  // Level
   const [level, setLevel] = useState(1);
 
-  // Background
   const [backgroundStory, setBackgroundStory] = useState('');
   const [personality, setPersonality] = useState('');
   const [ideals, setIdeals] = useState('');
   const [bonds, setBonds] = useState('');
   const [flaws, setFlaws] = useState('');
-
-  // Notes
   const [notes, setNotes] = useState('');
 
-  // Portrait image
-  const [portraitUrl, setPortraitUrl] = useState<string>('');
+  const [portraitUrl, setPortraitUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const avatarPreset = getAvatarPresetForRace(characterRace);
+  const normalizedAvatarModelUrl = normalizeAvatarModelUrl(avatarModelUrl);
+
+  const getPreviewSubtitle = () => {
+    if (!characterArchetype || !essenceProfile) {
+      return 'Keine Details gewählt';
+    }
+
+    const archetypeLabel = archetypeLabels[characterArchetype] || characterArchetype;
+    const essenceLabel = essenceLabels[essenceProfile] || essenceProfile;
+    const settingLabel = setting === 'custom' ? customSetting : settingLabels[setting] || '';
+
+    return `${archetypeLabel} ${essenceLabel}${settingLabel ? ` (${settingLabel})` : ''}`;
+  };
+
+  const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Bitte wähle eine Bilddatei aus');
       return;
     }
 
-    // Validate file size (5MB)
-    if (file.size > 5242880) {
+    if (file.size > 5 * 1024 * 1024) {
       toast.error('Bild ist zu groß. Maximum 5MB');
       return;
     }
@@ -131,81 +129,81 @@ export function CharacterEditor() {
   };
 
   const handleSaveCharacter = async () => {
-    console.log('🎯 CharacterEditor: Save button clicked!');
-    
-    // Validate required fields
     if (!characterName.trim()) {
-      console.warn('⚠️ CharacterEditor: Name is empty');
       toast.error('Bitte gib einen Charakternamen ein');
       return;
     }
 
     if (!characterArchetype) {
-      console.warn('⚠️ CharacterEditor: Archetype is empty');
       toast.error('Bitte wähle einen Archetyp');
       return;
     }
 
     if (!characterRace) {
-      console.warn('⚠️ CharacterEditor: Race is empty');
       toast.error('Bitte wähle eine Rasse');
       return;
     }
 
-    console.log('✅ CharacterEditor: Validation passed');
+    if (avatarModelUrl.trim() && !normalizedAvatarModelUrl) {
+      toast.error('3D-Modell muss eine HTTPS-URL oder ein interner Pfad sein');
+      return;
+    }
+
     setSaving(true);
-    
+
     try {
       trackActivity(`Character Editor: Charakter "${characterName}" wird gespeichert`);
-      
-      const characterData = {
+
+      const avatar = createCharacterStudioAvatar({
+        race: characterRace,
+        hairStyle,
+        clothing,
+        hairColor,
+        skinTone,
+        modelUrl: normalizedAvatarModelUrl,
+      });
+
+      const savedCharacter = await characterService.createCharacter({
         name: characterName.trim(),
         description: description.trim(),
         class: characterArchetype,
         race: characterRace,
-        level: level,
+        level,
+        background_story: backgroundStory.trim() || undefined,
+        personality_traits: personality.trim() ? [personality.trim()] : undefined,
+        ideals: ideals.trim() || undefined,
+        bonds: bonds.trim() || undefined,
+        flaws: flaws.trim() || undefined,
         appearance: {
-          body_size: bodySize[0],
-          height: height[0],
+          body_size: bodySize[0] ?? 50,
+          height: height[0] ?? 50,
           face_features: 'default',
-          hair_style: 'short',
-          hair_color: hairColor,
-          skin_tone: '#F5E6D3',
-          clothing: 'casual',
+          hair_style: hairStyle,
+          hair_color: avatar.colors.hair,
+          skin_tone: avatar.colors.skin,
+          clothing,
+          avatar,
         },
         attributes: {
-          strength: strength[0],
-          dexterity: dexterity[0],
-          constitution: constitution[0],
-          intelligence: intelligence[0],
-          wisdom: wisdom[0],
-          charisma: charisma[0],
+          strength: strength[0] ?? 10,
+          dexterity: dexterity[0] ?? 10,
+          constitution: constitution[0] ?? 10,
+          intelligence: intelligence[0] ?? 10,
+          wisdom: wisdom[0] ?? 10,
+          charisma: charisma[0] ?? 10,
         },
         portrait_url: portraitUrl || undefined,
-      };
-
-      console.log('📦 CharacterEditor: Prepared character data:', characterData);
-      console.log('📤 CharacterEditor: Calling characterService.createCharacter...');
-      
-      const savedCharacter = await characterService.createCharacter(characterData);
-      
-      console.log('✅ CharacterEditor: Character saved successfully!', savedCharacter);
-      trackActivity(`Character Editor: Charakter "${characterName}" erfolgreich gespeichert (ID: ${savedCharacter.id})`);
-      toast.success('Charakter erfolgreich gespeichert!');
-      
-      // Optional: Reset form or navigate away
-      // You could add a callback prop here to navigate back to library
-      
-    } catch (error) {
-      console.error('❌ CharacterEditor: Error saving character:', error);
-      console.error('Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
       });
+
+      trackActivity(
+        `Character Editor: Charakter "${characterName}" erfolgreich gespeichert (ID: ${savedCharacter.id})`,
+      );
+      toast.success('Charakter erfolgreich gespeichert!');
+    } catch (error) {
+      console.error('Character save error:', error);
       toast.error(error instanceof Error ? error.message : 'Fehler beim Speichern');
     } finally {
       setSaving(false);
-      console.log('🏁 CharacterEditor: Save process finished');
     }
   };
 
@@ -213,8 +211,8 @@ export function CharacterEditor() {
     fileInputRef.current?.click();
   };
 
-  const handleRemoveImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleRemoveImage = (event: MouseEvent) => {
+    event.stopPropagation();
     setPortraitUrl('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -224,15 +222,11 @@ export function CharacterEditor() {
   return (
     <div className="w-full h-full overflow-y-auto">
       <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-4 md:space-y-6">
-        {/* Mobile Header */}
         <div className="md:hidden">
           <h1 className="text-xl">Charakter Editor</h1>
-          <p className="text-muted-foreground text-sm">
-            Erstelle deinen Helden
-          </p>
+          <p className="text-muted-foreground text-sm">Erstelle deinen Helden</p>
         </div>
 
-        {/* Desktop Header */}
         <div className="hidden md:flex items-center justify-between">
           <div>
             <h1>Charakter Editor</h1>
@@ -241,14 +235,14 @@ export function CharacterEditor() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button 
+            <Button
               variant="outline"
               onClick={() => trackActivity('Character Editor: Vorschau angezeigt')}
             >
               <Eye className="w-4 h-4 mr-2" />
               Vorschau
             </Button>
-            <Button 
+            <Button
               variant="accent"
               onClick={handleSaveCharacter}
               disabled={saving || uploading}
@@ -259,20 +253,19 @@ export function CharacterEditor() {
           </div>
         </div>
 
-        {/* Mobile Action Buttons */}
         <div className="md:hidden flex gap-2">
-          <Button 
-            variant="outline" 
-            className="flex-1" 
+          <Button
+            variant="outline"
+            className="flex-1"
             size="sm"
             onClick={() => trackActivity('Character Editor: Vorschau angezeigt (Mobile)')}
           >
             <Eye className="w-4 h-4 mr-2" />
             Vorschau
           </Button>
-          <Button 
-            variant="accent" 
-            className="flex-1" 
+          <Button
+            variant="accent"
+            className="flex-1"
             size="sm"
             onClick={handleSaveCharacter}
             disabled={saving || uploading}
@@ -283,14 +276,13 @@ export function CharacterEditor() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          {/* Preview Panel - Hidden on mobile, shown in modal */}
           <Card className="hidden lg:block lg:col-span-1">
             <CardHeader>
               <CardTitle>Vorschau</CardTitle>
               <CardDescription>Charakter Visualisierung</CardDescription>
             </CardHeader>
             <CardContent>
-              <div 
+              <div
                 className="aspect-square bg-muted rounded-lg flex items-center justify-center mb-4 relative cursor-pointer group overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors"
                 onClick={handleImageClick}
               >
@@ -301,20 +293,20 @@ export function CharacterEditor() {
                   onChange={handleImageUpload}
                   className="hidden"
                 />
-                
+
                 {portraitUrl ? (
                   <>
-                    <img 
-                      src={portraitUrl} 
-                      alt="Character Portrait" 
+                    <img
+                      src={portraitUrl}
+                      alt="Character Portrait"
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       <Button
                         size="sm"
                         variant="secondary"
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        onClick={(event) => {
+                          event.stopPropagation();
                           handleImageClick();
                         }}
                         disabled={uploading}
@@ -343,21 +335,32 @@ export function CharacterEditor() {
                     ) : (
                       <>
                         <Upload className="w-16 h-16 mx-auto mb-2 group-hover:text-primary transition-colors" />
-                        <p className="text-sm">Klicke zum Hochladen</p>
+                        <p className="text-sm">Portrait als Fallback hochladen</p>
                         <p className="text-xs mt-1">PNG, JPG, WebP (max 5MB)</p>
                       </>
                     )}
                   </div>
                 )}
               </div>
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="font-medium">{characterName || 'Unbenannt'}</p>
                   <div className="achievement-badge px-3 py-1 rounded-full text-sm">Lvl {level}</div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {getPreviewSubtitle()}
-                </p>
+                <p className="text-sm text-muted-foreground">{getPreviewSubtitle()}</p>
+                <div className="rounded-md border border-border bg-muted/30 p-3 text-xs">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">Avatar-Preset</span>
+                    <span className="font-medium">{avatarPreset}</span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">3D-Modell</span>
+                    <span className="font-medium">
+                      {normalizedAvatarModelUrl ? 'verknüpft' : 'noch nicht exportiert'}
+                    </span>
+                  </div>
+                </div>
                 <Separator />
                 <div className="text-sm space-y-1">
                   <p>Stärke: {strength[0]}</p>
@@ -371,25 +374,39 @@ export function CharacterEditor() {
             </CardContent>
           </Card>
 
-          {/* Editor Panel */}
           <Card className="lg:col-span-2">
             <CardHeader className="pb-3">
               <CardTitle className="text-base md:text-lg">Charakter Details</CardTitle>
-              <CardDescription className="text-xs md:text-sm">Passe alle Eigenschaften an</CardDescription>
+              <CardDescription className="text-xs md:text-sm">
+                Passe alle Eigenschaften an
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="basic">
                 <TabsList className="grid w-full grid-cols-4 md:grid-cols-7 h-auto gap-1">
-                  <TabsTrigger value="basic" className="text-xs md:text-sm py-2 px-1 md:px-3">Info</TabsTrigger>
-                  <TabsTrigger value="appearance" className="text-xs md:text-sm py-2 px-1 md:px-3">Look</TabsTrigger>
-                  <TabsTrigger value="attributes" className="text-xs md:text-sm py-2 px-1 md:px-3">Stats</TabsTrigger>
-                  <TabsTrigger value="abilities" className="text-xs md:text-sm py-2 px-1 md:px-3">Skills</TabsTrigger>
-                  <TabsTrigger value="background" className="text-xs md:text-sm py-2 px-1 md:px-3">BG</TabsTrigger>
-                  <TabsTrigger value="inventory" className="text-xs md:text-sm py-2 px-1 md:px-3">Inv</TabsTrigger>
-                  <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-1 md:px-3">Notes</TabsTrigger>
+                  <TabsTrigger value="basic" className="text-xs md:text-sm py-2 px-1 md:px-3">
+                    Info
+                  </TabsTrigger>
+                  <TabsTrigger value="appearance" className="text-xs md:text-sm py-2 px-1 md:px-3">
+                    Look
+                  </TabsTrigger>
+                  <TabsTrigger value="attributes" className="text-xs md:text-sm py-2 px-1 md:px-3">
+                    Stats
+                  </TabsTrigger>
+                  <TabsTrigger value="abilities" className="text-xs md:text-sm py-2 px-1 md:px-3">
+                    Skills
+                  </TabsTrigger>
+                  <TabsTrigger value="background" className="text-xs md:text-sm py-2 px-1 md:px-3">
+                    BG
+                  </TabsTrigger>
+                  <TabsTrigger value="inventory" className="text-xs md:text-sm py-2 px-1 md:px-3">
+                    Inv
+                  </TabsTrigger>
+                  <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-1 md:px-3">
+                    Notes
+                  </TabsTrigger>
                 </TabsList>
 
-                {/* Basic Info Tab */}
                 <TabsContent value="basic" className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2 md:col-span-2">
@@ -398,7 +415,7 @@ export function CharacterEditor() {
                         id="name"
                         placeholder="Charakter Name"
                         value={characterName}
-                        onChange={(e) => setCharacterName(e.target.value)}
+                        onChange={(event) => setCharacterName(event.target.value)}
                       />
                     </div>
 
@@ -411,7 +428,9 @@ export function CharacterEditor() {
                         max="20"
                         placeholder="1"
                         value={level}
-                        onChange={(e) => setLevel(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                        onChange={(event) =>
+                          setLevel(Math.max(1, Math.min(20, Number.parseInt(event.target.value, 10) || 1)))
+                        }
                       />
                     </div>
                   </div>
@@ -423,7 +442,7 @@ export function CharacterEditor() {
                       placeholder="Beschreibe deinen Charakter..."
                       rows={4}
                       value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                      onChange={(event) => setDescription(event.target.value)}
                     />
                   </div>
 
@@ -464,12 +483,13 @@ export function CharacterEditor() {
 
                     <div className="space-y-2">
                       <Label htmlFor="setting">Setting</Label>
-                      <Select value={setting} onValueChange={(value) => {
-                        setSetting(value);
-                        if (value !== 'custom') {
-                          setCustomSetting('');
-                        }
-                      }}>
+                      <Select
+                        value={setting}
+                        onValueChange={(value) => {
+                          setSetting(value);
+                          if (value !== 'custom') setCustomSetting('');
+                        }}
+                      >
                         <SelectTrigger id="setting">
                           <SelectValue placeholder="Wähle Setting" />
                         </SelectTrigger>
@@ -489,7 +509,7 @@ export function CharacterEditor() {
                           id="customSetting"
                           placeholder="Eigenes Setting eingeben..."
                           value={customSetting}
-                          onChange={(e) => setCustomSetting(e.target.value)}
+                          onChange={(event) => setCustomSetting(event.target.value)}
                         />
                       </div>
                     )}
@@ -512,113 +532,149 @@ export function CharacterEditor() {
                   </div>
                 </TabsContent>
 
-                {/* Appearance Tab */}
                 <TabsContent value="appearance" className="space-y-6">
+                  <CharacterStudioPanel />
+
+                  <div className="rounded-lg border border-border bg-muted/30 p-4">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <Label>Visuelles Avatar-Preset</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Wird aus der Rasse abgeleitet, verändert aber keine Gameplay-Regel.
+                        </p>
+                      </div>
+                      <code className="text-sm font-medium">{avatarPreset}</code>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label>Körperbau (Schlank ← → Kräftig)</Label>
-                    <Slider
-                      value={bodySize}
-                      onValueChange={setBodySize}
-                      max={100}
-                      step={1}
-                    />
+                    <Slider value={bodySize} onValueChange={setBodySize} max={100} step={1} />
                     <p className="text-sm text-muted-foreground">Wert: {bodySize[0]}</p>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Größe (Klein ← → Groß)</Label>
-                    <Slider
-                      value={height}
-                      onValueChange={setHeight}
-                      max={100}
-                      step={1}
-                    />
+                    <Slider value={height} onValueChange={setHeight} max={100} step={1} />
                     <p className="text-sm text-muted-foreground">Wert: {height[0]}</p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="hairColor">Haarfarbe</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="hairColor"
-                        type="color"
-                        value={hairColor}
-                        onChange={(e) => setHairColor(e.target.value)}
-                        className="w-20 h-10"
-                      />
-                      <Input
-                        value={hairColor}
-                        onChange={(e) => setHairColor(e.target.value)}
-                        placeholder="#000000"
-                      />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="hairColor">Haarfarbe</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="hairColor"
+                          type="color"
+                          value={/^#[0-9a-fA-F]{6}$/.test(hairColor) ? hairColor : '#000000'}
+                          onChange={(event) => setHairColor(event.target.value)}
+                          className="w-20 h-10"
+                        />
+                        <Input
+                          value={hairColor}
+                          onChange={(event) => setHairColor(event.target.value)}
+                          placeholder="#000000"
+                          aria-label="Haarfarbe als Hexwert"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="skinTone">Hautfarbe</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="skinTone"
+                          type="color"
+                          value={/^#[0-9a-fA-F]{6}$/.test(skinTone) ? skinTone : '#F5E6D3'}
+                          onChange={(event) => setSkinTone(event.target.value)}
+                          className="w-20 h-10"
+                        />
+                        <Input
+                          value={skinTone}
+                          onChange={(event) => setSkinTone(event.target.value)}
+                          placeholder="#F5E6D3"
+                          aria-label="Hautfarbe als Hexwert"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="hairStyle">Frisur</Label>
+                      <Select value={hairStyle} onValueChange={setHairStyle}>
+                        <SelectTrigger id="hairStyle">
+                          <SelectValue placeholder="Wähle Frisur" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="short">Kurz</SelectItem>
+                          <SelectItem value="long">Lang</SelectItem>
+                          <SelectItem value="bald">Kahl</SelectItem>
+                          <SelectItem value="braided">Geflochten</SelectItem>
+                          <SelectItem value="wild">Wild</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="clothing">Kleidung</Label>
+                      <Select value={clothing} onValueChange={setClothing}>
+                        <SelectTrigger id="clothing">
+                          <SelectValue placeholder="Wähle Kleidung" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="robe">Robe</SelectItem>
+                          <SelectItem value="armor">Rüstung</SelectItem>
+                          <SelectItem value="leather">Leder</SelectItem>
+                          <SelectItem value="casual">Casual</SelectItem>
+                          <SelectItem value="noble">Edel</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="hairStyle">Frisur</Label>
-                    <Select>
-                      <SelectTrigger id="hairStyle">
-                        <SelectValue placeholder="Wähle Frisur" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="short">Kurz</SelectItem>
-                        <SelectItem value="long">Lang</SelectItem>
-                        <SelectItem value="bald">Kahl</SelectItem>
-                        <SelectItem value="braided">Geflochten</SelectItem>
-                        <SelectItem value="wild">Wild</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="clothing">Kleidung</Label>
-                    <Select>
-                      <SelectTrigger id="clothing">
-                        <SelectValue placeholder="Wähle Kleidung" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="robe">Robe</SelectItem>
-                        <SelectItem value="armor">Rüstung</SelectItem>
-                        <SelectItem value="leather">Leder</SelectItem>
-                        <SelectItem value="casual">Casual</SelectItem>
-                        <SelectItem value="noble">Edel</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="avatarModelUrl">Exportiertes 3D-Modell</Label>
+                    <Input
+                      id="avatarModelUrl"
+                      type="url"
+                      value={avatarModelUrl}
+                      onChange={(event) => setAvatarModelUrl(event.target.value)}
+                      placeholder="https://…/character.vrm oder /avatars/character.glb"
+                      aria-describedby="avatarModelHelp"
+                    />
+                    <p id="avatarModelHelp" className="text-xs text-muted-foreground">
+                      Optional. Hinterlege nach dem Export aus CharacterStudio eine HTTPS-URL oder einen internen Pfad.
+                    </p>
                   </div>
                 </TabsContent>
 
-                {/* Attributes Tab */}
                 <TabsContent value="attributes" className="space-y-6">
                   <div className="space-y-2">
                     <Label>Stärke (STR)</Label>
                     <Slider value={strength} onValueChange={setStrength} max={20} min={1} step={1} />
                     <p className="text-sm text-muted-foreground">Wert: {strength[0]}</p>
                   </div>
-
                   <div className="space-y-2">
                     <Label>Geschicklichkeit (DEX)</Label>
                     <Slider value={dexterity} onValueChange={setDexterity} max={20} min={1} step={1} />
                     <p className="text-sm text-muted-foreground">Wert: {dexterity[0]}</p>
                   </div>
-
                   <div className="space-y-2">
                     <Label>Konstitution (CON)</Label>
                     <Slider value={constitution} onValueChange={setConstitution} max={20} min={1} step={1} />
                     <p className="text-sm text-muted-foreground">Wert: {constitution[0]}</p>
                   </div>
-
                   <div className="space-y-2">
                     <Label>Intelligenz (INT)</Label>
                     <Slider value={intelligence} onValueChange={setIntelligence} max={20} min={1} step={1} />
                     <p className="text-sm text-muted-foreground">Wert: {intelligence[0]}</p>
                   </div>
-
                   <div className="space-y-2">
                     <Label>Weisheit (WIS)</Label>
                     <Slider value={wisdom} onValueChange={setWisdom} max={20} min={1} step={1} />
                     <p className="text-sm text-muted-foreground">Wert: {wisdom[0]}</p>
                   </div>
-
                   <div className="space-y-2">
                     <Label>Charisma (CHA)</Label>
                     <Slider value={charisma} onValueChange={setCharisma} max={20} min={1} step={1} />
@@ -626,7 +682,6 @@ export function CharacterEditor() {
                   </div>
                 </TabsContent>
 
-                {/* Abilities Tab */}
                 <TabsContent value="abilities" className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 border border-border rounded-lg">
@@ -634,9 +689,10 @@ export function CharacterEditor() {
                         <p className="font-medium">Feuerball</p>
                         <p className="text-sm text-muted-foreground">Zauber - 10 Mana</p>
                       </div>
-                      <Button size="sm" variant="destructive">Entfernen</Button>
+                      <Button size="sm" variant="destructive">
+                        Entfernen
+                      </Button>
                     </div>
-                    
                     <Button variant="outline" className="w-full">
                       <Plus className="w-4 h-4 mr-2" />
                       Fähigkeit hinzufügen
@@ -644,7 +700,6 @@ export function CharacterEditor() {
                   </div>
                 </TabsContent>
 
-                {/* Background Tab */}
                 <TabsContent value="background" className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="backgroundStory">Hintergrundgeschichte</Label>
@@ -653,10 +708,9 @@ export function CharacterEditor() {
                       placeholder="Die Geschichte deines Charakters..."
                       rows={6}
                       value={backgroundStory}
-                      onChange={(e) => setBackgroundStory(e.target.value)}
+                      onChange={(event) => setBackgroundStory(event.target.value)}
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="personality">Persönlichkeitsmerkmale</Label>
                     <Textarea
@@ -664,42 +718,38 @@ export function CharacterEditor() {
                       placeholder="Wie verhält sich dein Charakter?"
                       rows={3}
                       value={personality}
-                      onChange={(e) => setPersonality(e.target.value)}
+                      onChange={(event) => setPersonality(event.target.value)}
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="ideals">Ideale</Label>
                     <Input
                       id="ideals"
                       placeholder="Was ist deinem Charakter wichtig?"
                       value={ideals}
-                      onChange={(e) => setIdeals(e.target.value)}
+                      onChange={(event) => setIdeals(event.target.value)}
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="bonds">Bindungen</Label>
                     <Input
                       id="bonds"
                       placeholder="Woran hängt dein Charakter?"
                       value={bonds}
-                      onChange={(e) => setBonds(e.target.value)}
+                      onChange={(event) => setBonds(event.target.value)}
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="flaws">Schwächen</Label>
                     <Input
                       id="flaws"
                       placeholder="Was sind die Fehler deines Charakters?"
                       value={flaws}
-                      onChange={(e) => setFlaws(e.target.value)}
+                      onChange={(event) => setFlaws(event.target.value)}
                     />
                   </div>
                 </TabsContent>
 
-                {/* Inventory Tab */}
                 <TabsContent value="inventory" className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -709,8 +759,6 @@ export function CharacterEditor() {
                         Hinzufügen
                       </Button>
                     </div>
-
-                    {/* 6x5 Grid = 30 Slots */}
                     <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
                       {Array.from({ length: 30 }).map((_, index) => (
                         <div
@@ -728,55 +776,28 @@ export function CharacterEditor() {
                   <div className="space-y-2">
                     <Label>Währung</Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div>
-                        <Label htmlFor="gold" className="text-xs text-muted-foreground">Gold</Label>
-                        <Input
-                          id="gold"
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          defaultValue="0"
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="silver" className="text-xs text-muted-foreground">Silber</Label>
-                        <Input
-                          id="silver"
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          defaultValue="0"
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="copper" className="text-xs text-muted-foreground">Kupfer</Label>
-                        <Input
-                          id="copper"
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          defaultValue="0"
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="platinum" className="text-xs text-muted-foreground">Platin</Label>
-                        <Input
-                          id="platinum"
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          defaultValue="0"
-                          className="mt-1"
-                        />
-                      </div>
+                      {['Gold', 'Silber', 'Kupfer', 'Platin'].map((currency) => {
+                        const id = currency.toLowerCase();
+                        return (
+                          <div key={currency}>
+                            <Label htmlFor={id} className="text-xs text-muted-foreground">
+                              {currency}
+                            </Label>
+                            <Input
+                              id={id}
+                              type="number"
+                              min="0"
+                              placeholder="0"
+                              defaultValue="0"
+                              className="mt-1"
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </TabsContent>
 
-                {/* Notes Tab */}
                 <TabsContent value="notes" className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="notes">Notizen</Label>
@@ -785,12 +806,12 @@ export function CharacterEditor() {
                       placeholder="Deine persönlichen Notizen zum Charakter..."
                       rows={15}
                       value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
+                      onChange={(event) => setNotes(event.target.value)}
                       className="min-h-[400px]"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Hier kannst du Kampfnotizen, Quest-Informationen, NPCs und andere wichtige Details festhalten.
+                    Notizen bleiben aktuell lokal im Editor. Die Character-Tabelle hat dafür noch kein persistentes Feld.
                   </p>
                 </TabsContent>
               </Tabs>
@@ -799,24 +820,5 @@ export function CharacterEditor() {
         </div>
       </div>
     </div>
-  );
-}
-
-// Placeholder icon component
-function User({ className }: { className?: string }) {
-  return (
-    <svg 
-      className={className}
-      fill="none" 
-      strokeWidth="1.5" 
-      stroke="currentColor" 
-      viewBox="0 0 24 24"
-    >
-      <path 
-        strokeLinecap="round" 
-        strokeLinejoin="round" 
-        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" 
-      />
-    </svg>
   );
 }
