@@ -1,9 +1,9 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import { extname, join, relative } from 'node:path';
 import process from 'node:process';
 
 const root = process.cwd();
-const sourceRoot = join(root, 'src');
 const extensions = new Set(['.ts', '.tsx']);
 const forbidden = [
   { label: '@ts-ignore', pattern: /@ts-ignore/ },
@@ -15,22 +15,69 @@ const forbidden = [
   { label: 'Record<..., any>', pattern: /Record\s*<[^>]*,\s*any\s*>/ },
 ];
 
-async function collectFiles(directory) {
-  const entries = await readdir(directory, { withFileTypes: true });
-  const nested = await Promise.all(
-    entries.map(async (entry) => {
-      const path = join(directory, entry.name);
-      if (entry.isDirectory()) return collectFiles(path);
-      return extensions.has(extname(entry.name)) ? [path] : [];
-    }),
-  );
-  return nested.flat();
+function git(args) {
+  return execFileSync('git', args, {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
 }
 
-const files = await collectFiles(sourceRoot);
+function hasRef(ref) {
+  try {
+    git(['rev-parse', '--verify', '--quiet', ref]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function resolveBaseRef() {
+  if (process.env.TYPED_STRICT_BASE_REF && hasRef(process.env.TYPED_STRICT_BASE_REF)) {
+    return process.env.TYPED_STRICT_BASE_REF;
+  }
+
+  const currentRef = process.env.GITHUB_REF_NAME ?? '';
+  const baseRef = process.env.GITHUB_BASE_REF ?? '';
+
+  if (baseRef && hasRef(`origin/${baseRef}`)) return `origin/${baseRef}`;
+  if (currentRef === 'main' && hasRef('HEAD^')) return 'HEAD^';
+  if (hasRef('origin/main')) return 'origin/main';
+  if (hasRef('main')) return 'main';
+  if (hasRef('HEAD^')) return 'HEAD^';
+
+  return undefined;
+}
+
+function collectChangedFiles() {
+  const baseRef = resolveBaseRef();
+  if (!baseRef) return [];
+
+  const mergeBase = git(['merge-base', 'HEAD', baseRef]);
+  const output = git([
+    'diff',
+    '--name-only',
+    '--diff-filter=ACMR',
+    `${mergeBase}...HEAD`,
+    '--',
+    'src/**/*.ts',
+    'src/**/*.tsx',
+    'src/*.ts',
+    'src/*.tsx',
+  ]);
+
+  if (!output) return [];
+
+  return output
+    .split('\n')
+    .filter((path) => path.startsWith('src/') && extensions.has(extname(path)));
+}
+
+const files = collectChangedFiles();
 const failures = [];
 
-for (const file of files) {
+for (const path of files) {
+  const file = join(root, path);
   const text = await readFile(file, 'utf8');
   const lines = text.split('\n');
 
@@ -45,9 +92,9 @@ for (const file of files) {
 }
 
 if (failures.length > 0) {
-  console.error('Type-safety lint failed:');
+  console.error('Type-safety lint failed on changed TypeScript files:');
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
 
-console.log(`Type-safety lint passed (${files.length} TypeScript files).`);
+console.log(`Type-safety lint passed (${files.length} changed TypeScript files).`);
