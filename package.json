@@ -59,6 +59,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "lint": "node scripts/lint.mjs",
+    "typecheck": "npm exec --yes --package=typescript@5.8.3 -- tsc -p tsconfig.json --noEmit",
+    "checks": "npm run lint && npm run typecheck && npm run build"
   }
 }
