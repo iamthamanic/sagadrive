@@ -1,0 +1,10 @@
+language: de
+app:
+  type: web
+  framework: react-vite
+  devCommand: npm run dev
+  buildCommand: npm run build
+  port: 3004
+typedStrict:
+  languages:
+    - typescript
