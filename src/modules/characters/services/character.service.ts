@@ -1,5 +1,6 @@
 import { supabase } from '../../../lib/supabase';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { projectId } from '../../../utils/supabase/info';
+import { normalizeCharacterAppearance } from '../avatar';
 import type {
   CharacterDto,
   CharacterVm,
@@ -25,7 +26,12 @@ class CharacterService {
       class: dto.class,
       race: dto.race,
       level: dto.level,
-      appearance: dto.appearance,
+      backgroundStory: dto.background_story,
+      personalityTraits: dto.personality_traits ?? [],
+      ideals: dto.ideals,
+      bonds: dto.bonds,
+      flaws: dto.flaws,
+      appearance: normalizeCharacterAppearance(dto.appearance),
       attributes: dto.attributes,
       abilities: dto.abilities || [],
       inventory: dto.inventory || [],
@@ -36,20 +42,28 @@ class CharacterService {
     };
   }
 
-  /**
-   * Get all characters for current user
-   */
-  async getUserCharacters(): Promise<CharacterVm[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+  private async getAuthenticatedUserId(): Promise<string> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
       throw new Error('User not authenticated');
     }
 
+    return user.id;
+  }
+
+  /**
+   * Get all characters for current user
+   */
+  async getUserCharacters(): Promise<CharacterVm[]> {
+    const userId = await this.getAuthenticatedUserId();
+
     const { data, error } = await supabase
       .from(this.tableName)
       .select('*')
-      .eq('owner_user_id', user.id)
+      .eq('owner_user_id', userId)
       .eq('character_type', 'pc')
       .order('created_at', { ascending: false });
 
@@ -57,17 +71,19 @@ class CharacterService {
       throw new Error(`Failed to fetch characters: ${error.message}`);
     }
 
-    return (data || []).map(this.mapToViewModel);
+    return (data || []).map((character) => this.mapToViewModel(character as CharacterDto));
   }
 
   /**
    * Get single character by ID
    */
   async getCharacterById(id: string): Promise<CharacterVm> {
+    const userId = await this.getAuthenticatedUserId();
     const { data, error } = await supabase
       .from(this.tableName)
       .select('*')
       .eq('id', id)
+      .eq('owner_user_id', userId)
       .single();
 
     if (error) {
@@ -78,48 +94,41 @@ class CharacterService {
       throw new Error('Character not found');
     }
 
-    return this.mapToViewModel(data);
+    return this.mapToViewModel(data as CharacterDto);
   }
 
   /**
    * Create new character
    */
   async createCharacter(payload: CreateCharacterDto): Promise<CharacterVm> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    const userId = await this.getAuthenticatedUserId();
 
     const characterData: Partial<CharacterDto> = {
-      owner_user_id: user.id,
+      owner_user_id: userId,
       character_type: 'pc',
       name: payload.name,
       description: payload.description,
       class: payload.class,
       race: payload.race,
       level: payload.level || 1,
-      appearance: payload.appearance || {
-        body_size: 50,
-        height: 50,
-        face_features: 'default',
-        hair_style: 'short',
-        hair_color: '#000000',
-        skin_tone: '#F5E6D3',
-        clothing: 'casual',
-      },
-      attributes: payload.attributes || {
-        strength: 10,
-        dexterity: 10,
-        constitution: 10,
-        intelligence: 10,
-        wisdom: 10,
-        charisma: 10,
+      background_story: payload.background_story,
+      personality_traits: payload.personality_traits,
+      ideals: payload.ideals,
+      bonds: payload.bonds,
+      flaws: payload.flaws,
+      appearance: normalizeCharacterAppearance(payload.appearance),
+      attributes: {
+        strength: payload.attributes?.strength ?? 10,
+        dexterity: payload.attributes?.dexterity ?? 10,
+        constitution: payload.attributes?.constitution ?? 10,
+        intelligence: payload.attributes?.intelligence ?? 10,
+        wisdom: payload.attributes?.wisdom ?? 10,
+        charisma: payload.attributes?.charisma ?? 10,
       },
       abilities: [],
       inventory: [],
       emotion_profiles: [],
-      portrait_url: payload.portrait_url || null,
+      portrait_url: payload.portrait_url || undefined,
     };
 
     const { data, error } = await supabase
@@ -132,20 +141,27 @@ class CharacterService {
       throw new Error(`Failed to create character: ${error.message}`);
     }
 
-    return this.mapToViewModel(data);
+    return this.mapToViewModel(data as CharacterDto);
   }
 
   /**
    * Update existing character
    */
   async updateCharacter(id: string, payload: UpdateCharacterDto): Promise<CharacterVm> {
+    const userId = await this.getAuthenticatedUserId();
+    const updatePayload: UpdateCharacterDto & { updated_at: string } = {
+      ...payload,
+      ...(payload.appearance
+        ? { appearance: normalizeCharacterAppearance(payload.appearance) }
+        : {}),
+      updated_at: new Date().toISOString(),
+    };
+
     const { data, error } = await supabase
       .from(this.tableName)
-      .update({
-        ...payload,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', id)
+      .eq('owner_user_id', userId)
       .select()
       .single();
 
@@ -153,17 +169,19 @@ class CharacterService {
       throw new Error(`Failed to update character: ${error.message}`);
     }
 
-    return this.mapToViewModel(data);
+    return this.mapToViewModel(data as CharacterDto);
   }
 
   /**
    * Delete character
    */
   async deleteCharacter(id: string): Promise<void> {
+    const userId = await this.getAuthenticatedUserId();
     const { error } = await supabase
       .from(this.tableName)
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('owner_user_id', userId);
 
     if (error) {
       throw new Error(`Failed to delete character: ${error.message}`);
@@ -174,16 +192,12 @@ class CharacterService {
    * Search characters by name
    */
   async searchCharacters(query: string): Promise<CharacterVm[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    const userId = await this.getAuthenticatedUserId();
 
     const { data, error } = await supabase
       .from(this.tableName)
       .select('*')
-      .eq('owner_user_id', user.id)
+      .eq('owner_user_id', userId)
       .eq('character_type', 'pc')
       .ilike('name', `%${query}%`)
       .order('created_at', { ascending: false });
@@ -192,15 +206,17 @@ class CharacterService {
       throw new Error(`Failed to search characters: ${error.message}`);
     }
 
-    return (data || []).map(this.mapToViewModel);
+    return (data || []).map((character) => this.mapToViewModel(character as CharacterDto));
   }
 
   /**
    * Upload character portrait image
    */
   async uploadPortrait(file: File): Promise<string> {
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
     if (!session) {
       throw new Error('User not authenticated');
     }
@@ -216,16 +232,32 @@ class CharacterService {
           Authorization: `Bearer ${session.access_token}`,
         },
         body: formData,
-      }
+      },
     );
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to upload portrait');
+      const responseBody: unknown = await response.json();
+      const message =
+        typeof responseBody === 'object' &&
+        responseBody !== null &&
+        'error' in responseBody &&
+        typeof responseBody.error === 'string'
+          ? responseBody.error
+          : 'Failed to upload portrait';
+      throw new Error(message);
     }
 
-    const { url } = await response.json();
-    return url;
+    const responseBody: unknown = await response.json();
+    if (
+      typeof responseBody !== 'object' ||
+      responseBody === null ||
+      !('url' in responseBody) ||
+      typeof responseBody.url !== 'string'
+    ) {
+      throw new Error('Portrait upload returned an invalid response');
+    }
+
+    return responseBody.url;
   }
 }
 
