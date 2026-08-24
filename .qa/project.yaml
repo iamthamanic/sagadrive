@@ -5,6 +5,7 @@ app:
   devCommand: npm run dev
   buildCommand: npm run build
   port: 3004
+checksCommand: npm run checks
 typedStrict:
   languages:
     - typescript
