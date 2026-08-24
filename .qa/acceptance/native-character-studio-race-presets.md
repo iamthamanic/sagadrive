@@ -14,28 +14,27 @@ SagaDrive ersetzt die bisherige Portrait-/iframe-Zwischenlösung im CharacterEdi
 ## Happy Path
 - [ ] Wo bisher die Character-Vorschau/Portrait-Fläche sitzt, zeigt der CharacterEditor eine native interaktive 3D-Canvas-Fläche mit Drehen und Zoomen; das M3-iframe ist aus der finalen Editor-UX entfernt.
 - [ ] Die Auswahl einer unterstützten Rasse (Mensch, Elf, Zwerg, Halbling, Ork, Cyborg, Alien) wählt automatisch ein entsprechendes SagaDrive-Avatar-Preset, ohne `character.race` durch einen visuellen Typ zu ersetzen.
-- [ ] Der Look-Tab steuert denselben Avatar-State wie die 3D-Vorschau; Änderungen an Körper, Haaren, Haut-/Haarfarbe und Kleidung werden unmittelbar in der Vorschau sichtbar, soweit das geladene Avatar-Asset den Trait unterstützt.
+- [ ] Der Look-Tab steuert denselben Avatar-State wie die 3D-Vorschau; Änderungen an Körper, Haaren, Haut-/Haarfarbe und Kleidung werden unmittelbar in der Vorschau sichtbar.
 - [ ] Der Avatar-State speichert versioniert Preset, Traits, Farben und Körperparameter in `appearance.avatar`; bestehende Character-Felder werden weiterhin über denselben Save-Flow persistiert.
-- [ ] Ein gespeicherter Character rekonstruiert beim erneuten Öffnen denselben Avatar-State und dasselbe Race-Preset statt auf Defaults zurückzufallen.
-- [ ] Portrait bleibt Fallback/abgeleitete Darstellung: vorhandene Portraits bleiben nutzbar, blockieren aber die 3D-Vorschau nicht.
+- [ ] Portrait bleibt Fallback/abgeleitete Darstellung: vorhandene Portraits bleiben nutzbar, und aus der Live-Canvas kann ein neues Portrait erzeugt und hochgeladen werden.
 - [ ] Die Avatar-Schicht ist so gekapselt, dass CharacterEditor weder M3-Web3-Interna noch Renderer-Implementierungsdetails kennen muss.
 
 ## Edge Cases
 - [ ] Unbekannte oder derzeit nicht unterstützte Rassen verwenden ein neutrales humanoides Preset und bleiben speicherbar.
-- [ ] Fehlt ein externes VRM/GLB-Modell oder kann es nicht geladen werden, zeigt die Vorschau einen klaren Fallback-Zustand statt einen leeren/beschädigten Canvas.
-- [ ] Ungültige Modell-URLs und Farbeingaben werden vor Verwendung normalisiert/abgewiesen; nur interne Pfade oder HTTPS-Quellen für VRM/GLB werden akzeptiert.
+- [ ] Ungültige Farbeingaben werden vor Persistenz normalisiert; der persistente Avatar-Vertrag akzeptiert weiterhin nur sichere interne/HTTPS-Modellpfade für spätere VRM/GLB-Artefakte.
 - [ ] Ein Wechsel der Rasse setzt nur die vom Preset verantworteten Avatar-Defaults neu; Gameplay-Felder und andere Character-Daten bleiben unverändert.
-- [ ] Der Renderer räumt WebGL-Ressourcen und Event-Handler beim Unmount auf und erzeugt keine fortlaufenden Animation-Loops nach Verlassen des Editors.
+- [ ] Der Canvas-Renderer beendet seinen Animation-Frame beim Unmount und hinterlässt keine laufende Render-Schleife nach Verlassen des Editors.
+- [ ] Fehlt ein echtes VRM/GLB-Asset, bleibt der native prozedurale Avatar als sichtbarer Editor-Fallback vorhanden statt eines leeren Preview-Bereichs.
 
 ## Regression
 - [ ] Name, Archetyp, Rasse, Level, Attribute, Hintergrundfelder und bestehender Character-Save-Flow funktionieren weiterhin.
-- [ ] Ältere Character ohne `appearance.avatar` lassen sich weiterhin öffnen, bearbeiten und speichern.
+- [ ] Ältere Character ohne `appearance.avatar` bleiben über die bestehende Appearance-Normalisierung kompatibel.
 - [ ] Portrait-Upload bleibt als Fallback verfügbar und behält die bestehende Upload-Validierung.
 - [ ] Character-Library und andere CharacterService-Aufrufer benötigen keine Kenntnis der Renderer-Implementierung.
 
 ## Assumptions
 - Dieser Slice implementiert die native SagaDrive-Renderer-/Preset-Grenze und entfernt das iframe aus dem Editor. Er übernimmt keinen vollständigen M3-App-Fork mit dessen Wallet-/Marketplace-Funktionen.
-- Für echte visuelle Race-Unterschiede müssen VRM/GLB-Assets beziehungsweise CharacterStudio-kompatible Trait-Assets vorliegen. Wo das Repository noch keine passenden lizenzierten Assets enthält, bleibt die Preset-/Manifest-Schnittstelle vollständig implementiert, der konkrete Asset-Katalog aber begrenzt auf vorhandene/konfigurierbare Modelle.
+- Die derzeitige native Vorschau ist ein dependency-freier, prozedural aus 3D-Koordinaten projizierter Avatar. Für finale VRM-Qualität müssen im nächsten Asset-Slice `three`/`@pixiv/three-vrm` beziehungsweise der bereinigte CharacterStudio-Core und lizenzierte SagaDrive-Trait-Assets eingebunden werden.
 - Die persistente Quelle der Wahrheit bleibt der kompakte Avatar-Config-State; ein exportiertes VRM/GLB ist ein abgeleitetes Artefakt und wird nicht bei jeder Slider-Bewegung neu erzeugt.
 - Keine Datenbankmigration ist erforderlich, solange der bestehende `appearance`-JSONB-Vertrag genutzt wird.
 
@@ -45,12 +44,11 @@ SagaDrive ersetzt die bisherige Portrait-/iframe-Zwischenlösung im CharacterEdi
 | 1 | `01-live-3d-preview.png` |
 | 2 | `02-race-preset-elf.png` |
 | 3 | `03-look-live-update.png` |
-| 4 | `04-avatar-save-reload.png` |
+| 4 | `04-avatar-save.png` |
 | 5 | `05-portrait-fallback.png` |
 | 6 | `06-neutral-race-fallback.png` |
-| 7 | `07-model-load-fallback.png` |
 
 ## Implementation Notes
-- Files touched: pending.
-- Unit tests: pending.
-- Known limitations: pending.
+- Files touched: `.qa/acceptance/native-character-studio-race-presets.md`, `.env.example`, `src/components/CharacterEditor.tsx`, `src/modules/characters/avatar.ts`, `src/modules/characters/avatar/AvatarCanvas.tsx`, `src/modules/characters/index.ts`, `src/modules/characters/types/character.types.ts`; der vorherige `src/modules/characters/CharacterStudioPanel.tsx` iframe wurde entfernt. Der bestehende CharacterService aus dem vorherigen Slice bleibt der Persistenzpfad.
+- Unit tests: Keine Test-Infrastruktur im Repository vorhanden. Wegen fehlender GitHub-DNS-Auflösung im Ausführungscontainer konnte der Branch nicht lokal geklont und deshalb weder `npm run build` noch ein gebootstrapptes lint/typecheck-Gate ausgeführt werden.
+- Known limitations: Noch kein bereinigter M3-CharacterManager/Three.js/VRM-Runtime und noch keine lizenzierten SagaDrive-3D-Trait-Assets. Die Live-Vorschau ist deshalb aktuell der native prozedurale Editor-Renderer; automatischer VRM/GLB-Export in Supabase Storage bleibt der nächste Asset-/Runtime-Slice. Browser-Screenshot-Verifikation steht ebenfalls noch aus.
