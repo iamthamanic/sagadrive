@@ -61,12 +61,19 @@ export interface CharacterAvatarDto {
   model_format: CharacterAvatarFormat;
   model_url?: string;
   traits: {
+    head?: string;
+    ears?: string;
     hair?: string;
     clothing?: string;
+    accessory?: string;
   };
   colors: {
     hair: string;
     skin: string;
+  };
+  body: {
+    height: number;
+    size: number;
   };
 }
 
@@ -113,7 +120,6 @@ export interface EmotionProfileDto {
   intensity: number;
 }
 
-// Create/Update DTOs
 export interface CreateCharacterDto {
   name: string;
   description: string;
@@ -148,7 +154,6 @@ export interface UpdateCharacterDto {
   portrait_url?: string;
 }
 
-// View Models (for UI)
 export interface CharacterVm {
   id: string;
   name: string;
