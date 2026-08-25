@@ -1,3 +1,5 @@
+import type { CharacterRulesetKey } from '../../rulesets/characterCreation';
+
 // Character DTOs (Data Transfer Objects)
 export interface CharacterDto {
   id: string;
@@ -7,6 +9,7 @@ export interface CharacterDto {
   parent_character_id?: string;
   character_type: 'pc' | 'npc' | 'companion' | 'monster';
   ruleset_id?: string;
+  ruleset_key?: CharacterRulesetKey;
 
   name: string;
   description: string;
@@ -14,6 +17,7 @@ export interface CharacterDto {
   race: string;
   level: number;
   background_story?: string;
+  dnd_background?: string | null;
 
   appearance: CharacterAppearanceDto;
   portrait_url?: string;
@@ -125,6 +129,8 @@ export interface CreateCharacterDto {
   description: string;
   class: string;
   race: string;
+  ruleset_key?: CharacterRulesetKey;
+  dnd_background?: string | null;
   level?: number;
   background_story?: string;
   personality_traits?: string[];
@@ -143,6 +149,8 @@ export interface UpdateCharacterDto {
   description?: string;
   class?: string;
   race?: string;
+  ruleset_key?: CharacterRulesetKey;
+  dnd_background?: string | null;
   level?: number;
   background_story?: string;
   personality_traits?: string[];
@@ -162,6 +170,8 @@ export interface CharacterVm {
   description: string;
   class: string;
   race: string;
+  rulesetKey: CharacterRulesetKey;
+  dndBackground?: string;
   level: number;
   backgroundStory?: string;
   personalityTraits: string[];
