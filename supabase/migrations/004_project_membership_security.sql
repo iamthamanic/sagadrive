@@ -23,6 +23,33 @@ REVOKE ALL ON FUNCTION public.current_user_is_active_project_member(UUID) FROM P
 REVOKE ALL ON FUNCTION public.current_user_is_active_project_member(UUID) FROM anon;
 GRANT EXECUTE ON FUNCTION public.current_user_is_active_project_member(UUID) TO authenticated;
 
+-- Project codes are looked up case-insensitively. Enforce the same uniqueness rule in
+-- storage so ABC123 and abc123 can never resolve to different projects. Existing
+-- collisions fail the migration explicitly instead of assigning a join arbitrarily.
+DO $$
+DECLARE
+  v_duplicate_codes TEXT;
+BEGIN
+  SELECT string_agg(normalized_code, ', ' ORDER BY normalized_code)
+  INTO v_duplicate_codes
+  FROM (
+    SELECT UPPER(BTRIM(code)) AS normalized_code
+    FROM public.projects
+    GROUP BY UPPER(BTRIM(code))
+    HAVING COUNT(*) > 1
+  ) duplicates;
+
+  IF v_duplicate_codes IS NOT NULL THEN
+    RAISE EXCEPTION
+      'Cannot enforce case-insensitive project-code uniqueness; duplicate normalized codes exist: %',
+      v_duplicate_codes;
+  END IF;
+END;
+$$;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_code_casefold_unique
+  ON public.projects ((UPPER(BTRIM(code))));
+
 -- Normalize project visibility across the legacy and V3 policy names. A kicked/inactive
 -- membership is not enough to read a project anymore.
 DROP POLICY IF EXISTS "Users can view their own projects" ON public.projects;
@@ -85,6 +112,129 @@ CREATE POLICY "Users can leave active project memberships"
     AND status = 'active'
   );
 
+-- Legacy self-host databases initialized from 001_initial.sql used membership existence
+-- as an authorization grant in several policies. Recreate every affected policy so a
+-- kicked/inactive row cannot continue to expose characters, sessions, memories, combat,
+-- session-player state, or chat. This block is intentionally conditional because Schema
+-- V3 has a different character/session model and already carries active-status policies.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'characters'
+      AND column_name = 'is_public'
+  ) THEN
+    EXECUTE 'DROP POLICY IF EXISTS "Users can view their characters" ON public.characters';
+    EXECUTE $policy$
+      CREATE POLICY "Users can view their characters" ON public.characters
+        FOR SELECT USING (
+          owner_user_id = auth.uid()
+          OR is_public = true
+          OR (
+            project_id IS NOT NULL
+            AND (
+              project_id IN (SELECT id FROM public.projects WHERE gm_user_id = auth.uid())
+              OR public.current_user_is_active_project_member(project_id)
+            )
+          )
+        )
+    $policy$;
+
+    EXECUTE 'DROP POLICY IF EXISTS "Users can view their sessions" ON public.sessions';
+    EXECUTE $policy$
+      CREATE POLICY "Users can view their sessions" ON public.sessions
+        FOR SELECT USING (
+          project_id IN (SELECT id FROM public.projects WHERE gm_user_id = auth.uid())
+          OR public.current_user_is_active_project_member(project_id)
+        )
+    $policy$;
+
+    IF to_regclass('public.session_players') IS NOT NULL THEN
+      EXECUTE 'DROP POLICY IF EXISTS "Users can view session players" ON public.session_players';
+      EXECUTE $policy$
+        CREATE POLICY "Users can view session players" ON public.session_players
+          FOR SELECT USING (
+            session_id IN (
+              SELECT id
+              FROM public.sessions
+              WHERE project_id IN (SELECT id FROM public.projects WHERE gm_user_id = auth.uid())
+            )
+            OR (
+              user_id = auth.uid()
+              AND session_id IN (
+                SELECT id
+                FROM public.sessions
+                WHERE public.current_user_is_active_project_member(project_id)
+              )
+            )
+          )
+      $policy$;
+    END IF;
+
+    IF to_regclass('public.npc_memories') IS NOT NULL THEN
+      EXECUTE 'DROP POLICY IF EXISTS "Users can view NPC memories" ON public.npc_memories';
+      EXECUTE $policy$
+        CREATE POLICY "Users can view NPC memories" ON public.npc_memories
+          FOR SELECT USING (
+            session_id IN (
+              SELECT id
+              FROM public.sessions
+              WHERE project_id IN (SELECT id FROM public.projects WHERE gm_user_id = auth.uid())
+                 OR public.current_user_is_active_project_member(project_id)
+            )
+          )
+      $policy$;
+    END IF;
+
+    IF to_regclass('public.combat_states') IS NOT NULL THEN
+      EXECUTE 'DROP POLICY IF EXISTS "Users can view combat states" ON public.combat_states';
+      EXECUTE $policy$
+        CREATE POLICY "Users can view combat states" ON public.combat_states
+          FOR SELECT USING (
+            session_id IN (
+              SELECT id
+              FROM public.sessions
+              WHERE project_id IN (SELECT id FROM public.projects WHERE gm_user_id = auth.uid())
+                 OR public.current_user_is_active_project_member(project_id)
+            )
+          )
+      $policy$;
+    END IF;
+
+    IF to_regclass('public.chat_messages') IS NOT NULL THEN
+      EXECUTE 'DROP POLICY IF EXISTS "Users can view chat messages" ON public.chat_messages';
+      EXECUTE $policy$
+        CREATE POLICY "Users can view chat messages" ON public.chat_messages
+          FOR SELECT USING (
+            session_id IN (
+              SELECT id
+              FROM public.sessions
+              WHERE project_id IN (SELECT id FROM public.projects WHERE gm_user_id = auth.uid())
+                 OR public.current_user_is_active_project_member(project_id)
+            )
+          )
+      $policy$;
+
+      EXECUTE 'DROP POLICY IF EXISTS "Users can insert chat messages" ON public.chat_messages';
+      EXECUTE $policy$
+        CREATE POLICY "Users can insert chat messages" ON public.chat_messages
+          FOR INSERT WITH CHECK (
+            user_id = auth.uid()
+            AND session_id IN (
+              SELECT id
+              FROM public.sessions
+              WHERE project_id IN (SELECT id FROM public.projects WHERE gm_user_id = auth.uid())
+                 OR public.current_user_is_active_project_member(project_id)
+            )
+          )
+      $policy$;
+    END IF;
+  END IF;
+END;
+$$;
+
 -- Joining by a secret code is the only authenticated self-service operation that can
 -- create an active membership. The caller cannot choose user_id, project_id, role or status.
 CREATE OR REPLACE FUNCTION public.join_project_by_code(
@@ -112,9 +262,8 @@ BEGIN
   SELECT id
   INTO v_project_id
   FROM public.projects
-  WHERE UPPER(code) = UPPER(BTRIM(p_code))
-    AND status = 'active'
-  LIMIT 1;
+  WHERE UPPER(BTRIM(code)) = UPPER(BTRIM(p_code))
+    AND status = 'active';
 
   IF v_project_id IS NULL THEN
     RAISE EXCEPTION 'Project not found' USING ERRCODE = 'P0002';
