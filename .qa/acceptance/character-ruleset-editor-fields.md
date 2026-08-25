@@ -1,0 +1,42 @@
+# Feature: Character Ruleset Editor Fields
+
+## Intent
+Der CharacterEditor zeigt den Charakternamen direkt an der 3D-Charaktervorschau und ersetzt dort generische Vorschau-/Bedienhinweise. Im Info-Tab steuert ein Regelset-Dropdown direkt unter der Beschreibung, welche fachlichen Character-Felder angeboten werden.
+
+## Preconditions
+- Bestehender CharacterEditor und die vorhandenen Ruleset-Optionen in `src/modules/rulesets/characterCreation.ts` bleiben die Source of Truth.
+- Default-Regelset ist `SagaDrive Core` (`sagadrive-core`).
+- Die bereits vorhandene Zuordnung wird beibehalten:
+  - SagaDrive Core: `Archetyp`, `Rasse`, `Setting`, `Essenzprofil`.
+  - Dungeons & Dragons 5.5e: `Klasse`, `Spezies`, `Hintergrund`.
+  - `Archetyp` entspricht funktional der D&D-`Klasse`.
+  - `Rasse` entspricht funktional der D&D-`Spezies`.
+  - `Setting` ist ein SagaDrive-Core-Charakterrahmen und wird bei D&D nicht als Character-Dropdown geführt; D&D-Welt-/Kampagnenkontext kommt separat aus Projekt/World-Lore.
+  - `Essenzprofil` ist ein SagaDrive-Core-Konzept ohne direktes D&D-5.5e-Äquivalent und entfällt bei D&D.
+  - D&D `Hintergrund` ist ein eigenes D&D-Character-Creation-Feld und kein Ersatz für SagaDrive `Setting` oder `Essenzprofil`.
+- Ruleset-Wechsel darf keine regelsetfremden Werte im UI stehen lassen.
+
+## Happy Path
+- [ ] In der 3D-Vorschau wird der aktuelle Charaktername sichtbar; bei leerem Namen steht `Unbenannt`.
+- [ ] Der generische Ready-/Titeltext wie `Live 3D Vorschau` sowie der permanente Hinweis `Ziehen zum Drehen · Mausrad/Trackpad zum Zoomen` werden entfernt; Loading-/Error-Zustände bleiben sichtbar.
+- [ ] Direkt unter `Beschreibung` steht das Dropdown `Regelset` mit `SagaDrive Core` und `Dungeons & Dragons 5.5e`; Default ist `SagaDrive Core`.
+- [ ] Bei `SagaDrive Core` werden `Archetyp`, `Rasse`, `Setting` und `Essenzprofil` angezeigt; bei `Dungeons & Dragons 5.5e` werden stattdessen `Klasse`, `Spezies` und `Hintergrund` angezeigt.
+- [ ] Ein Regelset-Wechsel setzt regelsetabhängige Auswahlwerte kontrolliert zurück und verwendet weiterhin den neutralen Human-Avatar als sicheren visuellen Startwert.
+
+## Edge Cases
+- [ ] Ein leerer Charaktername verursacht keinen leeren Overlay-Titel, sondern zeigt `Unbenannt`.
+- [ ] Loading- und Error-Status der 3D-Runtime bleiben trotz entferntem Ready-Label verständlich sichtbar.
+- [ ] D&D-Spezies ohne eigenes 3D-Preset verwenden weiterhin den vorhandenen neutralen Humanoid-Fallback.
+- [ ] Custom-Setting wird nur bei SagaDrive Core und nur bei Auswahl `Custom` angezeigt.
+- [ ] Typed-strict: alle geänderten TypeScript-Dateien bleiben ohne `any`, `@ts-ignore`, `@ts-nocheck` oder vergleichbare Type-Escapes.
+
+## Regression
+- [ ] Portrait-Generierung, Avatar-Rotation/Zoom, Levelanzeige und Preview-Stats bleiben funktional.
+- [ ] Character-Lore-Context erhält weiterhin regelsetkorrekte Labels und sendet bei D&D kein SagaDrive-Setting/Essenzprofil.
+- [ ] Bestehende Gold/Cyan-Interaktionshierarchie und Shared-UI-Primitives bleiben unverändert.
+
+## Screenshots
+Browser-Verifikation erforderlich für SagaDrive-Core-Info-Tab, D&D-5.5e-Info-Tab und 3D-Vorschau mit Name.
+
+## Implementation Notes
+Noch offen.
