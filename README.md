@@ -62,7 +62,7 @@ Der CharacterEditor besitzt eine Hintergrundgeschichten-Pipeline. Die UI erzeugt
 
 Im BG-Tab kann optional ein für den eingeloggten User sichtbares Projekt als **Kampagnen-Lore** gewählt werden. Der Browser sendet dabei `projectId` und, falls vorhanden, die verknüpfte `worldId`. Diese IDs sind nur untrusted Kontext-Hinweise: Die Edge Function verifiziert Projektmitgliedschaft bzw. GM-Rechte und die Projekt-Welt-Zuordnung erneut serverseitig, bevor Lore gelesen wird. Ohne Auswahl bleibt die Generierung setting-neutral.
 
-Projektmitgliedschaft ist dabei selbst Teil der Sicherheitsgrenze. `supabase/migrations/004_project_membership_security.sql` entfernt browserseitige Schreibrechte auf `project_id`, `user_id`, `role` und `status`. Self-Service-Beitritt läuft ausschließlich über die `SECURITY DEFINER`-RPC `join_project_by_code`; die eigene Charakterzuordnung über `set_my_project_character`. Gekickte Mitgliedschaften können sich nicht selbst reaktivieren oder löschen. Die kanonischen Schema-V3-RLS-Policies prüfen bei projektbasiertem Lesezugriff aktive Mitgliedschaft.
+Projektmitgliedschaft ist dabei selbst Teil der Sicherheitsgrenze. `supabase/migrations/004_project_membership_security.sql` entfernt browserseitige Schreibrechte auf `project_id`, `user_id`, `role` und `status`. Self-Service-Beitritt läuft ausschließlich über die `SECURITY DEFINER`-RPC `join_project_by_code`; die eigene Charakterzuordnung über `set_my_project_character`. Gekickte Mitgliedschaften können sich nicht selbst reaktivieren oder löschen. Die Migration härtet auch Legacy-Ressourcen-Policies auf aktive Mitgliedschaften und erzwingt eine case-insensitiv eindeutige Projektcode-Identität.
 
 Unterstützte Provider:
 
@@ -87,15 +87,18 @@ Für Ollama können `OLLAMA_MODEL` und `OLLAMA_HOST` als Fallback verwendet werd
 
 Der Prompt liegt versioniert unter `supabase/functions/_shared/character-lore-prompt.ts`. D&D 5.5e bleibt ohne autorisierten Welt-Kontext setting-neutral. SagaDrive Core verwendet die gewählten Character- und Setting-Parameter als Lore-Rahmen. Notizen aus dem Notes-Tab werden bewusst nicht an die Generierung übertragen.
 
+Das im CharacterEditor gewählte Regelset wird unabhängig vom optionalen `ruleset_id` als stabiler Editor-Key gespeichert. `ruleset_key` enthält `sagadrive-core` oder `dnd-5.5e`; bei D&D 5.5e wird der gewählte PHB-Hintergrund zusätzlich in `dnd_background` gespeichert. `background_story` bleibt davon getrennt und enthält ausschließlich die freie bzw. generierte Charakter-Lore.
+
 Für den aktuellen Character-/Lore-Stand sind bei bestehenden Datenbanken diese Migrationen in Reihenfolge erforderlich:
 
 ```text
 002_character_trait_arrays.sql
 003_character_lore_rate_limits.sql
 004_project_membership_security.sql
+005_character_ruleset_metadata.sql
 ```
 
-`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota und `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach `004`, damit bestehende unsichere Policy-Namen sicher ersetzt werden.
+`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis und `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
 
 ## Quality Gates
 
@@ -121,7 +124,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`test-gate` führt die technischen Checks aus: diff-spezifischer Typed-Strict-Lint, Typecheck, Produktions-Build, `deno check` für geänderte Supabase-Edge-Function-TypeScript-Dateien, Deno-Tests, den Project-Membership-Security-Contract und den Secrets-Diff-Scan. GitHub Actions stellt dafür Deno LTS über `denoland/setup-deno@v2` bereit. `npm audit --omit=dev` wird zusätzlich sichtbar protokolliert.
+`test-gate` führt die technischen Checks aus: diff-spezifischer Typed-Strict-Lint, Typecheck, Produktions-Build, `deno check` für geänderte Supabase-Edge-Function-TypeScript-Dateien, Deno-Tests, den Project-Membership-Security-Contract, den Character-Editor-Regression-Contract und den Secrets-Diff-Scan. GitHub Actions stellt dafür Deno LTS über `denoland/setup-deno@v2` bereit. `npm audit --omit=dev` wird zusätzlich sichtbar protokolliert.
 
 `composition-gate` prüft die Bedeutung über Modul-/Service-/Backend-Hops. Reine Docs-/Tooling-Diffs und sichere Single-Hop-Diffs werden dokumentiert übersprungen. Bei Multi-Hop-, Persistenz-, Worker-, Queue-, Webhook- oder Side-Effect-relevanten Änderungen muss ein aktueller Proof unter `.qa/runs/composition-gate-<slug>.md` mit `CLEAR` oder begründetem `SKIPPED` vorliegen.
 
