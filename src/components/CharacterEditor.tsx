@@ -8,9 +8,11 @@ import {
   getAvatarRacePreset,
   getAvatarPresetForRace,
 } from '../modules/characters';
-import type { AbilityDto, ItemDto } from '../modules/characters';
+import type { AbilityDto, CharacterLoreContext, ItemDto } from '../modules/characters';
 import { CharacterAbilitiesPanel } from '../modules/characters/components/CharacterAbilitiesPanel';
+import { CharacterBackgroundComposer } from '../modules/characters/components/CharacterBackgroundComposer';
 import { CharacterInventoryPanel } from '../modules/characters/components/CharacterInventoryPanel';
+import { CharacterTraitEditor } from '../modules/characters/components/CharacterTraitEditor';
 import {
   characterRulesetOptions,
   dnd55BackgroundOptions,
@@ -91,10 +93,10 @@ export function CharacterEditor() {
   const [inventory, setInventory] = useState<ItemDto[]>([]);
 
   const [backgroundStory, setBackgroundStory] = useState('');
-  const [personality, setPersonality] = useState('');
-  const [ideals, setIdeals] = useState('');
-  const [bonds, setBonds] = useState('');
-  const [flaws, setFlaws] = useState('');
+  const [personalityTraits, setPersonalityTraits] = useState<string[]>([]);
+  const [ideals, setIdeals] = useState<string[]>([]);
+  const [bonds, setBonds] = useState<string[]>([]);
+  const [flaws, setFlaws] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
 
   const [portraitUrl, setPortraitUrl] = useState('');
@@ -132,6 +134,111 @@ export function CharacterEditor() {
       skinTone,
     ],
   );
+
+  const loreContext = useMemo<CharacterLoreContext>(() => {
+    const classLabel = characterArchetype
+      ? getCharacterCreationOptionLabel(
+          isDnd55 ? dnd55ClassOptions : sagaDriveArchetypeOptions,
+          characterArchetype,
+        )
+      : '';
+    const raceLabel = characterRace
+      ? getCharacterCreationOptionLabel(
+          isDnd55 ? dnd55SpeciesOptions : sagaDriveRaceOptions,
+          characterRace,
+        )
+      : '';
+    const settingLabel = !isDnd55
+      ? setting === 'custom'
+        ? customSetting.trim()
+        : setting
+          ? getCharacterCreationOptionLabel(sagaDriveSettingOptions, setting)
+          : ''
+      : '';
+    const essenceLabel = !isDnd55 && essenceProfile
+      ? getCharacterCreationOptionLabel(sagaDriveEssenceOptions, essenceProfile)
+      : '';
+    const backgroundLabel = isDnd55 && dndBackground
+      ? getCharacterCreationOptionLabel(dnd55BackgroundOptions, dndBackground)
+      : '';
+
+    return {
+      ruleset,
+      name: characterName.trim(),
+      description: description.trim(),
+      characterClass: classLabel,
+      raceOrSpecies: raceLabel,
+      setting: settingLabel || undefined,
+      essenceProfile: essenceLabel || undefined,
+      dndBackground: backgroundLabel || undefined,
+      level,
+      attributes: {
+        strength: strength[0] ?? 10,
+        dexterity: dexterity[0] ?? 10,
+        constitution: constitution[0] ?? 10,
+        intelligence: intelligence[0] ?? 10,
+        wisdom: wisdom[0] ?? 10,
+        charisma: charisma[0] ?? 10,
+      },
+      abilities: abilities.map(({ name, description: abilityDescription, type, cost, effect }) => ({
+        name,
+        description: abilityDescription,
+        type,
+        cost,
+        effect,
+      })),
+      inventory: inventory.map(({ name, description: itemDescription, type, quantity }) => ({
+        name,
+        description: itemDescription,
+        type,
+        quantity,
+      })),
+      appearance: {
+        bodySize: currentAvatar.body.size,
+        height: currentAvatar.body.height,
+        face: currentAvatar.traits.head ?? headStyle,
+        hairStyle: currentAvatar.traits.hair ?? hairStyle,
+        hairColor: currentAvatar.colors.hair,
+        skinTone: currentAvatar.colors.skin,
+        clothing: currentAvatar.traits.clothing ?? clothing,
+        accessory: currentAvatar.traits.accessory,
+      },
+      traits: {
+        personality: personalityTraits,
+        ideals,
+        bonds,
+        flaws,
+      },
+    };
+  }, [
+    abilities,
+    bonds,
+    characterArchetype,
+    characterName,
+    characterRace,
+    charisma,
+    clothing,
+    constitution,
+    currentAvatar,
+    customSetting,
+    description,
+    dexterity,
+    dndBackground,
+    essenceProfile,
+    flaws,
+    hairStyle,
+    ideals,
+    intelligence,
+    inventory,
+    isDnd55,
+    level,
+    personalityTraits,
+    ruleset,
+    setting,
+    strength,
+    wisdom,
+    headStyle,
+  ]);
 
   const getPreviewSubtitle = () => {
     if (isDnd55) {
@@ -264,10 +371,10 @@ export function CharacterEditor() {
         race: characterRace,
         level,
         background_story: backgroundStory.trim() || undefined,
-        personality_traits: personality.trim() ? [personality.trim()] : undefined,
-        ideals: ideals.trim() || undefined,
-        bonds: bonds.trim() || undefined,
-        flaws: flaws.trim() || undefined,
+        personality_traits: personalityTraits.length > 0 ? personalityTraits : undefined,
+        ideals: ideals.length > 0 ? ideals : undefined,
+        bonds: bonds.length > 0 ? bonds : undefined,
+        flaws: flaws.length > 0 ? flaws : undefined,
         appearance: {
           body_size: currentAvatar.body.size,
           height: currentAvatar.body.height,
@@ -697,12 +804,44 @@ export function CharacterEditor() {
                   <CharacterAbilitiesPanel abilities={abilities} onChange={setAbilities} />
                 </TabsContent>
 
-                <TabsContent value="background" className="space-y-4">
-                  <div className="space-y-2"><Label htmlFor="backgroundStory">Hintergrundgeschichte</Label><Textarea id="backgroundStory" rows={6} value={backgroundStory} onChange={(event) => setBackgroundStory(event.target.value)} /></div>
-                  <div className="space-y-2"><Label htmlFor="personality">Persönlichkeitsmerkmale</Label><Textarea id="personality" rows={3} value={personality} onChange={(event) => setPersonality(event.target.value)} /></div>
-                  <div className="space-y-2"><Label htmlFor="ideals">Ideale</Label><Input id="ideals" value={ideals} onChange={(event) => setIdeals(event.target.value)} /></div>
-                  <div className="space-y-2"><Label htmlFor="bonds">Bindungen</Label><Input id="bonds" value={bonds} onChange={(event) => setBonds(event.target.value)} /></div>
-                  <div className="space-y-2"><Label htmlFor="flaws">Schwächen</Label><Input id="flaws" value={flaws} onChange={(event) => setFlaws(event.target.value)} /></div>
+                <TabsContent value="background" className="space-y-5">
+                  <CharacterBackgroundComposer
+                    value={backgroundStory}
+                    context={loreContext}
+                    onChange={setBackgroundStory}
+                  />
+                  <CharacterTraitEditor
+                    id="personality"
+                    label="Persönlichkeitsmerkmale"
+                    category="personality"
+                    values={personalityTraits}
+                    context={loreContext}
+                    onChange={setPersonalityTraits}
+                  />
+                  <CharacterTraitEditor
+                    id="ideals"
+                    label="Ideale"
+                    category="ideals"
+                    values={ideals}
+                    context={loreContext}
+                    onChange={setIdeals}
+                  />
+                  <CharacterTraitEditor
+                    id="bonds"
+                    label="Bindungen"
+                    category="bonds"
+                    values={bonds}
+                    context={loreContext}
+                    onChange={setBonds}
+                  />
+                  <CharacterTraitEditor
+                    id="flaws"
+                    label="Schwächen"
+                    category="flaws"
+                    values={flaws}
+                    context={loreContext}
+                    onChange={setFlaws}
+                  />
                 </TabsContent>
 
                 <TabsContent value="inventory">
