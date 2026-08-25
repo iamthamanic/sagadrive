@@ -1,6 +1,6 @@
 # Composition Gate - character-background-ai-composer
 
-- HEAD_SHA: 996f6ed64107705103910c1a9d05364718dd4a8a
+- HEAD_SHA: 6118828aa721646059524ec1f70785bfb722acbf
 - BASE_SHA: 9f0ea4f858e48e73929175d36c36eeec25765a76
 - Date: 2026-08-25
 - Verdict: CLEAR
@@ -9,19 +9,21 @@
 An authenticated user requests one new background-story variant from the current CharacterEditor state, receives exactly one draft, and explicitly chooses whether to accept it. Character trait blocks are persisted once as part of the normal character save.
 
 ## Hop chain
-`CharacterEditor` -> `CharacterBackgroundComposer` -> `characterLoreService` -> Supabase Edge Function `character-lore` -> authentication + request validation + per-user rate guard -> optional authorized project/world lookup -> versioned prompt builder -> exactly one configured LLM provider call -> draft response -> explicit local `Übernehmen` -> normal Character save -> `characterService` -> one `characters` row.
+`CharacterEditor` -> `CharacterBackgroundComposer` -> `characterLoreService` -> Supabase Edge Function `character-lore` -> caller JWT verification -> request validation + per-user rate guard -> optional server-only project/world lookup with explicit authorization -> versioned prompt builder -> exactly one configured LLM provider call -> draft response -> explicit local `Übernehmen` -> normal Character save -> `characterService` -> one `characters` row.
+
+Optional reference lore uses the Supabase service-role key only inside the Edge Function. Access is granted only when the authenticated caller is the project's GM or an active project member. A direct `worldId` combined with a project must exactly match that project's `world_id`; a direct world without a project is allowed only to its creator.
 
 Trait persistence follows: `CharacterTraitEditor` -> CharacterEditor state -> one `createCharacter`/`updateCharacter` payload -> `characterService` -> `characters.personality_traits/ideals/bonds/flaws` arrays.
 
 ## Simulations
 | Case | Intended | Composed | Result |
 |------|----------|----------|--------|
-| N-actors | One user click produces one provider request and one returned variant. Trait count or project membership must not fan out generation or saves. | `handleGenerate` is disabled while one request is pending and calls `generateBackground` once. The Edge Function makes one provider call after validation. Ten independent user actions remain ten independent requests, subject to the per-user request limit. Character save remains one DB write payload regardless of the number of trait blocks. | pass |
-| Invalid/missing | Invalid identity, malformed input, unknown ruleset, unauthorized lore context, or missing provider configuration must fail closed without replacing user text or leaking another project's lore. | Missing/invalid auth returns 401. Invalid request/ruleset/UUID returns 400. Project/world lore is fetched only server-side with the caller JWT and explicit membership/creator checks. Missing provider configuration returns `not-configured` before any provider call. The UI keeps the current background story unchanged on every error. | pass |
+| N-actors | One user click produces one provider request and one returned variant. Trait count or project membership must not fan out generation or saves. | `handleGenerate` is disabled while one request is pending and calls `generateBackground` once. The Edge Function makes one provider call after validation and authorization. Ten independent user actions remain ten independent requests, subject to the per-user request limit. Character save remains one DB write payload regardless of the number of trait blocks. | pass |
+| Invalid/missing | Invalid identity, malformed input, unknown ruleset, unauthorized lore context, oversized request, or missing provider configuration must fail closed without replacing user text or leaking another project's lore. | Missing/invalid auth returns 401. Oversized declared request returns 413. Invalid request/ruleset/UUID returns 400. Project/world lookup bypasses client RLS only after JWT verification and then explicitly checks GM/active membership plus project-world binding. Missing provider configuration returns `not-configured` before any provider call. The UI keeps the current background story unchanged on every error. | pass |
 | Two consumers / crash | Concurrent/retried generation must not create a persistent duplicate side effect or silently overwrite the current story. | There is no queue, outbox, worker, or persistent generation record. Each HTTP request is an explicit user-requested variant. A failed/crashed provider request persists nothing. Successful output is held as a local draft until `Übernehmen`; a second intentional request represents a second intentional variant. Character persistence happens only through the separate normal save action. | pass |
 
 ## Validation
-- GitHub Test Gate on `996f6ed64107705103910c1a9d05364718dd4a8a`: PASS.
+- GitHub Test Gate on `6118828aa721646059524ec1f70785bfb722acbf`: PASS.
 - Diff Typed-Strict lint: 26 changed TypeScript files PASS.
 - Frontend TypeScript check: PASS.
 - Vite production build: PASS.
