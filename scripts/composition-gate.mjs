@@ -1,11 +1,16 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
 
 const root = process.cwd();
 const headSha = git(['rev-parse', 'HEAD']);
+const toolingFiles = new Set([
+  'package.json',
+  'package-lock.json',
+  'tsconfig.json',
+  'vite.config.ts',
+]);
 
 function git(args) {
   return execFileSync('git', args, {
@@ -41,7 +46,7 @@ function resolveRange() {
   }
 
   if (eventName === 'push' && !isZeroSha(pushBeforeSha) && hasRef(pushBeforeSha)) {
-    return { base: pushBeforeSha, mode: 'push' };
+    return { base: git(['rev-parse', pushBeforeSha]), mode: 'push' };
   }
 
   const baseRef = process.env.GITHUB_BASE_REF ?? '';
@@ -55,7 +60,7 @@ function resolveRange() {
   }
 
   if (currentRef === 'main' && hasRef('HEAD^')) {
-    return { base: 'HEAD^', mode: 'main-push-fallback' };
+    return { base: git(['rev-parse', 'HEAD^']), mode: 'main-push-fallback' };
   }
 
   if (hasRef('origin/main')) {
@@ -72,7 +77,10 @@ function resolveRange() {
     };
   }
 
-  if (hasRef('HEAD^')) return { base: 'HEAD^', mode: 'parent-fallback' };
+  if (hasRef('HEAD^')) {
+    return { base: git(['rev-parse', 'HEAD^']), mode: 'parent-fallback' };
+  }
+
   return undefined;
 }
 
@@ -86,12 +94,7 @@ function isToolingOrDocs(path) {
   if (path.startsWith('.github/')) return true;
   if (path.startsWith('scripts/')) return true;
   if (path.endsWith('.md')) return true;
-  return new Set([
-    'package.json',
-    'package-lock.json',
-    'tsconfig.json',
-    'vite.config.ts',
-  ]).has(path);
+  return toolingFiles.has(path);
 }
 
 function classify(path) {
@@ -137,7 +140,8 @@ function analyze(files) {
   const semanticZones = [...zones].filter((zone) => !zone.startsWith('domain:'));
   const hasSideEffect = zones.has('side-effect');
   const hasBackendOrPersistence = zones.has('backend') || zones.has('persistence');
-  const crossesServiceBoundary = zones.has('service') && semanticZones.some((zone) => zone !== 'service');
+  const crossesServiceBoundary =
+    zones.has('service') && semanticZones.some((zone) => zone !== 'service');
   const crossesDomains = domainZones.length > 1;
 
   if (hasSideEffect) {
@@ -172,11 +176,15 @@ function analyze(files) {
 }
 
 function isAncestor(ancestor, descendant) {
-  const result = execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], {
-    cwd: root,
-    stdio: 'ignore',
-  });
-  return result !== undefined;
+  try {
+    execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], {
+      cwd: root,
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function proofOnlyChangesSince(sha) {
