@@ -1,8 +1,6 @@
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
 
-const root = process.cwd();
-
 function read(path) {
   return readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 }
@@ -25,6 +23,8 @@ const canonicalRls = read('src/supabase/schema_v3_rls.sql');
 const migration = read('supabase/migrations/004_project_membership_security.sql');
 const projectService = read('src/modules/projects/services/project.service.ts');
 const memberService = read('src/modules/projects/services/project-member.service.ts');
+const loreFunction = read('supabase/functions/character-lore/index.ts');
+const loreAccess = read('supabase/functions/_shared/character-lore-access.ts');
 
 for (const [label, pattern] of [
   ['client join INSERT policy', /CREATE POLICY\s+"Users can join projects"/i],
@@ -74,6 +74,59 @@ requireMatch(
   migration,
   /CREATE POLICY "Active members can view their projects"[\s\S]*?current_user_is_active_project_member/i,
   'migration active-member project policy',
+);
+requireMatch(
+  migration,
+  /CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_code_casefold_unique[\s\S]*?UPPER\(BTRIM\(code\)\)/i,
+  'case-insensitive project-code uniqueness',
+);
+requireMatch(
+  migration,
+  /duplicate normalized codes exist/i,
+  'fail-closed duplicate-code migration preflight',
+);
+requireMatch(
+  migration,
+  /WHERE UPPER\(BTRIM\(code\)\) = UPPER\(BTRIM\(p_code\)\)[\s\S]*?AND status = 'active';/i,
+  'unambiguous case-insensitive join lookup',
+);
+
+for (const policyName of [
+  'Users can view their characters',
+  'Users can view their sessions',
+  'Users can view session players',
+  'Users can view NPC memories',
+  'Users can view combat states',
+  'Users can view chat messages',
+  'Users can insert chat messages',
+]) {
+  requireMatch(
+    migration,
+    new RegExp(`DROP POLICY IF EXISTS "${policyName}"`, 'i'),
+    `legacy policy replacement for ${policyName}`,
+  );
+}
+
+for (const [label, pattern] of [
+  ['legacy character project access', /CREATE POLICY "Users can view their characters"[\s\S]*?current_user_is_active_project_member\(project_id\)/i],
+  ['legacy session access', /CREATE POLICY "Users can view their sessions"[\s\S]*?current_user_is_active_project_member\(project_id\)/i],
+  ['legacy NPC memory access', /CREATE POLICY "Users can view NPC memories"[\s\S]*?current_user_is_active_project_member\(project_id\)/i],
+  ['legacy combat-state access', /CREATE POLICY "Users can view combat states"[\s\S]*?current_user_is_active_project_member\(project_id\)/i],
+  ['legacy chat read access', /CREATE POLICY "Users can view chat messages"[\s\S]*?current_user_is_active_project_member\(project_id\)/i],
+  ['legacy chat write access', /CREATE POLICY "Users can insert chat messages"[\s\S]*?current_user_is_active_project_member\(project_id\)/i],
+]) {
+  requireMatch(migration, pattern, label);
+}
+
+requireMatch(
+  loreFunction,
+  /canUseWorldLoreReference\([\s\S]*?project\?\.gm_user_id/i,
+  'independent project-linked world authorization',
+);
+requireMatch(
+  loreAccess,
+  /const referenceOwnerUserId = projectGmUserId \?\? callerUserId;[\s\S]*?world\.creatorUserId === referenceOwnerUserId/i,
+  'private world ownership check',
 );
 
 requireMatch(
