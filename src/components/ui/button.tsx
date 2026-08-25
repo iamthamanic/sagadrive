@@ -4,24 +4,24 @@ import { cva, type VariantProps } from "class-variance-authority@0.7.1";
 
 import { cn } from "./utils";
 
-const primaryActionClasses = "bg-accent text-accent-foreground shadow-sm hover:bg-accent/90";
+const primaryActionClasses = "bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 active:bg-accent/80";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[background-color,border-color,color,box-shadow,opacity,transform] duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 motion-reduce:transform-none [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
         default: primaryActionClasses,
         accent: primaryActionClasses,
         destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-destructive text-white hover:bg-destructive/90 active:bg-destructive/80 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
-          "border border-foreground/20 bg-background text-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary dark:bg-input/30 dark:border-foreground/20 dark:hover:bg-primary/10",
+          "border border-foreground/20 bg-background text-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary active:bg-primary/15 dark:bg-input/30 dark:border-foreground/20 dark:hover:bg-primary/10",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70",
         ghost:
-          "text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/15",
-        link: "text-primary underline-offset-4 hover:underline",
+          "text-foreground hover:bg-primary/10 hover:text-primary active:bg-primary/15 dark:hover:bg-primary/15",
+        link: "text-primary underline-offset-4 hover:underline active:opacity-80",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
