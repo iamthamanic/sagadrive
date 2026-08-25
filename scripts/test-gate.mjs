@@ -54,6 +54,31 @@ function changedDenoFunctionFiles() {
     : [];
 }
 
+function trackedDenoTestFiles() {
+  const output = git(['ls-files', 'supabase/functions']);
+  return output
+    ? output.split('\n').filter((path) => path.endsWith('_test.ts'))
+    : [];
+}
+
+function runDeno(args, label) {
+  const result = spawnSync('deno', args, {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: 'inherit',
+  });
+
+  if (result.error) {
+    console.error(`${label} could not start: ${result.error.message}`);
+    process.exit(1);
+  }
+
+  if (result.status !== 0) {
+    console.error(`${label} failed.`);
+    process.exit(result.status ?? 1);
+  }
+}
+
 function checkChangedDenoFunctions() {
   const files = changedDenoFunctionFiles();
   if (files.length === 0) {
@@ -62,23 +87,18 @@ function checkChangedDenoFunctions() {
   }
 
   console.log(`Deno Edge Function check: ${files.length} changed TypeScript file(s).`);
-  const result = spawnSync('deno', ['check', ...files], {
-    cwd: root,
-    encoding: 'utf8',
-    stdio: 'inherit',
-  });
-
-  if (result.error) {
-    console.error(`Deno Edge Function check could not start: ${result.error.message}`);
-    process.exit(1);
-  }
-
-  if (result.status !== 0) {
-    console.error('Deno Edge Function check failed.');
-    process.exit(result.status ?? 1);
-  }
-
+  runDeno(['check', ...files], 'Deno Edge Function check');
   console.log('Deno Edge Function check passed.');
+
+  const testFiles = trackedDenoTestFiles();
+  if (testFiles.length === 0) {
+    console.log('Deno Edge Function tests skipped (no tracked *_test.ts files).');
+    return;
+  }
+
+  console.log(`Deno Edge Function tests: ${testFiles.length} test file(s).`);
+  runDeno(['test', ...testFiles], 'Deno Edge Function tests');
+  console.log('Deno Edge Function tests passed.');
 }
 
 function scanAddedLinesForSecrets() {
