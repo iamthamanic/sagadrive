@@ -8,7 +8,7 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - Prompt-Templates werden versioniert im Repository gespeichert und serverseitig zusammengesetzt.
 - Der LLM-Zugriff erfolgt nur serverseitig. Client-Code kennt keine API-Keys.
 - Provider-Schnittstelle ist OpenAI-kompatibel oder Ollama; konkrete Credentials/Modelle werden spaeter per Environment konfiguriert.
-- D&D 5.5e bleibt ohne zugeordnete Welt setting-neutral. Keine Forgotten-Realms-Annahme.
+- D&D 5.5e bleibt ohne zugeordnete Welt settingneutral. Keine Forgotten-Realms-Annahme.
 - SagaDrive Core nutzt die ausgewaehlten Genre-/Setting-Parameter als Lore-Rahmen.
 - User hat die rueckwaertskompatible Migration von `ideals`, `bonds`, `flaws` von Einzeltext auf mehrere Textbausteine freigegeben.
 
@@ -37,7 +37,7 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 ## Security & Data
 - LLM-Secrets liegen ausschliesslich in Server-Environment-Variablen und werden nie an den Browser ausgegeben.
 - `character-lore` verlangt eine authentifizierte Supabase-Session und leitet User-Identitaet ausschliesslich aus dem verifizierten Token ab.
-- Request-Body wird serverseitig auf Typ, Laengen, Gesamtgroesse und erlaubte Ruleset-Werte validiert; Prompt-Inhalte werden als untrusted character/world data markiert.
+- Request-Body wird serverseitig auf Typ, Laengen, deklarierte und tatsaechliche Gesamtgroesse sowie erlaubte Ruleset-Werte validiert; Prompt-Inhalte werden als untrusted character/world data markiert.
 - Notes werden nicht an die Character-Lore-Generierung uebertragen.
 - Keine Roh-Prompts, API-Keys oder komplette Character-Daten werden serverseitig geloggt.
 - Optionaler Projekt-/World-Lore-Kontext wird nach erfolgreicher JWT-Verifikation ausschliesslich serverseitig mit dem Service-Role-Key gelesen. Der Key verlaesst die Edge Function nie. Danach prueft die Funktion explizit GM oder aktive Projektmitgliedschaft; bei `projectId + worldId` muss die Welt exakt `project.world_id` entsprechen. Direkter World-Kontext ohne Projekt ist nur fuer den World-Creator erlaubt.
@@ -62,7 +62,7 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - [ ] Keine neue Frontend-UI-Library und keine neue npm-Dependency.
 
 ## Composition Gate
-- Code HEAD: `6118828aa721646059524ec1f70785bfb722acbf`
+- Code HEAD: `22cc7844a37f8545c43cc8bbc2c72307de7d0b22`
 - Feature BASE: `9f0ea4f858e48e73929175d36c36eeec25765a76`
 - Verdict: `CLEAR`
 - Proof: `.qa/runs/composition-gate-character-background-ai-composer.md`
@@ -76,10 +76,10 @@ Browser-Verifikation erforderlich fuer BG leer mit Beispiel, Trait-Popover, uebe
 - `CharacterBackgroundComposer` zeigt `Generieren`, rotiert Beispiele alle fuenf Sekunden und haelt KI-Ergebnisse als separate Variante mit explizitem `Uebernehmen`/`Verwerfen`.
 - `CharacterTraitEditor` wird fuer Persoenlichkeit, Ideale, Bindungen und Schwaechen wiederverwendet; Vorschlaege und Custom-Bloecke werden case-insensitiv dedupliziert, auf 160 Zeichen begrenzt und auf maximal 12 Bloecke je Gruppe beschraenkt. Dieses Limit entspricht dem serverseitig validierten Generation-Context.
 - Der CharacterEditor baut den Generation-Context aus Regelset, Klasse/Archetyp, Rasse/Spezies, Setting, Essenzprofil, D&D-Hintergrund, Level, Stats, Skills, Inventar, Aussehen und Trait-Gruppen. Notes sind nicht Teil des Contexts.
-- `supabase/functions/character-lore` authentifiziert serverseitig, begrenzt deklarierte Request-Groesse auf 128 KB, validiert Request-Grenzen und ruft genau einen konfigurierten Provider ueber den gemeinsamen Adapter auf. Der Prompt ist als `character-background-v1` versioniert und behandelt Character-/Lore-Daten als untrusted Prompt-Input.
+- `supabase/functions/character-lore` authentifiziert serverseitig, begrenzt sowohl deklarierte als auch tatsaechlich eingelesene Request-Groesse auf 128 KB, validiert Request-Grenzen und ruft genau einen konfigurierten Provider ueber den gemeinsamen Adapter auf. Der Prompt ist als `character-background-v1` versioniert und behandelt Character-/Lore-Daten als untrusted Prompt-Input.
 - Ein Security-Review fand zwei relevante Projekt-/World-Lore-Risiken und beide wurden vor Abschluss behoben: normale aktive Projektmitglieder waeren wegen der bestehenden GM-only-Project-RLS nicht an Lore gekommen, und ein Projekt ohne eigene Welt durfte zwischenzeitlich theoretisch mit einer fremden direkten `worldId` kombiniert werden. Die finale Edge Function verifiziert zuerst den Caller-JWT, nutzt danach den Service-Role-Key nur serverseitig fuer Lookups und erzwingt explizite GM-/aktive-Member-/World-Binding-Regeln.
 - `supabase/migrations/002_character_trait_arrays.sql` ist gegen aeltere SagaDrive-Schemata abgesichert und migriert bestehende Einzelwerte verlustfrei in Ein-Element-Arrays. Der Character-Service normalisiert waehrend der Uebergangsphase auch Legacy-Scalarwerte beim Lesen. `src/supabase/DEPLOY_V3.md` fuehrt die Migration jetzt explizit als Deploy-Schritt auf.
 - `.env.example` und README dokumentieren Ollama und OpenAI-kompatible Provider, ohne Secrets in den Client zu bringen.
-- Test Gate fuer Code HEAD `6118828aa721646059524ec1f70785bfb722acbf`: PASS. Diff-Typed-Strict-Lint: 26 TypeScript-Dateien PASS; Typecheck PASS; Vite Production Build PASS; Deno LTS `deno check` fuer vier geaenderte Edge-Function-TypeScript-Dateien PASS; Deno Prompt-Contract-Tests 4/4 PASS; Secrets-Diff-Scan PASS. Production-Dependency-Audit bleibt informational mit zwei High-Findings.
-- Die Prompt-Tests decken vollstaendigen Character-Context, setting-neutrales D&D 5.5e, autorisierten World-Lore-Kontext und die nicht-destruktive Alternativgenerierung bei vorhandenem Hintergrund ab.
+- Test Gate fuer Code HEAD `22cc7844a37f8545c43cc8bbc2c72307de7d0b22`: PASS. Diff-Typed-Strict-Lint: 26 TypeScript-Dateien PASS; Typecheck PASS; Vite Production Build PASS; Deno LTS `deno check` fuer vier geaenderte Edge-Function-TypeScript-Dateien PASS; Deno Prompt-Contract-Tests 4/4 PASS; Secrets-Diff-Scan PASS. Production-Dependency-Audit bleibt informational mit zwei High-Findings.
+- Die Prompt-Tests decken vollstaendigen Character-Context, settingneutrales D&D 5.5e, autorisierten World-Lore-Kontext und die nicht-destruktive Alternativgenerierung bei vorhandenem Hintergrund ab.
 - Browser-/Screenshot-Verifikation bleibt offen; UI-Checkboxen werden erst nach `@verify-ui` markiert.
