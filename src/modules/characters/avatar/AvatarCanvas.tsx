@@ -63,30 +63,24 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
         tabIndex={0}
       />
 
-      <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 rounded-md border border-white/10 bg-black/45 px-2.5 py-1.5 text-[11px] text-slate-200 backdrop-blur-sm">
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${
-            runtimeState.status === 'ready'
-              ? 'bg-emerald-400'
-              : runtimeState.status === 'error'
-                ? 'bg-red-400'
-                : 'animate-pulse bg-amber-400'
-          }`}
-        />
-        <span>{runtimeState.message}</span>
-      </div>
+      {runtimeState.status !== 'ready' && (
+        <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 rounded-md border border-white/10 bg-black/45 px-2.5 py-1.5 text-[11px] text-slate-200 backdrop-blur-sm">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              runtimeState.status === 'error' ? 'bg-red-400' : 'animate-pulse bg-amber-400'
+            }`}
+          />
+          <span>{runtimeState.message}</span>
+        </div>
+      )}
 
       {runtimeState.status === 'error' && (
-        <div className="pointer-events-none absolute inset-x-4 bottom-14 rounded-lg border border-red-400/30 bg-slate-950/85 p-3 text-center text-xs text-slate-200 backdrop-blur">
+        <div className="pointer-events-none absolute inset-x-4 bottom-4 rounded-lg border border-red-400/30 bg-slate-950/85 p-3 text-center text-xs text-slate-200 backdrop-blur">
           Die 3D-Runtime ist aktiv, aber das Modell konnte nicht geladen werden. Hinterlege ein selbst gehostetes Asset über
           <code className="mx-1 text-red-200">VITE_AVATAR_ASSET_BASE_URL</code>
           oder speichere eine gültige VRM/GLB-URL am Avatar.
         </div>
       )}
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-10 text-center text-xs text-slate-300">
-        Ziehen zum Drehen · Mausrad/Trackpad zum Zoomen
-      </div>
     </div>
   );
 }
