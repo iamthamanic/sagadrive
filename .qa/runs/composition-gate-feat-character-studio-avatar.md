@@ -1,41 +1,59 @@
 # Composition Gate - feat-character-studio-avatar
 
-- HEAD_SHA: 244a015c8ae8a2304b0b21cebb48867fe88e0dfd
+- HEAD_SHA: 96dc08c0a49694b72895e0b099b8f86da34f401e
 - BASE_SHA: 7f6f096dc5c6a0ff280d901cf262fa533814085f
 - Date: 2026-08-25
 - Verdict: CLEAR
 
 ## Event
-An authenticated user (1) generates exactly one character-background draft via the Character Lore Edge Function, optionally accepts it locally, and (2) persists character traits/fields once through the normal character save. Avatar/VRM preview and ruleset field switching are local UI hops without additional side-effects.
+Ein authentifizierter User klickt im BG-Tab genau einmal auf `Generieren`. Optional waehlt er vorher ein sichtbares Projekt als Kampagnen-Lore. Der Request darf fuer diese User-ID genau einen persistenten Quota-Slot konsumieren und bei gueltiger Autorisierung genau einen LLM-Provider-Aufruf erzeugen. Das Ergebnis bleibt ein lokaler Entwurf, bis der User es explizit uebernimmt; Character-Persistenz ist ein separater Save-Flow.
 
 ## Hop chain
-`CharacterEditor` / `CharacterBackgroundComposer` → `characterLoreService.generateBackground` → shared `supabase` client → environment-selected Supabase gateway (`VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` for self-host, hosted fallback only when both are absent) → Supabase Edge Function `character-lore` → JWT verify (`auth.getUser`) → request size/type validation + per-user in-memory rate limit → optional service-role project/world lookup with GM/active-member/world-binding checks → versioned prompt (`character-background-v1`) → exactly one configured LLM provider call → draft JSON → explicit UI `Übernehmen` → separate `characterService` create/update → one `characters` row (incl. trait arrays via migration `002_character_trait_arrays.sql`).
+`CharacterEditor` → `CharacterBackgroundComposer` → optionale Projektwahl aus `useProjects` (`projectId` + verknuepfte `worldId`, nur untrusted Kontext-Hinweis) → `characterLoreService.generateBackground` → gemeinsamer Supabase-Client → Edge Function `character-lore` → JWT-Verifikation und serverseitig abgeleitete `userId` → service-role-only RPC `consume_character_lore_rate_limit` → atomarer Postgres-Upsert auf genau eine Rate-Limit-Zeile pro User → Request-/UUID-Validierung → optionale serverseitige Projektmitgliedschaft-/GM-/World-Binding-Pruefung → versionierter Prompt `character-background-v1` → genau ein konfigurierter Provider-Aufruf → Draft JSON → lokaler KI-Entwurf → explizites `Uebernehmen` → separater normaler Character-Save.
 
-Self-host deployment hop:
-`.env.example` exposes the paired Vite Supabase gateway/anon-key settings and Character AI/Ollama settings → `.env` → Vite client configuration plus `docker-compose.yml` → `supabase-edge.environment` → `Deno.env` provider resolution. The service-role key and provider API key remain server-side inside the Edge Runtime.
+Persistente Quota:
+`supabase/migrations/003_character_lore_rate_limits.sql` → Tabelle `character_lore_rate_limits` mit `user_id` als Primary Key → `SECURITY DEFINER` RPC mit fixiertem `search_path` → EXECUTE nur fuer `service_role`; `PUBLIC`, `anon` und `authenticated` sind explizit gesperrt. Der Edge-Caller setzt `p_user_id` ausschliesslich aus dem bereits verifizierten JWT. Der atomare `INSERT ... ON CONFLICT DO UPDATE` serialisiert konkurrierende Updates fuer dieselbe User-Zeile; mehrere Edge-Instanzen teilen deshalb dasselbe Fenster statt jeweils einen eigenen In-Memory-Counter zu fuehren.
 
-Parallel local/tooling hops (no provider/DB fan-out):
-- `AvatarCanvas` / `CharacterStudioRuntime` → local Three.js/VRM WebGL preview only
-- Ruleset dropdown → `characterCreation` option maps → controlled field reset in editor state
-- `sonner.tsx` explicit `CSSProperties` import → typing-only; no service, persistence, identity, or side-effect hop
-- `scripts/test-gate.mjs` larger bounded Git output buffer → QA tooling only; the full `base..HEAD` secrets scan remains unchanged in scope
+Projekt-/Welt-Lore:
+Die Browserauswahl ist keine Autorisierung. `projectId`/`worldId` werden serverseitig erneut geprueft. Projektzugriff erfordert GM oder aktive Mitgliedschaft. Wenn Projekt und Welt gemeinsam gesendet werden, muss `worldId === project.world_id` gelten. Direkter Welt-Kontext ohne Projekt ist nur fuer den World-Creator erlaubt. Ohne Auswahl bleibt die Generierung setting-neutral.
+
+Parallel/local hops ohne Provider-Fan-out:
+- Avatar/VRM Preview → nur lokales Three.js/WebGL
+- Ruleset-Switch → kontrollierter React-State
+- Beispielrotation / Trait-Chips → lokaler React-State
+- Project-Select → aendert nur den Generation-Context; kein Character-Save und kein Provider-Aufruf
+- Browser-E2E-/Test-Gate-Tooling → QA-only
 
 ## Simulations
 | Case | Intended | Composed | Result |
 |------|----------|----------|--------|
-| N-actors | One Generieren click → one provider call → one draft. Trait count / inventory / project membership must not multiply generation or saves. | `generateBackground` invokes `character-lore` once through the same Supabase singleton used by auth. Edge Function performs one provider call after auth/validation. Rate limit is per userId. Character save is one payload write. Avatar/ruleset/toaster/tooling changes do not call the LLM. Ten clicks remain ten independent requests. | pass |
-| Invalid/missing | Bad auth, incomplete Supabase client config, oversized body, invalid ruleset/UUID, unauthorized lore, or missing provider config fail closed; never overwrite existing story or leak foreign world lore. | Frontend requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` together. Edge returns 401 without JWT, 413 above 128 KB, 400 on invalid payload. Project/world lore uses service role only after JWT + explicit membership/world binding. Missing provider returns `not-configured`. UI keeps current story on error and requires explicit accept. | pass |
-| Two consumers / crash | No queue/outbox; crash after provider must not persist a draft; retries are new intentional requests; no double DB write from generation alone. | No worker/outbox. Generation persists nothing. Draft is local until Übernehmen. Persistence only via separate save. Concurrent editor tabs can race on save (last-write-wins) but do not fan out provider side-effects. | pass |
+| N-actors | Zehn gleichzeitige Edge-Instanzen fuer denselben User duerfen nicht zehn unabhaengige Minutenkontingente besitzen. Ein Klick darf hoechstens einen Provider-Aufruf erzeugen. | Alle Instanzen schreiben dieselbe Primary-Key-Zeile `user_id`. Der atomare Postgres-Upsert aktualisiert den gemeinsamen Counter. `request_count <= limit` entscheidet den einzelnen Request. Trait-Anzahl, Inventar, Projektmitglieder oder eine verknuepfte Welt multiplizieren den Provider-Hop nicht. | pass |
+| Invalid/missing | Fehlende Auth, kaputte Quota-Infrastruktur, ausgeschoepftes Limit, ungueltige Payloads oder fremde Projekt-/Welt-IDs muessen vor einem Provider-Fan-out scheitern. | Ohne JWT: 401. Ohne Service-Role bzw. bei nicht erreichbarer/ungueltiger Rate-Limit-RPC: 503 fail-closed. Quota ausgeschoepft: 429. Ungueltige UUID/Payload: 400. Fremde Projekt-/Welt-Lore wird durch Membership/GM/Creator + World-Binding abgewiesen. Browser-Projektlistenfehler laesst den neutralen `Kein Projekt`-Pfad bestehen. | pass |
+| Two consumers / crash | Zwei parallele Consumer duerfen das gleiche User-Limit nicht jeweils lokal verbrauchen. Ein Crash darf keine doppelten Provider- oder Character-Writes erzeugen. | Die DB-Zeile ist die gemeinsame Serialisierungsstelle. Ein Crash nach erfolgreichem Quota-Consume kann konservativ genau einen Slot verbrauchen, erzeugt aber keinen zweiten Slot, keinen persistierten Draft und keinen Character-Write. Retry ist ein neuer bewusster Request. Generation besitzt keine Queue/Outbox; Draft bleibt lokal bis zur expliziten Uebernahme. | pass |
 
 ## Flags
-| Tag | Severity | Hops | Why local review missed it | Fix |
-|-----|----------|------|----------------------------|-----|
-| `rate-limit:` | note | Edge Function → provider | In-memory Map is instance-local, not a durable global quota. | Accepted for prep slice; persistent limiter before paid production. Documented via `CHARACTER_AI_RATE_LIMIT_PER_MINUTE`. |
-| `dead-path:` | note | Editor → optional project/world IDs | Standalone editor currently does not pass `projectId`/`worldId`, so authorized lore enrichment is dormant. | Pass IDs when opened from project context; no semantic mismatch today. |
+| Tag | Severity | Hops | Finding | Resolution |
+|-----|----------|------|---------|------------|
+| `rate-limit:` | resolved | Edge → DB → provider | Der vorherige In-Memory-Map-Counter war instanzlokal und konnte bei horizontaler Skalierung vervielfacht werden. | Migration 003 + service-role-only atomare Postgres-RPC; Deno-Tests pruefen RPC Contract, Exhaustion und fail-closed Fehlerpfade. |
+| `dead-path:` | resolved | Editor → project/world lore | Der standalone Editor hat vorher keine `projectId`/`worldId` geliefert. | BG-Tab bietet nun optional `Kampagnen-Lore`; Auswahl sendet Projekt plus verknuepfte Welt, serverseitige AuthZ bleibt kanonisch. |
+| `quota-loss-on-crash:` | note | DB quota → provider | Crash direkt nach Quota-Consume kann einen Slot ohne fertigen Draft verbrauchen. | Bewusst konservativ/fail-safe: kein doppelter Provider-Call, kein Kosten-Bypass, keine Persistenz. Fuer ein Minutenlimit ist der temporaere Slotverlust akzeptabel. |
 
-PR review follow-ups are incorporated in this proof: the central Supabase singleton now honors the self-host environment instead of forcing the hosted project URL; `.env.example` exposes the paired browser settings; and Docker Compose explicitly forwards Character AI/Ollama settings into the Edge Runtime. CORS remains fail-closed: no default `*`; allowlist CSV or localhost-only.
+## Architecture review
+Die persistente DB-Quota ersetzt keinen eigenstaendigen Cache/Queue-Service und nutzt die bereits kanonische Postgres-Trust-Boundary. Das ist fuer diesen kleinen, per-User atomaren Counter weniger Betriebsaufwand als Redis plus eigene Konsistenz-/Failover-Semantik. Die relevante System-Design-Eigenschaft ist Atomicity: konkurrierende Counter-Updates muessen als unteilbare DB-Operation behandelt werden (System Design Reference, S. 111). Die Modulgrenze bleibt eng: UI kennt nur Projekt-IDs, die Edge Function besitzt AuthZ/Secrets, der Rate-Limit-Helper versteckt den RPC-Transport. Der Composer importiert `useProjects` direkt statt das defekte Legacy-Barrel in die Character-Domain zu ziehen.
 
-No open blocker/flag changes cardinality, destination, tenant, or identity for the current branch scope.
+## Verification evidence
+- Test Gate auf `96dc08c0a49694b72895e0b099b8f86da34f401e`: PASS
+- Typed-strict lint: PASS (31 geaenderte TypeScript-Dateien)
+- Typecheck: PASS
+- Vite production build: PASS
+- Deno check: PASS (6 geaenderte Edge-Function-TypeScript-Dateien)
+- Deno tests: 8/8 PASS, davon 4 neue persistente Rate-Limit-Contract-/Fail-Closed-Tests
+- Secrets diff scan: PASS
+- Production dependency audit (`npm audit --omit=dev`): critical=0, high=0, moderate=0, low=0
+- Browser E2E auf demselben SHA: 3/3 PASS in Chromium; Character-Editor-Test deckt sichtbare neutrale `Kampagnen-Lore`-Auswahl und den nicht-destruktiven Generate-Status ab
+- Browser evidence artifact: `character-editor-browser-evidence`, Artifact ID `9576116633`
+
+No open composition blocker changes cardinality, destination, tenant, identity, or persistence semantics for the requested scope.
 
 ## Skip reason
 n/a
