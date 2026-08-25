@@ -354,10 +354,10 @@ async function getAuthorizedReferenceContext(
     if (!projectAuthorized) throw new Error('Project access denied');
   }
 
-  const worldId = directWorldId || project?.world_id || undefined;
-  if (directWorldId && project?.world_id && directWorldId !== project.world_id) {
+  if (projectId && directWorldId && directWorldId !== project?.world_id) {
     throw new Error('World does not belong to project');
   }
+  const worldId = directWorldId || project?.world_id || undefined;
 
   let world: WorldRow | null = null;
   if (worldId) {
