@@ -5,6 +5,13 @@
 import { supabase } from '../../../lib/supabase';
 import type { ProjectMemberDto, JoinProjectDto } from '../types/project.types';
 
+function requireUuid(value: unknown, operation: string): string {
+  if (typeof value !== 'string' || !/^[0-9a-f-]{36}$/i.test(value)) {
+    throw new Error(`${operation} returned an invalid identifier`);
+  }
+  return value;
+}
+
 export const projectMemberService = {
   /**
    * Get all members of a project
@@ -21,39 +28,22 @@ export const projectMemberService = {
   },
 
   /**
-   * Join a project by code
+   * Join a project by its secret code.
+   * Membership identity/status is created by a SECURITY DEFINER RPC, never by a client row insert.
    */
-  async joinByCode(dto: JoinProjectDto, userId: string): Promise<ProjectMemberDto> {
-    // First, find the project by code
-    const { data: project, error: projectError } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('code', dto.code)
-      .single();
+  async joinByCode(dto: JoinProjectDto): Promise<ProjectMemberDto> {
+    const { data: projectId, error: joinError } = await supabase.rpc('join_project_by_code', {
+      p_code: dto.code.toUpperCase(),
+      p_character_id: dto.character_id || null,
+    });
 
-    if (projectError) throw new Error('Invalid project code');
+    if (joinError) throw new Error(`Beitritt fehlgeschlagen: ${joinError.message}`);
+    const joinedProjectId = requireUuid(projectId, 'join_project_by_code');
 
-    // Check if already a member
-    const { data: existing } = await supabase
-      .from('project_members')
-      .select('id')
-      .eq('project_id', project.id)
-      .eq('user_id', userId)
-      .single();
-
-    if (existing) throw new Error('Already a member of this project');
-
-    // Join as player
     const { data, error } = await supabase
       .from('project_members')
-      .insert({
-        project_id: project.id,
-        user_id: userId,
-        character_id: dto.character_id || null,
-        role: 'player',
-        status: 'active',
-      })
-      .select()
+      .select('*')
+      .eq('project_id', joinedProjectId)
       .single();
 
     if (error) throw error;
@@ -61,19 +51,22 @@ export const projectMemberService = {
   },
 
   /**
-   * Update member's character
+   * Update only the current user's selected character for an active membership.
+   * Protected membership fields (project/user/role/status) stay server/GM controlled.
    */
-  async updateCharacter(
-    projectId: string,
-    userId: string,
-    characterId: string
-  ): Promise<ProjectMemberDto> {
+  async updateCharacter(projectId: string, characterId: string): Promise<ProjectMemberDto> {
+    const { data: memberId, error: updateError } = await supabase.rpc('set_my_project_character', {
+      p_project_id: projectId,
+      p_character_id: characterId,
+    });
+
+    if (updateError) throw new Error(`Charakter konnte nicht aktualisiert werden: ${updateError.message}`);
+    const updatedMemberId = requireUuid(memberId, 'set_my_project_character');
+
     const { data, error } = await supabase
       .from('project_members')
-      .update({ character_id: characterId })
-      .eq('project_id', projectId)
-      .eq('user_id', userId)
-      .select()
+      .select('*')
+      .eq('id', updatedMemberId)
       .single();
 
     if (error) throw error;
@@ -81,7 +74,7 @@ export const projectMemberService = {
   },
 
   /**
-   * Leave a project
+   * Leave a project. Kicked memberships remain as denial records and cannot be self-deleted by RLS.
    */
   async leave(projectId: string, userId: string): Promise<void> {
     const { error } = await supabase
@@ -94,7 +87,7 @@ export const projectMemberService = {
   },
 
   /**
-   * Get projects where user is a member
+   * Get active projects where user is a member
    */
   async getMyProjects(userId: string): Promise<ProjectMemberDto[]> {
     const { data, error } = await supabase
