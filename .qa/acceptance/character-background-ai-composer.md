@@ -61,7 +61,7 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - [ ] Keine neue Frontend-UI-Library und keine neue npm-Dependency.
 
 ## Composition Gate
-- Code HEAD: `6195aafb4bfe313449a94eb5fc7767f851875545`
+- Code HEAD: `996f6ed64107705103910c1a9d05364718dd4a8a`
 - Feature BASE: `9f0ea4f858e48e73929175d36c36eeec25765a76`
 - Verdict: `CLEAR`
 - Proof: `.qa/runs/composition-gate-character-background-ai-composer.md`
@@ -73,11 +73,11 @@ Browser-Verifikation erforderlich fuer BG leer mit Beispiel, Trait-Popover, uebe
 ## Implementation Notes
 - `src/modules/characters/lore/` enthaelt den typisierten Character-Lore-Context, exakt zehn dynamische lokale Beispiele, regelsetabhaengige Trait-Vorschlaege und den Frontend-Service.
 - `CharacterBackgroundComposer` zeigt `Generieren`, rotiert Beispiele alle fuenf Sekunden und haelt KI-Ergebnisse als separate Variante mit explizitem `Uebernehmen`/`Verwerfen`.
-- `CharacterTraitEditor` wird fuer Persoenlichkeit, Ideale, Bindungen und Schwaechen wiederverwendet; Vorschlaege und Custom-Bloecke werden dedupliziert und auf 160 Zeichen begrenzt.
+- `CharacterTraitEditor` wird fuer Persoenlichkeit, Ideale, Bindungen und Schwaechen wiederverwendet; Vorschlaege und Custom-Bloecke werden case-insensitiv dedupliziert, auf 160 Zeichen begrenzt und auf maximal 12 Bloecke je Gruppe beschraenkt. Dieses Limit entspricht dem serverseitig validierten Generation-Context.
 - Der CharacterEditor baut den Generation-Context aus Regelset, Klasse/Archetyp, Rasse/Spezies, Setting, Essenzprofil, D&D-Hintergrund, Level, Stats, Skills, Inventar, Aussehen und Trait-Gruppen. Notes sind nicht Teil des Contexts.
 - `supabase/functions/character-lore` authentifiziert serverseitig, validiert Request-Grenzen, prueft optionalen Projekt-/Weltzugriff und ruft genau einen konfigurierten Provider ueber den gemeinsamen Adapter auf. Der Prompt ist als `character-background-v1` versioniert und behandelt Character-/Lore-Daten als untrusted Prompt-Input.
-- `supabase/migrations/002_character_trait_arrays.sql` ist gegen aeltere SagaDrive-Schemata abgesichert und migriert bestehende Einzelwerte verlustfrei in Ein-Element-Arrays. Der Character-Service normalisiert waehrend der Uebergangsphase auch Legacy-Scalarwerte beim Lesen.
+- `supabase/migrations/002_character_trait_arrays.sql` ist gegen aeltere SagaDrive-Schemata abgesichert und migriert bestehende Einzelwerte verlustfrei in Ein-Element-Arrays. Der Character-Service normalisiert waehrend der Uebergangsphase auch Legacy-Scalarwerte beim Lesen. `src/supabase/DEPLOY_V3.md` fuehrt die Migration jetzt explizit als Deploy-Schritt auf.
 - `.env.example` und README dokumentieren Ollama und OpenAI-kompatible Provider, ohne Secrets in den Client zu bringen.
-- Test Gate fuer Code HEAD `6195aafb4bfe313449a94eb5fc7767f851875545`: PASS. Diff-Typed-Strict-Lint: 26 TypeScript-Dateien PASS; Typecheck PASS; Vite Production Build PASS; Secrets-Diff-Scan PASS. Production-Dependency-Audit bleibt informational mit zwei High-Findings.
-- Aktuelle Testkonfiguration kompiliert `supabase/functions/**` nicht mit dem Frontend-`tsconfig`; eine separate Deno-Compile-Pruefung ist deshalb noch kein Bestandteil des Test Gate.
+- Test Gate fuer Code HEAD `996f6ed64107705103910c1a9d05364718dd4a8a`: PASS. Diff-Typed-Strict-Lint: 26 TypeScript-Dateien PASS; Typecheck PASS; Vite Production Build PASS; Deno LTS `deno check` fuer vier geaenderte Edge-Function-TypeScript-Dateien PASS; Deno Prompt-Contract-Tests 4/4 PASS; Secrets-Diff-Scan PASS. Production-Dependency-Audit bleibt informational mit zwei High-Findings.
+- Die Prompt-Tests decken vollstaendigen Character-Context, setting-neutrales D&D 5.5e, autorisierten World-Lore-Kontext und die nicht-destruktive Alternativgenerierung bei vorhandenem Hintergrund ab.
 - Browser-/Screenshot-Verifikation bleibt offen; UI-Checkboxen werden erst nach `@verify-ui` markiert.
