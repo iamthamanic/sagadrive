@@ -62,7 +62,7 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - [ ] Keine neue Frontend-UI-Library und keine neue npm-Dependency.
 
 ## Composition Gate
-- Code HEAD: `b2a6e86a411a53ddad0c2175090f21b0fc9888e4`
+- Code HEAD: `6500adcafd570fe63c97e4534d2f1286f61150bc`
 - Feature BASE: `9f0ea4f858e48e73929175d36c36eeec25765a76`
 - Verdict: `CLEAR`
 - Proof: `.qa/runs/composition-gate-character-background-ai-composer.md`
@@ -73,13 +73,13 @@ Browser-Verifikation erforderlich fuer BG leer mit Beispiel, Trait-Popover, uebe
 
 ## Implementation Notes
 - `src/modules/characters/lore/` enthaelt den typisierten Character-Lore-Context, exakt zehn dynamische lokale Beispiele, regelsetabhaengige Trait-Vorschlaege und den Frontend-Service. Die Beispiele wurden auch fuer den vollstaendig leeren Initialzustand sprachlich geprueft.
-- `CharacterBackgroundComposer` zeigt `Generieren`, rotiert Beispiele alle fuenf Sekunden mit einem 180-ms-Fade und haelt KI-Ergebnisse als separate Variante mit explizitem `Uebernehmen`/`Verwerfen`. Der Beispiel-Overlaytext ist pointer-events-frei und blockiert das Textarea nicht.
+- `CharacterBackgroundComposer` zeigt `Generieren`, rotiert Beispiele alle fuenf Sekunden mit einem 180-ms-Fade und haelt KI-Ergebnisse als separate Variante mit explizitem `Uebernehmen`/`Verwerfen`. Der Beispiel-Overlaytext ist pointer-events-frei und blockiert das Textarea nicht. Bei `prefers-reduced-motion` wird die Fade-Transition deaktiviert, der 5-Sekunden-Inhaltswechsel bleibt erhalten.
 - `CharacterTraitEditor` wird fuer Persoenlichkeit, Ideale, Bindungen und Schwaechen wiederverwendet; Vorschlaege und Custom-Bloecke werden case-insensitiv dedupliziert, auf 160 Zeichen begrenzt und auf maximal 12 Bloecke je Gruppe beschraenkt. Dieses Limit entspricht dem serverseitig validierten Generation-Context.
 - Der CharacterEditor baut den Generation-Context aus Regelset, Klasse/Archetyp, Rasse/Spezies, Setting, Essenzprofil, D&D-Hintergrund, Level, Stats, Skills, Inventar, Aussehen und Trait-Gruppen. Notes sind nicht Teil des Contexts.
 - `supabase/functions/character-lore` authentifiziert serverseitig, begrenzt sowohl deklarierte als auch tatsaechlich eingelesene Request-Groesse auf 128 KB, validiert Request-Grenzen und ruft genau einen konfigurierten Provider ueber den gemeinsamen Adapter auf. Der Prompt ist als `character-background-v1` versioniert und behandelt Character-/Lore-Daten als untrusted Prompt-Input.
 - Ein Security-Review fand zwei relevante Projekt-/World-Lore-Risiken und beide wurden vor Abschluss behoben: normale aktive Projektmitglieder waeren wegen der bestehenden GM-only-Project-RLS nicht an Lore gekommen, und ein Projekt ohne eigene Welt durfte zwischenzeitlich theoretisch mit einer fremden direkten `worldId` kombiniert werden. Die finale Edge Function verifiziert zuerst den Caller-JWT, nutzt danach den Service-Role-Key nur serverseitig fuer Lookups und erzwingt explizite GM-/aktive-Member-/World-Binding-Regeln.
 - `supabase/migrations/002_character_trait_arrays.sql` ist gegen aeltere SagaDrive-Schemata abgesichert und migriert bestehende Einzelwerte verlustfrei in Ein-Element-Arrays. Der Character-Service normalisiert waehrend der Uebergangsphase auch Legacy-Scalarwerte beim Lesen. `src/supabase/DEPLOY_V3.md` fuehrt die Migration jetzt explizit als Deploy-Schritt auf.
 - `.env.example` und README dokumentieren Ollama und OpenAI-kompatible Provider, ohne Secrets in den Client zu bringen.
-- Test Gate fuer Code HEAD `b2a6e86a411a53ddad0c2175090f21b0fc9888e4`: PASS. Diff-Typed-Strict-Lint: 26 TypeScript-Dateien PASS; Typecheck PASS; Vite Production Build PASS; Deno LTS `deno check` fuer vier geaenderte Edge-Function-TypeScript-Dateien PASS; Deno Prompt-Contract-Tests 4/4 PASS; Secrets-Diff-Scan PASS. Production-Dependency-Audit bleibt informational mit zwei High-Findings.
+- Test Gate fuer Code HEAD `6500adcafd570fe63c97e4534d2f1286f61150bc`: PASS. Diff-Typed-Strict-Lint: 26 TypeScript-Dateien PASS; Typecheck PASS; Vite Production Build PASS; Deno LTS `deno check` fuer vier geaenderte Edge-Function-TypeScript-Dateien PASS; Deno Prompt-Contract-Tests 4/4 PASS; Secrets-Diff-Scan PASS. Production-Dependency-Audit bleibt informational mit zwei High-Findings.
 - Die Prompt-Tests decken vollstaendigen Character-Context, settingneutrales D&D 5.5e, autorisierten World-Lore-Kontext und die nicht-destruktive Alternativgenerierung bei vorhandenem Hintergrund ab.
 - Browser-/Screenshot-Verifikation bleibt offen; UI-Checkboxen werden erst nach `@verify-ui` markiert.
