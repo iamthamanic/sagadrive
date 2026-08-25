@@ -44,12 +44,16 @@ SagaDrive soll die beiden ECC-Gates `@test-gate` und `@composition-gate` dauerha
 - Bestehende npm-Audit-Findings sind ein separates Security-/Dependency-Ticket; dieser Slice macht sie sichtbar, fuehrt aber keinen unkontrollierten `npm audit fix --force` aus.
 
 ## Composition Gate
-Pending implementation/verification for this infrastructure ticket.
+- Proof: `.qa/runs/composition-gate-ci-test-composition-gates.md`
+- Verdict fuer diesen Infrastruktur-Slice: `SKIPPED`, da nur CI/Tooling/QA-Dokumentation betroffen ist und kein SagaDrive-Business-Event ueber mehrere Hops veraendert wird.
+- CI selbst erzwingt fuer spaetere riskante Diffs einen frischen `CLEAR`/`SKIPPED`-Proof; stale Proofs mit nachfolgenden Nicht-QA-Aenderungen werden abgelehnt.
 
 ## Screenshots
 Keine UI-Aenderung; Browser-Verifikation ist fuer diesen Slice nicht erforderlich.
 
 ## Implementation Notes
-- Files touched: pending.
-- Tests/checks: pending.
-- Known limitations: pending.
+- Files touched: `.github/workflows/verify.yml`, `.qa/project.yaml`, `package.json`, `README.md`, `scripts/test-gate.mjs`, `scripts/composition-gate.mjs`, `.qa/runs/composition-gate-ci-test-composition-gates.md`, dieses Acceptance-Artefakt.
+- Test Gate: GitHub Actions Run `32816339999`, Job `Test Gate` PASS. `npm run test-gate` fuehrte `npm run checks`, Secrets-Diff-Scan und informationalen Production-Dependency-Audit aus. Lint PASS (9 geaenderte TS-Dateien), Typecheck PASS (9), Vite Build PASS.
+- Composition Gate: GitHub Actions Run `32816339999`, Job `Composition Gate` PASS; Push-Diff war Docs/Tooling-only und wurde mit begruendetem `SKIPPED` bewertet.
+- Dependency audit: `npm audit --omit=dev` meldete informational 2 high, 0 critical. `npm ci` meldet weiterhin insgesamt 6 bekannte Findings (5 high, 1 critical inkl. Dev-Dependencies); deren Bereinigung bleibt separates Follow-up.
+- Known limitation: Die semantische Multi-Hop-Analyse selbst ist nicht als LLM in CI eingebaut. Stattdessen blockiert CI riskante Diffs ohne einen zuvor erzeugten, frischen Composition-Proof. Das vermeidet API-Key-/Paid-Service-Abhaengigkeiten und verhindert vorgetaeuschte semantische Verifikation.
