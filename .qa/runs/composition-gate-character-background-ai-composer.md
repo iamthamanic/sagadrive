@@ -1,6 +1,6 @@
 # Composition Gate - character-background-ai-composer
 
-- HEAD_SHA: 22cc7844a37f8545c43cc8bbc2c72307de7d0b22
+- HEAD_SHA: b2a6e86a411a53ddad0c2175090f21b0fc9888e4
 - BASE_SHA: 9f0ea4f858e48e73929175d36c36eeec25765a76
 - Date: 2026-08-25
 - Verdict: CLEAR
@@ -23,7 +23,7 @@ Trait persistence follows: `CharacterTraitEditor` -> CharacterEditor state -> on
 | Two consumers / crash | Concurrent/retried generation must not create a persistent duplicate side effect or silently overwrite the current story. | There is no queue, outbox, worker, or persistent generation record. Each HTTP request is an explicit user-requested variant. A failed/crashed provider request persists nothing. Successful output is held as a local draft until `Übernehmen`; a second intentional request represents a second intentional variant. Character persistence happens only through the separate normal save action. | pass |
 
 ## Validation
-- GitHub Test Gate on `22cc7844a37f8545c43cc8bbc2c72307de7d0b22`: PASS.
+- GitHub Test Gate on `b2a6e86a411a53ddad0c2175090f21b0fc9888e4`: PASS.
 - Diff Typed-Strict lint: 26 changed TypeScript files PASS.
 - Frontend TypeScript check: PASS.
 - Vite production build: PASS.
