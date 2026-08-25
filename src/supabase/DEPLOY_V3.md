@@ -31,12 +31,15 @@ Führe die Migrationen in dieser Reihenfolge aus:
 1. `supabase/migrations/002_character_trait_arrays.sql`
 2. `supabase/migrations/003_character_lore_rate_limits.sql`
 3. `supabase/migrations/004_project_membership_security.sql`
+4. `supabase/migrations/005_character_ruleset_metadata.sql`
 
 `002_character_trait_arrays.sql` ist sowohl für bestehende als auch für frisch angelegte SagaDrive-Datenbanken vorgesehen. Sie stellt `personality_traits`, `ideals`, `bonds` und `flaws` auf die vom CharacterEditor verwendeten Textbaustein-Arrays um und bewahrt vorhandene Einzelwerte als Ein-Element-Arrays.
 
 `003_character_lore_rate_limits.sql` legt den persistenten Character-Lore-Rate-Limiter an. Die Tabelle ist nicht direkt für `anon` oder `authenticated` zugänglich; konsumiert wird das atomare Minutenkontingent ausschließlich über die `service_role`-RPC `consume_character_lore_rate_limit`. Die Migration muss vor dem produktiven Deploy der `character-lore` Edge Function aktiv sein, da die Funktion bei fehlendem persistentem Limiter bewusst fail-closed reagiert.
 
-`004_project_membership_security.sql` härtet bestehende Installationen nach: Browser dürfen `project_id`, `user_id`, `role` und `status` einer Mitgliedschaft nicht mehr als Autorisierungsgrant selbst schreiben. Beitritt per Geheimcode läuft über `join_project_by_code`, die eigene Charakterzuordnung über `set_my_project_character`. Gekickte Mitgliedschaften bleiben als server-/GM-kontrollierte Sperrdatensätze erhalten und können nicht selbst reaktiviert oder gelöscht werden. Die Migration normalisiert außerdem die Projekt-Sichtbarkeit auf GM oder aktive Mitgliedschaft.
+`004_project_membership_security.sql` härtet bestehende Installationen nach: Browser dürfen `project_id`, `user_id`, `role` und `status` einer Mitgliedschaft nicht mehr als Autorisierungsgrant selbst schreiben. Beitritt per Geheimcode läuft über `join_project_by_code`, die eigene Charakterzuordnung über `set_my_project_character`. Gekickte Mitgliedschaften bleiben als server-/GM-kontrollierte Sperrdatensätze erhalten und können nicht selbst reaktiviert oder gelöscht werden. Die Migration normalisiert außerdem die Projekt-Sichtbarkeit auf GM oder aktive Mitgliedschaft, ersetzt Legacy-Ressourcen-Policies durch aktive Membership-Semantik und erzwingt eine case-insensitiv eindeutige Projektcode-Identität.
+
+`005_character_ruleset_metadata.sql` persistiert das im CharacterEditor ausgewählte Regelset separat als `ruleset_key` und den D&D-5.5e-Hintergrund als `dnd_background`. Bestehende Charaktere werden rückwärtskompatibel als `sagadrive-core` behandelt. Beim Wechsel zurück auf SagaDrive Core wird ein eventuell vorhandener D&D-Hintergrund entfernt, damit keine regelsetfremden Metadaten erhalten bleiben.
 
 ---
 
@@ -161,7 +164,11 @@ Gehe zu **Table Editor** und prüfe, ob alle Tabellen existieren:
 - ✅ ai_context
 - ✅ character_lore_rate_limits
 
-Prüfe bei `characters` zusätzlich, dass `personality_traits`, `ideals`, `bonds` und `flaws` als Text-Arrays vorliegen.
+Prüfe bei `characters` zusätzlich:
+
+- `personality_traits`, `ideals`, `bonds` und `flaws` sind Text-Arrays.
+- `ruleset_key` existiert, ist nicht `NULL` und enthält nur `sagadrive-core` oder `dnd-5.5e`.
+- `dnd_background` existiert als separates optionales Textfeld und wird nicht mit `background_story` vermischt.
 
 Prüfe anschließend:
 
@@ -169,6 +176,7 @@ Prüfe anschließend:
 - `join_project_by_code` und `set_my_project_character` existieren und sind für `authenticated`, nicht für `anon`, freigegeben.
 - Es existiert keine RLS-Policy mehr, mit der ein User seinen eigenen `project_members.status`, `role` oder `project_id` direkt aktualisieren kann.
 - Projektzugriff für Spieler basiert auf `status = 'active'`; eine gekickte/inaktive Mitgliedschaft ist kein Autorisierungsgrant.
+- Projektcodes sind nach `UPPER(BTRIM(code))` eindeutig.
 
 ---
 
@@ -178,8 +186,9 @@ Prüfe anschließend:
 2. Gehe zu Dashboard
 3. Öffne den CharacterEditor und den BG-Tab
 4. Prüfe, dass `Kampagnen-Lore` ohne Auswahl setting-neutral bleibt und ein berechtigtes aktives Projekt auswählbar ist
-5. Teste Beitritt per Projektcode und stelle sicher, dass `project_members` nicht direkt vom Browser geschrieben werden muss
-6. Fehler sollten weg sein! ✅
+5. Wechsle im Info-Tab auf D&D 5.5e, wähle Klasse, Spezies und Hintergrund und speichere den Charakter. Prüfe, dass `ruleset_key = dnd-5.5e` und `dnd_background` separat gespeichert werden.
+6. Teste Beitritt per Projektcode und stelle sicher, dass `project_members` nicht direkt vom Browser geschrieben werden muss
+7. Fehler sollten weg sein! ✅
 
 ---
 
@@ -188,6 +197,7 @@ Prüfe anschließend:
 Du hast jetzt:
 - ✅ Komplettes D&D-System
 - ✅ Flexible Rulesets
+- ✅ Regelset- und D&D-Hintergrund-Persistenz pro Charakter
 - ✅ Character System (PC/NPC/Companion/Monster)
 - ✅ Projects & Sessions
 - ✅ Server-/GM-kontrollierte Projektmitgliedschaft
