@@ -33,7 +33,7 @@ function getWorldFrame(context: CharacterLoreContext): string {
 }
 
 export function buildCharacterBackgroundExamples(context: CharacterLoreContext): string[] {
-  const name = context.name.trim() || 'Dieser Charakter';
+  const name = context.name.trim() || 'der Charakter';
   const role = context.characterClass.trim() || (context.ruleset === 'dnd-5.5e' ? 'Abenteurer' : 'ungebundener Archetyp');
   const origin = context.raceOrSpecies.trim() || 'unbekannter Herkunft';
   const background = context.dndBackground?.trim() || 'einer einfachen Herkunft';
@@ -44,19 +44,19 @@ export function buildCharacterBackgroundExamples(context: CharacterLoreContext):
   const ideal = joinTrait(context.traits.ideals, 'dem Wunsch, selbst über den eigenen Weg zu bestimmen');
   const bond = joinTrait(context.traits.bonds, 'einer Person, die niemals zurückgelassen werden darf');
   const flaw = joinTrait(context.traits.flaws, 'der Neigung, Risiken zu spät ernst zu nehmen');
-  const ability = context.abilities[0]?.name || 'einer ungewöhnlichen Begabung';
-  const item = context.inventory[0]?.name || 'einem Erinnerungsstück aus der Vergangenheit';
+  const ability = context.abilities[0]?.name || 'Eine ungewöhnliche Begabung';
+  const item = context.inventory[0]?.name || 'Ein Erinnerungsstück aus der Vergangenheit';
 
   return [
     `${name} wuchs als ${origin} in ${worldFrame} auf. Schon früh zeigte sich, dass ${role} weniger eine Berufung als eine Antwort auf die Umstände werden würde.`,
-    `Ein einzelnes Ereignis veränderte ${name}s bisherigen Weg vollständig. Seitdem verbindet sich die eigene Geschichte mit ${ideal} und der Frage, wie weit man dafür gehen darf.`,
+    `Ein einzelnes Ereignis veränderte den bisherigen Weg von ${name} vollständig. Seitdem verbindet sich die eigene Geschichte mit ${ideal} und der Frage, wie weit man dafür gehen darf.`,
     `${name} lernte früh, sich auf ${dominantAttribute} zu verlassen. Was zunächst nur beim Überleben half, wurde später zum entscheidenden Vorteil auf dem Weg als ${role}.`,
     `Aus ${background} kommend, trägt ${name} noch heute Gewohnheiten und Verpflichtungen aus dem früheren Leben mit sich. Eine davon betrifft ${bond}.`,
-    `Nach außen wirkt ${name} geprägt von ${personality}. Hinter dieser Haltung verbirgt sich jedoch ${flaw}, das in schwierigen Situationen immer wieder Entscheidungen beeinflusst.`,
-    `${ability} war nicht einfach eine Fähigkeit, die ${name} erlernte. Sie entstand aus einer Erfahrung, die bis heute erklärt, warum Gefahr und Verantwortung so eng miteinander verbunden sind.`,
-    `${item} ist eines der wenigen Dinge, die ${name} aus einem früheren Lebensabschnitt behalten hat. Sein eigentlicher Wert liegt nicht im Gegenstand selbst, sondern in der Erinnerung, die daran hängt.`,
+    `Nach außen wirkt ${name} geprägt von ${personality}. Hinter dieser Haltung verbirgt sich jedoch ${flaw}, was in schwierigen Situationen immer wieder Entscheidungen beeinflusst.`,
+    `${ability} war nicht einfach etwas, das ${name} erlernte. Die Fähigkeit entstand aus einer Erfahrung, die bis heute erklärt, warum Gefahr und Verantwortung so eng miteinander verbunden sind.`,
+    `${item} gehört zu den wenigen Dingen, die ${name} aus einem früheren Lebensabschnitt behalten hat. Der eigentliche Wert liegt nicht im Gegenstand selbst, sondern in der Erinnerung, die daran hängt.`,
     `${name} folgt ${ideal}, obwohl dieser Grundsatz regelmäßig mit persönlichen Bindungen kollidiert. Besonders ${bond} macht einfache Entscheidungen fast unmöglich.`,
     `In ${worldFrame} wurde ${name} mit ${essence} konfrontiert. Seitdem ist unklar, ob diese Kraft Werkzeug, Verantwortung oder langfristig sogar Gefahr für den eigenen Weg ist.`,
-    `Ein Teil von ${name}s Vergangenheit ist noch ungeklärt. Eine Person, ein Ort oder ein Versprechen aus früheren Tagen könnte jederzeit wieder auftauchen und die aktuelle Reise in eine neue Richtung zwingen.`,
+    `Ein Teil der Vergangenheit von ${name} ist noch ungeklärt. Eine Person, ein Ort oder ein Versprechen aus früheren Tagen könnte jederzeit wieder auftauchen und die aktuelle Reise in eine neue Richtung zwingen.`,
   ];
 }
