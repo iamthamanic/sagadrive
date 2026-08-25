@@ -8,13 +8,9 @@ import {
   generateCharacterLore,
   resolveCharacterLoreProviderConfig,
 } from '../_shared/character-lore-provider.ts';
+import { consumePersistentCharacterLoreRateLimit } from '../_shared/character-lore-rate-limit.ts';
 
 type JsonRecord = Record<string, unknown>;
-
-interface RateLimitEntry {
-  startedAt: number;
-  count: number;
-}
 
 interface ParsedRequest {
   context: CharacterLorePromptContext;
@@ -45,8 +41,7 @@ interface SupabaseConfig {
   serviceRoleKey?: string;
 }
 
-const rateLimits = new Map<string, RateLimitEntry>();
-const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_WINDOW_SECONDS = 60;
 const DEFAULT_RATE_LIMIT = 6;
 const MAX_STORY_LENGTH = 12_000;
 const MAX_REQUEST_BYTES = 128_000;
@@ -254,18 +249,6 @@ function getRateLimit(): number {
   return Number.isFinite(configured) && configured > 0 ? Math.min(configured, 60) : DEFAULT_RATE_LIMIT;
 }
 
-function consumeRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const current = rateLimits.get(userId);
-  if (!current || now - current.startedAt >= RATE_LIMIT_WINDOW_MS) {
-    rateLimits.set(userId, { startedAt: now, count: 1 });
-    return true;
-  }
-  if (current.count >= getRateLimit()) return false;
-  current.count += 1;
-  return true;
-}
-
 function getSupabaseConfig(): SupabaseConfig | null {
   const url = Deno.env.get('SUPABASE_URL')?.trim();
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')?.trim();
@@ -422,8 +405,40 @@ serve(async (request: Request) => {
     return jsonResponse(request, { status: 'error', message: 'Authentication required' }, 401);
   }
 
-  if (!consumeRateLimit(userId)) {
-    return jsonResponse(request, { status: 'error', message: 'Zu viele Generierungen. Bitte warte kurz und versuche es erneut.' }, 429);
+  const supabaseConfig = getSupabaseConfig();
+  if (!supabaseConfig?.serviceRoleKey) {
+    console.error('Character lore persistent rate limit unavailable: missing service-role configuration');
+    return jsonResponse(request, {
+      status: 'error',
+      message: 'Character-Lore ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.',
+    }, 503);
+  }
+
+  try {
+    const allowed = await consumePersistentCharacterLoreRateLimit(
+      {
+        url: supabaseConfig.url,
+        serviceRoleKey: supabaseConfig.serviceRoleKey,
+        limit: getRateLimit(),
+        windowSeconds: RATE_LIMIT_WINDOW_SECONDS,
+      },
+      userId,
+    );
+    if (!allowed) {
+      return jsonResponse(request, {
+        status: 'error',
+        message: 'Zu viele Generierungen. Bitte warte kurz und versuche es erneut.',
+      }, 429);
+    }
+  } catch (error) {
+    console.error(
+      'Character lore persistent rate limit failed:',
+      error instanceof Error ? error.message : 'unknown error',
+    );
+    return jsonResponse(request, {
+      status: 'error',
+      message: 'Character-Lore ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.',
+    }, 503);
   }
 
   let body: unknown;

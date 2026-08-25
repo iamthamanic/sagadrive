@@ -1,22 +1,25 @@
 # Feature: Character Background AI Composer
 
 ## Intent
-Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergrundgeschichte kann aus allen relevanten Charakterparametern vorbereitet generiert werden, bevor ein konkretes LLM konfiguriert ist. Parallel werden Persoenlichkeitsmerkmale, Ideale, Bindungen und Schwaechen als kombinierbare Bausteine editierbar.
+Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergrundgeschichte kann aus allen relevanten Charakterparametern generiert werden. Optional kann ein autorisierter Projekt-/Welt-Kontext verwendet werden. Parallel werden Persoenlichkeitsmerkmale, Ideale, Bindungen und Schwaechen als kombinierbare Bausteine editierbar. Teure Provider-Aufrufe werden pro authentifiziertem User persistent und instanzuebergreifend begrenzt.
 
 ## Preconditions
 - Bestehender CharacterEditor, Regeln fuer SagaDrive Core und Dungeons & Dragons 5.5e, Gold/Cyan-Interaction-Hierarchie und Character-Service bleiben die Basis.
 - Prompt-Templates werden versioniert im Repository gespeichert und serverseitig zusammengesetzt.
-- Der LLM-Zugriff erfolgt nur serverseitig. Client-Code kennt keine API-Keys.
-- Provider-Schnittstelle ist OpenAI-kompatibel oder Ollama; konkrete Credentials/Modelle werden spaeter per Environment konfiguriert.
+- Der LLM-Zugriff erfolgt nur serverseitig. Client-Code kennt keine API-Keys oder Service-Role-Keys.
+- Provider-Schnittstelle ist OpenAI-kompatibel oder Ollama; konkrete Credentials/Modelle werden per Environment konfiguriert.
 - D&D 5.5e bleibt ohne zugeordnete Welt settingneutral. Keine Forgotten-Realms-Annahme.
 - SagaDrive Core nutzt die ausgewaehlten Genre-/Setting-Parameter als Lore-Rahmen.
 - User hat die rueckwaertskompatible Migration von `ideals`, `bonds`, `flaws` von Einzeltext auf mehrere Textbausteine freigegeben.
 
 ## Architecture
-- `CharacterBackgroundComposer` kapselt Story-Textarea, Generieren-CTA, rotierende Beispiele und Uebernehmen-Flow.
+- `CharacterBackgroundComposer` kapselt Story-Textarea, Generieren-CTA, rotierende Beispiele, optionalen Kampagnen-Lore-Kontext und Uebernehmen-Flow.
+- Der Composer nutzt das bestehende Projects-Modul, um fuer den eingeloggten User sichtbare Projekte anzubieten; die Auswahl ist kein Autorisierungsbeweis.
 - `CharacterTraitEditor` kapselt die gemeinsame Mehrfachauswahl-/Custom-Block-Interaktion fuer Persoenlichkeit, Ideale, Bindungen und Schwaechen.
 - `characterLore`-Domaincode kapselt Context DTO, Beispielgenerator, Trait-Vorschlaege und Frontend-Service.
-- `supabase/functions/character-lore` ist der einzige LLM-Trust-Boundary und baut den finalen Prompt aus validiertem Kontext plus serverseitigem Ruleset-/Lore-Kontext.
+- `supabase/functions/character-lore` ist der einzige LLM-Trust-Boundary und baut den finalen Prompt aus validiertem Kontext plus serverseitig erneut autorisiertem Ruleset-/Lore-Kontext.
+- `supabase/functions/_shared/character-lore-rate-limit.ts` kapselt den service-role-only Aufruf der persistenten Postgres-RPC.
+- `supabase/migrations/003_character_lore_rate_limits.sql` stellt einen atomaren, instanzuebergreifenden User-Rate-Limiter bereit. Die Tabelle ist nicht fuer Browserrollen freigegeben.
 - Provider-Details werden hinter einem serverseitigen Adapter verborgen, sodass der CharacterEditor unveraendert bleibt, wenn das Modell wechselt.
 
 ## Happy Path
@@ -25,6 +28,8 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - [x] Der Generation-Context beruecksichtigt alle nicht-leeren Character-Parameter: Name, Beschreibung, Regelset, Archetyp/Klasse, Rasse/Spezies, Setting, Essenzprofil, D&D-Hintergrund, Level, sechs Stats, Skills/Faehigkeiten, Inventar, Aussehen sowie die vier Trait-Gruppen. Notes werden bewusst nicht an das LLM gesendet.
 - [x] Persoenlichkeitsmerkmale, Ideale, Bindungen und Schwaechen verwenden denselben Baustein-Editor: ausgewaehlte Werte erscheinen als entfernbare Chips, `+` oeffnet passende Vorschlaege und ein eigener Custom-Block kann hinzugefuegt werden.
 - [x] Vorschlaege und Beispiele reagieren auf das aktive Regelset und relevante Charakterparameter; D&D 5.5e und SagaDrive Core erhalten getrennte semantische Pools.
+- [ ] Im standalone CharacterEditor kann der User im BG-Tab optional ein sichtbares Projekt als `Kampagnen-Lore` waehlen. Dann werden `projectId` und die verknuepfte `worldId` in den Generation-Context aufgenommen; `Kein Projekt` bleibt setting-neutral.
+- [ ] Ein Generieren-Klick konsumiert vor dem Provider-Aufruf genau einen atomaren persistenten Quota-Slot fuer die verifizierte User-ID. Das Kontingent gilt gemeinsam ueber mehrere Edge-Runtime-Instanzen.
 
 ## Edge Cases
 - [x] Leere/teilweise Character-Parameter erzeugen weiterhin gueltige Beispiele und einen gueltigen Prompt ohne erfundene Pflichtwerte.
@@ -33,6 +38,8 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - [x] Doppelte Trait-Bausteine werden nicht mehrfach gespeichert; leere Custom-Eintraege und ueberlange Eingaben werden abgewiesen.
 - [x] Auto-Rotation und Fade-Timer werden beim Unmount aufgeraeumt und verursachen keine State-Updates nach Unmount.
 - [x] Typed-strict: alle geaenderten TypeScript-Dateien bleiben ohne `any`, `@ts-ignore`, `@ts-nocheck` oder vergleichbare Type-Escapes.
+- [ ] Ist die Projektliste im Browser nicht verfuegbar, bleibt der Composer nutzbar und ohne Auswahl setting-neutral.
+- [ ] Ist die persistente Rate-Limit-RPC nicht migriert, nicht erreichbar oder liefert ein ungueltiges Ergebnis, wird vor dem Provider-Aufruf fail-closed abgebrochen; ein ausgeschopftes Kontingent liefert `429`.
 
 ## Security & Data
 - LLM-Secrets liegen ausschliesslich in Server-Environment-Variablen und werden nie an den Browser ausgegeben.
@@ -41,49 +48,54 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - Notes werden nicht an die Character-Lore-Generierung uebertragen.
 - Keine Roh-Prompts, API-Keys oder komplette Character-Daten werden serverseitig geloggt.
 - Optionaler Projekt-/World-Lore-Kontext wird nach erfolgreicher JWT-Verifikation ausschliesslich serverseitig mit dem Service-Role-Key gelesen. Der Key verlaesst die Edge Function nie. Danach prueft die Funktion explizit GM oder aktive Projektmitgliedschaft; bei `projectId + worldId` muss die Welt exakt `project.world_id` entsprechen. Direkter World-Kontext ohne Projekt ist nur fuer den World-Creator erlaubt.
-- Der Endpoint begrenzt teure Generierungsaufrufe pro authentifiziertem User in-memory als erste Schutzschicht (`CHARACTER_AI_RATE_LIMIT_PER_MINUTE`); spaeter kann dieselbe Schnittstelle an einen persistenten Rate-Limiter angebunden werden.
+- Die Projektwahl im Browser ist nur ein untrusted Kontext-Hinweis. Eine manipulierte `projectId`/`worldId` kann die serverseitige Autorisierung nicht umgehen.
+- Die persistente Rate-Limit-RPC erhaelt `p_user_id` ausschliesslich aus dem verifizierten JWT-Caller und ist fuer `PUBLIC`, `anon` und `authenticated` gesperrt; nur `service_role` darf sie ausfuehren.
+- Der Postgres-Upsert sperrt/aktualisiert pro User genau eine Zeile atomar; parallele Edge-Instanzen teilen damit dasselbe Quota-Fenster. Die Tabelle waechst hoechstens auf eine Zeile pro User.
 - CORS ist fail-closed: kein Default-`*`. Erlaubt sind explizite Allowlist (`CHARACTER_AI_ALLOWED_ORIGIN`) oder localhost/127.0.0.1 fuer lokale Entwicklung.
 
 ## Data Migration
 - `personality_traits` bleibt `TEXT[]`.
 - `ideals`, `bonds`, `flaws` werden rueckwaertskompatibel von `TEXT` nach `TEXT[]` migriert; vorhandener nicht-leerer Text wird zu einem Array mit genau einem Element.
 - DTOs, ViewModel und Character-Service verwenden danach fuer alle vier Trait-Gruppen `string[]`.
-- Rollback-Hinweis: Arrays mit mehr als einem Element koennen bei Rueckmigration nur verlustbehaftet in einen Einzeltext zusammengefuehrt werden; deshalb ist die Vorwaertsmigration der kanonische Zustand.
+- `003_character_lore_rate_limits.sql` legt die Rate-Limit-Tabelle und die service-role-only RPC an. Die Migration ist vor dem produktiven Deploy der aktualisierten `character-lore` Function erforderlich.
+- Rollback-Hinweis fuer Trait-Arrays: Arrays mit mehr als einem Element koennen bei Rueckmigration nur verlustbehaftet in einen Einzeltext zusammengefuehrt werden; deshalb ist die Vorwaertsmigration der kanonische Zustand.
 
 ## Provider Configuration
 - `CHARACTER_AI_PROVIDER`: `openai-compatible` oder `ollama`.
 - `CHARACTER_AI_MODEL`: Modellname, fuer echte Generierung erforderlich.
 - `CHARACTER_AI_BASE_URL`: Provider-Base-URL; Ollama kann auf `OLLAMA_HOST` zurueckfallen.
 - `CHARACTER_AI_API_KEY`: fuer OpenAI-kompatible Provider erforderlich, fuer Ollama optional.
+- `CHARACTER_AI_RATE_LIMIT_PER_MINUTE`: persistentes User-Kontingent pro 60 Sekunden, Default 6, serverseitig auf maximal 60 begrenzt.
 - Bestehende `OLLAMA_HOST` / `OLLAMA_MODEL` koennen als rueckwaertskompatible Fallbacks verwendet werden.
 
 ## Regression
 - [x] Info, Look, Stats, Skills, Inventar, Portrait und Save-Flow bleiben funktional.
 - [x] Cyan bleibt Primary CTA/Selected; Gold bleibt Hover/Premium-Akzent.
 - [x] Keine neue Frontend-UI-Library; Playwright nur als Dev-/QA-Dependency.
+- [ ] Der PR-Head besteht Chromium-Playwright inklusive sichtbarer `Kampagnen-Lore`-Auswahl und nicht-destruktivem Generate-Status.
 
 ## Composition Gate
-- Code HEAD: `ac88e3423a612e87681cc42507ae5c04f860fb97`
+- Code HEAD: `PENDING_FINAL_IMPLEMENTATION_SHA`
 - Feature BASE: `7f6f096dc5c6a0ff280d901cf262fa533814085f`
-- Verdict: `CLEAR`
+- Verdict: `PENDING`
 - Proof: `.qa/runs/composition-gate-feat-character-studio-avatar.md`
-- Invariant: Ein expliziter Generieren-Klick fuehrt zu genau einem Provider-Aufruf und nur zu einem lokalen Entwurf; persistiert wird erst durch die separate explizite Uebernahme plus normalen Character-Save. Trait-Anzahl erzeugt keinen Fan-out.
+- Invariant: Ein expliziter Generieren-Klick konsumiert genau einen persistenten Quota-Slot fuer den verifizierten User und fuehrt bei erlaubtem Request zu genau einem Provider-Aufruf und nur zu einem lokalen Entwurf. Projekt-/Welt-Lore wird nur nach erneuter Server-Autorisierung gelesen; Trait-Anzahl und Runtime-Instanzzahl erzeugen keinen Provider-Fan-out.
 
 ## Screenshots
 - `.qa/evidence/feat-character-studio-avatar/02-info-sagadrive-core.png`
 - `.qa/evidence/feat-character-studio-avatar/03-info-dnd-5-5e.png`
-- `.qa/evidence/feat-character-studio-avatar/04-bg-generate-status.png`
-- Playwright: `npm run test:e2e` (smoke + character-editor) PASS
+- `.qa/evidence/feat-character-studio-avatar/04-bg-project-context.png`
+- `.qa/evidence/feat-character-studio-avatar/05-bg-generate-status.png`
+- CI Playwright Artifact: `character-editor-browser-evidence`
 
 ## Implementation Notes
-- `src/modules/characters/lore/` enthaelt den typisierten Character-Lore-Context, exakt zehn dynamische lokale Beispiele, regelsetabhaengige Trait-Vorschlaege und den Frontend-Service. Die Beispiele wurden auch fuer den vollstaendig leeren Initialzustand sprachlich geprueft.
-- `CharacterBackgroundComposer` zeigt `Generieren`, rotiert Beispiele alle fuenf Sekunden mit einem 180-ms-Fade und haelt KI-Ergebnisse als separate Variante mit explizitem `Uebernehmen`/`Verwerfen`. Der Beispiel-Overlaytext ist pointer-events-frei und blockiert das Textarea nicht. Bei `prefers-reduced-motion` wird die Fade-Transition deaktiviert, der 5-Sekunden-Inhaltswechsel bleibt erhalten.
-- `CharacterTraitEditor` wird fuer Persoenlichkeit, Ideale, Bindungen und Schwaechen wiederverwendet; Vorschlaege und Custom-Bloecke werden case-insensitiv dedupliziert, auf 160 Zeichen begrenzt und auf maximal 12 Bloecke je Gruppe beschraenkt. Dieses Limit entspricht dem serverseitig validierten Generation-Context.
+- `src/modules/characters/lore/` enthaelt den typisierten Character-Lore-Context, exakt zehn dynamische lokale Beispiele, regelsetabhaengige Trait-Vorschlaege und den Frontend-Service.
+- `CharacterBackgroundComposer` zeigt `Generieren`, rotiert Beispiele alle fuenf Sekunden mit einem 180-ms-Fade, haelt KI-Ergebnisse als separate Variante und bietet einen optionalen `Kampagnen-Lore`-Projektkontext. Die Projektwahl setzt `projectId` und die verknuepfte `worldId` nur fuer den Generate-Request; sie veraendert den Character-Save nicht.
+- `CharacterTraitEditor` wird fuer Persoenlichkeit, Ideale, Bindungen und Schwaechen wiederverwendet; Vorschlaege und Custom-Bloecke werden case-insensitiv dedupliziert, auf 160 Zeichen begrenzt und auf maximal 12 Bloecke je Gruppe beschraenkt.
 - Der CharacterEditor baut den Generation-Context aus Regelset, Klasse/Archetyp, Rasse/Spezies, Setting, Essenzprofil, D&D-Hintergrund, Level, Stats, Skills, Inventar, Aussehen und Trait-Gruppen. Notes sind nicht Teil des Contexts.
-- `supabase/functions/character-lore` authentifiziert serverseitig, begrenzt sowohl deklarierte als auch tatsaechlich eingelesene Request-Groesse auf 128 KB, validiert Request-Grenzen und ruft genau einen konfigurierten Provider ueber den gemeinsamen Adapter auf. Der Prompt ist als `character-background-v1` versioniert und behandelt Character-/Lore-Daten als untrusted Prompt-Input.
-- Ein Security-Review fand zwei relevante Projekt-/World-Lore-Risiken und beide wurden vor Abschluss behoben: normale aktive Projektmitglieder waeren wegen der bestehenden GM-only-Project-RLS nicht an Lore gekommen, und ein Projekt ohne eigene Welt durfte zwischenzeitlich theoretisch mit einer fremden direkten `worldId` kombiniert werden. Die finale Edge Function verifiziert zuerst den Caller-JWT, nutzt danach den Service-Role-Key nur serverseitig fuer Lookups und erzwingt explizite GM-/aktive-Member-/World-Binding-Regeln.
-- `supabase/migrations/002_character_trait_arrays.sql` ist gegen aeltere SagaDrive-Schemata abgesichert und migriert bestehende Einzelwerte verlustfrei in Ein-Element-Arrays. Der Character-Service normalisiert waehrend der Uebergangsphase auch Legacy-Scalarwerte beim Lesen. `src/supabase/DEPLOY_V3.md` fuehrt die Migration jetzt explizit als Deploy-Schritt auf.
-- `.env.example` und README dokumentieren Ollama und OpenAI-kompatible Provider, ohne Secrets in den Client zu bringen.
-- Test Gate fuer Code HEAD `6500adcafd570fe63c97e4534d2f1286f61150bc`: PASS. Diff-Typed-Strict-Lint: 26 TypeScript-Dateien PASS; Typecheck PASS; Vite Production Build PASS; Deno LTS `deno check` fuer vier geaenderte Edge-Function-TypeScript-Dateien PASS; Deno Prompt-Contract-Tests 4/4 PASS; Secrets-Diff-Scan PASS. Production-Dependency-Audit bleibt informational mit zwei High-Findings.
-- Die Prompt-Tests decken vollstaendigen Character-Context, settingneutrales D&D 5.5e, autorisierten World-Lore-Kontext und die nicht-destruktive Alternativgenerierung bei vorhandenem Hintergrund ab.
-- Browser-/Screenshot-Verifikation bleibt offen; UI-Checkboxen werden erst nach `@verify-ui` markiert.
+- `supabase/functions/character-lore` authentifiziert serverseitig, konsumiert danach ueber `consume_character_lore_rate_limit` einen persistenten Quota-Slot, validiert Request-Grenzen und ruft genau einen konfigurierten Provider ueber den gemeinsamen Adapter auf. Faehrt die Quota-Infrastruktur nicht sicher, wird kein Provider aufgerufen.
+- Die Rate-Limit-RPC verwendet einen atomaren `INSERT ... ON CONFLICT DO UPDATE` pro User und begrenzt den Counter auf `limit + 1`; parallele Edge-Instanzen koennen dadurch das gemeinsame Limit nicht jeweils separat verbrauchen.
+- Projekt-/World-Lore wird trotz UI-Auswahl serverseitig mit Service-Role nur nach JWT-, Membership- und World-Binding-Pruefung gelesen.
+- `supabase/migrations/002_character_trait_arrays.sql` migriert Trait-Arrays; `003_character_lore_rate_limits.sql` ist der neue notwendige Deploy-Schritt fuer die persistente Quota.
+- `.env.example`, README und `src/supabase/DEPLOY_V3.md` dokumentieren den neuen Deploy-Contract.
+- Finaler Test-Gate-, Composition-Gate- und Browser-E2E-Nachweis wird nach dem Implementierungs-Commit auf dessen SHA aktualisiert.

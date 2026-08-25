@@ -16,11 +16,16 @@ Kopiere den kompletten Inhalt von `/supabase/schema_v3_complete.sql` und führe 
 
 ---
 
-## Schritt 3: Character-Trait-Migration anwenden
+## Schritt 3: Character-Migrationen anwenden
 
-Führe danach `supabase/migrations/002_character_trait_arrays.sql` aus.
+Führe die Character-Migrationen in dieser Reihenfolge aus:
 
-Die Migration ist sowohl für bestehende als auch für frisch angelegte SagaDrive-Datenbanken vorgesehen. Sie stellt `personality_traits`, `ideals`, `bonds` und `flaws` auf die vom CharacterEditor verwendeten Textbaustein-Arrays um und bewahrt vorhandene Einzelwerte als Ein-Element-Arrays.
+1. `supabase/migrations/002_character_trait_arrays.sql`
+2. `supabase/migrations/003_character_lore_rate_limits.sql`
+
+`002_character_trait_arrays.sql` ist sowohl für bestehende als auch für frisch angelegte SagaDrive-Datenbanken vorgesehen. Sie stellt `personality_traits`, `ideals`, `bonds` und `flaws` auf die vom CharacterEditor verwendeten Textbaustein-Arrays um und bewahrt vorhandene Einzelwerte als Ein-Element-Arrays.
+
+`003_character_lore_rate_limits.sql` legt den persistenten Character-Lore-Rate-Limiter an. Die Tabelle ist nicht direkt für `anon` oder `authenticated` zugänglich; konsumiert wird das atomare Minutenkontingent ausschließlich über die `service_role`-RPC `consume_character_lore_rate_limit`. Die Migration muss vor dem produktiven Deploy der `character-lore` Edge Function aktiv sein, da die Funktion bei fehlendem persistentem Limiter bewusst fail-closed reagiert.
 
 ---
 
@@ -151,8 +156,11 @@ Gehe zu **Table Editor** und prüfe, ob alle Tabellen existieren:
 - ✅ quests
 - ✅ marketplace_categories
 - ✅ ai_context
+- ✅ character_lore_rate_limits
 
 Prüfe bei `characters` zusätzlich, dass `personality_traits`, `ideals`, `bonds` und `flaws` als Text-Arrays vorliegen.
+
+Prüfe anschließend, dass die RPC `consume_character_lore_rate_limit` existiert. `anon` und `authenticated` dürfen weder direkten Tabellenzugriff noch Execute-Rechte auf die RPC haben; `service_role` darf die RPC ausführen.
 
 ---
 
@@ -160,7 +168,9 @@ Prüfe bei `characters` zusätzlich, dass `personality_traits`, `ideals`, `bonds
 
 1. Reload die App
 2. Gehe zu Dashboard
-3. Fehler sollten weg sein! ✅
+3. Öffne den CharacterEditor und den BG-Tab
+4. Prüfe, dass `Kampagnen-Lore` ohne Auswahl setting-neutral bleibt und ein berechtigtes Projekt auswählbar ist
+5. Fehler sollten weg sein! ✅
 
 ---
 
@@ -171,6 +181,8 @@ Du hast jetzt:
 - ✅ Flexible Rulesets
 - ✅ Character System (PC/NPC/Companion/Monster)
 - ✅ Projects & Sessions
+- ✅ Persistentes, instanzübergreifendes Character-Lore-Rate-Limit
+- ✅ Autorisierten Projekt-/Welt-Lore-Kontext im CharacterEditor
 - ✅ Combat Tracking (vorbereitet)
 - ✅ Battle Maps (vorbereitet)
 - ✅ Marketplace (vorbereitet)

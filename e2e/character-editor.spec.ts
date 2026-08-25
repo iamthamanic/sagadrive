@@ -52,15 +52,22 @@ test('character editor ruleset fields and BG composer', async ({ page }) => {
   });
 
   await page.getByRole('tab', { name: 'BG' }).click();
+  await expect(page.getByTestId('character-lore-project-context')).toBeVisible();
+  await expect(page.getByTestId('character-lore-project-context')).toContainText(/Kein Projekt/i);
   await expect(page.getByTestId('character-bg-generate')).toBeVisible();
   await expect(page.getByTestId('character-bg-accept-example')).toBeVisible();
+
+  await page.screenshot({
+    path: path.join(EVIDENCE_DIR, '04-bg-project-context.png'),
+    fullPage: true,
+  });
 
   await page.getByTestId('character-bg-generate').click();
   await expect(page.getByTestId('character-bg-status')).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId('character-bg-story')).toHaveValue('');
 
   await page.screenshot({
-    path: path.join(EVIDENCE_DIR, '04-bg-generate-status.png'),
+    path: path.join(EVIDENCE_DIR, '05-bg-generate-status.png'),
     fullPage: true,
   });
 });

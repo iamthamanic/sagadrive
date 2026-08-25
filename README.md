@@ -1,4 +1,3 @@
-
 # SagaDrive (SagaDrive)
 
 SagaDrive ist eine webbasierte Rollenspiel-Plattform für Spielleitungen und Spieler, um Kampagnen gemeinsam zu planen und zu spielen. Das Tool bündelt zentrale Bereiche wie Projekte/Kampagnen, Charakterverwaltung, Sessions, Rulesets und einen Marketplace in einer Oberfläche.
@@ -59,7 +58,9 @@ Output-Verzeichnis:
 
 ## Character-Lore-KI
 
-Der CharacterEditor besitzt eine vorbereitete Hintergrundgeschichten-Pipeline. Die UI erzeugt einen typisierten Character-Context; die Supabase Edge Function `character-lore` baut daraus serverseitig den versionierten Prompt und ruft den konfigurierten Provider auf. API-Keys werden nie an den Browser ausgeliefert.
+Der CharacterEditor besitzt eine Hintergrundgeschichten-Pipeline. Die UI erzeugt einen typisierten Character-Context; die Supabase Edge Function `character-lore` baut daraus serverseitig den versionierten Prompt und ruft den konfigurierten Provider auf. API-Keys werden nie an den Browser ausgeliefert.
+
+Im BG-Tab kann optional ein für den eingeloggten User sichtbares Projekt als **Kampagnen-Lore** gewählt werden. Der Browser sendet dabei `projectId` und, falls vorhanden, die verknüpfte `worldId`. Diese IDs sind nur Kontext-Hinweise: Die Edge Function verifiziert Projektmitgliedschaft bzw. GM-Rechte und die Projekt-Welt-Zuordnung erneut serverseitig, bevor Lore gelesen wird. Ohne Auswahl bleibt die Generierung setting-neutral.
 
 Unterstützte Provider:
 
@@ -80,27 +81,37 @@ CHARACTER_AI_ALLOWED_ORIGIN=http://localhost:3004
 
 Für Ollama können `OLLAMA_MODEL` und `OLLAMA_HOST` als Fallback verwendet werden. Bei `openai-compatible` sind `CHARACTER_AI_BASE_URL`, `CHARACTER_AI_API_KEY` und ein Modell erforderlich. `CHARACTER_AI_ALLOWED_ORIGIN` defaultet **nicht** auf `*`.
 
+`CHARACTER_AI_RATE_LIMIT_PER_MINUTE` wird nicht pro Edge-Process im Speicher gezählt. Die Migration `supabase/migrations/003_character_lore_rate_limits.sql` legt einen persistenten, atomaren Postgres-Limiter an. Jede authentifizierte User-ID teilt dadurch dasselbe Minutenkontingent über alle Edge-Runtime-Instanzen hinweg. Die RPC ist nur für `service_role` ausführbar. Ist der persistente Limiter nicht verfügbar oder nicht migriert, schlägt `character-lore` vor dem Provider-Aufruf fail-closed mit `503` fehl.
+
 Der Prompt liegt versioniert unter `supabase/functions/_shared/character-lore-prompt.ts`. D&D 5.5e bleibt ohne autorisierten Welt-Kontext setting-neutral. SagaDrive Core verwendet die gewählten Character- und Setting-Parameter als Lore-Rahmen. Notizen aus dem Notes-Tab werden bewusst nicht an die Generierung übertragen.
 
-Die Migration `supabase/migrations/002_character_trait_arrays.sql` stellt `ideals`, `bonds` und `flaws` auf mehrere Textbausteine um und bewahrt vorhandene Einzelwerte als Ein-Element-Arrays.
+Die Migration `supabase/migrations/002_character_trait_arrays.sql` stellt `ideals`, `bonds` und `flaws` auf mehrere Textbausteine um und bewahrt vorhandene Einzelwerte als Ein-Element-Arrays. Danach muss `supabase/migrations/003_character_lore_rate_limits.sql` angewendet werden, bevor die Character-Lore-Generierung produktiv aktiviert wird.
 
 ## Quality Gates
 
-GitHub Actions führt auf Pushes sowie auf Pull Requests gegen `main` zwei getrennte Gates aus:
+GitHub Actions führt auf Pushes sowie auf Pull Requests gegen `main` die technischen und semantischen Gates aus:
 
 ```bash
 npm run test-gate
 npm run composition-gate
 ```
 
-Lokal optional Browser-Regression:
+Zusätzlich läuft nach einem erfolgreichen Test Gate ein Chromium-Playwright-Job mit:
+
+```bash
+npm run test:e2e
+```
+
+Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `character-editor-browser-evidence` hochgeladen.
+
+Lokal kann dieselbe Browser-Regression ausgeführt werden:
 
 ```bash
 npx playwright install chromium
 npm run test:e2e
 ```
 
-`test-gate` führt die technischen Checks aus: diff-spezifischer Typed-Strict-Lint, Typecheck, Produktions-Build, `deno check` für geänderte Supabase-Edge-Function-TypeScript-Dateien und Secrets-Diff-Scan. GitHub Actions stellt dafür Deno LTS über `denoland/setup-deno@v2` bereit. `npm audit` wird zusätzlich sichtbar protokolliert; bestehende Dependency-Findings sind derzeit informational und werden separat behoben.
+`test-gate` führt die technischen Checks aus: diff-spezifischer Typed-Strict-Lint, Typecheck, Produktions-Build, `deno check` für geänderte Supabase-Edge-Function-TypeScript-Dateien, Deno-Tests und Secrets-Diff-Scan. GitHub Actions stellt dafür Deno LTS über `denoland/setup-deno@v2` bereit. `npm audit --omit=dev` wird zusätzlich sichtbar protokolliert.
 
 `composition-gate` prüft die Bedeutung über Modul-/Service-/Backend-Hops. Reine Docs-/Tooling-Diffs und sichere Single-Hop-Diffs werden dokumentiert übersprungen. Bei Multi-Hop-, Persistenz-, Worker-, Queue-, Webhook- oder Side-Effect-relevanten Änderungen muss ein aktueller Proof unter `.qa/runs/composition-gate-<slug>.md` mit `CLEAR` oder begründetem `SKIPPED` vorliegen.
 
@@ -129,4 +140,3 @@ npm run test:e2e
 
 - Beim Start mit `npm run dev` öffnet Vite automatisch den Browser (`server.open = true`).
 - Falls Port `3004` lokal belegt ist, den belegenden Prozess beenden oder den Port in `vite.config.ts` anpassen.
-  
