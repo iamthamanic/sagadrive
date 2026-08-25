@@ -1,6 +1,6 @@
 # Composition Gate - character-background-ai-composer
 
-- HEAD_SHA: ed4da44676c1e1b073e5ac04508728232d5c6cb8
+- HEAD_SHA: 996f6ed64107705103910c1a9d05364718dd4a8a
 - BASE_SHA: 9f0ea4f858e48e73929175d36c36eeec25765a76
 - Date: 2026-08-25
 - Verdict: CLEAR
@@ -21,12 +21,14 @@ Trait persistence follows: `CharacterTraitEditor` -> CharacterEditor state -> on
 | Two consumers / crash | Concurrent/retried generation must not create a persistent duplicate side effect or silently overwrite the current story. | There is no queue, outbox, worker, or persistent generation record. Each HTTP request is an explicit user-requested variant. A failed/crashed provider request persists nothing. Successful output is held as a local draft until `Übernehmen`; a second intentional request represents a second intentional variant. Character persistence happens only through the separate normal save action. | pass |
 
 ## Validation
-- GitHub Test Gate on `ed4da44676c1e1b073e5ac04508728232d5c6cb8`: PASS.
-- Diff Typed-Strict lint: PASS.
+- GitHub Test Gate on `996f6ed64107705103910c1a9d05364718dd4a8a`: PASS.
+- Diff Typed-Strict lint: 26 changed TypeScript files PASS.
 - Frontend TypeScript check: PASS.
 - Vite production build: PASS.
-- Deno LTS `deno check` for all three changed Character-Lore Edge Function TypeScript files: PASS.
+- Deno LTS `deno check` for four changed Character-Lore Edge Function TypeScript files: PASS.
+- Deno prompt-contract tests: 4 passed, 0 failed.
 - Secrets diff scan: PASS.
+- Production dependency audit is informational: critical=0, high=2, moderate=0, low=0.
 
 ## Flags
 | Tag | Severity | Hops | Why local review missed it | Fix |
