@@ -1,6 +1,6 @@
 # Composition Gate - feat-character-studio-avatar
 
-- HEAD_SHA: 8bee38fad062fcc4ff8e04ea32bb5f3b4a6d01dc
+- HEAD_SHA: ac88e3423a612e87681cc42507ae5c04f860fb97
 - BASE_SHA: 7f6f096dc5c6a0ff280d901cf262fa533814085f
 - Date: 2026-08-25
 - Verdict: CLEAR
@@ -19,7 +19,7 @@ Parallel local hops (no provider/DB fan-out):
 | Case | Intended | Composed | Result |
 |------|----------|----------|--------|
 | N-actors | One Generieren click → one provider call → one draft. Trait count / inventory / project membership must not multiply generation or saves. | `generateBackground` invokes `character-lore` once. Edge Function performs one provider call after auth/validation. Rate limit is per userId. Character save is one payload write. Avatar/ruleset changes do not call the LLM. Ten clicks remain ten independent requests. | pass |
-| Invalid/missing | Bad auth, oversized body, invalid ruleset/UUID, unauthorized lore, missing provider config fail closed; never overwrite existing story or leak foreign world lore. | 401 without JWT. 413 above 128 KB. 400 on invalid payload. Project/world lore uses service role only after JWT + explicit membership/world binding. Missing provider returns `not-configured`. UI keeps current story on error and requires explicit accept. | pass |
+| Invalid/missing | Bad auth, oversized body, invalid ruleset/UUID, unauthorized lore, missing provider config fail closed; never overwrite existing story or leak foreign world lore. | 401 without JWT. 413 above 128 KB. 400 on invalid payload. Project/world lore uses service role only after JWT + explicit membership/world binding. Missing provider returns `not-configured`. UI keeps current story on error (inline status banner) and requires explicit accept. | pass |
 | Two consumers / crash | No queue/outbox; crash after provider must not persist a draft; retries are new intentional requests; no double DB write from generation alone. | No worker/outbox. Generation persists nothing. Draft is local until Übernehmen. Persistence only via separate save. Concurrent editor tabs can race on save (last-write-wins) but do not fan out provider side-effects. | pass |
 
 ## Flags
@@ -28,7 +28,7 @@ Parallel local hops (no provider/DB fan-out):
 | `rate-limit:` | note | Edge Function → provider | In-memory Map is instance-local, not a durable global quota. | Accepted for prep slice; persistent limiter before paid production. Documented via `CHARACTER_AI_RATE_LIMIT_PER_MINUTE`. |
 | `dead-path:` | note | Editor → optional project/world IDs | Standalone editor currently does not pass `projectId`/`worldId`, so authorized lore enrichment is dormant. | Pass IDs when opened from project context; no semantic mismatch today. |
 
-CORS hardening (worktree): no default `*`; allowlist CSV or localhost-only fail-closed.
+CORS is fail-closed on `ac88e34`: no default `*`; allowlist CSV or localhost-only.
 
 No open blocker/flag changes cardinality, destination, tenant, or identity for the current branch scope.
 
