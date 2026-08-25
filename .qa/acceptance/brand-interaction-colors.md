@@ -28,4 +28,9 @@ SagaDrive soll fuer aktive Auswahlzustaende und primaere CTAs eine eindeutige, w
 - [ ] Keine globale Aenderung an Background-, Card-, Input- oder Border-Tokens.
 
 ## Implementation Notes
-Pending.
+- `src/components/ui/tabs.tsx`: aktive Tabs verwenden jetzt global `accent` (Gold/Amber); inaktive Hover- und Focus-Zustaende verwenden `primary` (Cyan/Teal).
+- `src/components/ui/button.tsx`: der Default-Button ist jetzt die Gold/Amber-Primary-CTA. `accent` bleibt als kompatibler Alias bestehen; Outline/Ghost bleiben neutral und wechseln bei Hover zu Cyan/Teal.
+- `src/THEME_GUIDE.md`: Farbrollen wurden auf Gold = Auswahl/Primary Action und Cyan = funktionale Orientierung aktualisiert.
+- `src/guidelines/Guidelines.md`: die bisherige Platzhalterdatei wurde durch verbindliche AI-/Figma-Make-UI-Regeln ersetzt.
+- `AGENTS.md`: die veraltete Blue/Green-UI-Regel wurde entfernt und auf den kanonischen SagaDrive-Styleguide ausgerichtet.
+- Keine Produktlogik, Persistenz, Avatar-Runtime, Theme-Basisfarben oder Dependencies wurden geaendert.
