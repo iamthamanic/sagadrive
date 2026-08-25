@@ -39,10 +39,17 @@ interface WorldRow {
   setting_type: string | null;
 }
 
+interface SupabaseConfig {
+  url: string;
+  anonKey: string;
+  serviceRoleKey?: string;
+}
+
 const rateLimits = new Map<string, RateLimitEntry>();
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const DEFAULT_RATE_LIMIT = 6;
 const MAX_STORY_LENGTH = 12_000;
+const MAX_REQUEST_BYTES = 128_000;
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null;
@@ -51,13 +58,19 @@ function isRecord(value: unknown): value is JsonRecord {
 function getCorsHeaders(request: Request): HeadersInit {
   const allowedOrigin = Deno.env.get('CHARACTER_AI_ALLOWED_ORIGIN')?.trim() || '*';
   const requestOrigin = request.headers.get('Origin');
-  const origin = allowedOrigin === '*' ? '*' : requestOrigin === allowedOrigin ? allowedOrigin : allowedOrigin;
-  return {
-    'Access-Control-Allow-Origin': origin,
+  const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Content-Type': 'application/json',
   };
+
+  if (allowedOrigin === '*') {
+    headers['Access-Control-Allow-Origin'] = '*';
+  } else if (requestOrigin === allowedOrigin) {
+    headers['Access-Control-Allow-Origin'] = allowedOrigin;
+  }
+
+  return headers;
 }
 
 function jsonResponse(request: Request, body: JsonRecord, status = 200): Response {
@@ -229,17 +242,24 @@ function consumeRateLimit(userId: string): boolean {
   return true;
 }
 
-function getSupabaseConfig(): { url: string; anonKey: string } | null {
+function getSupabaseConfig(): SupabaseConfig | null {
   const url = Deno.env.get('SUPABASE_URL')?.trim();
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')?.trim();
-  return url && anonKey ? { url: url.replace(/\/+$/, ''), anonKey } : null;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim();
+  return url && anonKey
+    ? {
+        url: url.replace(/\/+$/, ''),
+        anonKey,
+        serviceRoleKey: serviceRoleKey || undefined,
+      }
+    : null;
 }
 
-async function fetchJson(url: string, authorization: string, anonKey: string): Promise<unknown> {
+async function fetchServiceJson(url: string, serviceRoleKey: string): Promise<unknown> {
   const response = await fetch(url, {
     headers: {
-      Authorization: authorization,
-      apikey: anonKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      apikey: serviceRoleKey,
       Accept: 'application/json',
     },
     signal: AbortSignal.timeout(10_000),
@@ -301,23 +321,22 @@ function parseWorldRow(value: unknown): WorldRow | null {
 }
 
 async function getAuthorizedReferenceContext(
-  request: Request,
   userId: string,
   projectId?: string,
   directWorldId?: string,
 ): Promise<CharacterLoreReferenceContext> {
   if (!projectId && !directWorldId) return {};
   const config = getSupabaseConfig();
-  const authorization = request.headers.get('Authorization');
-  if (!config || !authorization) throw new Error('Supabase reference lookup is not configured');
+  if (!config?.serviceRoleKey) {
+    throw new Error('Server-side lore lookup is not configured');
+  }
 
   let project: ProjectRow | null = null;
   let projectAuthorized = false;
   if (projectId) {
-    const projectBody = await fetchJson(
+    const projectBody = await fetchServiceJson(
       `${config.url}/rest/v1/projects?select=id,name,description,world_id,gm_user_id&id=eq.${projectId}&limit=1`,
-      authorization,
-      config.anonKey,
+      config.serviceRoleKey,
     );
     const firstProject = Array.isArray(projectBody) ? projectBody[0] : undefined;
     project = parseProjectRow(firstProject);
@@ -326,10 +345,9 @@ async function getAuthorizedReferenceContext(
     if (project.gm_user_id === userId) {
       projectAuthorized = true;
     } else {
-      const memberBody = await fetchJson(
+      const memberBody = await fetchServiceJson(
         `${config.url}/rest/v1/project_members?select=id&project_id=eq.${projectId}&user_id=eq.${userId}&status=eq.active&limit=1`,
-        authorization,
-        config.anonKey,
+        config.serviceRoleKey,
       );
       projectAuthorized = Array.isArray(memberBody) && memberBody.length > 0;
     }
@@ -343,10 +361,9 @@ async function getAuthorizedReferenceContext(
 
   let world: WorldRow | null = null;
   if (worldId) {
-    const worldBody = await fetchJson(
+    const worldBody = await fetchServiceJson(
       `${config.url}/rest/v1/worlds?select=id,creator_user_id,name,lore,setting_type&id=eq.${worldId}&limit=1`,
-      authorization,
-      config.anonKey,
+      config.serviceRoleKey,
     );
     const firstWorld = Array.isArray(worldBody) ? worldBody[0] : undefined;
     world = parseWorldRow(firstWorld);
@@ -369,6 +386,11 @@ serve(async (request: Request) => {
   }
   if (request.method !== 'POST') {
     return jsonResponse(request, { status: 'error', message: 'Method not allowed' }, 405);
+  }
+
+  const contentLength = Number.parseInt(request.headers.get('content-length') || '0', 10);
+  if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
+    return jsonResponse(request, { status: 'error', message: 'Request body too large' }, 413);
   }
 
   const userId = await authenticate(request);
@@ -402,7 +424,6 @@ serve(async (request: Request) => {
 
   try {
     const reference = await getAuthorizedReferenceContext(
-      request,
       userId,
       parsed.projectId,
       parsed.worldId,
