@@ -2,12 +2,14 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import process from 'node:process';
 
 const root = process.cwd();
+const gitOutputMaxBuffer = 32 * 1024 * 1024;
 
 function git(args) {
   return execFileSync('git', args, {
     cwd: root,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
+    maxBuffer: gitOutputMaxBuffer,
   }).trim();
 }
 
