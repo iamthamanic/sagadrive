@@ -51,6 +51,12 @@ export function CharacterAbilitiesPanel({ abilities, onChange }: CharacterAbilit
     if (!open) resetDraft();
   };
 
+  const handleTypeChange = (value: string) => {
+    if (value === 'combat' || value === 'magic' || value === 'skill') {
+      setType(value);
+    }
+  };
+
   const handleAddAbility = () => {
     const trimmedName = name.trim();
     if (!trimmedName) {
@@ -150,7 +156,7 @@ export function CharacterAbilitiesPanel({ abilities, onChange }: CharacterAbilit
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="ability-type">Typ</Label>
-                <Select value={type} onValueChange={(value) => setType(value as AbilityType)}>
+                <Select value={type} onValueChange={handleTypeChange}>
                   <SelectTrigger id="ability-type"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="combat">Kampf</SelectItem>
