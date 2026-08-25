@@ -11,6 +11,19 @@ import {
 import type { AbilityDto, ItemDto } from '../modules/characters';
 import { CharacterAbilitiesPanel } from '../modules/characters/components/CharacterAbilitiesPanel';
 import { CharacterInventoryPanel } from '../modules/characters/components/CharacterInventoryPanel';
+import {
+  characterRulesetOptions,
+  dnd55BackgroundOptions,
+  dnd55ClassOptions,
+  dnd55SpeciesOptions,
+  getCharacterCreationOptionLabel,
+  isCharacterRulesetKey,
+  sagaDriveArchetypeOptions,
+  sagaDriveEssenceOptions,
+  sagaDriveRaceOptions,
+  sagaDriveSettingOptions,
+  type CharacterRulesetKey,
+} from '../modules/rulesets/characterCreation';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -30,28 +43,6 @@ const trackActivity = (description: string) => {
   (window as ActivityTrackingWindow).trackActivity?.(description);
 };
 
-const archetypeLabels: Record<string, string> = {
-  fighter: 'Kämpfer',
-  thinker: 'Denker',
-  healer: 'Heiler',
-  rebel: 'Rebell',
-  diplomat: 'Diplomat',
-};
-
-const essenceLabels: Record<string, string> = {
-  physical: 'Körperlich',
-  mental: 'Mental',
-  spiritual: 'Spirituell',
-  practical: 'Paktbasiert',
-  technological: 'Technologisch',
-};
-
-const settingLabels: Record<string, string> = {
-  fantasy: 'Fantasy',
-  real: 'Real',
-  scifi: 'Sci-Fi',
-};
-
 const initialAbilities: AbilityDto[] = [
   {
     id: 'starter-fireball',
@@ -69,8 +60,10 @@ function clampLevel(value: string): number {
 
 export function CharacterEditor() {
   const [characterName, setCharacterName] = useState('');
+  const [ruleset, setRuleset] = useState<CharacterRulesetKey>('sagadrive-core');
   const [characterArchetype, setCharacterArchetype] = useState('');
   const [characterRace, setCharacterRace] = useState('human');
+  const [dndBackground, setDndBackground] = useState('');
   const [essenceProfile, setEssenceProfile] = useState('');
   const [setting, setSetting] = useState('');
   const [customSetting, setCustomSetting] = useState('');
@@ -110,6 +103,7 @@ export function CharacterEditor() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  const isDnd55 = ruleset === 'dnd-5.5e';
   const avatarPreset = getAvatarPresetForRace(characterRace);
   const currentAvatar = useMemo(
     () =>
@@ -140,12 +134,33 @@ export function CharacterEditor() {
   );
 
   const getPreviewSubtitle = () => {
-    if (!characterArchetype || !essenceProfile) return 'Noch keine Details gewählt';
+    if (isDnd55) {
+      const classLabel = characterArchetype
+        ? getCharacterCreationOptionLabel(dnd55ClassOptions, characterArchetype)
+        : '';
+      const speciesLabel = characterRace
+        ? getCharacterCreationOptionLabel(dnd55SpeciesOptions, characterRace)
+        : '';
+      const backgroundLabel = dndBackground
+        ? getCharacterCreationOptionLabel(dnd55BackgroundOptions, dndBackground)
+        : '';
+      const details = [classLabel, speciesLabel, backgroundLabel].filter((value) => value.length > 0);
+      return details.length > 0 ? details.join(', ') : 'Noch keine Details gewählt';
+    }
 
-    const archetypeLabel = archetypeLabels[characterArchetype] || characterArchetype;
-    const essenceLabel = essenceLabels[essenceProfile] || essenceProfile;
-    const settingLabel = setting === 'custom' ? customSetting : settingLabels[setting] || '';
-    return `${archetypeLabel} · ${essenceLabel}${settingLabel ? ` · ${settingLabel}` : ''}`;
+    const archetypeLabel = characterArchetype
+      ? getCharacterCreationOptionLabel(sagaDriveArchetypeOptions, characterArchetype)
+      : '';
+    const essenceLabel = essenceProfile
+      ? getCharacterCreationOptionLabel(sagaDriveEssenceOptions, essenceProfile)
+      : '';
+    const settingLabel = setting === 'custom'
+      ? customSetting.trim()
+      : setting
+        ? getCharacterCreationOptionLabel(sagaDriveSettingOptions, setting)
+        : '';
+    const details = [archetypeLabel, essenceLabel, settingLabel].filter((value) => value.length > 0);
+    return details.length > 0 ? details.join(', ') : 'Noch keine Details gewählt';
   };
 
   const applyRacePreset = (race: string) => {
@@ -160,6 +175,18 @@ export function CharacterEditor() {
     setSkinTone(preset.skinTone);
     setClothing(preset.clothing);
     setAccessory(preset.accessory ?? 'none');
+  };
+
+  const handleRulesetChange = (value: string) => {
+    if (!isCharacterRulesetKey(value) || value === ruleset) return;
+
+    setRuleset(value);
+    setCharacterArchetype('');
+    setDndBackground('');
+    setSetting('');
+    setCustomSetting('');
+    setEssenceProfile('');
+    applyRacePreset('human');
   };
 
   const uploadPortrait = async (file: File) => {
@@ -215,11 +242,15 @@ export function CharacterEditor() {
       return;
     }
     if (!characterArchetype) {
-      toast.error('Bitte wähle einen Archetyp');
+      toast.error(isDnd55 ? 'Bitte wähle eine Klasse' : 'Bitte wähle einen Archetyp');
       return;
     }
     if (!characterRace) {
-      toast.error('Bitte wähle eine Rasse');
+      toast.error(isDnd55 ? 'Bitte wähle eine Spezies' : 'Bitte wähle eine Rasse');
+      return;
+    }
+    if (isDnd55 && !dndBackground) {
+      toast.error('Bitte wähle einen Hintergrund');
       return;
     }
 
@@ -308,12 +339,11 @@ export function CharacterEditor() {
         <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
           <Card className="lg:sticky lg:top-4 lg:col-span-1 lg:self-start">
             <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <CardTitle>Live 3D Vorschau</CardTitle>
-                  <CardDescription>Ziehen zum Drehen, Mausrad zum Zoomen</CardDescription>
-                </div>
-                <div className="achievement-badge rounded-full px-3 py-1 text-sm">Lvl {level}</div>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="truncate text-base md:text-lg" title={characterName || 'Unbenannt'}>
+                  {characterName || 'Unbenannt'}
+                </CardTitle>
+                <div className="achievement-badge shrink-0 rounded-full px-3 py-1 text-sm">Lvl {level}</div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -321,15 +351,19 @@ export function CharacterEditor() {
                 <AvatarCanvas avatar={currentAvatar} canvasRef={avatarCanvasRef} />
               </div>
 
-              <div>
-                <p className="font-medium">{characterName || 'Unbenannt'}</p>
-                <p className="text-sm text-muted-foreground">{getPreviewSubtitle()}</p>
-              </div>
+              <p className="text-sm text-muted-foreground">{getPreviewSubtitle()}</p>
 
               <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-muted/30 p-3 text-xs">
                 <div>
-                  <p className="text-muted-foreground">Rasse</p>
-                  <p className="mt-1 font-medium capitalize">{characterRace || 'Neutral'}</p>
+                  <p className="text-muted-foreground">{isDnd55 ? 'Spezies' : 'Rasse'}</p>
+                  <p className="mt-1 font-medium">
+                    {characterRace
+                      ? getCharacterCreationOptionLabel(
+                          isDnd55 ? dnd55SpeciesOptions : sagaDriveRaceOptions,
+                          characterRace,
+                        )
+                      : 'Neutral'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Avatar-Preset</p>
@@ -414,72 +448,121 @@ export function CharacterEditor() {
                     <Textarea id="description" placeholder="Beschreibe deinen Charakter..." rows={4} value={description} onChange={(event) => setDescription(event.target.value)} />
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="archetype">Archetyp</Label>
-                      <Select value={characterArchetype} onValueChange={setCharacterArchetype}>
-                        <SelectTrigger id="archetype"><SelectValue placeholder="Wähle Archetyp" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="fighter">Kämpfer</SelectItem>
-                          <SelectItem value="thinker">Denker</SelectItem>
-                          <SelectItem value="healer">Heiler</SelectItem>
-                          <SelectItem value="rebel">Rebell</SelectItem>
-                          <SelectItem value="diplomat">Diplomat</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="race">Rasse</Label>
-                      <Select value={characterRace} onValueChange={applyRacePreset}>
-                        <SelectTrigger id="race"><SelectValue placeholder="Wähle Rasse" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="human">Mensch</SelectItem>
-                          <SelectItem value="elf">Elf</SelectItem>
-                          <SelectItem value="dwarf">Zwerg</SelectItem>
-                          <SelectItem value="halfling">Halbling</SelectItem>
-                          <SelectItem value="orc">Ork</SelectItem>
-                          <SelectItem value="cyborg">Cyborg</SelectItem>
-                          <SelectItem value="alien">Alien</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground">Setzt nur visuelle Startwerte. Die Gameplay-Rasse bleibt separat gespeichert.</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="setting">Setting</Label>
-                      <Select value={setting} onValueChange={(value) => { setSetting(value); if (value !== 'custom') setCustomSetting(''); }}>
-                        <SelectTrigger id="setting"><SelectValue placeholder="Wähle Setting" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="fantasy">Fantasy</SelectItem>
-                          <SelectItem value="real">Real</SelectItem>
-                          <SelectItem value="scifi">Sci-Fi</SelectItem>
-                          <SelectItem value="custom">Custom</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {setting === 'custom' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="customSetting">Custom Setting</Label>
-                        <Input id="customSetting" value={customSetting} onChange={(event) => setCustomSetting(event.target.value)} placeholder="Eigenes Setting" />
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label htmlFor="essenceProfile">Essenzprofil</Label>
-                      <Select value={essenceProfile} onValueChange={setEssenceProfile}>
-                        <SelectTrigger id="essenceProfile"><SelectValue placeholder="Wähle Essenzprofil" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="physical">Körperlich</SelectItem>
-                          <SelectItem value="mental">Mental</SelectItem>
-                          <SelectItem value="spiritual">Spirituell</SelectItem>
-                          <SelectItem value="practical">Paktbasiert</SelectItem>
-                          <SelectItem value="technological">Technologisch</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ruleset">Regelset</Label>
+                    <Select value={ruleset} onValueChange={handleRulesetChange}>
+                      <SelectTrigger id="ruleset"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {characterRulesetOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {isDnd55
+                        ? 'D&D 5.5e nutzt Klasse, Spezies und Hintergrund. Setting und Essenzprofil werden hier nicht verwendet.'
+                        : 'SagaDrive Core nutzt Archetyp, Rasse, Setting und Essenzprofil.'}
+                    </p>
                   </div>
+
+                  {isDnd55 ? (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="dnd-class">Klasse</Label>
+                        <Select value={characterArchetype} onValueChange={setCharacterArchetype}>
+                          <SelectTrigger id="dnd-class"><SelectValue placeholder="Wähle Klasse" /></SelectTrigger>
+                          <SelectContent>
+                            {dnd55ClassOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="dnd-species">Spezies</Label>
+                        <Select value={characterRace} onValueChange={applyRacePreset}>
+                          <SelectTrigger id="dnd-species"><SelectValue placeholder="Wähle Spezies" /></SelectTrigger>
+                          <SelectContent>
+                            {dnd55SpeciesOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">Spezies ohne eigenes 3D-Preset verwenden vorerst den neutralen Humanoid-Fallback.</p>
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="dnd-background">Hintergrund</Label>
+                        <Select value={dndBackground} onValueChange={setDndBackground}>
+                          <SelectTrigger id="dnd-background"><SelectValue placeholder="Wähle Hintergrund" /></SelectTrigger>
+                          <SelectContent>
+                            {dnd55BackgroundOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="archetype">Archetyp</Label>
+                        <Select value={characterArchetype} onValueChange={setCharacterArchetype}>
+                          <SelectTrigger id="archetype"><SelectValue placeholder="Wähle Archetyp" /></SelectTrigger>
+                          <SelectContent>
+                            {sagaDriveArchetypeOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="race">Rasse</Label>
+                        <Select value={characterRace} onValueChange={applyRacePreset}>
+                          <SelectTrigger id="race"><SelectValue placeholder="Wähle Rasse" /></SelectTrigger>
+                          <SelectContent>
+                            {sagaDriveRaceOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">Setzt nur visuelle Startwerte. Die Gameplay-Rasse bleibt separat gespeichert.</p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="setting">Setting</Label>
+                        <Select value={setting} onValueChange={(value) => { setSetting(value); if (value !== 'custom') setCustomSetting(''); }}>
+                          <SelectTrigger id="setting"><SelectValue placeholder="Wähle Setting" /></SelectTrigger>
+                          <SelectContent>
+                            {sagaDriveSettingOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {setting === 'custom' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="customSetting">Custom Setting</Label>
+                          <Input id="customSetting" value={customSetting} onChange={(event) => setCustomSetting(event.target.value)} placeholder="Eigenes Setting" />
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <Label htmlFor="essenceProfile">Essenzprofil</Label>
+                        <Select value={essenceProfile} onValueChange={setEssenceProfile}>
+                          <SelectTrigger id="essenceProfile"><SelectValue placeholder="Wähle Essenzprofil" /></SelectTrigger>
+                          <SelectContent>
+                            {sagaDriveEssenceOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="appearance" className="space-y-6">
