@@ -5,8 +5,10 @@
 import { supabase } from '../../../lib/supabase';
 import type { ProjectMemberDto, JoinProjectDto } from '../types/project.types';
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function requireUuid(value: unknown, operation: string): string {
-  if (typeof value !== 'string' || !/^[0-9a-f-]{36}$/i.test(value)) {
+  if (typeof value !== 'string' || !UUID_PATTERN.test(value)) {
     throw new Error(`${operation} returned an invalid identifier`);
   }
   return value;
