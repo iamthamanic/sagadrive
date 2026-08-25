@@ -3,13 +3,13 @@
 // ============================================
 
 import { supabase } from '../../../lib/supabase';
-import type { ProjectMember, JoinProjectDTO } from '../types/project.types';
+import type { ProjectMemberDto, JoinProjectDto } from '../types/project.types';
 
 export const projectMemberService = {
   /**
    * Get all members of a project
    */
-  async getMembers(projectId: string): Promise<ProjectMember[]> {
+  async getMembers(projectId: string): Promise<ProjectMemberDto[]> {
     const { data, error } = await supabase
       .from('project_members')
       .select('*')
@@ -23,7 +23,7 @@ export const projectMemberService = {
   /**
    * Join a project by code
    */
-  async joinByCode(dto: JoinProjectDTO, userId: string): Promise<ProjectMember> {
+  async joinByCode(dto: JoinProjectDto, userId: string): Promise<ProjectMemberDto> {
     // First, find the project by code
     const { data: project, error: projectError } = await supabase
       .from('projects')
@@ -67,7 +67,7 @@ export const projectMemberService = {
     projectId: string,
     userId: string,
     characterId: string
-  ): Promise<ProjectMember> {
+  ): Promise<ProjectMemberDto> {
     const { data, error } = await supabase
       .from('project_members')
       .update({ character_id: characterId })
@@ -96,7 +96,7 @@ export const projectMemberService = {
   /**
    * Get projects where user is a member
    */
-  async getMyProjects(userId: string): Promise<ProjectMember[]> {
+  async getMyProjects(userId: string): Promise<ProjectMemberDto[]> {
     const { data, error } = await supabase
       .from('project_members')
       .select(`
