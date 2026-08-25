@@ -15,6 +15,7 @@ interface CharacterBackgroundComposerProps {
 }
 
 const EXAMPLE_ROTATION_MS = 5_000;
+const EXAMPLE_FADE_MS = 180;
 
 export function CharacterBackgroundComposer({
   value,
@@ -23,21 +24,31 @@ export function CharacterBackgroundComposer({
 }: CharacterBackgroundComposerProps) {
   const examples = useMemo(() => buildCharacterBackgroundExamples(context), [context]);
   const [exampleIndex, setExampleIndex] = useState(0);
+  const [exampleVisible, setExampleVisible] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generatedDraft, setGeneratedDraft] = useState('');
 
   useEffect(() => {
     setExampleIndex(0);
+    setExampleVisible(true);
   }, [examples]);
 
   useEffect(() => {
     if (value.trim() || examples.length < 2) return undefined;
 
-    const timer = window.setInterval(() => {
-      setExampleIndex((current) => (current + 1) % examples.length);
+    let fadeTimer: number | undefined;
+    const rotationTimer = window.setInterval(() => {
+      setExampleVisible(false);
+      fadeTimer = window.setTimeout(() => {
+        setExampleIndex((current) => (current + 1) % examples.length);
+        setExampleVisible(true);
+      }, EXAMPLE_FADE_MS);
     }, EXAMPLE_ROTATION_MS);
 
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(rotationTimer);
+      if (fadeTimer !== undefined) window.clearTimeout(fadeTimer);
+    };
   }, [examples, value]);
 
   const currentExample = examples[exampleIndex] ?? examples[0] ?? '';
@@ -81,14 +92,23 @@ export function CharacterBackgroundComposer({
             {generating ? 'Generiert...' : 'Generieren'}
           </Button>
         </div>
-        <Textarea
-          id="backgroundStory"
-          rows={8}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder={currentExample}
-          className="min-h-[190px] resize-y rounded-none border-0 bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0"
-        />
+        <div className="relative">
+          <Textarea
+            id="backgroundStory"
+            rows={8}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            className="relative z-10 min-h-[190px] resize-y rounded-none border-0 bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0"
+          />
+          {!value.trim() && currentExample && (
+            <p
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-x-3 top-3 z-0 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground transition-opacity duration-200 ${exampleVisible ? 'opacity-70' : 'opacity-0'}`}
+            >
+              {currentExample}
+            </p>
+          )}
+        </div>
         {!value.trim() && currentExample && (
           <div className="flex flex-col gap-2 border-t border-border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">
