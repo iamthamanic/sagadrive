@@ -65,6 +65,8 @@
     "build": "vite build",
     "lint": "node scripts/lint.mjs",
     "typecheck": "node scripts/typecheck.mjs",
-    "checks": "npm run lint && npm run typecheck && npm run build"
+    "checks": "npm run lint && npm run typecheck && npm run build",
+    "test-gate": "node scripts/test-gate.mjs",
+    "composition-gate": "node scripts/composition-gate.mjs"
   }
 }
