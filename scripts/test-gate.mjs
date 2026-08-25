@@ -36,6 +36,51 @@ function resolveDiffBase() {
   return undefined;
 }
 
+function changedDenoFunctionFiles() {
+  const base = resolveDiffBase();
+  if (!base) return [];
+
+  const output = git([
+    'diff',
+    '--name-only',
+    '--diff-filter=ACMR',
+    `${base}..HEAD`,
+    '--',
+    'supabase/functions',
+  ]);
+
+  return output
+    ? output.split('\n').filter((path) => path.endsWith('.ts'))
+    : [];
+}
+
+function checkChangedDenoFunctions() {
+  const files = changedDenoFunctionFiles();
+  if (files.length === 0) {
+    console.log('Deno Edge Function check skipped (no changed TypeScript files).');
+    return;
+  }
+
+  console.log(`Deno Edge Function check: ${files.length} changed TypeScript file(s).`);
+  const result = spawnSync('deno', ['check', ...files], {
+    cwd: root,
+    encoding: 'utf8',
+    stdio: 'inherit',
+  });
+
+  if (result.error) {
+    console.error(`Deno Edge Function check could not start: ${result.error.message}`);
+    process.exit(1);
+  }
+
+  if (result.status !== 0) {
+    console.error('Deno Edge Function check failed.');
+    process.exit(result.status ?? 1);
+  }
+
+  console.log('Deno Edge Function check passed.');
+}
+
 function scanAddedLinesForSecrets() {
   const base = resolveDiffBase();
   if (!base) {
@@ -108,6 +153,7 @@ execFileSync('npm', ['run', 'checks'], {
   stdio: 'inherit',
 });
 
+checkChangedDenoFunctions();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
