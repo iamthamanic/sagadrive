@@ -9,7 +9,7 @@ SagaDrive soll die beiden ECC-Gates `@test-gate` und `@composition-gate` dauerha
 - `.github/workflows/verify.yml` ist der bestehende GitHub-Actions-Pruefpfad.
 - `npm ci` funktioniert mit dem committed `package-lock.json`.
 - `scripts/lint.mjs`, `scripts/typecheck.mjs` und `scripts/changed-typescript.mjs` bilden den bestehenden diff-spezifischen TS-Gate.
-- `.qa/project.yaml` definiert `npm run checks` als aktuellen technischen Gate.
+- `.qa/project.yaml` definiert einen technischen `checksCommand` und TypeScript als typed-strict Sprache.
 - Ein vollstaendiger semantischer `@composition-gate` benoetigt menschliche/Agenten-Analyse; CI darf diese Analyse nicht vortaeuschen.
 
 ## Happy Path
@@ -19,13 +19,14 @@ SagaDrive soll die beiden ECC-Gates `@test-gate` und `@composition-gate` dauerha
 - [ ] GitHub Actions besitzt einen separaten `composition-gate`-Job nach erfolgreichem Test Gate.
 - [ ] `npm run composition-gate` bestimmt den Diff gegen die relevante Basis reproduzierbar.
 - [ ] Docs-/QA-only-Diffs und eindeutig einfache Single-Hop-Diffs koennen mit dokumentiertem Grund automatisch `SKIPPED` passieren.
-- [ ] Multi-Hop-, Backend-/Persistenz-, Worker-/Webhook-/Queue- oder sonstige Side-Effect-relevante Diffs benoetigen einen Composition-Proof mit Verdict `CLEAR` oder `SKIPPED`.
+- [ ] Service-, Multi-Hop-, Backend-/Persistenz-, Worker-/Webhook-/Queue- oder sonstige Side-Effect-relevante Diffs benoetigen einen Composition-Proof mit Verdict `CLEAR` oder `SKIPPED`.
 - [ ] Ein veralteter Proof wird nicht akzeptiert, sobald nach dem bewerteten Code-SHA weitere nicht-reine QA-Proof-Aenderungen erfolgt sind.
+- [ ] Pull Requests pruefen den echten Branch-Head und nicht GitHubs synthetischen Merge-Commit, damit Composition-Proofs stabil an einen echten Commit-SHA gebunden werden koennen.
 - [ ] Die bestehende `npm run checks` Semantik bleibt erhalten; `npm run test-gate` wird die CI-Grenze.
 
 ## Edge Cases
-- [ ] Pull Requests gegen `main` verwenden die PR-Basis als Diff-Basis.
-- [ ] Feature-Branch-Pushes verwenden `origin/main` als Diff-Basis.
+- [ ] Pull Requests gegen `main` verwenden den PR-Base-SHA/merge-base und den echten PR-Head als Composition-Scope.
+- [ ] Feature-Branch-Pushes pruefen im Test Gate weiterhin den Branch gegen `origin/main`; der Composition Gate bewertet den konkreten Push-Diff gegen `github.event.before`.
 - [ ] Pushes auf `main` vergleichen sinnvoll gegen den vorherigen Commit.
 - [ ] Ein Branch ohne relevante Aenderungen beendet beide Gates erfolgreich.
 - [ ] Ein fehlender oder malformed Composition-Proof blockiert nur dann, wenn der Diff eine Composition-Pruefung erfordert.
@@ -45,6 +46,7 @@ SagaDrive soll die beiden ECC-Gates `@test-gate` und `@composition-gate` dauerha
 
 ## Composition Gate
 - Proof: `.qa/runs/composition-gate-ci-test-composition-gates.md`
+- Proof-Code-SHA: `d294914d431b53ff01a0afa710d4cc734171fe90`.
 - Verdict fuer diesen Infrastruktur-Slice: `SKIPPED`, da nur CI/Tooling/QA-Dokumentation betroffen ist und kein SagaDrive-Business-Event ueber mehrere Hops veraendert wird.
 - CI selbst erzwingt fuer spaetere riskante Diffs einen frischen `CLEAR`/`SKIPPED`-Proof; stale Proofs mit nachfolgenden Nicht-QA-Aenderungen werden abgelehnt.
 
@@ -53,7 +55,9 @@ Keine UI-Aenderung; Browser-Verifikation ist fuer diesen Slice nicht erforderlic
 
 ## Implementation Notes
 - Files touched: `.github/workflows/verify.yml`, `.qa/project.yaml`, `package.json`, `README.md`, `scripts/test-gate.mjs`, `scripts/composition-gate.mjs`, `.qa/runs/composition-gate-ci-test-composition-gates.md`, dieses Acceptance-Artefakt.
-- Test Gate: GitHub Actions Run `32816339999`, Job `Test Gate` PASS. `npm run test-gate` fuehrte `npm run checks`, Secrets-Diff-Scan und informationalen Production-Dependency-Audit aus. Lint PASS (9 geaenderte TS-Dateien), Typecheck PASS (9), Vite Build PASS.
-- Composition Gate: GitHub Actions Run `32816339999`, Job `Composition Gate` PASS; Push-Diff war Docs/Tooling-only und wurde mit begruendetem `SKIPPED` bewertet.
+- `Test Gate`: eigener GitHub-Actions-Job; `npm run test-gate` fuehrt `npm run checks`, Secrets-Diff-Scan und informationalen Production-Dependency-Audit aus.
+- `Composition Gate`: eigener nachgelagerter GitHub-Actions-Job; einfache Tooling/Docs-/Single-Hop-Diffs werden begruendet `SKIPPED`, waehrend Services, Backend/Persistenz, Worker/Queue/Webhook/Side-Effects sowie Cross-Domain-Diffs einen aktuellen Proof brauchen.
+- PR-Checkout: beide Jobs checken explizit `${{ github.event.pull_request.head.sha || github.sha }}` aus, damit der Proof-SHA nicht an GitHubs synthetischem PR-Merge-Commit scheitert.
+- Bereits erfolgreich ausgefuehrter Referenzlauf: GitHub Actions Run `32816339999` mit Test Gate PASS und Composition Gate PASS/SKIPPED. Ein finaler Lauf auf dem dokumentierten Head wird nach diesem reinen QA-Dokumentationscommit erneut erwartet.
 - Dependency audit: `npm audit --omit=dev` meldete informational 2 high, 0 critical. `npm ci` meldet weiterhin insgesamt 6 bekannte Findings (5 high, 1 critical inkl. Dev-Dependencies); deren Bereinigung bleibt separates Follow-up.
 - Known limitation: Die semantische Multi-Hop-Analyse selbst ist nicht als LLM in CI eingebaut. Stattdessen blockiert CI riskante Diffs ohne einen zuvor erzeugten, frischen Composition-Proof. Das vermeidet API-Key-/Paid-Service-Abhaengigkeiten und verhindert vorgetaeuschte semantische Verifikation.
