@@ -21,6 +21,7 @@ https://www.figma.com/design/XyboDSHba8TNFw0Bb5uUs4/SagaDrive
 
 - Node.js 20+ (empfohlen: aktuelle LTS)
 - npm 10+
+- Deno LTS für lokale `npm run test-gate`-Prüfungen, sobald `supabase/functions/**/*.ts` im Branch-Diff geändert wurde
 
 ## Lokale Entwicklung
 
@@ -91,7 +92,7 @@ npm run test-gate
 npm run composition-gate
 ```
 
-`test-gate` führt die technischen Checks aus: diff-spezifischer Typed-Strict-Lint, Typecheck, Produktions-Build und Secrets-Diff-Scan. `npm audit` wird zusätzlich sichtbar protokolliert; bestehende Dependency-Findings sind derzeit informational und werden separat behoben.
+`test-gate` führt die technischen Checks aus: diff-spezifischer Typed-Strict-Lint, Typecheck, Produktions-Build, `deno check` für geänderte Supabase-Edge-Function-TypeScript-Dateien und Secrets-Diff-Scan. GitHub Actions stellt dafür Deno LTS über `denoland/setup-deno@v2` bereit. `npm audit` wird zusätzlich sichtbar protokolliert; bestehende Dependency-Findings sind derzeit informational und werden separat behoben.
 
 `composition-gate` prüft die Bedeutung über Modul-/Service-/Backend-Hops. Reine Docs-/Tooling-Diffs und sichere Single-Hop-Diffs werden dokumentiert übersprungen. Bei Multi-Hop-, Persistenz-, Worker-, Queue-, Webhook- oder Side-Effect-relevanten Änderungen muss ein aktueller Proof unter `.qa/runs/composition-gate-<slug>.md` mit `CLEAR` oder begründetem `SKIPPED` vorliegen.
 
