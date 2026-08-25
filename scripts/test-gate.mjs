@@ -103,6 +103,14 @@ function checkChangedDenoFunctions() {
   console.log('Deno Edge Function tests passed.');
 }
 
+function checkProjectMembershipSecurity() {
+  console.log('Project membership security contract: checking RLS and client write paths...');
+  execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function scanAddedLinesForSecrets() {
   const base = resolveDiffBase();
   if (!base) {
@@ -176,6 +184,7 @@ execFileSync('npm', ['run', 'checks'], {
 });
 
 checkChangedDenoFunctions();
+checkProjectMembershipSecurity();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
