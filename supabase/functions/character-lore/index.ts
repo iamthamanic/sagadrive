@@ -9,6 +9,7 @@ import {
   resolveCharacterLoreProviderConfig,
 } from '../_shared/character-lore-provider.ts';
 import { consumePersistentCharacterLoreRateLimit } from '../_shared/character-lore-rate-limit.ts';
+import { canUseWorldLoreReference } from '../_shared/character-lore-access.ts';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -33,6 +34,7 @@ interface WorldRow {
   name: string;
   lore: string | null;
   setting_type: string | null;
+  is_public: boolean;
 }
 
 interface SupabaseConfig {
@@ -316,13 +318,15 @@ function parseWorldRow(value: unknown): WorldRow | null {
     typeof value.name === 'string' &&
     (typeof value.creator_user_id === 'string' || value.creator_user_id === null) &&
     (typeof value.lore === 'string' || value.lore === null) &&
-    (typeof value.setting_type === 'string' || value.setting_type === null)
+    (typeof value.setting_type === 'string' || value.setting_type === null) &&
+    typeof value.is_public === 'boolean'
     ? {
         id: value.id,
         creator_user_id: value.creator_user_id,
         name: value.name,
         lore: value.lore,
         setting_type: value.setting_type,
+        is_public: value.is_public,
       }
     : null;
 }
@@ -369,13 +373,22 @@ async function getAuthorizedReferenceContext(
   let world: WorldRow | null = null;
   if (worldId) {
     const worldBody = await fetchServiceJson(
-      `${config.url}/rest/v1/worlds?select=id,creator_user_id,name,lore,setting_type&id=eq.${worldId}&limit=1`,
+      `${config.url}/rest/v1/worlds?select=id,creator_user_id,name,lore,setting_type,is_public&id=eq.${worldId}&limit=1`,
       config.serviceRoleKey,
     );
     const firstWorld = Array.isArray(worldBody) ? worldBody[0] : undefined;
     world = parseWorldRow(firstWorld);
     if (!world) throw new Error('World not found');
-    if (!projectAuthorized && world.creator_user_id !== userId) throw new Error('World access denied');
+    if (!canUseWorldLoreReference(
+      {
+        creatorUserId: world.creator_user_id,
+        isPublic: world.is_public,
+      },
+      userId,
+      project?.gm_user_id,
+    )) {
+      throw new Error('World access denied');
+    }
   }
 
   return {
