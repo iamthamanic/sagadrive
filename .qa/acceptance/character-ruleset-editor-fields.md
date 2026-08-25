@@ -1,7 +1,7 @@
 # Feature: Character Ruleset Editor Fields
 
 ## Intent
-Der CharacterEditor zeigt den Charakternamen direkt an der 3D-Charaktervorschau und ersetzt dort generische Vorschau-/Bedienhinweise. Im Info-Tab steuert ein Regelset-Dropdown direkt unter der Beschreibung, welche fachlichen Character-Felder angeboten werden.
+Der CharacterEditor zeigt den Charakternamen direkt oberhalb der 3D-Charaktervorschau und ersetzt dort generische Vorschau-/Bedienhinweise. Im Info-Tab steuert ein Regelset-Dropdown direkt unter der Beschreibung, welche fachlichen Character-Felder angeboten werden.
 
 ## Preconditions
 - Bestehender CharacterEditor und die vorhandenen Ruleset-Optionen in `src/modules/rulesets/characterCreation.ts` bleiben die Source of Truth.
@@ -17,14 +17,14 @@ Der CharacterEditor zeigt den Charakternamen direkt an der 3D-Charaktervorschau 
 - Ruleset-Wechsel darf keine regelsetfremden Werte im UI stehen lassen.
 
 ## Happy Path
-- [ ] In der 3D-Vorschau wird der aktuelle Charaktername sichtbar; bei leerem Namen steht `Unbenannt`.
+- [ ] Direkt oberhalb der 3D-Vorschau wird der aktuelle Charaktername sichtbar; bei leerem Namen steht `Unbenannt`.
 - [ ] Der generische Ready-/Titeltext wie `Live 3D Vorschau` sowie der permanente Hinweis `Ziehen zum Drehen · Mausrad/Trackpad zum Zoomen` werden entfernt; Loading-/Error-Zustände bleiben sichtbar.
 - [ ] Direkt unter `Beschreibung` steht das Dropdown `Regelset` mit `SagaDrive Core` und `Dungeons & Dragons 5.5e`; Default ist `SagaDrive Core`.
 - [ ] Bei `SagaDrive Core` werden `Archetyp`, `Rasse`, `Setting` und `Essenzprofil` angezeigt; bei `Dungeons & Dragons 5.5e` werden stattdessen `Klasse`, `Spezies` und `Hintergrund` angezeigt.
 - [ ] Ein Regelset-Wechsel setzt regelsetabhängige Auswahlwerte kontrolliert zurück und verwendet weiterhin den neutralen Human-Avatar als sicheren visuellen Startwert.
 
 ## Edge Cases
-- [ ] Ein leerer Charaktername verursacht keinen leeren Overlay-Titel, sondern zeigt `Unbenannt`.
+- [ ] Ein leerer Charaktername verursacht keinen leeren Preview-Titel, sondern zeigt `Unbenannt`.
 - [ ] Loading- und Error-Status der 3D-Runtime bleiben trotz entferntem Ready-Label verständlich sichtbar.
 - [ ] D&D-Spezies ohne eigenes 3D-Preset verwenden weiterhin den vorhandenen neutralen Humanoid-Fallback.
 - [ ] Custom-Setting wird nur bei SagaDrive Core und nur bei Auswahl `Custom` angezeigt.
@@ -39,4 +39,11 @@ Der CharacterEditor zeigt den Charakternamen direkt an der 3D-Charaktervorschau 
 Browser-Verifikation erforderlich für SagaDrive-Core-Info-Tab, D&D-5.5e-Info-Tab und 3D-Vorschau mit Name.
 
 ## Implementation Notes
-Noch offen.
+- Der CharacterEditor hatte die gewünschte Ruleset-Logik bereits vollständig auf dem aktiven Branch: `ruleset` startet mit `sagadrive-core`, das `Regelset`-Select steht direkt unter `Beschreibung`, und `handleRulesetChange` leert regelsetabhängige Werte vor dem Wechsel.
+- Die vorhandene fachliche Zuordnung wurde bestätigt: SagaDrive Core zeigt `Archetyp`, `Rasse`, `Setting`, `Essenzprofil`; D&D 5.5e zeigt `Klasse`, `Spezies`, `Hintergrund`. D&D-Weltkontext bleibt getrennt vom Character-Formular und kann über den bereits vorbereiteten World-/Project-Lore-Kontext kommen.
+- Der Charaktername (`characterName || 'Unbenannt'`) bleibt im Preview-Card-Header unmittelbar oberhalb des Canvas sichtbar.
+- `AvatarCanvas` zeigt den Runtime-Status nur noch während `loading` oder `error`. Im `ready`-Zustand gibt es kein dauerhaftes generisches 3D-Label mehr.
+- Der permanente Bedienhinweis `Ziehen zum Drehen · Mausrad/Trackpad zum Zoomen` wurde entfernt; die OrbitControls selbst bleiben unverändert aktiv.
+- GitHub Test Gate für Code-HEAD `de77ea30ba5a5339d7d2d0032dfcf0a59d5387ed`: PASS. Enthalten: `npm run checks` mit Typed-Strict-Lint, Typecheck und Vite-Production-Build; Deno Edge-Function-Checks und 4/4 Prompt-Tests; Secrets-Diff-Scan PASS. Dependency-Audit bleibt informational mit critical=0, high=2.
+- Composition Gate für denselben Code-HEAD: PASS.
+- Browser-/Screenshot-Verifikation bleibt offen und muss über `@verify-ui` erfolgen.
