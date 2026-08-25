@@ -137,11 +137,9 @@ function analyze(files) {
   }
 
   const domainZones = [...zones].filter((zone) => zone.startsWith('domain:'));
-  const semanticZones = [...zones].filter((zone) => !zone.startsWith('domain:'));
   const hasSideEffect = zones.has('side-effect');
+  const hasService = zones.has('service');
   const hasBackendOrPersistence = zones.has('backend') || zones.has('persistence');
-  const crossesServiceBoundary =
-    zones.has('service') && semanticZones.some((zone) => zone !== 'service');
   const crossesDomains = domainZones.length > 1;
 
   if (hasSideEffect) {
@@ -152,18 +150,18 @@ function analyze(files) {
     };
   }
 
-  if (hasBackendOrPersistence) {
+  if (hasService || hasBackendOrPersistence) {
     return {
       requiresProof: true,
-      reason: 'backend or persistence hop changed',
+      reason: 'service, backend, or persistence hop changed',
       zones: [...zones],
     };
   }
 
-  if (crossesServiceBoundary || crossesDomains) {
+  if (crossesDomains) {
     return {
       requiresProof: true,
-      reason: 'diff crosses multiple semantic hops/domains',
+      reason: 'diff crosses multiple domain modules',
       zones: [...zones],
     };
   }
