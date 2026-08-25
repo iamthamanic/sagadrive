@@ -36,9 +36,9 @@ export interface CharacterDto {
   conditions?: string[];
 
   personality_traits?: string[];
-  ideals?: string;
-  bonds?: string;
-  flaws?: string;
+  ideals?: string[];
+  bonds?: string[];
+  flaws?: string[];
 
   abilities: AbilityDto[];
   inventory: ItemDto[];
@@ -128,9 +128,9 @@ export interface CreateCharacterDto {
   level?: number;
   background_story?: string;
   personality_traits?: string[];
-  ideals?: string;
-  bonds?: string;
-  flaws?: string;
+  ideals?: string[];
+  bonds?: string[];
+  flaws?: string[];
   appearance?: Partial<CharacterAppearanceDto>;
   attributes?: Partial<CharacterAttributesDto>;
   abilities?: AbilityDto[];
@@ -146,9 +146,9 @@ export interface UpdateCharacterDto {
   level?: number;
   background_story?: string;
   personality_traits?: string[];
-  ideals?: string;
-  bonds?: string;
-  flaws?: string;
+  ideals?: string[];
+  bonds?: string[];
+  flaws?: string[];
   appearance?: Partial<CharacterAppearanceDto>;
   attributes?: Partial<CharacterAttributesDto>;
   abilities?: AbilityDto[];
@@ -165,9 +165,9 @@ export interface CharacterVm {
   level: number;
   backgroundStory?: string;
   personalityTraits: string[];
-  ideals?: string;
-  bonds?: string;
-  flaws?: string;
+  ideals: string[];
+  bonds: string[];
+  flaws: string[];
   appearance: CharacterAppearanceDto;
   attributes: CharacterAttributesDto;
   abilities: AbilityDto[];
