@@ -16,7 +16,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isProjectStatus(value: unknown): value is ProjectDto['status'] {
-  return value === 'active' || value === 'paused' || value === 'completed';
+  return value === 'active' || value === 'paused' || value === 'completed' || value === 'archived';
 }
 
 function isProjectDto(value: unknown): value is ProjectDto {
