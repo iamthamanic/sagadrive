@@ -16,7 +16,15 @@ Kopiere den kompletten Inhalt von `/supabase/schema_v3_complete.sql` und führe 
 
 ---
 
-## Schritt 3: RLS Policies hinzufügen
+## Schritt 3: Character-Trait-Migration anwenden
+
+Führe danach `supabase/migrations/002_character_trait_arrays.sql` aus.
+
+Die Migration ist sowohl für bestehende als auch für frisch angelegte SagaDrive-Datenbanken vorgesehen. Sie stellt `personality_traits`, `ideals`, `bonds` und `flaws` auf die vom CharacterEditor verwendeten Textbaustein-Arrays um und bewahrt vorhandene Einzelwerte als Ein-Element-Arrays.
+
+---
+
+## Schritt 4: RLS Policies hinzufügen
 
 Kopiere den kompletten Inhalt von `/supabase/schema_v3_rls.sql` und führe ihn aus.
 
@@ -24,7 +32,7 @@ Kopiere den kompletten Inhalt von `/supabase/schema_v3_rls.sql` und führe ihn a
 
 ---
 
-## Schritt 4: D&D 5e Ruleset erstellen (Seed Data)
+## Schritt 5: D&D 5e Ruleset erstellen (Seed Data)
 
 ```sql
 INSERT INTO rulesets (
@@ -119,7 +127,7 @@ INSERT INTO rulesets (
 
 ---
 
-## Schritt 5: Verifizieren
+## Schritt 6: Verifizieren
 
 Gehe zu **Table Editor** und prüfe, ob alle Tabellen existieren:
 
@@ -144,9 +152,11 @@ Gehe zu **Table Editor** und prüfe, ob alle Tabellen existieren:
 - ✅ marketplace_categories
 - ✅ ai_context
 
+Prüfe bei `characters` zusätzlich, dass `personality_traits`, `ideals`, `bonds` und `flaws` als Text-Arrays vorliegen.
+
 ---
 
-## Schritt 6: Test
+## Schritt 7: Test
 
 1. Reload die App
 2. Gehe zu Dashboard
