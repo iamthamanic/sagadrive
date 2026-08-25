@@ -103,7 +103,7 @@ export function CharacterBackgroundComposer({
           {!value.trim() && currentExample && (
             <p
               aria-hidden="true"
-              className={`pointer-events-none absolute inset-x-3 top-3 z-0 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground transition-opacity duration-200 ${exampleVisible ? 'opacity-70' : 'opacity-0'}`}
+              className={`pointer-events-none absolute inset-x-3 top-3 z-0 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground transition-opacity duration-200 motion-reduce:transition-none ${exampleVisible ? 'opacity-70' : 'opacity-0'}`}
             >
               {currentExample}
             </p>
