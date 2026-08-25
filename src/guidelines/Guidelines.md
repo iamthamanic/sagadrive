@@ -1,61 +1,91 @@
-**Add your own guidelines here**
-<!--
+# SagaDrive UI Generation Guidelines
 
-System Guidelines
+Diese Regeln gelten fuer neue und ueberarbeitete SagaDrive-Produktoberflaechen. `src/THEME_GUIDE.md` ist die kanonische Detailreferenz. UI-Primitives unter `src/components/ui/` sind die technische Source of Truth.
 
-Use this file to provide the AI with rules and guidelines you want it to follow.
-This template outlines a few examples of things you can add. You can add your own sections and format it to suit your needs
+## Grundstil
 
-TIP: More context isn't always better. It can confuse the LLM. Try and add the most important rules you need
+- Produkt-UI, keine Marketing-Landingpage-Aesthetik.
+- Dark-first, klar, ruhig, hochwertig und funktional.
+- Bestehende Radix/shadcn-Komponenten wiederverwenden statt lokale Sonderloesungen zu bauen.
+- Darker Grotesque als UI-Schrift beibehalten.
+- Keine zufaelligen Farben ausserhalb der SagaDrive-CI.
+- Controls muessen auch ohne Hover oder Focus eindeutig als Controls erkennbar sein.
+- Touch Targets fuer wichtige Controls mindestens 44px hoch.
 
-# General guidelines
+## Brand-Farbrollen
 
-Any general rules you want the AI to follow.
-For example:
+SagaDrive verwendet zwei Markenfarben mit festen semantischen Rollen:
 
-* Only use absolute positioning when necessary. Opt for responsive and well structured layouts that use flexbox and grid by default
-* Refactor code as you go to keep code clean
-* Keep file sizes small and put helper functions and components in their own files.
+### Gold / Amber: Auswahl und wichtigste Aktion
 
---------------
+- Light: `#E8A641`
+- Dark: `#F59E0B`
+- Aktiver Tab: gefuellter Gold-/Amber-Zustand.
+- Primaere CTA: gefuellter Gold-/Amber-Button.
+- Level-, Achievement- und Premium-Akzente duerfen ebenfalls Gold verwenden.
+- Nicht fuer Fehler-, Disabled- oder normale Information States verwenden.
 
-# Design system guidelines
-Rules for how the AI should make generations look like your company's design system
+### Cyan / Teal: Funktion und Orientierung
 
-Additionally, if you select a design system to use in the prompt box, you can reference
-your design system's components, tokens, variables and components.
-For example:
+- Light: `#0891B2`
+- Dark: `#06B6D4`
+- Keyboard-Focus-Ringe.
+- Links und funktionale Navigation.
+- Progress und Status, sofern nicht semantisch anders belegt.
+- Hover von sekundaeren/Outline/Ghost Actions.
+- Inaktive Tabs duerfen bei Hover Cyan anzeigen, aktive Tabs bleiben Gold.
 
-* Use a base font-size of 14px
-* Date formats should always be in the format “Jun 10”
-* The bottom toolbar should only ever have a maximum of 4 items
-* Never use the floating action button with the bottom toolbar
-* Chips should always come in sets of 3 or more
-* Don't use a dropdown if there are 2 or fewer options
+Merksatz: **Gold = ausgewaehlt oder wichtigste Aktion. Cyan = funktionale Orientierung.**
 
-You can also create sub sections and add more specific details
-For example:
+## Buttons
 
+- `Button` ohne Variant ist die primaere CTA und wird Gold/Amber dargestellt.
+- Pro Abschnitt nach Moeglichkeit nur eine visuell dominante primaere CTA.
+- `outline` fuer sekundaere Aktionen. Neutral im Ruhezustand, Cyan bei Hover/Focus.
+- `secondary` fuer untergeordnete gefuellte Aktionen.
+- `ghost` fuer tertiaere Aktionen.
+- `destructive` bleibt rot und wird niemals durch Brand-Gold ersetzt.
+- Keine lokalen `bg-yellow-*`, `bg-blue-*` oder Hex-Hardcodes fuer Standardaktionen.
 
-## Button
-The Button component is a fundamental interactive element in our design system, designed to trigger actions or navigate
-users through the application. It provides visual feedback and clear affordances to enhance user experience.
+## Tabs
 
-### Usage
-Buttons should be used for important actions that users need to take, such as form submissions, confirming choices,
-or initiating processes. They communicate interactivity and should have clear, action-oriented labels.
+- Aktiver Tab: `bg-accent text-accent-foreground border-accent`.
+- Inaktiver Tab: neutral.
+- Hover auf inaktiven Tabs: dezentes Cyan/Teal.
+- Focus: sichtbarer Cyan/Teal-Ring.
+- Aktive Tabs duerfen auf Hover nicht in eine andere Markenrolle wechseln.
 
-### Variants
-* Primary Button
-  * Purpose : Used for the main action in a section or page
-  * Visual Style : Bold, filled with the primary brand color
-  * Usage : One primary button per section to guide users toward the most important action
-* Secondary Button
-  * Purpose : Used for alternative or supporting actions
-  * Visual Style : Outlined with the primary color, transparent background
-  * Usage : Can appear alongside a primary button for less important actions
-* Tertiary Button
-  * Purpose : Used for the least important actions
-  * Visual Style : Text-only with no border, using primary color
-  * Usage : For actions that should be available but not emphasized
--->
+## Forms
+
+- Label immer oberhalb des Controls.
+- Input, Textarea und Select haben im Ruhezustand einen sichtbaren 1px-Rahmen.
+- Placeholder darf nicht als einziges Label dienen.
+- Selects, Inputs und Textareas verwenden dieselbe Border-, Hover- und Focus-Hierarchie.
+- Invalid und Disabled States muessen ohne Farbverwechslung erkennbar bleiben.
+
+## Cards und Panels
+
+- Cards nur fuer echte Hierarchie verwenden.
+- Standard-Panel: dunkle Surface, subtil sichtbarer Border, sehr zurueckhaltender Shadow.
+- Keine Neon-Glows oder zufaelligen Gradient-Effekte.
+- Goldene Outlines nur fuer bewusst hervorgehobene Premium-/Achievement-Zustaende.
+
+## Umsetzung
+
+Vor lokalen Styles zuerst die bestehenden Primitives pruefen:
+
+- `src/components/ui/button.tsx`
+- `src/components/ui/tabs.tsx`
+- `src/components/ui/select.tsx`
+- `src/components/ui/input.tsx`
+- `src/components/ui/textarea.tsx`
+- `src/styles/globals.css`
+
+Wenn eine Regel fuer mehrere Screens gelten soll, wird zuerst das passende Primitive oder Theme-Token angepasst. Keine CharacterEditor-spezifischen Farb-Hardcodes fuer allgemeine Designsystem-Regeln.
+
+## Accessibility
+
+- WCAG AA Kontrast fuer Text und Controls.
+- Focus ist immer sichtbar und darf nicht nur ueber Farbe kommuniziert werden.
+- Tastaturbedienung der Radix-Primitives erhalten.
+- Disabled, invalid, selected und focus muessen voneinander unterscheidbar bleiben.
