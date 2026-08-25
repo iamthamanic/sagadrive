@@ -17,6 +17,11 @@ interface CharacterTraitEditorProps {
 }
 
 const MAX_TRAIT_LENGTH = 160;
+const MAX_TRAIT_BLOCKS = 12;
+
+function normalizeTraitKey(value: string): string {
+  return value.trim().toLocaleLowerCase('de-DE');
+}
 
 export function CharacterTraitEditor({
   id,
@@ -28,14 +33,21 @@ export function CharacterTraitEditor({
 }: CharacterTraitEditorProps) {
   const [open, setOpen] = useState(false);
   const [customValue, setCustomValue] = useState('');
-  const suggestions = useMemo(
-    () => getCharacterTraitSuggestions(category, context).filter((suggestion) => !values.includes(suggestion)),
-    [category, context, values],
+  const selectedKeys = useMemo(
+    () => new Set(values.map(normalizeTraitKey)),
+    [values],
   );
+  const suggestions = useMemo(
+    () => getCharacterTraitSuggestions(category, context)
+      .filter((suggestion) => !selectedKeys.has(normalizeTraitKey(suggestion))),
+    [category, context, selectedKeys],
+  );
+  const atLimit = values.length >= MAX_TRAIT_BLOCKS;
 
   const addValue = (candidate: string) => {
     const value = candidate.trim();
-    if (!value || value.length > MAX_TRAIT_LENGTH || values.includes(value)) return;
+    const key = normalizeTraitKey(value);
+    if (!value || value.length > MAX_TRAIT_LENGTH || atLimit || selectedKeys.has(key)) return;
     onChange([...values, value]);
     setCustomValue('');
   };
@@ -83,6 +95,7 @@ export function CharacterTraitEditor({
                 size="icon"
                 className="size-8 border-dashed"
                 aria-label={`${label}: Baustein hinzufügen`}
+                disabled={atLimit}
               >
                 <Plus className="size-4" />
               </Button>
@@ -125,12 +138,12 @@ export function CharacterTraitEditor({
                     type="button"
                     variant="outline"
                     onClick={() => addValue(customValue)}
-                    disabled={!customValue.trim()}
+                    disabled={!customValue.trim() || atLimit}
                   >
                     Hinzufügen
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Maximal {MAX_TRAIT_LENGTH} Zeichen.</p>
+                <p className="text-xs text-muted-foreground">Maximal {MAX_TRAIT_LENGTH} Zeichen pro Baustein.</p>
               </div>
             </PopoverContent>
           </Popover>
@@ -138,6 +151,9 @@ export function CharacterTraitEditor({
 
         {values.length === 0 && (
           <p className="mt-2 text-sm text-muted-foreground">Noch keine Bausteine gewählt. Mit + hinzufügen.</p>
+        )}
+        {atLimit && (
+          <p className="mt-2 text-xs text-muted-foreground">Maximal {MAX_TRAIT_BLOCKS} Bausteine pro Gruppe.</p>
         )}
       </div>
     </div>
