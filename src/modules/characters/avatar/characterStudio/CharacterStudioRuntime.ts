@@ -194,7 +194,7 @@ export class CharacterStudioRuntime {
       this.currentRoot = root;
       this.currentVrm = vrm;
       this.modelContainer.add(root);
-      this.applyAppearance(avatar, manifest);
+      this.applyAppearance(this.currentAvatar ?? avatar, this.currentManifest ?? manifest);
       this.fitCamera();
       this.onStateChange({
         status: 'ready',
