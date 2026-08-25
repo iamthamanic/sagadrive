@@ -74,10 +74,11 @@ CHARACTER_AI_PROVIDER=ollama
 # CHARACTER_AI_BASE_URL=http://ollama:11434
 # CHARACTER_AI_API_KEY=
 CHARACTER_AI_RATE_LIMIT_PER_MINUTE=6
-# CHARACTER_AI_ALLOWED_ORIGIN=http://localhost:3004
+# CORS fail-closed: localhost only when unset; set exact origin(s) for production
+CHARACTER_AI_ALLOWED_ORIGIN=http://localhost:3004
 ```
 
-Für Ollama können `OLLAMA_MODEL` und `OLLAMA_HOST` als Fallback verwendet werden. Bei `openai-compatible` sind `CHARACTER_AI_BASE_URL`, `CHARACTER_AI_API_KEY` und ein Modell erforderlich.
+Für Ollama können `OLLAMA_MODEL` und `OLLAMA_HOST` als Fallback verwendet werden. Bei `openai-compatible` sind `CHARACTER_AI_BASE_URL`, `CHARACTER_AI_API_KEY` und ein Modell erforderlich. `CHARACTER_AI_ALLOWED_ORIGIN` defaultet **nicht** auf `*`.
 
 Der Prompt liegt versioniert unter `supabase/functions/_shared/character-lore-prompt.ts`. D&D 5.5e bleibt ohne autorisierten Welt-Kontext setting-neutral. SagaDrive Core verwendet die gewählten Character- und Setting-Parameter als Lore-Rahmen. Notizen aus dem Notes-Tab werden bewusst nicht an die Generierung übertragen.
 
@@ -90,6 +91,13 @@ GitHub Actions führt auf Pushes sowie auf Pull Requests gegen `main` zwei getre
 ```bash
 npm run test-gate
 npm run composition-gate
+```
+
+Lokal optional Browser-Regression:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
 ```
 
 `test-gate` führt die technischen Checks aus: diff-spezifischer Typed-Strict-Lint, Typecheck, Produktions-Build, `deno check` für geänderte Supabase-Edge-Function-TypeScript-Dateien und Secrets-Diff-Scan. GitHub Actions stellt dafür Deno LTS über `denoland/setup-deno@v2` bereit. `npm audit` wird zusätzlich sichtbar protokolliert; bestehende Dependency-Findings sind derzeit informational und werden separat behoben.

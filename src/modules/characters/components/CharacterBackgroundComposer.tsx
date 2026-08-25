@@ -1,3 +1,7 @@
+/**
+ * CharacterBackgroundComposer — BG story field with examples, generate CTA, and explicit draft accept.
+ * Location: src/modules/characters/components/CharacterBackgroundComposer.tsx
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
@@ -17,6 +21,11 @@ interface CharacterBackgroundComposerProps {
 const EXAMPLE_ROTATION_MS = 5_000;
 const EXAMPLE_FADE_MS = 180;
 
+type StatusBanner = {
+  tone: 'error' | 'info';
+  message: string;
+};
+
 export function CharacterBackgroundComposer({
   value,
   context,
@@ -27,6 +36,7 @@ export function CharacterBackgroundComposer({
   const [exampleVisible, setExampleVisible] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generatedDraft, setGeneratedDraft] = useState('');
+  const [statusBanner, setStatusBanner] = useState<StatusBanner | null>(null);
 
   useEffect(() => {
     setExampleIndex(0);
@@ -56,15 +66,30 @@ export function CharacterBackgroundComposer({
   const handleGenerate = async () => {
     setGenerating(true);
     setGeneratedDraft('');
+    setStatusBanner(null);
     try {
       const result = await characterLoreService.generateBackground({
         context,
         currentBackgroundStory: value.trim() || undefined,
       });
       setGeneratedDraft(result.story);
+      setStatusBanner(null);
       toast.success('Neue Hintergrundgeschichte erstellt');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Hintergrundgeschichte konnte nicht generiert werden');
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Hintergrundgeschichte konnte nicht generiert werden';
+      const tone: StatusBanner['tone'] =
+        /nicht konfiguriert|not configured|Character-AI|Ollama|Provider/i.test(message)
+          ? 'info'
+          : 'error';
+      setStatusBanner({ tone, message });
+      if (tone === 'info') {
+        toast.message(message);
+      } else {
+        toast.error(message);
+      }
     } finally {
       setGenerating(false);
     }
@@ -74,6 +99,7 @@ export function CharacterBackgroundComposer({
     if (!generatedDraft.trim()) return;
     onChange(generatedDraft);
     setGeneratedDraft('');
+    setStatusBanner(null);
     toast.success('KI-Variante übernommen');
   };
 
@@ -87,7 +113,13 @@ export function CharacterBackgroundComposer({
       <Label htmlFor="backgroundStory">Hintergrundgeschichte</Label>
       <div className="overflow-hidden rounded-md border border-foreground/20 bg-input-background transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]">
         <div className="flex min-h-11 items-center justify-end border-b border-border px-2 py-1.5">
-          <Button type="button" size="sm" onClick={handleGenerate} disabled={generating}>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleGenerate}
+            disabled={generating}
+            data-testid="character-bg-generate"
+          >
             <Sparkles className="size-4" />
             {generating ? 'Generiert...' : 'Generieren'}
           </Button>
@@ -98,6 +130,7 @@ export function CharacterBackgroundComposer({
             rows={8}
             value={value}
             onChange={(event) => onChange(event.target.value)}
+            data-testid="character-bg-story"
             className="relative z-10 min-h-[190px] resize-y rounded-none border-0 bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0"
           />
           {!value.trim() && currentExample && (
@@ -114,15 +147,40 @@ export function CharacterBackgroundComposer({
             <p className="text-xs text-muted-foreground">
               Beispiel {exampleIndex + 1} von {examples.length}. Wechselt alle 5 Sekunden.
             </p>
-            <Button type="button" variant="outline" size="sm" onClick={acceptExample}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={acceptExample}
+              data-testid="character-bg-accept-example"
+            >
               Beispiel übernehmen
             </Button>
           </div>
         )}
       </div>
 
+      {statusBanner && (
+        <div
+          role="status"
+          aria-live="polite"
+          data-testid="character-bg-status"
+          className={`rounded-md border px-3 py-2 text-sm ${
+            statusBanner.tone === 'info'
+              ? 'border-primary/40 bg-primary/10 text-foreground'
+              : 'border-destructive/40 bg-destructive/10 text-destructive'
+          }`}
+        >
+          {statusBanner.message}
+        </div>
+      )}
+
       {generatedDraft && (
-        <div className="rounded-md border border-accent/50 bg-accent/5 p-3" aria-live="polite">
+        <div
+          className="rounded-md border border-primary/40 bg-primary/5 p-3"
+          aria-live="polite"
+          data-testid="character-bg-draft"
+        >
           <div className="mb-2 flex items-center justify-between gap-3">
             <p className="text-sm font-medium">Neue KI-Variante</p>
             <Button
@@ -141,7 +199,7 @@ export function CharacterBackgroundComposer({
             <Button type="button" variant="outline" size="sm" onClick={() => setGeneratedDraft('')}>
               Verwerfen
             </Button>
-            <Button type="button" size="sm" onClick={acceptGeneratedDraft}>
+            <Button type="button" size="sm" onClick={acceptGeneratedDraft} data-testid="character-bg-accept-draft">
               Übernehmen
             </Button>
           </div>

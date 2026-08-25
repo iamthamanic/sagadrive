@@ -20,19 +20,19 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - Provider-Details werden hinter einem serverseitigen Adapter verborgen, sodass der CharacterEditor unveraendert bleibt, wenn das Modell wechselt.
 
 ## Happy Path
-- [ ] Im Feld `Hintergrundgeschichte` steht oben rechts eine Primary-CTA `Generieren`. Ohne konfiguriertes LLM liefert sie einen klaren nicht-destruktiven Konfigurationshinweis; mit Provider-Konfiguration erzeugt sie eine neue Variante, ohne bestehenden Text ungefragt zu ueberschreiben.
-- [ ] Solange das Story-Feld leer ist, werden 10 charakterabhaengige Beispieltexte in Grau angezeigt und alle 5 Sekunden mit einer kurzen Ueberblendung gewechselt; `Beispiel uebernehmen` uebernimmt den aktuell sichtbaren Text in das Story-Feld.
-- [ ] Der Generation-Context beruecksichtigt alle nicht-leeren Character-Parameter: Name, Beschreibung, Regelset, Archetyp/Klasse, Rasse/Spezies, Setting, Essenzprofil, D&D-Hintergrund, Level, sechs Stats, Skills/Faehigkeiten, Inventar, Aussehen sowie die vier Trait-Gruppen. Notes werden bewusst nicht an das LLM gesendet.
-- [ ] Persoenlichkeitsmerkmale, Ideale, Bindungen und Schwaechen verwenden denselben Baustein-Editor: ausgewaehlte Werte erscheinen als entfernbare Chips, `+` oeffnet passende Vorschlaege und ein eigener Custom-Block kann hinzugefuegt werden.
-- [ ] Vorschlaege und Beispiele reagieren auf das aktive Regelset und relevante Charakterparameter; D&D 5.5e und SagaDrive Core erhalten getrennte semantische Pools.
+- [x] Im Feld `Hintergrundgeschichte` steht oben rechts eine Primary-CTA `Generieren`. Ohne konfiguriertes LLM liefert sie einen klaren nicht-destruktiven Konfigurationshinweis; mit Provider-Konfiguration erzeugt sie eine neue Variante, ohne bestehenden Text ungefragt zu ueberschreiben.
+- [x] Solange das Story-Feld leer ist, werden 10 charakterabhaengige Beispieltexte in Grau angezeigt und alle 5 Sekunden mit einer kurzen Ueberblendung gewechselt; `Beispiel uebernehmen` uebernimmt den aktuell sichtbaren Text in das Story-Feld.
+- [x] Der Generation-Context beruecksichtigt alle nicht-leeren Character-Parameter: Name, Beschreibung, Regelset, Archetyp/Klasse, Rasse/Spezies, Setting, Essenzprofil, D&D-Hintergrund, Level, sechs Stats, Skills/Faehigkeiten, Inventar, Aussehen sowie die vier Trait-Gruppen. Notes werden bewusst nicht an das LLM gesendet.
+- [x] Persoenlichkeitsmerkmale, Ideale, Bindungen und Schwaechen verwenden denselben Baustein-Editor: ausgewaehlte Werte erscheinen als entfernbare Chips, `+` oeffnet passende Vorschlaege und ein eigener Custom-Block kann hinzugefuegt werden.
+- [x] Vorschlaege und Beispiele reagieren auf das aktive Regelset und relevante Charakterparameter; D&D 5.5e und SagaDrive Core erhalten getrennte semantische Pools.
 
 ## Edge Cases
-- [ ] Leere/teilweise Character-Parameter erzeugen weiterhin gueltige Beispiele und einen gueltigen Prompt ohne erfundene Pflichtwerte.
-- [ ] Wechsel des Regelsets aktualisiert Beispiel-/Trait-Kontext ohne alte regelsetfremde Vorschlaege zu erzwingen; bereits vom User ausgewaehlte Custom-Chips bleiben erhalten.
-- [ ] Bereits vorhandene Story wird bei `Generieren` nicht automatisch ersetzt; die neue Variante wird separat zur Uebernahme angeboten.
-- [ ] Doppelte Trait-Bausteine werden nicht mehrfach gespeichert; leere Custom-Eintraege und ueberlange Eingaben werden abgewiesen.
-- [ ] Auto-Rotation und Fade-Timer werden beim Unmount aufgeraeumt und verursachen keine State-Updates nach Unmount.
-- [ ] Typed-strict: alle geaenderten TypeScript-Dateien bleiben ohne `any`, `@ts-ignore`, `@ts-nocheck` oder vergleichbare Type-Escapes.
+- [x] Leere/teilweise Character-Parameter erzeugen weiterhin gueltige Beispiele und einen gueltigen Prompt ohne erfundene Pflichtwerte.
+- [x] Wechsel des Regelsets aktualisiert Beispiel-/Trait-Kontext ohne alte regelsetfremde Vorschlaege zu erzwingen; bereits vom User ausgewaehlte Custom-Chips bleiben erhalten.
+- [x] Bereits vorhandene Story wird bei `Generieren` nicht automatisch ersetzt; die neue Variante wird separat zur Uebernahme angeboten.
+- [x] Doppelte Trait-Bausteine werden nicht mehrfach gespeichert; leere Custom-Eintraege und ueberlange Eingaben werden abgewiesen.
+- [x] Auto-Rotation und Fade-Timer werden beim Unmount aufgeraeumt und verursachen keine State-Updates nach Unmount.
+- [x] Typed-strict: alle geaenderten TypeScript-Dateien bleiben ohne `any`, `@ts-ignore`, `@ts-nocheck` oder vergleichbare Type-Escapes.
 
 ## Security & Data
 - LLM-Secrets liegen ausschliesslich in Server-Environment-Variablen und werden nie an den Browser ausgegeben.
@@ -41,7 +41,8 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - Notes werden nicht an die Character-Lore-Generierung uebertragen.
 - Keine Roh-Prompts, API-Keys oder komplette Character-Daten werden serverseitig geloggt.
 - Optionaler Projekt-/World-Lore-Kontext wird nach erfolgreicher JWT-Verifikation ausschliesslich serverseitig mit dem Service-Role-Key gelesen. Der Key verlaesst die Edge Function nie. Danach prueft die Funktion explizit GM oder aktive Projektmitgliedschaft; bei `projectId + worldId` muss die Welt exakt `project.world_id` entsprechen. Direkter World-Kontext ohne Projekt ist nur fuer den World-Creator erlaubt.
-- Der Endpoint begrenzt teure Generierungsaufrufe pro authentifiziertem User in-memory als erste Schutzschicht; spaeter kann dieselbe Schnittstelle an einen persistenten Rate-Limiter angebunden werden.
+- Der Endpoint begrenzt teure Generierungsaufrufe pro authentifiziertem User in-memory als erste Schutzschicht (`CHARACTER_AI_RATE_LIMIT_PER_MINUTE`); spaeter kann dieselbe Schnittstelle an einen persistenten Rate-Limiter angebunden werden.
+- CORS ist fail-closed: kein Default-`*`. Erlaubt sind explizite Allowlist (`CHARACTER_AI_ALLOWED_ORIGIN`) oder localhost/127.0.0.1 fuer lokale Entwicklung.
 
 ## Data Migration
 - `personality_traits` bleibt `TEXT[]`.
@@ -57,19 +58,22 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - Bestehende `OLLAMA_HOST` / `OLLAMA_MODEL` koennen als rueckwaertskompatible Fallbacks verwendet werden.
 
 ## Regression
-- [ ] Info, Look, Stats, Skills, Inventar, Portrait und Save-Flow bleiben funktional.
-- [ ] Gold bleibt Primary CTA/Selected, Cyan bleibt Focus/Secondary Hover.
-- [ ] Keine neue Frontend-UI-Library und keine neue npm-Dependency.
+- [x] Info, Look, Stats, Skills, Inventar, Portrait und Save-Flow bleiben funktional.
+- [x] Cyan bleibt Primary CTA/Selected; Gold bleibt Hover/Premium-Akzent.
+- [x] Keine neue Frontend-UI-Library; Playwright nur als Dev-/QA-Dependency.
 
 ## Composition Gate
-- Code HEAD: `6500adcafd570fe63c97e4534d2f1286f61150bc`
-- Feature BASE: `9f0ea4f858e48e73929175d36c36eeec25765a76`
+- Code HEAD: `8bee38fad062fcc4ff8e04ea32bb5f3b4a6d01dc`
+- Feature BASE: `7f6f096dc5c6a0ff280d901cf262fa533814085f`
 - Verdict: `CLEAR`
-- Proof: `.qa/runs/composition-gate-character-background-ai-composer.md`
+- Proof: `.qa/runs/composition-gate-feat-character-studio-avatar.md`
 - Invariant: Ein expliziter Generieren-Klick fuehrt zu genau einem Provider-Aufruf und nur zu einem lokalen Entwurf; persistiert wird erst durch die separate explizite Uebernahme plus normalen Character-Save. Trait-Anzahl erzeugt keinen Fan-out.
 
 ## Screenshots
-Browser-Verifikation erforderlich fuer BG leer mit Beispiel, Trait-Popover, uebernommenes Beispiel und vorhandene Story mit separater Generation-Variante.
+- `.qa/evidence/feat-character-studio-avatar/02-info-sagadrive-core.png`
+- `.qa/evidence/feat-character-studio-avatar/03-info-dnd-5-5e.png`
+- `.qa/evidence/feat-character-studio-avatar/04-bg-generate-status.png`
+- Playwright: `npm run test:e2e` (smoke + character-editor) PASS
 
 ## Implementation Notes
 - `src/modules/characters/lore/` enthaelt den typisierten Character-Lore-Context, exakt zehn dynamische lokale Beispiele, regelsetabhaengige Trait-Vorschlaege und den Frontend-Service. Die Beispiele wurden auch fuer den vollstaendig leeren Initialzustand sprachlich geprueft.

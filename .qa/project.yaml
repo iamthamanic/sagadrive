@@ -18,9 +18,11 @@ testGate:
     - rgSecretsDiff
   optional:
     - npmAudit
+    - e2e
   never:
     - aiReview
     - explanationCheck
     - fallow
     - updateReadme
     - mutation
+e2eCommand: npm run test:e2e

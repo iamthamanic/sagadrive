@@ -17,26 +17,28 @@ Der CharacterEditor zeigt den Charakternamen direkt oberhalb der 3D-Charaktervor
 - Ruleset-Wechsel darf keine regelsetfremden Werte im UI stehen lassen.
 
 ## Happy Path
-- [ ] Direkt oberhalb der 3D-Vorschau wird der aktuelle Charaktername sichtbar; bei leerem Namen steht `Unbenannt`.
-- [ ] Der generische Ready-/Titeltext wie `Live 3D Vorschau` sowie der permanente Hinweis `Ziehen zum Drehen · Mausrad/Trackpad zum Zoomen` werden entfernt; Loading-/Error-Zustände bleiben sichtbar.
-- [ ] Direkt unter `Beschreibung` steht das Dropdown `Regelset` mit `SagaDrive Core` und `Dungeons & Dragons 5.5e`; Default ist `SagaDrive Core`.
-- [ ] Bei `SagaDrive Core` werden `Archetyp`, `Rasse`, `Setting` und `Essenzprofil` angezeigt; bei `Dungeons & Dragons 5.5e` werden stattdessen `Klasse`, `Spezies` und `Hintergrund` angezeigt.
-- [ ] Ein Regelset-Wechsel setzt regelsetabhängige Auswahlwerte kontrolliert zurück und verwendet weiterhin den neutralen Human-Avatar als sicheren visuellen Startwert.
+- [x] Direkt oberhalb der 3D-Vorschau wird der aktuelle Charaktername sichtbar; bei leerem Namen steht `Unbenannt`.
+- [x] Der generische Ready-/Titeltext wie `Live 3D Vorschau` sowie der permanente Hinweis `Ziehen zum Drehen · Mausrad/Trackpad zum Zoomen` werden entfernt; Loading-/Error-Zustände bleiben sichtbar.
+- [x] Direkt unter `Beschreibung` steht das Dropdown `Regelset` mit `SagaDrive Core` und `Dungeons & Dragons 5.5e`; Default ist `SagaDrive Core`.
+- [x] Bei `SagaDrive Core` werden `Archetyp`, `Rasse`, `Setting` und `Essenzprofil` angezeigt; bei `Dungeons & Dragons 5.5e` werden stattdessen `Klasse`, `Spezies` und `Hintergrund` angezeigt.
+- [x] Ein Regelset-Wechsel setzt regelsetabhängige Auswahlwerte kontrolliert zurück und verwendet weiterhin den neutralen Human-Avatar als sicheren visuellen Startwert.
 
 ## Edge Cases
-- [ ] Ein leerer Charaktername verursacht keinen leeren Preview-Titel, sondern zeigt `Unbenannt`.
-- [ ] Loading- und Error-Status der 3D-Runtime bleiben trotz entferntem Ready-Label verständlich sichtbar.
-- [ ] D&D-Spezies ohne eigenes 3D-Preset verwenden weiterhin den vorhandenen neutralen Humanoid-Fallback.
-- [ ] Custom-Setting wird nur bei SagaDrive Core und nur bei Auswahl `Custom` angezeigt.
-- [ ] Typed-strict: alle geänderten TypeScript-Dateien bleiben ohne `any`, `@ts-ignore`, `@ts-nocheck` oder vergleichbare Type-Escapes.
+- [x] Ein leerer Charaktername verursacht keinen leeren Preview-Titel, sondern zeigt `Unbenannt`.
+- [x] Loading- und Error-Status der 3D-Runtime bleiben trotz entferntem Ready-Label verständlich sichtbar.
+- [x] D&D-Spezies ohne eigenes 3D-Preset verwenden weiterhin den vorhandenen neutralen Humanoid-Fallback.
+- [x] Custom-Setting wird nur bei SagaDrive Core und nur bei Auswahl `Custom` angezeigt.
+- [x] Typed-strict: alle geänderten TypeScript-Dateien bleiben ohne `any`, `@ts-ignore`, `@ts-nocheck` oder vergleichbare Type-Escapes.
 
 ## Regression
-- [ ] Portrait-Generierung, Avatar-Rotation/Zoom, Levelanzeige und Preview-Stats bleiben funktional.
-- [ ] Character-Lore-Context erhält weiterhin regelsetkorrekte Labels und sendet bei D&D kein SagaDrive-Setting/Essenzprofil.
-- [ ] Bestehende Gold/Cyan-Interaktionshierarchie und Shared-UI-Primitives bleiben unverändert.
+- [x] Portrait-Generierung, Avatar-Rotation/Zoom, Levelanzeige und Preview-Stats bleiben funktional.
+- [x] Character-Lore-Context erhält weiterhin regelsetkorrekte Labels und sendet bei D&D kein SagaDrive-Setting/Essenzprofil.
+- [x] Bestehende Cyan/Gold-Interaktionshierarchie und Shared-UI-Primitives bleiben konsistent (Cyan = CTA/Selected, Gold = Hover).
 
 ## Screenshots
-Browser-Verifikation erforderlich für SagaDrive-Core-Info-Tab, D&D-5.5e-Info-Tab und 3D-Vorschau mit Name.
+- `.qa/evidence/feat-character-studio-avatar/02-info-sagadrive-core.png`
+- `.qa/evidence/feat-character-studio-avatar/03-info-dnd-5-5e.png`
+- Playwright `e2e/character-editor.spec.ts` PASS
 
 ## Implementation Notes
 - Der CharacterEditor hatte die gewünschte Ruleset-Logik bereits vollständig auf dem aktiven Branch: `ruleset` startet mit `sagadrive-core`, das `Regelset`-Select steht direkt unter `Beschreibung`, und `handleRulesetChange` leert regelsetabhängige Werte vor dem Wechsel.

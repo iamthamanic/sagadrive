@@ -17,8 +17,8 @@ SagaDrive ist eine moderne TTRPG-Produktoberflaeche mit dunklen, ruhigen Surface
 | Background | White | `#FFFFFF` |
 | Card | White | `#FFFFFF` |
 | Foreground | Slate-900 | `#0F172A` |
-| Brand Functional | Cyan-600 | `#0891B2` |
-| Brand Action / Selection | Gold | `#E8A641` |
+| Brand Selection / CTA | Cyan-600 | `#0891B2` |
+| Brand Hover / Accent | Gold | `#E8A641` |
 | Muted | Slate-50 | `#F8FAFC` |
 | Border | Slate-200 | `#E2E8F0` |
 | Danger | Red-500 | `#EF4444` |
@@ -30,49 +30,50 @@ SagaDrive ist eine moderne TTRPG-Produktoberflaeche mit dunklen, ruhigen Surface
 | Background | Slate-900 | `#0F172A` |
 | Card | Slate-800 | `#1E293B` |
 | Foreground | Slate-100 | `#F1F5F9` |
-| Brand Functional | Cyan-500 | `#06B6D4` |
-| Brand Action / Selection | Amber-500 | `#F59E0B` |
+| Brand Selection / CTA | Cyan-500 | `#06B6D4` |
+| Brand Hover / Accent | Amber-500 | `#F59E0B` |
 | Muted | Slate-800 | `#1E293B` |
 | Border | Slate-700 | `#334155` |
 | Danger | Red-400 | `#F87171` |
 
 ## Verbindliche Farbrollen
 
-### Gold / Amber
+### Cyan / Teal
 
-Gold steht fuer **ausgewaehlt** oder **wichtigste Aktion**.
+Cyan ist die **Hauptfarbe aus dem Logo** und steht fuer **Auswahl** sowie **wichtigste Aktion**.
 
 Verwendung:
-- Primaere CTA
-- aktiver Tab
-- ausgewaehlte Segmented-Control-Option
-- Level- und Achievement-Akzente
-- bewusst hervorgehobene Premium-Zustaende
+- Primaere CTA (gefuellt)
+- aktiver Tab / ausgewaehlte Segmented-Control-Option
+- Keyboard-Focus-Ringe
+- Links und funktionale Navigation
+- Progress und Status
 
 Nicht verwenden fuer:
 - Destructive Actions
 - Disabled States
-- normale Links
-- reine Focus-Indikation
 - zufaellige Dekoration
 
-### Cyan / Teal
+### Gold / Amber
 
-Cyan steht fuer **funktionale Orientierung**.
+Gold ist die **Sekundaerfarbe aus dem Logo** und steht fuer **Hover-Feedback** sowie Premium-Akzente.
 
 Verwendung:
-- Keyboard-Focus-Ringe
-- Links
-- funktionale Navigation
-- Progress und Status
-- Hover von sekundaeren, Outline- und Ghost-Actions
-- Hover von inaktiven Tabs
+- Hover auf primaeren CTAs und aktiven Tabs
+- Hover auf Outline-/Ghost-Actions und inaktiven Tabs
+- Level-, Achievement- und Premium-Akzente
+
+Nicht verwenden fuer:
+- Standard-Auswahlzustand (dafuer Cyan)
+- Destructive Actions
+- Disabled States
+- reine Focus-Indikation
 
 ### Merksatz
 
-**Gold = ausgewaehlt oder wichtigste Aktion. Cyan = funktionale Orientierung.**
+**Cyan = ausgewaehlt oder wichtigste Aktion. Gold = Hover und Premium-Akzent.**
 
-Diese Regel ersetzt die alte Zuordnung, bei der Cyan gleichzeitig fuer primaere CTAs und aktive Tabs verwendet wurde.
+Damit folgt die UI dem Logo: Tuerkis/Cyan dominiert, Gold akzentuiert Interaktion.
 
 ## Theme-Tokens
 
@@ -95,8 +96,8 @@ Die vorhandenen Basis-Tokens bleiben bestehen:
 ```
 
 Semantische Verwendung:
-- `primary` = Cyan/Teal, funktionale Interaktion
-- `accent` = Gold/Amber, primaere Aktion und aktiver Auswahlzustand
+- `primary` = Cyan/Teal, Auswahl und primaere CTA
+- `accent` = Gold/Amber, Hover-Feedback und Premium-Akzent
 
 Keine neuen Hex-Hardcodes in Feature-Komponenten, wenn ein semantischer Theme-Token existiert.
 
@@ -119,14 +120,14 @@ font-family: 'Darker Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', 
 
 Der `Button`-Default ist die primaere CTA.
 
-- Primary CTA: `bg-accent text-accent-foreground hover:bg-accent/90`
-- Outline: neutraler Rahmen, Cyan bei Hover/Focus
+- Primary CTA: `bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground`
+- Outline: neutraler Rahmen, Gold bei Hover
 - Secondary: neutrale gefuellte Surface
-- Ghost: neutral, Cyan bei Hover
+- Ghost: neutral, Gold bei Hover
 - Link: Cyan
 - Destructive: Rot
 
-`variant="accent"` bleibt fuer bestehende Aufrufer als kompatibler Alias fuer die Gold-CTA erhalten. Neue primaere CTAs sollen den Default-Button verwenden.
+`variant="accent"` bleibt als Alias fuer die Primary-CTA erhalten. Neue primaere CTAs sollen den Default-Button verwenden.
 
 Regeln:
 - Nach Moeglichkeit eine visuell dominante primaere CTA pro Abschnitt.
@@ -135,11 +136,11 @@ Regeln:
 
 ### Tabs
 
-- Active: `bg-accent text-accent-foreground border-accent`
+- Active: `bg-primary text-primary-foreground border-primary`
 - Inactive: neutral
-- Inactive Hover: `text-primary`, dezenter Cyan-Hintergrund oder Cyan-Border
+- Inactive Hover: dezentes Gold (`accent`)
 - Focus: Cyan-Ring ueber `primary` / `ring`
-- Aktiver Tab bleibt beim Hover Gold
+- Aktiver Tab wechselt bei Hover zu Gold
 
 Aktive Tabs muessen auf den ersten Blick als Auswahlzustand erkennbar sein und duerfen nicht nur ueber Textfarbe kommuniziert werden.
 
@@ -163,16 +164,16 @@ Aktive Tabs muessen auf den ersten Blick als Auswahlzustand erkennbar sein und d
 ### Navigation
 
 - Active Navigation: Cyan-orientiert, sofern es sich um Navigation und nicht um einen Auswahl-Tab handelt.
-- Hover: dezentes Cyan.
-- Tabs sind eine eigene Auswahlkomponente und folgen der Gold-Active-Regel.
+- Hover: dezentes Gold.
+- Tabs sind eine eigene Auswahlkomponente und folgen der Cyan-Active-Regel.
 
 ## Interaction Hierarchy
 
 ```text
-Primaere CTA              -> Gold
-Aktive Auswahl / Tab      -> Gold
+Primaere CTA              -> Cyan (Hover: Gold)
+Aktive Auswahl / Tab      -> Cyan (Hover: Gold)
 Sekundaere Aktion         -> Neutral / Outline
-Sekundaer-Hover           -> Cyan
+Sekundaer-Hover           -> Gold
 Link / Navigation         -> Cyan
 Focus Ring                -> Cyan
 Progress / Status         -> Cyan
@@ -206,8 +207,8 @@ Disabled                  -> Neutral
 
 ## Do
 
-- Gold fuer primaere CTA und aktive Auswahl verwenden.
-- Cyan fuer Focus, Links, Navigation und funktionale Rueckmeldung verwenden.
+- Cyan fuer primaere CTA und aktive Auswahl verwenden.
+- Gold fuer Hover-Feedback und Premium-/Achievement-Akzente verwenden.
 - Controls mit klarer Affordance bauen.
 - Eine ruhige Dark-Product-UI erhalten.
 - Light und Dark Mode gemeinsam pruefen.
@@ -216,24 +217,21 @@ Disabled                  -> Neutral
 
 - Cyan und Gold ohne feste Rolle gegeneinander austauschen.
 - Aktive Tabs neutral lassen.
-- Jede Aktion als Gold-CTA darstellen.
-- Destructive oder Invalid States mit Brand-Gold ueberschreiben.
+- Jede Aktion als gefuellte Primary-CTA darstellen.
+- Destructive oder Invalid States mit Brand-Farben ueberschreiben.
 - Feature-spezifische Farb-Hardcodes fuer allgemeine Komponentenregeln einfuehren.
 - Neue UI-Libraries neben Radix/shadcn einfuehren, nur um Styling zu loesen.
 
 ## Quick Reference
 
 ```text
-GOLD / AMBER
+CYAN / TEAL
 - Primary CTA
 - Active tab
 - Selected state
-- Achievement / Level
+- Focus / Links / Navigation / Progress
 
-CYAN / TEAL
-- Focus
-- Links
-- Navigation
-- Progress / Status
-- Secondary hover
+GOLD / AMBER
+- Hover feedback
+- Achievement / Level / Premium accents
 ```

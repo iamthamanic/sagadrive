@@ -55,19 +55,43 @@ function isRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null;
 }
 
+function isLocalDevOrigin(origin: string): boolean {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+}
+
+/**
+ * CORS fail-closed: never default to `*`.
+ * - CHARACTER_AI_ALLOWED_ORIGIN=csv of exact origins, or explicit `*` only when intentionally set
+ * - Without config: allow localhost/127.0.0.1 only (local Vite)
+ */
 function getCorsHeaders(request: Request): HeadersInit {
-  const allowedOrigin = Deno.env.get('CHARACTER_AI_ALLOWED_ORIGIN')?.trim() || '*';
+  const configured = Deno.env.get('CHARACTER_AI_ALLOWED_ORIGIN')?.trim() ?? '';
   const requestOrigin = request.headers.get('Origin');
   const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Content-Type': 'application/json',
+    Vary: 'Origin',
   };
 
-  if (allowedOrigin === '*') {
+  if (configured === '*') {
     headers['Access-Control-Allow-Origin'] = '*';
-  } else if (requestOrigin === allowedOrigin) {
-    headers['Access-Control-Allow-Origin'] = allowedOrigin;
+    return headers;
+  }
+
+  const allowlist = configured
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  if (requestOrigin && allowlist.includes(requestOrigin)) {
+    headers['Access-Control-Allow-Origin'] = requestOrigin;
+    return headers;
+  }
+
+  if (!configured && requestOrigin && isLocalDevOrigin(requestOrigin)) {
+    headers['Access-Control-Allow-Origin'] = requestOrigin;
+    return headers;
   }
 
   return headers;

@@ -16,44 +16,43 @@ Diese Regeln gelten fuer neue und ueberarbeitete SagaDrive-Produktoberflaechen. 
 
 SagaDrive verwendet zwei Markenfarben mit festen semantischen Rollen:
 
-### Gold / Amber: Auswahl und wichtigste Aktion
-
-- Light: `#E8A641`
-- Dark: `#F59E0B`
-- Aktiver Tab: gefuellter Gold-/Amber-Zustand.
-- Primaere CTA: gefuellter Gold-/Amber-Button.
-- Level-, Achievement- und Premium-Akzente duerfen ebenfalls Gold verwenden.
-- Nicht fuer Fehler-, Disabled- oder normale Information States verwenden.
-
-### Cyan / Teal: Funktion und Orientierung
+### Cyan / Teal: Auswahl und wichtigste Aktion
 
 - Light: `#0891B2`
 - Dark: `#06B6D4`
-- Keyboard-Focus-Ringe.
-- Links und funktionale Navigation.
-- Progress und Status, sofern nicht semantisch anders belegt.
-- Hover von sekundaeren/Outline/Ghost Actions.
-- Inaktive Tabs duerfen bei Hover Cyan anzeigen, aktive Tabs bleiben Gold.
+- Aktiver Tab: gefuellter Cyan-/Teal-Zustand.
+- Primaere CTA: gefuellter Cyan-/Teal-Button.
+- Focus-Ringe, Links, Progress und Navigation bleiben ebenfalls Cyan.
+- Nicht fuer Fehler-, Disabled- oder Premium-Dekoration verwenden.
 
-Merksatz: **Gold = ausgewaehlt oder wichtigste Aktion. Cyan = funktionale Orientierung.**
+### Gold / Amber: Hover und Premium-Akzent
+
+- Light: `#E8A641`
+- Dark: `#F59E0B`
+- Hover auf primaeren CTAs und aktiven Tabs.
+- Hover auf Outline/Ghost und inaktiven Tabs.
+- Level-, Achievement- und Premium-Akzente.
+- Nicht als Standard-Auswahlzustand verwenden.
+
+Merksatz: **Cyan = ausgewaehlt oder wichtigste Aktion. Gold = Hover und Premium-Akzent.**
 
 ## Buttons
 
-- `Button` ohne Variant ist die primaere CTA und wird Gold/Amber dargestellt.
+- `Button` ohne Variant ist die primaere CTA und wird Cyan/Teal dargestellt; Hover wechselt zu Gold.
 - Pro Abschnitt nach Moeglichkeit nur eine visuell dominante primaere CTA.
-- `outline` fuer sekundaere Aktionen. Neutral im Ruhezustand, Cyan bei Hover/Focus.
+- `outline` fuer sekundaere Aktionen. Neutral im Ruhezustand, Gold bei Hover.
 - `secondary` fuer untergeordnete gefuellte Aktionen.
 - `ghost` fuer tertiaere Aktionen.
-- `destructive` bleibt rot und wird niemals durch Brand-Gold ersetzt.
+- `destructive` bleibt rot und wird niemals durch Brand-Farben ersetzt.
 - Keine lokalen `bg-yellow-*`, `bg-blue-*` oder Hex-Hardcodes fuer Standardaktionen.
 
 ## Tabs
 
-- Aktiver Tab: `bg-accent text-accent-foreground border-accent`.
+- Aktiver Tab: `bg-primary text-primary-foreground border-primary`.
 - Inaktiver Tab: neutral.
-- Hover auf inaktiven Tabs: dezentes Cyan/Teal.
+- Hover auf inaktiven Tabs: dezentes Gold/Amber.
 - Focus: sichtbarer Cyan/Teal-Ring.
-- Aktive Tabs duerfen auf Hover nicht in eine andere Markenrolle wechseln.
+- Aktive Tabs duerfen auf Hover zu Gold wechseln.
 
 ## Forms
 

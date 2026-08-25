@@ -97,20 +97,19 @@ supabase/functions/
 
 ### Brand Color Roles
 
-1. **Gold / Amber = selected or most important action**
-   - Light: `#E8A641`
-   - Dark: `#F59E0B`
-   - Primary CTA
-   - Active tab / selected segmented control
-   - Level, achievement, premium accents
-
-2. **Cyan / Teal = functional orientation**
+1. **Cyan / Teal = selected or most important action**
    - Light: `#0891B2`
    - Dark: `#06B6D4`
-   - Focus rings
-   - Links and navigation
-   - Progress/status
+   - Primary CTA
+   - Active tab / selected segmented control
+   - Focus rings, links, navigation, progress/status
+
+2. **Gold / Amber = hover feedback and premium accents**
+   - Light: `#E8A641`
+   - Dark: `#F59E0B`
+   - Hover on primary CTAs and active tabs
    - Hover for secondary, outline and ghost actions
+   - Level, achievement, premium accents
 
 3. **Danger**
    - Light: `#EF4444`
@@ -122,7 +121,7 @@ supabase/functions/
    - Surface/Card: `#1E293B` in dark mode
    - Border: `#334155` in dark mode
 
-**Rule:** Gold = selected or primary action. Cyan = functional orientation.
+**Rule:** Cyan = selected or primary action. Gold = hover and premium accent.
 
 ### Typography
 
@@ -150,16 +149,17 @@ supabase/functions/
 ### Component Patterns
 
 1. **Buttons**
-   - Default `Button` is the primary CTA and uses Gold/Amber.
-   - `outline` and `ghost` are secondary/tertiary actions and use Cyan/Teal on hover/focus.
+   - Default `Button` is the primary CTA and uses Cyan/Teal; hover uses Gold/Amber.
+   - `outline` and `ghost` are secondary/tertiary actions and use Gold on hover.
    - `destructive` remains red.
    - Do not hardcode standard CTA colors in feature components.
 
 2. **Tabs**
-   - Active tab is filled Gold/Amber with `accent-foreground` text.
+   - Active tab is filled Cyan/Teal with `primary-foreground` text.
    - Inactive tabs are neutral.
-   - Inactive hover and keyboard focus use Cyan/Teal.
-   - Active tabs remain Gold on hover.
+   - Inactive hover uses Gold/Amber.
+   - Active tabs may shift to Gold on hover.
+   - Keyboard focus uses Cyan/Teal.
 
 3. **Forms**
    - Label above input.

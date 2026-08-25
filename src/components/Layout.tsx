@@ -1,13 +1,15 @@
+/**
+ * Layout — Desktop sidebar + mobile bottom nav shell for authenticated views.
+ * Location: src/components/Layout.tsx
+ */
 import { ReactNode } from 'react';
 import { 
   Home, 
   User, 
   BookOpen, 
-  Gamepad2, 
   ShoppingBag, 
   Settings,
-  LogOut,
-  FileText
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '../lib/auth-context';
 import { toast } from 'sonner';
@@ -20,6 +22,16 @@ interface LayoutProps {
   onNavigate: (view: string) => void;
 }
 
+const VIEW_LABELS: Record<string, string> = {
+  dashboard: 'Dashboard',
+  library: 'Bibliothek',
+  'character-editor': 'Charakter Editor',
+  'adventure-editor': 'Abenteuer Editor',
+  marketplace: 'Marktplatz',
+  'marketplace-test': '🧪 Marketplace Test',
+  profile: 'Einstellungen',
+};
+
 export function Layout({ children, currentView, onNavigate }: LayoutProps) {
   const { signOut } = useAuth();
 
@@ -28,14 +40,12 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
     toast.success('Erfolgreich abgemeldet');
   };
 
+  // Editors are reached via Bibliothek (create/edit), not as top-level nav
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'library', label: 'Bibliothek', icon: BookOpen },
-    { id: 'character-editor', label: 'Charakter Editor', icon: User },
-    { id: 'adventure-editor', label: 'Abenteuer Editor', icon: FileText },
     { id: 'marketplace', label: 'Marktplatz', icon: ShoppingBag },
     { id: 'marketplace-test', label: '🧪 Marketplace Test', icon: Settings },
-    { id: 'profile', label: 'Profil', icon: Settings },
   ];
 
   const mobileNavItems = [
@@ -95,36 +105,39 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
             </div>
           </nav>
 
-          {/* Logout */}
+          {/* Settings + Logout */}
           <div className="p-4 border-t border-sidebar-border">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm hover:bg-destructive/10 text-destructive"
-            >
-              <LogOut className="w-5 h-5" />
-              <span>Abmelden</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleLogout}
+                className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm hover:bg-destructive/10 text-destructive"
+              >
+                <LogOut className="w-5 h-5 flex-shrink-0" />
+                <span>Abmelden</span>
+              </button>
+              <button
+                onClick={() => onNavigate('profile')}
+                className={`p-3 rounded-lg transition-colors flex-shrink-0 ${
+                  currentView === 'profile'
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+                }`}
+                title="Einstellungen"
+                aria-label="Einstellungen"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </aside>
 
         {/* Desktop Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Desktop Header */}
-          <header className="h-16 bg-card border-b border-border px-6 flex items-center justify-between flex-shrink-0">
-            <div>
-              <h2 className="text-foreground font-[Darker_Grotesque]">
-                {navItems.find(item => item.id === currentView)?.label || 'Dashboard'}
-              </h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onNavigate('profile')}
-                className="p-2 hover:bg-muted rounded-lg transition-colors"
-                title="Einstellungen"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-            </div>
+          <header className="h-16 bg-card border-b border-border px-6 flex items-center flex-shrink-0">
+            <h2 className="text-foreground font-[Darker_Grotesque]">
+              {VIEW_LABELS[currentView] || 'Dashboard'}
+            </h2>
           </header>
 
           {/* Scrollable Content */}
