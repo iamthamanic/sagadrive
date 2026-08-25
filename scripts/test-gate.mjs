@@ -111,6 +111,14 @@ function checkProjectMembershipSecurity() {
   });
 }
 
+function checkCharacterEditorRegressions() {
+  console.log('Character editor regression contract: checking persistence, avatar replay, and legacy project status...');
+  execFileSync(process.execPath, ['scripts/character-editor-regression-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function scanAddedLinesForSecrets() {
   const base = resolveDiffBase();
   if (!base) {
@@ -185,6 +193,7 @@ execFileSync('npm', ['run', 'checks'], {
 
 checkChangedDenoFunctions();
 checkProjectMembershipSecurity();
+checkCharacterEditorRegressions();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
