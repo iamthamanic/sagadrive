@@ -28,8 +28,8 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - [x] Der Generation-Context beruecksichtigt alle nicht-leeren Character-Parameter: Name, Beschreibung, Regelset, Archetyp/Klasse, Rasse/Spezies, Setting, Essenzprofil, D&D-Hintergrund, Level, sechs Stats, Skills/Faehigkeiten, Inventar, Aussehen sowie die vier Trait-Gruppen. Notes werden bewusst nicht an das LLM gesendet.
 - [x] Persoenlichkeitsmerkmale, Ideale, Bindungen und Schwaechen verwenden denselben Baustein-Editor: ausgewaehlte Werte erscheinen als entfernbare Chips, `+` oeffnet passende Vorschlaege und ein eigener Custom-Block kann hinzugefuegt werden.
 - [x] Vorschlaege und Beispiele reagieren auf das aktive Regelset und relevante Charakterparameter; D&D 5.5e und SagaDrive Core erhalten getrennte semantische Pools.
-- [ ] Im standalone CharacterEditor kann der User im BG-Tab optional ein sichtbares Projekt als `Kampagnen-Lore` waehlen. Dann werden `projectId` und die verknuepfte `worldId` in den Generation-Context aufgenommen; `Kein Projekt` bleibt setting-neutral.
-- [ ] Ein Generieren-Klick konsumiert vor dem Provider-Aufruf genau einen atomaren persistenten Quota-Slot fuer die verifizierte User-ID. Das Kontingent gilt gemeinsam ueber mehrere Edge-Runtime-Instanzen.
+- [x] Im standalone CharacterEditor kann der User im BG-Tab optional ein sichtbares Projekt als `Kampagnen-Lore` waehlen. Dann werden `projectId` und die verknuepfte `worldId` in den Generation-Context aufgenommen; `Kein Projekt` bleibt setting-neutral.
+- [x] Ein Generieren-Klick konsumiert vor dem Provider-Aufruf genau einen atomaren persistenten Quota-Slot fuer die verifizierte User-ID. Das Kontingent gilt gemeinsam ueber mehrere Edge-Runtime-Instanzen.
 
 ## Edge Cases
 - [x] Leere/teilweise Character-Parameter erzeugen weiterhin gueltige Beispiele und einen gueltigen Prompt ohne erfundene Pflichtwerte.
@@ -38,8 +38,8 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - [x] Doppelte Trait-Bausteine werden nicht mehrfach gespeichert; leere Custom-Eintraege und ueberlange Eingaben werden abgewiesen.
 - [x] Auto-Rotation und Fade-Timer werden beim Unmount aufgeraeumt und verursachen keine State-Updates nach Unmount.
 - [x] Typed-strict: alle geaenderten TypeScript-Dateien bleiben ohne `any`, `@ts-ignore`, `@ts-nocheck` oder vergleichbare Type-Escapes.
-- [ ] Ist die Projektliste im Browser nicht verfuegbar, bleibt der Composer nutzbar und ohne Auswahl setting-neutral.
-- [ ] Ist die persistente Rate-Limit-RPC nicht migriert, nicht erreichbar oder liefert ein ungueltiges Ergebnis, wird vor dem Provider-Aufruf fail-closed abgebrochen; ein ausgeschopftes Kontingent liefert `429`.
+- [x] Ist die Projektliste im Browser nicht verfuegbar, bleibt der Composer nutzbar und ohne Auswahl setting-neutral.
+- [x] Ist die persistente Rate-Limit-RPC nicht migriert, nicht erreichbar oder liefert ein ungueltiges Ergebnis, wird vor dem Provider-Aufruf fail-closed abgebrochen; ein ausgeschopftes Kontingent liefert `429`.
 
 ## Security & Data
 - LLM-Secrets liegen ausschliesslich in Server-Environment-Variablen und werden nie an den Browser ausgegeben.
@@ -72,25 +72,37 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - [x] Info, Look, Stats, Skills, Inventar, Portrait und Save-Flow bleiben funktional.
 - [x] Cyan bleibt Primary CTA/Selected; Gold bleibt Hover/Premium-Akzent.
 - [x] Keine neue Frontend-UI-Library; Playwright nur als Dev-/QA-Dependency.
-- [ ] Der PR-Head besteht Chromium-Playwright inklusive sichtbarer `Kampagnen-Lore`-Auswahl und nicht-destruktivem Generate-Status.
+- [x] Der PR-Code-Head besteht Chromium-Playwright inklusive sichtbarer `Kampagnen-Lore`-Auswahl und nicht-destruktivem Generate-Status.
 
 ## Composition Gate
-- Code HEAD: `PENDING_FINAL_IMPLEMENTATION_SHA`
+- Code HEAD: `96dc08c0a49694b72895e0b099b8f86da34f401e`
 - Feature BASE: `7f6f096dc5c6a0ff280d901cf262fa533814085f`
-- Verdict: `PENDING`
+- Verdict: `CLEAR`
 - Proof: `.qa/runs/composition-gate-feat-character-studio-avatar.md`
 - Invariant: Ein expliziter Generieren-Klick konsumiert genau einen persistenten Quota-Slot fuer den verifizierten User und fuehrt bei erlaubtem Request zu genau einem Provider-Aufruf und nur zu einem lokalen Entwurf. Projekt-/Welt-Lore wird nur nach erneuter Server-Autorisierung gelesen; Trait-Anzahl und Runtime-Instanzzahl erzeugen keinen Provider-Fan-out.
+
+## Verification Evidence
+- Test Gate Run `32881823442` auf Code-HEAD `96dc08c0a49694b72895e0b099b8f86da34f401e`: PASS.
+- Typed-strict lint: 31 geaenderte TypeScript-Dateien PASS.
+- Typecheck: PASS.
+- Vite production build: PASS (1797 Module); die bestehende >500-kB-Chunk-Warnung bleibt ein Performance-Hinweis, kein Gate-Fehler.
+- Deno Edge Function check: 6 geaenderte TypeScript-Dateien PASS.
+- Deno Tests: 8/8 PASS; davon 4 Prompt-Tests und 4 persistente Rate-Limit-Contract-/Fail-Closed-Tests.
+- Secrets diff scan: PASS.
+- Production dependency audit (`npm audit --omit=dev`): critical=0, high=0, moderate=0, low=0.
+- Browser E2E Job `97913060244`: Chromium 3/3 PASS in 19.5s.
+- Browser Artifact `character-editor-browser-evidence`, Artifact ID `9576116633`, 10 Dateien, Upload PASS.
 
 ## Screenshots
 - `.qa/evidence/feat-character-studio-avatar/02-info-sagadrive-core.png`
 - `.qa/evidence/feat-character-studio-avatar/03-info-dnd-5-5e.png`
 - `.qa/evidence/feat-character-studio-avatar/04-bg-project-context.png`
 - `.qa/evidence/feat-character-studio-avatar/05-bg-generate-status.png`
-- CI Playwright Artifact: `character-editor-browser-evidence`
+- CI Playwright Artifact: `character-editor-browser-evidence` / Artifact ID `9576116633`
 
 ## Implementation Notes
 - `src/modules/characters/lore/` enthaelt den typisierten Character-Lore-Context, exakt zehn dynamische lokale Beispiele, regelsetabhaengige Trait-Vorschlaege und den Frontend-Service.
-- `CharacterBackgroundComposer` zeigt `Generieren`, rotiert Beispiele alle fuenf Sekunden mit einem 180-ms-Fade, haelt KI-Ergebnisse als separate Variante und bietet einen optionalen `Kampagnen-Lore`-Projektkontext. Die Projektwahl setzt `projectId` und die verknuepfte `worldId` nur fuer den Generate-Request; sie veraendert den Character-Save nicht.
+- `CharacterBackgroundComposer` zeigt `Generieren`, rotiert Beispiele alle fuenf Sekunden mit einem 180-ms-Fade, haelt KI-Ergebnisse als separate Variante und bietet einen optionalen `Kampagnen-Lore`-Projektkontext. Die Projektwahl setzt `projectId` und die verknuepfte `worldId` nur fuer den Generate-Request; sie veraendert den Character-Save nicht. Der Composer importiert nur den benoetigten Projects-Hook und zieht nicht das Legacy-Projects-Barrel in den Character-Typecheck.
 - `CharacterTraitEditor` wird fuer Persoenlichkeit, Ideale, Bindungen und Schwaechen wiederverwendet; Vorschlaege und Custom-Bloecke werden case-insensitiv dedupliziert, auf 160 Zeichen begrenzt und auf maximal 12 Bloecke je Gruppe beschraenkt.
 - Der CharacterEditor baut den Generation-Context aus Regelset, Klasse/Archetyp, Rasse/Spezies, Setting, Essenzprofil, D&D-Hintergrund, Level, Stats, Skills, Inventar, Aussehen und Trait-Gruppen. Notes sind nicht Teil des Contexts.
 - `supabase/functions/character-lore` authentifiziert serverseitig, konsumiert danach ueber `consume_character_lore_rate_limit` einen persistenten Quota-Slot, validiert Request-Grenzen und ruft genau einen konfigurierten Provider ueber den gemeinsamen Adapter auf. Faehrt die Quota-Infrastruktur nicht sicher, wird kein Provider aufgerufen.
@@ -98,4 +110,3 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - Projekt-/World-Lore wird trotz UI-Auswahl serverseitig mit Service-Role nur nach JWT-, Membership- und World-Binding-Pruefung gelesen.
 - `supabase/migrations/002_character_trait_arrays.sql` migriert Trait-Arrays; `003_character_lore_rate_limits.sql` ist der neue notwendige Deploy-Schritt fuer die persistente Quota.
 - `.env.example`, README und `src/supabase/DEPLOY_V3.md` dokumentieren den neuen Deploy-Contract.
-- Finaler Test-Gate-, Composition-Gate- und Browser-E2E-Nachweis wird nach dem Implementierungs-Commit auf dessen SHA aktualisiert.
