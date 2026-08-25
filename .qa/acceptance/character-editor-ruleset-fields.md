@@ -48,4 +48,8 @@ Der CharacterEditor soll den Charakternamen direkt oberhalb der 3D-Vorschau zeig
 Browser-Verifikation fuer SagaDrive-Core-Info-Tab, D&D-5.5e-Info-Tab und linke Avatar-Card erforderlich.
 
 ## Implementation Notes
-Pending.
+- Ruleset-spezifische Character-Creation-Definitionen liegen zentral in `src/modules/rulesets/characterCreation.ts`.
+- `src/components/CharacterEditor.tsx` rendert die Felder anhand des aktiven Regelsets und setzt bei einem Regelset-Wechsel inkompatible lokale Auswahlwerte zurueck.
+- D&D-Spezies greifen weiterhin auf die vorhandene Avatar-Race-Aufloesung zu; unbekannte Spezies landen dadurch im bestehenden neutralen Humanoid-Fallback.
+- Technische Verifikation fuer Commit `04d377aef7509a1762da56cab806f6b087267f58`: `npm run test-gate` PASS inklusive Typed-Strict-Lint, Typecheck, Vite-Build und Secrets-Diff-Scan. Composition Gate wurde als sicherer Single-Hop-UI-Diff dokumentiert uebersprungen.
+- Browser-/Screenshot-Verifikation bleibt offen; deshalb bleiben die UI-Checkboxen bis `@verify-ui` unmarkiert.
