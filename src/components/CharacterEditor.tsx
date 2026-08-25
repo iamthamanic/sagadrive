@@ -369,6 +369,8 @@ export function CharacterEditor() {
         description: description.trim(),
         class: characterArchetype,
         race: characterRace,
+        ruleset_key: ruleset,
+        dnd_background: isDnd55 ? dndBackground : null,
         level,
         background_story: backgroundStory.trim() || undefined,
         personality_traits: personalityTraits.length > 0 ? personalityTraits : undefined,
