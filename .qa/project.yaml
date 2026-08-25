@@ -5,7 +5,22 @@ app:
   devCommand: npm run dev
   buildCommand: npm run build
   port: 3004
-checksCommand: npm run checks
+checksCommand: npm run test-gate
 typedStrict:
   languages:
     - typescript
+testGate:
+  profile: vite-react
+  depthDefault: standard
+  runner: scripts
+  always:
+    - typedStrict
+    - rgSecretsDiff
+  optional:
+    - npmAudit
+  never:
+    - aiReview
+    - explanationCheck
+    - fallow
+    - updateReadme
+    - mutation
