@@ -133,6 +133,8 @@ export interface CreateCharacterDto {
   flaws?: string;
   appearance?: Partial<CharacterAppearanceDto>;
   attributes?: Partial<CharacterAttributesDto>;
+  abilities?: AbilityDto[];
+  inventory?: ItemDto[];
   portrait_url?: string;
 }
 
