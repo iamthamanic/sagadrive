@@ -76,12 +76,13 @@ CREATE POLICY "GM can update members in their projects"
     )
   );
 
--- A kicked membership is kept as a server/GM-controlled denial record.
+-- Only an active member may voluntarily leave. Inactive/kicked rows remain controlled
+-- denial records so suspension cannot be bypassed via delete + rejoin.
 CREATE POLICY "Users can leave active project memberships"
   ON public.project_members FOR DELETE
   USING (
     user_id = auth.uid()
-    AND status IN ('active', 'inactive')
+    AND status = 'active'
   );
 
 -- Joining by a secret code is the only authenticated self-service operation that can
