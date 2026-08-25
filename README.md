@@ -56,6 +56,19 @@ Output-Verzeichnis:
 
 - `build/`
 
+## Quality Gates
+
+GitHub Actions führt auf Pushes sowie auf Pull Requests gegen `main` zwei getrennte Gates aus:
+
+```bash
+npm run test-gate
+npm run composition-gate
+```
+
+`test-gate` führt die technischen Checks aus: diff-spezifischer Typed-Strict-Lint, Typecheck, Produktions-Build und Secrets-Diff-Scan. `npm audit` wird zusätzlich sichtbar protokolliert; bestehende Dependency-Findings sind derzeit informational und werden separat behoben.
+
+`composition-gate` prüft die Bedeutung über Modul-/Service-/Backend-Hops. Reine Docs-/Tooling-Diffs und sichere Single-Hop-Diffs werden dokumentiert übersprungen. Bei Multi-Hop-, Persistenz-, Worker-, Queue-, Webhook- oder Side-Effect-relevanten Änderungen muss ein aktueller Proof unter `.qa/runs/composition-gate-<slug>.md` mit `CLEAR` oder begründetem `SKIPPED` vorliegen.
+
 ## Wichtige Projektstruktur
 
 - `src/` – Haupt-Frontend-Code
