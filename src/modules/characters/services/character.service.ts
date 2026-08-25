@@ -15,6 +15,26 @@ import type {
 class CharacterService {
   private readonly tableName = 'characters';
 
+  private normalizeTextBlocks(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return Array.from(
+        new Set(
+          value
+            .filter((entry): entry is string => typeof entry === 'string')
+            .map((entry) => entry.trim())
+            .filter(Boolean),
+        ),
+      );
+    }
+
+    if (typeof value === 'string') {
+      const normalized = value.trim();
+      return normalized ? [normalized] : [];
+    }
+
+    return [];
+  }
+
   /**
    * Map DTO to View Model
    */
@@ -27,10 +47,10 @@ class CharacterService {
       race: dto.race,
       level: dto.level,
       backgroundStory: dto.background_story,
-      personalityTraits: dto.personality_traits ?? [],
-      ideals: dto.ideals ?? [],
-      bonds: dto.bonds ?? [],
-      flaws: dto.flaws ?? [],
+      personalityTraits: this.normalizeTextBlocks(dto.personality_traits),
+      ideals: this.normalizeTextBlocks(dto.ideals),
+      bonds: this.normalizeTextBlocks(dto.bonds),
+      flaws: this.normalizeTextBlocks(dto.flaws),
       appearance: normalizeCharacterAppearance(dto.appearance),
       attributes: dto.attributes,
       abilities: dto.abilities || [],
