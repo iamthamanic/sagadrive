@@ -1,6 +1,6 @@
 # Composition Gate - character-background-ai-composer
 
-- HEAD_SHA: 6195aafb4bfe313449a94eb5fc7767f851875545
+- HEAD_SHA: ed4da44676c1e1b073e5ac04508728232d5c6cb8
 - BASE_SHA: 9f0ea4f858e48e73929175d36c36eeec25765a76
 - Date: 2026-08-25
 - Verdict: CLEAR
@@ -19,6 +19,14 @@ Trait persistence follows: `CharacterTraitEditor` -> CharacterEditor state -> on
 | N-actors | One user click produces one provider request and one returned variant. Trait count or project membership must not fan out generation or saves. | `handleGenerate` is disabled while one request is pending and calls `generateBackground` once. The Edge Function makes one provider call after validation. Ten independent user actions remain ten independent requests, subject to the per-user request limit. Character save remains one DB write payload regardless of the number of trait blocks. | pass |
 | Invalid/missing | Invalid identity, malformed input, unknown ruleset, unauthorized lore context, or missing provider configuration must fail closed without replacing user text or leaking another project's lore. | Missing/invalid auth returns 401. Invalid request/ruleset/UUID returns 400. Project/world lore is fetched only server-side with the caller JWT and explicit membership/creator checks. Missing provider configuration returns `not-configured` before any provider call. The UI keeps the current background story unchanged on every error. | pass |
 | Two consumers / crash | Concurrent/retried generation must not create a persistent duplicate side effect or silently overwrite the current story. | There is no queue, outbox, worker, or persistent generation record. Each HTTP request is an explicit user-requested variant. A failed/crashed provider request persists nothing. Successful output is held as a local draft until `Übernehmen`; a second intentional request represents a second intentional variant. Character persistence happens only through the separate normal save action. | pass |
+
+## Validation
+- GitHub Test Gate on `ed4da44676c1e1b073e5ac04508728232d5c6cb8`: PASS.
+- Diff Typed-Strict lint: PASS.
+- Frontend TypeScript check: PASS.
+- Vite production build: PASS.
+- Deno LTS `deno check` for all three changed Character-Lore Edge Function TypeScript files: PASS.
+- Secrets diff scan: PASS.
 
 ## Flags
 | Tag | Severity | Hops | Why local review missed it | Fix |
