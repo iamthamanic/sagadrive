@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
-import { Camera, Eye, Plus, Save, Upload, X } from 'lucide-react';
+import { Camera, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import {
   AvatarCanvas,
@@ -8,6 +8,9 @@ import {
   getAvatarRacePreset,
   getAvatarPresetForRace,
 } from '../modules/characters';
+import type { AbilityDto, ItemDto } from '../modules/characters';
+import { CharacterAbilitiesPanel } from '../modules/characters/components/CharacterAbilitiesPanel';
+import { CharacterInventoryPanel } from '../modules/characters/components/CharacterInventoryPanel';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -49,6 +52,17 @@ const settingLabels: Record<string, string> = {
   scifi: 'Sci-Fi',
 };
 
+const initialAbilities: AbilityDto[] = [
+  {
+    id: 'starter-fireball',
+    name: 'Feuerball',
+    description: 'Ein konzentrierter Feuerzauber.',
+    type: 'magic',
+    cost: 10,
+    effect: 'Feuerschaden',
+  },
+];
+
 function clampLevel(value: string): number {
   return Math.max(1, Math.min(20, Number.parseInt(value, 10) || 1));
 }
@@ -80,6 +94,8 @@ export function CharacterEditor() {
   const [wisdom, setWisdom] = useState([10]);
   const [charisma, setCharisma] = useState([10]);
   const [level, setLevel] = useState(1);
+  const [abilities, setAbilities] = useState<AbilityDto[]>(initialAbilities);
+  const [inventory, setInventory] = useState<ItemDto[]>([]);
 
   const [backgroundStory, setBackgroundStory] = useState('');
   const [personality, setPersonality] = useState('');
@@ -239,6 +255,8 @@ export function CharacterEditor() {
           wisdom: wisdom[0] ?? 10,
           charisma: charisma[0] ?? 10,
         },
+        abilities,
+        inventory,
         portrait_url: portraitUrl || undefined,
       });
 
@@ -258,6 +276,15 @@ export function CharacterEditor() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const attributeSliders = [
+    { label: 'Stärke (STR)', value: strength, onValueChange: setStrength },
+    { label: 'Geschicklichkeit (DEX)', value: dexterity, onValueChange: setDexterity },
+    { label: 'Konstitution (CON)', value: constitution, onValueChange: setConstitution },
+    { label: 'Intelligenz (INT)', value: intelligence, onValueChange: setIntelligence },
+    { label: 'Weisheit (WIS)', value: wisdom, onValueChange: setWisdom },
+    { label: 'Charisma (CHA)', value: charisma, onValueChange: setCharisma },
+  ];
+
   return (
     <div className="h-full w-full overflow-y-auto">
       <div className="mx-auto max-w-7xl space-y-4 p-4 md:space-y-6 md:p-8">
@@ -271,7 +298,7 @@ export function CharacterEditor() {
               <Eye className="mr-2 h-4 w-4" />
               Vorschau
             </Button>
-            <Button variant="accent" onClick={handleSaveCharacter} disabled={saving || uploading}>
+            <Button onClick={handleSaveCharacter} disabled={saving || uploading}>
               <Save className="mr-2 h-4 w-4" />
               {saving ? 'Speichert...' : 'Speichern'}
             </Button>
@@ -469,13 +496,17 @@ export function CharacterEditor() {
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label>Körperbau</Label>
-                      <Slider value={bodySize} onValueChange={setBodySize} max={100} step={1} />
-                      <p className="text-sm text-muted-foreground">{bodySize[0]} / 100</p>
+                      <Slider aria-label="Körperbau" value={bodySize} onValueChange={setBodySize} min={0} max={100} step={1} />
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>0</span><span>Wert: {bodySize[0]}</span><span>100</span>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label>Größe</Label>
-                      <Slider value={height} onValueChange={setHeight} max={100} step={1} />
-                      <p className="text-sm text-muted-foreground">{height[0]} / 100</p>
+                      <Slider aria-label="Größe" value={height} onValueChange={setHeight} min={0} max={100} step={1} />
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>0</span><span>Wert: {height[0]}</span><span>100</span>
+                      </div>
                     </div>
                   </div>
 
@@ -568,35 +599,19 @@ export function CharacterEditor() {
                 </TabsContent>
 
                 <TabsContent value="attributes" className="space-y-6">
-                  {[
-                    ['Stärke (STR)', strength, setStrength],
-                    ['Geschicklichkeit (DEX)', dexterity, setDexterity],
-                    ['Konstitution (CON)', constitution, setConstitution],
-                    ['Intelligenz (INT)', intelligence, setIntelligence],
-                    ['Weisheit (WIS)', wisdom, setWisdom],
-                    ['Charisma (CHA)', charisma, setCharisma],
-                  ].map(([label, value, setter]) => {
-                    const sliderValue = value as number[];
-                    const setSliderValue = setter as (next: number[]) => void;
-                    return (
-                      <div className="space-y-2" key={label as string}>
-                        <Label>{label as string}</Label>
-                        <Slider value={sliderValue} onValueChange={setSliderValue} max={20} min={1} step={1} />
-                        <p className="text-sm text-muted-foreground">Wert: {sliderValue[0]}</p>
+                  {attributeSliders.map(({ label, value, onValueChange }) => (
+                    <div className="space-y-2" key={label}>
+                      <Label>{label}</Label>
+                      <Slider aria-label={label} value={value} onValueChange={onValueChange} max={20} min={1} step={1} />
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>1</span><span>Wert: {value[0]}</span><span>20</span>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </TabsContent>
 
-                <TabsContent value="abilities" className="space-y-4">
-                  <div className="flex items-center justify-between rounded-lg border border-border p-3">
-                    <div>
-                      <p className="font-medium">Feuerball</p>
-                      <p className="text-sm text-muted-foreground">Zauber · 10 Mana</p>
-                    </div>
-                    <Button size="sm" variant="destructive">Entfernen</Button>
-                  </div>
-                  <Button variant="outline" className="w-full"><Plus className="mr-2 h-4 w-4" />Fähigkeit hinzufügen</Button>
+                <TabsContent value="abilities">
+                  <CharacterAbilitiesPanel abilities={abilities} onChange={setAbilities} />
                 </TabsContent>
 
                 <TabsContent value="background" className="space-y-4">
@@ -607,11 +622,8 @@ export function CharacterEditor() {
                   <div className="space-y-2"><Label htmlFor="flaws">Schwächen</Label><Input id="flaws" value={flaws} onChange={(event) => setFlaws(event.target.value)} /></div>
                 </TabsContent>
 
-                <TabsContent value="inventory" className="space-y-4">
-                  <div className="flex items-center justify-between"><Label>Inventar (0/30)</Label><Button size="sm" variant="outline"><Plus className="mr-2 h-4 w-4" />Hinzufügen</Button></div>
-                  <div className="grid grid-cols-5 gap-2 sm:grid-cols-6">
-                    {Array.from({ length: 30 }).map((_, index) => <div key={index} className="flex aspect-square items-center justify-center rounded-lg border-2 border-border bg-muted text-xs text-muted-foreground">{index + 1}</div>)}
-                  </div>
+                <TabsContent value="inventory">
+                  <CharacterInventoryPanel items={inventory} onChange={setInventory} />
                 </TabsContent>
 
                 <TabsContent value="notes" className="space-y-4">
