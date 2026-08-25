@@ -1,0 +1,67 @@
+# Feature: Character Background AI Composer
+
+## Intent
+Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergrundgeschichte kann aus allen relevanten Charakterparametern vorbereitet generiert werden, bevor ein konkretes LLM konfiguriert ist. Parallel werden Persoenlichkeitsmerkmale, Ideale, Bindungen und Schwaechen als kombinierbare Bausteine editierbar.
+
+## Preconditions
+- Bestehender CharacterEditor, Regeln fuer SagaDrive Core und Dungeons & Dragons 5.5e, Gold/Cyan-Interaction-Hierarchie und Character-Service bleiben die Basis.
+- Prompt-Templates werden versioniert im Repository gespeichert und serverseitig zusammengesetzt.
+- Der LLM-Zugriff erfolgt nur serverseitig. Client-Code kennt keine API-Keys.
+- Provider-Schnittstelle ist OpenAI-kompatibel oder Ollama; konkrete Credentials/Modelle werden spaeter per Environment konfiguriert.
+- D&D 5.5e bleibt ohne zugeordnete Welt setting-neutral. Keine Forgotten-Realms-Annahme.
+- SagaDrive Core nutzt die ausgewaehlten Genre-/Setting-Parameter als Lore-Rahmen.
+- User hat die rueckwaertskompatible Migration von `ideals`, `bonds`, `flaws` von Einzeltext auf mehrere Textbausteine freigegeben.
+
+## Architecture
+- `CharacterBackgroundComposer` kapselt Story-Textarea, Generieren-CTA, rotierende Beispiele und Uebernehmen-Flow.
+- `CharacterTraitEditor` kapselt die gemeinsame Mehrfachauswahl-/Custom-Block-Interaktion fuer Persoenlichkeit, Ideale, Bindungen und Schwaechen.
+- `characterLore`-Domaincode kapselt Context DTO, Beispielgenerator, Trait-Vorschlaege und Frontend-Service.
+- `supabase/functions/character-lore` ist der einzige LLM-Trust-Boundary und baut den finalen Prompt aus validiertem Kontext plus serverseitigem Ruleset-/Lore-Kontext.
+- Provider-Details werden hinter einem serverseitigen Adapter verborgen, sodass der CharacterEditor unveraendert bleibt, wenn das Modell wechselt.
+
+## Happy Path
+- [ ] Im Feld `Hintergrundgeschichte` steht oben rechts eine Primary-CTA `Generieren`. Ohne konfiguriertes LLM liefert sie einen klaren nicht-destruktiven Konfigurationshinweis; mit Provider-Konfiguration erzeugt sie eine neue Variante, ohne bestehenden Text ungefragt zu ueberschreiben.
+- [ ] Solange das Story-Feld leer ist, werden 10 charakterabhaengige Beispieltexte in Grau angezeigt und alle 5 Sekunden gewechselt; `Beispiel uebernehmen` uebernimmt den aktuell sichtbaren Text in das Story-Feld.
+- [ ] Der Generation-Context beruecksichtigt alle nicht-leeren Character-Parameter: Name, Beschreibung, Regelset, Archetyp/Klasse, Rasse/Spezies, Setting, Essenzprofil, D&D-Hintergrund, Level, sechs Stats, Skills/Faehigkeiten, Inventar, Aussehen sowie die vier Trait-Gruppen. Notes werden bewusst nicht an das LLM gesendet.
+- [ ] Persoenlichkeitsmerkmale, Ideale, Bindungen und Schwaechen verwenden denselben Baustein-Editor: ausgewaehlte Werte erscheinen als entfernbare Chips, `+` oeffnet passende Vorschlaege und ein eigener Custom-Block kann hinzugefuegt werden.
+- [ ] Vorschlaege und Beispiele reagieren auf das aktive Regelset und relevante Charakterparameter; D&D 5.5e und SagaDrive Core erhalten getrennte semantische Pools.
+
+## Edge Cases
+- [ ] Leere/teilweise Character-Parameter erzeugen weiterhin gueltige Beispiele und einen gueltigen Prompt ohne erfundene Pflichtwerte.
+- [ ] Wechsel des Regelsets aktualisiert Beispiel-/Trait-Kontext ohne alte regelsetfremde Vorschlaege zu erzwingen; bereits vom User ausgewaehlte Custom-Chips bleiben erhalten.
+- [ ] Bereits vorhandene Story wird bei `Generieren` nicht automatisch ersetzt; die neue Variante wird separat zur Uebernahme angeboten.
+- [ ] Doppelte Trait-Bausteine werden nicht mehrfach gespeichert; leere Custom-Eintraege und ueberlange Eingaben werden abgewiesen.
+- [ ] Auto-Rotation raeumt den Timer beim Unmount auf und verursacht keine State-Updates nach Unmount.
+- [ ] Typed-strict: alle geaenderten TypeScript-Dateien bleiben ohne `any`, `@ts-ignore`, `@ts-nocheck` oder vergleichbare Type-Escapes.
+
+## Security & Data
+- LLM-Secrets liegen ausschliesslich in Server-Environment-Variablen und werden nie an den Browser ausgegeben.
+- `character-lore` verlangt eine authentifizierte Supabase-Session und leitet User-Identitaet ausschliesslich aus dem verifizierten Token ab.
+- Request-Body wird serverseitig auf Typ, Laengen und erlaubte Ruleset-Werte validiert; Prompt-Inhalte werden als untrusted character/world data markiert.
+- Notes werden nicht an die Character-Lore-Generierung uebertragen.
+- Keine Roh-Prompts, API-Keys oder komplette Character-Daten werden serverseitig geloggt.
+- Der Endpoint begrenzt teure Generierungsaufrufe pro authentifiziertem User in-memory als erste Schutzschicht; spaeter kann dieselbe Schnittstelle an einen persistenten Rate-Limiter angebunden werden.
+
+## Data Migration
+- `personality_traits` bleibt `TEXT[]`.
+- `ideals`, `bonds`, `flaws` werden rueckwaertskompatibel von `TEXT` nach `TEXT[]` migriert; vorhandener nicht-leerer Text wird zu einem Array mit genau einem Element.
+- DTOs, ViewModel und Character-Service verwenden danach fuer alle vier Trait-Gruppen `string[]`.
+- Rollback-Hinweis: Arrays mit mehr als einem Element koennen bei Rueckmigration nur verlustbehaftet in einen Einzeltext zusammengefuehrt werden; deshalb ist die Vorwaertsmigration der kanonische Zustand.
+
+## Provider Configuration
+- `CHARACTER_AI_PROVIDER`: `openai-compatible` oder `ollama`.
+- `CHARACTER_AI_MODEL`: Modellname, fuer echte Generierung erforderlich.
+- `CHARACTER_AI_BASE_URL`: Provider-Base-URL; Ollama kann auf `OLLAMA_HOST` zurueckfallen.
+- `CHARACTER_AI_API_KEY`: fuer OpenAI-kompatible Provider erforderlich, fuer Ollama optional.
+- Bestehende `OLLAMA_HOST` / `OLLAMA_MODEL` koennen als rueckwaertskompatible Fallbacks verwendet werden.
+
+## Regression
+- [ ] Info, Look, Stats, Skills, Inventar, Portrait und Save-Flow bleiben funktional.
+- [ ] Gold bleibt Primary CTA/Selected, Cyan bleibt Focus/Secondary Hover.
+- [ ] Keine neue Frontend-UI-Library und keine neue npm-Dependency.
+
+## Screenshots
+Browser-Verifikation erforderlich fuer BG leer mit Beispiel, Trait-Popover, uebernommenes Beispiel und vorhandene Story mit separater Generation-Variante.
+
+## Implementation Notes
+Pending.
