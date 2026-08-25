@@ -125,8 +125,8 @@ class CharacterService {
         wisdom: payload.attributes?.wisdom ?? 10,
         charisma: payload.attributes?.charisma ?? 10,
       },
-      abilities: [],
-      inventory: [],
+      abilities: payload.abilities ?? [],
+      inventory: payload.inventory ?? [],
       emotion_profiles: [],
       portrait_url: payload.portrait_url || undefined,
     };
