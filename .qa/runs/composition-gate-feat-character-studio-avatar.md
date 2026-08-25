@@ -1,6 +1,6 @@
 # Composition Gate - feat-character-studio-avatar
 
-- HEAD_SHA: 6696d4a9618ed84521befc9ca2d7ed17c2e4616b
+- HEAD_SHA: 244a015c8ae8a2304b0b21cebb48867fe88e0dfd
 - BASE_SHA: 7f6f096dc5c6a0ff280d901cf262fa533814085f
 - Date: 2026-08-25
 - Verdict: CLEAR
@@ -12,7 +12,7 @@ An authenticated user (1) generates exactly one character-background draft via t
 `CharacterEditor` / `CharacterBackgroundComposer` → `characterLoreService.generateBackground` → shared `supabase` client → environment-selected Supabase gateway (`VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` for self-host, hosted fallback only when both are absent) → Supabase Edge Function `character-lore` → JWT verify (`auth.getUser`) → request size/type validation + per-user in-memory rate limit → optional service-role project/world lookup with GM/active-member/world-binding checks → versioned prompt (`character-background-v1`) → exactly one configured LLM provider call → draft JSON → explicit UI `Übernehmen` → separate `characterService` create/update → one `characters` row (incl. trait arrays via migration `002_character_trait_arrays.sql`).
 
 Self-host deployment hop:
-`.env` Character AI / Ollama settings → `docker-compose.yml` → `supabase-edge.environment` → `Deno.env` provider resolution. The service-role key and provider API key remain server-side inside the Edge Runtime.
+`.env.example` exposes the paired Vite Supabase gateway/anon-key settings and Character AI/Ollama settings → `.env` → Vite client configuration plus `docker-compose.yml` → `supabase-edge.environment` → `Deno.env` provider resolution. The service-role key and provider API key remain server-side inside the Edge Runtime.
 
 Parallel local/tooling hops (no provider/DB fan-out):
 - `AvatarCanvas` / `CharacterStudioRuntime` → local Three.js/VRM WebGL preview only
@@ -33,7 +33,7 @@ Parallel local/tooling hops (no provider/DB fan-out):
 | `rate-limit:` | note | Edge Function → provider | In-memory Map is instance-local, not a durable global quota. | Accepted for prep slice; persistent limiter before paid production. Documented via `CHARACTER_AI_RATE_LIMIT_PER_MINUTE`. |
 | `dead-path:` | note | Editor → optional project/world IDs | Standalone editor currently does not pass `projectId`/`worldId`, so authorized lore enrichment is dormant. | Pass IDs when opened from project context; no semantic mismatch today. |
 
-PR review follow-ups are incorporated in this proof: the central Supabase singleton now honors the self-host environment instead of forcing the hosted project URL, and Docker Compose explicitly forwards Character AI/Ollama settings into the Edge Runtime. CORS remains fail-closed: no default `*`; allowlist CSV or localhost-only.
+PR review follow-ups are incorporated in this proof: the central Supabase singleton now honors the self-host environment instead of forcing the hosted project URL; `.env.example` exposes the paired browser settings; and Docker Compose explicitly forwards Character AI/Ollama settings into the Edge Runtime. CORS remains fail-closed: no default `*`; allowlist CSV or localhost-only.
 
 No open blocker/flag changes cardinality, destination, tenant, or identity for the current branch scope.
 
