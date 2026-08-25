@@ -1,6 +1,6 @@
 # Composition Gate - character-background-ai-composer
 
-- HEAD_SHA: b2a6e86a411a53ddad0c2175090f21b0fc9888e4
+- HEAD_SHA: 6500adcafd570fe63c97e4534d2f1286f61150bc
 - BASE_SHA: 9f0ea4f858e48e73929175d36c36eeec25765a76
 - Date: 2026-08-25
 - Verdict: CLEAR
@@ -23,7 +23,7 @@ Trait persistence follows: `CharacterTraitEditor` -> CharacterEditor state -> on
 | Two consumers / crash | Concurrent/retried generation must not create a persistent duplicate side effect or silently overwrite the current story. | There is no queue, outbox, worker, or persistent generation record. Each HTTP request is an explicit user-requested variant. A failed/crashed provider request persists nothing. Successful output is held as a local draft until `Übernehmen`; a second intentional request represents a second intentional variant. Character persistence happens only through the separate normal save action. | pass |
 
 ## Validation
-- GitHub Test Gate on `b2a6e86a411a53ddad0c2175090f21b0fc9888e4`: PASS.
+- GitHub Test Gate on `6500adcafd570fe63c97e4534d2f1286f61150bc`: PASS.
 - Diff Typed-Strict lint: 26 changed TypeScript files PASS.
 - Frontend TypeScript check: PASS.
 - Vite production build: PASS.
@@ -37,6 +37,8 @@ Trait persistence follows: `CharacterTraitEditor` -> CharacterEditor state -> on
 |-----|----------|------|----------------------------|-----|
 | `rate-limit:` | note | Edge Function -> provider | In-memory rate limiting is instance-local and is not a globally durable quota. | Accepted as first protection layer for this preparatory slice; provider billing/cost hardening should use a persistent distributed limiter before production paid-model rollout. |
 | `dead-path:` | note | CharacterEditor -> optional project/world lookup | The standalone editor currently does not supply `projectId`/`worldId`, so authorized campaign/world lore enrichment is prepared but dormant. | No semantic mismatch in the current flow; when the editor is opened from a project/world context, pass those IDs through the typed context instead of raw lore. |
+
+The final UI-only change on `6500adc...` adds reduced-motion handling for the already-proven example fade. It does not alter the provider hop-chain, authorization, cardinality or persistence behavior.
 
 No open blocker or flag changes event cardinality, destination, tenant, or identity for the current feature.
 
