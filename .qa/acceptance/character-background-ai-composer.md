@@ -63,7 +63,7 @@ Der BG-Tab des CharacterEditors wird zu einem Character-Lore-Composer: Hintergru
 - [x] Keine neue Frontend-UI-Library; Playwright nur als Dev-/QA-Dependency.
 
 ## Composition Gate
-- Code HEAD: `8bee38fad062fcc4ff8e04ea32bb5f3b4a6d01dc`
+- Code HEAD: `ac88e3423a612e87681cc42507ae5c04f860fb97`
 - Feature BASE: `7f6f096dc5c6a0ff280d901cf262fa533814085f`
 - Verdict: `CLEAR`
 - Proof: `.qa/runs/composition-gate-feat-character-studio-avatar.md`
