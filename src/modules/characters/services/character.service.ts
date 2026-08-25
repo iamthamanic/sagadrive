@@ -39,12 +39,18 @@ class CharacterService {
    * Map DTO to View Model
    */
   private mapToViewModel(dto: CharacterDto): CharacterVm {
+    const rulesetKey = dto.ruleset_key === 'dnd-5.5e' ? 'dnd-5.5e' : 'sagadrive-core';
     return {
       id: dto.id,
       name: dto.name,
       description: dto.description,
       class: dto.class,
       race: dto.race,
+      rulesetKey,
+      dndBackground:
+        rulesetKey === 'dnd-5.5e' && typeof dto.dnd_background === 'string'
+          ? dto.dnd_background
+          : undefined,
       level: dto.level,
       backgroundStory: dto.background_story,
       personalityTraits: this.normalizeTextBlocks(dto.personality_traits),
@@ -122,6 +128,7 @@ class CharacterService {
    */
   async createCharacter(payload: CreateCharacterDto): Promise<CharacterVm> {
     const userId = await this.getAuthenticatedUserId();
+    const rulesetKey = payload.ruleset_key ?? 'sagadrive-core';
 
     const characterData: Partial<CharacterDto> = {
       owner_user_id: userId,
@@ -130,6 +137,8 @@ class CharacterService {
       description: payload.description,
       class: payload.class,
       race: payload.race,
+      ruleset_key: rulesetKey,
+      dnd_background: rulesetKey === 'dnd-5.5e' ? payload.dnd_background ?? null : null,
       level: payload.level || 1,
       background_story: payload.background_story,
       personality_traits: payload.personality_traits,
@@ -169,8 +178,16 @@ class CharacterService {
    */
   async updateCharacter(id: string, payload: UpdateCharacterDto): Promise<CharacterVm> {
     const userId = await this.getAuthenticatedUserId();
+    const rulesetPatch = payload.ruleset_key
+      ? {
+          ruleset_key: payload.ruleset_key,
+          dnd_background:
+            payload.ruleset_key === 'dnd-5.5e' ? payload.dnd_background ?? null : null,
+        }
+      : {};
     const updatePayload: UpdateCharacterDto & { updated_at: string } = {
       ...payload,
+      ...rulesetPatch,
       ...(payload.appearance
         ? { appearance: normalizeCharacterAppearance(payload.appearance) }
         : {}),
