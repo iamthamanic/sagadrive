@@ -88,76 +88,119 @@ supabase/functions/
 
 ## UI/UX Rules
 
-### Design Principles
+### Canonical Design Sources
 
-1. **Consistent Color Scheme**
-   - Primary: `#3B82F6` (Blue)
-   - Secondary: `#10B981` (Green)
-   - Danger: `#EF4444` (Red)
-   - Background: `#0F172A` (Dark)
-   - Surface: `#1E293B` (Dark Surface)
+- `src/THEME_GUIDE.md` is the canonical SagaDrive design-system reference.
+- `src/guidelines/Guidelines.md` contains compact AI/Figma-Make generation rules.
+- `src/styles/globals.css` and `src/components/ui/` are the technical source of truth.
+- Do not introduce local color conventions that conflict with these files.
 
-2. **Typography**
-   - Headings: `Inter` or `Plus Jakarta Sans`
-   - Body: `Inter`
-   - Code: `JetBrains Mono`
+### Brand Color Roles
 
-3. **Spacing**
-   - Base unit: `4px`
-   - Small: `8px`
-   - Medium: `16px`
-   - Large: `24px`
-   - XLarge: `32px`
+1. **Gold / Amber = selected or most important action**
+   - Light: `#E8A641`
+   - Dark: `#F59E0B`
+   - Primary CTA
+   - Active tab / selected segmented control
+   - Level, achievement, premium accents
 
-4. **Border Radius**
-   - Buttons: `6px`
-   - Cards: `8px`
-   - Modals: `12px`
+2. **Cyan / Teal = functional orientation**
+   - Light: `#0891B2`
+   - Dark: `#06B6D4`
+   - Focus rings
+   - Links and navigation
+   - Progress/status
+   - Hover for secondary, outline and ghost actions
 
-5. **Shadows**
-   - Small: `0 1px 2px rgba(0,0,0,0.05)`
-   - Medium: `0 4px 6px rgba(0,0,0,0.1)`
-   - Large: `0 10px 15px rgba(0,0,0,0.15)`
+3. **Danger**
+   - Light: `#EF4444`
+   - Dark: `#F87171`
+   - Destructive and invalid states only
+
+4. **Surfaces**
+   - Background: `#0F172A` in dark mode
+   - Surface/Card: `#1E293B` in dark mode
+   - Border: `#334155` in dark mode
+
+**Rule:** Gold = selected or primary action. Cyan = functional orientation.
+
+### Typography
+
+- UI and headings: `Darker Grotesque`
+- Headings: weight 700
+- Body/UI: weight 400-600
+- Code/data when needed: `JetBrains Mono`
+- Do not introduce serif fonts in product UI.
+
+### Spacing
+
+- Base unit: `4px`
+- Small: `8px`
+- Medium: `16px`
+- Large: `24px`
+- XLarge: `32px`
+
+### Border Radius
+
+- Buttons/controls: `6-8px`
+- Cards: `8-12px`
+- Modals: `12px`
+- Keep radius hierarchy consistent within a screen.
 
 ### Component Patterns
 
-1. **CharacterEditor** (Primary UI)
-   - Card-based layout
-   - Tab navigation (Details, Appearance, Attributes, Background)
-   - Real-time validation
-   - Portrait upload
-   - Attribute sliders
+1. **Buttons**
+   - Default `Button` is the primary CTA and uses Gold/Amber.
+   - `outline` and `ghost` are secondary/tertiary actions and use Cyan/Teal on hover/focus.
+   - `destructive` remains red.
+   - Do not hardcode standard CTA colors in feature components.
 
-2. **Dashboard** (Navigation Hub)
-   - Project cards
-   - Quick actions
-   - Recent sessions
-   - Notifications
+2. **Tabs**
+   - Active tab is filled Gold/Amber with `accent-foreground` text.
+   - Inactive tabs are neutral.
+   - Inactive hover and keyboard focus use Cyan/Teal.
+   - Active tabs remain Gold on hover.
 
 3. **Forms**
-   - Label above input
-   - Error messages below input
-   - Required fields marked with `*`
-   - Help text in smaller font below
+   - Label above input.
+   - Input, Textarea and Select have a visible border at rest.
+   - Error messages below input.
+   - Required fields marked with `*` when required by the flow.
+   - Help text in smaller muted text below.
+   - Important controls should target at least `44px` height.
 
-4. **Tables**
-   - Sortable columns
-   - Search/filter
-   - Pagination
-   - Row actions (edit, delete, view)
+4. **CharacterEditor**
+   - Card-based layout.
+   - Tab navigation.
+   - Live avatar preview.
+   - Real-time validation.
+   - Portrait upload/generation.
+   - Attribute sliders.
+   - General styling comes from shared UI primitives, not CharacterEditor-only overrides.
 
-5. **Modals**
-   - Overlay with backdrop blur
-   - Close button (X) top-right
-   - Title with separator
-   - Actions at bottom
+5. **Dashboard**
+   - Project cards.
+   - Quick actions.
+   - Recent sessions.
+   - Notifications.
+
+6. **Tables**
+   - Sortable columns.
+   - Search/filter.
+   - Pagination.
+   - Row actions (edit, delete, view).
+
+7. **Modals**
+   - Overlay with backdrop blur when appropriate.
+   - Close button top-right.
+   - Clear title and action hierarchy.
 
 ### Responsive Design
 
 1. **Mobile First**
-   - Single column on mobile
-   - Two columns on tablet
-   - Three columns on desktop
+   - Single column on mobile.
+   - Two columns on tablet where useful.
+   - Three columns on desktop only when content benefits.
 
 2. **Breakpoints**
    - Mobile: `< 640px`
@@ -165,25 +208,25 @@ supabase/functions/
    - Desktop: `> 1024px`
 
 3. **Touch Targets**
-   - Minimum `44px` height
-   - Minimum `44px` width
+   - Minimum `44px` height for primary controls.
+   - Minimum `44px` width for icon-only primary controls.
 
 ### Accessibility
 
 1. **ARIA Labels**
-   - All interactive elements labeled
-   - Screen reader support
-   - Keyboard navigation
+   - All interactive elements labeled.
+   - Screen reader support.
+   - Keyboard navigation.
 
 2. **Color Contrast**
-   - WCAG AA minimum
-   - Text: `4.5:1`
-   - UI: `3:1`
+   - WCAG AA minimum.
+   - Text: `4.5:1`.
+   - UI boundaries: `3:1` where applicable.
 
 3. **Focus States**
-   - Visible focus ring
-   - Tab order logical
-   - Skip links
+   - Visible Cyan/Teal focus ring.
+   - Logical tab order.
+   - Selected, focus, disabled and invalid states remain distinguishable.
 
 ## Integration Rules
 
