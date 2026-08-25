@@ -181,6 +181,14 @@ services:
       <<: *supabase-env
       JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
       VERIFY_JWT: "false"
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
+      CHARACTER_AI_PROVIDER: ${CHARACTER_AI_PROVIDER:-ollama}
+      CHARACTER_AI_MODEL: ${CHARACTER_AI_MODEL:-}
+      CHARACTER_AI_BASE_URL: ${CHARACTER_AI_BASE_URL:-}
+      CHARACTER_AI_API_KEY: ${CHARACTER_AI_API_KEY:-}
+      CHARACTER_AI_RATE_LIMIT_PER_MINUTE: ${CHARACTER_AI_RATE_LIMIT_PER_MINUTE:-6}
+      CHARACTER_AI_ALLOWED_ORIGIN: ${CHARACTER_AI_ALLOWED_ORIGIN:-}
     volumes:
       - ./supabase/functions:/home/deno/functions:ro
       - ./supabase/config/import_map.json:/home/deno/import_map.json:ro
