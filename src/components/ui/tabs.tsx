@@ -42,7 +42,7 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:border-foreground/15 data-[state=active]:shadow-sm focus-visible:border-accent focus-visible:ring-accent/25 focus-visible:outline-none text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2.5 py-1 text-sm font-medium whitespace-nowrap transition-[background-color,border-color,box-shadow,color] duration-150 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 hover:bg-background/50 hover:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "data-[state=active]:border-accent data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm data-[state=active]:hover:bg-accent/90 data-[state=active]:hover:text-accent-foreground focus-visible:border-primary focus-visible:ring-primary/30 focus-visible:outline-none text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2.5 py-1 text-sm font-medium whitespace-nowrap transition-[background-color,border-color,box-shadow,color] duration-150 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 hover:border-primary/30 hover:bg-primary/10 hover:text-primary [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
