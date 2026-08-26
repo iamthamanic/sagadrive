@@ -335,9 +335,23 @@ Eine Figur erhöht auf Stufe 8 und Stufe 16 jeweils ein Attribut um 1.
 
 ## 4. Charakterstruktur
 
-### 4.1 Stufen
+### 4.1 Stufen und Ränge
 
 SagaDrive verwendet 20 Charakterstufen. Eine Stufe gibt den allgemeinen Erfahrungsrahmen einer Figur an, erhöht aber nicht automatisch sämtliche Werte.
+
+Die 20 Stufen sind in fünf benannte Ränge zu je vier Stufen gegliedert. Der Rang bündelt die großen Progressionssprünge des Systems: Erfahrungsbonus, maximalen Fertigkeitswert, maximal verfügbaren Fähigkeitsrang und den zugehörigen Begegnungsrang.
+
+| Rang | Charakterstufen | Erfahrungsbonus | Fertigkeitslimit | Maximaler Fähigkeitsrang |
+|---|---:|---:|---:|---|
+| Novize | 1–4 | +1 | 3 | Novize |
+| Spezialist | 5–8 | +2 | 4 | Spezialist |
+| Experte | 9–12 | +3 | 4 | Experte |
+| Meister | 13–16 | +4 | 5 | Meister |
+| Legende | 17–20 | +5 | 5 | Legende |
+
+Der Rang ist keine eigene Klasse und besitzt keine getrennten Rangstufen. Ein Rangwechsel schaltet die entsprechenden Grenzen und Möglichkeiten frei, vergibt aber nur die Entwicklungen, die für die konkrete Charakterstufe in Abschnitt 13 vorgesehen sind.
+
+**Novize** bezeichnet ausschließlich den ersten SagaDrive-Progressionsrang. Eine Figur des Rangs Novize ist deshalb nicht automatisch unerfahren oder untrainiert; SagaDrive-Figuren beginnen bereits kompetent.
 
 ### 4.2 Archetypen
 
@@ -357,7 +371,7 @@ Jede Figur beginnt mit einem Primärarchetyp. Weitere Archetypen werden über fr
 - Dritter Archetyp: frühestens Stufe 12; mindestens drei Fähigkeiten in jedem bereits erschlossenen Archetyp.
 - Vierter Archetyp: frühestens Stufe 18; mindestens drei Fähigkeiten in jedem bereits erschlossenen Archetyp.
 
-Das Erschließen eines neuen Archetyps verbraucht eine freie Fähigkeitswahl und enthält dessen Rang-I-Kernfähigkeit.
+Das Erschließen eines neuen Archetyps verbraucht eine freie Fähigkeitswahl und enthält dessen Kernfähigkeit des Rangs Novize.
 
 ### 4.3 Kombinationen
 
@@ -517,19 +531,21 @@ Maximal drei Spezialisierungen pro Fertigkeit.
 | 4 | Meisterlich |
 | 5 | Weltklasse |
 
-| Stufe | Erfahrungsbonus |
-|---:|---:|
-| 1–4 | +1 |
-| 5–8 | +2 |
-| 9–12 | +3 |
-| 13–16 | +4 |
-| 17–20 | +5 |
+| Stufe | Rang | Erfahrungsbonus |
+|---:|---|---:|
+| 1–4 | Novize | +1 |
+| 5–8 | Spezialist | +2 |
+| 9–12 | Experte | +3 |
+| 13–16 | Meister | +4 |
+| 17–20 | Legende | +5 |
 
-| Charakterstufe | Maximaler Fertigkeitswert |
-|---:|---:|
-| 1–4 | 3 |
-| 5–12 | 4 |
-| 13–20 | 5 |
+| Charakterstufe | Rang | Maximaler Fertigkeitswert |
+|---:|---|---:|
+| 1–4 | Novize | 3 |
+| 5–8 | Spezialist | 4 |
+| 9–12 | Experte | 4 |
+| 13–16 | Meister | 5 |
+| 17–20 | Legende | 5 |
 
 ### 5.4 Fertigkeiten bei der Charaktererschaffung
 
@@ -600,7 +616,7 @@ Werkzeuge sind Ausrüstung:
 - fehlt ein unverzichtbares Werkzeug, ist die Handlung unmöglich,
 - hochwertige Werkzeuge haben nur ausdrücklich definierte Vorteile.
 
-Berechtigungen, Lizenzen, Rang, Kontakte und Sicherheitsfreigaben sind von fachlicher Kompetenz getrennt.
+Berechtigungen, Lizenzen, Dienstgrad oder sozialer Status, Kontakte und Sicherheitsfreigaben sind von fachlicher Kompetenz getrennt.
 
 ### 5.8 Vollständige Fertigkeitsbeschreibungen
 
@@ -1243,7 +1259,7 @@ Jede Fähigkeit definiert:
 
 - Name,
 - Quelle,
-- Rang I bis V,
+- Rang von Novize bis Legende,
 - Voraussetzungen,
 - Aktivierungsart,
 - Auslöser,
@@ -1257,19 +1273,23 @@ Jede Fähigkeit definiert:
 
 ### 11.2 Fähigkeitsränge
 
+Die Fähigkeitsränge verwenden dieselben Namen und Stufengrenzen wie die Charakterränge.
+
 | Rang | Früheste Stufe |
-|---:|---:|
-| I | 1 |
-| II | 5 |
-| III | 9 |
-| IV | 13 |
-| V | 17 |
+|---|---:|
+| Novize | 1 |
+| Spezialist | 5 |
+| Experte | 9 |
+| Meister | 13 |
+| Legende | 17 |
+
+Eine Figur kann keine Fähigkeit wählen, deren Rang über ihrem aktuellen Charakterrang liegt. Der Wechsel in einen höheren Charakterrang schaltet den entsprechenden Fähigkeitsrang frei, vergibt aber nicht automatisch eine Fähigkeit dieses Rangs.
 
 Zusätzliche Investitionsanforderungen:
 
-- Rang III: mindestens 2 niedrigere Fähigkeiten derselben Quelle.
-- Rang IV: mindestens 3 niedrigere Fähigkeiten derselben Quelle.
-- Rang V: mindestens 4 niedrigere Fähigkeiten derselben Quelle.
+- Experte: mindestens 2 niedrigere Fähigkeiten derselben Quelle.
+- Meister: mindestens 3 niedrigere Fähigkeiten derselben Quelle.
+- Legende: mindestens 4 niedrigere Fähigkeiten derselben Quelle.
 
 ### 11.3 Kernfähigkeiten der Archetypen
 
@@ -1372,12 +1392,12 @@ Eine direkte Gegenwirkung verwendet eine vergleichende Kraftprobe. Bei vollstän
 Die folgenden Werte sind Designrichtlinien, keine automatische Schadensformel.
 
 | Rang | Richtwert |
-|---:|---|
-| I | ein Ziel, kurze Wirkung, ungefähr d6+2 Schaden oder vergleichbarer Effekt |
-| II | mehrere Ziele oder ungefähr 2d6+2 |
-| III | kleine Fläche, starke Kontrolle oder ungefähr 3d6+3 |
-| IV | großer taktischer Effekt oder ungefähr 4d6+4 |
-| V | szenenprägender Effekt oder ungefähr 5d6+5 |
+|---|---|
+| Novize | ein Ziel, kurze Wirkung, ungefähr d6+2 Schaden oder vergleichbarer Effekt |
+| Spezialist | mehrere Ziele oder ungefähr 2d6+2 |
+| Experte | kleine Fläche, starke Kontrolle oder ungefähr 3d6+3 |
+| Meister | großer taktischer Effekt oder ungefähr 4d6+4 |
+| Legende | szenenprägender Effekt oder ungefähr 5d6+5 |
 
 Mehr Ziele, Fläche, Reichweite, Dauer und Kontrolle verbrauchen dasselbe Wirkungsbudget. Eine Kraft soll nicht alle Dimensionen gleichzeitig maximieren.
 
@@ -1389,26 +1409,26 @@ Dauerhaft weltverändernde Effekte werden als Projekt, Ritual oder Abenteuerziel
 
 | Stufe | Entwicklung |
 |---:|---|
-| 1 | EB +1, Fertigkeitslimit 3, Primärarchetyp + Kernfähigkeit, primäre Essenz + erste Manifestation |
+| 1 | Rang Novize, EB +1, Fertigkeitslimit 3, Primärarchetyp + Kernfähigkeit, primäre Essenz + erste Manifestation |
 | 2 | freie Fähigkeit |
 | 3 | Fertigkeitsentwicklung |
 | 4 | freie Fähigkeit |
-| 5 | EB +2, Fertigkeitslimit 4, Fertigkeitsentwicklung, Rang II verfügbar |
+| 5 | Rang Spezialist, EB +2, Fertigkeitslimit 4, Fertigkeitsentwicklung, Fähigkeiten des Rangs Spezialist verfügbar |
 | 6 | freie Fähigkeit, zweiter Archetyp möglich |
 | 7 | Fertigkeitsentwicklung |
 | 8 | Attribut +1, freie Fähigkeit |
-| 9 | EB +3, Fertigkeitsentwicklung, Rang III verfügbar |
+| 9 | Rang Experte, EB +3, Fertigkeitsentwicklung, Fähigkeiten des Rangs Experte verfügbar |
 | 10 | freie Fähigkeit, sekundäre Essenz möglich |
 | 11 | Fertigkeitsentwicklung |
 | 12 | freie Fähigkeit, dritter Archetyp möglich |
-| 13 | EB +4, Fertigkeitslimit 5, Fertigkeitsentwicklung, Rang IV verfügbar |
+| 13 | Rang Meister, EB +4, Fertigkeitslimit 5, Fertigkeitsentwicklung, Fähigkeiten des Rangs Meister verfügbar |
 | 14 | freie Fähigkeit |
 | 15 | Fertigkeitsentwicklung |
 | 16 | Attribut +1, freie Fähigkeit |
-| 17 | EB +5, Fertigkeitsentwicklung, Rang V verfügbar |
+| 17 | Rang Legende, EB +5, Fertigkeitsentwicklung, Fähigkeiten des Rangs Legende verfügbar |
 | 18 | freie Fähigkeit, vierter Archetyp möglich |
 | 19 | Fertigkeitsentwicklung |
-| 20 | freie Fähigkeit oder Rang-V-Abschlussfähigkeit |
+| 20 | freie Fähigkeit oder legendäre Abschlussfähigkeit |
 
 ### 13.1 Sekundäre Essenz
 
@@ -1417,9 +1437,9 @@ Frühestens Stufe 10.
 Voraussetzungen:
 
 - erzählerischer oder weltbezogener Zugang,
-- mindestens eine Rang-II-Fähigkeit, die die primäre Essenz tatsächlich verwendet.
+- mindestens eine Fähigkeit des Rangs Spezialist, die die primäre Essenz tatsächlich verwendet.
 
-Das Erschließen verbraucht eine freie Fähigkeitswahl und enthält eine Rang-I-Manifestation der neuen Essenz.
+Das Erschließen verbraucht eine freie Fähigkeitswahl und enthält eine Manifestation des Rangs Novize der neuen Essenz.
 
 ### 13.2 Aufstiegsmodell
 
@@ -1439,7 +1459,33 @@ Richtwerte:
 
 Entwicklungspunkte werden nicht nach getöteten Gegnern vergeben.
 
-Neue Figuren steigen auf der aktuellen Gruppenstufe ein und erhalten alle regulären Entwicklungen dieser Stufe. Es gibt keine Aufholstrafe.
+Neue Figuren steigen auf der aktuellen Gruppenstufe ein und erhalten alle regulären Entwicklungen bis einschließlich dieser Stufe. Es gibt keine Aufholstrafe.
+
+### 13.3 Höherstufige Charaktererschaffung
+
+Ein neuer Charakter darf direkt auf jeder regulären Charakterstufe von 1 bis 20 erstellt werden. Stufe 1 ist der Standard, aber keine Pflicht.
+
+Ein höherstufiger Charakter wird regeltechnisch immer aus der vollständigen Stufe-1-Basis plus allen Entwicklungen der Stufen 2 bis zur gewählten Zielstufe aufgebaut. Er erhält deshalb nicht nur den Bonus seiner Zielstufe, sondern sämtliche bis dahin vorgesehenen Fertigkeitsentwicklungen, freien Fähigkeiten und Attributssteigerungen.
+
+Automatisch aus der Zielstufe folgen:
+
+- Charakterrang,
+- Erfahrungsbonus,
+- Fertigkeitslimit,
+- maximal verfügbarer Fähigkeitsrang,
+- alle davon abhängigen abgeleiteten Werte.
+
+Die spielende Person entscheidet weiterhin selbst:
+
+- welche Fertigkeiten mit erhaltenen Fertigkeitsentwicklungen verändert werden,
+- welche Fähigkeiten gewählt werden,
+- welches Attribut auf Stufe 8 oder 16 erhöht wird,
+- ob und wann ein weiterer Archetyp erschlossen wird,
+- ob und wann eine sekundäre Essenz erschlossen wird.
+
+Alle Voraussetzungen müssen so erfüllbar sein, dass eine legale chronologische Entwicklung von Stufe 1 bis zur Zielstufe existiert. Ein direkt erstellter Stufe-14-Charakter darf beispielsweise keine Meister-Fähigkeit besitzen, wenn die dafür nötigen niedrigeren Investitionen bis dahin nicht legal erreicht werden konnten.
+
+Für die Nachvollziehbarkeit wird die Herkunft jeder Entwicklung dokumentiert. Analog genügt eine kurze Zuordnung zu Stufe und Quelle; digital kann SagaDrive daraus ein Progressionsprotokoll führen. Ein digitaler Editor darf die noch offenen Entwicklungen eines höherstufigen Charakters gebündelt anzeigen, muss die chronologischen Voraussetzungen aber weiterhin vollständig prüfen.
 
 ---
 
@@ -1598,25 +1644,27 @@ Die Struktur gilt für Verfolgungen zu Fuß, mit Tieren, Fahrzeugen, Schiffen od
 
 ## 15. Gegner- und Spielleitungsregeln
 
-### 15.1 Begegnungsstufen
+### 15.1 Begegnungsränge
 
-| Band | Charakterstufen |
-|---:|---:|
-| I | 1–4 |
-| II | 5–8 |
-| III | 9–12 |
-| IV | 13–16 |
-| V | 17–20 |
+Begegnungen verwenden dieselben fünf Rangnamen und Stufenbereiche wie Spielercharaktere.
+
+| Begegnungsrang | Charakterstufen |
+|---|---:|
+| Novize | 1–4 |
+| Spezialist | 5–8 |
+| Experte | 9–12 |
+| Meister | 13–16 |
+| Legende | 17–20 |
 
 ### 15.2 Standardgegner
 
-| Band | Angriff | Verteidigung | Gesundheit | Standardschaden |
-|---:|---:|---:|---:|---:|
-| I | +6 | 14 | 18 | d6+1 |
-| II | +8 | 16 | 20 | d8+1 |
-| III | +10 | 18 | 22 | d8+2 |
-| IV | +12 | 20 | 24 | d10+2 |
-| V | +14 | 22 | 26 | d10+3 |
+| Rang | Angriff | Verteidigung | Gesundheit | Standardschaden |
+|---|---:|---:|---:|---:|
+| Novize | +6 | 14 | 18 | d6+1 |
+| Spezialist | +8 | 16 | 20 | d8+1 |
+| Experte | +10 | 18 | 22 | d8+2 |
+| Meister | +12 | 20 | 24 | d10+2 |
+| Legende | +14 | 22 | 26 | d10+3 |
 
 Widerstände liegen normalerweise innerhalb von Verteidigung ±2.
 
@@ -1650,7 +1698,7 @@ Diese Werte sind verbindliche Playtestwerte und müssen in Abschnitt 19 empirisc
 
 ### 15.4 Bedrohungspunkte
 
-Innerhalb desselben Bands:
+Innerhalb desselben Begegnungsrangs:
 
 | Typ | Punkte |
 |---|---:|
@@ -1668,7 +1716,7 @@ Gruppenbudget:
 | Schwer | 2,5 × Zahl der Spielerfiguren |
 | Extrem | 3 × Zahl der Spielerfiguren |
 
-Ein Gegner ein Band über der Gruppe kostet doppelt. Ein Gegner ein Band darunter kostet halbiert.
+Ein Gegner einen Begegnungsrang über der Gruppe kostet doppelt. Ein Gegner einen Begegnungsrang darunter kostet halbiert.
 
 Auch diese Budgets sind Playtestwerte.
 
@@ -1761,27 +1809,32 @@ Magie und Technologie werden unabhängig bewertet.
 
 ## 17. Charaktererschaffung
 
+Eine Figur wird zunächst als vollständige Stufe-1-Basis erstellt. Soll sie direkt auf einer höheren Stufe beginnen, werden anschließend alle regulären Entwicklungen bis zur gewählten Zielstufe nach Abschnitt 13.3 angewendet.
+
 Verbindliche Reihenfolge:
 
 1. Weltprofil und aktive Module bestimmen.
-2. Figurenkonzept festlegen.
-3. Spezies und Speziesmerkmale wählen.
-4. Hintergrund wählen.
-5. Primärarchetyp wählen.
-6. Primäre Essenz wählen.
-7. Attribute verteilen.
-8. Hintergrund-Fertigkeitspunkte anwenden.
-9. Archetyp-Fertigkeitspunkt anwenden.
-10. Freie Fertigkeitspunkte verteilen.
-11. Spezialisierung wählen.
-12. zusätzliche Sprache oder Kommunikationsform wählen.
-13. Archetyp-Kernfähigkeit und erste Essenzmanifestation wählen.
-14. abgeleitete Werte berechnen.
-15. Startausrüstung und Ressourcen bestimmen.
-16. Kontakt und charakterbezogene Komplikation festhalten.
-17. Drive auf 3 setzen.
-18. Gruppen-Momentum auf 0 setzen.
-19. Fertigkeitsgrenzen, Voraussetzungen und Merkmalsbudget prüfen.
+2. Zielstufe von 1 bis 20 bestimmen; Standard ist Stufe 1.
+3. Figurenkonzept festlegen.
+4. Spezies und Speziesmerkmale wählen.
+5. Hintergrund wählen.
+6. Primärarchetyp wählen.
+7. Primäre Essenz wählen.
+8. Attribute verteilen.
+9. Hintergrund-Fertigkeitspunkte anwenden.
+10. Archetyp-Fertigkeitspunkt anwenden.
+11. Freie Fertigkeitspunkte verteilen.
+12. Spezialisierung wählen.
+13. zusätzliche Sprache oder Kommunikationsform wählen.
+14. Archetyp-Kernfähigkeit und erste Essenzmanifestation wählen.
+15. abgeleitete Werte berechnen.
+16. Startausrüstung und Ressourcen bestimmen.
+17. Kontakt und charakterbezogene Komplikation festhalten.
+18. Drive auf 3 setzen.
+19. Gruppen-Momentum auf 0 setzen.
+20. Fertigkeitsgrenzen, Voraussetzungen und Merkmalsbudget der Stufe-1-Basis prüfen.
+21. Bei Zielstufe über 1 alle Entwicklungen der Stufen 2 bis Zielstufe anwenden und deren Voraussetzungen chronologisch prüfen.
+22. Rang, Erfahrungsbonus, Fertigkeitslimit und alle abgeleiteten Werte für die Zielstufe abschließend berechnen.
 
 ---
 
@@ -1824,7 +1877,7 @@ DSA dient vor allem als Kontrast für detaillierte Fertigkeitsmodelle. SagaDrive
 
 ### 18.4 Savage Worlds
 
-Relevant ist die Idee eines universellen Kernsystems mit Weltanpassungen und Metaressourcen. SagaDrive verwendet jedoch seine eigene d20-Auflösung, Erfolgsgrade, Progression und Konfliktstruktur.
+Relevant ist die Idee eines universellen Kernsystems mit Weltanpassungen, benannten Erfahrungsrängen und Metaressourcen. SagaDrive verwendet jedoch seine eigene d20-Auflösung, seine eigenen Ranggrenzen, Erfolgsgrade, Progression und Konfliktstruktur.
 
 ### 18.5 Begriffsentsprechungen
 
@@ -1837,6 +1890,7 @@ Relevant ist die Idee eines universellen Kernsystems mit Weltanpassungen und Met
 | Hintergrund | Herkunft und soziale Einbindung |
 | Spezies | körperliche/strukturelle Speziesmerkmale |
 | Essenz | Wirkprinzip besonderer Fähigkeiten |
+| Rang | vier Stufen umfassender Progressionsbereich: Novize, Spezialist, Experte, Meister oder Legende |
 | Drive | persönliche Metaressource |
 | Momentum | gemeinsame Gruppenressource |
 | Erfahrungsbonus | stufenabhängiger allgemeiner Kompetenzbonus bei Training |
@@ -1936,7 +1990,8 @@ Vor endgültiger Freigabe müssen mindestens praktisch oder mathematisch geprüf
 - Spielbarkeit ohne Momentum,
 - Primär- und Sekundärarchetypen,
 - sekundäre Essenzen,
-- Kräfte der Ränge I bis V, insbesondere III bis V,
+- Kräfte der Ränge Novize bis Legende, insbesondere Experte bis Legende,
+- direkte Erstellung höherstufiger Figuren und chronologische Voraussetzungen,
 - Gemeinschaftsprojekte,
 - soziale Konflikte,
 - Verfolgungsjagden,
@@ -1944,7 +1999,7 @@ Vor endgültiger Freigabe müssen mindestens praktisch oder mathematisch geprüf
 
 ### 19.4 Vorläufige Gegner-Simulation
 
-Eine vereinfachte Vorprüfung für Band I ohne Kräfte, Gelände, Zustände und Momentum ergab als groben Proxy für vier Spielerfiguren:
+Eine vereinfachte Vorprüfung für den Begegnungsrang Novize ohne Kräfte, Gelände, Zustände und Momentum ergab als groben Proxy für vier Spielerfiguren:
 
 - 4 Standardgegner: ungefähr 5 Runden Median, sehr geringe Niederlagenquote,
 - 5 Standardgegner: spürbar gefährlicher,
@@ -1973,12 +2028,12 @@ Die SagaDrive Core Rules gelten als final validiert, wenn:
 
 - alle Regeln der Abschnitte 1 bis 18 ohne bekannte interne Lücke funktionieren,
 - alle 18 Fertigkeiten praktisch eingesetzt wurden,
-- Charaktererschaffung und Stufenaufstieg lückenlos funktionieren,
+- Charaktererschaffung und Stufenaufstieg einschließlich direkt höherstufig erstellter Figuren lückenlos funktionieren,
 - Konflikt, Schaden, Heilung und Tod getestet wurden,
 - Ausrüstung und besondere Kräfte in mehreren Weltarten funktionieren,
 - Gegner und Herausforderungen konsistent erstellt werden können,
 - Schergen, Standardgegner, Eliten und Bosse getestet wurden,
-- Kräfte mindestens der Ränge I, III und V praktisch getestet wurden,
+- Kräfte mindestens der Ränge Novize, Experte und Legende praktisch getestet wurden,
 - optionale Module ihre Abhängigkeiten deklarieren,
 - mathematische Grenzfälle geprüft wurden,
 - mehrere vollständige Testspiele dokumentiert wurden,
@@ -1992,6 +2047,7 @@ Die SagaDrive Core Rules gelten als final validiert, wenn:
 
 | Datum | Stand |
 |---|---|
+| 26.08.2026 | Das 20-Stufen-Modell ausdrücklich bestätigt und in fünf benannte Ränge gegliedert: Novize (1–4), Spezialist (5–8), Experte (9–12), Meister (13–16), Legende (17–20). Römische Rangbezeichnungen entfernt, Fähigkeits- und Begegnungsränge angeglichen und direkte Erstellung höherstufiger Figuren mit vollständiger, chronologisch legaler Progression definiert. |
 | 26.08.2026 | Regelentwurf der zuvor offenen Abschnitte 2 bis 18 nach drei Reviewzyklen vollständig als verbindliche Validierungsfassung übernommen. Abschnitt 19 ist jetzt der aktive Arbeitsblock. Zahlenwerte sind verbindliche Playtestwerte, aber noch nicht endgültig empirisch validiert. |
 | 26.08.2026 | Athletik als umweltbezogene Bewegungs- und Kraftfertigkeit festgelegt; Kampfmanöver bleiben bei Nahkampf. Fortsetzungspunkt auf Akrobatik gesetzt. |
 | 26.08.2026 | Erster konsolidierter Entwurf. Verbindliche Entscheidungen aus den Blöcken 1 bis 5.7 übernommen. Offene Regelbereiche und Fortsetzungspunkt ergänzt. |
