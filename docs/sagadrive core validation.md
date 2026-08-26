@@ -1,0 +1,593 @@
+# SagaDrive Core Rules – Validierungsplan
+
+> **Status:** geplant, noch nicht vollständig durchgeführt  
+> **Stand:** 26. August 2026  
+> **Epic:** #18 – SagaDrive Core Rules – Validierungsphase  
+> **Regelquelle:** `docs/sagadrive core rules.md`  
+> **Aktuelle Produktpriorität:** Character Editor, Character Creation und UI/UX weiterbauen; die hier dokumentierte Regelvalidierung wird anschließend schrittweise abgearbeitet.
+
+## Zweck
+
+Die SagaDrive Core Rules sind in den Abschnitten 1 bis 18 als verbindlicher aktueller Regelstand beschlossen. Die dort enthaltenen Zahlen sind Playtestwerte. Bevor die Rule Engine weiter ausgebaut oder die Regeln als final belastbar betrachtet werden, müssen die Kernmechaniken mathematisch, szenariobasiert und praktisch validiert werden.
+
+Diese Datei verhindert, dass die offenen Validierungsaufgaben während der weiteren Produktentwicklung verloren gehen. Sie ist kein Blocker für die aktuelle Arbeit am Character Editor.
+
+Der Character Editor wird jetzt auf Basis der beschlossenen Regeln weiterentwickelt. Sobald die dafür notwendigen UI-, Tooltip-, Save- und Character-Creation-Flows stehen, wird er selbst zu einer wichtigen Validierungsoberfläche.
+
+## Grundprinzip der Validierung
+
+Eine Regel wird nicht geändert, weil sie theoretisch ungewöhnlich wirkt oder weil eine andere Lösung vertrauter wäre. Eine Core-Regel wird nur verändert, wenn mindestens einer dieser Gründe reproduzierbar dokumentiert werden kann:
+
+1. mathematischer Grenzfall oder systematischer Wahrscheinlichkeitsfehler,
+2. reproduzierbares Problem in Simulation oder Spieltest,
+3. Widerspruch zwischen zwei Core-Regeln,
+4. unnötige Komplexität ohne spielerischen Mehrwert,
+5. fehlende oder unverhältnismäßig aufwendige analoge Durchführbarkeit.
+
+Jede spätere Änderung muss mindestens enthalten:
+
+- betroffene Regelstelle,
+- bisherigen Wert oder bisherige Regel,
+- reproduzierbares Testszenario,
+- beobachtetes Problem,
+- neuen Wert oder neue Regel,
+- erwartete Auswirkung,
+- erneuten Regressionstest der betroffenen Nachbarsysteme.
+
+---
+
+## Validierungs-Epic und Issues
+
+Kanonisches Epic: **#18**
+
+| Issue | Bereich | Zweck | Startbedingung |
+|---:|---|---|---|
+| #19 | Kernwahrscheinlichkeiten | d20-Kurve, Zielwerte, EB, Spezialisierung, Vorteil/Nachteil, Sicherheitswert, Widerstände | kann unabhängig zuerst durchgeführt werden |
+| #20 | Charaktererschaffung & Progression | legale Builds, Caps, Archetypen, Essenzen, Wesenarten, Level 1–20 | beschlossene Core Rules reichen aus |
+| #21 | Character Editor als Regelabbildung | UI, Tooltips, Live-Validierung, Save/Reload gegen die Core Rules prüfen | nach funktionalem Character-Creation-/Tooltip-Stand; blockiert aktuelle UI-Arbeit nicht |
+| #22 | Kampf & Aktionsökonomie | Initiative, Aktionen, Reaktionen, Manöver, Deckung, Sicht, Reichweite | nach #19 |
+| #23 | Schaden, Rüstung, Heilung, Sterben | Attrition, Schutz, Durchdringung, 0 HP, Sterbend, Ruhe | nach #19 und #22 |
+| #24 | Gegner & Begegnungsbalance | Standardgegner, Schergen, Eliten, Bosse, Budgets, Boss-Aktionsökonomie | nach #22 und #23 |
+| #25 | Kräfte & Essenzen | Ränge I–V, alle fünf Essenzen, Kontrolle, Schaden, Dauer, Aufrechterhaltung | nach #19, #20 und #22 |
+| #26 | Drive & Momentum | Ressourcenfluss, Rerolls, Teamressource, deaktivierte Varianten | nach #19 |
+| #27 | Nichtkampf | Recherche, soziale Konflikte, Gemeinschaftsprojekte, Gefahren, Kontakte, Ruf | nach #19 |
+| #28 | 18 Fertigkeiten | Skill-Abgrenzungen, Fachhandlungen, Spezialisierungen, alternative Attribute | nach #19 |
+| #29 | Reisen, Chases, Fahrzeuge | Reise-Fail-Forward, Distanzleiste, Steuern, Maßstab, Struktur | nach #19 und #22 |
+| #30 | Weltprofile & Module | Fantasy/Gegenwart/Sci-Fi, Modulpriorität, deaktivierte Regeln, Ersatzregeln | nach #20, #25 und #26 |
+| #31 | Analoger End-to-End-Playtest | komplette Sitzungen ohne App/Rule Engine | Abschluss nach den übrigen relevanten Validierungen |
+| #32 | Ausrüstung & Ressourcen | Werkzeuge, Waffenmerkmale, Traglast, abstrakte Ressourcen | nach #19 |
+| #33 | Zustände | alle Core-Zustände, Widerstände, Stapelung und Kombinationen | nach #19 und #22 |
+
+Die versehentlich erzeugten Duplikate #34, #35 und #36 sind geschlossen und nicht Bestandteil des Plans. Der kanonische Ausrüstungs-Validierungsslice ist #32.
+
+---
+
+# Phase A – mathematische und strukturelle Grundlagen
+
+## A1. Kernwahrscheinlichkeiten – #19
+
+### Was muss geprüft werden?
+
+Die vollständige Kernprobe:
+
+```text
+d20 + Attribut + Fertigkeit + Erfahrungsbonus + Spezialisierung + ausdrückliche Modifikatoren
+```
+
+Prüfmatrix:
+
+- Stufen 1, 5, 9, 13, 17 und 20,
+- Attribute 1 bis 5,
+- Fertigkeiten 0 bis zum jeweils erlaubten Cap,
+- untrainiert vs. trainiert,
+- ohne und mit Spezialisierung +2,
+- Zielwerte 5, 10, 15, 20, 25, 30 und 35,
+- normaler Wurf,
+- Vorteil,
+- Nachteil,
+- Sicherheitswert 10,
+- statische Widerstände,
+- natürliche 1 und natürliche 20.
+
+### Zu messen
+
+- Erfolgswahrscheinlichkeit,
+- kritische Erfolgswahrscheinlichkeit,
+- Fehlschlagswahrscheinlichkeit,
+- kritische Fehlschlagswahrscheinlichkeit,
+- Sprünge beim Erfahrungsbonus,
+- Kompetenzabstand zwischen untrainiert, trainiert, spezialisiert und Weltklasse,
+- Bereiche, in denen Zielwerte faktisch automatisch oder praktisch unmöglich werden.
+
+### Warum?
+
+Diese Kurve beeinflusst nahezu alle anderen Subsysteme. Kampf-, Powers-, Nichtkampf- und Gegnerdaten dürfen erst auf einer stabilen Grundwahrscheinlichkeit bewertet werden.
+
+---
+
+## A2. Charaktererschaffung & Progression – #20
+
+### Pflicht-Builds
+
+Mindestens:
+
+- menschlicher Hacker,
+- Fantasy-Heiler,
+- körperlicher Kämpfer,
+- mentaler Kämpfer,
+- technologischer Diplomat,
+- gebundener Rebell,
+- mindestens eine Wesenart mit vollständigem 3-Punkte-Merkmalsbudget.
+
+### Zu prüfen
+
+- Attributsverteilung,
+- zehn Fertigkeitspunkte,
+- Hintergrundpunkte,
+- Archetyppunkt,
+- Spezialisierungen,
+- Wesenartbudget,
+- Archetyp-Kernfähigkeit,
+- primäre Essenz,
+- abgeleitete Werte,
+- Progression auf Stufe 5/10/15/20,
+- zweiter/dritter/vierter Archetyp,
+- sekundäre Essenz,
+- Rank-II-bis-V-Voraussetzungen,
+- Fertigkeitscaps,
+- Attributssteigerungen auf 8 und 16.
+
+### Ziel
+
+Jeder Punkt eines Characters muss eine eindeutige Herkunft haben. Kein Build darf Regelgrenzen durch Reihenfolge, Überschneidung oder UI-Sonderlogik umgehen.
+
+---
+
+## A3. Alle 18 Fertigkeiten – #28
+
+Jede Fertigkeit benötigt praktische Beispiele für:
+
+- gewöhnliche Anwendung,
+- trainierte Anwendung,
+- Fachhandlung beziehungsweise passende Spezialisierung,
+- mindestens einen Abgrenzungsfall.
+
+Besonders wichtig:
+
+- Athletik vs. Akrobatik vs. Ausdauer,
+- Aufmerksamkeit vs. Ermitteln,
+- Menschenkenntnis vs. Täuschen,
+- Fingerfertigkeit vs. Technik,
+- Überleben vs. Ermitteln,
+- Nahkampf vs. Athletik bei Kampfmanövern,
+- Auftreten vs. Überzeugen.
+
+Die Prüfung soll bestätigen, dass die 18 Skills universell ausreichen und kein reguläres Handlungsmuster eine zusätzliche 19. Core-Fertigkeit benötigt.
+
+---
+
+## A4. Ausrüstung, Werkzeuge, Traglast und Ressourcen – #32
+
+Zu testen:
+
+- improvisierte Werkzeuge,
+- fehlende essentielle Werkzeuge,
+- hochwertige Werkzeuge,
+- Finesse,
+- Durchdringung,
+- leichte, normale und schwere Ausrüstung,
+- Traglast unter Cap,
+- Traglast über Cap,
+- mehr als doppelte Traglast,
+- Ressourcenwerte 0–5,
+- Kosten unter, gleich und über Ressourcenwert,
+- Weltprofil mit konkreter Währung statt abstrakter Ressource.
+
+---
+
+# Phase B – Character Editor als Regeloberfläche
+
+## B1. Character Editor – #21
+
+Dieses Issue wird **nicht vorgezogen**, nur weil der Editor aktuell gebaut wird. Die UI-Arbeit kann jetzt normal weitergehen.
+
+Die spätere Validierung beginnt, sobald die für Character Creation relevanten Bereiche funktional stehen.
+
+### Zu prüfen
+
+- Wesenart,
+- Hintergrund,
+- Archetyp,
+- Essenz,
+- Attribute,
+- Fertigkeiten,
+- Spezialisierungen,
+- abgeleitete Werte,
+- Drive/Momentum-Anzeige soweit im Editor relevant,
+- Save/Reload.
+
+Für jedes Feld muss beantwortet werden:
+
+1. Welche Core-Regel ist die Quelle?
+2. Ist der Tooltip fachlich korrekt?
+3. Sind Limits und Voraussetzungen sichtbar oder zumindest eindeutig validiert?
+4. Werden ungewöhnliche, aber legale Builds zugelassen?
+5. Werden illegale Builds deterministisch verhindert?
+6. Kommen berechnete Werte aus derselben Regelquelle und nicht aus unabhängigen UI-Konstanten?
+
+Beispiel für einen wichtigen Regressionstest:
+
+- `Kämpfer + Mental` ist ungewöhnlich, aber legal.
+- `Gebunden` ist der Core-Begriff; ältere Implementierungsnamen wie `Paktbasiert` dürfen nicht als Regelquelle bestehen bleiben.
+
+Der Character Editor wird damit gleichzeitig UX-Test und erster realer Contract-Test zwischen Regelwerk und digitalem Modell.
+
+---
+
+# Phase C – direkter Kampf
+
+## C1. Kampf & Aktionsökonomie – #22
+
+Pflichtszenarien:
+
+- Nahkampfduell,
+- Fernkampf mit Teildeckung,
+- Fernkampf mit Volldeckung,
+- Überraschung,
+- Greifen und Entkommen,
+- Schubsen,
+- Zu-Fall-Bringen,
+- Entwaffnen,
+- Lösen vs. Gelegenheitsangriff,
+- Bereithalten und Reaktion,
+- Verborgener Angriff und anschließende Sichtbarkeit.
+
+Zu beobachten:
+
+- Zugdauer,
+- Aktionen ohne klare Regelantwort,
+- dominante Standardaktionen,
+- Timing-Probleme,
+- Reaktionshäufigkeit,
+- Interaktion mit Bewegung und Zuständen.
+
+---
+
+## C2. Schaden, Schutz, Heilung und Sterben – #23
+
+Testprofile:
+
+- niedrige/mittlere/hohe Ausdauer,
+- Band I, III und V,
+- Schutz 0/1/2/3/5,
+- mit und ohne Durchdringung.
+
+Pflichtfälle:
+
+- normaler Treffer,
+- kritischer Treffer,
+- mehrere Treffer,
+- 0 Gesundheit,
+- Schaden bei 0,
+- Stabilisierung,
+- Erste Hilfe,
+- Verschnaufpause,
+- volle Ruhe,
+- Heroisch/Standard/Hart.
+
+Messgrößen:
+
+- Treffer bis Kampfunfähigkeit,
+- Heilung pro Ruhephase,
+- Sterbewahrscheinlichkeit,
+- Effekt von Schutz,
+- Attrition über mehrere Konflikte.
+
+---
+
+## C3. Zustände – #33
+
+Alle Core-Zustände einzeln und kombiniert testen:
+
+- Liegend,
+- Gegriffen,
+- Blind,
+- Benommen,
+- Verängstigt,
+- Kampfunfähig,
+- Bewusstlos,
+- Erschöpfung,
+- Verborgen relativ zu Beobachtern,
+- Gestört,
+- Deaktiviert.
+
+Pflichtkombinationen:
+
+- Gegriffen + Liegend,
+- Blind + Fernkampf,
+- Benommen + Bereithalten/Reaktion,
+- Verängstigt + Bewegung,
+- Erschöpfung 1–3,
+- Bewusstlos bei 0,
+- Verborgen gegenüber mehreren Beobachtern.
+
+---
+
+## C4. Gegner, Begegnungsbudgets und Bosse – #24
+
+Gruppengrößen:
+
+- 3,
+- 4,
+- 5,
+- 6 Spielerfiguren.
+
+Bänder:
+
+- I bis V.
+
+Gegnertypen:
+
+- Scherge,
+- Standard,
+- Elite,
+- Boss.
+
+Begegnungen:
+
+- Routine,
+- Standard,
+- Schwer,
+- Extrem.
+
+Messgrößen:
+
+- Kampfrunden,
+- Ausfall-/Niederlagenquote,
+- verbleibende Gesundheit/Ressourcen,
+- Aktionsverhältnis Spieler zu Gegner,
+- Fokusfeuer,
+- Effekt des zweiten Boss-Initiativeslots,
+- Effekt der zwei Boss-Reaktionen.
+
+Die aktuelle Gegner- und Budgettabelle bleibt Playtestwert, bis diese Tests belastbare Ergebnisse liefern.
+
+---
+
+# Phase D – besondere Fähigkeiten und Metaressourcen
+
+## D1. Kräfte, Essenzen und Ränge – #25
+
+Für Rang I bis V repräsentative Fähigkeiten testen.
+
+Dimensionen:
+
+- Schaden,
+- Kontrolle,
+- Mobilität,
+- Schutz,
+- Utility,
+- Ziele,
+- Fläche,
+- Reichweite,
+- Dauer,
+- Aufrechterhaltung.
+
+Alle fünf Essenzen:
+
+- Körperlich,
+- Mental,
+- Spirituell,
+- Gebunden,
+- Technologisch.
+
+Besonders kritisch:
+
+- Rang III bis V,
+- mehrere Ziele + Kontrolle + lange Dauer,
+- Aufrechterhaltung,
+- direkte Gegenwirkung,
+- sekundäre Essenz,
+- Fähigkeiten aus mehreren Archetypen.
+
+---
+
+## D2. Drive und Momentum – #26
+
+Varianten:
+
+1. beide aktiv,
+2. nur Drive,
+3. nur Momentum,
+4. beide deaktiviert.
+
+Zu messen:
+
+- Gewinn pro Szene,
+- Ausgaben pro Szene,
+- Cap-Häufigkeit,
+- tatsächlicher Wert eines Drive-Rerolls,
+- Momentum-Einfluss auf Teamaktionen,
+- Fähigkeiten, die ohne Ressource keinen definierten Zustand haben.
+
+Wichtig: Eine deaktivierte Ressource macht davon abhängige Fähigkeiten niemals stillschweigend kostenlos.
+
+---
+
+# Phase E – Nichtkampf und Bewegung außerhalb normaler Kämpfe
+
+## E1. Nichtkampf, Recherche und soziale Konflikte – #27
+
+Pflichtszenarien:
+
+- essentielle Information recherchieren,
+- komplexes Gemeinschaftsprojekt,
+- reservierten NSC zu riskanter Hilfe bewegen,
+- Gefahrenpassage,
+- Kontakt einsetzen,
+- Rufwirkung,
+- Erkundung unter Zeitdruck.
+
+Zu validieren:
+
+- Fail Forward,
+- kein einzelner Wurf als Sackgasse,
+- Projektfortschritt,
+- Gruppenprobe,
+- soziale Haltung,
+- Fortschrittsziel 3/5,
+- Kontakte und Ruf ohne pauschale Boni.
+
+---
+
+## E2. Reisen, Verfolgungen, Fahrzeuge und Maßstab – #29
+
+Pflichtszenarien:
+
+- Fußverfolgung,
+- Fahrzeugverfolgung,
+- längere Reise mit Navigationsfehler,
+- Fahrzeug gegen Fahrzeug,
+- Person gegen Fahrzeug ohne Anti-Fahrzeug-Wirkung,
+- definierte Schwachstelle.
+
+Verfolgungsleiste:
+
+```text
+0 = eingeholt
+2 = Standardstart
+5 = entkommen
+```
+
+Prüfen:
+
+- Dauer von Chases,
+- Gleichstand,
+- kritische Verschiebung,
+- unterschiedliche plausible Skills,
+- Maßstab,
+- Struktur vs. Personenschaden,
+- Übergang von Reise zu Chase zu direktem Kampf.
+
+---
+
+# Phase F – Universalität und Module
+
+## F1. Weltprofile und Cross-Setting – #30
+
+Mindestens drei vollständige Testprofile:
+
+1. klassische Fantasy,
+2. moderne/realistische Gegenwart,
+3. Science-Fiction mit hoher Technologie.
+
+Optional zusätzlich:
+
+- Low-Magic,
+- Hard-Mode,
+- ungewöhnlicher Genremix.
+
+Jedes Profil muss alle 20 Pflichtfelder des Core ausfüllen.
+
+Zu testen:
+
+- identische funktionale Figuren in unterschiedlichem Flavor,
+- Magie- und Technologiestufen unabhängig voneinander,
+- Modulprioritäten,
+- aktive/deaktivierte Regeln,
+- Ersatzregeln,
+- kein stilles Überschreiben des Core.
+
+---
+
+# Phase G – analoger End-to-End-Playtest
+
+## G1. Vollständige Testsitzungen – #31
+
+Erst wenn die relevanten vorherigen Slices erledigt sind.
+
+Mindestens drei vollständige analoge Sitzungen.
+
+### Session A
+
+- Character Creation,
+- Exploration,
+- Recherche oder soziale Szene,
+- Standardkampf.
+
+### Session B
+
+- Reise oder Chase,
+- Gemeinschaftsprojekt,
+- schwerer Kampf mit Elite/Boss,
+- Heilung und Ruhe.
+
+### Session C
+
+- anderes Weltprofil,
+- mindestens Drive oder Momentum deaktiviert,
+- keine digitale Unterstützung für Regelauflösung.
+
+### Messen
+
+- Regelpausen,
+- Nachschlagehäufigkeit,
+- manuelle Rechenschritte,
+- ungeklärte Situationen,
+- Regeln, die nur digital angenehm funktionieren,
+- häufig vergessene Zustände/Ressourcen,
+- tatsächliche Runden- und Szenendauer.
+
+Der Core gilt erst dann als analog belastbar, wenn normale Gruppen diese Sitzungen ohne Rule Engine durchführen können.
+
+---
+
+# Empfohlene Reihenfolge
+
+Die Validierung muss nicht jetzt beginnen. Sobald sie gestartet wird, ist diese Reihenfolge sinnvoll:
+
+```text
+#19 Kernmathematik
+ ├─ #20 Charaktererschaffung/Progression
+ │   └─ #21 Character-Editor-Regelabbildung
+ ├─ #28 Fertigkeiten
+ ├─ #32 Ausrüstung/Ressourcen
+ ├─ #26 Drive/Momentum
+ ├─ #27 Nichtkampf
+ └─ #22 Kampf
+      ├─ #23 Schaden/Heilung/Sterben
+      ├─ #33 Zustände
+      ├─ #29 Reisen/Chases/Fahrzeuge
+      └─ #24 Gegner/Bosse
+
+#20 + #22 + #19 -> #25 Kräfte/Essenzen
+#20 + #25 + #26 -> #30 Weltprofile/Module
+alle relevanten Slices -> #31 analoger End-to-End-Playtest
+```
+
+# Was jetzt als Nächstes passiert
+
+Die Validierungsplanung ist damit geparkt und nachvollziehbar. Die aktuelle Produktarbeit kann wieder auf den Character Editor zurückgehen:
+
+- Character Creation funktional fertigstellen,
+- UI/UX sauber machen,
+- Tooltips auf Basis der neuen Core Rules einbauen,
+- Character-Datenmodell und Save/Reload korrekt machen,
+- echte Charaktere baubar machen,
+- Avatar-/Look-System weiterentwickeln.
+
+Diese Arbeit muss nicht auf mathematische Kampf- oder Gegnervalidierung warten.
+
+Wenn der Character Editor funktional genug ist, wird #21 als gezielter Regel-/UX-Validierungsslice durchgeführt. Die tieferen mathematischen und spielmechanischen Tests bleiben in den übrigen Issues erhalten und können später systematisch abgearbeitet werden.
+
+---
+
+## Abschlussbedingung
+
+Das Epic #18 kann geschlossen werden, wenn:
+
+- alle relevanten Validierungs-Issues abgeschlossen sind,
+- gefundene Regeländerungen erneut regressionsgetestet wurden,
+- mehrere vollständige analoge Playtests dokumentiert sind,
+- die Core Rules keine bekannten Widersprüche oder unvalidierten kritischen Zahlenbereiche mehr enthalten,
+- Character Creation, Kampf, Nichtkampf, Kräfte, Gegner und Module in mindestens mehreren repräsentativen Weltprofilen funktionieren.
