@@ -1,6 +1,6 @@
 # Composition Gate - feat-character-studio-avatar
 
-- HEAD_SHA: 33872cdb399c53253c6df52591c49a35c093b7e9
+- HEAD_SHA: a1f6a7cd08c196d40c2ec103612eafc1ac0aafb5
 - BASE_SHA: 7f6f096dc5c6a0ff280d901cf262fa533814085f
 - Date: 2026-08-26
 - Verdict: CLEAR
@@ -76,8 +76,8 @@ Parallel/local hops ohne Provider-Fan-out:
 Die persistente DB-Quota ersetzt keinen eigenstaendigen Cache/Queue-Service und nutzt die bereits kanonische Postgres-Trust-Boundary. Autorisierungsidentitaet wird nicht aus Browserdaten abgeleitet. Character-Creation-Regelset und katalogisiertes `ruleset_id` bleiben absichtlich getrennte Begriffe. Portrait-Storage nutzt dieselbe Supabase-Tenant-/Deployment-Grenze wie Auth und Character-Persistenz; damit gibt es keine zweite serverseitige Upload-Anwendung und keinen Hosted-only Fallback. Die neuen Character-Metadaten und Portrait-URL bleiben in der Character-Persistenzgrenze; das Binary selbst liegt privat und owner-scoped in Supabase Storage.
 
 ## Verification evidence
-- Vor diesem Proof referenzierter Code-/Doku-HEAD: `33872cdb399c53253c6df52591c49a35c093b7e9`.
-- Der Test Gate muss auf dem nachfolgenden QA-Head erneut PASS sein und prueft zusaetzlich ueber `character-editor-regression-check.mjs`, dass Portraits nicht mehr den festen Hosted-Endpunkt verwenden, Migration 006 owner-scoped ist und Lore-HTTP-Fehler den Server-Body lesen.
+- Proof-Code-HEAD: `a1f6a7cd08c196d40c2ec103612eafc1ac0aafb5`.
+- Test Gate auf dem nachfolgenden QA-Head muss erneut PASS sein. Der Character-Editor-Regression-Contract prueft, dass Portraits nicht mehr den festen Hosted-Endpunkt verwenden, Migration 006 private/owner-scoped ist und Lore-HTTP-Fehler den Server-Body lesen.
 - Browser E2E bleibt verpflichtend. Die sichtbaren CharacterEditor-Flows werden erneut auf dem finalen PR-Head ausgefuehrt.
 - Secrets diff scan und Production dependency audit bleiben Teil des Test Gate.
 
