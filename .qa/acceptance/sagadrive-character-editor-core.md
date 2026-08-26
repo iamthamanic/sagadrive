@@ -19,7 +19,7 @@ Roadmap: nicht vorhanden — aktueller Chat-/Core-Rules-Slice.
 - [ ] Im Werte-Tab kann die SagaDrive-Startverteilung `4,3,3,2,2,1` regelkonform auf Stärke, Geschicklichkeit, Ausdauer, Verstand, Wahrnehmung und Charisma verteilt werden; abgeleitete Werte werden read-only live berechnet.
 - [ ] Im Fertigkeiten-Tab stehen alle 18 Core-Fertigkeiten mit Standardattribut, Kurzbeschreibung, Kompetenzwert 0–3 für Stufe 1, 10-Punkte-Budget und mindestens sechs trainierten Fertigkeiten zur Verfügung; Spezialisierungen zeigen den +2-Effekt und ihre Voraussetzungen.
 - [ ] Im Fähigkeiten-Tab wird die Kernfähigkeit des gewählten Primärarchetyps automatisch angezeigt und ist nicht frei lösch-/erfindbar; freie Platzhalterfähigkeiten wie der bisherige Start-Feuerball erscheinen nicht.
-- [ ] Im Hintergrund-Tab sind die mechanischen SagaDrive-Bestandteile Hintergrund, zwei Trainings, eine Spezialisierung, Milieuzugang, Kontakt und Komplikation verständlich getrennt; freie Lore/Persönlichkeitsangaben bleiben optional.
+- [ ] Im Hintergrund-Tab sind die mechanischen SagaDrive-Bestandteile Hintergrund, vier passende Fertigkeiten, zwei Trainings, eine Spezialisierung, Milieuzugang, Kontakt, Komplikation und zusätzliche Kommunikationsform verständlich getrennt; freie Lore/Persönlichkeitsangaben bleiben optional.
 - [ ] Im Inventar-Tab werden Gegenstände als Liste/Karten mit Last statt als 30 feste Slots geführt; `Traglast = 5 + 2 × Stärke` und Überlastungsfolgen werden live erklärt.
 - [ ] Die linke Character-Zusammenfassung zeigt SagaDrive-Begriffe und Kernwerte statt D&D-Abkürzungen/Entwicklerinformationen und aktualisiert sich direkt mit den Eingaben.
 - [ ] Notizen werden zusammen mit dem Character gespeichert bzw. über den bestehenden Character-Persistenzvertrag übertragen, statt ausdrücklich nur lokal zu bleiben.
@@ -61,6 +61,11 @@ Roadmap: nicht vorhanden — aktueller Chat-/Core-Rules-Slice.
 | 12 | `12-mobile-tooltips.png` |
 
 ## Implementation Notes
-- Files touched: pending
-- Unit tests: pending
-- Known limitations: pending
+- Implementiert auf Branch `feat/sagadrive-character-editor-core`.
+- Zentrale Core-Metadaten: `src/modules/rulesets/characterCreation.ts`.
+- Neue UI-Helfer/Panels: `RuleHelp.tsx`, `CharacterSkillsPanel.tsx`; Fähigkeiten- und Inventarpanel wurden auf Core-Semantik umgestellt.
+- Persistenz erweitert um `skills`, `sagadrive_profile` und `notes`; Migration: `supabase/migrations/007_sagadrive_character_profile.sql`.
+- Legacy-Attribute `constitution`, `intelligence`, `wisdom` werden beim Lesen auf `endurance`, `mind`, `perception` normalisiert.
+- Regression/E2E wurden auf den neuen SagaDrive-Core-Flow aktualisiert.
+- Ausführbare Verifikation (`npm run test-gate`, Build, Playwright) konnte im verfügbaren Runner nicht durchgeführt werden, weil kein Repo-Checkout verfügbar ist, GitHub nicht aus dem Runner geklont werden kann und Connector-Commits keinen Actions-Run ausgelöst haben. Details: `.qa/runs/sagadrive-character-editor-core-verification.md`.
+- Bekannte fachliche Lücke: Der Core verlangt eine erste Essenzmanifestation auf Stufe 1, aber ein verbindlicher Rang-I-Essenzmanifestationskatalog existiert noch nicht. Der Editor erfindet deshalb keine Platzhalterkraft und markiert diesen Punkt ausdrücklich als ausstehend.
