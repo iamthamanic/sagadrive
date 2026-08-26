@@ -12,11 +12,20 @@ function requireMatch(content, pattern, label) {
   }
 }
 
+function rejectMatch(content, pattern, label) {
+  if (pattern.test(content)) {
+    console.error(`Character editor regression check failed: ${label}.`);
+    process.exit(1);
+  }
+}
+
 const runtime = read('src/modules/characters/avatar/characterStudio/CharacterStudioRuntime.ts');
 const editor = read('src/components/CharacterEditor.tsx');
 const characterTypes = read('src/modules/characters/types/character.types.ts');
 const characterService = read('src/modules/characters/services/character.service.ts');
+const loreService = read('src/modules/characters/lore/service.ts');
 const rulesetMigration = read('supabase/migrations/005_character_ruleset_metadata.sql');
+const portraitStorageMigration = read('supabase/migrations/006_character_portrait_storage.sql');
 const projectTypes = read('src/modules/projects/types/project.types.ts');
 const projectService = read('src/modules/projects/services/project.service.ts');
 
@@ -59,6 +68,48 @@ requireMatch(
   rulesetMigration,
   /ADD COLUMN IF NOT EXISTS dnd_background TEXT/,
   'D&D background migration',
+);
+
+requireMatch(
+  characterService,
+  /supabase\.storage[\s\S]*?\.from\(CHARACTER_PORTRAIT_BUCKET\)[\s\S]*?\.upload\(filePath, file/,
+  'portrait upload through configured Supabase Storage client',
+);
+requireMatch(
+  characterService,
+  /createSignedUrl\(filePath, 31_536_000\)/,
+  'private portrait signed URL creation',
+);
+rejectMatch(
+  characterService,
+  /https:\/\/\$\{projectId\}\.supabase\.co|make-server-9f6fb44c\/characters\/upload-portrait/,
+  'portrait upload still uses the fixed hosted make-server endpoint',
+);
+requireMatch(
+  portraitStorageMigration,
+  /'character-portraits'[\s\S]*?public,[\s\S]*?false[\s\S]*?5242880/,
+  'private portrait storage bucket with 5MB limit',
+);
+requireMatch(
+  portraitStorageMigration,
+  /storage\.foldername\(name\)\)\[1\] = auth\.uid\(\)::text/,
+  'owner-scoped portrait storage policies',
+);
+
+requireMatch(
+  loreService,
+  /error\.context\.clone\(\)\.json\(\)/,
+  'structured Edge Function HTTP error parsing',
+);
+requireMatch(
+  loreService,
+  /serverMessage \?\?\s*'Hintergrundgeschichte konnte nicht generiert werden\. Bitte versuche es erneut\.'/,
+  'generic lore fallback only after server message lookup',
+);
+rejectMatch(
+  loreService,
+  /if \(error\)[\s\S]{0,220}?Prüfe die Character-AI-Konfiguration/,
+  'lore HTTP errors are collapsed into a configuration message',
 );
 
 requireMatch(
