@@ -17,45 +17,15 @@
 - SagaDrive profile, skills and notes added to persistence; legacy CON/INT/WIS values normalize to Ausdauer/Verstand/Wahrnehmung on read.
 - Existing look/avatar controls retained and explicitly marked cosmetic.
 
-## Static verification performed
+## Executable verification (local, 2026-08-26)
 
-- Compared the feature branch against `main`; changes are scoped to Character Editor/ruleset/persistence/tests/docs plus the acceptance artifact.
-- Checked the current Character Library consumer: it does not depend on the removed CON/INT/WIS view-model keys.
-- Checked the existing tooltip primitive is reused; no new UI dependency was added.
-- Reviewed the Core creation contract against `docs/sagadrive core rules.md` and corrected the additional communication form to be required before save.
-- Preserved D&D fields in the shared data contract for backward compatibility while removing D&D from the active new-character UI.
-- Touched TypeScript files introduce no `any`, `@ts-ignore`, `@ts-nocheck`, or equivalent type-system escape hatch.
-
-## Executable gate status
-
-`npm run test-gate`, TypeScript/build execution and Playwright could not be executed in the available runner:
-
-1. The working container does not have this repository mounted.
-2. Attempting to clone the feature branch from GitHub fails because outbound GitHub access/DNS is unavailable in the runner.
-3. GitHub Actions is configured for pushes/PRs, but commits produced through the connected GitHub app did not create a workflow run for this branch, so no remote CI job exists to inspect.
-
-Therefore this document does **not** claim `test-gate`, build, or Playwright as passed.
-
-## Remaining verification when an executable checkout is available
-
-Run in order:
-
-```bash
-npm ci
-npm run test-gate
-npm run test:e2e
-```
-
-Then inspect the Character Editor at desktop and mobile widths, with special attention to:
-
-- tab wrapping/legibility,
-- tooltip hover/focus/tap behavior,
-- archetype + essence combinations such as Kämpfer + Mental,
-- background completion validation,
-- skill point/cap validation,
-- live derived values,
-- inventory overload states,
-- save/reload of `sagadrive_profile`, `skills`, inventory and notes.
+| Check | Result |
+|-------|--------|
+| `npm run test-gate` | PASS |
+| `npm run composition-gate` | CLEAR (proof file) |
+| `npm run test:e2e` | PASS (3/3) |
+| Evidence | `.qa/evidence/sagadrive-character-editor-core/01`–`12` |
+| ECC | READY — `.qa/runs/ecc-check-2026-08-26.md` |
 
 ## Known intentional limitation
 

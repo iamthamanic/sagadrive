@@ -148,6 +148,10 @@ npm run test:e2e
 
 Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `character-editor-browser-evidence` hochgeladen.
 
+## Recent changes
+
+- **2026-08-26** — SagaDrive Core Character Editor verifiziert (test-gate, composition-gate CLEAR, Playwright Evidence `01`–`12`) (`feat/sagadrive-character-editor-core`)
+
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 
 ```bash

@@ -14,29 +14,29 @@ Roadmap: nicht vorhanden — aktueller Chat-/Core-Rules-Slice.
 - Der aktuell unterstützte Character-Creation-Flow ist SagaDrive Core; D&D 5.5e wird in diesem Slice nicht weiter ausgebaut.
 
 ## Happy Path
-- [ ] Nach Öffnen des Editors sieht der User SagaDrive Core als aktives Regelset und die acht Tabs `Info`, `Hintergrund`, `Werte`, `Fertigkeiten`, `Fähigkeiten`, `Look`, `Inventar`, `Notizen` ohne D&D-spezifische Felder im aktiven Flow.
-- [ ] Im Info-Tab kann ein Stufe-1-Character Name, Wesenart, Primärarchetyp und primäre Essenz wählen; Archetyp- und Essenzoptionen erklären ihre Rolle direkt in der Auswahl und über zugängliche Hilfetexte.
-- [ ] Im Werte-Tab kann die SagaDrive-Startverteilung `4,3,3,2,2,1` regelkonform auf Stärke, Geschicklichkeit, Ausdauer, Verstand, Wahrnehmung und Charisma verteilt werden; abgeleitete Werte werden read-only live berechnet.
-- [ ] Im Fertigkeiten-Tab stehen alle 18 Core-Fertigkeiten mit Standardattribut, Kurzbeschreibung, Kompetenzwert 0–3 für Stufe 1, 10-Punkte-Budget und mindestens sechs trainierten Fertigkeiten zur Verfügung; Spezialisierungen zeigen den +2-Effekt und ihre Voraussetzungen.
-- [ ] Im Fähigkeiten-Tab wird die Kernfähigkeit des gewählten Primärarchetyps automatisch angezeigt und ist nicht frei lösch-/erfindbar; freie Platzhalterfähigkeiten wie der bisherige Start-Feuerball erscheinen nicht.
-- [ ] Im Hintergrund-Tab sind die mechanischen SagaDrive-Bestandteile Hintergrund, vier passende Fertigkeiten, zwei Trainings, eine Spezialisierung, Milieuzugang, Kontakt, Komplikation und zusätzliche Kommunikationsform verständlich getrennt; freie Lore/Persönlichkeitsangaben bleiben optional.
-- [ ] Im Inventar-Tab werden Gegenstände als Liste/Karten mit Last statt als 30 feste Slots geführt; `Traglast = 5 + 2 × Stärke` und Überlastungsfolgen werden live erklärt.
-- [ ] Die linke Character-Zusammenfassung zeigt SagaDrive-Begriffe und Kernwerte statt D&D-Abkürzungen/Entwicklerinformationen und aktualisiert sich direkt mit den Eingaben.
-- [ ] Notizen werden zusammen mit dem Character gespeichert bzw. über den bestehenden Character-Persistenzvertrag übertragen, statt ausdrücklich nur lokal zu bleiben.
+- [x] Nach Öffnen des Editors sieht der User SagaDrive Core als aktives Regelset und die acht Tabs `Info`, `Hintergrund`, `Werte`, `Fertigkeiten`, `Fähigkeiten`, `Look`, `Inventar`, `Notizen` ohne D&D-spezifische Felder im aktiven Flow.
+- [x] Im Info-Tab kann ein Stufe-1-Character Name, Wesenart, Primärarchetyp und primäre Essenz wählen; Archetyp- und Essenzoptionen erklären ihre Rolle direkt in der Auswahl und über zugängliche Hilfetexte.
+- [x] Im Werte-Tab kann die SagaDrive-Startverteilung `4,3,3,2,2,1` regelkonform auf Stärke, Geschicklichkeit, Ausdauer, Verstand, Wahrnehmung und Charisma verteilt werden; abgeleitete Werte werden read-only live berechnet.
+- [x] Im Fertigkeiten-Tab stehen alle 18 Core-Fertigkeiten mit Standardattribut, Kurzbeschreibung, Kompetenzwert 0–3 für Stufe 1, 10-Punkte-Budget und mindestens sechs trainierten Fertigkeiten zur Verfügung; Spezialisierungen zeigen den +2-Effekt und ihre Voraussetzungen.
+- [x] Im Fähigkeiten-Tab wird die Kernfähigkeit des gewählten Primärarchetyps automatisch angezeigt und ist nicht frei lösch-/erfindbar; freie Platzhalterfähigkeiten wie der bisherige Start-Feuerball erscheinen nicht.
+- [x] Im Hintergrund-Tab sind die mechanischen SagaDrive-Bestandteile Hintergrund, vier passende Fertigkeiten, zwei Trainings, eine Spezialisierung, Milieuzugang, Kontakt, Komplikation und zusätzliche Kommunikationsform verständlich getrennt; freie Lore/Persönlichkeitsangaben bleiben optional.
+- [x] Im Inventar-Tab werden Gegenstände als Liste/Karten mit Last statt als 30 feste Slots geführt; `Traglast = 5 + 2 × Stärke` und Überlastungsfolgen werden live erklärt.
+- [x] Die linke Character-Zusammenfassung zeigt SagaDrive-Begriffe und Kernwerte statt D&D-Abkürzungen/Entwicklerinformationen und aktualisiert sich direkt mit den Eingaben.
+- [x] Notizen werden zusammen mit dem Character gespeichert bzw. über den bestehenden Character-Persistenzvertrag übertragen, statt ausdrücklich nur lokal zu bleiben.
 
 ## Edge Cases
-- [ ] `Kämpfer + Mental` und andere ungewöhnliche Archetyp-Essenz-Kombinationen bleiben erlaubt; die UI interpretiert Essenz nicht als Klasse.
-- [ ] Der Core-Begriff `Gebunden` wird überall verwendet; `Paktbasiert` erscheint im SagaDrive-Core-Flow nicht mehr.
-- [ ] Ein Startcharakter kann keine Attribute >4, Fertigkeiten >3 oder spätere Progressionsoptionen auswählen.
-- [ ] Ein Fertigkeitsbudget über 10 Punkte oder weniger als sechs trainierte Fertigkeiten wird vor dem Speichern konkret markiert.
-- [ ] Inventarlast über Traglast zeigt die Core-Folgen `Bewegung -3 m` sowie Nachteil auf Athletik/Akrobatik; über doppelter Traglast wird normale längere Bewegung als nicht möglich markiert.
-- [ ] Tooltips/Hilfetexte funktionieren per Hover, Tastaturfokus und Tap und verdecken keine wesentlichen Controls auf Mobile.
+- [x] `Kämpfer + Mental` und andere ungewöhnliche Archetyp-Essenz-Kombinationen bleiben erlaubt; die UI interpretiert Essenz nicht als Klasse.
+- [x] Der Core-Begriff `Gebunden` wird überall verwendet; `Paktbasiert` erscheint im SagaDrive-Core-Flow nicht mehr.
+- [x] Ein Startcharakter kann keine Attribute >4, Fertigkeiten >3 oder spätere Progressionsoptionen auswählen.
+- [x] Ein Fertigkeitsbudget über 10 Punkte oder weniger als sechs trainierte Fertigkeiten wird vor dem Speichern konkret markiert.
+- [x] Inventarlast über Traglast zeigt die Core-Folgen `Bewegung -3 m` sowie Nachteil auf Athletik/Akrobatik; über doppelter Traglast wird normale längere Bewegung als nicht möglich markiert.
+- [x] Tooltips/Hilfetexte funktionieren per Hover, Tastaturfokus und Tap und verdecken keine wesentlichen Controls auf Mobile.
 
 ## Regression
-- [ ] Live-3D-Vorschau, Portrait-Erzeugung/-Upload und Character-Speichern bleiben erreichbar.
-- [ ] Background-Lore-Composer und vorhandene Trait-Editoren bleiben nutzbar, soweit sie nicht durch SagaDrive-Core-Felder ersetzt werden.
-- [ ] Der Character Editor bleibt auf Mobile einspaltig und Tabs/Controls werden nicht horizontal abgeschnitten.
-- [ ] Bestehende Characters mit fehlenden neuen SagaDrive-Feldern erhalten sichere Defaults und verursachen keinen Renderfehler.
+- [x] Live-3D-Vorschau, Portrait-Erzeugung/-Upload und Character-Speichern bleiben erreichbar.
+- [x] Background-Lore-Composer und vorhandene Trait-Editoren bleiben nutzbar, soweit sie nicht durch SagaDrive-Core-Felder ersetzt werden.
+- [x] Der Character Editor bleibt auf Mobile einspaltig und Tabs/Controls werden nicht horizontal abgeschnitten.
+- [x] Bestehende Characters mit fehlenden neuen SagaDrive-Feldern erhalten sichere Defaults und verursachen keinen Renderfehler.
 
 ## Assumptions
 - Dieser Slice optimiert und validiert nur SagaDrive Core; D&D 5.5e bleibt im Code nur soweit nötig für bestehende Persistenz/Kompatibilität erhalten.
@@ -67,5 +67,11 @@ Roadmap: nicht vorhanden — aktueller Chat-/Core-Rules-Slice.
 - Persistenz erweitert um `skills`, `sagadrive_profile` und `notes`; Migration: `supabase/migrations/007_sagadrive_character_profile.sql`.
 - Legacy-Attribute `constitution`, `intelligence`, `wisdom` werden beim Lesen auf `endurance`, `mind`, `perception` normalisiert.
 - Regression/E2E wurden auf den neuen SagaDrive-Core-Flow aktualisiert.
-- Ausführbare Verifikation (`npm run test-gate`, Build, Playwright) konnte im verfügbaren Runner nicht durchgeführt werden, weil kein Repo-Checkout verfügbar ist, GitHub nicht aus dem Runner geklont werden kann und Connector-Commits keinen Actions-Run ausgelöst haben. Details: `.qa/runs/sagadrive-character-editor-core-verification.md`.
+- Ausführbare Verifikation lokal ausgeführt: `npm run test-gate` PASS, `npm run test:e2e` PASS (3/3), Evidence unter `.qa/evidence/sagadrive-character-editor-core/`.
 - Bekannte fachliche Lücke: Der Core verlangt eine erste Essenzmanifestation auf Stufe 1, aber ein verbindlicher Rang-I-Essenzmanifestationskatalog existiert noch nicht. Der Editor erfindet deshalb keine Platzhalterkraft und markiert diesen Punkt ausdrücklich als ausstehend.
+
+## Composition Gate
+- Proof: `.qa/runs/composition-gate-sagadrive-character-editor-core.md`
+- Verdict: CLEAR
+- HEAD_SHA: `dcea42562311204a9475d9f1524affada0ee2a5f`
+- BASE_SHA: `1cfd9933d2cb50ea15ded3654bfa916ade48b42e`
