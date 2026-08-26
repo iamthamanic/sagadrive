@@ -50,6 +50,22 @@ function parseFunctionResponse(value: unknown): CharacterLoreFunctionResponse {
   return { status: 'error', message: 'Die KI-Antwort hatte ein ungültiges Format.' };
 }
 
+function hasResponseContext(error: unknown): error is { context: Response } {
+  return isRecord(error) && error.context instanceof Response;
+}
+
+async function getFunctionErrorMessage(error: unknown): Promise<string | undefined> {
+  if (!hasResponseContext(error)) return undefined;
+
+  try {
+    const responseBody: unknown = await error.context.clone().json();
+    const parsed = parseFunctionResponse(responseBody);
+    return parsed.status === 'ok' ? undefined : parsed.message;
+  } catch {
+    return undefined;
+  }
+}
+
 class CharacterLoreService {
   async generateBackground(
     request: CharacterLoreGenerationRequest,
@@ -63,7 +79,11 @@ class CharacterLoreService {
     });
 
     if (error) {
-      throw new Error('Hintergrundgeschichte konnte nicht generiert werden. Prüfe die Character-AI-Konfiguration.');
+      const serverMessage = await getFunctionErrorMessage(error);
+      throw new Error(
+        serverMessage ??
+          'Hintergrundgeschichte konnte nicht generiert werden. Bitte versuche es erneut.',
+      );
     }
 
     const response = parseFunctionResponse(data);
