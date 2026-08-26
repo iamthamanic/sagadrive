@@ -73,5 +73,5 @@ Roadmap: nicht vorhanden — aktueller Chat-/Core-Rules-Slice.
 ## Composition Gate
 - Proof: `.qa/runs/composition-gate-sagadrive-character-editor-core.md`
 - Verdict: CLEAR
-- HEAD_SHA: `dcea42562311204a9475d9f1524affada0ee2a5f`
+- HEAD_SHA: `d334703d39e0d6823da6159663a3da1226ad0028`
 - BASE_SHA: `1cfd9933d2cb50ea15ded3654bfa916ade48b42e`
