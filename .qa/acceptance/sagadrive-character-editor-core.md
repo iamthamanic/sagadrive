@@ -15,7 +15,7 @@ Roadmap: nicht vorhanden — aktueller Chat-/Core-Rules-Slice.
 
 ## Happy Path
 - [x] Nach Öffnen des Editors sieht der User SagaDrive Core als aktives Regelset und die acht Tabs `Info`, `Hintergrund`, `Werte`, `Fertigkeiten`, `Fähigkeiten`, `Look`, `Inventar`, `Notizen` ohne D&D-spezifische Felder im aktiven Flow.
-- [x] Im Info-Tab kann ein Stufe-1-Character Name, Wesenart, Primärarchetyp und primäre Essenz wählen; Archetyp- und Essenzoptionen erklären ihre Rolle direkt in der Auswahl und über zugängliche Hilfetexte.
+- [x] Im Info-Tab kann ein Stufe-1-Character Name, Spezies, Primärarchetyp und primäre Essenz wählen; Archetyp- und Essenzoptionen erklären ihre Rolle direkt in der Auswahl und über zugängliche Hilfetexte.
 - [x] Im Werte-Tab kann die SagaDrive-Startverteilung `4,3,3,2,2,1` regelkonform auf Stärke, Geschicklichkeit, Ausdauer, Verstand, Wahrnehmung und Charisma verteilt werden; abgeleitete Werte werden read-only live berechnet.
 - [x] Im Fertigkeiten-Tab stehen alle 18 Core-Fertigkeiten mit Standardattribut, Kurzbeschreibung, Kompetenzwert 0–3 für Stufe 1, 10-Punkte-Budget und mindestens sechs trainierten Fertigkeiten zur Verfügung; Spezialisierungen zeigen den +2-Effekt und ihre Voraussetzungen.
 - [x] Im Fähigkeiten-Tab wird die Kernfähigkeit des gewählten Primärarchetyps automatisch angezeigt und ist nicht frei lösch-/erfindbar; freie Platzhalterfähigkeiten wie der bisherige Start-Feuerball erscheinen nicht.
@@ -42,7 +42,7 @@ Roadmap: nicht vorhanden — aktueller Chat-/Core-Rules-Slice.
 - Dieser Slice optimiert und validiert nur SagaDrive Core; D&D 5.5e bleibt im Code nur soweit nötig für bestehende Persistenz/Kompatibilität erhalten.
 - Für Stufe 1 wird die Standard-Attributsverteilung als primärer Flow verwendet; der alternative 10-Punkte-Kauf wird nicht zusätzlich als zweiter vollständiger Editor-Modus gebaut, solange der Standardflow die Core-Erstellung abdeckt.
 - Ein vollständiger späterer Fähigkeitskatalog existiert noch nicht; deshalb werden nur bereits verbindlich definierte Archetyp-Kernfähigkeiten und vorhandene regelkonforme Daten angezeigt.
-- Weltprofile/Wesenart-Presets werden in diesem Slice nicht als neue Rule-Engine abstrahiert; die UI wird so strukturiert, dass spätere Weltprofile die Optionen liefern können.
+- Weltprofile/Spezies-Presets werden in diesem Slice nicht als neue Rule-Engine abstrahiert; die UI wird so strukturiert, dass spätere Weltprofile die Optionen liefern können.
 
 ## Screenshots
 | Step | Filename |

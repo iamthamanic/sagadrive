@@ -64,6 +64,7 @@ chmod +x setup.sh
 cp .env.example .env
 # Edit .env with your secrets
 docker-compose up -d
+./scripts/apply-migrations.sh
 ```
 
 ### Download LLM Model
@@ -147,8 +148,7 @@ sagadrive-selfhost/
     │   │   └── index.ts        # DM Tools function
     │   └── sessions/
     │       └── index.ts        # Session Management function
-    └── migrations/
-        └── 001_initial.sql      # Database schema
+    └── migrations/        # Apply via ./scripts/apply-migrations.sh (not initdb mount)
 ```
 
 ## 🗃️ Database Schema

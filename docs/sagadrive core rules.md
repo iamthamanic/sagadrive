@@ -303,7 +303,7 @@ Kein reguläres Startattribut darf unter 1 oder über 4 liegen. Nicht ausgegeben
 
 ### 3.4 Quellen von Attributswerten
 
-Archetypen, Hintergründe, Wesenarten und Essenzen vergeben bei der regulären Charaktererschaffung keine allgemeinen Attributsboni.
+Archetypen, Hintergründe, Spezies und Essenzen vergeben bei der regulären Charaktererschaffung keine allgemeinen Attributsboni.
 
 ### 3.5 Attribute und Fertigkeiten
 
@@ -376,15 +376,15 @@ Ein Hintergrund enthält:
 
 Hintergründe vergeben keine Attributsboni und keine allgemeinen Kräfte.
 
-### 4.5 Wesenart
+### 4.5 Spezies
 
-Eine reguläre Wesenart verwendet ein Merkmalsbudget von 3 Punkten.
+Eine reguläre Spezies verwendet ein Merkmalsbudget von 3 Punkten.
 
 - Keine allgemeinen Attributs- oder Fertigkeitsboni.
 - Keine kulturellen Sprachen.
 - Keine zusätzlichen vollständigen Aktionen.
 - Nachteile erzeugen keine zusätzlichen freien Merkmalspunkte.
-- Hybride Wesenarten verwenden dasselbe Gesamtbudget.
+- Hybride Spezies verwenden dasselbe Gesamtbudget.
 
 #### Merkmalskosten
 
@@ -414,7 +414,7 @@ Beispiele:
 - Überleben in einer extremen Umwelt ohne normale Schutzmittel,
 - außergewöhnlicher Körperbau mit klar definierter mechanischer Wirkung.
 
-Wesenartmerkmale dürfen keine vollen Zusatzaktionen, allgemeinen Attributsboni, allgemeinen Fertigkeitsboni, zusätzlichen Drive, zusätzliches Momentum oder einen Archetyp ersetzen.
+Speziesmerkmale dürfen keine vollen Zusatzaktionen, allgemeinen Attributsboni, allgemeinen Fertigkeitsboni, zusätzlichen Drive, zusätzliches Momentum oder einen Archetyp ersetzen.
 
 ### 4.6 Essenzen
 
@@ -425,7 +425,7 @@ SagaDrive verwendet fünf universelle Essenzen.
 | Körperlich | Körper, Biologie, Training oder körperliche Veränderung |
 | Mental | Geist, Fokus, Wahrnehmung oder mentale Projektion |
 | Spirituell | Seele, Glauben, Geister oder metaphysische Verbindung |
-| Gebunden | Bindung an Wesen, Artefakte, Pakte, Begleiter oder externe Quellen |
+| Gebunden | Bindung an Spezies, Artefakte, Pakte, Begleiter oder externe Quellen |
 | Technologisch | Geräte, Systeme, Konstruktionen oder technische Veränderung |
 
 Jede Figur besitzt eine primäre Essenz. Eine sekundäre Essenz kann später erschlossen werden. Essenzen vergeben keine automatischen Attributs- oder Fertigkeitsboni.
@@ -437,7 +437,7 @@ Ein Weltprofil muss mindestens festlegen:
 1. Name und Genre,
 2. Tonalität,
 3. Standard-Härtegrad,
-4. verfügbare Wesenarten,
+4. verfügbare Spezies,
 5. Milieus und Hintergründe,
 6. Erscheinungsformen der Archetypen,
 7. verfügbare Essenzen und ihre Manifestationen,
@@ -742,7 +742,7 @@ Geeignete Spezialisierungen: Elektronik, Mechanik, Computer, Fahrzeuge, Robotik,
 
 Medizin beschreibt Diagnose, Stabilisierung, Behandlung, Chirurgie und biologische Gesundheitsversorgung.
 
-Reparaturen rein technischer Wesen oder Maschinen verwenden normalerweise Technik. Hybride Systeme können eine passende Spezialisierung oder beide Fertigkeiten voraussetzen.
+Reparaturen rein technische Spezies oder Maschinen verwenden normalerweise Technik. Hybride Systeme können eine passende Spezialisierung oder beide Fertigkeiten voraussetzen.
 
 Geeignete Spezialisierungen: Notfallmedizin, Chirurgie, Diagnose, Toxikologie, Psychiatrie, bestimmte Spezies.
 
@@ -1765,7 +1765,7 @@ Verbindliche Reihenfolge:
 
 1. Weltprofil und aktive Module bestimmen.
 2. Figurenkonzept festlegen.
-3. Wesenart und Wesenartmerkmale wählen.
+3. Spezies und Speziesmerkmale wählen.
 4. Hintergrund wählen.
 5. Primärarchetyp wählen.
 6. Primäre Essenz wählen.
@@ -1835,7 +1835,7 @@ Relevant ist die Idee eines universellen Kernsystems mit Weltanpassungen und Met
 | Spezialisierung | enges Fachgebiet |
 | Archetyp | funktionale Charakterausrichtung |
 | Hintergrund | Herkunft und soziale Einbindung |
-| Wesenart | körperliche/strukturelle Speziesmerkmale |
+| Spezies | körperliche/strukturelle Speziesmerkmale |
 | Essenz | Wirkprinzip besonderer Fähigkeiten |
 | Drive | persönliche Metaressource |
 | Momentum | gemeinsame Gruppenressource |
@@ -1879,7 +1879,7 @@ Geprüft und vermieden wurden unter anderem:
 
 - zusätzliche Attribute,
 - eigene Essenz-Fertigkeit,
-- allgemeine Wesenart-Attributsboni,
+- allgemeine Spezies-Attributsboni,
 - Klassenstufen,
 - dynamische Schwierigkeitsanpassung,
 - freie situative Zahlenmodifikatoren,
@@ -1906,7 +1906,7 @@ Bewusst nicht Bestandteil des Core:
 - allgemeine Flanken- oder Höhenboni,
 - Tabellen freier situativer Zahlenmodifikatoren,
 - dynamische Stufenskalierung der Welt,
-- Punkteerstattung durch Wesenartnachteile,
+- Punkteerstattung durch Speziesnachteile,
 - weltabhängige Aufsplittung der 18 Kernfertigkeiten,
 - getrennte Magie- und Technologie-Auflösung,
 - negative Gesundheit,

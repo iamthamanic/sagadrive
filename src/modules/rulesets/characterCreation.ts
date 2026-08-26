@@ -48,6 +48,10 @@ export interface CharacterCreationOption {
   label: string;
 }
 
+export interface SagaDriveRaceOption extends CharacterCreationOption {
+  description: string;
+}
+
 export interface SagaDriveAttributeDefinition {
   key: SagaDriveAttributeKey;
   label: string;
@@ -136,8 +140,14 @@ export const sagaDriveArchetypeOptions: readonly SagaDriveArchetypeOption[] = [
   },
 ];
 
-export const sagaDriveRaceOptions: readonly CharacterCreationOption[] = [
-  { value: 'human', label: 'Mensch' }, { value: 'elf', label: 'Elf' }, { value: 'dwarf', label: 'Zwerg' }, { value: 'halfling', label: 'Halbling' }, { value: 'orc', label: 'Ork' }, { value: 'cyborg', label: 'Cyborg' }, { value: 'alien', label: 'Alien' },
+export const sagaDriveRaceOptions: readonly SagaDriveRaceOption[] = [
+  { value: 'human', label: 'Mensch', description: 'Vielseitige Standard-Spezies ohne festes Merkmalsprofil. Regelwirkung entsteht ausschließlich über die gewählten Talente.' },
+  { value: 'elf', label: 'Elf', description: 'Fein und beweglich im Erscheinungsbild. Typisch für Sinnes-, Sicht- oder Umwelttalente statt fester Attributsboni.' },
+  { value: 'dwarf', label: 'Zwerg', description: 'Kompakt und widerstandsfähig im Körperbau. Oft passend zu Schutz-, Resistenz- oder Extremumwelttalenten.' },
+  { value: 'halfling', label: 'Halbling', description: 'Klein und unauffällig im Profil. Häufig mit Bewegungs-, Heimlichkeits- oder Akrobatik-orientierten Talenten kombiniert.' },
+  { value: 'orc', label: 'Ork', description: 'Massiv und körperlich präsent. Passt gut zu natürlicher Waffe, Kraftprofil oder robuster Anpassung über Talente.' },
+  { value: 'cyborg', label: 'Cyborg', description: 'Techno-biologische Mischform mit synthetischen Anteilen. Talente betonen Resistenz, Sinne oder technische Verträglichkeit.' },
+  { value: 'alien', label: 'Alien', description: 'Nicht-menschliche Biologie mit eigenem Körperprofil. Besonders geeignet für Flug, Amphibie, Extremumwelt oder außergewöhnlichen Körperbau.' },
 ];
 
 export const sagaDriveSettingOptions: readonly CharacterCreationOption[] = [
@@ -148,7 +158,7 @@ export const sagaDriveEssenceOptions: readonly SagaDriveEssenceOption[] = [
   { value: 'physical', label: 'Körperlich', summary: 'Körper · Training · Biologie', description: 'Besondere Wirkungen entstehen durch Körper, Biologie, Training oder körperliche Veränderung.' },
   { value: 'mental', label: 'Mental', summary: 'Geist · Fokus · Projektion', description: 'Besondere Wirkungen entstehen durch Geist, Fokus, Wahrnehmung oder mentale Projektion.' },
   { value: 'spiritual', label: 'Spirituell', summary: 'Seele · Glauben · Geister', description: 'Besondere Wirkungen entstehen durch Seele, Glauben, Geister oder metaphysische Verbindung.' },
-  { value: 'bound', label: 'Gebunden', summary: 'Pakt · Artefakt · Wesen · externe Quelle', description: 'Besondere Wirkungen entstehen durch die Bindung an Wesen, Artefakte, Pakte, Begleiter oder andere externe Quellen.' },
+  { value: 'bound', label: 'Gebunden', summary: 'Pakt · Artefakt · Spezies · externe Quelle', description: 'Besondere Wirkungen entstehen durch die Bindung an Spezies, Artefakte, Pakte, Begleiter oder andere externe Quellen.' },
   { value: 'technological', label: 'Technologisch', summary: 'Geräte · Systeme · Konstruktionen', description: 'Besondere Wirkungen entstehen durch Geräte, Systeme, Konstruktionen oder technische Veränderung.' },
 ];
 
@@ -165,7 +175,7 @@ export const sagaDriveSkillDefinitions: readonly SagaDriveSkillDefinition[] = [
   { key: 'investigation', label: 'Ermitteln', attribute: 'mind', summary: 'Systematische Suche, Rekonstruktion, Recherche und Informationsgewinnung.', excludes: 'Zwingend notwendige Hinweise hängen nie ausschließlich an einer einzelnen Probe.', specializations: ['Tatorte', 'Archive', 'Digitale Recherche', 'Forensik', 'Befragungsanalyse'] },
   { key: 'knowledge', label: 'Wissen', attribute: 'mind', summary: 'Erlerntes Fachwissen abrufen, einordnen und auf bekannte Zusammenhänge anwenden.', specializations: ['Geschichte', 'Recht', 'Naturwissenschaften', 'Okkultes', 'Kulturen'] },
   { key: 'technology', label: 'Technik', attribute: 'mind', summary: 'Technische und mechanische Systeme bedienen, analysieren, reparieren, bauen oder umgehen.', specializations: ['Elektronik', 'Mechanik', 'Computer', 'Fahrzeuge', 'Robotik', 'Sicherheitssysteme'] },
-  { key: 'medicine', label: 'Medizin', attribute: 'mind', summary: 'Diagnose, Stabilisierung, Behandlung, Chirurgie und biologische Gesundheitsversorgung.', excludes: 'Rein technische Wesen und Maschinen werden normalerweise mit Technik repariert.', specializations: ['Notfallmedizin', 'Chirurgie', 'Diagnose', 'Toxikologie', 'Psychiatrie'] },
+  { key: 'medicine', label: 'Medizin', attribute: 'mind', summary: 'Diagnose, Stabilisierung, Behandlung, Chirurgie und biologische Gesundheitsversorgung.', excludes: 'Rein technische Spezies und Maschinen werden normalerweise mit Technik repariert.', specializations: ['Notfallmedizin', 'Chirurgie', 'Diagnose', 'Toxikologie', 'Psychiatrie'] },
   { key: 'driving', label: 'Steuern', attribute: 'dexterity', summary: 'Fahrzeuge, Reittiere oder Bewegungssysteme unter schwierigen Bedingungen kontrollieren.', excludes: 'Routinefahrt braucht keine Probe; Navigation verwendet andere passende Fertigkeiten.', specializations: ['Bodenfahrzeuge', 'Motorräder', 'Fluggeräte', 'Wasserfahrzeuge', 'Raumfahrzeuge', 'Reittiere'] },
   { key: 'persuasion', label: 'Überzeugen', attribute: 'charisma', summary: 'Ehrlicher sozialer Einfluss, Verhandlung, Führung und glaubwürdige Argumentation.', excludes: 'Überzeugen ist keine Gedankenkontrolle.', specializations: ['Verhandeln', 'Diplomatie', 'Führung', 'Verkauf', 'Vermittlung'] },
   { key: 'deception', label: 'Täuschen', attribute: 'charisma', summary: 'Lügen, Ablenkungen, falsche Darstellung und bewusste Irreführung.', excludes: 'Physische Fälschungen benötigen zusätzlich die passende praktische Fertigkeit.', specializations: ['Lügen', 'Verkleidung', 'Ablenkung', 'Falsche Identität', 'Betrug'] },
@@ -213,4 +223,12 @@ export function getSagaDriveAttribute(value: SagaDriveAttributeKey): SagaDriveAt
 
 export function createEmptySagaDriveSkillRanks(): Record<SagaDriveSkillKey, number> {
   return { athletics: 0, acrobatics: 0, sleight: 0, stealth: 0, melee: 0, ranged: 0, awareness: 0, insight: 0, survival: 0, investigation: 0, knowledge: 0, technology: 0, medicine: 0, driving: 0, persuasion: 0, deception: 0, intimidation: 0, performance: 0 };
+}
+
+/** Total attribute points available for standard distribution at a given character level. */
+export function getSagaDriveAttributePointBudget(level: number): number {
+  const normalizedLevel = Math.min(20, Math.max(1, Math.round(level)));
+  const baseTotal = SAGA_DRIVE_START_ATTRIBUTE_ARRAY.reduce((sum, value) => sum + value, 0);
+  const levelUpBonuses = (normalizedLevel >= 16 ? 2 : normalizedLevel >= 8 ? 1 : 0);
+  return baseTotal + levelUpBonuses;
 }

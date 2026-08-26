@@ -1,15 +1,18 @@
 /**
  * Layout — Desktop sidebar + mobile bottom nav shell for authenticated views.
  * Location: src/components/Layout.tsx
+ * Desktop sidebar collapses to icon-only rail; state persisted in localStorage.
  */
-import { ReactNode } from 'react';
-import { 
-  Home, 
-  User, 
-  BookOpen, 
-  ShoppingBag, 
+import { useEffect, useState, type ReactNode } from 'react';
+import {
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Home,
+  LogOut,
   Settings,
-  LogOut
+  ShoppingBag,
+  User,
 } from 'lucide-react';
 import { useAuth } from '../lib/auth-context';
 import { toast } from 'sonner';
@@ -28,12 +31,34 @@ const VIEW_LABELS: Record<string, string> = {
   'character-editor': 'Charakter Editor',
   'adventure-editor': 'Abenteuer Editor',
   marketplace: 'Marktplatz',
-  'marketplace-test': '🧪 Marketplace Test',
   profile: 'Einstellungen',
 };
 
+const SIDEBAR_COLLAPSED_KEY = 'sagadrive-sidebar-collapsed';
+
 export function Layout({ children, currentView, onNavigate }: LayoutProps) {
   const { signOut } = useAuth();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1');
+    } catch {
+      // ignore storage errors (private mode)
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed((current) => {
+      const next = !current;
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? '1' : '0');
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -45,7 +70,6 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'library', label: 'Bibliothek', icon: BookOpen },
     { id: 'marketplace', label: 'Marktplatz', icon: ShoppingBag },
-    { id: 'marketplace-test', label: '🧪 Marketplace Test', icon: Settings },
   ];
 
   const mobileNavItems = [
@@ -55,31 +79,51 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
     { id: 'profile', label: 'Profil', icon: User },
   ];
 
+  const CollapseIcon = sidebarCollapsed ? ChevronRight : ChevronLeft;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop: Sidebar + Content Layout */}
       <div className="hidden md:flex md:h-screen">
         {/* Desktop Sidebar */}
-        <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
-          {/* Logo */}
-          <div className="p-6 border-b border-sidebar-border">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 flex-shrink-0">
-                <ImageWithFallback
-                  src={logoImage}
-                  alt="SagaDrive Logo"
-                  className="w-full h-full object-contain"
-                />
+        <aside
+          className={`bg-sidebar border-r border-sidebar-border flex flex-col transition-[width] duration-200 ease-out ${
+            sidebarCollapsed ? 'w-[4.5rem]' : 'w-64'
+          }`}
+          data-collapsed={sidebarCollapsed ? 'true' : 'false'}
+        >
+          {/* Logo + collapse control */}
+          <div className={`border-b border-sidebar-border ${sidebarCollapsed ? 'p-3' : 'p-4 pl-6 pr-3'}`}>
+            <div className={`flex items-center ${sidebarCollapsed ? 'flex-col gap-2' : 'gap-2'}`}>
+              <div className={`flex items-center min-w-0 ${sidebarCollapsed ? 'justify-center' : 'flex-1 gap-3'}`}>
+                <div className={`flex-shrink-0 ${sidebarCollapsed ? 'w-10 h-10' : 'w-12 h-12'}`}>
+                  <ImageWithFallback
+                    src={logoImage}
+                    alt="SagaDrive Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                {!sidebarCollapsed && (
+                  <div className="min-w-0">
+                    <h1 className="text-sidebar-foreground truncate">SagaDrive</h1>
+                  </div>
+                )}
               </div>
-              <div>
-                <h1 className="text-sidebar-foreground">SagaDrive</h1>
-                <p className="text-sm text-sidebar-foreground/60 font-[Darker_Grotesque]">SagaDrive</p>
-              </div>
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                className="p-2 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors flex-shrink-0"
+                title={sidebarCollapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'}
+                aria-label={sidebarCollapsed ? 'Sidebar ausklappen' : 'Sidebar einklappen'}
+                aria-expanded={!sidebarCollapsed}
+              >
+                <CollapseIcon className="w-5 h-5" />
+              </button>
             </div>
           </div>
-          
+
           {/* Navigation */}
-          <nav className="flex-1 p-4 overflow-y-auto">
+          <nav className={`flex-1 overflow-y-auto ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
             <div className="space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -87,18 +131,20 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => {
-                      console.log('🎯 Layout: Navigation clicked -', item.id);
-                      onNavigate(item.id);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm ${
+                    type="button"
+                    title={item.label}
+                    aria-label={item.label}
+                    onClick={() => onNavigate(item.id)}
+                    className={`w-full flex items-center rounded-lg transition-colors text-sm ${
+                      sidebarCollapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-3'
+                    } ${
                       isActive
                         ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                         : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
                     }`}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
-                    <span>{item.label}</span>
+                    {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
                   </button>
                 );
               })}
@@ -106,18 +152,26 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
           </nav>
 
           {/* Settings + Logout */}
-          <div className="p-4 border-t border-sidebar-border">
-            <div className="flex items-center gap-2">
+          <div className={`border-t border-sidebar-border ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
+            <div className={`flex ${sidebarCollapsed ? 'flex-col items-stretch gap-1' : 'items-center gap-2'}`}>
               <button
+                type="button"
                 onClick={handleLogout}
-                className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm hover:bg-destructive/10 text-destructive"
+                title="Abmelden"
+                aria-label="Abmelden"
+                className={`flex items-center rounded-lg transition-colors text-sm hover:bg-destructive/10 text-destructive ${
+                  sidebarCollapsed ? 'justify-center px-2 py-3' : 'flex-1 gap-3 px-4 py-3'
+                }`}
               >
                 <LogOut className="w-5 h-5 flex-shrink-0" />
-                <span>Abmelden</span>
+                {!sidebarCollapsed && <span>Abmelden</span>}
               </button>
               <button
+                type="button"
                 onClick={() => onNavigate('profile')}
-                className={`p-3 rounded-lg transition-colors flex-shrink-0 ${
+                className={`rounded-lg transition-colors flex-shrink-0 ${
+                  sidebarCollapsed ? 'flex justify-center px-2 py-3' : 'p-3'
+                } ${
                   currentView === 'profile'
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                     : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
@@ -132,7 +186,7 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
         </aside>
 
         {/* Desktop Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           {/* Desktop Header */}
           <header className="h-16 bg-card border-b border-border px-6 flex items-center flex-shrink-0">
             <h2 className="text-foreground font-[Darker_Grotesque]">
@@ -167,6 +221,7 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
             </div>
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => onNavigate('profile')}
                 className="p-2 hover:bg-muted rounded-lg transition-colors"
                 title="Einstellungen"
@@ -174,6 +229,7 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
                 <Settings className="w-5 h-5" />
               </button>
               <button
+                type="button"
                 onClick={handleLogout}
                 className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors"
                 title="Abmelden"
@@ -198,13 +254,11 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    console.log('🎯 Layout (Mobile): Navigation clicked -', item.id);
-                    onNavigate(item.id);
-                  }}
+                  type="button"
+                  onClick={() => onNavigate(item.id)}
                   className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors ${
-                    isActive 
-                      ? 'bg-primary text-primary-foreground' 
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:bg-muted'
                   }`}
                 >

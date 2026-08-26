@@ -11,7 +11,6 @@ import { ProjectJoin } from "./components/ProjectJoin";
 import { Library } from "./components/Library";
 import { Profile } from "./components/Profile";
 import { RulesetsTest } from "./components/RulesetsTest";
-import { MarketplaceTest } from "./components/MarketplaceTest";
 import { Toaster } from "./components/ui/sonner";
 
 // ═══════════════════════════════════════════════════════════════
@@ -281,7 +280,7 @@ if (typeof window !== 'undefined') {
 // ═══════════════════════════════════════════════════════════════
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<"dashboard" | "character-editor" | "adventure-editor" | "gamemaster" | "marketplace" | "library" | "profile" | "join" | "rulesets-test" | "marketplace-test">("dashboard");
+  const [currentView, setCurrentView] = useState<"dashboard" | "character-editor" | "adventure-editor" | "gamemaster" | "marketplace" | "library" | "profile" | "join" | "rulesets-test">("dashboard");
   const [inSession, setInSession] = useState(false);
   const [sessionRole, setSessionRole] = useState<"player" | "gamemaster" | null>(null);
 
@@ -317,8 +316,6 @@ export default function App() {
         return <ProjectJoin />;
       case "rulesets-test":
         return <RulesetsTest />;
-      case "marketplace-test":
-        return <MarketplaceTest />;
       default:
         console.warn('⚠️ App: Unknown view:', currentView);
         return <Dashboard onNavigate={handleNavigate} />;

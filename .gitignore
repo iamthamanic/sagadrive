@@ -38,3 +38,4 @@ test-results/
 
 # Docker
 .docker/
+docker-compose.override.yml
