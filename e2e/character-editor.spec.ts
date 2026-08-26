@@ -38,8 +38,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tab', { name: /^Archetype$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Essenz$/i })).toBeVisible();
   await page.getByRole('tab', { name: /^Talente$/i }).click();
-  await expect(page.getByText('Talente').first()).toBeVisible();
-  await expect(page.getByText('Gebunden').first()).toBeVisible();
+  await expect(page.getByText('Geschärfter Sinn').first()).toBeVisible();
   await expect(page.getByText('Paktbasiert')).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '01-info-core-tabs.png'), fullPage: true });
 
@@ -53,6 +52,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-skills-budget-specialization.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /^Essenz$/i }).click();
+  await expect(page.getByText('Gebunden').first()).toBeVisible();
   await page.getByRole('button', { name: /Mental/i }).click();
   await expect(page.getByText(/Essenz-Manifestation/i).first()).toBeVisible();
   await expect(page.getByText(/mentaler Kämpfer|vollständig regelkonform/i).first()).toBeVisible();
