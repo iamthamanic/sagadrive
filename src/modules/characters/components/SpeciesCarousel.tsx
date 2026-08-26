@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { sagaDriveRaceOptions } from '../../rulesets/characterCreation';
 import { RuleHelp } from './RuleHelp';
+import { SpeciesBannerFlag } from './SpeciesBannerFlag';
+import { getSpeciesColorway } from './speciesBanners';
 import { getSpeciesSketchUrl } from './speciesSketches';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -130,6 +132,49 @@ export function SpeciesCarousel({ selectedRace, onSelect, labelledBy = 'species-
           position: absolute;
           cursor: pointer;
         }
+        .species-banner-flag-wrap {
+          position: relative;
+        }
+        .species-banner-shimmer {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: linear-gradient(
+            105deg,
+            transparent 35%,
+            color-mix(in srgb, var(--species-shimmer-soft) 18%, transparent) 42%,
+            color-mix(in srgb, var(--species-shimmer) 48%, transparent) 50%,
+            color-mix(in srgb, var(--species-shimmer-soft) 18%, transparent) 58%,
+            transparent 65%
+          );
+          background-size: 220% 100%;
+          animation: species-banner-shimmer 2.8s ease-in-out infinite;
+          mix-blend-mode: overlay;
+        }
+        @keyframes species-banner-shimmer {
+          0%, 100% {
+            background-position: 180% 0;
+          }
+          50% {
+            background-position: -80% 0;
+          }
+        }
+        .species-card-header {
+          border-top-width: 2px;
+          border-top-style: solid;
+          background-color: var(--species-header-bg);
+        }
+        .species-card-header.is-selected {
+          animation: species-header-pulse 2.8s ease-in-out infinite;
+        }
+        @keyframes species-header-pulse {
+          0%, 100% {
+            background-color: var(--species-header-bg);
+          }
+          50% {
+            background-color: var(--species-header-bg-pulse);
+          }
+        }
       `}</style>
 
       <Carousel
@@ -148,6 +193,15 @@ export function SpeciesCarousel({ selectedRace, onSelect, labelledBy = 'species-
           {options.map((option, index) => {
             const isCenter = index === current;
             const isSelected = selectedRace === option.value;
+            const colorway = getSpeciesColorway(option.value);
+            const headerStyle = {
+              '--species-header-bg': colorway.headerBg,
+              '--species-header-bg-pulse': colorway.headerBgPulse,
+              '--species-accent': colorway.accent,
+              '--species-text': colorway.text,
+              '--species-border': colorway.border,
+              borderTopColor: colorway.border,
+            } as React.CSSProperties;
             return (
               <CarouselItem
                 key={option.value}
@@ -174,10 +228,11 @@ export function SpeciesCarousel({ selectedRace, onSelect, labelledBy = 'species-
                       }}
                     >
                       <div className="relative aspect-[4/5] overflow-hidden bg-background">
+                        <SpeciesBannerFlag species={option.value} isSelected={isSelected} />
                         <img
                           src={getSpeciesSketchUrl(option.value)}
                           alt={`Skizze: ${option.label}`}
-                          className="absolute inset-0 h-full w-full object-contain p-3"
+                          className="absolute inset-0 z-10 h-full w-full object-contain p-3"
                           draggable={false}
                         />
                         {isSelected && isCenter && (
@@ -186,14 +241,21 @@ export function SpeciesCarousel({ selectedRace, onSelect, labelledBy = 'species-
                           </Badge>
                         )}
                       </div>
-                      <CardHeader className="space-y-2 p-3 md:p-4">
+                      <CardHeader
+                        className={`species-card-header space-y-2 p-3 md:p-4 ${isSelected ? 'is-selected' : ''}`}
+                        style={headerStyle}
+                      >
                         <div className="flex items-center gap-1">
-                          <CardTitle className="text-sm md:text-base">{option.label}</CardTitle>
+                          <CardTitle className="text-sm md:text-base" style={{ color: colorway.accent }}>
+                            {option.label}
+                          </CardTitle>
                           <span className="inline-flex" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
                             <RuleHelp label={option.label}>{option.description}</RuleHelp>
                           </span>
                         </div>
-                        <p className="text-xs leading-relaxed text-muted-foreground line-clamp-3">{option.description}</p>
+                        <p className="text-xs leading-relaxed line-clamp-3" style={{ color: colorway.text }}>
+                          {option.description}
+                        </p>
                       </CardHeader>
                     </Card>
                 </div>
