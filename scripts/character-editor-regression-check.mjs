@@ -87,7 +87,7 @@ rejectMatch(
 );
 requireMatch(
   portraitStorageMigration,
-  /'character-portraits'[\s\S]*?public,[\s\S]*?false[\s\S]*?5242880/,
+  /INSERT INTO storage\.buckets[\s\S]*?VALUES\s*\(\s*'character-portraits',\s*'character-portraits',\s*false,\s*5242880,/,
   'private portrait storage bucket with 5MB limit',
 );
 requireMatch(
