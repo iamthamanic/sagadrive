@@ -1,6 +1,6 @@
 # Composition Gate — sagadrive-character-editor-core
 
-- HEAD_SHA: e68152261e3ea620460f33326060703ae75c9301
+- HEAD_SHA: 38b7b92aa9b28b6e0be3805a5cba50bcbe659900
 - BASE_SHA: f9b11da27bd192a586639f7c2cb86d7334956128
 - Date: 2026-08-26
 - Verdict: CLEAR
