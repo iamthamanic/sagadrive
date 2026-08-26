@@ -14,7 +14,7 @@ export interface ProjectDto {
   description: string | null;
   world_id: string | null;
   gm_user_id: string;
-  status: 'active' | 'paused' | 'completed';
+  status: 'active' | 'paused' | 'completed' | 'archived';
   created_at: string;
   updated_at: string;
 }
@@ -76,7 +76,7 @@ export interface ProjectVm {
   description: string | null;
   worldId: string | null;
   gmUserId: string;
-  status: 'active' | 'paused' | 'completed';
+  status: 'active' | 'paused' | 'completed' | 'archived';
   createdAt: string;
   updatedAt: string;
   members: ProjectMemberVm[];

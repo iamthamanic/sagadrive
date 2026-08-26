@@ -1,5 +1,5 @@
 import { supabase } from '../../../lib/supabase';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { projectMemberService } from './project-member.service';
 import type {
   ProjectDto,
   ProjectVm,
@@ -10,6 +10,29 @@ import type {
   SessionDto,
   SessionVm,
 } from '../types/project.types';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isProjectStatus(value: unknown): value is ProjectDto['status'] {
+  return value === 'active' || value === 'paused' || value === 'completed' || value === 'archived';
+}
+
+function isProjectDto(value: unknown): value is ProjectDto {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === 'string' &&
+    typeof value.code === 'string' &&
+    typeof value.name === 'string' &&
+    (typeof value.description === 'string' || value.description === null) &&
+    (typeof value.world_id === 'string' || value.world_id === null) &&
+    typeof value.gm_user_id === 'string' &&
+    isProjectStatus(value.status) &&
+    typeof value.created_at === 'string' &&
+    typeof value.updated_at === 'string'
+  );
+}
 
 /**
  * Project Service
@@ -40,33 +63,32 @@ class ProjectService {
     members: ProjectMemberDto[],
     sessions: SessionDto[]
   ): ProjectVm {
-    const mappedMembers: ProjectMemberVm[] = members.map((m) => ({
-      id: m.id,
-      userId: m.user_id,
-      characterId: m.character_id,
-      role: m.role,
-      joinedAt: m.joined_at,
-      status: m.status,
+    const mappedMembers: ProjectMemberVm[] = members.map((member) => ({
+      id: member.id,
+      userId: member.user_id,
+      characterId: member.character_id,
+      role: member.role,
+      joinedAt: member.joined_at,
+      status: member.status,
     }));
 
-    const mappedSessions: SessionVm[] = sessions.map((s) => ({
-      id: s.id,
-      projectId: s.project_id,
-      sessionNumber: s.session_number,
-      name: s.name,
-      notes: s.notes,
-      status: s.status,
-      startedAt: s.started_at,
-      endedAt: s.ended_at,
-      durationMinutes: s.duration_minutes,
-      createdAt: s.created_at,
+    const mappedSessions: SessionVm[] = sessions.map((session) => ({
+      id: session.id,
+      projectId: session.project_id,
+      sessionNumber: session.session_number,
+      name: session.name,
+      notes: session.notes,
+      status: session.status,
+      startedAt: session.started_at,
+      endedAt: session.ended_at,
+      durationMinutes: session.duration_minutes,
+      createdAt: session.created_at,
     }));
 
-    // Find last session date
-    const completedSessions = sessions.filter((s) => s.ended_at);
+    const completedSessions = sessions.filter((session) => session.ended_at);
     const lastSessionDate = completedSessions.length
-      ? completedSessions.sort((a, b) => 
-          new Date(b.ended_at!).getTime() - new Date(a.ended_at!).getTime()
+      ? completedSessions.sort((left, right) =>
+          new Date(right.ended_at!).getTime() - new Date(left.ended_at!).getTime()
         )[0].ended_at
       : null;
 
@@ -92,7 +114,7 @@ class ProjectService {
    */
   async createProject(payload: CreateProjectDto): Promise<ProjectVm> {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
       throw new Error('User not authenticated');
     }
@@ -118,7 +140,7 @@ class ProjectService {
       throw new Error(`Failed to create project: ${error.message}`);
     }
 
-    // Add GM as member
+    // The GM-controlled membership policy permits this bootstrap row.
     await supabase.from(this.membersTableName).insert({
       project_id: data.id,
       user_id: user.id,
@@ -130,16 +152,15 @@ class ProjectService {
   }
 
   /**
-   * Get user's projects (as GM or Player)
+   * Get user's projects (as GM or active player).
    */
   async getUserProjects(): Promise<ProjectVm[]> {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
       throw new Error('User not authenticated');
     }
 
-    // 1. Get projects where user is GM (RLS allows this)
     const { data: gmProjects, error: gmError } = await supabase
       .from(this.tableName)
       .select('*')
@@ -150,33 +171,32 @@ class ProjectService {
       throw new Error(`Failed to fetch GM projects: ${gmError.message}`);
     }
 
-    // 2. Get member records where user is a player (RLS allows this)
     const { data: memberRecords, error: memberError } = await supabase
       .from(this.membersTableName)
       .select('*, projects!inner(*)')
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .eq('status', 'active');
 
     if (memberError) {
       console.error('Failed to fetch player projects:', memberError);
     }
 
-    // 3. Extract projects from member records
-    const playerProjects = (memberRecords || [])
-      .map((record: any) => record.projects);
+    const playerProjects: ProjectDto[] = [];
+    for (const record of memberRecords || []) {
+      if (!isRecord(record)) continue;
+      const project = record.projects;
+      if (isProjectDto(project)) playerProjects.push(project);
+    }
 
-    // 4. Combine GM projects and player projects (avoid duplicates)
     const allProjectIds = new Set<string>();
     const combinedProjects: ProjectDto[] = [];
+    for (const project of [...(gmProjects || []), ...playerProjects]) {
+      if (!isProjectDto(project) || allProjectIds.has(project.id)) continue;
+      allProjectIds.add(project.id);
+      combinedProjects.push(project);
+    }
 
-    [...(gmProjects || []), ...playerProjects].forEach(project => {
-      if (!allProjectIds.has(project.id)) {
-        allProjectIds.add(project.id);
-        combinedProjects.push(project);
-      }
-    });
-
-    // 5. Fetch members and sessions for all projects
-    const projectsWithDetails = await Promise.all(
+    return Promise.all(
       combinedProjects.map(async (project) => {
         const { data: members } = await supabase
           .from(this.membersTableName)
@@ -188,69 +208,19 @@ class ProjectService {
           .select('*')
           .eq('project_id', project.id)
           .order('session_number', { ascending: true });
-        
+
         return this.mapToViewModel(project, members || [], sessions || []);
       })
     );
-
-    return projectsWithDetails;
   }
 
   /**
-   * Join project by code (as player)
-   * Uses Supabase RPC function to find project (bypasses RLS)
+   * Join project by secret code. The SECURITY DEFINER RPC owns membership identity,
+   * role and status, so the browser cannot mint or reactivate an authorization grant.
    */
   async joinProject(payload: JoinProjectDto): Promise<ProjectVm> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    // 1. Find project by code using RPC function
-    const { data: projects, error: findError } = await supabase
-      .rpc('find_project_by_code', { project_code: payload.code.toUpperCase() });
-
-    if (findError) {
-      console.error('Error finding project:', findError);
-      throw new Error('Fehler beim Suchen des Projekts');
-    }
-
-    if (!projects || projects.length === 0) {
-      throw new Error('Projekt nicht gefunden. Bitte überprüfe den Code.');
-    }
-
-    const project = projects[0];
-
-    // 2. Check if already joined
-    const { data: existingMember } = await supabase
-      .from(this.membersTableName)
-      .select('*')
-      .eq('project_id', project.id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (existingMember) {
-      throw new Error('Du bist bereits Mitglied dieses Projekts');
-    }
-
-    // 3. Add player to project
-    const { error: joinError } = await supabase
-      .from(this.membersTableName)
-      .insert({
-        project_id: project.id,
-        user_id: user.id,
-        character_id: payload.character_id || null,
-        role: 'player',
-        status: 'active',
-      });
-
-    if (joinError) {
-      throw new Error(`Beitritt fehlgeschlagen: ${joinError.message}`);
-    }
-
-    // 4. Fetch updated project with members and sessions
-    return this.getProjectById(project.id);
+    const membership = await projectMemberService.joinByCode(payload);
+    return this.getProjectById(membership.project_id);
   }
 
   /**
@@ -263,7 +233,7 @@ class ProjectService {
       .eq('id', id)
       .single();
 
-    if (projectError || !project) {
+    if (projectError || !project || !isProjectDto(project)) {
       throw new Error('Project not found');
     }
 
@@ -312,24 +282,16 @@ class ProjectService {
   }
 
   /**
-   * Leave project (as player)
+   * Leave project (as player). Kicked rows stay server/GM-controlled denial records.
    */
   async leaveProject(projectId: string): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
       throw new Error('User not authenticated');
     }
 
-    const { error } = await supabase
-      .from(this.membersTableName)
-      .delete()
-      .eq('project_id', projectId)
-      .eq('user_id', user.id);
-
-    if (error) {
-      throw new Error(`Failed to leave project: ${error.message}`);
-    }
+    await projectMemberService.leave(projectId, user.id);
   }
 }
 

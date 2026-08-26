@@ -111,7 +111,7 @@ ALTER TABLE characters ENABLE ROW LEVEL SECURITY;
 -- - NPCs in public worlds
 -- - NPCs in their worlds
 -- - NPCs/Monsters in marketplace
--- - Characters in projects they're members of
+-- - Characters in projects where they are active members
 CREATE POLICY "Users can view accessible characters"
   ON characters FOR SELECT
   USING (
@@ -131,11 +131,12 @@ CREATE POLICY "Users can view accessible characters"
     -- Marketplace items
     is_marketplace_item = true
     OR
-    -- Characters in projects user is member of
+    -- Characters in projects user is actively a member of
     (project_id IS NOT NULL AND EXISTS (
       SELECT 1 FROM project_members
       WHERE project_members.project_id = characters.project_id
       AND project_members.user_id = auth.uid()
+      AND project_members.status = 'active'
     ))
   );
 
@@ -262,10 +263,39 @@ CREATE POLICY "Users can manage their character inventory"
 
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
+-- Security-definer helper avoids recursive project/project_members RLS while deriving
+-- identity exclusively from auth.uid(). It exposes only a boolean authorization result.
+CREATE OR REPLACE FUNCTION public.current_user_is_active_project_member(
+  p_project_id UUID
+)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.project_members
+    WHERE project_id = p_project_id
+      AND user_id = auth.uid()
+      AND status = 'active'
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.current_user_is_active_project_member(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.current_user_is_active_project_member(UUID) FROM anon;
+GRANT EXECUTE ON FUNCTION public.current_user_is_active_project_member(UUID) TO authenticated;
+
 -- Users can view projects where they are GM
 CREATE POLICY "Users can view projects where they are GM"
   ON projects FOR SELECT
   USING (gm_user_id = auth.uid());
+
+-- Active members can view their joined project after membership was server/GM-controlled.
+CREATE POLICY "Active members can view their projects"
+  ON projects FOR SELECT
+  USING (public.current_user_is_active_project_member(id));
 
 CREATE POLICY "Users can create projects as GM"
   ON projects FOR INSERT
@@ -301,17 +331,41 @@ CREATE POLICY "GM can view members in their projects"
     )
   );
 
-CREATE POLICY "Users can join projects"
+-- Membership identity, role, project and status are GM/server controlled.
+CREATE POLICY "GM can add members to their projects"
   ON project_members FOR INSERT
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM projects
+      WHERE projects.id = project_members.project_id
+      AND projects.gm_user_id = auth.uid()
+    )
+  );
 
-CREATE POLICY "Users can update their member record"
+CREATE POLICY "GM can update members in their projects"
   ON project_members FOR UPDATE
-  USING (user_id = auth.uid());
+  USING (
+    EXISTS (
+      SELECT 1 FROM projects
+      WHERE projects.id = project_members.project_id
+      AND projects.gm_user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM projects
+      WHERE projects.id = project_members.project_id
+      AND projects.gm_user_id = auth.uid()
+    )
+  );
 
-CREATE POLICY "Users can leave projects"
+-- A kicked membership stays as a denial record and cannot be self-deleted/reactivated.
+CREATE POLICY "Users can leave active project memberships"
   ON project_members FOR DELETE
-  USING (user_id = auth.uid());
+  USING (
+    user_id = auth.uid()
+    AND status IN ('active', 'inactive')
+  );
 
 -- GM can remove members
 CREATE POLICY "GM can remove members from their projects"
@@ -323,6 +377,131 @@ CREATE POLICY "GM can remove members from their projects"
       AND projects.gm_user_id = auth.uid()
     )
   );
+
+-- Joining by secret code is the only authenticated self-service path that can create
+-- an active player membership. It does not accept role/status/user/project IDs from the client.
+CREATE OR REPLACE FUNCTION public.join_project_by_code(
+  p_code TEXT,
+  p_character_id UUID DEFAULT NULL
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_user_id UUID := auth.uid();
+  v_project_id UUID;
+  v_existing_status TEXT;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required' USING ERRCODE = '42501';
+  END IF;
+
+  IF NULLIF(BTRIM(p_code), '') IS NULL THEN
+    RAISE EXCEPTION 'Project code is required' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT id
+  INTO v_project_id
+  FROM public.projects
+  WHERE UPPER(code) = UPPER(BTRIM(p_code))
+    AND status = 'active'
+  LIMIT 1;
+
+  IF v_project_id IS NULL THEN
+    RAISE EXCEPTION 'Project not found' USING ERRCODE = 'P0002';
+  END IF;
+
+  SELECT status
+  INTO v_existing_status
+  FROM public.project_members
+  WHERE project_id = v_project_id
+    AND user_id = v_user_id;
+
+  IF FOUND THEN
+    RAISE EXCEPTION 'Project membership already exists with status %', v_existing_status
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF p_character_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1
+    FROM public.characters
+    WHERE id = p_character_id
+      AND owner_user_id = v_user_id
+      AND character_type = 'pc'
+  ) THEN
+    RAISE EXCEPTION 'Character is not owned by the current user' USING ERRCODE = '42501';
+  END IF;
+
+  INSERT INTO public.project_members (
+    project_id,
+    user_id,
+    character_id,
+    role,
+    status
+  ) VALUES (
+    v_project_id,
+    v_user_id,
+    p_character_id,
+    'player',
+    'active'
+  );
+
+  RETURN v_project_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.join_project_by_code(TEXT, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.join_project_by_code(TEXT, UUID) FROM anon;
+GRANT EXECUTE ON FUNCTION public.join_project_by_code(TEXT, UUID) TO authenticated;
+
+-- Users may change only the selected PC for their own active membership.
+CREATE OR REPLACE FUNCTION public.set_my_project_character(
+  p_project_id UUID,
+  p_character_id UUID DEFAULT NULL
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_user_id UUID := auth.uid();
+  v_member_id UUID;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required' USING ERRCODE = '42501';
+  END IF;
+
+  IF p_character_id IS NOT NULL AND NOT EXISTS (
+    SELECT 1
+    FROM public.characters
+    WHERE id = p_character_id
+      AND owner_user_id = v_user_id
+      AND character_type = 'pc'
+  ) THEN
+    RAISE EXCEPTION 'Character is not owned by the current user' USING ERRCODE = '42501';
+  END IF;
+
+  UPDATE public.project_members
+  SET character_id = p_character_id
+  WHERE project_id = p_project_id
+    AND user_id = v_user_id
+    AND status = 'active'
+  RETURNING id INTO v_member_id;
+
+  IF v_member_id IS NULL THEN
+    RAISE EXCEPTION 'Active project membership not found' USING ERRCODE = 'P0002';
+  END IF;
+
+  RETURN v_member_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.set_my_project_character(UUID, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.set_my_project_character(UUID, UUID) FROM anon;
+GRANT EXECUTE ON FUNCTION public.set_my_project_character(UUID, UUID) TO authenticated;
 
 -- ============================================
 -- 9. SESSIONS
@@ -341,7 +520,7 @@ CREATE POLICY "GM can view sessions in their projects"
     )
   );
 
--- Players can view sessions in projects they're members of
+-- Players can view sessions in projects they're active members of
 CREATE POLICY "Players can view sessions in their projects"
   ON sessions FOR SELECT
   USING (
@@ -414,7 +593,7 @@ CREATE POLICY "GM can manage combat in their projects"
     )
   );
 
--- Players can view combat in their projects
+-- Players can view combat in projects where they are active members
 CREATE POLICY "Players can view combat in their projects"
   ON combat_encounters FOR SELECT
   USING (
@@ -422,6 +601,7 @@ CREATE POLICY "Players can view combat in their projects"
       SELECT 1 FROM project_members
       WHERE project_members.project_id = combat_encounters.project_id
       AND project_members.user_id = auth.uid()
+      AND project_members.status = 'active'
     )
   );
 
@@ -441,6 +621,7 @@ CREATE POLICY "Users can view combat participants"
           SELECT 1 FROM project_members
           WHERE project_members.project_id = projects.id
           AND project_members.user_id = auth.uid()
+          AND project_members.status = 'active'
         )
       )
     )
@@ -516,6 +697,7 @@ CREATE POLICY "Users can view dice rolls in their sessions"
           SELECT 1 FROM project_members
           WHERE project_members.project_id = projects.id
           AND project_members.user_id = auth.uid()
+          AND project_members.status = 'active'
         )
       )
     ))
@@ -542,6 +724,7 @@ CREATE POLICY "Users can view accessible quests"
       SELECT 1 FROM project_members
       WHERE project_members.project_id = quests.project_id
       AND project_members.user_id = auth.uid()
+      AND project_members.status = 'active'
     ))
     OR
     creator_user_id = auth.uid()

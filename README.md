@@ -1,4 +1,3 @@
-
 # SagaDrive (SagaDrive)
 
 SagaDrive ist eine webbasierte Rollenspiel-Plattform für Spielleitungen und Spieler, um Kampagnen gemeinsam zu planen und zu spielen. Das Tool bündelt zentrale Bereiche wie Projekte/Kampagnen, Charakterverwaltung, Sessions, Rulesets und einen Marketplace in einer Oberfläche.
@@ -21,6 +20,7 @@ https://www.figma.com/design/XyboDSHba8TNFw0Bb5uUs4/SagaDrive
 
 - Node.js 20+ (empfohlen: aktuelle LTS)
 - npm 10+
+- Deno LTS für lokale `npm run test-gate`-Prüfungen, sobald `supabase/functions/**/*.ts` im Branch-Diff geändert wurde
 
 ## Lokale Entwicklung
 
@@ -56,6 +56,81 @@ Output-Verzeichnis:
 
 - `build/`
 
+## Character-Lore-KI
+
+Der CharacterEditor besitzt eine Hintergrundgeschichten-Pipeline. Die UI erzeugt einen typisierten Character-Context; die Supabase Edge Function `character-lore` baut daraus serverseitig den versionierten Prompt und ruft den konfigurierten Provider auf. API-Keys werden nie an den Browser ausgeliefert.
+
+Im BG-Tab kann optional ein für den eingeloggten User sichtbares Projekt als **Kampagnen-Lore** gewählt werden. Der Browser sendet dabei `projectId` und, falls vorhanden, die verknüpfte `worldId`. Diese IDs sind nur untrusted Kontext-Hinweise: Die Edge Function verifiziert Projektmitgliedschaft bzw. GM-Rechte und die Projekt-Welt-Zuordnung erneut serverseitig, bevor Lore gelesen wird. Ohne Auswahl bleibt die Generierung setting-neutral.
+
+Projektmitgliedschaft ist dabei selbst Teil der Sicherheitsgrenze. `supabase/migrations/004_project_membership_security.sql` entfernt browserseitige Schreibrechte auf `project_id`, `user_id`, `role` und `status`. Self-Service-Beitritt läuft ausschließlich über die `SECURITY DEFINER`-RPC `join_project_by_code`; die eigene Charakterzuordnung über `set_my_project_character`. Gekickte Mitgliedschaften können sich nicht selbst reaktivieren oder löschen. Die Migration härtet auch Legacy-Ressourcen-Policies auf aktive Mitgliedschaften und erzwingt eine case-insensitiv eindeutige Projektcode-Identität.
+
+Unterstützte Provider:
+
+- `ollama`
+- `openai-compatible`
+
+Relevante Server-Variablen:
+
+```bash
+CHARACTER_AI_PROVIDER=ollama
+# CHARACTER_AI_MODEL=llama3.2
+# CHARACTER_AI_BASE_URL=http://ollama:11434
+# CHARACTER_AI_API_KEY=
+CHARACTER_AI_RATE_LIMIT_PER_MINUTE=6
+# CORS fail-closed: localhost only when unset; set exact origin(s) for production
+CHARACTER_AI_ALLOWED_ORIGIN=http://localhost:3004
+```
+
+Für Ollama können `OLLAMA_MODEL` und `OLLAMA_HOST` als Fallback verwendet werden. Bei `openai-compatible` sind `CHARACTER_AI_BASE_URL`, `CHARACTER_AI_API_KEY` und ein Modell erforderlich. `CHARACTER_AI_ALLOWED_ORIGIN` defaultet **nicht** auf `*`.
+
+`CHARACTER_AI_RATE_LIMIT_PER_MINUTE` wird nicht pro Edge-Process im Speicher gezählt. Die Migration `supabase/migrations/003_character_lore_rate_limits.sql` legt einen persistenten, atomaren Postgres-Limiter an. Jede authentifizierte User-ID teilt dadurch dasselbe Minutenkontingent über alle Edge-Runtime-Instanzen hinweg. Die RPC ist nur für `service_role` ausführbar. Ist der persistente Limiter nicht verfügbar oder nicht migriert, schlägt `character-lore` vor dem Provider-Aufruf fail-closed mit `503` fehl.
+
+Der Prompt liegt versioniert unter `supabase/functions/_shared/character-lore-prompt.ts`. D&D 5.5e bleibt ohne autorisierten Welt-Kontext setting-neutral. SagaDrive Core verwendet die gewählten Character- und Setting-Parameter als Lore-Rahmen. Notizen aus dem Notes-Tab werden bewusst nicht an die Generierung übertragen.
+
+Das im CharacterEditor gewählte Regelset wird unabhängig vom optionalen `ruleset_id` als stabiler Editor-Key gespeichert. `ruleset_key` enthält `sagadrive-core` oder `dnd-5.5e`; bei D&D 5.5e wird der gewählte PHB-Hintergrund zusätzlich in `dnd_background` gespeichert. `background_story` bleibt davon getrennt und enthält ausschließlich die freie bzw. generierte Charakter-Lore.
+
+Character-Portraits werden über denselben konfigurierten Supabase-Client direkt in den privaten Storage-Bucket `character-portraits` geladen. Dadurch funktioniert `Portrait erzeugen` sowohl gegen Hosted Supabase als auch im dokumentierten Self-Host-Stack mit `VITE_SUPABASE_URL`. Migration `006_character_portrait_storage.sql` legt den privaten Bucket mit 5-MB-/MIME-Limits an und erlaubt authentifizierten Nutzern ausschließlich Zugriff auf Objekte unter ihrem eigenen User-ID-Pfad. Der CharacterEditor speichert weiterhin eine signierte Portrait-URL.
+
+Für den aktuellen Character-/Lore-Stand sind bei bestehenden Datenbanken diese Migrationen in Reihenfolge erforderlich:
+
+```text
+002_character_trait_arrays.sql
+003_character_lore_rate_limits.sql
+004_project_membership_security.sql
+005_character_ruleset_metadata.sql
+006_character_portrait_storage.sql
+```
+
+`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz und `006` richtet den privaten, owner-scoped Portrait-Storage ein. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
+
+## Quality Gates
+
+GitHub Actions führt auf Pushes sowie auf Pull Requests gegen `main` die technischen und semantischen Gates aus:
+
+```bash
+npm run test-gate
+npm run composition-gate
+```
+
+Zusätzlich läuft nach einem erfolgreichen Test Gate ein Chromium-Playwright-Job mit:
+
+```bash
+npm run test:e2e
+```
+
+Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `character-editor-browser-evidence` hochgeladen.
+
+Lokal kann dieselbe Browser-Regression ausgeführt werden:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+`test-gate` führt die technischen Checks aus: diff-spezifischer Typed-Strict-Lint, Typecheck, Produktions-Build, `deno check` für geänderte Supabase-Edge-Function-TypeScript-Dateien, Deno-Tests, den Project-Membership-Security-Contract, den Character-Editor-Regression-Contract und den Secrets-Diff-Scan. GitHub Actions stellt dafür Deno LTS über `denoland/setup-deno@v2` bereit. `npm audit --omit=dev` wird zusätzlich sichtbar protokolliert.
+
+`composition-gate` prüft die Bedeutung über Modul-/Service-/Backend-Hops. Reine Docs-/Tooling-Diffs und sichere Single-Hop-Diffs werden dokumentiert übersprungen. Bei Multi-Hop-, Persistenz-, Worker-, Queue-, Webhook- oder Side-Effect-relevanten Änderungen muss ein aktueller Proof unter `.qa/runs/composition-gate-<slug>.md` mit `CLEAR` oder begründetem `SKIPPED` vorliegen.
+
 ## Wichtige Projektstruktur
 
 - `src/` – Haupt-Frontend-Code
@@ -81,4 +156,3 @@ Output-Verzeichnis:
 
 - Beim Start mit `npm run dev` öffnet Vite automatisch den Browser (`server.open = true`).
 - Falls Port `3004` lokal belegt ist, den belegenden Prozess beenden oder den Port in `vite.config.ts` anpassen.
-  

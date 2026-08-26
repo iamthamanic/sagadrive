@@ -1,0 +1,28 @@
+language: de
+app:
+  type: web
+  framework: react-vite
+  devCommand: npm run dev
+  buildCommand: npm run build
+  port: 3004
+checksCommand: npm run test-gate
+typedStrict:
+  languages:
+    - typescript
+testGate:
+  profile: vite-react
+  depthDefault: standard
+  runner: scripts
+  always:
+    - typedStrict
+    - rgSecretsDiff
+  optional:
+    - npmAudit
+    - e2e
+  never:
+    - aiReview
+    - explanationCheck
+    - fallow
+    - updateReadme
+    - mutation
+e2eCommand: npm run test:e2e

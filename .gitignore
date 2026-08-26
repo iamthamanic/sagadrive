@@ -31,5 +31,10 @@ npm-debug.log*
 *.temp
 .cache/
 
+# Playwright / QA artifacts
+playwright-report/
+.qa/test-results/
+test-results/
+
 # Docker
 .docker/

@@ -1,11 +1,20 @@
 import { supabase } from '../../../lib/supabase';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+import { normalizeCharacterAppearance } from '../avatar';
 import type {
   CharacterDto,
   CharacterVm,
   CreateCharacterDto,
   UpdateCharacterDto,
 } from '../types/character.types';
+
+const CHARACTER_PORTRAIT_BUCKET = 'character-portraits';
+const CHARACTER_PORTRAIT_MAX_BYTES = 5 * 1024 * 1024;
+const CHARACTER_PORTRAIT_MIME_EXTENSIONS: Readonly<Record<string, string>> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
 
 /**
  * Character Service
@@ -14,18 +23,49 @@ import type {
 class CharacterService {
   private readonly tableName = 'characters';
 
+  private normalizeTextBlocks(value: unknown): string[] {
+    if (Array.isArray(value)) {
+      return Array.from(
+        new Set(
+          value
+            .filter((entry): entry is string => typeof entry === 'string')
+            .map((entry) => entry.trim())
+            .filter(Boolean),
+        ),
+      );
+    }
+
+    if (typeof value === 'string') {
+      const normalized = value.trim();
+      return normalized ? [normalized] : [];
+    }
+
+    return [];
+  }
+
   /**
    * Map DTO to View Model
    */
   private mapToViewModel(dto: CharacterDto): CharacterVm {
+    const rulesetKey = dto.ruleset_key === 'dnd-5.5e' ? 'dnd-5.5e' : 'sagadrive-core';
     return {
       id: dto.id,
       name: dto.name,
       description: dto.description,
       class: dto.class,
       race: dto.race,
+      rulesetKey,
+      dndBackground:
+        rulesetKey === 'dnd-5.5e' && typeof dto.dnd_background === 'string'
+          ? dto.dnd_background
+          : undefined,
       level: dto.level,
-      appearance: dto.appearance,
+      backgroundStory: dto.background_story,
+      personalityTraits: this.normalizeTextBlocks(dto.personality_traits),
+      ideals: this.normalizeTextBlocks(dto.ideals),
+      bonds: this.normalizeTextBlocks(dto.bonds),
+      flaws: this.normalizeTextBlocks(dto.flaws),
+      appearance: normalizeCharacterAppearance(dto.appearance),
       attributes: dto.attributes,
       abilities: dto.abilities || [],
       inventory: dto.inventory || [],
@@ -36,20 +76,28 @@ class CharacterService {
     };
   }
 
-  /**
-   * Get all characters for current user
-   */
-  async getUserCharacters(): Promise<CharacterVm[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+  private async getAuthenticatedUserId(): Promise<string> {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
       throw new Error('User not authenticated');
     }
 
+    return user.id;
+  }
+
+  /**
+   * Get all characters for current user
+   */
+  async getUserCharacters(): Promise<CharacterVm[]> {
+    const userId = await this.getAuthenticatedUserId();
+
     const { data, error } = await supabase
       .from(this.tableName)
       .select('*')
-      .eq('owner_user_id', user.id)
+      .eq('owner_user_id', userId)
       .eq('character_type', 'pc')
       .order('created_at', { ascending: false });
 
@@ -57,17 +105,19 @@ class CharacterService {
       throw new Error(`Failed to fetch characters: ${error.message}`);
     }
 
-    return (data || []).map(this.mapToViewModel);
+    return (data || []).map((character) => this.mapToViewModel(character as CharacterDto));
   }
 
   /**
    * Get single character by ID
    */
   async getCharacterById(id: string): Promise<CharacterVm> {
+    const userId = await this.getAuthenticatedUserId();
     const { data, error } = await supabase
       .from(this.tableName)
       .select('*')
       .eq('id', id)
+      .eq('owner_user_id', userId)
       .single();
 
     if (error) {
@@ -78,48 +128,44 @@ class CharacterService {
       throw new Error('Character not found');
     }
 
-    return this.mapToViewModel(data);
+    return this.mapToViewModel(data as CharacterDto);
   }
 
   /**
    * Create new character
    */
   async createCharacter(payload: CreateCharacterDto): Promise<CharacterVm> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    const userId = await this.getAuthenticatedUserId();
+    const rulesetKey = payload.ruleset_key ?? 'sagadrive-core';
 
     const characterData: Partial<CharacterDto> = {
-      owner_user_id: user.id,
+      owner_user_id: userId,
       character_type: 'pc',
       name: payload.name,
       description: payload.description,
       class: payload.class,
       race: payload.race,
+      ruleset_key: rulesetKey,
+      dnd_background: rulesetKey === 'dnd-5.5e' ? payload.dnd_background ?? null : null,
       level: payload.level || 1,
-      appearance: payload.appearance || {
-        body_size: 50,
-        height: 50,
-        face_features: 'default',
-        hair_style: 'short',
-        hair_color: '#000000',
-        skin_tone: '#F5E6D3',
-        clothing: 'casual',
+      background_story: payload.background_story,
+      personality_traits: payload.personality_traits,
+      ideals: payload.ideals,
+      bonds: payload.bonds,
+      flaws: payload.flaws,
+      appearance: normalizeCharacterAppearance(payload.appearance),
+      attributes: {
+        strength: payload.attributes?.strength ?? 10,
+        dexterity: payload.attributes?.dexterity ?? 10,
+        constitution: payload.attributes?.constitution ?? 10,
+        intelligence: payload.attributes?.intelligence ?? 10,
+        wisdom: payload.attributes?.wisdom ?? 10,
+        charisma: payload.attributes?.charisma ?? 10,
       },
-      attributes: payload.attributes || {
-        strength: 10,
-        dexterity: 10,
-        constitution: 10,
-        intelligence: 10,
-        wisdom: 10,
-        charisma: 10,
-      },
-      abilities: [],
-      inventory: [],
+      abilities: payload.abilities ?? [],
+      inventory: payload.inventory ?? [],
       emotion_profiles: [],
-      portrait_url: payload.portrait_url || null,
+      portrait_url: payload.portrait_url || undefined,
     };
 
     const { data, error } = await supabase
@@ -132,20 +178,35 @@ class CharacterService {
       throw new Error(`Failed to create character: ${error.message}`);
     }
 
-    return this.mapToViewModel(data);
+    return this.mapToViewModel(data as CharacterDto);
   }
 
   /**
    * Update existing character
    */
   async updateCharacter(id: string, payload: UpdateCharacterDto): Promise<CharacterVm> {
+    const userId = await this.getAuthenticatedUserId();
+    const rulesetPatch = payload.ruleset_key
+      ? {
+          ruleset_key: payload.ruleset_key,
+          dnd_background:
+            payload.ruleset_key === 'dnd-5.5e' ? payload.dnd_background ?? null : null,
+        }
+      : {};
+    const updatePayload: UpdateCharacterDto & { updated_at: string } = {
+      ...payload,
+      ...rulesetPatch,
+      ...(payload.appearance
+        ? { appearance: normalizeCharacterAppearance(payload.appearance) }
+        : {}),
+      updated_at: new Date().toISOString(),
+    };
+
     const { data, error } = await supabase
       .from(this.tableName)
-      .update({
-        ...payload,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', id)
+      .eq('owner_user_id', userId)
       .select()
       .single();
 
@@ -153,17 +214,19 @@ class CharacterService {
       throw new Error(`Failed to update character: ${error.message}`);
     }
 
-    return this.mapToViewModel(data);
+    return this.mapToViewModel(data as CharacterDto);
   }
 
   /**
    * Delete character
    */
   async deleteCharacter(id: string): Promise<void> {
+    const userId = await this.getAuthenticatedUserId();
     const { error } = await supabase
       .from(this.tableName)
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('owner_user_id', userId);
 
     if (error) {
       throw new Error(`Failed to delete character: ${error.message}`);
@@ -174,16 +237,12 @@ class CharacterService {
    * Search characters by name
    */
   async searchCharacters(query: string): Promise<CharacterVm[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    const userId = await this.getAuthenticatedUserId();
 
     const { data, error } = await supabase
       .from(this.tableName)
       .select('*')
-      .eq('owner_user_id', user.id)
+      .eq('owner_user_id', userId)
       .eq('character_type', 'pc')
       .ilike('name', `%${query}%`)
       .order('created_at', { ascending: false });
@@ -192,40 +251,49 @@ class CharacterService {
       throw new Error(`Failed to search characters: ${error.message}`);
     }
 
-    return (data || []).map(this.mapToViewModel);
+    return (data || []).map((character) => this.mapToViewModel(character as CharacterDto));
   }
 
   /**
-   * Upload character portrait image
+   * Upload character portrait image through the configured Supabase Storage endpoint.
+   * Migration 006 keeps the bucket private and limits each user to their own folder.
    */
   async uploadPortrait(file: File): Promise<string> {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error('User not authenticated');
+    const userId = await this.getAuthenticatedUserId();
+    const extension = CHARACTER_PORTRAIT_MIME_EXTENSIONS[file.type];
+
+    if (!extension) {
+      throw new Error('Invalid file type. Only PNG, JPEG, WEBP and GIF images are allowed.');
+    }
+    if (file.size > CHARACTER_PORTRAIT_MAX_BYTES) {
+      throw new Error('File too large. Maximum size is 5MB.');
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
+    const filePath = `${userId}/${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from(CHARACTER_PORTRAIT_BUCKET)
+      .upload(filePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
 
-    const response = await fetch(
-      `https://${projectId}.supabase.co/functions/v1/make-server-9f6fb44c/characters/upload-portrait`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: formData,
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to upload portrait');
+    if (uploadError) {
+      throw new Error(`Failed to upload portrait: ${uploadError.message}`);
     }
 
-    const { url } = await response.json();
-    return url;
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from(CHARACTER_PORTRAIT_BUCKET)
+      .createSignedUrl(filePath, 31_536_000);
+
+    if (signedUrlError || !signedUrlData?.signedUrl) {
+      throw new Error(
+        signedUrlError
+          ? `Failed to create portrait URL: ${signedUrlError.message}`
+          : 'Failed to create portrait URL',
+      );
+    }
+
+    return signedUrlData.signedUrl;
   }
 }
 

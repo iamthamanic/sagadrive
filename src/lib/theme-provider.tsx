@@ -10,7 +10,8 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('system');
+  // Default always dark — light only via explicit user toggle
+  const [theme, setTheme] = useState<Theme>('dark');
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -38,7 +39,7 @@ export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {
     // Return default if not in context (for compatibility)
-    return { theme: 'system' as Theme, setTheme: () => {} };
+    return { theme: 'dark' as Theme, setTheme: () => {} };
   }
   return context;
 }

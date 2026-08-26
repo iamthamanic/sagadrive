@@ -6,10 +6,18 @@ import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
 import { User, Bell, Palette, Volume2, Languages, LogOut } from 'lucide-react';
 import { useAuth } from '../lib/auth-context';
+import { useTheme } from '../lib/theme-provider';
 import { toast } from 'sonner';
 
+// Profile & settings view — includes theme toggle (default dark)
 export function Profile() {
   const { user, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const isDarkMode =
+    theme === 'dark' ||
+    (theme === 'system' &&
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   const handleSignOut = async () => {
     await signOut();
@@ -101,7 +109,11 @@ export function Profile() {
                 <p className="font-medium text-sm md:text-base">Dark Mode</p>
                 <p className="text-xs md:text-sm text-muted-foreground">Dunkles Farbschema verwenden</p>
               </div>
-              <Switch />
+              <Switch
+                checked={isDarkMode}
+                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                aria-label="Dark Mode umschalten"
+              />
             </div>
             <Separator />
             <div className="flex items-center justify-between">
