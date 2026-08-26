@@ -89,6 +89,8 @@ Der Prompt liegt versioniert unter `supabase/functions/_shared/character-lore-pr
 
 Das im CharacterEditor gewählte Regelset wird unabhängig vom optionalen `ruleset_id` als stabiler Editor-Key gespeichert. `ruleset_key` enthält `sagadrive-core` oder `dnd-5.5e`; bei D&D 5.5e wird der gewählte PHB-Hintergrund zusätzlich in `dnd_background` gespeichert. `background_story` bleibt davon getrennt und enthält ausschließlich die freie bzw. generierte Charakter-Lore.
 
+Character-Portraits werden über denselben konfigurierten Supabase-Client direkt in den privaten Storage-Bucket `character-portraits` geladen. Dadurch funktioniert `Portrait erzeugen` sowohl gegen Hosted Supabase als auch im dokumentierten Self-Host-Stack mit `VITE_SUPABASE_URL`. Migration `006_character_portrait_storage.sql` legt den privaten Bucket mit 5-MB-/MIME-Limits an und erlaubt authentifizierten Nutzern ausschließlich Zugriff auf Objekte unter ihrem eigenen User-ID-Pfad. Der CharacterEditor speichert weiterhin eine signierte Portrait-URL.
+
 Für den aktuellen Character-/Lore-Stand sind bei bestehenden Datenbanken diese Migrationen in Reihenfolge erforderlich:
 
 ```text
@@ -96,9 +98,10 @@ Für den aktuellen Character-/Lore-Stand sind bei bestehenden Datenbanken diese 
 003_character_lore_rate_limits.sql
 004_project_membership_security.sql
 005_character_ruleset_metadata.sql
+006_character_portrait_storage.sql
 ```
 
-`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis und `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
+`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz und `006` richtet den privaten, owner-scoped Portrait-Storage ein. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
 
 ## Quality Gates
 
