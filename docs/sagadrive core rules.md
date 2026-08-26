@@ -2,8 +2,8 @@
 
 > **Dokumentstatus:** Lebender Regeldesign-Entwurf  
 > **Stand:** 26. August 2026  
-> **Zuletzt abgeschlossener Entscheidungsblock:** 5.7 – Sprachen, Werkzeuge und Berechtigungen  
-> **Nächster Arbeitsblock:** 5.8 – Vollständige Fertigkeitsbeschreibungen  
+> **Zuletzt abgeschlossener Entscheidungsblock:** 5.8.1 – Athletik  
+> **Nächster Arbeitsblock:** 5.8.2 – Akrobatik  
 > **Ziel:** Universelles, analog vollständig spielbares Kernregelsystem mit optionalen digitalen Erweiterungen
 
 ## Verwendung dieses Dokuments
@@ -575,19 +575,107 @@ Eine fehlende Berechtigung erschwert nicht automatisch die eigentliche Fertigkei
 
 ### 5.8 Vollständige Fertigkeitsbeschreibungen
 
+#### 5.8.1 Athletik
+
+**Standardattribut:** Stärke
+
+Athletik beschreibt trainierte körperliche Bewegung und die kontrollierte Anwendung eigener Körperkraft gegen Entfernungen, Höhen, Strömungen, Lasten und unbelebte Hindernisse.
+
+Typische Anwendungen sind:
+
+- klettern,
+- schwimmen,
+- springen,
+- sprinten,
+- tauchen,
+- schwere Gegenstände heben oder bewegen,
+- Türen und andere Hindernisse gewaltsam öffnen,
+- sich mit Körperkraft festhalten,
+- eine Last kontrolliert tragen oder ziehen,
+- sich mit Kraft aus einer Fesselung oder einem Griff lösen.
+
+Eine normale körperliche Bewegung benötigt keine Probe. Gewürfelt wird nur bei Gefahr, Zeitdruck, außergewöhnlicher Schwierigkeit oder relevanten Folgen.
+
+##### Handlungskategorien
+
+| Kategorie | Beispiele |
+|---|---|
+| Automatisch | Leiter hinaufsteigen, kurze Strecke laufen, in ruhigem Wasser schwimmen, gewöhnliche Last bewegen |
+| Gewöhnlich | Schwierige Oberfläche erklimmen, über eine breite Lücke springen, gegen eine Strömung schwimmen, eine verkeilte Tür aufdrücken |
+| Trainiert | Gefährliche Kletter- oder Wasserrettung, eine andere Person unter schwierigen Bedingungen transportieren oder sichern |
+| Fachhandlung | Technische Extremkletterei, Höhlen- oder Strömungsrettung, komplexer Rettungstauchgang; benötigt passende Spezialisierung |
+
+Untrainierte Figuren dürfen alle gewöhnlichen Anwendungen versuchen. Training wird nur vorausgesetzt, wenn nicht bloß Kraft, sondern zuverlässig erlernte Bewegungs- oder Rettungstechnik erforderlich ist.
+
+##### Alternative Attribute
+
+Außerhalb des direkten Kampfes kann Ausdauer mit Athletik verwendet werden, wenn langfristige körperliche Leistung statt kurzfristiger Kraft entscheidend ist.
+
+Beispiele sind Langstreckenschwimmen, Marathon, mehrstündiges Klettern oder langes Halten und Ziehen einer Last.
+
+Eine reine Ausdauerprobe wird verwendet, wenn keine sportliche Technik entscheidend ist, beispielsweise um Erschöpfung zu widerstehen, Luft anzuhalten, extreme Temperaturen zu ertragen oder trotz Schlafmangels wach zu bleiben.
+
+Geschicklichkeit wird nicht als alternatives Attribut verwendet, um Akrobatik zu ersetzen.
+
+##### Abgrenzungen
+
+| Situation | Regel |
+|---|---|
+| Entfernung, Höhe oder Kraft überwinden | Athletik |
+| Balance, Körperkontrolle oder präzise Landung | Akrobatik |
+| Körperliche Belastung lediglich aushalten | Ausdauer |
+| Angriff oder Manöver gegen einen aktiven Gegner | Nahkampf |
+| Sich mit Kraft aus einem Griff lösen | Athletik |
+| Sich durch Beweglichkeit aus einem Griff lösen | Akrobatik |
+| Kletterroute oder sicheren Weg bestimmen | Überleben |
+| Seilzug, Sicherungsgerät oder Struktur berechnen | Technik |
+
+Ein Hindernis erzeugt nicht automatisch mehrere Proben. Beim Sprung über eine Häuserschlucht wird normalerweise nur Athletik gewürfelt. Eine zusätzliche Akrobatikprobe für die Landung ist nur zulässig, wenn die Landung ein eigenständiges Hindernis mit eigener Konsequenz darstellt.
+
+##### Direkter Kampf
+
+Athletik ersetzt Nahkampf nicht.
+
+Das Einleiten von Griffen, Schubsen, Zu-Fall-Bringen und vergleichbaren Kampfmanövern verwendet Nahkampf. Athletik kann verwendet werden, um sich mit Körperkraft aus einem Griff oder einer körperlichen Behinderung zu lösen, wenn das jeweilige Kampfmanöver dies ausdrücklich vorsieht.
+
+##### Spezialisierungen
+
+Geeignete Spezialisierungen sind:
+
+- Klettern
+- Schwimmen
+- Tauchen
+- Springen
+- Sprinten
+- Kraftakt
+- Rettung
+
+Eine Spezialisierung muss eng genug bleiben. Bewegung oder Sport sind als Spezialisierungen zu breit.
+
+##### Erfolgsgrade
+
+| Erfolgsgrad | Ergebnis |
+|---|---|
+| Kritischer Erfolg | Ziel erreicht; zusätzlich schneller, weiter, sicherer oder ohne erwarteten Ressourcenverlust |
+| Erfolg | Körperliches Ziel wird wie beabsichtigt erreicht |
+| Fehlschlag | Kein vollständiger Fortschritt; Zeitverlust, schlechtere Position oder vorher benannte Komplikation |
+| Kritischer Fehlschlag | Deutliche Verschlechterung wie Absturz, Kontrollverlust, Fallenlassen einer Last oder Trennung von der Gruppe |
+
+Schaden, Erschöpfung oder Absturz entstehen nur, wenn diese Gefahr vor der Probe erkennbar war. Ein gewöhnlicher Fehlschlag verursacht nicht willkürlich körperlichen Schaden.
+
+##### Weltübergreifende Beispiele
+
+| Welt | Beispiel |
+|---|---|
+| Fantasy | Burgruine erklimmen, gegen einen reißenden Fluss schwimmen, ein Fallgitter anheben |
+| Gegenwart | Baugerüst erklimmen, eine verletzte Person tragen, eine blockierte Tür aufdrücken |
+| Science-Fiction | Außenhülle eines Raumschiffs entlangklettern, sich bei wechselnder Gravitation festhalten, eine verklemmte Schleuse manuell bewegen |
+
+#### 5.8.2 Akrobatik
+
 **Status: offen – nächster Arbeitsblock**
 
-Für jede der 18 Fertigkeiten fehlen noch:
-
-- eine vollständige Definition,
-- klare Abgrenzungen zu ähnlichen Fertigkeiten,
-- gewöhnliche untrainierte Anwendungen,
-- trainierte Handlungen,
-- Fachhandlungen,
-- typische alternative Attribute außerhalb des direkten Kampfes,
-- Beispiel-Spezialisierungen,
-- typische Widerstände und Gegenfertigkeiten,
-- Beispiele für Fantasy, Gegenwart und Science-Fiction.
+Danach fehlen weiterhin die vollständigen Beschreibungen für Fingerfertigkeit, Heimlichkeit, Nahkampf, Fernkampf, Aufmerksamkeit, Menschenkenntnis, Überleben, Ermitteln, Wissen, Technik, Medizin, Steuern, Überzeugen, Täuschen, Einschüchtern und Auftreten.
 
 ---
 
@@ -917,4 +1005,5 @@ Die SagaDrive Core Rules gelten als vollständig, wenn:
 
 | Datum | Stand |
 |---|---|
+| 26.08.2026 | Athletik als umweltbezogene Bewegungs- und Kraftfertigkeit festgelegt; Kampfmanöver bleiben bei Nahkampf. Fortsetzungspunkt auf Akrobatik gesetzt. |
 | 26.08.2026 | Erster konsolidierter Entwurf. Verbindliche Entscheidungen aus den Blöcken 1 bis 5.7 übernommen. Offene Regelbereiche und Fortsetzungspunkt ergänzt. |
