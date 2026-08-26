@@ -45,7 +45,7 @@ function getDerivedStatHints(skillKey: SagaDriveSkillKey): string[] {
   if (skillKey === 'awareness') {
     return ['Trainierte Aufmerksamkeit zählt für Initiative (d20 + Wahrnehmung + Aufmerksamkeit + Erfahrungsbonus).'];
   }
-  if (skillKey === 'athletics' || skillKey === 'acrobatics') {
+  if (skillKey === 'athletics') {
     return ['Zählt für Manöverwiderstand zusammen mit Stärke bzw. Geschicklichkeit.'];
   }
   return [];

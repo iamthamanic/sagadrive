@@ -13,6 +13,40 @@ import { Profile } from "./components/Profile";
 import { RulesetsTest } from "./components/RulesetsTest";
 import { Toaster } from "./components/ui/sonner";
 
+type AppView =
+  | "dashboard"
+  | "character-editor"
+  | "adventure-editor"
+  | "gamemaster"
+  | "marketplace"
+  | "library"
+  | "profile"
+  | "join"
+  | "rulesets-test";
+
+declare global {
+  interface Window {
+    DEVTRACK_INSTANCE_ID?: string;
+    trackActivity?: (description: string) => void;
+  }
+}
+
+const APP_VIEWS = new Set<string>([
+  "dashboard",
+  "character-editor",
+  "adventure-editor",
+  "gamemaster",
+  "marketplace",
+  "library",
+  "profile",
+  "join",
+  "rulesets-test",
+]);
+
+function isAppView(view: string): view is AppView {
+  return APP_VIEWS.has(view);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // 📊 DevTrack Snippet - SagaDrive (DEBUG VERSION)
 // ═══════════════════════════════════════════════════════════════
@@ -25,12 +59,12 @@ import { Toaster } from "./components/ui/sonner";
 // ⚠️ STRONGER SINGLETON GUARD
 if (typeof window !== 'undefined') {
   // Check if already initialized
-  if ((window as any).DEVTRACK_INSTANCE_ID) {
-    console.warn('⚠️ DevTrack: Already initialized with instance ID:', (window as any).DEVTRACK_INSTANCE_ID, '- SKIPPING!');
+  if (window.DEVTRACK_INSTANCE_ID) {
+    console.warn('⚠️ DevTrack: Already initialized with instance ID:', window.DEVTRACK_INSTANCE_ID, '- SKIPPING!');
   } else {
     // Generate unique instance ID
     const instanceId = Math.random().toString(36).substring(7);
-    (window as any).DEVTRACK_INSTANCE_ID = instanceId;
+    window.DEVTRACK_INSTANCE_ID = instanceId;
     console.log('🆕 DevTrack: New instance created:', instanceId);
 
     const DEVTRACK_SNIPPET_KEY = '6b4e7b96-e392-42df-8dfc-ea581d599fca';
@@ -39,8 +73,8 @@ if (typeof window !== 'undefined') {
 
     let activeTime = 0;
     let sessionStart = Date.now();
-    let activityTimer: NodeJS.Timeout | null = null;
-    let reportTimer: NodeJS.Timeout | null = null;
+    let activityTimer: ReturnType<typeof setInterval> | null = null;
+    let reportTimer: ReturnType<typeof setInterval> | null = null;
     let inputCount = 0;
     let buttonClickCount = 0;
     let activityBuffer: string[] = [];
@@ -211,7 +245,7 @@ if (typeof window !== 'undefined') {
       }
       
       // Reset instance ID on cleanup
-      delete (window as any).DEVTRACK_INSTANCE_ID;
+      delete window.DEVTRACK_INSTANCE_ID;
       console.log('✅ DevTrack: Instance ID cleared');
     }
 
@@ -223,7 +257,7 @@ if (typeof window !== 'undefined') {
     trackClicks();
     
     // Expose trackActivity globally for components
-    (window as any).trackActivity = (description: string) => {
+    window.trackActivity = (description: string) => {
       hadActivityThisMinute = true;
       if (!activityBuffer.includes(description)) {
         activityBuffer.push(description);
@@ -280,7 +314,7 @@ if (typeof window !== 'undefined') {
 // ═══════════════════════════════════════════════════════════════
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<"dashboard" | "character-editor" | "adventure-editor" | "gamemaster" | "marketplace" | "library" | "profile" | "join" | "rulesets-test">("dashboard");
+  const [currentView, setCurrentView] = useState<AppView>("dashboard");
   const [inSession, setInSession] = useState(false);
   const [sessionRole, setSessionRole] = useState<"player" | "gamemaster" | null>(null);
 
@@ -288,7 +322,11 @@ export default function App() {
   const handleNavigate = (view: string) => {
     console.log('🚀 App: Navigation requested:', view);
     console.log('📍 App: Current view:', currentView);
-    setCurrentView(view as any);
+    if (!isAppView(view)) {
+      console.warn('⚠️ App: Unknown view:', view);
+      return;
+    }
+    setCurrentView(view);
     console.log('✅ App: Navigation state updated to:', view);
   };
 
@@ -313,7 +351,13 @@ export default function App() {
       case "profile":
         return <Profile />;
       case "join":
-        return <ProjectJoin />;
+        return (
+          <ProjectJoin
+            onBack={() => handleNavigate("dashboard")}
+            onJoinAsGM={() => undefined}
+            onJoinAsPlayer={() => undefined}
+          />
+        );
       case "rulesets-test":
         return <RulesetsTest />;
       default:

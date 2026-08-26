@@ -18,6 +18,7 @@ const config = {
   compilerOptions: {
     noEmit: true,
     allowImportingTsExtensions: true,
+    types: ['vite/client', 'react', 'react-dom'],
   },
   files: files.map((path) => `../${path}`),
   include: [],

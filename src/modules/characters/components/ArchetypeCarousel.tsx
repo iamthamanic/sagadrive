@@ -66,7 +66,9 @@ export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'a
       if (option && option.value !== selectedArchetype) onSelect(option.value);
     };
     api.on('select', handleSelect);
-    return () => api.off('select', handleSelect);
+    return () => {
+      api.off('select', handleSelect);
+    };
   }, [api, onSelect, options, selectedArchetype]);
 
   const handleCardClick = (index: number) => {

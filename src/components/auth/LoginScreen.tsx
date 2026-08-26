@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useAuth } from '../../lib/auth-context';
 import { useTheme } from '../../lib/theme-provider';
 import { Button } from '../ui/button';
@@ -27,7 +27,7 @@ export function LoginScreen() {
     window.matchMedia('(prefers-color-scheme: dark)').matches
   );
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
@@ -44,7 +44,7 @@ export function LoginScreen() {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
