@@ -1,5 +1,4 @@
 import { supabase } from '../../../lib/supabase';
-import { projectId } from '../../../utils/supabase/info';
 import { normalizeCharacterAppearance } from '../avatar';
 import type {
   CharacterDto,
@@ -7,6 +6,15 @@ import type {
   CreateCharacterDto,
   UpdateCharacterDto,
 } from '../types/character.types';
+
+const CHARACTER_PORTRAIT_BUCKET = 'character-portraits';
+const CHARACTER_PORTRAIT_MAX_BYTES = 5 * 1024 * 1024;
+const CHARACTER_PORTRAIT_MIME_EXTENSIONS: Readonly<Record<string, string>> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
 
 /**
  * Character Service
@@ -247,54 +255,45 @@ class CharacterService {
   }
 
   /**
-   * Upload character portrait image
+   * Upload character portrait image through the configured Supabase Storage endpoint.
+   * Migration 006 keeps the bucket private and limits each user to their own folder.
    */
   async uploadPortrait(file: File): Promise<string> {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const userId = await this.getAuthenticatedUserId();
+    const extension = CHARACTER_PORTRAIT_MIME_EXTENSIONS[file.type];
 
-    if (!session) {
-      throw new Error('User not authenticated');
+    if (!extension) {
+      throw new Error('Invalid file type. Only PNG, JPEG, WEBP and GIF images are allowed.');
+    }
+    if (file.size > CHARACTER_PORTRAIT_MAX_BYTES) {
+      throw new Error('File too large. Maximum size is 5MB.');
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
+    const filePath = `${userId}/${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from(CHARACTER_PORTRAIT_BUCKET)
+      .upload(filePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
 
-    const response = await fetch(
-      `https://${projectId}.supabase.co/functions/v1/make-server-9f6fb44c/characters/upload-portrait`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: formData,
-      },
-    );
-
-    if (!response.ok) {
-      const responseBody: unknown = await response.json();
-      const message =
-        typeof responseBody === 'object' &&
-        responseBody !== null &&
-        'error' in responseBody &&
-        typeof responseBody.error === 'string'
-          ? responseBody.error
-          : 'Failed to upload portrait';
-      throw new Error(message);
+    if (uploadError) {
+      throw new Error(`Failed to upload portrait: ${uploadError.message}`);
     }
 
-    const responseBody: unknown = await response.json();
-    if (
-      typeof responseBody !== 'object' ||
-      responseBody === null ||
-      !('url' in responseBody) ||
-      typeof responseBody.url !== 'string'
-    ) {
-      throw new Error('Portrait upload returned an invalid response');
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from(CHARACTER_PORTRAIT_BUCKET)
+      .createSignedUrl(filePath, 31_536_000);
+
+    if (signedUrlError || !signedUrlData?.signedUrl) {
+      throw new Error(
+        signedUrlError
+          ? `Failed to create portrait URL: ${signedUrlError.message}`
+          : 'Failed to create portrait URL',
+      );
     }
 
-    return responseBody.url;
+    return signedUrlData.signedUrl;
   }
 }
 
