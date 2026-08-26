@@ -43,12 +43,12 @@ Kanonisches Epic: **#18**
 | Issue | Bereich | Zweck | Startbedingung |
 |---:|---|---|---|
 | #19 | Kernwahrscheinlichkeiten | d20-Kurve, Zielwerte, EB, Spezialisierung, Vorteil/Nachteil, Sicherheitswert, Widerstände | kann unabhängig zuerst durchgeführt werden |
-| #20 | Charaktererschaffung & Progression | legale Builds, Caps, Archetypen, Essenzen, Spezies, Level 1–20 | beschlossene Core Rules reichen aus |
+| #20 | Charaktererschaffung & Progression | legale Builds, Caps, Archetypen, Essenzen, Spezies, Level 1–20 und direkt höherstufige Charaktere | beschlossene Core Rules reichen aus |
 | #21 | Character Editor als Regelabbildung | UI, Tooltips, Live-Validierung, Save/Reload gegen die Core Rules prüfen | nach funktionalem Character-Creation-/Tooltip-Stand; blockiert aktuelle UI-Arbeit nicht |
 | #22 | Kampf & Aktionsökonomie | Initiative, Aktionen, Reaktionen, Manöver, Deckung, Sicht, Reichweite | nach #19 |
 | #23 | Schaden, Rüstung, Heilung, Sterben | Attrition, Schutz, Durchdringung, 0 HP, Sterbend, Ruhe | nach #19 und #22 |
 | #24 | Gegner & Begegnungsbalance | Standardgegner, Schergen, Eliten, Bosse, Budgets, Boss-Aktionsökonomie | nach #22 und #23 |
-| #25 | Kräfte & Essenzen | Ränge I–V, alle fünf Essenzen, Kontrolle, Schaden, Dauer, Aufrechterhaltung | nach #19, #20 und #22 |
+| #25 | Kräfte & Essenzen | Ränge Novize bis Legende, alle fünf Essenzen, Kontrolle, Schaden, Dauer, Aufrechterhaltung | nach #19, #20 und #22 |
 | #26 | Drive & Momentum | Ressourcenfluss, Rerolls, Teamressource, deaktivierte Varianten | nach #19 |
 | #27 | Nichtkampf | Recherche, soziale Konflikte, Gemeinschaftsprojekte, Gefahren, Kontakte, Ruf | nach #19 |
 | #28 | 18 Fertigkeiten | Skill-Abgrenzungen, Fachhandlungen, Spezialisierungen, alternative Attribute | nach #19 |
@@ -77,6 +77,7 @@ d20 + Attribut + Fertigkeit + Erfahrungsbonus + Spezialisierung + ausdrückliche
 Prüfmatrix:
 
 - Stufen 1, 5, 9, 13, 17 und 20,
+- Ränge Novize, Spezialist, Experte, Meister und Legende,
 - Attribute 1 bis 5,
 - Fertigkeiten 0 bis zum jeweils erlaubten Cap,
 - untrainiert vs. trainiert,
@@ -129,17 +130,24 @@ Mindestens:
 - Speziesbudget,
 - Archetyp-Kernfähigkeit,
 - primäre Essenz,
+- erste Essenzmanifestation,
 - abgeleitete Werte,
-- Progression auf Stufe 5/10/15/20,
+- vollständige Progression von Stufe 1 bis 20,
+- Rangwechsel Novize → Spezialist → Experte → Meister → Legende,
+- direkte Charaktererschaffung auf mindestens Stufe 1, 5, 9, 13, 17 und 20,
+- zusätzliche direkte Builds auf Zwischenstufen, damit nicht nur Ranggrenzen funktionieren,
+- vollständige Zuteilung aller bis zur Zielstufe erworbenen Fertigkeitsentwicklungen, freien Fähigkeiten und Attributssteigerungen,
+- chronologisch erfüllbare Voraussetzungen bei direkt höherstufig erstellten Figuren,
+- nachvollziehbare Herkunft jeder Entwicklung über Stufe und Quelle,
 - zweiter/dritter/vierter Archetyp,
 - sekundäre Essenz,
-- Rank-II-bis-V-Voraussetzungen,
+- Voraussetzungen der Fähigkeitsränge Spezialist bis Legende,
 - Fertigkeitscaps,
 - Attributssteigerungen auf 8 und 16.
 
 ### Ziel
 
-Jeder Punkt eines Characters muss eine eindeutige Herkunft haben. Kein Build darf Regelgrenzen durch Reihenfolge, Überschneidung oder UI-Sonderlogik umgehen.
+Jeder Punkt eines Characters muss eine eindeutige Herkunft haben. Kein Build darf Regelgrenzen durch Reihenfolge, Überschneidung oder UI-Sonderlogik umgehen. Ein direkt höherstufig erstellter Charakter muss mechanisch demselben legalen Endzustand entsprechen können wie eine Figur, die tatsächlich von Stufe 1 bis zu dieser Stufe entwickelt wurde.
 
 ---
 
@@ -195,6 +203,7 @@ Die spätere Validierung beginnt, sobald die für Character Creation relevanten 
 
 ### Zu prüfen
 
+- Zielstufe 1–20 und automatisch abgeleiteter Rang,
 - Spezies,
 - Hintergrund,
 - Archetyp,
@@ -202,6 +211,8 @@ Die spätere Validierung beginnt, sobald die für Character Creation relevanten 
 - Attribute,
 - Fertigkeiten,
 - Spezialisierungen,
+- vollständige Entwicklungsbudgets bei direkt höherstufigen Figuren,
+- chronologische Voraussetzungskontrolle für Fähigkeiten, Archetypen und sekundäre Essenz,
 - abgeleitete Werte,
 - Drive/Momentum-Anzeige soweit im Editor relevant,
 - Save/Reload.
@@ -214,6 +225,7 @@ Für jedes Feld muss beantwortet werden:
 4. Werden ungewöhnliche, aber legale Builds zugelassen?
 5. Werden illegale Builds deterministisch verhindert?
 6. Kommen berechnete Werte aus derselben Regelquelle und nicht aus unabhängigen UI-Konstanten?
+7. Bleibt ein direkt höherstufig erstellter Build chronologisch legal und vollständig nachvollziehbar?
 
 Beispiel für einen wichtigen Regressionstest:
 
@@ -258,7 +270,7 @@ Zu beobachten:
 Testprofile:
 
 - niedrige/mittlere/hohe Ausdauer,
-- Band I, III und V,
+- Begegnungsränge Novize, Experte und Legende,
 - Schutz 0/1/2/3/5,
 - mit und ohne Durchdringung.
 
@@ -322,9 +334,13 @@ Gruppengrößen:
 - 5,
 - 6 Spielerfiguren.
 
-Bänder:
+Begegnungsränge:
 
-- I bis V.
+- Novize,
+- Spezialist,
+- Experte,
+- Meister,
+- Legende.
 
 Gegnertypen:
 
@@ -358,7 +374,7 @@ Die aktuelle Gegner- und Budgettabelle bleibt Playtestwert, bis diese Tests bela
 
 ## D1. Kräfte, Essenzen und Ränge – #25
 
-Für Rang I bis V repräsentative Fähigkeiten testen.
+Für die Ränge Novize, Spezialist, Experte, Meister und Legende repräsentative Fähigkeiten testen.
 
 Dimensionen:
 
@@ -383,7 +399,7 @@ Alle fünf Essenzen:
 
 Besonders kritisch:
 
-- Rang III bis V,
+- Experte bis Legende,
 - mehrere Ziele + Kontrolle + lange Dauer,
 - Aufrechterhaltung,
 - direkte Gegenwirkung,
@@ -570,6 +586,8 @@ alle relevanten Slices -> #31 analoger End-to-End-Playtest
 Die Validierungsplanung ist damit geparkt und nachvollziehbar. Die aktuelle Produktarbeit kann wieder auf den Character Editor zurückgehen:
 
 - Character Creation funktional fertigstellen,
+- Zielstufe und Rang korrekt aus dem Core ableiten,
+- höherstufige Charaktere mit vollständigen Entwicklungsbudgets baubar machen,
 - UI/UX sauber machen,
 - Tooltips auf Basis der neuen Core Rules einbauen,
 - Character-Datenmodell und Save/Reload korrekt machen,
@@ -590,4 +608,4 @@ Das Epic #18 kann geschlossen werden, wenn:
 - gefundene Regeländerungen erneut regressionsgetestet wurden,
 - mehrere vollständige analoge Playtests dokumentiert sind,
 - die Core Rules keine bekannten Widersprüche oder unvalidierten kritischen Zahlenbereiche mehr enthalten,
-- Character Creation, Kampf, Nichtkampf, Kräfte, Gegner und Module in mindestens mehreren repräsentativen Weltprofilen funktionieren.
+- Character Creation einschließlich direkt höherstufiger Figuren, Kampf, Nichtkampf, Kräfte, Gegner und Module in mindestens mehreren repräsentativen Weltprofilen funktionieren.
