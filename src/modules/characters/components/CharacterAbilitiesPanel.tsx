@@ -1,199 +1,61 @@
-import { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../../../components/ui/dialog';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
-import { Textarea } from '../../../components/ui/textarea';
+import { Badge } from '../../../components/ui/badge';
 import type { AbilityDto } from '../types/character.types';
-
-type AbilityType = AbilityDto['type'];
+import { RuleHelp } from './RuleHelp';
 
 interface CharacterAbilitiesPanelProps {
-  abilities: AbilityDto[];
-  onChange: (abilities: AbilityDto[]) => void;
+  abilities: readonly AbilityDto[];
 }
 
-const abilityTypeLabels: Record<AbilityType, string> = {
-  combat: 'Kampf',
-  magic: 'Zauber',
-  skill: 'Fähigkeit',
-};
-
-export function CharacterAbilitiesPanel({ abilities, onChange }: CharacterAbilitiesPanelProps) {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [type, setType] = useState<AbilityType>('skill');
-  const [cost, setCost] = useState(0);
-  const [effect, setEffect] = useState('');
-  const [validationError, setValidationError] = useState('');
-
-  const resetDraft = () => {
-    setName('');
-    setDescription('');
-    setType('skill');
-    setCost(0);
-    setEffect('');
-    setValidationError('');
-  };
-
-  const handleDialogChange = (open: boolean) => {
-    setDialogOpen(open);
-    if (!open) resetDraft();
-  };
-
-  const handleTypeChange = (value: string) => {
-    if (value === 'combat' || value === 'magic' || value === 'skill') {
-      setType(value);
-    }
-  };
-
-  const handleAddAbility = () => {
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      setValidationError('Bitte gib einen Namen für die Fähigkeit ein.');
-      return;
-    }
-
-    const nextAbility: AbilityDto = {
-      id: crypto.randomUUID(),
-      name: trimmedName,
-      description: description.trim(),
-      type,
-      cost: Math.max(0, cost),
-      effect: effect.trim(),
-    };
-
-    onChange([...abilities, nextAbility]);
-    setDialogOpen(false);
-    resetDraft();
-  };
-
-  const handleRemoveAbility = (abilityId: string) => {
-    onChange(abilities.filter((ability) => ability.id !== abilityId));
-  };
+export function CharacterAbilitiesPanel({ abilities }: CharacterAbilitiesPanelProps) {
+  if (abilities.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-10 text-center">
+        <p className="font-medium">Noch keine Kernfähigkeit</p>
+        <p className="mt-1 text-sm text-muted-foreground">Wähle im Info-Tab deinen Primärarchetyp. Seine Rang-I-Kernfähigkeit erscheint hier automatisch.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <Label>Fähigkeiten ({abilities.length})</Label>
-          <p className="text-xs text-muted-foreground">Kampfaktionen, Zauber und besondere Skills des Charakters.</p>
+          <p className="font-medium">Regelgebundene Fähigkeiten</p>
+          <p className="text-sm text-muted-foreground">Fähigkeiten entstehen aus Archetyp, Essenz und späteren Entwicklungswahlen. Sie werden nicht frei als Werteblöcke erfunden.</p>
         </div>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Fähigkeit hinzufügen
-        </Button>
+        <RuleHelp label="Fähigkeiten">
+          Jede SagaDrive-Fähigkeit definiert Quelle, Rang, Aktivierungsart, Auslöser, Ziel, Reichweite, Effekt, Dauer, Ressource oder Nutzungsbegrenzung und Skalierung. Auf Stufe 1 wird zunächst die Kernfähigkeit des Primärarchetyps vergeben.
+        </RuleHelp>
       </div>
 
-      {abilities.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-foreground/20 bg-muted/20 px-4 py-8 text-center">
-          <p className="font-medium">Noch keine Fähigkeiten</p>
-          <p className="mt-1 text-sm text-muted-foreground">Füge die erste Fähigkeit hinzu, damit sie beim Charakter gespeichert wird.</p>
-          <Button className="mt-4" onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Fähigkeit hinzufügen
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {abilities.map((ability) => (
-            <div key={ability.id} className="flex items-center justify-between gap-4 rounded-lg border border-foreground/15 bg-muted/20 p-3">
+      <div className="space-y-3">
+        {abilities.map((ability) => (
+          <article key={ability.id} className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <p className="truncate font-medium">{ability.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {abilityTypeLabels[ability.type]}{ability.cost > 0 ? ` · Kosten ${ability.cost}` : ''}
-                </p>
-                {ability.description && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{ability.description}</p>}
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="destructive"
-                onClick={() => handleRemoveAbility(ability.id)}
-                aria-label={`${ability.name} entfernen`}
-              >
-                <Trash2 className="h-4 w-4" />
-                Entfernen
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Fähigkeit hinzufügen</DialogTitle>
-            <DialogDescription>Lege die wichtigsten Daten für die neue Fähigkeit fest.</DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="ability-name">Name</Label>
-              <Input
-                id="ability-name"
-                value={name}
-                onChange={(event) => {
-                  setName(event.target.value);
-                  if (validationError) setValidationError('');
-                }}
-                placeholder="z. B. Feuerball"
-                aria-invalid={Boolean(validationError)}
-              />
-              {validationError && <p className="text-sm text-destructive">{validationError}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="ability-type">Typ</Label>
-                <Select value={type} onValueChange={handleTypeChange}>
-                  <SelectTrigger id="ability-type"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="combat">Kampf</SelectItem>
-                    <SelectItem value="magic">Zauber</SelectItem>
-                    <SelectItem value="skill">Fähigkeit</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ability-cost">Kosten</Label>
-                <Input
-                  id="ability-cost"
-                  type="number"
-                  min="0"
-                  value={cost}
-                  onChange={(event) => setCost(Math.max(0, Number.parseInt(event.target.value, 10) || 0))}
-                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-semibold">{ability.name}</h3>
+                  {ability.source && <Badge variant="outline">{ability.source}</Badge>}
+                  {ability.rank && <Badge>Rang {ability.rank}</Badge>}
+                  {ability.action_type && <Badge variant="secondary">{ability.action_type}</Badge>}
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">{ability.description}</p>
+                <p className="mt-3 text-sm leading-relaxed">{ability.effect}</p>
               </div>
             </div>
+            {(ability.usage_limit || (ability.tags && ability.tags.length > 0)) && (
+              <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-3">
+                {ability.usage_limit && <Badge variant="outline">{ability.usage_limit}</Badge>}
+                {ability.tags?.map((tag) => <Badge key={tag} variant="outline">{tag}</Badge>)}
+              </div>
+            )}
+          </article>
+        ))}
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="ability-description">Beschreibung</Label>
-              <Textarea id="ability-description" rows={3} value={description} onChange={(event) => setDescription(event.target.value)} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="ability-effect">Effekt</Label>
-              <Textarea id="ability-effect" rows={2} value={effect} onChange={(event) => setEffect(event.target.value)} />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => handleDialogChange(false)}>Abbrechen</Button>
-            <Button type="button" onClick={handleAddAbility}>Fähigkeit hinzufügen</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+        Weitere Essenzmanifestationen und Rang-II-bis-V-Fähigkeiten werden ergänzt, sobald der verbindliche Fähigkeitskatalog vorliegt. Es werden bewusst keine Platzhalter-Zauber erzeugt.
+      </div>
     </div>
   );
 }

@@ -1,10 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const EVIDENCE_DIR = '.qa/evidence/feat-character-studio-avatar';
+const EVIDENCE_DIR = '.qa/evidence/sagadrive-character-editor-core';
 
-async function ensureLoggedIn(page: import('@playwright/test').Page) {
+async function ensureLoggedIn(page: Page) {
   await page.goto('/');
   const loginTab = page.getByRole('tab', { name: 'Login' });
   if (await loginTab.count()) {
@@ -12,62 +12,48 @@ async function ensureLoggedIn(page: import('@playwright/test').Page) {
     await page.getByPlaceholder('••••••••').fill('1234');
     await page.getByRole('button', { name: 'Einloggen' }).click();
   }
-  await expect(page.getByRole('button', { name: 'Dashboard' }).first()).toBeVisible({
-    timeout: 15_000,
-  });
+  await expect(page.getByRole('button', { name: 'Dashboard' }).first()).toBeVisible({ timeout: 15_000 });
 }
 
-test.beforeAll(() => {
-  fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
-});
+test.beforeAll(() => { fs.mkdirSync(EVIDENCE_DIR, { recursive: true }); });
 
-test('character editor ruleset fields and BG composer', async ({ page }) => {
+test('character editor exposes the SagaDrive Core creation flow', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await ensureLoggedIn(page);
-
   await page.getByRole('button', { name: 'Charakter erstellen' }).first().click();
   await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Unbenannt' }).first()).toBeVisible();
+  await expect(page.getByText('SagaDrive Core').first()).toBeVisible();
+  await expect(page.getByRole('combobox', { name: /Regelset/i })).toHaveCount(0);
 
-  await page.screenshot({
-    path: path.join(EVIDENCE_DIR, '02-info-sagadrive-core.png'),
-    fullPage: true,
-  });
+  for (const tab of ['Info', 'Hintergrund', 'Werte', 'Fertigkeiten', 'Fähigkeiten', 'Look', 'Inventar', 'Notizen']) {
+    await expect(page.getByRole('tab', { name: new RegExp(tab, 'i') })).toBeVisible();
+  }
 
-  await expect(page.getByText('Archetyp').first()).toBeVisible();
-  await expect(page.getByText('Essenzprofil').first()).toBeVisible();
+  await expect(page.getByText('Primärarchetyp').first()).toBeVisible();
+  await expect(page.getByText('Primäre Essenz').first()).toBeVisible();
+  await expect(page.getByText('Wesenart').first()).toBeVisible();
+  await expect(page.getByText('Gebunden').first()).toBeVisible();
+  await expect(page.getByText('Paktbasiert')).toHaveCount(0);
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '01-info-core-tabs.png'), fullPage: true });
 
-  await page.getByRole('combobox', { name: /Regelset/i }).first().click();
-  await page.getByRole('option', { name: /Dungeons & Dragons 5\.5e/i }).click();
-  await expect(page.getByRole('combobox', { name: 'Klasse' }).first()).toBeVisible();
-  await expect(page.getByRole('combobox', { name: 'Spezies' }).first()).toBeVisible();
-  await expect(page.getByRole('combobox', { name: 'Hintergrund' }).first()).toBeVisible();
-  await expect(page.getByRole('combobox', { name: 'Essenzprofil' })).toHaveCount(0);
-  await expect(page.getByRole('combobox', { name: 'Archetyp' })).toHaveCount(0);
-  await expect(page.getByText(/D&D 5\.5e nutzt Klasse/i).first()).toBeVisible();
+  await page.getByRole('tab', { name: /Werte/i }).click();
+  await expect(page.getByText('Standardverteilung').first()).toBeVisible();
+  await expect(page.getByText('Ausdauer').first()).toBeVisible();
+  await expect(page.getByText('Verstand').first()).toBeVisible();
+  await expect(page.getByText('Wahrnehmung').first()).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '03-values-derived-stats.png'), fullPage: true });
 
-  await page.screenshot({
-    path: path.join(EVIDENCE_DIR, '03-info-dnd-5-5e.png'),
-    fullPage: true,
-  });
+  await page.getByRole('tab', { name: /Fertigkeiten/i }).click();
+  await expect(page.getByText('Zuerst Primärarchetyp wählen').first()).toBeVisible();
 
-  await page.getByRole('tab', { name: 'BG' }).click();
+  await page.getByRole('tab', { name: /Hintergrund/i }).click();
+  await expect(page.getByText('Mechanischer Hintergrund').first()).toBeVisible();
   await expect(page.getByTestId('character-lore-project-context')).toBeVisible();
-  await expect(page.getByTestId('character-lore-project-context')).toContainText(/Kein Projekt/i);
   await expect(page.getByTestId('character-bg-generate')).toBeVisible();
-  await expect(page.getByTestId('character-bg-accept-example')).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '06-background-core-fields.png'), fullPage: true });
 
-  await page.screenshot({
-    path: path.join(EVIDENCE_DIR, '04-bg-project-context.png'),
-    fullPage: true,
-  });
-
-  await page.getByTestId('character-bg-generate').click();
-  await expect(page.getByTestId('character-bg-status')).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByTestId('character-bg-story')).toHaveValue('');
-
-  await page.screenshot({
-    path: path.join(EVIDENCE_DIR, '05-bg-generate-status.png'),
-    fullPage: true,
-  });
+  await page.getByRole('tab', { name: /Inventar/i }).click();
+  await expect(page.getByText(/^Last 0 \/ 13$/).first()).toBeVisible();
+  await expect(page.getByText(/Keine festen Slots/i).first()).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '07-inventory-load.png'), fullPage: true });
 });
