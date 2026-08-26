@@ -24,43 +24,50 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('button', { name: 'Charakter erstellen' }).first().click();
   await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible();
   await expect(page.getByText('SagaDrive Core').first()).toBeVisible();
-  await expect(page.getByRole('combobox', { name: /Regelset/i })).toHaveCount(0);
+  await expect(page.getByRole('combobox', { name: /Regelset/i }).first()).toBeVisible();
 
-  for (const tab of ['Info', 'Hintergrund', 'Werte', 'Fertigkeiten', 'Fähigkeiten', 'Look', 'Inventar', 'Notizen']) {
-    await expect(page.getByRole('tab', { name: new RegExp(tab, 'i') })).toBeVisible();
+  for (const tab of ['Info', 'Hintergrund', 'Parameter', 'Look', 'Inventar', 'Notizen']) {
+    await expect(page.getByRole('tab', { name: new RegExp(`^${tab}$`, 'i') })).toBeVisible();
   }
 
-  await expect(page.getByText('Primärarchetyp').first()).toBeVisible();
-  await expect(page.getByText('Primäre Essenz').first()).toBeVisible();
-  await expect(page.getByText('Wesenart').first()).toBeVisible();
-  await expect(page.getByText('Gebunden').first()).toBeVisible();
+  await page.getByRole('tab', { name: /^Info$/i }).click();
+  await expect(page.getByText('Spezies', { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('radio', { name: /Mensch/i })).toBeVisible();
+  await expect(page.getByRole('img', { name: /Skizze: Mensch/i })).toBeVisible();
+  await page.getByRole('tab', { name: /^Parameter$/i }).click();
+  await expect(page.getByRole('tab', { name: /^Archetype$/i })).toBeVisible();
+  await expect(page.getByRole('tab', { name: /^Essenz$/i })).toBeVisible();
+  await page.getByRole('tab', { name: /^Talente$/i }).click();
+  await expect(page.getByText('Geschärfter Sinn').first()).toBeVisible();
   await expect(page.getByText('Paktbasiert')).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '01-info-core-tabs.png'), fullPage: true });
 
-  await page.getByRole('button', { name: /Kämpfer/i }).click();
-  await page.getByRole('button', { name: /Mental/i }).click();
-  await expect(page.getByText(/mentaler Kämpfer|vollständig regelkonform/i).first()).toBeVisible();
+  await page.getByRole('tab', { name: /^Archetype$/i }).click();
+  await page.getByRole('radio', { name: /Kämpfer/i }).click();
+  await expect(page.getByText(/Archetyp-Punkt \(1 von 10\)/i).first()).toBeVisible();
+  await expect(page.getByText(/Kampfroutine/i).first()).toBeVisible();
+  await expect(page.getByText('Freie Punkte').first()).toBeVisible();
+  await expect(page.getByText('Gesamtpunkte').first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '02-info-archetype-essence.png'), fullPage: true });
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-skills-budget-specialization.png'), fullPage: true });
+
+  await page.getByRole('tab', { name: /^Essenz$/i }).click();
+  await expect(page.getByText('Gebunden').first()).toBeVisible();
+  await page.getByRole('button', { name: /Mental/i }).click();
+  await expect(page.getByText(/Essenz-Manifestation/i).first()).toBeVisible();
+  await expect(page.getByText(/mentaler Kämpfer|vollständig regelkonform/i).first()).toBeVisible();
+  await expect(page.getByText(/Feuerball/i)).toHaveCount(0);
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '05-abilities-core-ability.png'), fullPage: true });
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '10-edge-unusual-combination.png'), fullPage: true });
 
-  await page.getByRole('tab', { name: /Werte/i }).click();
+  await page.getByRole('tab', { name: /^Attribute$/i }).click();
   await expect(page.getByText('Standardverteilung').first()).toBeVisible();
+  await expect(page.getByText(/15 \/ 15 Punkte/i).first()).toBeVisible();
   await expect(page.getByText('Ausdauer').first()).toBeVisible();
   await expect(page.getByText('Verstand').first()).toBeVisible();
   await expect(page.getByText('Wahrnehmung').first()).toBeVisible();
   await expect(page.getByText('Traglast').first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '03-values-derived-stats.png'), fullPage: true });
-
-  await page.getByRole('tab', { name: /Fertigkeiten/i }).click();
-  await expect(page.getByText('Freie Punkte').first()).toBeVisible();
-  await expect(page.getByText('Gesamtpunkte').first()).toBeVisible();
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-skills-budget-specialization.png'), fullPage: true });
-
-  await page.getByRole('tab', { name: /Fähigkeiten/i }).click();
-  await expect(page.getByText('Regelgebundene Fähigkeiten').first()).toBeVisible();
-  await expect(page.getByRole('heading', { name: /Kampfroutine/i })).toBeVisible();
-  await expect(page.getByText(/Feuerball/i)).toHaveCount(0);
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '05-abilities-core-ability.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /Hintergrund/i }).click();
   await expect(page.getByText('Mechanischer Hintergrund').first()).toBeVisible();
@@ -82,11 +89,12 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('tab', { name: /Info/i }).click();
   await page.getByPlaceholder('Charaktername').first().fill('Validierungsprobe');
   await page.getByRole('button', { name: /Speichern/i }).first().click();
-  await expect(page.locator('[data-sonner-toast]').filter({ hasText: /Hintergrundangaben|Fertigkeitspunkte|Attribute|Namen/i }).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('[data-sonner-toast]').filter({ hasText: /Hintergrundangaben|Fertigkeitspunkte|Attribute|Namen|gelesen/i }).first()).toBeVisible({ timeout: 10_000 });
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '11-edge-invalid-build.png'), fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('tab', { name: /Info/i }).click();
+  await page.getByRole('tab', { name: /^Parameter$/i }).click();
+  await page.getByRole('tab', { name: /^Archetype$/i }).click();
   await page.getByRole('button', { name: /Archetyp erklären/i }).click();
   await expect(page.getByText(/besonders gut tut/i).first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '12-mobile-tooltips.png'), fullPage: true });

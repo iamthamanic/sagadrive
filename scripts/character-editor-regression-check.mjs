@@ -21,9 +21,12 @@ const projectTypes = read('src/modules/projects/types/project.types.ts');
 const projectService = read('src/modules/projects/services/project.service.ts');
 
 requireMatch(runtime, /this\.applyAppearance\(this\.currentAvatar \?\? avatar, this\.currentManifest \?\? manifest\)/, 'latest avatar appearance replay after async model load');
-requireMatch(editor, /ruleset_key:\s*RULESET/, 'SagaDrive Core ruleset in CharacterEditor save payload');
+requireMatch(editor, /ruleset_key:\s*ruleset/, 'SagaDrive Core ruleset in CharacterEditor save payload');
 requireMatch(editor, /dnd_background:\s*null/, 'D&D metadata cleared in SagaDrive Core save payload');
-requireMatch(editor, /TabsTrigger value="info"[\s\S]*TabsTrigger value="background"[\s\S]*TabsTrigger value="values"[\s\S]*TabsTrigger value="skills"[\s\S]*TabsTrigger value="abilities"[\s\S]*TabsTrigger value="appearance"[\s\S]*TabsTrigger value="inventory"[\s\S]*TabsTrigger value="notes"/, 'eight SagaDrive Core editor tabs');
+requireMatch(editor, /TabsTrigger value="info"[\s\S]*TabsTrigger value="background"[\s\S]*TabsTrigger value="values"[\s\S]*TabsTrigger value="appearance"[\s\S]*TabsTrigger value="inventory"[\s\S]*TabsTrigger value="notes"/, 'SagaDrive Core editor tabs');
+requireMatch(editor, /TabsTrigger value="talente"[\s\S]*TabsTrigger value="archetype"[\s\S]*TabsTrigger value="essenz"/, 'Parameter sub-tabs for Talente, Archetyp and Essenz');
+requireMatch(editor, /GenderReadingSelect/, 'gender reading field in CharacterEditor');
+requireMatch(editor, /SkillSelectField/, 'skill select fields in CharacterEditor');
 requireMatch(editor, /SAGA_DRIVE_START_ATTRIBUTE_ARRAY/, 'SagaDrive start attribute distribution validation');
 requireMatch(editor, /sagadrive_profile:\s*sagaDriveProfile/, 'SagaDrive profile save payload');
 requireMatch(editor, /notes:\s*notes\.trim\(\)/, 'persistent notes save payload');

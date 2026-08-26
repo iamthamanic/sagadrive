@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useAuth } from '../../lib/auth-context';
 import { LoginScreen } from './LoginScreen';
 import { Loader2, Sparkles } from 'lucide-react';
 
 interface AuthGateProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 /**

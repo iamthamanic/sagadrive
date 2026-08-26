@@ -95,5 +95,5 @@ GRANT EXECUTE ON FUNCTION increment_marketplace_downloads(UUID) TO anon;
 DO $$
 BEGIN
   RAISE NOTICE '✅ Marketplace table created successfully!';
-  RAISE NOTICE '📝 You can now create marketplace items via the MarketplaceTest component';
+  RAISE NOTICE '📝 You can now create marketplace items via the Marktplatz (Marketplace) view';
 END $$;

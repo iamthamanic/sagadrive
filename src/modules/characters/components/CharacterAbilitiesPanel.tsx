@@ -11,7 +11,7 @@ export function CharacterAbilitiesPanel({ abilities }: CharacterAbilitiesPanelPr
     return (
       <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-10 text-center">
         <p className="font-medium">Noch keine Kernfähigkeit</p>
-        <p className="mt-1 text-sm text-muted-foreground">Wähle im Info-Tab deinen Primärarchetyp. Seine Rang-I-Kernfähigkeit erscheint hier automatisch.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Wähle im Parameter-Tab deinen Primärarchetyp. Seine Rang-I-Kernfähigkeit erscheint dort automatisch.</p>
       </div>
     );
   }

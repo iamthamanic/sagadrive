@@ -108,6 +108,8 @@ export interface CharacterAvatarDto {
   body: { height: number; size: number };
 }
 
+export type CharacterGenderReading = 'masculine-read' | 'feminine-read' | 'diverse';
+
 export interface CharacterAppearanceDto {
   body_size: number;
   height: number;
@@ -116,6 +118,7 @@ export interface CharacterAppearanceDto {
   hair_color: string;
   skin_tone: string;
   clothing: string;
+  gender_reading?: CharacterGenderReading;
   avatar?: CharacterAvatarDto;
 }
 

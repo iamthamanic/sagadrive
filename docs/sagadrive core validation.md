@@ -43,7 +43,7 @@ Kanonisches Epic: **#18**
 | Issue | Bereich | Zweck | Startbedingung |
 |---:|---|---|---|
 | #19 | Kernwahrscheinlichkeiten | d20-Kurve, Zielwerte, EB, Spezialisierung, Vorteil/Nachteil, Sicherheitswert, Widerstände | kann unabhängig zuerst durchgeführt werden |
-| #20 | Charaktererschaffung & Progression | legale Builds, Caps, Archetypen, Essenzen, Wesenarten, Level 1–20 | beschlossene Core Rules reichen aus |
+| #20 | Charaktererschaffung & Progression | legale Builds, Caps, Archetypen, Essenzen, Spezies, Level 1–20 | beschlossene Core Rules reichen aus |
 | #21 | Character Editor als Regelabbildung | UI, Tooltips, Live-Validierung, Save/Reload gegen die Core Rules prüfen | nach funktionalem Character-Creation-/Tooltip-Stand; blockiert aktuelle UI-Arbeit nicht |
 | #22 | Kampf & Aktionsökonomie | Initiative, Aktionen, Reaktionen, Manöver, Deckung, Sicht, Reichweite | nach #19 |
 | #23 | Schaden, Rüstung, Heilung, Sterben | Attrition, Schutz, Durchdringung, 0 HP, Sterbend, Ruhe | nach #19 und #22 |
@@ -117,7 +117,7 @@ Mindestens:
 - mentaler Kämpfer,
 - technologischer Diplomat,
 - gebundener Rebell,
-- mindestens eine Wesenart mit vollständigem 3-Punkte-Merkmalsbudget.
+- mindestens eine Spezies mit vollständigem 3-Punkte-Merkmalsbudget.
 
 ### Zu prüfen
 
@@ -126,7 +126,7 @@ Mindestens:
 - Hintergrundpunkte,
 - Archetyppunkt,
 - Spezialisierungen,
-- Wesenartbudget,
+- Speziesbudget,
 - Archetyp-Kernfähigkeit,
 - primäre Essenz,
 - abgeleitete Werte,
@@ -195,7 +195,7 @@ Die spätere Validierung beginnt, sobald die für Character Creation relevanten 
 
 ### Zu prüfen
 
-- Wesenart,
+- Spezies,
 - Hintergrund,
 - Archetyp,
 - Essenz,

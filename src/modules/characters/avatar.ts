@@ -216,6 +216,7 @@ export function normalizeCharacterAppearance(
       DEFAULT_SKIN_TONE,
     ),
     clothing: appearance?.clothing ?? appearance?.avatar?.traits.clothing ?? 'casual',
+    ...(appearance?.gender_reading ? { gender_reading: appearance.gender_reading } : {}),
     avatar: appearance?.avatar,
   };
 }

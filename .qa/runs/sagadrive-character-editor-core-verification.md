@@ -8,7 +8,7 @@
 
 - SagaDrive-Core-only new-character flow with eight tabs: Info, Hintergrund, Werte, Fertigkeiten, Fähigkeiten, Look, Inventar, Notizen.
 - RuleHelp tooltips for rule-specific concepts and derived values.
-- SagaDrive terminology: Wesenart, Gebunden, Ausdauer, Verstand, Wahrnehmung.
+- SagaDrive terminology: Spezies, Gebunden, Ausdauer, Verstand, Wahrnehmung.
 - Start attributes constrained to the Core standard array `4,3,3,2,2,1`.
 - All 18 Core skills with source-aware allocation, 10 total start points, 7 free points, minimum six trained skills and level-1 cap 3.
 - Mechanical background fields: four-skill pool, two trainings, specialization, milieu access, contact, complication and additional communication form.

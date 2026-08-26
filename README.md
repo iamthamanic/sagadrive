@@ -69,7 +69,7 @@ Der aktuelle **Neuer-Charakter-Flow** konzentriert sich bewusst ausschließlich 
 - `Inventar`
 - `Notizen`
 
-Die UI behandelt SagaDrive Core nicht als umbenannte D&D-Maske. Sie verwendet die Core-Begriffe **Wesenart**, **Archetyp**, **Essenz**, **Ausdauer**, **Verstand** und **Wahrnehmung**, die Startattributverteilung `4,3,3,2,2,1`, alle 18 Core-Fertigkeiten sowie die definierten Fertigkeitsbudgets und -grenzen. Die fünf Primärarchetypen liefern ihre jeweilige Rang-I-Kernfähigkeit automatisch; freie Platzhalterfähigkeiten werden nicht erzeugt.
+Die UI behandelt SagaDrive Core nicht als umbenannte D&D-Maske. Sie verwendet die Core-Begriffe **Spezies**, **Archetyp**, **Essenz**, **Ausdauer**, **Verstand** und **Wahrnehmung**, die Startattributverteilung `4,3,3,2,2,1`, alle 18 Core-Fertigkeiten sowie die definierten Fertigkeitsbudgets und -grenzen. Die fünf Primärarchetypen liefern ihre jeweilige Rang-I-Kernfähigkeit automatisch; freie Platzhalterfähigkeiten werden nicht erzeugt.
 
 Regelbegriffe und abgeleitete Werte besitzen kontextuelle Hilfen. Attribute, Fertigkeitsbudgets, Verteidigung, Gesundheit, Widerstände, Erholung und Traglast werden aus den Core-Regeln abgeleitet statt frei eingegeben. Das Inventar verwendet **Lastpunkte** statt fester Slots; `Traglast = 5 + 2 × Stärke` und Überlastungsfolgen werden direkt in der UI angezeigt. Der Look-Tab ist ausdrücklich kosmetisch und verändert keine Regelwerte.
 
@@ -77,7 +77,7 @@ Die regelrelevanten Character-Creation-Daten werden getrennt gespeichert:
 
 - `attributes` – SagaDrive-Attribute
 - `skills` – berechnete Fertigkeitsstände
-- `sagadrive_profile` – Essenz, Wesenartmerkmale, mechanischer Hintergrund, Archetyp-Punkt, Drive/Momentum
+- `sagadrive_profile` – Essenz, Speziesmerkmale, mechanischer Hintergrund, Archetyp-Punkt, Drive/Momentum
 - `background_story` – freie bzw. generierte Lore
 - `notes` – freie Spielnotizen
 
@@ -150,6 +150,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-08-26** — Character Editor UI: Parameter-Tab (Attribute/Talente/Archetyp/Essenz), Spezies- & Archetyp-Karussells, Pflichtfeld Geschlecht, Regelset-Dropdown, Skill-Icons, Terminologie Wesen→Spezies, collapsible Sidebar (`feat/character-editor-ui-polish`)
 - **2026-08-26** — SagaDrive Core Character Editor verifiziert (test-gate, composition-gate CLEAR, Playwright Evidence `01`–`12`) (`feat/sagadrive-character-editor-core`)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:

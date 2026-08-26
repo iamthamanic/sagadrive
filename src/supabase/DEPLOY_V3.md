@@ -33,6 +33,15 @@ Führe die Migrationen in dieser Reihenfolge aus:
 3. `supabase/migrations/004_project_membership_security.sql`
 4. `supabase/migrations/005_character_ruleset_metadata.sql`
 5. `supabase/migrations/006_character_portrait_storage.sql`
+6. `supabase/migrations/007_sagadrive_character_profile.sql`
+
+Auf dem Self-Host-Stack (`docker compose`, Container `sagadrive-db`) Migrationen **nicht** über `/docker-entrypoint-initdb.d` mounten (das überschreibt das Image-Bootstrap). Stattdessen:
+
+```bash
+docker compose up -d supabase-db
+./scripts/apply-migrations.sh                 # 001–007
+./scripts/apply-migrations.sh 007_sagadrive_character_profile.sql  # nur 007
+```
 
 `002_character_trait_arrays.sql` ist sowohl für bestehende als auch für frisch angelegte SagaDrive-Datenbanken vorgesehen. Sie stellt `personality_traits`, `ideals`, `bonds` und `flaws` auf die vom CharacterEditor verwendeten Textbaustein-Arrays um und bewahrt vorhandene Einzelwerte als Ein-Element-Arrays.
 
@@ -42,7 +51,9 @@ Führe die Migrationen in dieser Reihenfolge aus:
 
 `005_character_ruleset_metadata.sql` persistiert das im CharacterEditor ausgewählte Regelset separat als `ruleset_key` und den D&D-5.5e-Hintergrund als `dnd_background`. Bestehende Charaktere werden rückwärtskompatibel als `sagadrive-core` behandelt. Beim Wechsel zurück auf SagaDrive Core wird ein eventuell vorhandener D&D-Hintergrund entfernt, damit keine regelsetfremden Metadaten erhalten bleiben.
 
-`006_character_portrait_storage.sql` richtet den privaten Storage-Bucket `character-portraits` ein. Upload und Lesen sind für `authenticated` nur im eigenen User-ID-Unterordner erlaubt; der Bucket begrenzt Portraits auf 5 MB und die unterstützten Bild-MIME-Typen. Der Browser lädt Portraits über denselben konfigurierten Supabase-Client hoch, sodass Hosted und Self-Host denselben Pfad verwenden.
+`006_character_portrait_storage.sql` richtet den privaten Storage-Bucket `character-portraits` ein. Upload und Lesen sind für `authenticated` nur im eigenen User-ID-Unterordner erlaubt; der Bucket begrenzt Portraits auf 5 MB und die unterstützten Bild-MIME-Typen. Der Browser lädt Portraits über denselben konfigurierten Supabase-Client hoch, sodass der dokumentierte Self-Host-Stack denselben Pfad verwendet.
+
+`007_sagadrive_character_profile.sql` ergänzt `characters.sagadrive_profile` (JSONB) und persistente `characters.notes` für den SagaDrive-Core Character Editor.
 
 ---
 
