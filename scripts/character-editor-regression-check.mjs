@@ -25,7 +25,11 @@ const projectService = read('src/modules/projects/services/project.service.ts');
 requireMatch(runtime, /this\.applyAppearance\(this\.currentAvatar \?\? avatar, this\.currentManifest \?\? manifest\)/, 'latest avatar appearance replay after async model load');
 requireMatch(editor, /ruleset_key:\s*ruleset/, 'SagaDrive Core ruleset in CharacterEditor save payload');
 requireMatch(editor, /dnd_background:\s*null/, 'D&D metadata cleared in SagaDrive Core save payload');
-requireMatch(editor, /TabsTrigger value="info"[\s\S]*TabsTrigger value="background"[\s\S]*TabsTrigger value="values"[\s\S]*TabsTrigger value="appearance"[\s\S]*TabsTrigger value="inventory"[\s\S]*TabsTrigger value="notes"/, 'SagaDrive Core editor tabs');
+requireMatch(editor, /TabsTrigger value="info"[\s\S]*TabsTrigger value="background"[\s\S]*TabsTrigger value="values"[\s\S]*TabsTrigger value="appearance"[\s\S]*TabsTrigger value="inventory"[\s\S]*TabsTrigger value="statistics"/, 'SagaDrive Core editor tabs');
+rejectMatch(editor, /TabsTrigger value="notes"/, 'legacy Notizen editor tab remains');
+requireMatch(editor, /CharacterNotesSection/, 'notes section inside Hintergrund tab');
+requireMatch(editor, /CharacterStatisticsPanel/, 'statistics panel inside CharacterEditor');
+requireMatch(editor, /savedCharacterId/, 'saved character id retained for statistics');
 requireMatch(editor, /TabsTrigger value="attribute"[\s\S]*TabsTrigger value="archetype"[\s\S]*TabsTrigger value="essenz"/, 'Parameter sub-tabs for Attribute, Archetyp and Essenz');
 rejectMatch(editor, /TabsTrigger value="talente"/, 'legacy Talente Parameter sub-tab remains');
 requireMatch(editor, /<SpeciesTraitsPanel/, 'species traits panel inside CharacterEditor');
@@ -119,5 +123,23 @@ requireMatch(loreService, /serverMessage \?\?\s*'Hintergrundgeschichte konnte ni
 rejectMatch(loreService, /if \(error\)[\s\S]{0,220}?Prüfe die Character-AI-Konfiguration/, 'lore HTTP errors are collapsed into a configuration message');
 requireMatch(projectTypes, /status: 'active' \| 'paused' \| 'completed' \| 'archived'/, 'legacy archived project status in DTO/view-model types');
 requireMatch(projectService, /value === 'active' \|\| value === 'paused' \|\| value === 'completed' \|\| value === 'archived'/, 'legacy archived project runtime validation');
+
+const adventureArcMigration = read('supabase/migrations/009_character_adventure_arcs.sql');
+const adventureArcTypes = read('src/modules/characters/types/characterAdventureArc.types.ts');
+const adventureArcService = read('src/modules/characters/services/characterAdventureArc.service.ts');
+const notesSection = read('src/modules/characters/components/CharacterNotesSection.tsx');
+const statisticsPanel = read('src/modules/characters/components/CharacterStatisticsPanel.tsx');
+
+requireMatch(adventureArcMigration, /CREATE TABLE IF NOT EXISTS public\.character_adventure_arcs/, 'character adventure arcs table');
+requireMatch(adventureArcMigration, /UNIQUE \(character_id, project_id\)/, 'one arc per character-project pair');
+requireMatch(adventureArcMigration, /Owners insert adventure arcs for active memberships/, 'owner insert RLS requires active membership');
+requireMatch(adventureArcMigration, /prevent_character_adventure_arc_retarget/, 'immutable character_id/project_id on arcs');
+requireMatch(adventureArcMigration, /Owners update character adventure arcs/, 'owner update RLS on adventure arcs');
+requireMatch(adventureArcTypes, /CharacterAdventureDevelopmentKind = 'level' \| 'species-trait' \| 'skill' \| 'note'/, 'development kind contract');
+requireMatch(adventureArcService, /listArcsForCharacter/, 'arc sync/list service');
+requireMatch(adventureArcService, /appendDevelopment/, 'append development service');
+requireMatch(notesSection, /id="notes"/, 'notes textarea id preserved');
+requireMatch(statisticsPanel, /Entwicklung eintragen/, 'statistics development form entry point');
+requireMatch(statisticsPanel, /Speichere den Charakter zuerst/, 'unsaved character statistics guidance');
 
 console.log('Character editor regression check passed.');

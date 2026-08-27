@@ -26,7 +26,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('SagaDrive Core').first()).toBeVisible();
   await expect(page.getByRole('combobox', { name: /Regelset/i }).first()).toBeVisible();
 
-  for (const tab of ['Spezies', 'Hintergrund', 'Parameter', 'Look', 'Inventar', 'Notizen']) {
+  for (const tab of ['Spezies', 'Hintergrund', 'Parameter', 'Look', 'Inventar', 'Statistik']) {
     await expect(page.getByRole('tab', { name: new RegExp(`^${tab}$`, 'i') })).toBeVisible();
   }
 
@@ -70,6 +70,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('listbox').getByText(/Geräusche entscheidend sind/i)).toBeVisible();
   await page.getByRole('option', { name: /Hören/i }).click();
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Weitere Auswahl/i }).first()).toBeDisabled();
+  await page.getByLabel(/^Weitere Auswahl:/i).first().click();
+  await expect(page.getByRole('tooltip').getByText(/Startbudget ist mit 3 \/ 3/i)).toBeVisible();
+  await expect(page.getByRole('tooltip').getByText(/Weltprofil-Modul „Speziesentwicklung“/i)).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '02-species-repeatable-two-resistances.png'), fullPage: true });
 
   await page.getByLabel('Stufe').click();
@@ -78,9 +82,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByLabel('Stufe').click();
   await page.getByRole('option', { name: '1', exact: true }).click();
 
-  await page.getByRole('button', { name: /Enge Resistenz 2 entfernen/i }).click();
-  await page.getByRole('button', { name: /Enge Resistenz entfernen/i }).click();
-  await page.getByRole('button', { name: /Geschärfter Sinn entfernen/i }).click();
+  await page.getByRole('button', { name: /Enge Resistenz abwählen/i }).click();
+  await page.getByRole('button', { name: /Geschärfter Sinn abwählen/i }).click();
   await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
 
   await page.getByRole('button', { name: /Umweltanpassung, 1 Punkt/i }).click();
@@ -159,7 +162,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Mechanischer Hintergrund').first()).toBeVisible();
   await expect(page.getByTestId('character-lore-project-context')).toBeVisible();
   await expect(page.getByTestId('character-bg-generate')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Notizen$/i })).toBeVisible();
+  await expect(page.locator('#notes')).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '06-background-core-fields.png'), fullPage: true });
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '09-notes-in-background.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /Inventar/i }).click();
   await expect(page.getByText(/^Last 0 \/ 13$/).first()).toBeVisible();
@@ -168,9 +174,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '08-character-summary.png'), fullPage: true });
 
-  await page.getByRole('tab', { name: /Notizen/i }).click();
-  await expect(page.getByRole('button', { name: /Speichern/i }).first()).toBeVisible();
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '09-notes-save.png'), fullPage: true });
+  await page.getByRole('tab', { name: /Statistik/i }).click();
+  await expect(page.getByText(/Speichere den Charakter zuerst/i)).toBeVisible();
+  await expect(page.getByRole('tab', { name: /Notizen/i })).toHaveCount(0);
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '13-statistics-tab.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /Spezies/i }).click();
   await page.getByPlaceholder('Charaktername').first().fill('Validierungsprobe');

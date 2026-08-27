@@ -58,16 +58,14 @@ Output-Verzeichnis:
 
 ## SagaDrive Core Character Editor
 
-Der aktuelle **Neuer-Charakter-Flow** konzentriert sich bewusst ausschließlich auf **SagaDrive Core**. Der Character Editor verwendet acht regelgeführte Bereiche:
+Der aktuelle **Neuer-Charakter-Flow** konzentriert sich bewusst ausschließlich auf **SagaDrive Core**. Der Character Editor verwendet sechs Tabs:
 
 - `Spezies`
-- `Hintergrund`
-- `Werte`
-- `Fertigkeiten`
-- `Fähigkeiten`
+- `Hintergrund` (inkl. freier Notizen unter der Hintergrundgeschichte)
+- `Parameter` (Attribute / Archetyp / Essenz)
 - `Look`
 - `Inventar`
-- `Notizen`
+- `Statistik` (Abenteuer-Bögen und Entwicklungseinträge nach dem Speichern)
 
 Die UI behandelt SagaDrive Core nicht als umbenannte D&D-Maske. Sie verwendet die Core-Begriffe **Spezies**, **Archetyp**, **Essenz**, **Ausdauer**, **Verstand** und **Wahrnehmung**, die Startattributverteilung `4,3,3,2,2,1`, alle 18 Core-Fertigkeiten sowie die definierten Fertigkeitsbudgets und -grenzen. Die fünf Primärarchetypen liefern ihre jeweilige Rang-I-Kernfähigkeit automatisch; freie Platzhalterfähigkeiten werden nicht erzeugt.
 
@@ -114,7 +112,7 @@ Für Ollama können `OLLAMA_MODEL` und `OLLAMA_HOST` als Fallback verwendet werd
 
 `CHARACTER_AI_RATE_LIMIT_PER_MINUTE` wird nicht pro Edge-Process im Speicher gezählt. Die Migration `supabase/migrations/003_character_lore_rate_limits.sql` legt einen persistenten, atomaren Postgres-Limiter an. Jede authentifizierte User-ID teilt dadurch dasselbe Minutenkontingent über alle Edge-Runtime-Instanzen hinweg. Die RPC ist nur für `service_role` ausführbar. Ist der persistente Limiter nicht verfügbar oder nicht migriert, schlägt `character-lore` vor dem Provider-Aufruf fail-closed mit `503` fehl.
 
-Der Prompt liegt versioniert unter `supabase/functions/_shared/character-lore-prompt.ts`. SagaDrive Core verwendet den gewählten Character-Kontext als Lore-Rahmen. Notizen aus dem Notizen-Tab werden bewusst nicht an die Generierung übertragen.
+Der Prompt liegt versioniert unter `supabase/functions/_shared/character-lore-prompt.ts`. SagaDrive Core verwendet den gewählten Character-Kontext als Lore-Rahmen. Freie Charakter-Notizen werden bewusst nicht an die Generierung übertragen.
 
 `ruleset_key` bleibt unabhängig vom optionalen `ruleset_id` als stabiler Editor-Key gespeichert. `dnd_background` bleibt für bestehende D&D-Daten erhalten; `background_story` und `sagadrive_profile` sind davon getrennt.
 
@@ -129,9 +127,11 @@ Für den aktuellen Character-/Lore-Stand sind bei bestehenden Datenbanken diese 
 005_character_ruleset_metadata.sql
 006_character_portrait_storage.sql
 007_sagadrive_character_profile.sql
+008_world_profiles.sql
+009_character_adventure_arcs.sql
 ```
 
-`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz, `006` richtet den privaten owner-scoped Portrait-Storage ein und `007` ergänzt `sagadrive_profile` sowie persistente Character-Notizen. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
+`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz, `006` richtet den privaten owner-scoped Portrait-Storage ein, `007` ergänzt `sagadrive_profile` sowie persistente Character-Notizen, `008` legt owner-scoped Weltprofile an und `009` speichert Abenteuer-Bögen inkl. Entwicklungsgeschichte. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
 
 ## Quality Gates
 
@@ -152,6 +152,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-08-27** — Bibliothek-Tab Welten (owner-scoped Weltprofile, Modul Speziesentwicklung); Character Editor: Notizen unter Hintergrund, Tab Statistik mit Abenteuer-Bögen (`feat/world-profiles-and-statistics`, siehe `docs/world profiles.md`)
 - **2026-08-27** — Speziesmerkmale: speziesgebundene Allowlists, exakt 3/3 Punkte, Merkmalsdetails direkt an den Cards, Alien-Profil-Builder, `Erweitertes Klettern`/`Erweitertes Schwimmen`; Talente-Subtab entfernt (`feat/species-traits-by-species`)
 - **2026-08-27** — Character Editor Chrome: Tab „Spezies“, Name/Geschlecht/Stufe in Preview, Regelset neben Vorschau, Archetyp-Kernfähigkeit einklappbar, flachere Archetyp-Karten (`feat/alien-species-sketch`)
 - **2026-08-27** — Alien-Spezies-Skizze: Outline-Lineup mit fünf Gestalten (Schnecke, Geist, Grey, Kristall, Tentakel) (`feat/alien-species-sketch`)
@@ -174,7 +175,7 @@ npm run test:e2e
 
 - `src/` – Haupt-Frontend-Code
 - `src/components/` – UI- und Feature-Komponenten
-- `src/modules/` – Domänenmodule (projects, characters, sessions, rulesets, marketplace)
+- `src/modules/` – Domänenmodule (projects, characters, sessions, rulesets, worlds, marketplace)
 - `src/lib/` – gemeinsame Clients/Provider (u. a. Supabase, Auth)
 - `src/supabase/` – SQL-Skripte, Migrations und Deploy-Hilfen
 - `supabase/functions/` – Supabase Edge Functions
@@ -188,6 +189,7 @@ npm run test:e2e
 - `src/ARCHITECTURE.md`
 - `src/SUPABASE_SETUP.md`
 - `src/AUTH_SETUP.md`
+- `docs/world profiles.md`
 - `src/modules/marketplace/README.md`
 - `src/supabase/DEPLOY_V3.md`
 

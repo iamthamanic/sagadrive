@@ -1,4 +1,5 @@
 import { Plus, X } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import {
   SAGA_DRIVE_SPECIES_TRAIT_BUDGET,
   getCharacterCreationOptionLabel,
@@ -15,9 +16,78 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Select, SelectContent, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
 import { RuleHelp } from './RuleHelp';
 import { SpeciesTraitIcon } from './SpeciesTraitIcon';
 import { SpeciesTraitOptionItem } from './SpeciesTraitOptionItem';
+
+const WORLD_SPECIES_DEVELOPMENT_HINT =
+  'Ob und wie Figuren später permanente Speziesmerkmale nachentwickeln können, steuert das Weltprofil-Modul „Speziesentwicklung“: Explizit (nur ausdrücklich benannte Quellen), Progressiv (reguläre Entwicklungsquellen der Welt) oder Deaktiviert. Die Anbindung an Abenteuer und Charaktere wird gerade aufgebaut; normales Level-up vergibt keine zusätzlichen Speziespunkte.';
+
+function getWeitereAuswahlBlockedReason(args: {
+  unresolvedInstance: boolean;
+  allOptionsUsed: boolean;
+  budgetBlocked: boolean;
+  traitCost: number;
+  usedPoints: number;
+}): string | null {
+  if (args.unresolvedInstance) {
+    return 'Vervollständige zuerst die offene Auswahl, bevor du eine weitere hinzufügst.';
+  }
+  if (args.allOptionsUsed) {
+    return 'Alle Unteroptionen dieses Merkmals sind bereits gewählt.';
+  }
+  if (args.budgetBlocked) {
+    return [
+      `Weitere Auswahl braucht ${args.traitCost} ${args.traitCost === 1 ? 'Punkt' : 'Punkte'}, aber das Startbudget ist mit ${args.usedPoints} / ${SAGA_DRIVE_SPECIES_TRAIT_BUDGET} bereits ausgeschöpft.`,
+      WORLD_SPECIES_DEVELOPMENT_HINT,
+    ].join(' ');
+  }
+  return null;
+}
+
+/**
+ * DisabledActionHint — Wrapper, damit ausgegraute Buttons per Hover/Tap erklärt werden können.
+ * Location: inline in SpeciesTraitsPanel (disabled buttons otherwise ignore pointer events).
+ */
+function DisabledActionHint({
+  label,
+  reason,
+  children,
+}: {
+  label: string;
+  reason: string;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Tooltip open={open} onOpenChange={setOpen}>
+      <TooltipTrigger asChild>
+        <span
+          className="inline-flex w-full cursor-help sm:w-auto"
+          tabIndex={0}
+          aria-label={`${label}: ${reason}`}
+          onClick={(event) => {
+            event.preventDefault();
+            setOpen((current) => !current);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              setOpen((current) => !current);
+            }
+          }}
+        >
+          {children}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" sideOffset={6} className="max-w-[320px] px-3 py-2 text-left text-xs leading-relaxed">
+        {reason}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 type SpeciesTraitsPanelProps = {
   species: string;
@@ -130,6 +200,26 @@ export function SpeciesTraitsPanel({
           const allOptionsUsed = Boolean(catalog && entries.length >= catalog.options.length);
           const canAdd = !unavailable && !budgetBlocked && !unresolvedInstance && !allOptionsUsed;
           const hasInvalidEntry = Boolean(validationAttempted && catalog && entries.some(({ instance }) => !instance.option));
+          const weitereAuswahlBlockedReason = getWeitereAuswahlBlockedReason({
+            unresolvedInstance,
+            allOptionsUsed,
+            budgetBlocked,
+            traitCost: trait.cost,
+            usedPoints,
+          });
+
+          const weitereAuswahlButton = (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="w-full sm:w-auto"
+              disabled={!canAdd}
+              onClick={() => addTraitInstance(trait.key, trait.cost)}
+            >
+              <Plus className="mr-2 h-4 w-4" />Weitere Auswahl
+            </Button>
+          );
 
           return (
             <div
@@ -141,46 +231,37 @@ export function SpeciesTraitsPanel({
                 hasInvalidEntry ? 'border-destructive' : '',
               ].filter(Boolean).join(' ')}
             >
-              {!selected || !repeatable ? (
-                <button
-                  type="button"
-                  className="w-full p-3 text-left disabled:cursor-not-allowed"
-                  disabled={unavailable || (!selected && budgetBlocked)}
-                  aria-pressed={selected}
-                  aria-label={`${trait.label}, ${trait.cost} ${trait.cost === 1 ? 'Punkt' : 'Punkte'}`}
-                  onClick={() => {
-                    if (selected) {
-                      const selectedIndex = entries[0]?.index;
-                      if (selectedIndex !== undefined) removeTraitInstance(selectedIndex);
-                    } else {
-                      addTraitInstance(trait.key, trait.cost);
-                    }
-                  }}
-                >
-                  <TraitCardHeader
-                    traitKey={trait.key}
-                    label={trait.label}
-                    cost={trait.cost}
-                    selected={selected}
-                    unavailableReason={unavailable ? trait.unavailableReason ?? 'Noch nicht verfügbar' : undefined}
-                    selectedCount={entries.length}
-                    repeatable={repeatable}
-                  />
-                  <p className="mt-2 pl-12 text-xs leading-relaxed text-muted-foreground">{trait.description}</p>
-                </button>
-              ) : (
-                <div className="p-3">
-                  <TraitCardHeader
-                    traitKey={trait.key}
-                    label={trait.label}
-                    cost={trait.cost}
-                    selected
-                    selectedCount={entries.length}
-                    repeatable
-                  />
-                  <p className="mt-2 pl-12 text-xs leading-relaxed text-muted-foreground">{trait.description}</p>
-                </div>
-              )}
+              <button
+                type="button"
+                className="w-full p-3 text-left disabled:cursor-not-allowed"
+                disabled={unavailable || (!selected && budgetBlocked)}
+                aria-pressed={selected}
+                aria-label={
+                  selected
+                    ? `${trait.label} abwählen`
+                    : `${trait.label}, ${trait.cost} ${trait.cost === 1 ? 'Punkt' : 'Punkte'}`
+                }
+                onClick={() => {
+                  if (selected) {
+                    onTraitInstancesChange(
+                      traitInstances.filter((instance) => instance.trait !== trait.key),
+                    );
+                    return;
+                  }
+                  addTraitInstance(trait.key, trait.cost);
+                }}
+              >
+                <TraitCardHeader
+                  traitKey={trait.key}
+                  label={trait.label}
+                  cost={trait.cost}
+                  selected={selected}
+                  unavailableReason={unavailable ? trait.unavailableReason ?? 'Noch nicht verfügbar' : undefined}
+                  selectedCount={entries.length}
+                  repeatable={repeatable}
+                />
+                <p className="mt-2 pl-12 text-xs leading-relaxed text-muted-foreground">{trait.description}</p>
+              </button>
 
               {selected && catalog && (
                 <div className="space-y-3 border-t border-border/70 px-3 pb-3 pt-3">
@@ -258,16 +339,13 @@ export function SpeciesTraitsPanel({
                     );
                   })}
 
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="w-full sm:w-auto"
-                    disabled={!canAdd}
-                    onClick={() => addTraitInstance(trait.key, trait.cost)}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />Weitere Auswahl
-                  </Button>
+                  {weitereAuswahlBlockedReason ? (
+                    <DisabledActionHint label="Weitere Auswahl" reason={weitereAuswahlBlockedReason}>
+                      {weitereAuswahlButton}
+                    </DisabledActionHint>
+                  ) : (
+                    weitereAuswahlButton
+                  )}
                 </div>
               )}
             </div>
