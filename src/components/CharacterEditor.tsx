@@ -14,6 +14,7 @@ import type {
   CharacterLoreContext,
   ItemDto,
   SagaDriveProfileDto,
+  SagaDriveSpeciesTraitInstanceDto,
 } from '../modules/characters';
 import { DerivedStatCard } from './DerivedStatCard';
 import { CharacterArchetypePanel } from '../modules/characters/components/CharacterArchetypePanel';
@@ -25,10 +26,7 @@ import { getSagaDriveFinalSkillRanks } from '../modules/characters/components/Ch
 import { GenderReadingSelect } from '../modules/characters/components/GenderReadingSelect';
 import { SelectedSpeciesChip } from '../modules/characters/components/SelectedSpeciesChip';
 import { SpeciesCarousel } from '../modules/characters/components/SpeciesCarousel';
-import {
-  SpeciesTraitsPanel,
-  type SpeciesTraitDetailValues,
-} from '../modules/characters/components/SpeciesTraitsPanel';
+import { SpeciesTraitsPanel } from '../modules/characters/components/SpeciesTraitsPanel';
 import { SkillSelectField } from '../modules/characters/components/SkillSelectField';
 import { CharacterTraitEditor } from '../modules/characters/components/CharacterTraitEditor';
 import { buildSagaDriveDerivedStatCards } from '../modules/characters/utils/derivedStats';
@@ -60,8 +58,8 @@ import {
   type SagaDriveAttributeKey,
   type SagaDriveEssenceKey,
   type SagaDriveSkillKey,
-  type SagaDriveSpeciesTraitKey,
 } from '../modules/rulesets/characterCreation';
+import { getSagaDriveSpeciesTraitOptionCatalog } from '../modules/rulesets/speciesTraitOptions';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader } from './ui/card';
@@ -111,6 +109,51 @@ function isValidStartAttributeDistribution(attributes: CharacterAttributesDto): 
 
 function uniqueSkills(values: readonly SkillSlot[]): SagaDriveSkillKey[] { return Array.from(new Set(values.filter(isSagaDriveSkillKey))); }
 
+function areSpeciesTraitInstancesValid(
+  instances: readonly SagaDriveSpeciesTraitInstanceDto[],
+  allowedTraitKeys: ReadonlySet<string>,
+): boolean {
+  const nonRepeatableTraits = new Set<string>();
+  const repeatableOptions = new Set<string>();
+
+  for (const instance of instances) {
+    const trait = getSagaDriveSpeciesTrait(instance.trait);
+    if (!allowedTraitKeys.has(instance.trait) || trait.available === false) return false;
+
+    const catalog = getSagaDriveSpeciesTraitOptionCatalog(instance.trait);
+    if (!catalog) {
+      if (nonRepeatableTraits.has(instance.trait)) return false;
+      nonRepeatableTraits.add(instance.trait);
+      continue;
+    }
+
+    if (!instance.option || !catalog.options.some((option) => option.value === instance.option)) return false;
+    const optionIdentity = `${instance.trait}:${instance.option}`;
+    if (repeatableOptions.has(optionIdentity)) return false;
+    repeatableOptions.add(optionIdentity);
+  }
+
+  return true;
+}
+
+function retainSpeciesTraitInstancesForRace(
+  instances: readonly SagaDriveSpeciesTraitInstanceDto[],
+  allowedTraitKeys: ReadonlySet<string>,
+): SagaDriveSpeciesTraitInstanceDto[] {
+  const retained: SagaDriveSpeciesTraitInstanceDto[] = [];
+  let usedPoints = 0;
+
+  for (const instance of instances) {
+    const trait = getSagaDriveSpeciesTrait(instance.trait);
+    if (!allowedTraitKeys.has(instance.trait) || trait.available === false) continue;
+    if (usedPoints + trait.cost > SAGA_DRIVE_SPECIES_TRAIT_BUDGET) continue;
+    retained.push(instance);
+    usedPoints += trait.cost;
+  }
+
+  return retained;
+}
+
 export function CharacterEditor() {
   const [activeTab, setActiveTab] = useState<EditorTab>('info');
   const [activeValuesSubTab, setActiveValuesSubTab] = useState<ValuesSubTab>('attribute');
@@ -123,8 +166,7 @@ export function CharacterEditor() {
   const [characterRace, setCharacterRace] = useState('human');
   const [genderReading, setGenderReading] = useState<CharacterGenderReading | undefined>();
   const [essenceProfile, setEssenceProfile] = useState<SagaDriveEssenceKey | undefined>();
-  const [speciesTraits, setSpeciesTraits] = useState<SagaDriveSpeciesTraitKey[]>([]);
-  const [speciesTraitDetails, setSpeciesTraitDetails] = useState<SpeciesTraitDetailValues>({});
+  const [speciesTraitInstances, setSpeciesTraitInstances] = useState<SagaDriveSpeciesTraitInstanceDto[]>([]);
   const [speciesProfileName, setSpeciesProfileName] = useState('');
   const [speciesBodyDescription, setSpeciesBodyDescription] = useState('');
 
@@ -191,15 +233,11 @@ export function CharacterEditor() {
   const attributePointsUsed = (
     Object.values(attributes) as CharacterAttributesDto[keyof CharacterAttributesDto][]
   ).reduce((sum, value) => sum + value, 0);
-  const speciesTraitCost = getSagaDriveSpeciesTraitCost(speciesTraits);
+  const speciesTraitCost = getSagaDriveSpeciesTraitCost(speciesTraitInstances.map((instance) => instance.trait));
   const allowedSpeciesTraitKeys = useMemo(() => new Set(getSagaDriveSpeciesTraitKeysForRace(characterRace)), [characterRace]);
-  const speciesTraitDetailsComplete = speciesTraits.every((traitKey) => {
-    const trait = getSagaDriveSpeciesTrait(traitKey);
-    return !trait.detailRequired || Boolean(speciesTraitDetails[traitKey]?.trim());
-  });
+  const speciesTraitInstancesValid = areSpeciesTraitInstancesValid(speciesTraitInstances, allowedSpeciesTraitKeys);
   const speciesTraitsComplete = speciesTraitCost === SAGA_DRIVE_SPECIES_TRAIT_BUDGET
-    && speciesTraits.every((traitKey) => allowedSpeciesTraitKeys.has(traitKey) && getSagaDriveSpeciesTrait(traitKey).available !== false)
-    && speciesTraitDetailsComplete
+    && speciesTraitInstancesValid
     && (characterRace !== 'alien' || Boolean(speciesProfileName.trim()));
   const inventoryLoad = getInventoryLoad(inventory);
   const carryCapacity = 5 + 2 * attributes.strength;
@@ -238,16 +276,8 @@ export function CharacterEditor() {
   const applyRacePreset = (race: string, resetTraits = false) => {
     const preset = getAvatarRacePreset(race);
     const allowed = new Set(getSagaDriveSpeciesTraitKeysForRace(race));
-    const retainedTraits = resetTraits ? [] : speciesTraits.filter((key) => allowed.has(key) && getSagaDriveSpeciesTrait(key).available !== false);
-    setSpeciesTraits(retainedTraits);
-    setSpeciesTraitDetails((current) => {
-      const next: SpeciesTraitDetailValues = {};
-      for (const key of retainedTraits) {
-        const detail = current[key];
-        if (detail) next[key] = detail;
-      }
-      return next;
-    });
+    const retainedInstances = resetTraits ? [] : retainSpeciesTraitInstancesForRace(speciesTraitInstances, allowed);
+    setSpeciesTraitInstances(retainedInstances);
     setCharacterRace(race); setBodySize([preset.bodySize]); setHeight([preset.height]); setHeadStyle(preset.head); setEars(preset.ears); setHairStyle(preset.hair); setHairColor(preset.hairColor); setSkinTone(preset.skinTone); setClothing(preset.clothing); setAccessory(preset.accessory ?? 'none');
   };
 
@@ -267,8 +297,7 @@ export function CharacterEditor() {
     setContact('');
     setComplication('');
     setCommunication('');
-    setSpeciesTraits([]);
-    setSpeciesTraitDetails({});
+    setSpeciesTraitInstances([]);
     setSpeciesProfileName('');
     setSpeciesBodyDescription('');
     setAttributes(INITIAL_ATTRIBUTES);
@@ -279,7 +308,6 @@ export function CharacterEditor() {
   };
   const handleArchetypeChange = (value: string) => { if (!isSagaDriveArchetypeKey(value)) return; const next = getSagaDriveArchetype(value); setCharacterArchetype(value); if (archetypeTrainingSkill && !next?.skills.includes(archetypeTrainingSkill)) setArchetypeTrainingSkill(undefined); };
   const handleEssenceChange = (value: string) => { if (isSagaDriveEssenceKey(value)) setEssenceProfile(value); };
-  const updateSpeciesTraitDetail = (traitKey: SagaDriveSpeciesTraitKey, value: string) => setSpeciesTraitDetails((current) => ({ ...current, [traitKey]: value }));
   const updateBackgroundPool = (index: number, value: string) => {
     if (!isSagaDriveSkillKey(value) || index < 0 || index > 3) return;
     const previous = backgroundSkillPool[index];
@@ -324,8 +352,7 @@ export function CharacterEditor() {
     if (!genderReadingComplete) problems.push({ tab: 'info', message: 'Bitte wähle, wie dein Charakter gelesen wird (männlich, weiblich oder divers).' });
     if (speciesTraitCost !== SAGA_DRIVE_SPECIES_TRAIT_BUDGET) problems.push({ tab: 'info', message: `Wähle Speziesmerkmale im Wert von genau ${SAGA_DRIVE_SPECIES_TRAIT_BUDGET} Punkten.` });
     if (characterRace === 'alien' && !speciesProfileName.trim()) problems.push({ tab: 'info', message: 'Gib deinem Alien-Speziesprofil einen Namen.' });
-    if (!speciesTraitDetailsComplete) problems.push({ tab: 'info', message: 'Konkretisiere alle gewählten Speziesmerkmale.' });
-    if (!speciesTraitsComplete && speciesTraitCost === SAGA_DRIVE_SPECIES_TRAIT_BUDGET && speciesTraitDetailsComplete && (characterRace !== 'alien' || speciesProfileName.trim())) problems.push({ tab: 'info', message: 'Die gewählten Speziesmerkmale sind für diese Spezies nicht zulässig.' });
+    if (!speciesTraitInstancesValid) problems.push({ tab: 'info', message: 'Vervollständige alle Speziesmerkmale und verwende jede Unteroption höchstens einmal.' });
     if (!characterArchetype) problems.push({ tab: 'values', valuesSubTab: 'archetype', message: 'Bitte wähle einen Archetyp.' });
     if (!essenceProfile) problems.push({ tab: 'values', valuesSubTab: 'essenz', message: 'Bitte wähle eine primäre Essenz.' });
     if (!backgroundComplete) problems.push({ tab: 'background', message: 'Vervollständige die mechanischen Hintergrundangaben.' });
@@ -343,17 +370,15 @@ export function CharacterEditor() {
     }
     if (!characterArchetype || !essenceProfile || !archetypeTrainingSkill || !isSagaDriveSkillKey(specializationSkill) || !genderReading || !speciesTraitsComplete) return;
 
-    const savedSpeciesTraitDetails: SagaDriveProfileDto['speciesTraitDetails'] = {};
-    for (const traitKey of speciesTraits) {
-      const detail = speciesTraitDetails[traitKey]?.trim();
-      if (detail) savedSpeciesTraitDetails[traitKey] = detail;
-    }
-
     const sagaDriveProfile: SagaDriveProfileDto = {
       archetype: characterArchetype,
       essence: essenceProfile,
-      speciesTraits,
-      speciesTraitDetails: savedSpeciesTraitDetails,
+      speciesTraitInstances: speciesTraitInstances.map((instance) => ({
+        trait: instance.trait,
+        ...(instance.option ? { option: instance.option } : {}),
+        source: 'species-creation',
+        acquiredAtLevel: 1,
+      })),
       speciesProfile: characterRace === 'alien' ? { name: speciesProfileName.trim(), bodyDescription: speciesBodyDescription.trim() } : undefined,
       background: { name: backgroundName.trim(), skillPool: selectedBackgroundPool, trainedSkills: selectedBackgroundTraining, specialization: { skill: specializationSkill, name: specializationName.trim() }, milieuAccess: milieuAccess.trim(), contact: contact.trim(), complication: complication.trim(), communication: communication.trim() },
       archetypeTrainingSkill, drive: 3, momentum: 0,
@@ -491,13 +516,11 @@ export function CharacterEditor() {
                   </div>
                   <SpeciesTraitsPanel
                     species={characterRace}
-                    selectedTraits={speciesTraits}
-                    traitDetails={speciesTraitDetails}
+                    traitInstances={speciesTraitInstances}
                     speciesProfileName={speciesProfileName}
                     speciesBodyDescription={speciesBodyDescription}
                     validationAttempted={validationAttempted}
-                    onSelectedTraitsChange={setSpeciesTraits}
-                    onTraitDetailChange={updateSpeciesTraitDetail}
+                    onTraitInstancesChange={setSpeciesTraitInstances}
                     onSpeciesProfileNameChange={setSpeciesProfileName}
                     onSpeciesBodyDescriptionChange={setSpeciesBodyDescription}
                   />
