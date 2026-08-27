@@ -340,7 +340,7 @@ export function CharacterEditor() {
     <div className="h-full w-full overflow-y-auto">
       <div className="mx-auto max-w-7xl space-y-4 p-4 md:space-y-6 md:p-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div><div className="flex flex-wrap items-center gap-2"><h1 className="text-xl md:text-2xl">Charakter Editor</h1><Badge>{rulesetLabel}</Badge><Badge variant="outline">Stufe {characterLevel}</Badge></div></div>
+          <div><h1 className="text-xl md:text-2xl">Charakter Editor</h1></div>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={ruleset} onValueChange={handleRulesetChange}>
               <SelectTrigger id="ruleset" size="sm" className="w-[10.5rem] sm:w-52" aria-label="Regelset">
