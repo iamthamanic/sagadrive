@@ -6,10 +6,13 @@ import {
   sagaDriveRaceOptions,
   type SagaDriveSpeciesTraitKey,
 } from '../../rulesets/characterCreation';
+import { sagaDriveNarrowResistanceHazardOptions } from '../../rulesets/speciesResistanceHazards';
 import { Badge } from '../../../components/ui/badge';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
+import { RuleHelp } from './RuleHelp';
 import { SpeciesTraitIcon } from './SpeciesTraitIcon';
 
 export type SpeciesTraitDetailValues = Partial<Record<SagaDriveSpeciesTraitKey, string>>;
@@ -148,17 +151,59 @@ export function SpeciesTraitsPanel({
 
               {selected && trait.detailRequired && (
                 <div className="space-y-2 border-t border-border/70 px-3 pb-3 pt-3">
-                  <Label htmlFor={`species-trait-${trait.key}`}>
-                    {trait.detailLabel ?? 'Details'} *
-                  </Label>
-                  <Input
-                    id={`species-trait-${trait.key}`}
-                    value={traitDetails[trait.key] ?? ''}
-                    onChange={(event) => onTraitDetailChange(trait.key, event.target.value)}
-                    placeholder={trait.detailPlaceholder}
-                    aria-invalid={detailInvalid}
-                    className={detailInvalid ? 'border-destructive' : undefined}
-                  />
+                  {trait.key === 'narrow-resistance' ? (
+                    <>
+                      <div className="flex min-h-7 items-center gap-1">
+                        <Label htmlFor="species-trait-narrow-resistance">Gefahrenart *</Label>
+                        <RuleHelp label="Gefahrenart">
+                          <div className="space-y-2">
+                            <p>
+                              Entscheidend ist die konkrete Wirkung, nicht ihre Quelle. Magisches Feuer zählt zum Beispiel als Hitze / Verbrennung. Eine allgemeine Resistenz gegen „Magie“ gibt es hier nicht.
+                            </p>
+                            <div className="space-y-1.5">
+                              {sagaDriveNarrowResistanceHazardOptions.map((option) => (
+                                <p key={option.value}>
+                                  <span className="font-medium">{option.label}:</span> {option.description}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        </RuleHelp>
+                      </div>
+                      <Select
+                        value={traitDetails[trait.key] ?? ''}
+                        onValueChange={(value) => onTraitDetailChange(trait.key, value)}
+                      >
+                        <SelectTrigger
+                          id="species-trait-narrow-resistance"
+                          aria-label="Gefahrenart"
+                          aria-invalid={detailInvalid}
+                          className={detailInvalid ? 'border-destructive' : undefined}
+                        >
+                          <SelectValue placeholder="Gefahrenart wählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sagaDriveNarrowResistanceHazardOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </>
+                  ) : (
+                    <>
+                      <Label htmlFor={`species-trait-${trait.key}`}>
+                        {trait.detailLabel ?? 'Details'} *
+                      </Label>
+                      <Input
+                        id={`species-trait-${trait.key}`}
+                        value={traitDetails[trait.key] ?? ''}
+                        onChange={(event) => onTraitDetailChange(trait.key, event.target.value)}
+                        placeholder={trait.detailPlaceholder}
+                        aria-invalid={detailInvalid}
+                        className={detailInvalid ? 'border-destructive' : undefined}
+                      />
+                    </>
+                  )}
                   {detailInvalid && (
                     <p className="text-xs text-destructive">Bitte konkretisiere dieses Speziesmerkmal.</p>
                   )}
