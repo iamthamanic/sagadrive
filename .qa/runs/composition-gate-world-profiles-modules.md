@@ -1,7 +1,7 @@
 # Composition Gate — world-profiles-modules
 
-- HEAD_SHA: a34b650a7b31b4162fb4d232959bdcdd37d10ac7
-- BASE_SHA: 53079a466b6bb6a35cf1a2bc9bc8a7258e22f45b
+- HEAD_SHA: 55422560d38ee553efb9416b9b0a5c40216eb6e2
+- BASE_SHA: 72fd3af61c2e133f91182f204ace22c4464dd143
 - Date: 2026-08-27
 - Verdict: CLEAR
 
@@ -28,6 +28,7 @@ Ein Benutzer erstellt oder bearbeitet ein owner-scoped Weltprofil und setzt dess
 n/a
 
 ## Notes
+- Der Welt-Branch enthält den aktuellen Stand von `feat/species-traits-by-species` bis `72fd3af61c2e133f91182f204ace22c4464dd143`; die fünf nach Branch-Erstellung hinzugekommenen Spezies-QA/UI-Commits wurden ohne Konflikt nachgezogen.
 - Dieses Ticket erzeugt bewusst keine Adventure↔World- oder Character↔World-Verknüpfung.
 - Der Character Editor liest `world_profiles` noch nicht und behält daher exakt sein bestehendes Speziesverhalten.
 - `Progressiv` ist in dieser Ausbaustufe eine Weltregel-Konfiguration, aber noch kein eigenständiger Punktegenerator. Konkrete Erwerbsquellen folgen separat.
