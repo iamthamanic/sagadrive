@@ -1,6 +1,6 @@
 # Composition Gate — feat-alien-species-sketch
 
-- HEAD_SHA: 493e4a0ff5b52bf827ed1e1c4e3ac0fc02ba1361
+- HEAD_SHA: 5fe70b18d317d6dfc4df6d48184a381c99e9a998
 - BASE_SHA: 63cb036f95d9763d21985933cf1396abfff720cd
 - Date: 2026-08-27
 - Verdict: SKIPPED
@@ -26,3 +26,4 @@ Single-hop presentational asset update (species sketch PNG only). No API, DB, wo
 
 ## Notes
 - Outline-only lineup: snail, ghost, grey (center), crystal, tentacle — same `#94A3B8` line-art style as other Spezies.
+- Follow-up UI chrome on same branch (Spezies tab rename, preview identity fields, ruleset toolbar, collapsible archetype ability, shorter archetype cards) remains presentational single-hop; no persistence path change.
