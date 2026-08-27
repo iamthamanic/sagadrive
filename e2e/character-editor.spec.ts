@@ -26,11 +26,11 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('SagaDrive Core').first()).toBeVisible();
   await expect(page.getByRole('combobox', { name: /Regelset/i }).first()).toBeVisible();
 
-  for (const tab of ['Info', 'Hintergrund', 'Parameter', 'Look', 'Inventar', 'Notizen']) {
+  for (const tab of ['Spezies', 'Hintergrund', 'Parameter', 'Look', 'Inventar', 'Notizen']) {
     await expect(page.getByRole('tab', { name: new RegExp(`^${tab}$`, 'i') })).toBeVisible();
   }
 
-  await page.getByRole('tab', { name: /^Info$/i }).click();
+  await page.getByRole('tab', { name: /^Spezies$/i }).click();
   await expect(page.getByText('Spezies', { exact: true }).first()).toBeVisible();
   await expect(page.getByRole('radio', { name: /Mensch/i })).toBeVisible();
   await expect(page.getByRole('img', { name: /Skizze: Mensch/i })).toBeVisible();
@@ -86,7 +86,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('button', { name: /Speichern/i }).first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '09-notes-save.png'), fullPage: true });
 
-  await page.getByRole('tab', { name: /Info/i }).click();
+  await page.getByRole('tab', { name: /Spezies/i }).click();
   await page.getByPlaceholder('Charaktername').first().fill('Validierungsprobe');
   await page.getByRole('button', { name: /Speichern/i }).first().click();
   await expect(page.locator('[data-sonner-toast]').filter({ hasText: /Hintergrundangaben|Fertigkeitspunkte|Attribute|Namen|gelesen/i }).first()).toBeVisible({ timeout: 10_000 });

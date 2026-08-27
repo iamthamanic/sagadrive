@@ -57,7 +57,7 @@ import {
 } from '../modules/rulesets/characterCreation';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -340,13 +340,74 @@ export function CharacterEditor() {
     <div className="h-full w-full overflow-y-auto">
       <div className="mx-auto max-w-7xl space-y-4 p-4 md:space-y-6 md:p-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div><div className="flex flex-wrap items-center gap-2"><h1 className="text-xl md:text-2xl">Charakter Editor</h1><Badge>{rulesetLabel}</Badge><Badge variant="outline">Stufe {characterLevel}</Badge></div><p className="mt-1 text-sm text-muted-foreground">Der Editor führt dich durch die Core-Regeln und berechnet regelrelevante Werte automatisch.</p></div>
-          <div className="flex gap-2"><Button variant="outline" onClick={() => trackActivity('Character Editor: Vorschau fokussiert')}><Eye className="mr-2 h-4 w-4" />Vorschau</Button><Button onClick={handleSaveCharacter} disabled={saving || uploading}><Save className="mr-2 h-4 w-4" />{saving ? 'Speichert...' : 'Speichern'}</Button></div>
+          <div><div className="flex flex-wrap items-center gap-2"><h1 className="text-xl md:text-2xl">Charakter Editor</h1><Badge>{rulesetLabel}</Badge><Badge variant="outline">Stufe {characterLevel}</Badge></div></div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={ruleset} onValueChange={handleRulesetChange}>
+              <SelectTrigger id="ruleset" size="sm" className="w-[10.5rem] sm:w-52" aria-label="Regelset">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {characterRulesetOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={() => trackActivity('Character Editor: Vorschau fokussiert')}>
+              <Eye className="mr-2 h-4 w-4" />Vorschau
+            </Button>
+            <Button onClick={handleSaveCharacter} disabled={saving || uploading}>
+              <Save className="mr-2 h-4 w-4" />{saving ? 'Speichert...' : 'Speichern'}
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
           <Card className="lg:sticky lg:top-4 lg:col-span-1 lg:self-start">
-            <CardHeader className="pb-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><CardTitle className="truncate text-base md:text-lg" title={characterName || 'Unbenannt'}>{characterName || 'Unbenannt'}</CardTitle><p className="mt-1 text-xs text-muted-foreground">Stufe {characterLevel} · {rulesetLabel}</p></div><Badge variant="outline">Drive 3 / 5</Badge></div></CardHeader>
+            <CardHeader className="space-y-3 pb-3">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs text-muted-foreground">{rulesetLabel}</p>
+                <Badge variant="outline">Drive 3 / 5</Badge>
+              </div>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Charaktername"
+                    value={characterName}
+                    onChange={(event) => setCharacterName(event.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <Label htmlFor="gender-reading">Geschlecht</Label>
+                    <GenderReadingSelect
+                      id="gender-reading"
+                      value={genderReading}
+                      onValueChange={setGenderReading}
+                      className="w-full"
+                      invalid={validationAttempted && !genderReadingComplete}
+                    />
+                  </div>
+                  <div className="w-[4.5rem] shrink-0 space-y-1.5 sm:w-20">
+                    <Label htmlFor="level">Stufe</Label>
+                    <Select value={String(characterLevel)} onValueChange={(value) => setCharacterLevel(Number.parseInt(value, 10))}>
+                      <SelectTrigger id="level" className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 20 }, (_, index) => index + 1).map((level) => (
+                          <SelectItem key={level} value={String(level)}>{level}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {validationAttempted && !genderReadingComplete && (
+                  <p className="text-xs text-destructive">
+                    Bitte wähle eine Lesart: männlich, weiblich oder divers.
+                  </p>
+                )}
+              </div>
+            </CardHeader>
             <CardContent className="space-y-4">
               <div className="aspect-[4/5] overflow-hidden rounded-lg border border-border bg-[#0B1220] shadow-inner"><AvatarCanvas avatar={currentAvatar} canvasRef={avatarCanvasRef} /></div>
               <p className="text-sm text-muted-foreground">{previewSubtitle || 'Wähle Archetyp und Essenz'}</p>
@@ -366,28 +427,10 @@ export function CharacterEditor() {
           </Card>
 
           <Card className="lg:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base md:text-lg">Charakter erstellen</CardTitle>
-              <CardAction>
-                <div className="space-y-1.5">
-                  <Label htmlFor="ruleset" className="text-xs text-muted-foreground">Regelset</Label>
-                  <Select value={ruleset} onValueChange={handleRulesetChange}>
-                    <SelectTrigger id="ruleset" className="w-[10.5rem] sm:w-52" aria-label="Regelset">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {characterRulesetOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardAction>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-6">
-                  <TabsTrigger value="info" className="px-1 py-2 text-xs md:px-2 md:text-sm">Info</TabsTrigger>
+                  <TabsTrigger value="info" className="px-1 py-2 text-xs md:px-2 md:text-sm">Spezies</TabsTrigger>
                   <TabsTrigger value="background" className="px-1 py-2 text-xs md:px-2 md:text-sm">Hintergrund</TabsTrigger>
                   <TabsTrigger value="values" className="px-1 py-2 text-xs md:px-2 md:text-sm">Parameter</TabsTrigger>
                   <TabsTrigger value="appearance" className="px-1 py-2 text-xs md:px-2 md:text-sm">Look</TabsTrigger>
@@ -396,34 +439,6 @@ export function CharacterEditor() {
                 </TabsList>
 
                 <TabsContent value="info" className="space-y-6">
-                  <div className="flex gap-3 sm:gap-4">
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <Label htmlFor="name">Name</Label>
-                      <Input id="name" placeholder="Charaktername" value={characterName} onChange={(event) => setCharacterName(event.target.value)} />
-                    </div>
-                    <div className="w-[7.25rem] shrink-0 space-y-2 sm:w-36">
-                      <Label htmlFor="gender-reading">Geschlecht</Label>
-                      <GenderReadingSelect
-                        id="gender-reading"
-                        value={genderReading}
-                        onValueChange={setGenderReading}
-                        className="w-full"
-                        invalid={validationAttempted && !genderReadingComplete}
-                      />
-                    </div>
-                    <div className="w-[4.5rem] shrink-0 space-y-2 sm:w-20">
-                      <Label htmlFor="level">Stufe</Label>
-                      <Select value={String(characterLevel)} onValueChange={(value) => setCharacterLevel(Number.parseInt(value, 10))}>
-                        <SelectTrigger id="level" className="w-full"><SelectValue /></SelectTrigger>
-                        <SelectContent>{Array.from({ length: 20 }, (_, index) => index + 1).map((level) => <SelectItem key={level} value={String(level)}>{level}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  {validationAttempted && !genderReadingComplete && (
-                    <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-                      Bitte wähle eine Lesart: männlich gelesen, weiblich gelesen oder divers.
-                    </div>
-                  )}
                   <div className="space-y-2">
                     <Label id="species-label">Spezies</Label>
                     <SpeciesCarousel selectedRace={characterRace} onSelect={applyRacePreset} labelledBy="species-label" />
@@ -505,7 +520,7 @@ export function CharacterEditor() {
                 </TabsContent>
 
                 <TabsContent value="appearance" className="space-y-6">
-                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium">Look ist kosmetisch</p><p className="mt-1 text-sm text-muted-foreground">Körperbau, Gesicht, Haare und Kleidung verändern keine Charakterwerte. Spezies wählst du im Info-Tab, Talente unter Parameter → Talente.</p></div><Badge variant="outline">Keine Werte</Badge></div></div>
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium">Look ist kosmetisch</p><p className="mt-1 text-sm text-muted-foreground">Körperbau, Gesicht, Haare und Kleidung verändern keine Charakterwerte. Spezies wählst du im Spezies-Tab, Talente unter Parameter → Talente.</p></div><Badge variant="outline">Keine Werte</Badge></div></div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2"><div className="space-y-2"><Label>Körperbau</Label><Slider aria-label="Körperbau" value={bodySize} onValueChange={setBodySize} min={0} max={100} step={1} /><div className="flex items-center justify-between text-xs text-muted-foreground"><span>Schmal</span><span>{bodySize[0]}</span><span>Massiv</span></div></div><div className="space-y-2"><Label>Größe</Label><Slider aria-label="Größe" value={height} onValueChange={setHeight} min={0} max={100} step={1} /><div className="flex items-center justify-between text-xs text-muted-foreground"><span>Klein</span><span>{height[0]}</span><span>Groß</span></div></div></div>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2"><Label htmlFor="headStyle">Gesicht</Label><Select value={headStyle} onValueChange={setHeadStyle}><SelectTrigger id="headStyle"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="human-balanced">Ausgewogen</SelectItem><SelectItem value="elf-angular">Fein / kantig</SelectItem><SelectItem value="dwarf-broad">Breit</SelectItem><SelectItem value="halfling-soft">Weich</SelectItem><SelectItem value="orc-heavy">Massiv</SelectItem><SelectItem value="cyborg-angular">Synthetisch</SelectItem><SelectItem value="alien-oval">Oval</SelectItem><SelectItem value="neutral-soft">Neutral</SelectItem></SelectContent></Select></div>
