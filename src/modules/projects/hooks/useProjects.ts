@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { projectService } from '../services/project.service';
-import type { ProjectVm, CreateProjectDto, JoinProjectDto } from '../types/project.types';
+import type {
+  ProjectVm,
+  CreateProjectDto,
+  UpdateProjectDto,
+  JoinProjectDto,
+} from '../types/project.types';
 
-/**
- * Custom hook for managing projects
- */
 export function useProjects() {
   const [projects, setProjects] = useState<ProjectVm[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch projects on mount
   useEffect(() => {
-    fetchProjects();
+    void fetchProjects();
   }, []);
 
   const fetchProjects = async () => {
@@ -46,7 +47,7 @@ export function useProjects() {
     try {
       setError(null);
       const project = await projectService.joinProject(payload);
-      setProjects((prev) => [project, ...prev]);
+      setProjects((prev) => [project, ...prev.filter((entry) => entry.id !== project.id)]);
       return project;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to join project';
@@ -55,13 +56,40 @@ export function useProjects() {
     }
   };
 
-  const updateProject = async (id: string, updates: Partial<ProjectVm>) => {
+  const updateProject = async (id: string, updates: UpdateProjectDto): Promise<ProjectVm> => {
     try {
       setError(null);
-      const updated = await projectService.updateProject(id, updates as any);
-      setProjects((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      const updated = await projectService.updateProject(id, updates);
+      setProjects((prev) => prev.map((project) => project.id === id ? updated : project));
+      return updated;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to update project';
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    }
+  };
+
+  const setWorldProfile = async (projectId: string, worldProfileId: string): Promise<ProjectVm> => {
+    try {
+      setError(null);
+      const updated = await projectService.setWorldProfile(projectId, worldProfileId);
+      setProjects((prev) => prev.map((project) => project.id === projectId ? updated : project));
+      return updated;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Welt konnte nicht zugewiesen werden';
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    }
+  };
+
+  const setMyCharacter = async (projectId: string, characterId: string | null): Promise<ProjectVm> => {
+    try {
+      setError(null);
+      const updated = await projectService.setMyCharacter(projectId, characterId);
+      setProjects((prev) => prev.map((project) => project.id === projectId ? updated : project));
+      return updated;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Charakter konnte nicht zugewiesen werden';
       setError(errorMsg);
       throw new Error(errorMsg);
     }
@@ -71,7 +99,7 @@ export function useProjects() {
     try {
       setError(null);
       await projectService.deleteProject(id);
-      setProjects((prev) => prev.filter((p) => p.id !== id));
+      setProjects((prev) => prev.filter((project) => project.id !== id));
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to delete project';
       setError(errorMsg);
@@ -83,7 +111,7 @@ export function useProjects() {
     try {
       setError(null);
       await projectService.leaveProject(projectId);
-      setProjects((prev) => prev.filter((p) => p.id !== projectId));
+      setProjects((prev) => prev.filter((project) => project.id !== projectId));
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to leave project';
       setError(errorMsg);
@@ -99,6 +127,8 @@ export function useProjects() {
     createProject,
     joinProject,
     updateProject,
+    setWorldProfile,
+    setMyCharacter,
     deleteProject,
     leaveProject,
   };

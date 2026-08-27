@@ -85,11 +85,21 @@ Die regelrelevanten Character-Creation-Daten werden getrennt gespeichert:
 
 Alte Attributdaten mit `constitution`, `intelligence` und `wisdom` werden beim Lesen weiterhin auf `Ausdauer`, `Verstand` und `Wahrnehmung` normalisiert. D&D-Metadaten bleiben im Datenvertrag aus Kompatibilitätsgründen erhalten, sind aber **nicht Teil des aktuell ausgebauten Neuer-Charakter-Flows**.
 
+## Weltprofile und Abenteuer-Kontext
+
+Die Bibliothek besitzt neben Charakteren und Abenteuern eigenständige **Welten**. Intern werden sie als `WorldProfile` gespeichert. Weltprofile enthalten Setting-/Regelmodule in `world_profiles.modules` (JSONB); das erste Core-Modul ist `species-development` mit `Explizit`, `Progressiv` und `Deaktiviert`.
+
+Ein Abenteuer/Projekt verweist über `projects.world_profile_id` auf sein WorldProfile. Das bereits bestehende `projects.world_id` bleibt ausdrücklich Legacy-Kampagnen-/Lore-Identität und wird nicht umgedeutet. Ein Charakter erhält ebenfalls keine globale Welt-ID: Seine effektiven Weltregeln werden nur im Kontext einer aktiven `project_members.character_id`-Teilnahme über `projectId + characterId` aufgelöst.
+
+Neue Abenteuer verlangen eine Welt. Beim Beitritt wird ein eigener Charakter gewählt; bestehende Teilnahmen können den eigenen Charakter über die bereits abgesicherte `set_my_project_character`-RPC wechseln. Aktive Teilnehmer dürfen das dem Abenteuer zugewiesene WorldProfile lesen, aber nicht bearbeiten. Bereits erworbene permanente Charaktermerkmale bleiben bei einem späteren Weltwechsel bestehen; ein Weltmodus wie `Speziesentwicklung: Deaktiviert` beschränkt künftigen Erwerb und löscht nichts rückwirkend.
+
+Details zur Architektur und zu den Sicherheitsinvarianten: [`docs/world profiles.md`](docs/world%20profiles.md).
+
 ## Character-Lore-KI
 
 Der CharacterEditor besitzt eine Hintergrundgeschichten-Pipeline. Die UI erzeugt einen typisierten Character-Context; die Supabase Edge Function `character-lore` baut daraus serverseitig den versionierten Prompt und ruft den konfigurierten Provider auf. API-Keys werden nie an den Browser ausgeliefert.
 
-Im Hintergrund-Tab kann optional ein für den eingeloggten User sichtbares Projekt als **Kampagnen-Lore** gewählt werden. Der Browser sendet dabei `projectId` und, falls vorhanden, die verknüpfte `worldId`. Diese IDs sind nur untrusted Kontext-Hinweise: Die Edge Function verifiziert Projektmitgliedschaft bzw. GM-Rechte und die Projekt-Welt-Zuordnung erneut serverseitig, bevor Lore gelesen wird. Ohne Auswahl bleibt die Generierung setting-neutral.
+Im Hintergrund-Tab kann optional ein für den eingeloggten User sichtbares Projekt als **Kampagnen-Lore** gewählt werden. Der Browser sendet dabei `projectId` und, falls vorhanden, die verknüpfte Legacy-`worldId`. Diese IDs sind nur untrusted Kontext-Hinweise: Die Edge Function verifiziert Projektmitgliedschaft bzw. GM-Rechte und die Projekt-Welt-Zuordnung erneut serverseitig, bevor Lore gelesen wird. Ohne Auswahl bleibt die Generierung setting-neutral. Der neue `world_profile_id`-Regelkontext ändert diese Legacy-Lore-Semantik nicht.
 
 Projektmitgliedschaft ist dabei selbst Teil der Sicherheitsgrenze. `supabase/migrations/004_project_membership_security.sql` entfernt browserseitige Schreibrechte auf `project_id`, `user_id`, `role` und `status`. Self-Service-Beitritt läuft ausschließlich über die `SECURITY DEFINER`-RPC `join_project_by_code`; die eigene Charakterzuordnung über `set_my_project_character`. Gekickte Mitgliedschaften können sich nicht selbst reaktivieren oder löschen. Die Migration härtet auch Legacy-Ressourcen-Policies auf aktive Mitgliedschaften und erzwingt eine case-insensitiv eindeutige Projektcode-Identität.
 
@@ -120,7 +130,7 @@ Der Prompt liegt versioniert unter `supabase/functions/_shared/character-lore-pr
 
 Character-Portraits werden über denselben konfigurierten Supabase-Client direkt in den privaten Storage-Bucket `character-portraits` geladen. Dadurch funktioniert `Portrait erzeugen` sowohl gegen Hosted Supabase als auch im dokumentierten Self-Host-Stack mit `VITE_SUPABASE_URL`. Migration `006_character_portrait_storage.sql` legt den privaten Bucket mit 5-MB-/MIME-Limits an und erlaubt authentifizierten Nutzern ausschließlich Zugriff auf Objekte unter ihrem eigenen User-ID-Pfad. Der CharacterEditor speichert weiterhin eine signierte Portrait-URL.
 
-Für den aktuellen Character-/Lore-Stand sind bei bestehenden Datenbanken diese Migrationen in Reihenfolge erforderlich:
+Für den aktuellen Character-/World-Stand sind bei bestehenden Datenbanken diese Migrationen in Reihenfolge erforderlich:
 
 ```text
 002_character_trait_arrays.sql
@@ -129,9 +139,11 @@ Für den aktuellen Character-/Lore-Stand sind bei bestehenden Datenbanken diese 
 005_character_ruleset_metadata.sql
 006_character_portrait_storage.sql
 007_sagadrive_character_profile.sql
+008_world_profiles.sql
+009_project_world_profiles.sql
 ```
 
-`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz, `006` richtet den privaten owner-scoped Portrait-Storage ein und `007` ergänzt `sagadrive_profile` sowie persistente Character-Notizen. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
+`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz, `006` richtet den privaten owner-scoped Portrait-Storage ein, `007` ergänzt `sagadrive_profile` sowie persistente Character-Notizen, `008` erstellt owner-scoped WorldProfiles und `009` verbindet Abenteuer sicher über `world_profile_id` mit Weltprofilen und öffnet deren Read-Zugriff für aktive Teilnehmer. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
 
 ## Quality Gates
 
@@ -152,6 +164,8 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-08-27** — Weltkontext: WorldProfiles → Abenteuer/Projekt → aktive Character-Teilnahme → `EffectiveWorldConfig`; neues `projects.world_profile_id`, sichere GM-Zuordnung und Teilnehmer-Read-RLS (`feat/world-profiles-modules`)
+- **2026-08-27** — Weltprofile: Bibliotheks-Tab `Welten`, modulare JSONB-Registry und `species-development` mit Explizit/Progressiv/Deaktiviert (`feat/world-profiles-modules`)
 - **2026-08-27** — Speziesmerkmale: speziesgebundene Allowlists, exakt 3/3 Punkte, Merkmalsdetails direkt an den Cards, Alien-Profil-Builder, `Erweitertes Klettern`/`Erweitertes Schwimmen`; Talente-Subtab entfernt (`feat/species-traits-by-species`)
 - **2026-08-27** — Character Editor Chrome: Tab „Spezies“, Name/Geschlecht/Stufe in Preview, Regelset neben Vorschau, Archetyp-Kernfähigkeit einklappbar, flachere Archetyp-Karten (`feat/alien-species-sketch`)
 - **2026-08-27** — Alien-Spezies-Skizze: Outline-Lineup mit fünf Gestalten (Schnecke, Geist, Grey, Kristall, Tentakel) (`feat/alien-species-sketch`)
@@ -166,7 +180,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-`test-gate` führt die technischen Checks aus: diff-spezifischer Typed-Strict-Lint, Typecheck, Produktions-Build, `deno check` für geänderte Supabase-Edge-Function-TypeScript-Dateien, Deno-Tests, den Project-Membership-Security-Contract, den Character-Editor-Regression-Contract und den Secrets-Diff-Scan. GitHub Actions stellt dafür Deno LTS über `denoland/setup-deno@v2` bereit. `npm audit --omit=dev` wird zusätzlich sichtbar protokolliert.
+`test-gate` führt die technischen Checks aus: diff-spezifischer Typed-Strict-Lint, Typecheck, Produktions-Build, `deno check` für geänderte Supabase-Edge-Function-TypeScript-Dateien, Deno-Tests, den Project-Membership-Security-Contract, den World-Context-Regression-Contract, den Character-Editor-Regression-Contract und den Secrets-Diff-Scan. GitHub Actions stellt dafür Deno LTS über `denoland/setup-deno@v2` bereit. `npm audit --omit=dev` wird zusätzlich sichtbar protokolliert.
 
 `composition-gate` prüft die Bedeutung über Modul-/Service-/Backend-Hops. Reine Docs-/Tooling-Diffs und sichere Single-Hop-Diffs werden dokumentiert übersprungen. Bei Multi-Hop-, Persistenz-, Worker-, Queue-, Webhook- oder Side-Effect-relevanten Änderungen muss ein aktueller Proof unter `.qa/runs/composition-gate-<slug>.md` mit `CLEAR` oder begründetem `SKIPPED` vorliegen.
 
@@ -174,7 +188,7 @@ npm run test:e2e
 
 - `src/` – Haupt-Frontend-Code
 - `src/components/` – UI- und Feature-Komponenten
-- `src/modules/` – Domänenmodule (projects, characters, sessions, rulesets, marketplace)
+- `src/modules/` – Domänenmodule (projects, characters, sessions, rulesets, marketplace, worlds)
 - `src/lib/` – gemeinsame Clients/Provider (u. a. Supabase, Auth)
 - `src/supabase/` – SQL-Skripte, Migrations und Deploy-Hilfen
 - `supabase/functions/` – Supabase Edge Functions
@@ -190,6 +204,7 @@ npm run test:e2e
 - `src/AUTH_SETUP.md`
 - `src/modules/marketplace/README.md`
 - `src/supabase/DEPLOY_V3.md`
+- `docs/world profiles.md`
 
 ## Hinweise
 

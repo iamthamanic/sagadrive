@@ -15,9 +15,6 @@ function requireUuid(value: unknown, operation: string): string {
 }
 
 export const projectMemberService = {
-  /**
-   * Get all members of a project
-   */
   async getMembers(projectId: string): Promise<ProjectMemberDto[]> {
     const { data, error } = await supabase
       .from('project_members')
@@ -29,14 +26,13 @@ export const projectMemberService = {
     return data || [];
   },
 
-  /**
-   * Join a project by its secret code.
-   * Membership identity/status is created by a SECURITY DEFINER RPC, never by a client row insert.
-   */
   async joinByCode(dto: JoinProjectDto): Promise<ProjectMemberDto> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data: projectId, error: joinError } = await supabase.rpc('join_project_by_code', {
       p_code: dto.code.toUpperCase(),
-      p_character_id: dto.character_id || null,
+      p_character_id: dto.character_id,
     });
 
     if (joinError) throw new Error(`Beitritt fehlgeschlagen: ${joinError.message}`);
@@ -46,17 +42,14 @@ export const projectMemberService = {
       .from('project_members')
       .select('*')
       .eq('project_id', joinedProjectId)
+      .eq('user_id', user.id)
       .single();
 
     if (error) throw error;
     return data;
   },
 
-  /**
-   * Update only the current user's selected character for an active membership.
-   * Protected membership fields (project/user/role/status) stay server/GM controlled.
-   */
-  async updateCharacter(projectId: string, characterId: string): Promise<ProjectMemberDto> {
+  async updateCharacter(projectId: string, characterId: string | null): Promise<ProjectMemberDto> {
     const { data: memberId, error: updateError } = await supabase.rpc('set_my_project_character', {
       p_project_id: projectId,
       p_character_id: characterId,
@@ -75,9 +68,6 @@ export const projectMemberService = {
     return data;
   },
 
-  /**
-   * Leave a project. Kicked memberships remain as denial records and cannot be self-deleted by RLS.
-   */
   async leave(projectId: string, userId: string): Promise<void> {
     const { error } = await supabase
       .from('project_members')
@@ -88,9 +78,6 @@ export const projectMemberService = {
     if (error) throw error;
   },
 
-  /**
-   * Get active projects where user is a member
-   */
   async getMyProjects(userId: string): Promise<ProjectMemberDto[]> {
     const { data, error } = await supabase
       .from('project_members')

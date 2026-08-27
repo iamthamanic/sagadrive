@@ -4,6 +4,7 @@ import type {
   ProjectDto,
   ProjectVm,
   CreateProjectDto,
+  UpdateProjectDto,
   JoinProjectDto,
   ProjectMemberDto,
   ProjectMemberVm,
@@ -27,6 +28,7 @@ function isProjectDto(value: unknown): value is ProjectDto {
     typeof value.name === 'string' &&
     (typeof value.description === 'string' || value.description === null) &&
     (typeof value.world_id === 'string' || value.world_id === null) &&
+    (typeof value.world_profile_id === 'string' || value.world_profile_id === null) &&
     typeof value.gm_user_id === 'string' &&
     isProjectStatus(value.status) &&
     typeof value.created_at === 'string' &&
@@ -34,34 +36,24 @@ function isProjectDto(value: unknown): value is ProjectDto {
   );
 }
 
-/**
- * Project Service
- * Handles all project-related API calls (campaigns/adventures)
- */
 class ProjectService {
   private readonly tableName = 'projects';
   private readonly membersTableName = 'project_members';
   private readonly sessionsTableName = 'sessions';
 
-  /**
-   * Generate random 6-digit join code
-   */
   private generateProjectCode(): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Exclude ambiguous chars
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 6; i += 1) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return code;
   }
 
-  /**
-   * Map DTO to View Model
-   */
   private mapToViewModel(
     project: ProjectDto,
     members: ProjectMemberDto[],
-    sessions: SessionDto[]
+    sessions: SessionDto[],
   ): ProjectVm {
     const mappedMembers: ProjectMemberVm[] = members.map((member) => ({
       id: member.id,
@@ -88,7 +80,7 @@ class ProjectService {
     const completedSessions = sessions.filter((session) => session.ended_at);
     const lastSessionDate = completedSessions.length
       ? completedSessions.sort((left, right) =>
-          new Date(right.ended_at!).getTime() - new Date(left.ended_at!).getTime()
+          new Date(right.ended_at!).getTime() - new Date(left.ended_at!).getTime(),
         )[0].ended_at
       : null;
 
@@ -98,6 +90,7 @@ class ProjectService {
       name: project.name,
       description: project.description,
       worldId: project.world_id,
+      worldProfileId: project.world_profile_id,
       gmUserId: project.gm_user_id,
       status: project.status,
       createdAt: project.created_at,
@@ -109,23 +102,18 @@ class ProjectService {
     };
   }
 
-  /**
-   * Create new project (as GM)
-   */
   async createProject(payload: CreateProjectDto): Promise<ProjectVm> {
     const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    if (!user) throw new Error('User not authenticated');
+    if (!payload.world_profile_id) throw new Error('Bitte wähle eine Welt für das Abenteuer.');
 
     const code = this.generateProjectCode();
-
     const projectData: Partial<ProjectDto> = {
       code,
       name: payload.name,
       description: payload.description || null,
-      world_id: payload.world_id || null,
+      world_id: null,
+      world_profile_id: payload.world_profile_id,
       gm_user_id: user.id,
       status: 'active',
     };
@@ -136,11 +124,8 @@ class ProjectService {
       .select()
       .single();
 
-    if (error) {
-      throw new Error(`Failed to create project: ${error.message}`);
-    }
+    if (error) throw new Error(`Failed to create project: ${error.message}`);
 
-    // The GM-controlled membership policy permits this bootstrap row.
     await supabase.from(this.membersTableName).insert({
       project_id: data.id,
       user_id: user.id,
@@ -148,18 +133,12 @@ class ProjectService {
       status: 'active',
     });
 
-    return this.mapToViewModel(data, [], []);
+    return this.mapToViewModel(data as ProjectDto, [], []);
   }
 
-  /**
-   * Get user's projects (as GM or active player).
-   */
   async getUserProjects(): Promise<ProjectVm[]> {
     const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    if (!user) throw new Error('User not authenticated');
 
     const { data: gmProjects, error: gmError } = await supabase
       .from(this.tableName)
@@ -167,9 +146,7 @@ class ProjectService {
       .eq('gm_user_id', user.id)
       .order('created_at', { ascending: false });
 
-    if (gmError) {
-      throw new Error(`Failed to fetch GM projects: ${gmError.message}`);
-    }
+    if (gmError) throw new Error(`Failed to fetch GM projects: ${gmError.message}`);
 
     const { data: memberRecords, error: memberError } = await supabase
       .from(this.membersTableName)
@@ -177,9 +154,7 @@ class ProjectService {
       .eq('user_id', user.id)
       .eq('status', 'active');
 
-    if (memberError) {
-      console.error('Failed to fetch player projects:', memberError);
-    }
+    if (memberError) console.error('Failed to fetch player projects:', memberError);
 
     const playerProjects: ProjectDto[] = [];
     for (const record of memberRecords || []) {
@@ -210,22 +185,15 @@ class ProjectService {
           .order('session_number', { ascending: true });
 
         return this.mapToViewModel(project, members || [], sessions || []);
-      })
+      }),
     );
   }
 
-  /**
-   * Join project by secret code. The SECURITY DEFINER RPC owns membership identity,
-   * role and status, so the browser cannot mint or reactivate an authorization grant.
-   */
   async joinProject(payload: JoinProjectDto): Promise<ProjectVm> {
     const membership = await projectMemberService.joinByCode(payload);
     return this.getProjectById(membership.project_id);
   }
 
-  /**
-   * Get project by ID
-   */
   async getProjectById(id: string): Promise<ProjectVm> {
     const { data: project, error: projectError } = await supabase
       .from(this.tableName)
@@ -251,46 +219,43 @@ class ProjectService {
     return this.mapToViewModel(project, members || [], sessions || []);
   }
 
-  /**
-   * Update project
-   */
-  async updateProject(id: string, updates: Partial<ProjectDto>): Promise<ProjectVm> {
+  async updateProject(id: string, updates: UpdateProjectDto): Promise<ProjectVm> {
     const { error } = await supabase
       .from(this.tableName)
       .update(updates)
       .eq('id', id);
 
-    if (error) {
-      throw new Error(`Failed to update project: ${error.message}`);
-    }
-
+    if (error) throw new Error(`Failed to update project: ${error.message}`);
     return this.getProjectById(id);
   }
 
-  /**
-   * Delete project
-   */
+  async setWorldProfile(projectId: string, worldProfileId: string): Promise<ProjectVm> {
+    const { error } = await supabase.rpc('set_project_world_profile', {
+      p_project_id: projectId,
+      p_world_profile_id: worldProfileId,
+    });
+
+    if (error) throw new Error(`Welt konnte dem Abenteuer nicht zugewiesen werden: ${error.message}`);
+    return this.getProjectById(projectId);
+  }
+
+  async setMyCharacter(projectId: string, characterId: string | null): Promise<ProjectVm> {
+    await projectMemberService.updateCharacter(projectId, characterId);
+    return this.getProjectById(projectId);
+  }
+
   async deleteProject(id: string): Promise<void> {
     const { error } = await supabase
       .from(this.tableName)
       .delete()
       .eq('id', id);
 
-    if (error) {
-      throw new Error(`Failed to delete project: ${error.message}`);
-    }
+    if (error) throw new Error(`Failed to delete project: ${error.message}`);
   }
 
-  /**
-   * Leave project (as player). Kicked rows stay server/GM-controlled denial records.
-   */
   async leaveProject(projectId: string): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
+    if (!user) throw new Error('User not authenticated');
     await projectMemberService.leave(projectId, user.id);
   }
 }

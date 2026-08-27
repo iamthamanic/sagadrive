@@ -26,55 +26,32 @@ function resolveDiffBase() {
   const baseRef = process.env.GITHUB_BASE_REF ?? '';
   const currentRef = process.env.GITHUB_REF_NAME ?? '';
 
-  if (baseRef && hasRef(`origin/${baseRef}`)) {
-    return git(['merge-base', 'HEAD', `origin/${baseRef}`]);
-  }
-
+  if (baseRef && hasRef(`origin/${baseRef}`)) return git(['merge-base', 'HEAD', `origin/${baseRef}`]);
   if (currentRef === 'main' && hasRef('HEAD^')) return 'HEAD^';
   if (hasRef('origin/main')) return git(['merge-base', 'HEAD', 'origin/main']);
   if (hasRef('main')) return git(['merge-base', 'HEAD', 'main']);
   if (hasRef('HEAD^')) return 'HEAD^';
-
   return undefined;
 }
 
 function changedDenoFunctionFiles() {
   const base = resolveDiffBase();
   if (!base) return [];
-
-  const output = git([
-    'diff',
-    '--name-only',
-    '--diff-filter=ACMR',
-    `${base}..HEAD`,
-    '--',
-    'supabase/functions',
-  ]);
-
-  return output
-    ? output.split('\n').filter((path) => path.endsWith('.ts'))
-    : [];
+  const output = git(['diff', '--name-only', '--diff-filter=ACMR', `${base}..HEAD`, '--', 'supabase/functions']);
+  return output ? output.split('\n').filter((path) => path.endsWith('.ts')) : [];
 }
 
 function trackedDenoTestFiles() {
   const output = git(['ls-files', 'supabase/functions']);
-  return output
-    ? output.split('\n').filter((path) => path.endsWith('_test.ts'))
-    : [];
+  return output ? output.split('\n').filter((path) => path.endsWith('_test.ts')) : [];
 }
 
 function runDeno(args, label) {
-  const result = spawnSync('deno', args, {
-    cwd: root,
-    encoding: 'utf8',
-    stdio: 'inherit',
-  });
-
+  const result = spawnSync('deno', args, { cwd: root, encoding: 'utf8', stdio: 'inherit' });
   if (result.error) {
     console.error(`${label} could not start: ${result.error.message}`);
     process.exit(1);
   }
-
   if (result.status !== 0) {
     console.error(`${label} failed.`);
     process.exit(result.status ?? 1);
@@ -87,7 +64,6 @@ function checkChangedDenoFunctions() {
     console.log('Deno Edge Function check skipped (no changed TypeScript files).');
     return;
   }
-
   console.log(`Deno Edge Function check: ${files.length} changed TypeScript file(s).`);
   runDeno(['check', ...files], 'Deno Edge Function check');
   console.log('Deno Edge Function check passed.');
@@ -97,7 +73,6 @@ function checkChangedDenoFunctions() {
     console.log('Deno Edge Function tests skipped (no tracked *_test.ts files).');
     return;
   }
-
   console.log(`Deno Edge Function tests: ${testFiles.length} test file(s).`);
   runDeno(['test', ...testFiles], 'Deno Edge Function tests');
   console.log('Deno Edge Function tests passed.');
@@ -105,18 +80,17 @@ function checkChangedDenoFunctions() {
 
 function checkProjectMembershipSecurity() {
   console.log('Project membership security contract: checking RLS and client write paths...');
-  execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], {
-    cwd: root,
-    stdio: 'inherit',
-  });
+  execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], { cwd: root, stdio: 'inherit' });
+}
+
+function checkWorldContextRegressions() {
+  console.log('World context regression contract: checking adventure world links and effective rule context...');
+  execFileSync(process.execPath, ['scripts/world-context-regression-check.mjs'], { cwd: root, stdio: 'inherit' });
 }
 
 function checkCharacterEditorRegressions() {
   console.log('Character editor regression contract: checking persistence, avatar replay, and legacy project status...');
-  execFileSync(process.execPath, ['scripts/character-editor-regression-check.mjs'], {
-    cwd: root,
-    stdio: 'inherit',
-  });
+  execFileSync(process.execPath, ['scripts/character-editor-regression-check.mjs'], { cwd: root, stdio: 'inherit' });
 }
 
 function scanAddedLinesForSecrets() {
@@ -125,48 +99,34 @@ function scanAddedLinesForSecrets() {
     console.log('Secrets diff scan skipped (no diff base available).');
     return;
   }
-
   const diff = git(['diff', '--unified=0', `${base}..HEAD`, '--', '.']);
-  const addedLines = diff
-    .split('\n')
-    .filter((line) => line.startsWith('+') && !line.startsWith('+++'))
-    .map((line) => line.slice(1));
-
+  const addedLines = diff.split('\n').filter((line) => line.startsWith('+') && !line.startsWith('+++')).map((line) => line.slice(1));
   const secretPatterns = [
     { label: 'private key', pattern: /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/ },
     { label: 'AWS access key', pattern: /\bAKIA[0-9A-Z]{16}\b/ },
     { label: 'GitHub token', pattern: /\bgh[pousr]_[A-Za-z0-9_]{20,}\b/ },
     { label: 'OpenAI-style secret', pattern: /\bsk-[A-Za-z0-9_-]{24,}\b/ },
   ];
-
   const findings = [];
   for (const line of addedLines) {
     for (const rule of secretPatterns) {
       if (rule.pattern.test(line)) findings.push(rule.label);
     }
   }
-
   if (findings.length > 0) {
     console.error(`Secrets diff scan failed: ${[...new Set(findings)].join(', ')}`);
     process.exit(1);
   }
-
   console.log('Secrets diff scan passed.');
 }
 
 function reportDependencyAudit() {
-  const result = spawnSync('npm', ['audit', '--omit=dev', '--json'], {
-    cwd: root,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-
+  const result = spawnSync('npm', ['audit', '--omit=dev', '--json'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   const raw = result.stdout || result.stderr;
   if (!raw) {
     console.warn('Dependency audit unavailable; continuing because npmAudit is informational.');
     return;
   }
-
   try {
     const report = JSON.parse(raw);
     const vulnerabilities = report?.metadata?.vulnerabilities;
@@ -174,11 +134,7 @@ function reportDependencyAudit() {
       console.warn('Dependency audit returned no vulnerability summary.');
       return;
     }
-
-    const summary = ['critical', 'high', 'moderate', 'low']
-      .map((level) => `${level}=${Number(vulnerabilities[level] ?? 0)}`)
-      .join(', ');
-
+    const summary = ['critical', 'high', 'moderate', 'low'].map((level) => `${level}=${Number(vulnerabilities[level] ?? 0)}`).join(', ');
     console.log(`Dependency audit (informational): ${summary}.`);
   } catch {
     console.warn('Dependency audit output could not be parsed; continuing as informational.');
@@ -186,15 +142,11 @@ function reportDependencyAudit() {
 }
 
 console.log('Test Gate: running project checks...');
-execFileSync('npm', ['run', 'checks'], {
-  cwd: root,
-  stdio: 'inherit',
-});
-
+execFileSync('npm', ['run', 'checks'], { cwd: root, stdio: 'inherit' });
 checkChangedDenoFunctions();
 checkProjectMembershipSecurity();
+checkWorldContextRegressions();
 checkCharacterEditorRegressions();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
-
 console.log('Test Gate passed.');

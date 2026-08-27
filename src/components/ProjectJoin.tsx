@@ -4,8 +4,11 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Plus, LogIn, Copy, Check, ArrowLeft } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Plus, LogIn, Copy, Check, ArrowLeft, Globe2, User } from 'lucide-react';
 import { useProjects } from '../modules/projects';
+import { useWorldProfiles } from '../modules/worlds';
+import { useCharacters } from '../modules/characters';
 import { toast } from 'sonner';
 
 interface ProjectJoinProps {
@@ -16,16 +19,24 @@ interface ProjectJoinProps {
 
 export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinProps) {
   const { projects, createProject, joinProject } = useProjects();
+  const { worlds, isLoading: worldsLoading } = useWorldProfiles();
+  const { characters, isLoading: charactersLoading } = useCharacters();
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
+  const [selectedWorldId, setSelectedWorldId] = useState('');
   const [joinCode, setJoinCode] = useState('');
+  const [selectedCharacterId, setSelectedCharacterId] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const handleCreateProject = async () => {
     if (!projectName.trim()) {
-      toast.error('Bitte gib einen Projektnamen ein');
+      toast.error('Bitte gib einen Abenteuernamen ein');
+      return;
+    }
+    if (!selectedWorldId) {
+      toast.error('Bitte wähle eine Welt für das Abenteuer');
       return;
     }
 
@@ -34,16 +45,17 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
       const newProject = await createProject({
         name: projectName,
         description: projectDescription || undefined,
+        world_profile_id: selectedWorldId,
       });
-      
-      toast.success(`Projekt erstellt! Code: ${newProject.code}`, {
+
+      toast.success(`Abenteuer erstellt! Code: ${newProject.code}`, {
         duration: 8000,
         description: 'Teile diesen Code mit deinen Spielern zum Beitreten',
       });
       setProjectName('');
       setProjectDescription('');
-      
-      // Go back to dashboard to see the new project
+      setSelectedWorldId('');
+
       setTimeout(() => {
         onBack();
       }, 500);
@@ -59,16 +71,20 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
       toast.error('Bitte gib einen Beitrittscode ein');
       return;
     }
+    if (!selectedCharacterId) {
+      toast.error('Bitte wähle den Charakter für dieses Abenteuer');
+      return;
+    }
 
     setIsJoining(true);
     try {
-      const project = await joinProject({ code: joinCode });
-      toast.success(`Projekt "${project.name}" beigetreten!`, {
+      const project = await joinProject({ code: joinCode, character_id: selectedCharacterId });
+      toast.success(`Abenteuer "${project.name}" beigetreten!`, {
         duration: 5000,
       });
       setJoinCode('');
-      
-      // Go back to dashboard
+      setSelectedCharacterId('');
+
       setTimeout(() => {
         onBack();
       }, 500);
@@ -81,14 +97,12 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
 
   const handleCopyCode = async (code: string) => {
     try {
-      // Try modern Clipboard API first
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(code);
         setCopiedCode(code);
         toast.success('Code kopiert!');
         setTimeout(() => setCopiedCode(null), 2000);
       } else {
-        // Fallback: Create temporary textarea
         const textarea = document.createElement('textarea');
         textarea.value = code;
         textarea.style.position = 'fixed';
@@ -103,7 +117,6 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
       }
     } catch (error) {
       console.error('Copy failed:', error);
-      // Show code in toast as fallback
       toast.info(`Code: ${code}`, {
         duration: 5000,
         description: 'Manuell kopieren (Clipboard API nicht verfügbar)'
@@ -113,50 +126,46 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
     }
   };
 
-  const activeProjects = projects.filter(p => p.status === 'active');
+  const activeProjects = projects.filter((project) => project.status === 'active');
 
   return (
     <div className="w-full h-full overflow-y-auto">
       <div className="max-w-4xl mx-auto p-4 md:p-8">
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={onBack} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Zurück
         </Button>
 
         <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl mb-2">Projekt starten oder beitreten</h1>
+          <h1 className="text-2xl md:text-3xl mb-2">Abenteuer starten oder beitreten</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Erstelle ein neues Abenteuer oder trete einem bestehenden bei
+            Jedes Abenteuer gehört zu einer Welt. Beim Beitritt legst du fest, welcher Charakter daran teilnimmt.
           </p>
         </div>
 
         <Tabs defaultValue="create" className="mb-8">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="create">Neues Projekt</TabsTrigger>
+            <TabsTrigger value="create">Neues Abenteuer</TabsTrigger>
             <TabsTrigger value="join">Beitreten</TabsTrigger>
           </TabsList>
 
           <TabsContent value="create" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Projekt erstellen</CardTitle>
+                <CardTitle>Abenteuer erstellen</CardTitle>
                 <CardDescription>
-                  Starte ein neues Abenteuer als Game Master
+                  Starte als Game Master ein Abenteuer in einer deiner Welten.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Projektname *</Label>
+                  <Label htmlFor="name">Abenteuername *</Label>
                   <Input
                     id="name"
                     placeholder="z.B. Die Helden von Eldoria"
                     value={projectName}
-                    onChange={(e) => setProjectName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
+                    onChange={(event) => setProjectName(event.target.value)}
+                    onKeyDown={(event) => event.key === 'Enter' && void handleCreateProject()}
                   />
                 </div>
                 <div className="space-y-2">
@@ -165,16 +174,35 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
                     id="description"
                     placeholder="Ein episches Abenteuer in einer Fantasy-Welt..."
                     value={projectDescription}
-                    onChange={(e) => setProjectDescription(e.target.value)}
+                    onChange={(event) => setProjectDescription(event.target.value)}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="project-world">Welt *</Label>
+                  <Select value={selectedWorldId} onValueChange={setSelectedWorldId} disabled={worldsLoading || worlds.length === 0}>
+                    <SelectTrigger id="project-world" aria-label="Welt für Abenteuer">
+                      <Globe2 className="w-4 h-4 mr-2 text-muted-foreground" />
+                      <SelectValue placeholder={worldsLoading ? 'Welten werden geladen...' : 'Welt auswählen'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {worlds.map((world) => (
+                        <SelectItem key={world.id} value={world.id}>{world.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {!worldsLoading && worlds.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Erstelle zuerst unter Bibliothek → Welten ein Weltprofil.
+                    </p>
+                  )}
+                </div>
                 <Button
-                  onClick={handleCreateProject}
-                  disabled={isCreating}
+                  onClick={() => void handleCreateProject()}
+                  disabled={isCreating || worldsLoading || worlds.length === 0}
                   className="w-full"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  {isCreating ? 'Erstelle...' : 'Projekt erstellen'}
+                  {isCreating ? 'Erstelle...' : 'Abenteuer erstellen'}
                 </Button>
               </CardContent>
             </Card>
@@ -183,9 +211,9 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
           <TabsContent value="join" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Projekt beitreten</CardTitle>
+                <CardTitle>Abenteuer beitreten</CardTitle>
                 <CardDescription>
-                  Trete einem bestehenden Projekt mit einem Code bei
+                  Der gewählte Charakter erhält seine effektiven Weltregeln aus diesem Abenteuer.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -195,14 +223,35 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
                     id="code"
                     placeholder="ABC123"
                     value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => e.key === 'Enter' && handleJoinProject()}
+                    onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
+                    onKeyDown={(event) => event.key === 'Enter' && void handleJoinProject()}
                     maxLength={6}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="join-character">Charakter *</Label>
+                  <Select
+                    value={selectedCharacterId}
+                    onValueChange={setSelectedCharacterId}
+                    disabled={charactersLoading || characters.length === 0}
+                  >
+                    <SelectTrigger id="join-character" aria-label="Charakter für Abenteuer">
+                      <User className="w-4 h-4 mr-2 text-muted-foreground" />
+                      <SelectValue placeholder={charactersLoading ? 'Charaktere werden geladen...' : 'Charakter auswählen'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {characters.map((character) => (
+                        <SelectItem key={character.id} value={character.id}>{character.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {!charactersLoading && characters.length === 0 && (
+                    <p className="text-xs text-muted-foreground">Erstelle zuerst einen Charakter.</p>
+                  )}
+                </div>
                 <Button
-                  onClick={handleJoinProject}
-                  disabled={isJoining}
+                  onClick={() => void handleJoinProject()}
+                  disabled={isJoining || charactersLoading || characters.length === 0}
                   className="w-full"
                 >
                   <LogIn className="w-4 h-4 mr-2" />
@@ -213,10 +262,9 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
           </TabsContent>
         </Tabs>
 
-        {/* Active Projects List */}
         {activeProjects.length > 0 && (
           <div>
-            <h2 className="text-xl mb-4">Deine aktiven Projekte</h2>
+            <h2 className="text-xl mb-4">Deine aktiven Abenteuer</h2>
             <div className="grid gap-4">
               {activeProjects.map((project) => (
                 <Card key={project.id}>
@@ -224,20 +272,10 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <CardTitle>{project.name}</CardTitle>
-                        <CardDescription>
-                          {project.description || 'Kein Beschreibung'}
-                        </CardDescription>
+                        <CardDescription>{project.description || 'Keine Beschreibung'}</CardDescription>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCopyCode(project.code)}
-                      >
-                        {copiedCode === project.code ? (
-                          <Check className="w-4 h-4 mr-2" />
-                        ) : (
-                          <Copy className="w-4 h-4 mr-2" />
-                        )}
+                      <Button variant="outline" size="sm" onClick={() => void handleCopyCode(project.code)}>
+                        {copiedCode === project.code ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                         {project.code}
                       </Button>
                     </div>
@@ -250,14 +288,9 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
                       </div>
                       <Button
                         onClick={() => {
-                          const isGM = project.members.some(
-                            m => m.role === 'gm'
-                          );
-                          if (isGM) {
-                            onJoinAsGM(project.id);
-                          } else {
-                            onJoinAsPlayer(project.id);
-                          }
+                          const isGM = project.members.some((member) => member.role === 'gm');
+                          if (isGM) onJoinAsGM(project.id);
+                          else onJoinAsPlayer(project.id);
                         }}
                       >
                         Öffnen

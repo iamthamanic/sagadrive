@@ -1,11 +1,9 @@
 /**
  * Project Types
- * A project is a campaign/adventure with a GM and players
+ * A project is a campaign/adventure with a GM and players.
+ * `world_id` remains the legacy campaign-lore/world-state reference.
+ * SagaDrive rule worlds use `world_profile_id`.
  */
-
-// ============================================
-// DTOs (Data Transfer Objects - from Supabase)
-// ============================================
 
 export interface ProjectDto {
   id: string;
@@ -13,6 +11,7 @@ export interface ProjectDto {
   name: string;
   description: string | null;
   world_id: string | null;
+  world_profile_id: string | null;
   gm_user_id: string;
   status: 'active' | 'paused' | 'completed' | 'archived';
   created_at: string;
@@ -43,10 +42,6 @@ export interface SessionDto {
   updated_at: string;
 }
 
-// ============================================
-// View Models (for UI consumption)
-// ============================================
-
 export interface ProjectMemberVm {
   id: string;
   userId: string;
@@ -75,6 +70,7 @@ export interface ProjectVm {
   name: string;
   description: string | null;
   worldId: string | null;
+  worldProfileId: string | null;
   gmUserId: string;
   status: 'active' | 'paused' | 'completed' | 'archived';
   createdAt: string;
@@ -85,19 +81,21 @@ export interface ProjectVm {
   lastSessionDate: string | null;
 }
 
-// ============================================
-// Create DTOs (for creating new records)
-// ============================================
-
 export interface CreateProjectDto {
   name: string;
   description?: string;
-  world_id?: string;
+  world_profile_id: string;
+}
+
+export interface UpdateProjectDto {
+  name?: string;
+  description?: string | null;
+  status?: ProjectDto['status'];
 }
 
 export interface JoinProjectDto {
   code: string;
-  character_id?: string;
+  character_id: string;
 }
 
 export interface CreateSessionDto {
