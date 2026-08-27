@@ -1,14 +1,17 @@
 /**
- * SpeciesTraitIcon — Lucide icon for each SagaDrive species talent/trait option.
+ * SpeciesTraitIcon — Lucide icon for each SagaDrive species trait option.
  * Location: src/modules/characters/components/SpeciesTraitIcon.tsx
  */
 import {
+  Activity,
   Bird,
   Dna,
   Ear,
   Eye,
   Fish,
   Flame,
+  Mountain,
+  Moon,
   Shield,
   ShieldHalf,
   Swords,
@@ -23,8 +26,11 @@ const SPECIES_TRAIT_ICONS: Record<SagaDriveSpeciesTraitKey, LucideIcon> = {
   'natural-weapon': Swords,
   'narrow-resistance': ShieldHalf,
   'environment-adaptation': Trees,
+  'enduring-organism': Activity,
+  'low-rest-need': Moon,
   'natural-protection': Shield,
-  'climb-or-swim': Waves,
+  'enhanced-climbing': Mountain,
+  'enhanced-swimming': Waves,
   amphibious: Fish,
   'enhanced-sight': Eye,
   flight: Bird,
