@@ -5,6 +5,7 @@ import type {
   SagaDriveSkillKey,
   SagaDriveSpeciesTraitKey,
 } from '../../rulesets/characterCreation';
+import type { SagaDriveSpeciesTraitOptionKey } from '../../rulesets/speciesTraitOptions';
 
 export interface SagaDriveSpecializationDto {
   skill: SagaDriveSkillKey;
@@ -22,7 +23,19 @@ export interface SagaDriveBackgroundDto {
   communication: string;
 }
 
+/** Legacy PR #42 shape; retained only so existing JSONB profiles can be normalized. */
 export type SagaDriveSpeciesTraitDetailsDto = Partial<Record<SagaDriveSpeciesTraitKey, string>>;
+
+export type SagaDriveSpeciesTraitSource = 'species-creation';
+
+export interface SagaDriveSpeciesTraitInstanceDto {
+  trait: SagaDriveSpeciesTraitKey;
+  option?: SagaDriveSpeciesTraitOptionKey;
+  /** Unmapped legacy free text is preserved until the player chooses a canonical Core option. */
+  legacyDetail?: string;
+  source: SagaDriveSpeciesTraitSource;
+  acquiredAtLevel: number;
+}
 
 export interface SagaDriveSpeciesProfileDto {
   name: string;
@@ -32,8 +45,11 @@ export interface SagaDriveSpeciesProfileDto {
 export interface SagaDriveProfileDto {
   archetype?: SagaDriveArchetypeKey;
   essence?: SagaDriveEssenceKey;
-  speciesTraits: SagaDriveSpeciesTraitKey[];
-  speciesTraitDetails: SagaDriveSpeciesTraitDetailsDto;
+  speciesTraitInstances: SagaDriveSpeciesTraitInstanceDto[];
+  /** Legacy read compatibility. New saves use speciesTraitInstances only. */
+  speciesTraits?: SagaDriveSpeciesTraitKey[];
+  /** Legacy read compatibility. New saves use speciesTraitInstances only. */
+  speciesTraitDetails?: SagaDriveSpeciesTraitDetailsDto;
   speciesProfile?: SagaDriveSpeciesProfileDto;
   background: SagaDriveBackgroundDto;
   archetypeTrainingSkill?: SagaDriveSkillKey;
