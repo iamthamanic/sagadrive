@@ -56,7 +56,7 @@ rejectMatch(speciesTraitsPanel, /catalog\.options\.map\(\(option\)[\s\S]*option\
 
 const speciesTraitOptionItem = read('src/modules/characters/components/SpeciesTraitOptionItem.tsx');
 requireMatch(speciesTraitOptionItem, /option\.description/, 'per-option tooltip description');
-requireMatch(speciesTraitOptionItem, /erklären/, 'per-option explain control');
+requireMatch(speciesTraitOptionItem, /title=\{option\.description\}/, 'per-option native description title');
 requireMatch(speciesTraitOptions, /label:\s*'Sehen'/, 'sharpened sense option catalog');
 requireMatch(speciesTraitOptions, /label:\s*'Gift \/ Toxine'/, 'narrow resistance option catalog');
 requireMatch(speciesTraitOptions, /label:\s*'Hitze & Trockenheit'/, 'environment adaptation option catalog');

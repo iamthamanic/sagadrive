@@ -48,8 +48,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tooltip').getByText(/konkrete Wirkung, nicht ihre Quelle/i)).toBeVisible();
   await page.getByRole('button', { name: /Enge Resistenz: Gefahrenart erklären/i }).click();
   await firstResistance.click();
-  await page.getByRole('button', { name: /Übernatürliche Veränderungen erklären/i }).click();
-  await expect(page.getByRole('tooltip').getByText(/Verwandlung|Versteinerung|Gedankenkontrolle/i)).toBeVisible();
+  const supernaturalOption = page.getByRole('option', { name: /Übernatürliche Veränderungen/i });
+  await supernaturalOption.scrollIntoViewIfNeeded();
+  await expect(supernaturalOption).toHaveAttribute('title', /Verwandlung|Versteinerung|Gedankenkontrolle/i);
+  await expect(page.getByText(/keine Illusionen und keine Gedankenkontrolle/i)).toBeVisible();
   await page.getByRole('option', { name: 'Gift / Toxine' }).click();
   await page.getByRole('button', { name: /Weitere Auswahl/i }).click();
   const resistanceSelects = page.getByRole('combobox', { name: /Enge Resistenz: Gefahrenart/ });
@@ -66,8 +68,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tooltip').getByText(/keine neue Sinnesart/i)).toBeVisible();
   await page.getByRole('button', { name: /Geschärfter Sinn: Sinn erklären/i }).click();
   await senseSelect.click();
-  await page.getByRole('button', { name: /^Hören erklären$/i }).click();
-  await expect(page.getByRole('tooltip').getByText(/Geräusche entscheidend/i)).toBeVisible();
+  await expect(page.getByRole('option', { name: /^Hören$/i })).toHaveAttribute('title', /Geräusche entscheidend/i);
+  await expect(page.getByText(/Geräusche entscheidend sind/i)).toBeVisible();
   await page.getByRole('option', { name: 'Hören' }).click();
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '02-species-repeatable-two-resistances.png'), fullPage: true });
@@ -90,8 +92,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tooltip').getByText(/gewöhnlichen Lebensumgebung/i)).toBeVisible();
   await page.getByRole('button', { name: /Umweltanpassung: Umgebung erklären/i }).click();
   await environmentSelect.click();
-  await page.getByRole('button', { name: /Hochgebirge & dünne Luft erklären/i }).click();
-  await expect(page.getByRole('tooltip').getByText(/großen Höhe und dünner Luft/i)).toBeVisible();
+  await expect(page.getByRole('option', { name: /Hochgebirge & dünne Luft/i })).toHaveAttribute('title', /großen Höhe und dünner Luft/i);
   await page.getByRole('option', { name: 'Hochgebirge & dünne Luft' }).click();
   await page.getByRole('button', { name: /Umweltanpassung entfernen/i }).click();
 
@@ -111,8 +112,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tooltip').getByText(/zusätzliche Sehfähigkeit/i)).toBeVisible();
   await page.getByRole('button', { name: /Erweiterte Sicht: Sichtform erklären/i }).click();
   await sightSelect.click();
-  await page.getByRole('button', { name: /^Dunkelsicht erklären$/i }).click();
-  await expect(page.getByRole('tooltip').getByText(/Natürliche Dunkelheit/i)).toBeVisible();
+  await expect(page.getByRole('option', { name: /^Dunkelsicht$/i })).toHaveAttribute('title', /Natürliche Dunkelheit/i);
   await page.getByRole('option', { name: 'Dunkelsicht' }).click();
   await page.getByRole('button', { name: /Erweiterte Sicht entfernen/i }).click();
 
@@ -123,8 +123,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tooltip').getByText(/dauerhaftes Überleben/i)).toBeVisible();
   await page.getByRole('button', { name: /Extremumwelt: Extremumwelt erklären/i }).click();
   await extremeSelect.click();
-  await page.getByRole('button', { name: /Vakuum & Sauerstofflosigkeit erklären/i }).click();
-  await expect(page.getByRole('tooltip').getByText(/ohne Atemluft/i)).toBeVisible();
+  await expect(page.getByRole('option', { name: /Vakuum & Sauerstofflosigkeit/i })).toHaveAttribute('title', /ohne Atemluft/i);
   await page.getByRole('option', { name: 'Vakuum & Sauerstofflosigkeit' }).click();
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '01-species-repeatable-dropdowns.png'), fullPage: true });
