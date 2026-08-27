@@ -1,6 +1,6 @@
 # Composition Gate — repeatable-species-traits
 
-- HEAD_SHA: 02b169cdf3f52422875e92f9ee4d5107013a9c89
+- HEAD_SHA: 45ab4d5980eaa487365d4c9c60c71795db58bd00
 - BASE_SHA: 65e2483d4b99dd84eb529064afc0cf8bddf23b9a
 - Date: 2026-08-27
 - Verdict: CLEAR
