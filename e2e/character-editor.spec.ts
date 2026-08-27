@@ -45,12 +45,12 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   const firstResistance = page.getByRole('combobox', { name: 'Enge Resistenz: Gefahrenart' });
   await expect(firstResistance).toBeVisible();
   await page.getByRole('button', { name: /Enge Resistenz: Gefahrenart erklären/i }).click();
-  await expect(page.getByRole('tooltip').getByText(/konkrete Wirkung, nicht ihre Quelle/i)).toBeVisible();
+  const resistanceHelp = page.getByRole('tooltip');
+  await expect(resistanceHelp.getByText(/konkrete Wirkung, nicht ihre Quelle/i)).toBeVisible();
+  await expect(resistanceHelp.getByText(/Übernatürliche Veränderungen:/i)).toBeVisible();
+  await expect(resistanceHelp.getByText(/Verwandlung.*Versteinerung.*Gedankenkontrolle/i)).toBeVisible();
   await page.getByRole('button', { name: /Enge Resistenz: Gefahrenart erklären/i }).click();
   await firstResistance.click();
-  await page.getByRole('button', { name: /Übernatürliche Veränderungen erklären/i }).click();
-  await expect(page.getByRole('tooltip').getByText(/Verwandlung|Versteinerung|Gedankenkontrolle/i)).toBeVisible();
-  await page.getByRole('button', { name: /Übernatürliche Veränderungen erklären/i }).click();
   await page.getByRole('option', { name: 'Gift / Toxine' }).click();
   await page.getByRole('button', { name: /Weitere Auswahl/i }).click();
   const resistanceSelects = page.getByRole('combobox', { name: /Enge Resistenz: Gefahrenart/ });
