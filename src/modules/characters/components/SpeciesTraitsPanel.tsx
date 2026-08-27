@@ -13,11 +13,10 @@ import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { Select, SelectContent, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
 import { RuleHelp } from './RuleHelp';
 import { SpeciesTraitIcon } from './SpeciesTraitIcon';
-import { SpeciesTraitOptionItem } from './SpeciesTraitOptionItem';
 
 type SpeciesTraitsPanelProps = {
   species: string;
@@ -187,7 +186,16 @@ export function SpeciesTraitsPanel({
                   <div className="flex min-h-7 items-center gap-1">
                     <p className="text-sm font-medium">{catalog.label} *</p>
                     <RuleHelp label={`${trait.label}: ${catalog.label}`}>
-                      <p>{catalog.helpIntro} Die einzelnen Optionen erklären sich im Dropdown über das Hilfe-Icon am jeweiligen Eintrag.</p>
+                      <div className="space-y-2">
+                        <p>{catalog.helpIntro}</p>
+                        <div className="space-y-1.5">
+                          {catalog.options.map((option) => (
+                            <p key={option.value}>
+                              <span className="font-medium">{option.label}:</span> {option.description}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
                     </RuleHelp>
                   </div>
 
@@ -225,15 +233,18 @@ export function SpeciesTraitsPanel({
                               </SelectTrigger>
                               <SelectContent>
                                 {catalog.options.map((option) => (
-                                  <SpeciesTraitOptionItem
+                                  <SelectItem
                                     key={option.value}
-                                    option={option}
+                                    value={option.value}
                                     disabled={selectedByOtherInstance.has(option.value)}
-                                  />
+                                  >
+                                    {option.label}
+                                  </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                           </div>
+                          <Badge variant="outline" className="mb-0.5 shrink-0">{trait.cost} P</Badge>
                           <Button
                             type="button"
                             size="icon"
