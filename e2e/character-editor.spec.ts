@@ -41,7 +41,6 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
   await expect(page.getByText(/Speziespunkte steigen nicht automatisch mit der Charakterstufe/i)).toBeVisible();
 
-  // Enge Resistenz is repeatable and each hazard may only be used once.
   await page.getByRole('button', { name: /Enge Resistenz, 1 Punkt/i }).click();
   const firstResistance = page.getByRole('combobox', { name: 'Enge Resistenz: Gefahrenart' });
   await expect(firstResistance).toBeVisible();
@@ -61,7 +60,6 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '03-species-duplicate-option-blocked.png'), fullPage: true });
   await page.getByRole('option', { name: 'Krankheit / Infektion' }).click();
 
-  // A third one-point instance completes the 3-point budget.
   await page.getByRole('button', { name: /Geschärfter Sinn, 1 Punkt/i }).click();
   const senseSelect = page.getByRole('combobox', { name: 'Geschärfter Sinn: Sinn' });
   await expect(senseSelect).toBeVisible();
@@ -73,17 +71,17 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '02-species-repeatable-two-resistances.png'), fullPage: true });
 
-  // Higher character levels do not increase the species budget.
   await page.getByLabel('Stufe').click();
   await page.getByRole('option', { name: '10', exact: true }).click();
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
+  await page.getByLabel('Stufe').click();
+  await page.getByRole('option', { name: '1', exact: true }).click();
 
   await page.getByRole('button', { name: /Enge Resistenz 2 entfernen/i }).click();
   await page.getByRole('button', { name: /Enge Resistenz entfernen/i }).click();
   await page.getByRole('button', { name: /Geschärfter Sinn entfernen/i }).click();
   await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
 
-  // Umweltanpassung uses a fixed Core catalog rather than free text.
   await page.getByRole('button', { name: /Umweltanpassung, 1 Punkt/i }).click();
   const environmentSelect = page.getByRole('combobox', { name: 'Umweltanpassung: Umgebung' });
   await expect(environmentSelect).toBeVisible();
@@ -94,7 +92,6 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('option', { name: 'Hochgebirge & dünne Luft' }).click();
   await page.getByRole('button', { name: /Umweltanpassung entfernen/i }).click();
 
-  // Alien keeps the free profile fields and exposes the complete catalog.
   await page.getByRole('radio', { name: /Alien/i }).click();
   await expect(page.getByLabel(/Name deiner Spezies/i)).toBeVisible();
   await expect(page.getByLabel(/Körperbeschreibung/i)).toBeVisible();
@@ -104,7 +101,6 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByLabel(/Name deiner Spezies/i).fill('Schneggl');
   await expect(page.getByLabel(/Spezies: Schneggl/i)).toBeVisible();
 
-  // Erweiterte Sicht uses defined modes.
   await page.getByRole('button', { name: /Erweiterte Sicht, 2 Punkte/i }).click();
   const sightSelect = page.getByRole('combobox', { name: 'Erweiterte Sicht: Sichtform' });
   await expect(sightSelect).toBeVisible();
@@ -115,7 +111,6 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('option', { name: 'Dunkelsicht' }).click();
   await page.getByRole('button', { name: /Erweiterte Sicht entfernen/i }).click();
 
-  // Extremumwelt is a 3-point catalog and is distinct from narrow resistance.
   await page.getByRole('button', { name: /Extremumwelt, 3 Punkte/i }).click();
   const extremeSelect = page.getByRole('combobox', { name: 'Extremumwelt: Extremumwelt' });
   await expect(extremeSelect).toBeVisible();
@@ -158,7 +153,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByRole('tab', { name: /^Attribute$/i }).click();
   await expect(page.getByText('Standardverteilung').first()).toBeVisible();
-  await expect(page.getByText(/16 \/ 16 Punkte/i).first()).toBeVisible();
+  await expect(page.getByText(/15 \/ 15 Punkte/i).first()).toBeVisible();
   await expect(page.getByText('Ausdauer').first()).toBeVisible();
   await expect(page.getByText('Verstand').first()).toBeVisible();
   await expect(page.getByText('Wahrnehmung').first()).toBeVisible();
