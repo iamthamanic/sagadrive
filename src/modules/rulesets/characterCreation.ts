@@ -10,6 +10,7 @@ export type SagaDriveAttributeKey =
 
 export type SagaDriveArchetypeKey = 'fighter' | 'thinker' | 'healer' | 'rebel' | 'diplomat';
 export type SagaDriveEssenceKey = 'physical' | 'mental' | 'spiritual' | 'bound' | 'technological';
+export type SagaDriveRaceKey = 'human' | 'elf' | 'dwarf' | 'halfling' | 'orc' | 'cyborg' | 'alien';
 export type SagaDriveSkillKey =
   | 'athletics'
   | 'acrobatics'
@@ -35,8 +36,11 @@ export type SagaDriveSpeciesTraitKey =
   | 'natural-weapon'
   | 'narrow-resistance'
   | 'environment-adaptation'
+  | 'enduring-organism'
+  | 'low-rest-need'
   | 'natural-protection'
-  | 'climb-or-swim'
+  | 'enhanced-climbing'
+  | 'enhanced-swimming'
   | 'amphibious'
   | 'enhanced-sight'
   | 'flight'
@@ -49,6 +53,7 @@ export interface CharacterCreationOption {
 }
 
 export interface SagaDriveRaceOption extends CharacterCreationOption {
+  value: SagaDriveRaceKey;
   description: string;
 }
 
@@ -94,6 +99,11 @@ export interface SagaDriveSpeciesTraitDefinition {
   label: string;
   cost: 1 | 2 | 3;
   description: string;
+  detailLabel?: string;
+  detailPlaceholder?: string;
+  detailRequired?: boolean;
+  available?: boolean;
+  unavailableReason?: string;
 }
 
 export const SAGA_DRIVE_START_ATTRIBUTE_ARRAY = [4, 3, 3, 2, 2, 1] as const;
@@ -102,6 +112,7 @@ export const SAGA_DRIVE_START_TOTAL_SKILL_POINTS = 10;
 export const SAGA_DRIVE_START_MIN_TRAINED_SKILLS = 6;
 export const SAGA_DRIVE_START_SKILL_CAP = 3;
 export const SAGA_DRIVE_EXPERIENCE_BONUS_LEVEL_1 = 1;
+export const SAGA_DRIVE_SPECIES_TRAIT_BUDGET = 3;
 
 export const characterRulesetOptions: readonly CharacterCreationOption[] = [
   { value: 'sagadrive-core', label: 'SagaDrive Core' },
@@ -141,13 +152,13 @@ export const sagaDriveArchetypeOptions: readonly SagaDriveArchetypeOption[] = [
 ];
 
 export const sagaDriveRaceOptions: readonly SagaDriveRaceOption[] = [
-  { value: 'human', label: 'Mensch', description: 'Vielseitige Standard-Spezies ohne festes Merkmalsprofil. Regelwirkung entsteht ausschließlich über die gewählten Talente.' },
-  { value: 'elf', label: 'Elf', description: 'Fein und beweglich im Erscheinungsbild. Typisch für Sinnes-, Sicht- oder Umwelttalente statt fester Attributsboni.' },
-  { value: 'dwarf', label: 'Zwerg', description: 'Kompakt und widerstandsfähig im Körperbau. Oft passend zu Schutz-, Resistenz- oder Extremumwelttalenten.' },
-  { value: 'halfling', label: 'Halbling', description: 'Klein und unauffällig im Profil. Häufig mit Bewegungs-, Heimlichkeits- oder Akrobatik-orientierten Talenten kombiniert.' },
-  { value: 'orc', label: 'Ork', description: 'Massiv und körperlich präsent. Passt gut zu natürlicher Waffe, Kraftprofil oder robuster Anpassung über Talente.' },
-  { value: 'cyborg', label: 'Cyborg', description: 'Techno-biologische Mischform mit synthetischen Anteilen. Talente betonen Resistenz, Sinne oder technische Verträglichkeit.' },
-  { value: 'alien', label: 'Alien', description: 'Nicht-menschliche Biologie mit eigenem Körperprofil. Besonders geeignet für Flug, Amphibie, Extremumwelt oder außergewöhnlichen Körperbau.' },
+  { value: 'human', label: 'Mensch', description: 'Vielseitige Standardspezies. Menschliche Speziesmerkmale bilden Sinne, Widerstandsfähigkeit, Anpassung und Ruhebedarf ab.' },
+  { value: 'elf', label: 'Elf', description: 'Fein und beweglich im Erscheinungsbild. Zusätzlich zu den allgemeinen humanoiden Merkmalen sind erweitertes Klettern und besondere Sichtformen möglich.' },
+  { value: 'dwarf', label: 'Zwerg', description: 'Kompakt und widerstandsfähig im Körperbau. Zusätzlich zu den allgemeinen humanoiden Merkmalen sind natürlicher Schutz und besondere Sichtformen möglich.' },
+  { value: 'halfling', label: 'Halbling', description: 'Klein und beweglich im Profil. Der Merkmalszugang betont Sinne, Widerstandsfähigkeit, Anpassung, Ausdauer und erweitertes Klettern.' },
+  { value: 'orc', label: 'Ork', description: 'Massiv und körperlich präsent. Der Merkmalszugang umfasst unter anderem natürliche Waffen, Schutz und robuste Anpassungen.' },
+  { value: 'cyborg', label: 'Cyborg', description: 'Techno-biologische Mischform mit synthetischen Anteilen. Der Körper kann Schutz, besondere Sinne, Bewegungsanpassungen oder Extremumweltverträglichkeit besitzen.' },
+  { value: 'alien', label: 'Alien', description: 'Freier Spezies-Builder für nicht-menschliche oder hybride Biologien. Das Speziesprofil wird frei benannt und kann den vollständigen Merkmalskatalog nutzen.' },
 ];
 
 export const sagaDriveSettingOptions: readonly CharacterCreationOption[] = [
@@ -184,18 +195,39 @@ export const sagaDriveSkillDefinitions: readonly SagaDriveSkillDefinition[] = [
 ];
 
 export const sagaDriveSpeciesTraitDefinitions: readonly SagaDriveSpeciesTraitDefinition[] = [
-  { key: 'sharpened-sense', label: 'Geschärfter Sinn', cost: 1, description: 'Vorteil oder besondere Wahrnehmung in einem eng definierten Sinnesbereich.' },
-  { key: 'natural-weapon', label: 'Natürliche Waffe', cost: 1, description: 'Unbewaffneter Schaden steigt von d4+1 auf d6+1.' },
-  { key: 'narrow-resistance', label: 'Enge Resistenz', cost: 1, description: 'Vorteil gegen eine klar eingegrenzte Gefahrenart.' },
-  { key: 'environment-adaptation', label: 'Umweltanpassung', cost: 1, description: 'Anpassung an eine bestimmte, klar benannte Umgebung.' },
-  { key: 'natural-protection', label: 'Natürlicher Schutz', cost: 2, description: 'Natürliche Schutzwirkung 1.' },
-  { key: 'climb-or-swim', label: 'Kletter- oder Schwimmbewegung', cost: 2, description: 'Volle Bewegungsrate beim Klettern oder Schwimmen; die konkrete Form wird beim Charakter beschrieben.' },
-  { key: 'amphibious', label: 'Amphibisch', cost: 2, description: 'Kann in Wasser und an Land ohne normale Atemeinschränkung leben.' },
-  { key: 'enhanced-sight', label: 'Erweiterte Sicht', cost: 2, description: 'Besondere Sichtform mit klar festgelegtem Anwendungsbereich.' },
-  { key: 'flight', label: 'Flugfähig', cost: 3, description: 'Besitzt eine regelrelevante Flugbewegung.' },
-  { key: 'extreme-environment', label: 'Extremumwelt', cost: 3, description: 'Überlebt in einer definierten Extremumwelt ohne normale Schutzmittel.' },
-  { key: 'exceptional-body', label: 'Außergewöhnlicher Körperbau', cost: 3, description: 'Besonderer Körperbau mit klar definierter mechanischer Wirkung.' },
+  { key: 'sharpened-sense', label: 'Geschärfter Sinn', cost: 1, description: 'Wähle einen Sinn. Du erhältst Vorteil auf Wahrnehmungsproben, bei denen dieser Sinn entscheidend ist.', detailLabel: 'Geschärfter Sinn', detailPlaceholder: 'z. B. Gehör, Geruch, Tastsinn', detailRequired: true },
+  { key: 'natural-weapon', label: 'Natürliche Waffe', cost: 1, description: 'Unbewaffneter Schaden steigt von d4+1 auf d6+1. Die Form kann z. B. Klauen, Zähne oder Hörner sein.' },
+  { key: 'narrow-resistance', label: 'Enge Resistenz', cost: 1, description: 'Wähle eine klar eingegrenzte Gefahrenart. Du erhältst Vorteil auf passende Proben und Widerstände gegen diese Gefahr.', detailLabel: 'Gefahrenart', detailPlaceholder: 'z. B. Gift, Krankheit, Strahlung', detailRequired: true },
+  { key: 'environment-adaptation', label: 'Umweltanpassung', cost: 1, description: 'Wähle eine gewöhnliche Umgebung. Normale Nachteile, die ausschließlich aus dieser Umgebung entstehen, entfallen.', detailLabel: 'Umgebung', detailPlaceholder: 'z. B. Hochgebirge, Wüste, arktisches Klima', detailRequired: true },
+  { key: 'enduring-organism', label: 'Ausdauernder Organismus', cost: 1, description: 'Du erhältst Vorteil auf Proben gegen langandauernde körperliche Erschöpfung.' },
+  { key: 'low-rest-need', label: 'Geringer Ruhebedarf', cost: 1, description: 'Du benötigst nur die Hälfte der für deine Spezies üblichen Schlaf- oder Ruhezeit. Heilung und Erholung werden dadurch nicht beschleunigt.' },
+  { key: 'natural-protection', label: 'Natürlicher Schutz', cost: 2, description: 'Du besitzt natürliche Schutzwirkung 1 nach den normalen Schutzregeln.' },
+  { key: 'enhanced-climbing', label: 'Erweitertes Klettern', cost: 2, description: 'Beim Klettern kostet 1 Meter Bewegung nur 1 Meter statt 2 Meter. Schwierige Oberflächen, Gefahr oder Zeitdruck können weiterhin eine Athletikprobe verlangen.' },
+  { key: 'enhanced-swimming', label: 'Erweitertes Schwimmen', cost: 2, description: 'Beim Schwimmen kostet 1 Meter Bewegung nur 1 Meter statt 2 Meter. Strömung, Gefahr oder andere schwierige Bedingungen können weiterhin eine Athletikprobe verlangen.' },
+  { key: 'amphibious', label: 'Amphibisch', cost: 2, description: 'Du kannst an Land und unter Wasser normal atmen und leben. Normale Atemeinschränkungen durch Wasser entfallen.' },
+  { key: 'enhanced-sight', label: 'Erweiterte Sicht', cost: 2, description: 'Wähle eine klar definierte besondere Sichtform. Sie gilt nur in ihrem festgelegten Anwendungsbereich.', detailLabel: 'Sichtform', detailPlaceholder: 'z. B. Dunkelsicht, Wärmesicht, Fernsicht', detailRequired: true },
+  { key: 'flight', label: 'Flugfähig', cost: 3, description: 'Du besitzt eine natürliche Flugbewegung in Höhe deiner normalen Bewegungsrate.' },
+  { key: 'extreme-environment', label: 'Extremumwelt', cost: 3, description: 'Wähle eine Extremumwelt. Du kannst dort ohne die normalerweise erforderlichen Schutzmittel überleben.', detailLabel: 'Extremumwelt', detailPlaceholder: 'z. B. Vakuum, extreme Kälte, toxische Atmosphäre', detailRequired: true },
+  { key: 'exceptional-body', label: 'Außergewöhnlicher Körperbau', cost: 3, description: 'Stark abweichende Anatomie mit einer fest definierten mechanischen Wirkung. Die zulässigen Varianten werden noch festgelegt.', available: false, unavailableReason: 'Noch nicht verfügbar' },
 ];
+
+const HUMAN_TRAITS: readonly SagaDriveSpeciesTraitKey[] = [
+  'sharpened-sense',
+  'narrow-resistance',
+  'environment-adaptation',
+  'enduring-organism',
+  'low-rest-need',
+];
+
+export const sagaDriveSpeciesTraitKeysByRace: Readonly<Record<SagaDriveRaceKey, readonly SagaDriveSpeciesTraitKey[]>> = {
+  human: HUMAN_TRAITS,
+  elf: [...HUMAN_TRAITS, 'enhanced-climbing', 'enhanced-sight'],
+  dwarf: [...HUMAN_TRAITS, 'natural-protection', 'enhanced-sight'],
+  halfling: ['sharpened-sense', 'narrow-resistance', 'environment-adaptation', 'enduring-organism', 'enhanced-climbing'],
+  orc: ['sharpened-sense', 'natural-weapon', 'narrow-resistance', 'environment-adaptation', 'enduring-organism', 'natural-protection', 'exceptional-body'],
+  cyborg: ['sharpened-sense', 'natural-weapon', 'narrow-resistance', 'environment-adaptation', 'low-rest-need', 'natural-protection', 'enhanced-climbing', 'enhanced-swimming', 'enhanced-sight', 'extreme-environment', 'exceptional-body'],
+  alien: sagaDriveSpeciesTraitDefinitions.map((trait) => trait.key),
+};
 
 export const dnd55ClassOptions: readonly CharacterCreationOption[] = [
   { value: 'barbarian', label: 'Barbarian' }, { value: 'bard', label: 'Bard' }, { value: 'cleric', label: 'Cleric' }, { value: 'druid', label: 'Druid' }, { value: 'fighter', label: 'Fighter' }, { value: 'monk', label: 'Monk' }, { value: 'paladin', label: 'Paladin' }, { value: 'ranger', label: 'Ranger' }, { value: 'rogue', label: 'Rogue' }, { value: 'sorcerer', label: 'Sorcerer' }, { value: 'warlock', label: 'Warlock' }, { value: 'wizard', label: 'Wizard' },
@@ -212,6 +244,7 @@ export const dnd55BackgroundOptions: readonly CharacterCreationOption[] = [
 export function isCharacterRulesetKey(value: string): value is CharacterRulesetKey { return value === 'sagadrive-core' || value === 'dnd-5.5e'; }
 export function isSagaDriveArchetypeKey(value: string): value is SagaDriveArchetypeKey { return sagaDriveArchetypeOptions.some((option) => option.value === value); }
 export function isSagaDriveEssenceKey(value: string): value is SagaDriveEssenceKey { return sagaDriveEssenceOptions.some((option) => option.value === value); }
+export function isSagaDriveRaceKey(value: string): value is SagaDriveRaceKey { return sagaDriveRaceOptions.some((option) => option.value === value); }
 export function isSagaDriveSkillKey(value: string): value is SagaDriveSkillKey { return sagaDriveSkillDefinitions.some((skill) => skill.key === value); }
 export function isSagaDriveSpeciesTraitKey(value: string): value is SagaDriveSpeciesTraitKey { return sagaDriveSpeciesTraitDefinitions.some((trait) => trait.key === value); }
 
@@ -220,6 +253,10 @@ export function getSagaDriveArchetype(value: string): SagaDriveArchetypeOption |
 export function getSagaDriveEssence(value: string): SagaDriveEssenceOption | undefined { return sagaDriveEssenceOptions.find((option) => option.value === value); }
 export function getSagaDriveSkill(value: SagaDriveSkillKey): SagaDriveSkillDefinition { const skill = sagaDriveSkillDefinitions.find((definition) => definition.key === value); if (!skill) throw new Error(`Unknown SagaDrive skill: ${value}`); return skill; }
 export function getSagaDriveAttribute(value: SagaDriveAttributeKey): SagaDriveAttributeDefinition { const attribute = sagaDriveAttributeDefinitions.find((definition) => definition.key === value); if (!attribute) throw new Error(`Unknown SagaDrive attribute: ${value}`); return attribute; }
+export function getSagaDriveSpeciesTrait(value: SagaDriveSpeciesTraitKey): SagaDriveSpeciesTraitDefinition { const trait = sagaDriveSpeciesTraitDefinitions.find((definition) => definition.key === value); if (!trait) throw new Error(`Unknown SagaDrive species trait: ${value}`); return trait; }
+export function getSagaDriveSpeciesTraitKeysForRace(value: string): readonly SagaDriveSpeciesTraitKey[] { return isSagaDriveRaceKey(value) ? sagaDriveSpeciesTraitKeysByRace[value] : []; }
+export function getSagaDriveSpeciesTraitsForRace(value: string): readonly SagaDriveSpeciesTraitDefinition[] { const allowed = new Set(getSagaDriveSpeciesTraitKeysForRace(value)); return sagaDriveSpeciesTraitDefinitions.filter((trait) => allowed.has(trait.key)); }
+export function getSagaDriveSpeciesTraitCost(values: readonly SagaDriveSpeciesTraitKey[]): number { return values.reduce((sum, key) => sum + getSagaDriveSpeciesTrait(key).cost, 0); }
 
 export function createEmptySagaDriveSkillRanks(): Record<SagaDriveSkillKey, number> {
   return { athletics: 0, acrobatics: 0, sleight: 0, stealth: 0, melee: 0, ranged: 0, awareness: 0, insight: 0, survival: 0, investigation: 0, knowledge: 0, technology: 0, medicine: 0, driving: 0, persuasion: 0, deception: 0, intimidation: 0, performance: 0 };

@@ -18,7 +18,7 @@ async function ensureLoggedIn(page: Page) {
 test.beforeAll(() => { fs.mkdirSync(EVIDENCE_DIR, { recursive: true }); });
 
 test('character editor exposes the SagaDrive Core creation flow', async ({ page }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(180_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await ensureLoggedIn(page);
   await page.getByRole('button', { name: 'Charakter erstellen' }).first().click();
@@ -34,11 +34,97 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Spezies', { exact: true }).first()).toBeVisible();
   await expect(page.getByRole('radio', { name: /Mensch/i })).toBeVisible();
   await expect(page.getByRole('img', { name: /Skizze: Mensch/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Speziesmerkmale/i })).toBeVisible();
+  await expect(page.getByText('Geschärfter Sinn').first()).toBeVisible();
+  await expect(page.getByText('Geringer Ruhebedarf').first()).toBeVisible();
+  await expect(page.getByText('Flugfähig')).toHaveCount(0);
+  await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
+  await expect(page.getByText(/Speziespunkte steigen nicht automatisch mit der Charakterstufe/i).first()).toBeVisible();
+
+  await page.getByRole('button', { name: /Enge Resistenz, 1 Punkt/i }).click();
+  const firstResistance = page.getByRole('combobox', { name: 'Enge Resistenz: Gefahrenart' });
+  await expect(firstResistance).toBeVisible();
+  await page.getByRole('button', { name: /Enge Resistenz: Gefahrenart erklären/i }).click();
+  await expect(page.getByRole('tooltip').getByText(/konkrete Wirkung, nicht ihre Quelle/i)).toBeVisible();
+  await page.getByRole('button', { name: /Enge Resistenz: Gefahrenart erklären/i }).click();
+  await firstResistance.click();
+  const supernaturalOption = page.getByRole('option', { name: /Übernatürliche Veränderungen/i });
+  await supernaturalOption.scrollIntoViewIfNeeded();
+  await expect(page.getByRole('listbox').getByText(/keine Illusionen und keine Gedankenkontrolle/i)).toBeVisible();
+  await page.getByRole('option', { name: /Gift \/ Toxine/i }).click();
+  await page.getByRole('button', { name: /Weitere Auswahl/i }).click();
+  const resistanceSelects = page.getByRole('combobox', { name: /Enge Resistenz: Gefahrenart/ });
+  await expect(resistanceSelects).toHaveCount(2);
+  await resistanceSelects.nth(1).click();
+  await expect(page.getByRole('option', { name: /Gift \/ Toxine/i })).toBeDisabled();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '03-species-duplicate-option-blocked.png'), fullPage: true });
+  await page.getByRole('option', { name: /Krankheit \/ Infektion/i }).click();
+
+  await page.getByRole('button', { name: /Geschärfter Sinn, 1 Punkt/i }).click();
+  const senseSelect = page.getByRole('combobox', { name: 'Geschärfter Sinn: Sinn' });
+  await expect(senseSelect).toBeVisible();
+  await page.getByRole('button', { name: /Geschärfter Sinn: Sinn erklären/i }).click();
+  await expect(page.getByRole('tooltip').getByText(/keine neue Sinnesart/i)).toBeVisible();
+  await page.getByRole('button', { name: /Geschärfter Sinn: Sinn erklären/i }).click();
+  await senseSelect.click();
+  await expect(page.getByRole('listbox').getByText(/Geräusche entscheidend sind/i)).toBeVisible();
+  await page.getByRole('option', { name: /Hören/i }).click();
+  await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '02-species-repeatable-two-resistances.png'), fullPage: true });
+
+  await page.getByLabel('Stufe').click();
+  await page.getByRole('option', { name: '10', exact: true }).click();
+  await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
+  await page.getByLabel('Stufe').click();
+  await page.getByRole('option', { name: '1', exact: true }).click();
+
+  await page.getByRole('button', { name: /Enge Resistenz 2 entfernen/i }).click();
+  await page.getByRole('button', { name: /Enge Resistenz entfernen/i }).click();
+  await page.getByRole('button', { name: /Geschärfter Sinn entfernen/i }).click();
+  await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
+
+  await page.getByRole('button', { name: /Umweltanpassung, 1 Punkt/i }).click();
+  const environmentSelect = page.getByRole('combobox', { name: 'Umweltanpassung: Umgebung' });
+  await expect(environmentSelect).toBeVisible();
+  await environmentSelect.click();
+  await expect(page.getByRole('listbox').getByText(/großer Höhe und dünner Luft/i)).toBeVisible();
+  await page.getByRole('option', { name: /Hochgebirge & dünne Luft/i }).click();
+  await page.getByRole('button', { name: /Umweltanpassung entfernen/i }).click();
+
+  await page.getByRole('radio', { name: /Alien/i }).click();
+  await expect(page.getByLabel(/Name deiner Spezies/i)).toBeVisible();
+  await expect(page.getByLabel(/Körperbeschreibung/i)).toBeVisible();
+  await expect(page.getByText('Flugfähig').first()).toBeVisible();
+  await expect(page.getByText('Erweitertes Schwimmen').first()).toBeVisible();
+  await expect(page.getByText('Noch nicht verfügbar').first()).toBeVisible();
+  await page.getByLabel(/Name deiner Spezies/i).fill('Schneggl');
+  await expect(page.getByLabel(/Spezies: Schneggl/i)).toBeVisible();
+
+  await page.getByRole('button', { name: /Erweiterte Sicht, 2 Punkte/i }).click();
+  const sightSelect = page.getByRole('combobox', { name: 'Erweiterte Sicht: Sichtform' });
+  await expect(sightSelect).toBeVisible();
+  await sightSelect.click();
+  await expect(page.getByRole('listbox').getByText(/Natürliche Dunkelheit allein/i)).toBeVisible();
+  await page.getByRole('option', { name: /Dunkelsicht/i }).click();
+  await page.getByRole('button', { name: /Erweiterte Sicht entfernen/i }).click();
+
+  await page.getByRole('button', { name: /Extremumwelt, 3 Punkte/i }).click();
+  const extremeSelect = page.getByRole('combobox', { name: 'Extremumwelt: Extremumwelt' });
+  await expect(extremeSelect).toBeVisible();
+  await extremeSelect.click();
+  await expect(page.getByRole('listbox').getByText(/ohne Atemluft/i)).toBeVisible();
+  await page.getByRole('option', { name: /Vakuum & Sauerstofflosigkeit/i }).click();
+  await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '01-species-repeatable-dropdowns.png'), fullPage: true });
+
+  await page.getByRole('radio', { name: /Mensch/i }).click();
+  await expect(page.getByText('Flugfähig')).toHaveCount(0);
+  await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
+
   await page.getByRole('tab', { name: /^Parameter$/i }).click();
   await expect(page.getByRole('tab', { name: /^Archetype$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Essenz$/i })).toBeVisible();
-  await page.getByRole('tab', { name: /^Talente$/i }).click();
-  await expect(page.getByText('Geschärfter Sinn').first()).toBeVisible();
+  await expect(page.getByRole('tab', { name: /^Talente$/i })).toHaveCount(0);
   await expect(page.getByText('Paktbasiert')).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '01-info-core-tabs.png'), fullPage: true });
 
@@ -89,10 +175,14 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('tab', { name: /Spezies/i }).click();
   await page.getByPlaceholder('Charaktername').first().fill('Validierungsprobe');
   await page.getByRole('button', { name: /Speichern/i }).first().click();
-  await expect(page.locator('[data-sonner-toast]').filter({ hasText: /Hintergrundangaben|Fertigkeitspunkte|Attribute|Namen|gelesen/i }).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('[data-sonner-toast]').filter({ hasText: /Speziesmerkmale|Hintergrundangaben|Fertigkeitspunkte|Attribute|Namen|gelesen|Vervollständige/i }).first()).toBeVisible({ timeout: 10_000 });
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '11-edge-invalid-build.png'), fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: /Enge Resistenz, 1 Punkt/i }).click();
+  await expect(page.getByRole('combobox', { name: 'Enge Resistenz: Gefahrenart' })).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-species-mobile-repeatable.png'), fullPage: true });
+
   await page.getByRole('tab', { name: /^Parameter$/i }).click();
   await page.getByRole('tab', { name: /^Archetype$/i }).click();
   await page.getByRole('button', { name: /Archetyp erklären/i }).click();
