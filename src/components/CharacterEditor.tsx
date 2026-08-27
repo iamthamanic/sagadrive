@@ -235,10 +235,10 @@ export function CharacterEditor() {
 
   const rulesetLabel = getCharacterCreationOptionLabel(characterRulesetOptions, ruleset);
 
-  const applyRacePreset = (race: string) => {
+  const applyRacePreset = (race: string, resetTraits = false) => {
     const preset = getAvatarRacePreset(race);
     const allowed = new Set(getSagaDriveSpeciesTraitKeysForRace(race));
-    const retainedTraits = speciesTraits.filter((key) => allowed.has(key) && getSagaDriveSpeciesTrait(key).available !== false);
+    const retainedTraits = resetTraits ? [] : speciesTraits.filter((key) => allowed.has(key) && getSagaDriveSpeciesTrait(key).available !== false);
     setSpeciesTraits(retainedTraits);
     setSpeciesTraitDetails((current) => {
       const next: SpeciesTraitDetailValues = {};
@@ -272,7 +272,7 @@ export function CharacterEditor() {
     setSpeciesProfileName('');
     setSpeciesBodyDescription('');
     setAttributes(INITIAL_ATTRIBUTES);
-    applyRacePreset('human');
+    applyRacePreset('human', true);
     if (value === 'dnd-5.5e') {
       toast.info('D&D 5.5e: Der vollständige Erstellungsflow folgt demnächst in diesem Editor.');
     }
