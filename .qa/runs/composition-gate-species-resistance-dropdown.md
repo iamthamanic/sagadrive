@@ -28,5 +28,5 @@ No new database column, queue, worker, webhook or external side effect is introd
 ## Notes
 - `Übernatürliche Veränderungen` is intentionally narrow: bodily/form/nature transformations such as transformation, petrification, supernatural mutation or magical aging. It is not general magic resistance and does not include illusions or mind control.
 - The hazard catalog uses stable internal keys while the UI displays German labels.
-- The tooltip explains all Core hazard categories and the source-vs-effect distinction (for example, magical fire is still `Hitze / Verbrennung`).
-- Browser E2E scopes tooltip assertions to the visible Radix tooltip container to avoid duplicate hidden tooltip nodes in Playwright strict mode.
+- The label RuleHelp explains only the source-vs-effect distinction. Per-hazard descriptions live on each dropdown entry via its own help tooltip.
+- Browser E2E opens an option-level help tooltip (e.g. Übernatürliche Veränderungen) instead of asserting the full catalog in the label tooltip.

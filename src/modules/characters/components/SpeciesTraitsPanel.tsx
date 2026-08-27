@@ -10,9 +10,10 @@ import { sagaDriveNarrowResistanceHazardOptions } from '../../rulesets/speciesRe
 import { Badge } from '../../../components/ui/badge';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { Select, SelectContent, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
 import { RuleHelp } from './RuleHelp';
+import { SpeciesResistanceHazardItem } from './SpeciesResistanceHazardItem';
 import { SpeciesTraitIcon } from './SpeciesTraitIcon';
 
 export type SpeciesTraitDetailValues = Partial<Record<SagaDriveSpeciesTraitKey, string>>;
@@ -156,18 +157,9 @@ export function SpeciesTraitsPanel({
                       <div className="flex min-h-7 items-center gap-1">
                         <Label htmlFor="species-trait-narrow-resistance">Gefahrenart *</Label>
                         <RuleHelp label="Gefahrenart">
-                          <div className="space-y-2">
-                            <p>
-                              Entscheidend ist die konkrete Wirkung, nicht ihre Quelle. Magisches Feuer zählt zum Beispiel als Hitze / Verbrennung. Eine allgemeine Resistenz gegen „Magie“ gibt es hier nicht.
-                            </p>
-                            <div className="space-y-1.5">
-                              {sagaDriveNarrowResistanceHazardOptions.map((option) => (
-                                <p key={option.value}>
-                                  <span className="font-medium">{option.label}:</span> {option.description}
-                                </p>
-                              ))}
-                            </div>
-                          </div>
+                          <p>
+                            Entscheidend ist die konkrete Wirkung, nicht ihre Quelle. Magisches Feuer zählt zum Beispiel als Hitze / Verbrennung. Eine allgemeine Resistenz gegen „Magie“ gibt es hier nicht. Die einzelnen Gefahrenarten erklären sich im Dropdown über das Hilfe-Icon am jeweiligen Eintrag.
+                          </p>
                         </RuleHelp>
                       </div>
                       <Select
@@ -184,7 +176,7 @@ export function SpeciesTraitsPanel({
                         </SelectTrigger>
                         <SelectContent>
                           {sagaDriveNarrowResistanceHazardOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            <SpeciesResistanceHazardItem key={option.value} option={option} />
                           ))}
                         </SelectContent>
                       </Select>
