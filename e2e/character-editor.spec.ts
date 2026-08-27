@@ -70,6 +70,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('listbox').getByText(/Geräusche entscheidend sind/i)).toBeVisible();
   await page.getByRole('option', { name: /Hören/i }).click();
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Weitere Auswahl/i }).first()).toBeDisabled();
+  await page.getByLabel(/^Weitere Auswahl:/i).first().click();
+  await expect(page.getByRole('tooltip').getByText(/Startbudget ist mit 3 \/ 3/i)).toBeVisible();
+  await expect(page.getByRole('tooltip').getByText(/Weltprofil-Modul „Speziesentwicklung“/i)).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '02-species-repeatable-two-resistances.png'), fullPage: true });
 
   await page.getByLabel('Stufe').click();
@@ -78,9 +82,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByLabel('Stufe').click();
   await page.getByRole('option', { name: '1', exact: true }).click();
 
-  await page.getByRole('button', { name: /Enge Resistenz 2 entfernen/i }).click();
-  await page.getByRole('button', { name: /Enge Resistenz entfernen/i }).click();
-  await page.getByRole('button', { name: /Geschärfter Sinn entfernen/i }).click();
+  await page.getByRole('button', { name: /Enge Resistenz abwählen/i }).click();
+  await page.getByRole('button', { name: /Geschärfter Sinn abwählen/i }).click();
   await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
 
   await page.getByRole('button', { name: /Umweltanpassung, 1 Punkt/i }).click();
