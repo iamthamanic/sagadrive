@@ -1,3 +1,4 @@
+import { Plus, X } from 'lucide-react';
 import {
   SAGA_DRIVE_SPECIES_TRAIT_BUDGET,
   getCharacterCreationOptionLabel,
@@ -6,57 +7,67 @@ import {
   sagaDriveRaceOptions,
   type SagaDriveSpeciesTraitKey,
 } from '../../rulesets/characterCreation';
-import { sagaDriveNarrowResistanceHazardOptions } from '../../rulesets/speciesResistanceHazards';
+import { getSagaDriveSpeciesTraitOptionCatalog } from '../../rulesets/speciesTraitOptions';
+import type { SagaDriveSpeciesTraitInstanceDto } from '../types/character.types';
 import { Badge } from '../../../components/ui/badge';
+import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Select, SelectContent, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
 import { RuleHelp } from './RuleHelp';
-import { SpeciesResistanceHazardItem } from './SpeciesResistanceHazardItem';
 import { SpeciesTraitIcon } from './SpeciesTraitIcon';
-
-export type SpeciesTraitDetailValues = Partial<Record<SagaDriveSpeciesTraitKey, string>>;
+import { SpeciesTraitOptionItem } from './SpeciesTraitOptionItem';
 
 type SpeciesTraitsPanelProps = {
   species: string;
-  selectedTraits: SagaDriveSpeciesTraitKey[];
-  traitDetails: SpeciesTraitDetailValues;
+  traitInstances: SagaDriveSpeciesTraitInstanceDto[];
   speciesProfileName: string;
   speciesBodyDescription: string;
   validationAttempted?: boolean;
-  onSelectedTraitsChange: (traits: SagaDriveSpeciesTraitKey[]) => void;
-  onTraitDetailChange: (trait: SagaDriveSpeciesTraitKey, value: string) => void;
+  onTraitInstancesChange: (instances: SagaDriveSpeciesTraitInstanceDto[]) => void;
   onSpeciesProfileNameChange: (value: string) => void;
   onSpeciesBodyDescriptionChange: (value: string) => void;
 };
 
 export function SpeciesTraitsPanel({
   species,
-  selectedTraits,
-  traitDetails,
+  traitInstances,
   speciesProfileName,
   speciesBodyDescription,
   validationAttempted = false,
-  onSelectedTraitsChange,
-  onTraitDetailChange,
+  onTraitInstancesChange,
   onSpeciesProfileNameChange,
   onSpeciesBodyDescriptionChange,
 }: SpeciesTraitsPanelProps) {
   const traits = getSagaDriveSpeciesTraitsForRace(species);
-  const usedPoints = getSagaDriveSpeciesTraitCost(selectedTraits);
+  const usedPoints = getSagaDriveSpeciesTraitCost(traitInstances.map((instance) => instance.trait));
   const speciesLabel = getCharacterCreationOptionLabel(sagaDriveRaceOptions, species);
   const budgetComplete = usedPoints === SAGA_DRIVE_SPECIES_TRAIT_BUDGET;
 
-  const toggleTrait = (traitKey: SagaDriveSpeciesTraitKey, cost: number, available = true) => {
-    if (!available) return;
-    if (selectedTraits.includes(traitKey)) {
-      onSelectedTraitsChange(selectedTraits.filter((key) => key !== traitKey));
-      onTraitDetailChange(traitKey, '');
-      return;
-    }
+  const addTraitInstance = (traitKey: SagaDriveSpeciesTraitKey, cost: number) => {
+    const catalog = getSagaDriveSpeciesTraitOptionCatalog(traitKey);
+    const existing = traitInstances.filter((instance) => instance.trait === traitKey);
     if (usedPoints + cost > SAGA_DRIVE_SPECIES_TRAIT_BUDGET) return;
-    onSelectedTraitsChange([...selectedTraits, traitKey]);
+    if (!catalog && existing.length > 0) return;
+    if (catalog && existing.some((instance) => !instance.option)) return;
+    if (catalog && existing.length >= catalog.options.length) return;
+    onTraitInstancesChange([
+      ...traitInstances,
+      { trait: traitKey, source: 'species-creation', acquiredAtLevel: 1 },
+    ]);
+  };
+
+  const removeTraitInstance = (index: number) => {
+    onTraitInstancesChange(traitInstances.filter((_, currentIndex) => currentIndex !== index));
+  };
+
+  const updateTraitOption = (index: number, option: NonNullable<SagaDriveSpeciesTraitInstanceDto['option']>) => {
+    onTraitInstancesChange(traitInstances.map((instance, currentIndex) => (
+      currentIndex === index
+        ? { trait: instance.trait, option, source: instance.source, acquiredAtLevel: instance.acquiredAtLevel }
+        : instance
+    )));
   };
 
   return (
@@ -66,6 +77,9 @@ export function SpeciesTraitsPanel({
           <h3 className="font-semibold">Speziesmerkmale</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {speciesLabel} kann nur die unten aufgeführten Speziesmerkmale wählen. Verteile genau {SAGA_DRIVE_SPECIES_TRAIT_BUDGET} Punkte.
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Merkmale mit Auswahlkatalog sind mehrfach wählbar, aber jede Unteroption nur einmal. Die Speziespunkte steigen nicht automatisch mit der Charakterstufe.
           </p>
         </div>
         <Badge variant={budgetComplete ? 'default' : validationAttempted ? 'destructive' : 'outline'}>
@@ -104,16 +118,18 @@ export function SpeciesTraitsPanel({
 
       <div className="grid gap-2 sm:grid-cols-2">
         {traits.map((trait) => {
-          const selected = selectedTraits.includes(trait.key);
+          const catalog = getSagaDriveSpeciesTraitOptionCatalog(trait.key);
+          const repeatable = Boolean(catalog);
+          const entries = traitInstances
+            .map((instance, index) => ({ instance, index }))
+            .filter(({ instance }) => instance.trait === trait.key);
+          const selected = entries.length > 0;
           const unavailable = trait.available === false;
-          const budgetBlocked = !selected && usedPoints + trait.cost > SAGA_DRIVE_SPECIES_TRAIT_BUDGET;
-          const disabled = unavailable || budgetBlocked;
-          const detailInvalid = Boolean(
-            validationAttempted
-            && selected
-            && trait.detailRequired
-            && !traitDetails[trait.key]?.trim(),
-          );
+          const budgetBlocked = usedPoints + trait.cost > SAGA_DRIVE_SPECIES_TRAIT_BUDGET;
+          const unresolvedInstance = entries.some(({ instance }) => catalog && !instance.option);
+          const allOptionsUsed = Boolean(catalog && entries.length >= catalog.options.length);
+          const canAdd = !unavailable && !budgetBlocked && !unresolvedInstance && !allOptionsUsed;
+          const hasInvalidEntry = Boolean(validationAttempted && catalog && entries.some(({ instance }) => !instance.option));
 
           return (
             <div
@@ -122,83 +138,132 @@ export function SpeciesTraitsPanel({
                 'rounded-lg border bg-card transition-colors',
                 selected ? 'border-primary bg-primary/10' : 'border-border',
                 unavailable ? 'opacity-60' : '',
-                detailInvalid ? 'border-destructive' : '',
+                hasInvalidEntry ? 'border-destructive' : '',
               ].filter(Boolean).join(' ')}
             >
-              <button
-                type="button"
-                className="w-full p-3 text-left disabled:cursor-not-allowed"
-                disabled={disabled}
-                aria-pressed={selected}
-                aria-label={`${trait.label}, ${trait.cost} ${trait.cost === 1 ? 'Punkt' : 'Punkte'}`}
-                onClick={() => toggleTrait(trait.key, trait.cost, !unavailable)}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${selected ? 'bg-primary/15 text-primary' : 'bg-muted/60 text-muted-foreground'}`}>
-                      <SpeciesTraitIcon traitKey={trait.key} className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-medium leading-snug">{trait.label}</span>
-                      {unavailable && (
-                        <p className="mt-0.5 text-xs font-medium text-muted-foreground">{trait.unavailableReason ?? 'Noch nicht verfügbar'}</p>
-                      )}
-                    </div>
-                  </div>
-                  <Badge variant={selected ? 'default' : 'outline'}>{trait.cost}</Badge>
+              {!selected || !repeatable ? (
+                <button
+                  type="button"
+                  className="w-full p-3 text-left disabled:cursor-not-allowed"
+                  disabled={unavailable || (!selected && budgetBlocked)}
+                  aria-pressed={selected}
+                  aria-label={`${trait.label}, ${trait.cost} ${trait.cost === 1 ? 'Punkt' : 'Punkte'}`}
+                  onClick={() => {
+                    if (selected) {
+                      const selectedIndex = entries[0]?.index;
+                      if (selectedIndex !== undefined) removeTraitInstance(selectedIndex);
+                    } else {
+                      addTraitInstance(trait.key, trait.cost);
+                    }
+                  }}
+                >
+                  <TraitCardHeader
+                    traitKey={trait.key}
+                    label={trait.label}
+                    cost={trait.cost}
+                    selected={selected}
+                    unavailableReason={unavailable ? trait.unavailableReason ?? 'Noch nicht verfügbar' : undefined}
+                    selectedCount={entries.length}
+                    repeatable={repeatable}
+                  />
+                  <p className="mt-2 pl-12 text-xs leading-relaxed text-muted-foreground">{trait.description}</p>
+                </button>
+              ) : (
+                <div className="p-3">
+                  <TraitCardHeader
+                    traitKey={trait.key}
+                    label={trait.label}
+                    cost={trait.cost}
+                    selected
+                    selectedCount={entries.length}
+                    repeatable
+                  />
+                  <p className="mt-2 pl-12 text-xs leading-relaxed text-muted-foreground">{trait.description}</p>
                 </div>
-                <p className="mt-2 pl-12 text-xs leading-relaxed text-muted-foreground">{trait.description}</p>
-              </button>
+              )}
 
-              {selected && trait.detailRequired && (
-                <div className="space-y-2 border-t border-border/70 px-3 pb-3 pt-3">
-                  {trait.key === 'narrow-resistance' ? (
-                    <>
-                      <div className="flex min-h-7 items-center gap-1">
-                        <Label htmlFor="species-trait-narrow-resistance">Gefahrenart *</Label>
-                        <RuleHelp label="Gefahrenart">
-                          <p>
-                            Entscheidend ist die konkrete Wirkung, nicht ihre Quelle. Magisches Feuer zählt zum Beispiel als Hitze / Verbrennung. Eine allgemeine Resistenz gegen „Magie“ gibt es hier nicht. Die einzelnen Gefahrenarten erklären sich im Dropdown über das Hilfe-Icon am jeweiligen Eintrag.
+              {selected && catalog && (
+                <div className="space-y-3 border-t border-border/70 px-3 pb-3 pt-3">
+                  <div className="flex min-h-7 items-center gap-1">
+                    <p className="text-sm font-medium">{catalog.label} *</p>
+                    <RuleHelp label={`${trait.label}: ${catalog.label}`}>
+                      <p>{catalog.helpIntro} Die einzelnen Optionen erklären sich im Dropdown über das Hilfe-Icon am jeweiligen Eintrag.</p>
+                    </RuleHelp>
+                  </div>
+
+                  {entries.map(({ instance, index }, entryIndex) => {
+                    const controlId = `species-trait-${trait.key}-${index}`;
+                    const selectedByOtherInstance = new Set(
+                      entries
+                        .filter((entry) => entry.index !== index)
+                        .map((entry) => entry.instance.option)
+                        .filter((option): option is NonNullable<typeof option> => Boolean(option)),
+                    );
+                    const detailInvalid = Boolean(validationAttempted && !instance.option);
+
+                    return (
+                      <div key={`${trait.key}-${index}`} className="rounded-md border border-border/70 bg-background/40 p-2.5">
+                        <div className="flex items-end gap-2">
+                          <div className="min-w-0 flex-1 space-y-1.5">
+                            {entries.length > 1 && (
+                              <Label htmlFor={controlId}>{catalog.label} {entryIndex + 1}</Label>
+                            )}
+                            <Select
+                              value={instance.option ?? ''}
+                              onValueChange={(value) => updateTraitOption(index, value as NonNullable<SagaDriveSpeciesTraitInstanceDto['option']>)}
+                            >
+                              <SelectTrigger
+                                id={controlId}
+                                aria-label={`${trait.label}: ${catalog.label}${entries.length > 1 ? ` ${entryIndex + 1}` : ''}`}
+                                aria-invalid={detailInvalid}
+                                className={detailInvalid ? 'border-destructive' : undefined}
+                              >
+                                <SelectValue placeholder={catalog.placeholder} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {catalog.options.map((option) => (
+                                  <SpeciesTraitOptionItem
+                                    key={option.value}
+                                    option={option}
+                                    disabled={selectedByOtherInstance.has(option.value)}
+                                  />
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="shrink-0"
+                            aria-label={`${trait.label}${entries.length > 1 ? ` ${entryIndex + 1}` : ''} entfernen`}
+                            onClick={() => removeTraitInstance(index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {instance.legacyDetail && !instance.option && (
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            Bisheriger Wert: „{instance.legacyDetail}“. Bitte ordne ihn einer Core-Auswahl zu.
                           </p>
-                        </RuleHelp>
+                        )}
+                        {detailInvalid && (
+                          <p className="mt-2 text-xs text-destructive">Bitte wähle eine Option für dieses Speziesmerkmal.</p>
+                        )}
                       </div>
-                      <Select
-                        value={traitDetails[trait.key] ?? ''}
-                        onValueChange={(value) => onTraitDetailChange(trait.key, value)}
-                      >
-                        <SelectTrigger
-                          id="species-trait-narrow-resistance"
-                          aria-label="Gefahrenart"
-                          aria-invalid={detailInvalid}
-                          className={detailInvalid ? 'border-destructive' : undefined}
-                        >
-                          <SelectValue placeholder="Gefahrenart wählen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {sagaDriveNarrowResistanceHazardOptions.map((option) => (
-                            <SpeciesResistanceHazardItem key={option.value} option={option} />
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </>
-                  ) : (
-                    <>
-                      <Label htmlFor={`species-trait-${trait.key}`}>
-                        {trait.detailLabel ?? 'Details'} *
-                      </Label>
-                      <Input
-                        id={`species-trait-${trait.key}`}
-                        value={traitDetails[trait.key] ?? ''}
-                        onChange={(event) => onTraitDetailChange(trait.key, event.target.value)}
-                        placeholder={trait.detailPlaceholder}
-                        aria-invalid={detailInvalid}
-                        className={detailInvalid ? 'border-destructive' : undefined}
-                      />
-                    </>
-                  )}
-                  {detailInvalid && (
-                    <p className="text-xs text-destructive">Bitte konkretisiere dieses Speziesmerkmal.</p>
-                  )}
+                    );
+                  })}
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    disabled={!canAdd}
+                    onClick={() => addTraitInstance(trait.key, trait.cost)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />Weitere Auswahl
+                  </Button>
                 </div>
               )}
             </div>
@@ -212,5 +277,47 @@ export function SpeciesTraitsPanel({
         </p>
       )}
     </section>
+  );
+}
+
+type TraitCardHeaderProps = {
+  traitKey: SagaDriveSpeciesTraitKey;
+  label: string;
+  cost: 1 | 2 | 3;
+  selected: boolean;
+  repeatable: boolean;
+  selectedCount: number;
+  unavailableReason?: string;
+};
+
+function TraitCardHeader({
+  traitKey,
+  label,
+  cost,
+  selected,
+  repeatable,
+  selectedCount,
+  unavailableReason,
+}: TraitCardHeaderProps) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${selected ? 'bg-primary/15 text-primary' : 'bg-muted/60 text-muted-foreground'}`}>
+          <SpeciesTraitIcon traitKey={traitKey} className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <span className="font-medium leading-snug">{label}</span>
+          {repeatable && (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Mehrfach wählbar{selectedCount > 0 ? ` · ${selectedCount} gewählt` : ''}
+            </p>
+          )}
+          {unavailableReason && (
+            <p className="mt-0.5 text-xs font-medium text-muted-foreground">{unavailableReason}</p>
+          )}
+        </div>
+      </div>
+      <Badge variant={selected ? 'default' : 'outline'}>{cost}</Badge>
+    </div>
   );
 }
