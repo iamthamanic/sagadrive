@@ -86,9 +86,6 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('button', { name: /Umweltanpassung, 1 Punkt/i }).click();
   const environmentSelect = page.getByRole('combobox', { name: 'Umweltanpassung: Umgebung' });
   await expect(environmentSelect).toBeVisible();
-  await page.getByRole('button', { name: /Umweltanpassung: Umgebung erklären/i }).click();
-  await expect(page.getByRole('tooltip').getByText(/gewöhnlichen Lebensumgebung/i)).toBeVisible();
-  await page.getByRole('button', { name: /Umweltanpassung: Umgebung erklären/i }).click();
   await environmentSelect.click();
   await expect(page.getByRole('listbox').getByText(/großer Höhe und dünner Luft/i)).toBeVisible();
   await page.getByRole('option', { name: /Hochgebirge & dünne Luft/i }).click();
@@ -106,9 +103,6 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('button', { name: /Erweiterte Sicht, 2 Punkte/i }).click();
   const sightSelect = page.getByRole('combobox', { name: 'Erweiterte Sicht: Sichtform' });
   await expect(sightSelect).toBeVisible();
-  await page.getByRole('button', { name: /Erweiterte Sicht: Sichtform erklären/i }).click();
-  await expect(page.getByRole('tooltip').getByText(/zusätzliche Sehfähigkeit/i)).toBeVisible();
-  await page.getByRole('button', { name: /Erweiterte Sicht: Sichtform erklären/i }).click();
   await sightSelect.click();
   await expect(page.getByRole('listbox').getByText(/Natürliche Dunkelheit allein/i)).toBeVisible();
   await page.getByRole('option', { name: /Dunkelsicht/i }).click();
@@ -117,9 +111,6 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('button', { name: /Extremumwelt, 3 Punkte/i }).click();
   const extremeSelect = page.getByRole('combobox', { name: 'Extremumwelt: Extremumwelt' });
   await expect(extremeSelect).toBeVisible();
-  await page.getByRole('button', { name: /Extremumwelt: Extremumwelt erklären/i }).click();
-  await expect(page.getByRole('tooltip').getByText(/dauerhaftes Überleben/i)).toBeVisible();
-  await page.getByRole('button', { name: /Extremumwelt: Extremumwelt erklären/i }).click();
   await extremeSelect.click();
   await expect(page.getByRole('listbox').getByText(/ohne Atemluft/i)).toBeVisible();
   await page.getByRole('option', { name: /Vakuum & Sauerstofflosigkeit/i }).click();
