@@ -34,11 +34,28 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Spezies', { exact: true }).first()).toBeVisible();
   await expect(page.getByRole('radio', { name: /Mensch/i })).toBeVisible();
   await expect(page.getByRole('img', { name: /Skizze: Mensch/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Speziesmerkmale/i })).toBeVisible();
+  await expect(page.getByText('Geschärfter Sinn').first()).toBeVisible();
+  await expect(page.getByText('Geringer Ruhebedarf').first()).toBeVisible();
+  await expect(page.getByText('Flugfähig')).toHaveCount(0);
+  await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
+
+  await page.getByRole('radio', { name: /Alien/i }).click();
+  await expect(page.getByLabel(/Name deiner Spezies/i)).toBeVisible();
+  await expect(page.getByLabel(/Körperbeschreibung/i)).toBeVisible();
+  await expect(page.getByText('Flugfähig').first()).toBeVisible();
+  await expect(page.getByText('Erweitertes Schwimmen').first()).toBeVisible();
+  await expect(page.getByText('Noch nicht verfügbar').first()).toBeVisible();
+  await page.getByLabel(/Name deiner Spezies/i).fill('Schneggl');
+  await expect(page.getByLabel(/Spezies: Schneggl/i)).toBeVisible();
+
+  await page.getByRole('radio', { name: /Mensch/i }).click();
+  await expect(page.getByText('Flugfähig')).toHaveCount(0);
+
   await page.getByRole('tab', { name: /^Parameter$/i }).click();
   await expect(page.getByRole('tab', { name: /^Archetype$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Essenz$/i })).toBeVisible();
-  await page.getByRole('tab', { name: /^Talente$/i }).click();
-  await expect(page.getByText('Geschärfter Sinn').first()).toBeVisible();
+  await expect(page.getByRole('tab', { name: /^Talente$/i })).toHaveCount(0);
   await expect(page.getByText('Paktbasiert')).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '01-info-core-tabs.png'), fullPage: true });
 
@@ -89,7 +106,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('tab', { name: /Spezies/i }).click();
   await page.getByPlaceholder('Charaktername').first().fill('Validierungsprobe');
   await page.getByRole('button', { name: /Speichern/i }).first().click();
-  await expect(page.locator('[data-sonner-toast]').filter({ hasText: /Hintergrundangaben|Fertigkeitspunkte|Attribute|Namen|gelesen/i }).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('[data-sonner-toast]').filter({ hasText: /Speziesmerkmale|Hintergrundangaben|Fertigkeitspunkte|Attribute|Namen|gelesen/i }).first()).toBeVisible({ timeout: 10_000 });
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '11-edge-invalid-build.png'), fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
