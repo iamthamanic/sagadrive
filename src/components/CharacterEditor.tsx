@@ -23,6 +23,7 @@ import { CharacterInventoryPanel, getInventoryLoad } from '../modules/characters
 import { RuleHelp } from '../modules/characters/components/RuleHelp';
 import { CharacterSkillsPanel, getSagaDriveFinalSkillRanks } from '../modules/characters/components/CharacterSkillsPanel';
 import { GenderReadingSelect } from '../modules/characters/components/GenderReadingSelect';
+import { SelectedSpeciesChip } from '../modules/characters/components/SelectedSpeciesChip';
 import { SpeciesCarousel } from '../modules/characters/components/SpeciesCarousel';
 import { SkillSelectField } from '../modules/characters/components/SkillSelectField';
 import { SpeciesTraitIcon } from '../modules/characters/components/SpeciesTraitIcon';
@@ -371,12 +372,16 @@ export function CharacterEditor() {
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Charaktername"
-                    value={characterName}
-                    onChange={(event) => setCharacterName(event.target.value)}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="name"
+                      className="min-w-0 flex-1"
+                      placeholder="Charaktername"
+                      value={characterName}
+                      onChange={(event) => setCharacterName(event.target.value)}
+                    />
+                    {characterRace.trim() ? <SelectedSpeciesChip species={characterRace} /> : null}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <div className="min-w-0 flex-1 space-y-1.5">
