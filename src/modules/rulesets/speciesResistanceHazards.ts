@@ -1,9 +1,14 @@
-export {
+import {
+  isSagaDriveSpeciesTraitOptionKeyForTrait,
   sagaDriveNarrowResistanceHazardOptions,
-  type SagaDriveSpeciesTraitOption as SagaDriveNarrowResistanceHazardOption,
+  type SagaDriveSpeciesTraitOption,
+  type SagaDriveSpeciesTraitOptionKey,
 } from './speciesTraitOptions';
 
-export {
-  isSagaDriveSpeciesTraitOptionKeyForTrait as isSagaDriveNarrowResistanceHazardKey,
-  type SagaDriveSpeciesTraitOptionKey as SagaDriveNarrowResistanceHazardKey,
-} from './speciesTraitOptions';
+export { sagaDriveNarrowResistanceHazardOptions };
+export type SagaDriveNarrowResistanceHazardOption = SagaDriveSpeciesTraitOption;
+export type SagaDriveNarrowResistanceHazardKey = SagaDriveSpeciesTraitOptionKey;
+
+export function isSagaDriveNarrowResistanceHazardKey(value: string): value is SagaDriveNarrowResistanceHazardKey {
+  return isSagaDriveSpeciesTraitOptionKeyForTrait('narrow-resistance', value);
+}
