@@ -11,21 +11,21 @@ Move free-form character notes into the Hintergrund tab and add a Statistik tab 
 - For live Statistik arcs: character has been saved and may be linked via `project_members.character_id`
 
 ## Happy Path
-- [ ] Editor tabs are Spezies, Hintergrund, Parameter, Look, Inventar, Statistik (no Notizen tab)
-- [ ] Notizen textarea lives under Hintergrundgeschichte and still saves to `characters.notes`
+- [x] Editor tabs are Spezies, Hintergrund, Parameter, Look, Inventar, Statistik (no Notizen tab)
+- [x] Notizen textarea lives under Hintergrundgeschichte and still saves to `characters.notes`
 - [ ] Statistik lists adventure arcs for the saved character (synced from project memberships)
 - [ ] User can append a development entry (kind + title + detail) to an arc and see it after reload
-- [ ] Empty Statistik states explain “save first” and “no adventures yet”
+- [x] Empty Statistik states explain “save first” and “no adventures yet”
 
 ## Edge Cases
-- [ ] Unsaved character: Statistik shows save-first guidance, no service crash
+- [x] Unsaved character: Statistik shows save-first guidance, no service crash
 - [ ] Membership without arc: load upserts an active arc
 - [ ] Arc without membership: remains visible as historical completed/left
-- [ ] Invalid development payload rejected with clear error
+- [x] Invalid development payload rejected with clear error
 
 ## Regression
-- [ ] Species / background / parameter flows still work
-- [ ] Character save still persists notes and sagadrive_profile
+- [x] Species / background / parameter flows still work
+- [x] Character save still persists notes and sagadrive_profile
 
 ## Assumptions
 - Migration number is `009` so it does not collide with upcoming world-profile `008` on the other branch
