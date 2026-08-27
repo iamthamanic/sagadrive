@@ -1,6 +1,6 @@
 # Composition Gate — species resistance dropdown
 
-- HEAD_SHA: 8ee3ecf0f8cc46a071834d78a81d0b2dce48865d
+- HEAD_SHA: 61962f5ab37b7a2ea793d07501363572f361a1d1
 - BASE_SHA: 65e2483d4b99dd84eb529064afc0cf8bddf23b9a
 - Date: 2026-08-27
 - Verdict: CLEAR
@@ -29,3 +29,4 @@ No new database column, queue, worker, webhook or external side effect is introd
 - `Übernatürliche Veränderungen` is intentionally narrow: bodily/form/nature transformations such as transformation, petrification, supernatural mutation or magical aging. It is not general magic resistance and does not include illusions or mind control.
 - The hazard catalog uses stable internal keys while the UI displays German labels.
 - The tooltip explains all Core hazard categories and the source-vs-effect distinction (for example, magical fire is still `Hitze / Verbrennung`).
+- Browser E2E scopes tooltip assertions to the visible Radix tooltip container to avoid duplicate hidden tooltip nodes in Playwright strict mode.
