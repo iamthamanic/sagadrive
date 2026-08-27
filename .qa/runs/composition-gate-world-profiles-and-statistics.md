@@ -1,6 +1,6 @@
 # Composition Gate — world-profiles-and-statistics
 
-- HEAD_SHA: af976d999d7c598dba71d988ceba1a9a47dafdb6
+- HEAD_SHA: 30da7f19a5e4a86f6bd5213fe42b9ff1b7953a8d
 - BASE_SHA: a409fbeb36a5bee0c76e055d7b15ffee1d90505f
 - Date: 2026-08-27
 - Verdict: CLEAR
