@@ -150,6 +150,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-08-27** — Spezies-Karussell: Wappen pro Spezies (Shimmer/Puls bei Auswahl), Colorway-Header, überarbeitete Skizzen und Skalierung Zwerg/Halbling (`feat/character-editor-ui-polish`)
 - **2026-08-26** — Character Editor UI: Parameter-Tab (Attribute/Talente/Archetyp/Essenz), Spezies- & Archetyp-Karussells, Pflichtfeld Geschlecht, Regelset-Dropdown, Skill-Icons, Terminologie Wesen→Spezies, collapsible Sidebar (`feat/character-editor-ui-polish`)
 - **2026-08-26** — SagaDrive Core Character Editor verifiziert (test-gate, composition-gate CLEAR, Playwright Evidence `01`–`12`) (`feat/sagadrive-character-editor-core`)
 

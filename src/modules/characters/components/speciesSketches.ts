@@ -1,6 +1,6 @@
 /**
- * speciesSketches — Meshy-generated monochrome line-art per SagaDrive Spezies.
- * Lines: muted-foreground (#94A3B8) on background (#0F172A), matching dark UI.
+ * speciesSketches — Meshy-generated minimal fashion-sketch line-art per SagaDrive Spezies.
+ * Style: #94A3B8 (muted-foreground) ink lines on transparent background, simple universal clothing.
  * Location: src/modules/characters/components/speciesSketches.ts
  */
 import alienSketch from '../../../assets/species/alien.png';
