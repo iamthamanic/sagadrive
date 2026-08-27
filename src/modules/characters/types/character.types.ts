@@ -22,11 +22,19 @@ export interface SagaDriveBackgroundDto {
   communication: string;
 }
 
+export type SagaDriveSpeciesTraitDetailsDto = Partial<Record<SagaDriveSpeciesTraitKey, string>>;
+
+export interface SagaDriveSpeciesProfileDto {
+  name: string;
+  bodyDescription: string;
+}
+
 export interface SagaDriveProfileDto {
   archetype?: SagaDriveArchetypeKey;
   essence?: SagaDriveEssenceKey;
   speciesTraits: SagaDriveSpeciesTraitKey[];
-  speciesTraitDetails?: string;
+  speciesTraitDetails: SagaDriveSpeciesTraitDetailsDto;
+  speciesProfile?: SagaDriveSpeciesProfileDto;
   background: SagaDriveBackgroundDto;
   archetypeTrainingSkill?: SagaDriveSkillKey;
   drive: number;
