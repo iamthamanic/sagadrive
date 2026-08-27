@@ -26,7 +26,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('SagaDrive Core').first()).toBeVisible();
   await expect(page.getByRole('combobox', { name: /Regelset/i }).first()).toBeVisible();
 
-  for (const tab of ['Spezies', 'Hintergrund', 'Parameter', 'Look', 'Inventar', 'Notizen']) {
+  for (const tab of ['Spezies', 'Hintergrund', 'Parameter', 'Look', 'Inventar', 'Statistik']) {
     await expect(page.getByRole('tab', { name: new RegExp(`^${tab}$`, 'i') })).toBeVisible();
   }
 
@@ -159,7 +159,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Mechanischer Hintergrund').first()).toBeVisible();
   await expect(page.getByTestId('character-lore-project-context')).toBeVisible();
   await expect(page.getByTestId('character-bg-generate')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Notizen$/i })).toBeVisible();
+  await expect(page.locator('#notes')).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '06-background-core-fields.png'), fullPage: true });
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '09-notes-in-background.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /Inventar/i }).click();
   await expect(page.getByText(/^Last 0 \/ 13$/).first()).toBeVisible();
@@ -168,9 +171,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '08-character-summary.png'), fullPage: true });
 
-  await page.getByRole('tab', { name: /Notizen/i }).click();
-  await expect(page.getByRole('button', { name: /Speichern/i }).first()).toBeVisible();
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '09-notes-save.png'), fullPage: true });
+  await page.getByRole('tab', { name: /Statistik/i }).click();
+  await expect(page.getByText(/Speichere den Charakter zuerst/i)).toBeVisible();
+  await expect(page.getByRole('tab', { name: /Notizen/i })).toHaveCount(0);
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '13-statistics-tab.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /Spezies/i }).click();
   await page.getByPlaceholder('Charaktername').first().fill('Validierungsprobe');

@@ -21,6 +21,8 @@ import { CharacterArchetypePanel } from '../modules/characters/components/Charac
 import { CharacterBackgroundComposer } from '../modules/characters/components/CharacterBackgroundComposer';
 import { CharacterEssencePanel } from '../modules/characters/components/CharacterEssencePanel';
 import { CharacterInventoryPanel, getInventoryLoad } from '../modules/characters/components/CharacterInventoryPanel';
+import { CharacterNotesSection } from '../modules/characters/components/CharacterNotesSection';
+import { CharacterStatisticsPanel } from '../modules/characters/components/CharacterStatisticsPanel';
 import { RuleHelp } from '../modules/characters/components/RuleHelp';
 import { getSagaDriveFinalSkillRanks } from '../modules/characters/components/CharacterSkillsPanel';
 import { GenderReadingSelect } from '../modules/characters/components/GenderReadingSelect';
@@ -69,10 +71,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Separator } from './ui/separator';
 import { Slider } from './ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Textarea } from './ui/textarea';
 
 type ActivityTrackingWindow = Window & { trackActivity?: (description: string) => void };
-type EditorTab = 'info' | 'background' | 'values' | 'appearance' | 'inventory' | 'notes';
+type EditorTab = 'info' | 'background' | 'values' | 'appearance' | 'inventory' | 'statistics';
 type ValuesSubTab = 'attribute' | 'archetype' | 'essenz';
 type ValidationProblem = { tab: EditorTab; message: string; valuesSubTab?: ValuesSubTab };
 type SkillSlot = SagaDriveSkillKey | '';
@@ -86,7 +87,7 @@ const trackActivity = (description: string) => {
 };
 
 function isEditorTab(value: string): value is EditorTab {
-  return value === 'info' || value === 'background' || value === 'values' || value === 'appearance' || value === 'inventory' || value === 'notes';
+  return value === 'info' || value === 'background' || value === 'values' || value === 'appearance' || value === 'inventory' || value === 'statistics';
 }
 
 function isValuesSubTab(value: string): value is ValuesSubTab {
@@ -158,6 +159,7 @@ export function CharacterEditor() {
   const [activeTab, setActiveTab] = useState<EditorTab>('info');
   const [activeValuesSubTab, setActiveValuesSubTab] = useState<ValuesSubTab>('attribute');
   const [validationAttempted, setValidationAttempted] = useState(false);
+  const [savedCharacterId, setSavedCharacterId] = useState<string | null>(null);
   const [characterLevel, setCharacterLevel] = useState(1);
   const [ruleset, setRuleset] = useState<CharacterRulesetKey>('sagadrive-core');
   const [characterName, setCharacterName] = useState('');
@@ -393,6 +395,7 @@ export function CharacterEditor() {
         appearance: { body_size: currentAvatar.body.size, height: currentAvatar.body.height, face_features: currentAvatar.traits.head ?? headStyle, hair_style: currentAvatar.traits.hair ?? hairStyle, hair_color: currentAvatar.colors.hair, skin_tone: currentAvatar.colors.skin, clothing: currentAvatar.traits.clothing ?? clothing, gender_reading: genderReading, avatar: currentAvatar },
         attributes, skills: finalSkillRanks, sagadrive_profile: sagaDriveProfile, abilities, inventory, portrait_url: portraitUrl || undefined,
       });
+      setSavedCharacterId(savedCharacter.id);
       trackActivity(`Character Editor: Charakter "${characterName}" gespeichert (ID: ${savedCharacter.id})`); toast.success('Charakter erfolgreich gespeichert');
     } catch (error) { console.error('Character save error:', error); toast.error(error instanceof Error ? error.message : 'Fehler beim Speichern'); }
     finally { setSaving(false); }
@@ -506,7 +509,7 @@ export function CharacterEditor() {
                   <TabsTrigger value="values" className="px-1 py-2 text-xs md:px-2 md:text-sm">Parameter</TabsTrigger>
                   <TabsTrigger value="appearance" className="px-1 py-2 text-xs md:px-2 md:text-sm">Look</TabsTrigger>
                   <TabsTrigger value="inventory" className="px-1 py-2 text-xs md:px-2 md:text-sm">Inventar</TabsTrigger>
-                  <TabsTrigger value="notes" className="px-1 py-2 text-xs md:px-2 md:text-sm">Notizen</TabsTrigger>
+                  <TabsTrigger value="statistics" className="px-1 py-2 text-xs md:px-2 md:text-sm">Statistik</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="info" className="space-y-6">
@@ -550,6 +553,8 @@ export function CharacterEditor() {
                   </section>
                   <Separator />
                   <section className="space-y-4"><div><h3 className="font-semibold">Hintergrundgeschichte</h3><p className="text-sm text-muted-foreground">Optionaler Lore-Teil. Die mechanischen Hintergrundwerte oben bleiben davon getrennt.</p></div><CharacterBackgroundComposer value={backgroundStory} context={loreContext} onChange={setBackgroundStory} /></section>
+                  <Separator />
+                  <CharacterNotesSection value={notes} onChange={setNotes} />
                   <details className="rounded-lg border border-border bg-muted/10 p-4"><summary className="cursor-pointer font-medium">Weitere Charakterdetails · optional</summary><div className="mt-5 space-y-5"><CharacterTraitEditor id="personality" label="Persönlichkeitsmerkmale" category="personality" values={personalityTraits} context={loreContext} onChange={setPersonalityTraits} /><CharacterTraitEditor id="ideals" label="Ideale" category="ideals" values={ideals} context={loreContext} onChange={setIdeals} /><CharacterTraitEditor id="bonds" label="Bindungen" category="bonds" values={bonds} context={loreContext} onChange={setBonds} /><CharacterTraitEditor id="flaws" label="Schwächen" category="flaws" values={flaws} context={loreContext} onChange={setFlaws} /></div></details>
                 </TabsContent>
 
@@ -606,7 +611,9 @@ export function CharacterEditor() {
                 </TabsContent>
 
                 <TabsContent value="inventory"><CharacterInventoryPanel items={inventory} onChange={setInventory} strength={attributes.strength} /></TabsContent>
-                <TabsContent value="notes" className="space-y-4"><div className="space-y-2"><Label htmlFor="notes">Notizen</Label><Textarea id="notes" rows={15} value={notes} onChange={(event) => setNotes(event.target.value)} className="min-h-[400px]" placeholder="Freie Spielnotizen, offene Fragen, Ziele oder Erinnerungen ..." /></div><p className="text-xs text-muted-foreground">Notizen werden mit dem Charakter gespeichert und verändern keine Charakterwerte.</p></TabsContent>
+                <TabsContent value="statistics" className="space-y-4">
+                  <CharacterStatisticsPanel characterId={savedCharacterId} />
+                </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
