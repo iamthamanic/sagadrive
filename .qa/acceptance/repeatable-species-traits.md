@@ -61,7 +61,7 @@ Konfigurierbare Speziesmerkmale sollen keine regelrelevanten Freitexte mehr verw
 
 ## Implementation Notes
 - Files touched: `src/modules/rulesets/speciesTraitOptions.ts`, `src/modules/rulesets/speciesResistanceHazards.ts`, `src/modules/characters/types/character.types.ts`, `src/modules/characters/services/character.service.ts`, `src/modules/characters/components/SpeciesTraitsPanel.tsx`, `src/components/CharacterEditor.tsx`, `scripts/character-editor-regression-check.mjs`, `e2e/character-editor.spec.ts`, QA-Artefakte.
-- Test Gate: PASS auf Code-HEAD `f6ab7d54352f792253c07f26ec03118d0190cb0d`.
+- Test Gate: PASS auf Code-HEAD `02b169cdf3f52422875e92f9ee4d5107013a9c89`.
 - Browser E2E: PASS auf Code-HEAD `f6ab7d54352f792253c07f26ec03118d0190cb0d`; Screenshots als Workflow-Artefakt `character-editor-browser-evidence` erzeugt und visuell geprüft.
 - UI-Verifikation: Desktop-Mehrfachauswahl, deaktivierte Doppeloption, Kosten pro Instanz und Mobile-Layout geprüft; keine blockierenden Darstellungsfehler gefunden.
 - Known limitations: Dieses Ticket vergibt keine neuen Speziespunkte durch spätere Fähigkeiten/Transformationen. Das Datenmodell speichert Quelle und Erwerbsstufe, damit ein solcher expliziter Mechanismus später ergänzt werden kann.

@@ -1,6 +1,6 @@
 # Composition Gate — repeatable-species-traits
 
-- HEAD_SHA: f6ab7d54352f792253c07f26ec03118d0190cb0d
+- HEAD_SHA: 45ab4d5980eaa487365d4c9c60c71795db58bd00
 - BASE_SHA: 65e2483d4b99dd84eb529064afc0cf8bddf23b9a
 - Date: 2026-08-27
 - Verdict: CLEAR
@@ -9,7 +9,7 @@
 Eine Figur wählt eine oder mehrere Speziesmerkmal-Instanzen mit festen Core-Unteroptionen, speichert den Charakter und erhält beim erneuten Laden dieselben Instanzen ohne automatische zusätzliche Merkmale durch die Charakterstufe.
 
 ## Hop chain
-`speciesTraitOptions.ts` definiert stabile Trait-spezifische Options-Keys und Beschreibungen → `SpeciesTraitsPanel` erzeugt getrennte Merkmalsinstanzen, verhindert identische Unteroptionen desselben Traits und berechnet weiterhin gegen das feste 3-Punkte-Budget → `CharacterEditor` validiert Allowlist, Verfügbarkeit, Budget und eindeutige Unteroptionen und schreibt `speciesTraitInstances` mit `source: species-creation` sowie `acquiredAtLevel: 1` → `characterService.createCharacter` normalisiert die Instanzen und persistiert sie im bestehenden `characters.sagadrive_profile` JSONB → `mapToViewModel` normalisiert beim Lesen sowohl das neue Instanzformat als auch Legacy-`speciesTraits`/`speciesTraitDetails` → der Character Editor kann die kanonischen Instanzen wiederverwenden, ohne ihre Identität umzudeuten.
+`speciesTraitOptions.ts` definiert stabile Trait-spezifische Options-Keys und Beschreibungen → `SpeciesTraitsPanel` / `SpeciesTraitOptionItem` erzeugen getrennte Merkmalsinstanzen, erklären Optionen am Dropdown-Eintrag und verhindern identische Unteroptionen desselben Traits bei festem 3-Punkte-Budget → `CharacterEditor` validiert Allowlist, Verfügbarkeit, Budget und eindeutige Unteroptionen und schreibt `speciesTraitInstances` mit `source: species-creation` sowie `acquiredAtLevel: 1` → `characterService.createCharacter` normalisiert die Instanzen und persistiert sie im bestehenden `characters.sagadrive_profile` JSONB → `mapToViewModel` normalisiert beim Lesen sowohl das neue Instanzformat als auch Legacy-`speciesTraits`/`speciesTraitDetails` → der Character Editor kann die kanonischen Instanzen wiederverwenden, ohne ihre Identität umzudeuten.
 
 ## Simulations
 | Case | Intended | Composed | Result |
@@ -21,12 +21,12 @@ Eine Figur wählt eine oder mehrere Speziesmerkmal-Instanzen mit festen Core-Unt
 ## Flags
 | Tag | Severity | Hops | Why local review missed it | Fix |
 |-----|----------|------|----------------------------|-----|
-| — | — | — | Keine offenen Flags nach Browser- und Persistenzprüfung. | done |
+| — | — | — | Keine offenen Flags nach Persistenz- und Options-Tooltip-Prüfung. | done |
 
 ## Skip reason
 n/a
 
 ## Notes
 - Das Charakterlevel verändert `SAGA_DRIVE_SPECIES_TRAIT_BUDGET` nicht; Start-Speziesinstanzen werden unabhängig von der gewählten Zielstufe mit Erwerbsstufe 1 gespeichert.
-- Spätere ausdrücklich gewährte Speziesentwicklungen sind nicht Teil dieses Tickets. Das Instanzmodell führt Quelle und Erwerbsstufe bereits als Erweiterungspunkte.
+- Per-Option-Tooltips (`SpeciesTraitOptionItem`) ändern nur die Erklärungs-UI; die gespeicherten Options-Keys und die Hop-Kardinalität bleiben unverändert.
 - `Geschärfter Sinn`, `Enge Resistenz`, `Umweltanpassung`, `Erweiterte Sicht` und `Extremumwelt` sind wiederholbar; dieselbe Unteroption desselben Merkmals bleibt eindeutig.

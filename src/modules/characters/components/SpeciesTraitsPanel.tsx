@@ -13,10 +13,11 @@ import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { Select, SelectContent, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
 import { RuleHelp } from './RuleHelp';
 import { SpeciesTraitIcon } from './SpeciesTraitIcon';
+import { SpeciesTraitOptionItem } from './SpeciesTraitOptionItem';
 
 type SpeciesTraitsPanelProps = {
   species: string;
@@ -186,16 +187,7 @@ export function SpeciesTraitsPanel({
                   <div className="flex min-h-7 items-center gap-1">
                     <p className="text-sm font-medium">{catalog.label} *</p>
                     <RuleHelp label={`${trait.label}: ${catalog.label}`}>
-                      <div className="space-y-2">
-                        <p>{catalog.helpIntro}</p>
-                        <div className="space-y-1.5">
-                          {catalog.options.map((option) => (
-                            <p key={option.value}>
-                              <span className="font-medium">{option.label}:</span> {option.description}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
+                      <p>{catalog.helpIntro}</p>
                     </RuleHelp>
                   </div>
 
@@ -233,13 +225,11 @@ export function SpeciesTraitsPanel({
                               </SelectTrigger>
                               <SelectContent>
                                 {catalog.options.map((option) => (
-                                  <SelectItem
+                                  <SpeciesTraitOptionItem
                                     key={option.value}
-                                    value={option.value}
+                                    option={option}
                                     disabled={selectedByOtherInstance.has(option.value)}
-                                  >
-                                    {option.label}
-                                  </SelectItem>
+                                  />
                                 ))}
                               </SelectContent>
                             </Select>
