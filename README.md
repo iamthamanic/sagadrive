@@ -71,13 +71,15 @@ Der aktuelle **Neuer-Charakter-Flow** konzentriert sich bewusst ausschließlich 
 
 Die UI behandelt SagaDrive Core nicht als umbenannte D&D-Maske. Sie verwendet die Core-Begriffe **Spezies**, **Archetyp**, **Essenz**, **Ausdauer**, **Verstand** und **Wahrnehmung**, die Startattributverteilung `4,3,3,2,2,1`, alle 18 Core-Fertigkeiten sowie die definierten Fertigkeitsbudgets und -grenzen. Die fünf Primärarchetypen liefern ihre jeweilige Rang-I-Kernfähigkeit automatisch; freie Platzhalterfähigkeiten werden nicht erzeugt.
 
+Spezies und ihre angeborenen Merkmale werden gemeinsam im Spezies-Tab konfiguriert. Jede Core-Spezies besitzt eine feste Merkmals-Allowlist und muss genau `3 / 3` Speziespunkte ausgeben. Konfigurierbare Merkmale verlangen ihre Details direkt an der Merkmalskarte. `Alien` dient als freier Spezies-Builder mit verpflichtendem Profilnamen und optionaler Körperbeschreibung; `Außergewöhnlicher Körperbau` bleibt bis zur Definition verbindlicher Varianten sichtbar, aber nicht auswählbar.
+
 Regelbegriffe und abgeleitete Werte besitzen kontextuelle Hilfen. Attribute, Fertigkeitsbudgets, Verteidigung, Gesundheit, Widerstände, Erholung und Traglast werden aus den Core-Regeln abgeleitet statt frei eingegeben. Das Inventar verwendet **Lastpunkte** statt fester Slots; `Traglast = 5 + 2 × Stärke` und Überlastungsfolgen werden direkt in der UI angezeigt. Der Look-Tab ist ausdrücklich kosmetisch und verändert keine Regelwerte.
 
 Die regelrelevanten Character-Creation-Daten werden getrennt gespeichert:
 
 - `attributes` – SagaDrive-Attribute
 - `skills` – berechnete Fertigkeitsstände
-- `sagadrive_profile` – Essenz, Speziesmerkmale, mechanischer Hintergrund, Archetyp-Punkt, Drive/Momentum
+- `sagadrive_profile` – Essenz, Speziesmerkmale samt strukturierten Merkmalsdetails und optionalem Alien-Speziesprofil, mechanischer Hintergrund, Archetyp-Punkt, Drive/Momentum
 - `background_story` – freie bzw. generierte Lore
 - `notes` – freie Spielnotizen
 
@@ -150,6 +152,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-08-27** — Speziesmerkmale: speziesgebundene Allowlists, exakt 3/3 Punkte, Merkmalsdetails direkt an den Cards, Alien-Profil-Builder, `Erweitertes Klettern`/`Erweitertes Schwimmen`; Talente-Subtab entfernt (`feat/species-traits-by-species`)
 - **2026-08-27** — Character Editor Chrome: Tab „Spezies“, Name/Geschlecht/Stufe in Preview, Regelset neben Vorschau, Archetyp-Kernfähigkeit einklappbar, flachere Archetyp-Karten (`feat/alien-species-sketch`)
 - **2026-08-27** — Alien-Spezies-Skizze: Outline-Lineup mit fünf Gestalten (Schnecke, Geist, Grey, Kristall, Tentakel) (`feat/alien-species-sketch`)
 - **2026-08-27** — Spezies-Karussell: Wappen pro Spezies (Shimmer/Puls bei Auswahl), Colorway-Header, überarbeitete Skizzen und Skalierung Zwerg/Halbling (`feat/character-editor-ui-polish`)
