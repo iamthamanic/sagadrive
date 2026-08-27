@@ -40,6 +40,16 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Flugfähig')).toHaveCount(0);
   await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
 
+  await page.getByRole('button', { name: /Enge Resistenz, 1 Punkt/i }).click();
+  await expect(page.getByRole('combobox', { name: 'Gefahrenart' })).toBeVisible();
+  await page.getByRole('button', { name: /Gefahrenart erklären/i }).click();
+  await expect(page.getByText(/Entscheidend ist die konkrete Wirkung/i)).toBeVisible();
+  await expect(page.getByText(/Übernatürliche Veränderungen:/i)).toBeVisible();
+  await page.getByRole('button', { name: /Gefahrenart erklären/i }).click();
+  await page.getByRole('combobox', { name: 'Gefahrenart' }).click();
+  await page.getByRole('option', { name: 'Übernatürliche Veränderungen' }).click();
+  await expect(page.getByRole('combobox', { name: 'Gefahrenart' })).toContainText('Übernatürliche Veränderungen');
+
   await page.getByRole('radio', { name: /Alien/i }).click();
   await expect(page.getByLabel(/Name deiner Spezies/i)).toBeVisible();
   await expect(page.getByLabel(/Körperbeschreibung/i)).toBeVisible();
