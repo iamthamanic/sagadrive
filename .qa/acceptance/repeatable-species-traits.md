@@ -13,32 +13,32 @@ Konfigurierbare Speziesmerkmale sollen keine regelrelevanten Freitexte mehr verw
 - Die bestehende 3-Punkte-Speziesbudget-Regel und das Card-Design aus PR #42 bleiben aktiv.
 
 ## Happy Path
-- [ ] Nach Auswahl von `Geschärfter Sinn` erscheint ein Pflicht-Dropdown mit `Sehen`, `Hören`, `Geruch / chemische Wahrnehmung` und `Tastsinn`; der Tooltip grenzt die Wirkung gegen Dunkelsicht, Echoortung und andere Zusatzsinne ab.
-- [ ] Nach Auswahl von `Umweltanpassung` erscheint ein Pflicht-Dropdown mit `Hitze & Trockenheit`, `Kälte & Schnee`, `Tropen & hohe Luftfeuchtigkeit`, `Hochgebirge & dünne Luft`, `Unterirdisch & Höhlen` und `Sumpf & Feuchtgebiet`; der Tooltip grenzt Umweltanpassung gegen Resistenz und Extremumwelt ab.
-- [ ] Nach Auswahl von `Erweiterte Sicht` erscheint ein Pflicht-Dropdown mit `Dunkelsicht`, `Wärmesicht` und `Fernsicht`; der Tooltip beschreibt die konkrete Regelwirkung jeder Sichtform.
-- [ ] Nach Auswahl von `Extremumwelt` erscheint ein Pflicht-Dropdown mit `Vakuum & Sauerstofflosigkeit`, `Extreme Kälte`, `Extreme Hitze`, `Extremdruck / Tiefsee`, `Toxische Atmosphäre` und `Hohe Strahlung`; der Tooltip grenzt dauerhaftes Überleben gegen die 1-Punkt-Resistenz ab.
-- [ ] `Enge Resistenz` verwendet weiterhin den bestehenden Core-Dropdown mit zehn Gefahrenarten und dessen Tooltip.
-- [ ] Die fünf konfigurierbaren Merkmale `Geschärfter Sinn`, `Enge Resistenz`, `Umweltanpassung`, `Erweiterte Sicht` und `Extremumwelt` können mehrfach als getrennte Merkmalsinstanzen gewählt werden, sofern das verfügbare Speziesbudget reicht.
-- [ ] Dieselbe Unteroption desselben Merkmals kann nicht zweimal gewählt werden; bereits verwendete Optionen sind in weiteren Instanzen nicht erneut auswählbar.
-- [ ] Jede Merkmalsinstanz zeigt ihren eigenen ausgewählten Wert, ihre Kosten und kann unabhängig entfernt oder geändert werden.
-- [ ] Ein vollständiger Startcharakter benötigt weiterhin exakt `3 / 3` Speziespunkte; wiederholbare Merkmale verbrauchen ihre normalen Kosten pro Instanz.
-- [ ] Gespeicherte Merkmalsinstanzen enthalten stabile Trait-/Options-Keys sowie Herkunft `Spezieserschaffung` und Erwerbsstufe `1`.
-- [ ] Eine Charakterstufe über 1 erhöht das Speziesbudget nicht automatisch und erzeugt keine zusätzlichen Speziesmerkmale.
+- [x] Nach Auswahl von `Geschärfter Sinn` erscheint ein Pflicht-Dropdown mit `Sehen`, `Hören`, `Geruch / chemische Wahrnehmung` und `Tastsinn`; der Tooltip grenzt die Wirkung gegen Dunkelsicht, Echoortung und andere Zusatzsinne ab.
+- [x] Nach Auswahl von `Umweltanpassung` erscheint ein Pflicht-Dropdown mit `Hitze & Trockenheit`, `Kälte & Schnee`, `Tropen & hohe Luftfeuchtigkeit`, `Hochgebirge & dünne Luft`, `Unterirdisch & Höhlen` und `Sumpf & Feuchtgebiet`; der Tooltip grenzt Umweltanpassung gegen Resistenz und Extremumwelt ab.
+- [x] Nach Auswahl von `Erweiterte Sicht` erscheint ein Pflicht-Dropdown mit `Dunkelsicht`, `Wärmesicht` und `Fernsicht`; der Tooltip beschreibt die konkrete Regelwirkung jeder Sichtform.
+- [x] Nach Auswahl von `Extremumwelt` erscheint ein Pflicht-Dropdown mit `Vakuum & Sauerstofflosigkeit`, `Extreme Kälte`, `Extreme Hitze`, `Extremdruck / Tiefsee`, `Toxische Atmosphäre` und `Hohe Strahlung`; der Tooltip grenzt dauerhaftes Überleben gegen die 1-Punkt-Resistenz ab.
+- [x] `Enge Resistenz` verwendet weiterhin den bestehenden Core-Dropdown mit zehn Gefahrenarten und dessen Tooltip.
+- [x] Die fünf konfigurierbaren Merkmale `Geschärfter Sinn`, `Enge Resistenz`, `Umweltanpassung`, `Erweiterte Sicht` und `Extremumwelt` können mehrfach als getrennte Merkmalsinstanzen gewählt werden, sofern das verfügbare Speziesbudget reicht.
+- [x] Dieselbe Unteroption desselben Merkmals kann nicht zweimal gewählt werden; bereits verwendete Optionen sind in weiteren Instanzen nicht erneut auswählbar.
+- [x] Jede Merkmalsinstanz zeigt ihren eigenen ausgewählten Wert, ihre Kosten und kann unabhängig entfernt oder geändert werden.
+- [x] Ein vollständiger Startcharakter benötigt weiterhin exakt `3 / 3` Speziespunkte; wiederholbare Merkmale verbrauchen ihre normalen Kosten pro Instanz.
+- [x] Gespeicherte Merkmalsinstanzen enthalten stabile Trait-/Options-Keys sowie Herkunft `Spezieserschaffung` und Erwerbsstufe `1`.
+- [x] Eine Charakterstufe über 1 erhöht das Speziesbudget nicht automatisch und erzeugt keine zusätzlichen Speziesmerkmale.
 
 ## Edge Cases
-- [ ] Ein Pflicht-Dropdown ohne Auswahl blockiert weiterhin das Speichern und markiert nur die betroffene Merkmalsinstanz als unvollständig.
-- [ ] Wird eine Merkmalsinstanz entfernt, wird nur deren eigener Optionswert entfernt; andere Instanzen desselben Merkmals bleiben erhalten.
-- [ ] Beim Spezieswechsel werden alle Instanzen entfernt, deren Trait bei der neuen Spezies nicht zulässig ist; weiterhin zulässige Instanzen bleiben erhalten, sofern sie das Budget nicht überschreiten.
-- [ ] Nicht wiederholbare Merkmale können weiterhin höchstens einmal gewählt werden.
-- [ ] Bereits bestehende Charakterdaten aus PR #42 mit `speciesTraits` und `speciesTraitDetails` werden beim Laden ohne Datenverlust in das neue Instanzmodell normalisiert.
-- [ ] Weltprofil-Erweiterungen bleiben möglich, ohne die stabilen Core-Options-Keys umzudeuten.
+- [x] Ein Pflicht-Dropdown ohne Auswahl blockiert weiterhin das Speichern und markiert nur die betroffene Merkmalsinstanz als unvollständig.
+- [x] Wird eine Merkmalsinstanz entfernt, wird nur deren eigener Optionswert entfernt; andere Instanzen desselben Merkmals bleiben erhalten.
+- [x] Beim Spezieswechsel werden alle Instanzen entfernt, deren Trait bei der neuen Spezies nicht zulässig ist; weiterhin zulässige Instanzen bleiben erhalten, sofern sie das Budget nicht überschreiten.
+- [x] Nicht wiederholbare Merkmale können weiterhin höchstens einmal gewählt werden.
+- [x] Bereits bestehende Charakterdaten aus PR #42 mit `speciesTraits` und `speciesTraitDetails` werden beim Laden ohne Datenverlust in das neue Instanzmodell normalisiert.
+- [x] Weltprofil-Erweiterungen bleiben möglich, ohne die stabilen Core-Options-Keys umzudeuten.
 
 ## Regression
-- [ ] Alien-Profilname und Körperbeschreibung funktionieren weiterhin und `Alien` behält Zugriff auf alle verfügbaren Core-Speziesmerkmale.
-- [ ] `Außergewöhnlicher Körperbau` bleibt sichtbar, aber nicht auswählbar.
-- [ ] Spezies-Allowlisten für Mensch, Elf, Zwerg, Halbling, Ork, Cyborg und Alien bleiben unverändert.
-- [ ] `Erweitertes Klettern`, `Erweitertes Schwimmen`, `Amphibisch`, `Flugfähig`, `Natürlicher Schutz`, `Ausdauernder Organismus`, `Geringer Ruhebedarf` und `Natürliche Waffe` behalten ihre bisherigen festen Wirkungen.
-- [ ] Character Save/Load über `sagadrive_profile` bleibt rückwärtskompatibel.
+- [x] Alien-Profilname und Körperbeschreibung funktionieren weiterhin und `Alien` behält Zugriff auf alle verfügbaren Core-Speziesmerkmale.
+- [x] `Außergewöhnlicher Körperbau` bleibt sichtbar, aber nicht auswählbar.
+- [x] Spezies-Allowlisten für Mensch, Elf, Zwerg, Halbling, Ork, Cyborg und Alien bleiben unverändert.
+- [x] `Erweitertes Klettern`, `Erweitertes Schwimmen`, `Amphibisch`, `Flugfähig`, `Natürlicher Schutz`, `Ausdauernder Organismus`, `Geringer Ruhebedarf` und `Natürliche Waffe` behalten ihre bisherigen festen Wirkungen.
+- [x] Character Save/Load über `sagadrive_profile` bleibt rückwärtskompatibel.
 
 ## Assumptions
 - Die Core-Auswahlkataloge entsprechen der zuletzt im Chat bestätigten Fassung.
@@ -53,7 +53,15 @@ Konfigurierbare Speziesmerkmale sollen keine regelrelevanten Freitexte mehr verw
 | 3 | `03-species-duplicate-option-blocked.png` |
 | 4 | `04-species-mobile-repeatable.png` |
 
+## Composition Gate
+- Verdict: CLEAR
+- Proof: `.qa/runs/composition-gate-repeatable-species-traits.md`
+- Event: Eine Figur wählt eine oder mehrere Speziesmerkmal-Instanzen, speichert sie strukturiert im SagaDrive-Profil und erhält beim erneuten Laden dieselbe Auswahl ohne zusätzliche oder verlorene Instanzen.
+- Invariant: Eine gewählte Unteroption entspricht genau einer gespeicherten Merkmalsinstanz; identische Unteroptionen desselben Merkmals sind nicht doppelt zulässig; normales Level-up erzeugt keine zusätzlichen Speziesinstanzen.
+
 ## Implementation Notes
-- Files touched: pending
-- Unit tests: pending
-- Known limitations: pending
+- Files touched: `src/modules/rulesets/speciesTraitOptions.ts`, `src/modules/rulesets/speciesResistanceHazards.ts`, `src/modules/characters/types/character.types.ts`, `src/modules/characters/services/character.service.ts`, `src/modules/characters/components/SpeciesTraitsPanel.tsx`, `src/components/CharacterEditor.tsx`, `scripts/character-editor-regression-check.mjs`, `e2e/character-editor.spec.ts`, QA-Artefakte.
+- Test Gate: PASS auf Code-HEAD `f6ab7d54352f792253c07f26ec03118d0190cb0d`.
+- Browser E2E: PASS auf Code-HEAD `f6ab7d54352f792253c07f26ec03118d0190cb0d`; Screenshots als Workflow-Artefakt `character-editor-browser-evidence` erzeugt und visuell geprüft.
+- UI-Verifikation: Desktop-Mehrfachauswahl, deaktivierte Doppeloption, Kosten pro Instanz und Mobile-Layout geprüft; keine blockierenden Darstellungsfehler gefunden.
+- Known limitations: Dieses Ticket vergibt keine neuen Speziespunkte durch spätere Fähigkeiten/Transformationen. Das Datenmodell speichert Quelle und Erwerbsstufe, damit ein solcher expliziter Mechanismus später ergänzt werden kann.
