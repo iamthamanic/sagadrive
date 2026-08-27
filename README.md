@@ -60,7 +60,7 @@ Output-Verzeichnis:
 
 Der aktuelle **Neuer-Charakter-Flow** konzentriert sich bewusst ausschließlich auf **SagaDrive Core**. Der Character Editor verwendet acht regelgeführte Bereiche:
 
-- `Info`
+- `Spezies`
 - `Hintergrund`
 - `Werte`
 - `Fertigkeiten`
@@ -150,6 +150,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-08-27** — Character Editor Chrome: Tab „Spezies“, Name/Geschlecht/Stufe in Preview, Regelset neben Vorschau, Archetyp-Kernfähigkeit einklappbar, flachere Archetyp-Karten (`feat/alien-species-sketch`)
 - **2026-08-27** — Alien-Spezies-Skizze: Outline-Lineup mit fünf Gestalten (Schnecke, Geist, Grey, Kristall, Tentakel) (`feat/alien-species-sketch`)
 - **2026-08-27** — Spezies-Karussell: Wappen pro Spezies (Shimmer/Puls bei Auswahl), Colorway-Header, überarbeitete Skizzen und Skalierung Zwerg/Halbling (`feat/character-editor-ui-polish`)
 - **2026-08-26** — Character Editor UI: Parameter-Tab (Attribute/Talente/Archetyp/Essenz), Spezies- & Archetyp-Karussells, Pflichtfeld Geschlecht, Regelset-Dropdown, Skill-Icons, Terminologie Wesen→Spezies, collapsible Sidebar (`feat/character-editor-ui-polish`)
