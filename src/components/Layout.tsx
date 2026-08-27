@@ -214,10 +214,7 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <div>
-                <h1 className="text-base">SagaDrive</h1>
-                <p className="text-xs text-muted-foreground">SagaDrive</p>
-              </div>
+              <h1 className="text-base">SagaDrive</h1>
             </div>
             <div className="flex items-center gap-2">
               <button
