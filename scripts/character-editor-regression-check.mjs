@@ -47,8 +47,11 @@ requireMatch(speciesTraitsPanel, /Noch nicht verfügbar/, 'unavailable species t
 requireMatch(speciesTraitsPanel, /Weitere Auswahl/, 'repeatable species trait add control');
 requireMatch(speciesTraitsPanel, /jede Unteroption nur einmal/, 'repeatable species trait duplicate-option guidance');
 requireMatch(speciesTraitsPanel, /Die Speziespunkte steigen nicht automatisch mit der Charakterstufe/, 'species budget does not scale with level');
-requireMatch(speciesTraitsPanel, /SpeciesTraitOptionItem/, 'dropdown option rows with help tooltips');
+requireMatch(speciesTraitsPanel, /catalog\.options\.map\(\(option\)[\s\S]*option\.description/s, 'catalog tooltip descriptions');
+requireMatch(speciesTraitsPanel, /disabled=\{selectedByOtherInstance\.has\(option\.value\)\}/, 'duplicate option disabled in repeated instances');
+requireMatch(speciesTraitsPanel, /\{trait\.cost\} P/, 'per-instance species trait cost');
 rejectMatch(speciesTraitsPanel, /trait\.detailPlaceholder|onTraitDetailChange|SpeciesTraitDetailValues/, 'legacy free-text species trait detail UI remains');
+rejectMatch(speciesTraitsPanel, /SpeciesTraitOptionItem/, 'nested interactive species option control remains');
 
 requireMatch(speciesTraitOptions, /label:\s*'Sehen'/, 'sharpened sense option catalog');
 requireMatch(speciesTraitOptions, /label:\s*'Gift \/ Toxine'/, 'narrow resistance option catalog');
