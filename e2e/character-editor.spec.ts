@@ -39,7 +39,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Geringer Ruhebedarf').first()).toBeVisible();
   await expect(page.getByText('Flugfähig')).toHaveCount(0);
   await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
-  await expect(page.getByText(/Speziespunkte steigen nicht automatisch mit der Charakterstufe/i)).toBeVisible();
+  await expect(page.getByText(/Speziespunkte steigen nicht automatisch mit der Charakterstufe/i).first()).toBeVisible();
 
   await page.getByRole('button', { name: /Enge Resistenz, 1 Punkt/i }).click();
   const firstResistance = page.getByRole('combobox', { name: 'Enge Resistenz: Gefahrenart' });
