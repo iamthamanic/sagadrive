@@ -43,8 +43,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('button', { name: /Enge Resistenz, 1 Punkt/i }).click();
   await expect(page.getByRole('combobox', { name: 'Gefahrenart' })).toBeVisible();
   await page.getByRole('button', { name: /Gefahrenart erklären/i }).click();
-  await expect(page.getByText(/Entscheidend ist die konkrete Wirkung/i)).toBeVisible();
-  await expect(page.getByText(/Übernatürliche Veränderungen:/i)).toBeVisible();
+  await expect(page.getByRole('tooltip').getByText(/Entscheidend ist die konkrete Wirkung/i)).toBeVisible();
+  await expect(page.getByRole('tooltip').getByText(/Übernatürliche Veränderungen:/i)).toBeVisible();
   await page.getByRole('button', { name: /Gefahrenart erklären/i }).click();
   await page.getByRole('combobox', { name: 'Gefahrenart' }).click();
   await page.getByRole('option', { name: 'Übernatürliche Veränderungen' }).click();
