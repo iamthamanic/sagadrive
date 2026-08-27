@@ -3,17 +3,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
-import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2 } from 'lucide-react';
 import { useCharacters } from '../modules/characters';
+import {
+  WorldProfileEditorDialog,
+  getSpeciesDevelopmentMode,
+  useWorldProfiles,
+  type CreateWorldProfileDto,
+  type WorldProfileVm,
+} from '../modules/worlds';
 import { toast } from 'sonner';
 
 interface LibraryProps {
   onNavigate: (view: string) => void;
 }
 
+const SPECIES_DEVELOPMENT_MODE_LABELS = {
+  explicit: 'Explizit',
+  progressive: 'Progressiv',
+  disabled: 'Deaktiviert',
+} as const;
+
 export function Library({ onNavigate }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [worldEditorOpen, setWorldEditorOpen] = useState(false);
+  const [editingWorld, setEditingWorld] = useState<WorldProfileVm | null>(null);
   const { characters, isLoading, error, deleteCharacter } = useCharacters();
+  const {
+    worlds,
+    isLoading: worldsLoading,
+    error: worldsError,
+    createWorld,
+    updateWorld,
+    deleteWorld,
+  } = useWorldProfiles();
 
   const handleDeleteCharacter = async (id: string, name: string) => {
     if (!confirm(`Möchtest du "${name}" wirklich löschen?`)) {
@@ -28,24 +51,65 @@ export function Library({ onNavigate }: LibraryProps) {
     }
   };
 
+  const openCreateWorld = () => {
+    setEditingWorld(null);
+    setWorldEditorOpen(true);
+  };
+
+  const openEditWorld = (world: WorldProfileVm) => {
+    setEditingWorld(world);
+    setWorldEditorOpen(true);
+  };
+
+  const handleSaveWorld = async (payload: CreateWorldProfileDto): Promise<boolean> => {
+    const saved = editingWorld
+      ? await updateWorld(editingWorld.id, payload)
+      : await createWorld(payload);
+
+    if (!saved) {
+      toast.error('Welt konnte nicht gespeichert werden');
+      return false;
+    }
+
+    toast.success(editingWorld ? 'Welt gespeichert' : 'Welt erstellt');
+    setEditingWorld(null);
+    return true;
+  };
+
+  const handleDeleteWorld = async (world: WorldProfileVm) => {
+    if (!confirm(`Möchtest du die Welt "${world.name}" wirklich löschen?`)) {
+      return;
+    }
+
+    const success = await deleteWorld(world.id);
+    if (success) {
+      toast.success('Welt gelöscht');
+    } else {
+      toast.error('Welt konnte nicht gelöscht werden');
+    }
+  };
+
+  const normalizedSearch = searchQuery.trim().toLowerCase();
   const filteredCharacters = characters.filter(char =>
-    char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    char.class.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    char.race.toLowerCase().includes(searchQuery.toLowerCase())
+    char.name.toLowerCase().includes(normalizedSearch) ||
+    char.class.toLowerCase().includes(normalizedSearch) ||
+    char.race.toLowerCase().includes(normalizedSearch)
+  );
+  const filteredWorlds = worlds.filter((world) =>
+    world.name.toLowerCase().includes(normalizedSearch) ||
+    world.description.toLowerCase().includes(normalizedSearch)
   );
 
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
-        {/* Header */}
         <div>
           <h1 className="text-xl md:text-2xl">Meine Bibliothek</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Verwalte deine Charaktere und Abenteuer
+            Verwalte deine Charaktere, Abenteuer und Welten
           </p>
         </div>
 
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -57,7 +121,7 @@ export function Library({ onNavigate }: LibraryProps) {
         </div>
 
         <Tabs defaultValue="characters" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="characters">
               <User className="w-4 h-4 mr-2" />
               Charaktere
@@ -66,9 +130,12 @@ export function Library({ onNavigate }: LibraryProps) {
               <BookOpen className="w-4 h-4 mr-2" />
               Abenteuer
             </TabsTrigger>
+            <TabsTrigger value="worlds">
+              <Globe2 className="w-4 h-4 mr-2" />
+              Welten
+            </TabsTrigger>
           </TabsList>
 
-          {/* Characters Tab */}
           <TabsContent value="characters" className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
@@ -121,19 +188,19 @@ export function Library({ onNavigate }: LibraryProps) {
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           className="flex-1"
                           onClick={() => onNavigate('character-editor')}
                         >
                           <Edit className="w-3 h-3 mr-1" />
                           <span className="text-xs">Bearbeiten</span>
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleDeleteCharacter(char.id, char.name)}
+                          onClick={() => void handleDeleteCharacter(char.id, char.name)}
                         >
                           <Trash2 className="w-3 h-3 text-destructive" />
                         </Button>
@@ -145,7 +212,6 @@ export function Library({ onNavigate }: LibraryProps) {
             )}
           </TabsContent>
 
-          {/* Adventures Tab */}
           <TabsContent value="adventures" className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">2 Abenteuer</p>
@@ -186,8 +252,98 @@ export function Library({ onNavigate }: LibraryProps) {
               ))}
             </div>
           </TabsContent>
+
+          <TabsContent value="worlds" className="space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm text-muted-foreground">
+                {worldsLoading ? 'Lädt...' : `${filteredWorlds.length} Welt${filteredWorlds.length !== 1 ? 'en' : ''}`}
+              </p>
+              <Button size="sm" onClick={openCreateWorld}>
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Neue Welt</span>
+                <span className="sm:hidden">Neu</span>
+              </Button>
+            </div>
+
+            {worldsError && (
+              <div className="p-3 bg-destructive/10 border border-destructive rounded-lg">
+                <p className="text-sm text-destructive">{worldsError}</p>
+              </div>
+            )}
+
+            {worldsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredWorlds.length === 0 ? (
+              <div className="text-center py-12">
+                <Globe2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground mb-4">
+                  {searchQuery ? 'Keine Welten gefunden' : 'Noch keine Welten erstellt'}
+                </p>
+                {!searchQuery && (
+                  <Button onClick={openCreateWorld}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Erste Welt erstellen
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                {filteredWorlds.map((world) => {
+                  const speciesDevelopmentMode = getSpeciesDevelopmentMode(world.modules);
+                  return (
+                    <Card key={world.id} className="hover:border-primary transition-colors">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <CardTitle className="text-sm md:text-base truncate">{world.name}</CardTitle>
+                            <CardDescription className="mt-1 line-clamp-2 text-xs md:text-sm">
+                              {world.description || 'Keine Beschreibung'}
+                            </CardDescription>
+                          </div>
+                          <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                            <Globe2 className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <p className="text-xs text-muted-foreground">
+                          Speziesentwicklung: <span className="font-medium text-foreground">{SPECIES_DEVELOPMENT_MODE_LABELS[speciesDevelopmentMode]}</span>
+                        </p>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="flex-1" onClick={() => openEditWorld(world)}>
+                            <Edit className="w-3 h-3 mr-1" />
+                            <span className="text-xs">Bearbeiten</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            aria-label={`${world.name} löschen`}
+                            onClick={() => void handleDeleteWorld(world)}
+                          >
+                            <Trash2 className="w-3 h-3 text-destructive" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
+
+      <WorldProfileEditorDialog
+        open={worldEditorOpen}
+        world={editingWorld}
+        onOpenChange={(open) => {
+          setWorldEditorOpen(open);
+          if (!open) setEditingWorld(null);
+        }}
+        onSave={handleSaveWorld}
+      />
     </div>
   );
 }
