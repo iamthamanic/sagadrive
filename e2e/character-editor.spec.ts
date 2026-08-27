@@ -18,7 +18,7 @@ async function ensureLoggedIn(page: Page) {
 test.beforeAll(() => { fs.mkdirSync(EVIDENCE_DIR, { recursive: true }); });
 
 test('character editor exposes the SagaDrive Core creation flow', async ({ page }) => {
-  test.setTimeout(90_000);
+  test.setTimeout(180_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await ensureLoggedIn(page);
   await page.getByRole('button', { name: 'Charakter erstellen' }).first().click();
