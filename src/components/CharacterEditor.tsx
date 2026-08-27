@@ -21,15 +21,19 @@ import { CharacterBackgroundComposer } from '../modules/characters/components/Ch
 import { CharacterEssencePanel } from '../modules/characters/components/CharacterEssencePanel';
 import { CharacterInventoryPanel, getInventoryLoad } from '../modules/characters/components/CharacterInventoryPanel';
 import { RuleHelp } from '../modules/characters/components/RuleHelp';
-import { CharacterSkillsPanel, getSagaDriveFinalSkillRanks } from '../modules/characters/components/CharacterSkillsPanel';
+import { getSagaDriveFinalSkillRanks } from '../modules/characters/components/CharacterSkillsPanel';
 import { GenderReadingSelect } from '../modules/characters/components/GenderReadingSelect';
 import { SelectedSpeciesChip } from '../modules/characters/components/SelectedSpeciesChip';
 import { SpeciesCarousel } from '../modules/characters/components/SpeciesCarousel';
+import {
+  SpeciesTraitsPanel,
+  type SpeciesTraitDetailValues,
+} from '../modules/characters/components/SpeciesTraitsPanel';
 import { SkillSelectField } from '../modules/characters/components/SkillSelectField';
-import { SpeciesTraitIcon } from '../modules/characters/components/SpeciesTraitIcon';
 import { CharacterTraitEditor } from '../modules/characters/components/CharacterTraitEditor';
 import { buildSagaDriveDerivedStatCards } from '../modules/characters/utils/derivedStats';
 import {
+  SAGA_DRIVE_SPECIES_TRAIT_BUDGET,
   SAGA_DRIVE_START_ATTRIBUTE_ARRAY,
   SAGA_DRIVE_START_FREE_SKILL_POINTS,
   SAGA_DRIVE_START_MIN_TRAINED_SKILLS,
@@ -41,6 +45,9 @@ import {
   getSagaDriveAttributePointBudget,
   getSagaDriveEssence,
   getSagaDriveSkill,
+  getSagaDriveSpeciesTrait,
+  getSagaDriveSpeciesTraitCost,
+  getSagaDriveSpeciesTraitKeysForRace,
   isCharacterRulesetKey,
   isSagaDriveArchetypeKey,
   isSagaDriveEssenceKey,
@@ -48,7 +55,6 @@ import {
   sagaDriveAttributeDefinitions,
   sagaDriveRaceOptions,
   sagaDriveSkillDefinitions,
-  sagaDriveSpeciesTraitDefinitions,
   type CharacterRulesetKey,
   type SagaDriveArchetypeKey,
   type SagaDriveAttributeKey,
@@ -69,7 +75,7 @@ import { Textarea } from './ui/textarea';
 
 type ActivityTrackingWindow = Window & { trackActivity?: (description: string) => void };
 type EditorTab = 'info' | 'background' | 'values' | 'appearance' | 'inventory' | 'notes';
-type ValuesSubTab = 'attribute' | 'talente' | 'archetype' | 'essenz';
+type ValuesSubTab = 'attribute' | 'archetype' | 'essenz';
 type ValidationProblem = { tab: EditorTab; message: string; valuesSubTab?: ValuesSubTab };
 type SkillSlot = SagaDriveSkillKey | '';
 type BackgroundSkillPool = [SkillSlot, SkillSlot, SkillSlot, SkillSlot];
@@ -86,7 +92,7 @@ function isEditorTab(value: string): value is EditorTab {
 }
 
 function isValuesSubTab(value: string): value is ValuesSubTab {
-  return value === 'attribute' || value === 'talente' || value === 'archetype' || value === 'essenz';
+  return value === 'attribute' || value === 'archetype' || value === 'essenz';
 }
 
 function isValidAttributeDistribution(attributes: CharacterAttributesDto, level: number): boolean {
@@ -118,7 +124,9 @@ export function CharacterEditor() {
   const [genderReading, setGenderReading] = useState<CharacterGenderReading | undefined>();
   const [essenceProfile, setEssenceProfile] = useState<SagaDriveEssenceKey | undefined>();
   const [speciesTraits, setSpeciesTraits] = useState<SagaDriveSpeciesTraitKey[]>([]);
-  const [speciesTraitDetails, setSpeciesTraitDetails] = useState('');
+  const [speciesTraitDetails, setSpeciesTraitDetails] = useState<SpeciesTraitDetailValues>({});
+  const [speciesProfileName, setSpeciesProfileName] = useState('');
+  const [speciesBodyDescription, setSpeciesBodyDescription] = useState('');
 
   const initialPreset = getAvatarRacePreset('human');
   const [bodySize, setBodySize] = useState([initialPreset.bodySize]);
@@ -163,6 +171,8 @@ export function CharacterEditor() {
 
   const archetype = characterArchetype ? getSagaDriveArchetype(characterArchetype) : undefined;
   const essence = essenceProfile ? getSagaDriveEssence(essenceProfile) : undefined;
+  const baseSpeciesLabel = getCharacterCreationOptionLabel(sagaDriveRaceOptions, characterRace);
+  const speciesDisplayName = characterRace === 'alien' && speciesProfileName.trim() ? speciesProfileName.trim() : baseSpeciesLabel;
   const selectedBackgroundPool = useMemo(() => uniqueSkills(backgroundSkillPool), [backgroundSkillPool]);
   const selectedBackgroundTraining = useMemo(() => uniqueSkills(backgroundTraining), [backgroundTraining]);
   const finalSkillRanks = useMemo(() => getSagaDriveFinalSkillRanks(freeSkillRanks, selectedBackgroundTraining, archetypeTrainingSkill), [archetypeTrainingSkill, freeSkillRanks, selectedBackgroundTraining]);
@@ -181,7 +191,16 @@ export function CharacterEditor() {
   const attributePointsUsed = (
     Object.values(attributes) as CharacterAttributesDto[keyof CharacterAttributesDto][]
   ).reduce((sum, value) => sum + value, 0);
-  const speciesTraitCost = speciesTraits.reduce((sum, traitKey) => sum + (sagaDriveSpeciesTraitDefinitions.find((definition) => definition.key === traitKey)?.cost ?? 0), 0);
+  const speciesTraitCost = getSagaDriveSpeciesTraitCost(speciesTraits);
+  const allowedSpeciesTraitKeys = useMemo(() => new Set(getSagaDriveSpeciesTraitKeysForRace(characterRace)), [characterRace]);
+  const speciesTraitDetailsComplete = speciesTraits.every((traitKey) => {
+    const trait = getSagaDriveSpeciesTrait(traitKey);
+    return !trait.detailRequired || Boolean(speciesTraitDetails[traitKey]?.trim());
+  });
+  const speciesTraitsComplete = speciesTraitCost === SAGA_DRIVE_SPECIES_TRAIT_BUDGET
+    && speciesTraits.every((traitKey) => allowedSpeciesTraitKeys.has(traitKey) && getSagaDriveSpeciesTrait(traitKey).available !== false)
+    && speciesTraitDetailsComplete
+    && (characterRace !== 'alien' || Boolean(speciesProfileName.trim()));
   const inventoryLoad = getInventoryLoad(inventory);
   const carryCapacity = 5 + 2 * attributes.strength;
   const overloaded = inventoryLoad > carryCapacity;
@@ -204,7 +223,7 @@ export function CharacterEditor() {
     name: characterName.trim(),
     description: [description.trim(), backgroundName.trim() ? `Hintergrund: ${backgroundName.trim()}` : ''].filter(Boolean).join('\n'),
     characterClass: archetype?.label ?? '',
-    raceOrSpecies: getCharacterCreationOptionLabel(sagaDriveRaceOptions, characterRace),
+    raceOrSpecies: speciesDisplayName,
     essenceProfile: essence?.label,
     level: characterLevel,
     attributes: { strength: attributes.strength, dexterity: attributes.dexterity, constitution: attributes.endurance, intelligence: attributes.mind, wisdom: attributes.perception, charisma: attributes.charisma },
@@ -212,12 +231,23 @@ export function CharacterEditor() {
     inventory: inventory.map((item) => ({ name: item.name, description: item.description, type: item.type === 'shield' || item.type === 'tool' ? 'misc' : item.type, quantity: item.quantity })),
     appearance: { bodySize: currentAvatar.body.size, height: currentAvatar.body.height, face: currentAvatar.traits.head ?? headStyle, hairStyle: currentAvatar.traits.hair ?? hairStyle, hairColor: currentAvatar.colors.hair, skinTone: currentAvatar.colors.skin, clothing: currentAvatar.traits.clothing ?? clothing, accessory: currentAvatar.traits.accessory },
     traits: { personality: personalityTraits, ideals, bonds, flaws },
-  }), [abilities, archetype, attributes, backgroundName, bonds, characterLevel, characterName, characterRace, clothing, currentAvatar, description, essence, flaws, hairStyle, ideals, inventory, personalityTraits, ruleset]);
+  }), [abilities, archetype, attributes, backgroundName, bonds, characterLevel, characterName, clothing, currentAvatar, description, essence, flaws, hairStyle, ideals, inventory, personalityTraits, ruleset, speciesDisplayName]);
 
   const rulesetLabel = getCharacterCreationOptionLabel(characterRulesetOptions, ruleset);
 
   const applyRacePreset = (race: string) => {
     const preset = getAvatarRacePreset(race);
+    const allowed = new Set(getSagaDriveSpeciesTraitKeysForRace(race));
+    const retainedTraits = speciesTraits.filter((key) => allowed.has(key) && getSagaDriveSpeciesTrait(key).available !== false);
+    setSpeciesTraits(retainedTraits);
+    setSpeciesTraitDetails((current) => {
+      const next: SpeciesTraitDetailValues = {};
+      for (const key of retainedTraits) {
+        const detail = current[key];
+        if (detail) next[key] = detail;
+      }
+      return next;
+    });
     setCharacterRace(race); setBodySize([preset.bodySize]); setHeight([preset.height]); setHeadStyle(preset.head); setEars(preset.ears); setHairStyle(preset.hair); setHairColor(preset.hairColor); setSkinTone(preset.skinTone); setClothing(preset.clothing); setAccessory(preset.accessory ?? 'none');
   };
 
@@ -238,7 +268,9 @@ export function CharacterEditor() {
     setComplication('');
     setCommunication('');
     setSpeciesTraits([]);
-    setSpeciesTraitDetails('');
+    setSpeciesTraitDetails({});
+    setSpeciesProfileName('');
+    setSpeciesBodyDescription('');
     setAttributes(INITIAL_ATTRIBUTES);
     applyRacePreset('human');
     if (value === 'dnd-5.5e') {
@@ -247,12 +279,7 @@ export function CharacterEditor() {
   };
   const handleArchetypeChange = (value: string) => { if (!isSagaDriveArchetypeKey(value)) return; const next = getSagaDriveArchetype(value); setCharacterArchetype(value); if (archetypeTrainingSkill && !next?.skills.includes(archetypeTrainingSkill)) setArchetypeTrainingSkill(undefined); };
   const handleEssenceChange = (value: string) => { if (isSagaDriveEssenceKey(value)) setEssenceProfile(value); };
-  const toggleSpeciesTrait = (traitKey: SagaDriveSpeciesTraitKey) => {
-    if (speciesTraits.includes(traitKey)) { setSpeciesTraits((current) => current.filter((key) => key !== traitKey)); return; }
-    const trait = sagaDriveSpeciesTraitDefinitions.find((definition) => definition.key === traitKey);
-    if (!trait || speciesTraitCost + trait.cost > 3) return;
-    setSpeciesTraits((current) => [...current, traitKey]);
-  };
+  const updateSpeciesTraitDetail = (traitKey: SagaDriveSpeciesTraitKey, value: string) => setSpeciesTraitDetails((current) => ({ ...current, [traitKey]: value }));
   const updateBackgroundPool = (index: number, value: string) => {
     if (!isSagaDriveSkillKey(value) || index < 0 || index > 3) return;
     const previous = backgroundSkillPool[index];
@@ -295,6 +322,10 @@ export function CharacterEditor() {
     if (!characterName.trim()) problems.push({ tab: 'info', message: 'Bitte gib deinem Charakter einen Namen.' });
     if (ruleset === 'dnd-5.5e') problems.push({ tab: 'info', message: 'D&D 5.5e ist in diesem Editor noch nicht verfügbar. Wähle SagaDrive Core.' });
     if (!genderReadingComplete) problems.push({ tab: 'info', message: 'Bitte wähle, wie dein Charakter gelesen wird (männlich, weiblich oder divers).' });
+    if (speciesTraitCost !== SAGA_DRIVE_SPECIES_TRAIT_BUDGET) problems.push({ tab: 'info', message: `Wähle Speziesmerkmale im Wert von genau ${SAGA_DRIVE_SPECIES_TRAIT_BUDGET} Punkten.` });
+    if (characterRace === 'alien' && !speciesProfileName.trim()) problems.push({ tab: 'info', message: 'Gib deinem Alien-Speziesprofil einen Namen.' });
+    if (!speciesTraitDetailsComplete) problems.push({ tab: 'info', message: 'Konkretisiere alle gewählten Speziesmerkmale.' });
+    if (!speciesTraitsComplete && speciesTraitCost === SAGA_DRIVE_SPECIES_TRAIT_BUDGET && speciesTraitDetailsComplete && (characterRace !== 'alien' || speciesProfileName.trim())) problems.push({ tab: 'info', message: 'Die gewählten Speziesmerkmale sind für diese Spezies nicht zulässig.' });
     if (!characterArchetype) problems.push({ tab: 'values', valuesSubTab: 'archetype', message: 'Bitte wähle einen Archetyp.' });
     if (!essenceProfile) problems.push({ tab: 'values', valuesSubTab: 'essenz', message: 'Bitte wähle eine primäre Essenz.' });
     if (!backgroundComplete) problems.push({ tab: 'background', message: 'Vervollständige die mechanischen Hintergrundangaben.' });
@@ -310,10 +341,20 @@ export function CharacterEditor() {
       toast.error(firstProblem.message);
       return;
     }
-    if (!characterArchetype || !essenceProfile || !archetypeTrainingSkill || !isSagaDriveSkillKey(specializationSkill) || !genderReading) return;
+    if (!characterArchetype || !essenceProfile || !archetypeTrainingSkill || !isSagaDriveSkillKey(specializationSkill) || !genderReading || !speciesTraitsComplete) return;
+
+    const savedSpeciesTraitDetails: SagaDriveProfileDto['speciesTraitDetails'] = {};
+    for (const traitKey of speciesTraits) {
+      const detail = speciesTraitDetails[traitKey]?.trim();
+      if (detail) savedSpeciesTraitDetails[traitKey] = detail;
+    }
 
     const sagaDriveProfile: SagaDriveProfileDto = {
-      archetype: characterArchetype, essence: essenceProfile, speciesTraits, speciesTraitDetails: speciesTraitDetails.trim(),
+      archetype: characterArchetype,
+      essence: essenceProfile,
+      speciesTraits,
+      speciesTraitDetails: savedSpeciesTraitDetails,
+      speciesProfile: characterRace === 'alien' ? { name: speciesProfileName.trim(), bodyDescription: speciesBodyDescription.trim() } : undefined,
       background: { name: backgroundName.trim(), skillPool: selectedBackgroundPool, trainedSkills: selectedBackgroundTraining, specialization: { skill: specializationSkill, name: specializationName.trim() }, milieuAccess: milieuAccess.trim(), contact: contact.trim(), complication: complication.trim(), communication: communication.trim() },
       archetypeTrainingSkill, drive: 3, momentum: 0,
     };
@@ -335,7 +376,7 @@ export function CharacterEditor() {
   const handleRemoveImage = (event: MouseEvent) => { event.stopPropagation(); setPortraitUrl(''); if (fileInputRef.current) fileInputRef.current.value = ''; };
   const handleTabChange = (value: string) => { if (isEditorTab(value)) setActiveTab(value); };
   const handleValuesSubTabChange = (value: string) => { if (isValuesSubTab(value)) setActiveValuesSubTab(value); };
-  const previewSubtitle = [essence?.label, archetype?.label, getCharacterCreationOptionLabel(sagaDriveRaceOptions, characterRace)].filter(Boolean).join(' · ');
+  const previewSubtitle = [essence?.label, archetype?.label, speciesDisplayName].filter(Boolean).join(' · ');
 
   return (
     <div className="h-full w-full overflow-y-auto">
@@ -380,7 +421,7 @@ export function CharacterEditor() {
                       value={characterName}
                       onChange={(event) => setCharacterName(event.target.value)}
                     />
-                    {characterRace.trim() ? <SelectedSpeciesChip species={characterRace} /> : null}
+                    {characterRace.trim() ? <SelectedSpeciesChip species={characterRace} label={characterRace === 'alien' ? speciesProfileName : undefined} /> : null}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -448,6 +489,18 @@ export function CharacterEditor() {
                     <Label id="species-label">Spezies</Label>
                     <SpeciesCarousel selectedRace={characterRace} onSelect={applyRacePreset} labelledBy="species-label" />
                   </div>
+                  <SpeciesTraitsPanel
+                    species={characterRace}
+                    selectedTraits={speciesTraits}
+                    traitDetails={speciesTraitDetails}
+                    speciesProfileName={speciesProfileName}
+                    speciesBodyDescription={speciesBodyDescription}
+                    validationAttempted={validationAttempted}
+                    onSelectedTraitsChange={setSpeciesTraits}
+                    onTraitDetailChange={updateSpeciesTraitDetail}
+                    onSpeciesProfileNameChange={setSpeciesProfileName}
+                    onSpeciesBodyDescriptionChange={setSpeciesBodyDescription}
+                  />
                 </TabsContent>
 
                 <TabsContent value="background" className="space-y-6">
@@ -479,9 +532,8 @@ export function CharacterEditor() {
 
                 <TabsContent value="values" className="space-y-6">
                   <Tabs value={activeValuesSubTab} onValueChange={handleValuesSubTabChange}>
-                    <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-4">
+                    <TabsList className="grid h-auto w-full grid-cols-3 gap-1">
                       <TabsTrigger value="attribute" className="px-3 py-2 text-xs md:text-sm">Attribute</TabsTrigger>
-                      <TabsTrigger value="talente" className="px-3 py-2 text-xs md:text-sm">Talente</TabsTrigger>
                       <TabsTrigger value="archetype" className="px-3 py-2 text-xs md:text-sm">Archetype</TabsTrigger>
                       <TabsTrigger value="essenz" className="px-3 py-2 text-xs md:text-sm">Essenz</TabsTrigger>
                     </TabsList>
@@ -495,13 +547,6 @@ export function CharacterEditor() {
                       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{sagaDriveAttributeDefinitions.map((attribute) => <div key={attribute.key} className="rounded-lg border border-border bg-card p-4"><div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-1"><p className="font-semibold">{attribute.label}</p><RuleHelp label={attribute.label}>{attribute.description}</RuleHelp></div><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{attribute.description}</p></div><Select value={String(attributes[attribute.key])} onValueChange={(value) => setAttribute(attribute.key, value)}><SelectTrigger className="w-20" aria-label={`${attribute.label} Wert`}><SelectValue /></SelectTrigger><SelectContent>{[1, 2, 3, 4].map((value) => <SelectItem key={value} value={String(value)}>{value}</SelectItem>)}</SelectContent></Select></div></div>)}</div>
                       <Separator />
                       <div><div className="mb-3"><h3 className="font-semibold">Abgeleitete Werte</h3><p className="text-sm text-muted-foreground">Diese Werte werden aus Attributen, Fertigkeiten und Erfahrungsbonus berechnet und nicht direkt bearbeitet.</p></div><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{derivedStatCards.map((entry) => <DerivedStatCard key={entry.label} {...entry} />)}</div></div>
-                    </TabsContent>
-                    <TabsContent value="talente" className="mt-4 space-y-4">
-                      <div className="rounded-lg border border-border bg-muted/15 p-4">
-                        <div className="flex items-center justify-between gap-3"><div><p className="font-medium">Talente</p></div><Badge variant="outline">{speciesTraitCost} / 3</Badge></div>
-                        <div className="mt-3 grid gap-2 sm:grid-cols-2">{sagaDriveSpeciesTraitDefinitions.map((trait) => { const selected = speciesTraits.includes(trait.key); const blocked = !selected && speciesTraitCost + trait.cost > 3; return <button key={trait.key} type="button" disabled={blocked} onClick={() => toggleSpeciesTrait(trait.key)} className={selected ? 'rounded-lg border border-primary bg-primary/10 p-3 text-left transition-colors' : 'rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/60 disabled:cursor-not-allowed disabled:opacity-45'}><div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-start gap-3"><div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${selected ? 'bg-primary/15 text-primary' : 'bg-muted/60 text-muted-foreground'}`}><SpeciesTraitIcon traitKey={trait.key} className="h-4 w-4" /></div><span className="font-medium leading-snug">{trait.label}</span></div><Badge variant={selected ? 'default' : 'outline'}>{trait.cost}</Badge></div><p className="mt-2 pl-12 text-xs text-muted-foreground">{trait.description}</p></button>; })}</div>
-                        {speciesTraits.length > 0 && <div className="mt-4 space-y-2"><Label htmlFor="species-trait-details">Talentdetails</Label><Textarea id="species-trait-details" rows={2} value={speciesTraitDetails} onChange={(event) => setSpeciesTraitDetails(event.target.value)} placeholder="z. B. welcher Sinn, welche Umgebung oder welche besondere Körperform" /></div>}
-                      </div>
                     </TabsContent>
                     <TabsContent value="archetype" className="mt-4">
                       <CharacterArchetypePanel
@@ -525,7 +570,7 @@ export function CharacterEditor() {
                 </TabsContent>
 
                 <TabsContent value="appearance" className="space-y-6">
-                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium">Look ist kosmetisch</p><p className="mt-1 text-sm text-muted-foreground">Körperbau, Gesicht, Haare und Kleidung verändern keine Charakterwerte. Spezies wählst du im Spezies-Tab, Talente unter Parameter → Talente.</p></div><Badge variant="outline">Keine Werte</Badge></div></div>
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium">Look ist kosmetisch</p><p className="mt-1 text-sm text-muted-foreground">Körperbau, Gesicht, Haare und Kleidung verändern keine Charakterwerte. Spezies und Speziesmerkmale wählst du im Spezies-Tab.</p></div><Badge variant="outline">Keine Werte</Badge></div></div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2"><div className="space-y-2"><Label>Körperbau</Label><Slider aria-label="Körperbau" value={bodySize} onValueChange={setBodySize} min={0} max={100} step={1} /><div className="flex items-center justify-between text-xs text-muted-foreground"><span>Schmal</span><span>{bodySize[0]}</span><span>Massiv</span></div></div><div className="space-y-2"><Label>Größe</Label><Slider aria-label="Größe" value={height} onValueChange={setHeight} min={0} max={100} step={1} /><div className="flex items-center justify-between text-xs text-muted-foreground"><span>Klein</span><span>{height[0]}</span><span>Groß</span></div></div></div>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2"><Label htmlFor="headStyle">Gesicht</Label><Select value={headStyle} onValueChange={setHeadStyle}><SelectTrigger id="headStyle"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="human-balanced">Ausgewogen</SelectItem><SelectItem value="elf-angular">Fein / kantig</SelectItem><SelectItem value="dwarf-broad">Breit</SelectItem><SelectItem value="halfling-soft">Weich</SelectItem><SelectItem value="orc-heavy">Massiv</SelectItem><SelectItem value="cyborg-angular">Synthetisch</SelectItem><SelectItem value="alien-oval">Oval</SelectItem><SelectItem value="neutral-soft">Neutral</SelectItem></SelectContent></Select></div>
