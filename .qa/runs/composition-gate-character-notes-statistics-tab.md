@@ -1,6 +1,6 @@
 # Composition Gate — character-notes-statistics-tab
 
-- HEAD_SHA: 705a935685fcb0bba3c7094251bae9ad0b8e5171
+- HEAD_SHA: a36ad70b79153575b5d2f52482fec77c57876183
 - BASE_SHA: a409fbeb36a5bee0c76e055d7b15ffee1d90505f
 - Date: 2026-08-27
 - Verdict: CLEAR
