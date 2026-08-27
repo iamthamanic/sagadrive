@@ -132,7 +132,9 @@ const statisticsPanel = read('src/modules/characters/components/CharacterStatist
 
 requireMatch(adventureArcMigration, /CREATE TABLE IF NOT EXISTS public\.character_adventure_arcs/, 'character adventure arcs table');
 requireMatch(adventureArcMigration, /UNIQUE \(character_id, project_id\)/, 'one arc per character-project pair');
-requireMatch(adventureArcMigration, /Owners manage character adventure arcs/, 'owner RLS on adventure arcs');
+requireMatch(adventureArcMigration, /Owners insert adventure arcs for active memberships/, 'owner insert RLS requires active membership');
+requireMatch(adventureArcMigration, /prevent_character_adventure_arc_retarget/, 'immutable character_id/project_id on arcs');
+requireMatch(adventureArcMigration, /Owners update character adventure arcs/, 'owner update RLS on adventure arcs');
 requireMatch(adventureArcTypes, /CharacterAdventureDevelopmentKind = 'level' \| 'species-trait' \| 'skill' \| 'note'/, 'development kind contract');
 requireMatch(adventureArcService, /listArcsForCharacter/, 'arc sync/list service');
 requireMatch(adventureArcService, /appendDevelopment/, 'append development service');

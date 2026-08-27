@@ -35,3 +35,4 @@ n/a
 - Combined PR: Weltprofile (008) + Character-Statistik/Notizen (009) auf Basis von `main` nach #42.
 - Character Editor liest Weltprofile in v1 noch nicht; Weitere-Auswahl-Hint erklärt nur das Modul textuell.
 - v1 schreibt Arc-Developments nur über das Statistik-Formular.
+- Security harden (review): INSERT requires active membership; `character_id`/`project_id` immutable via trigger.

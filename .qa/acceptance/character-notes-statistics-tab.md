@@ -38,7 +38,7 @@ Move free-form character notes into the Hintergrund tab and add a Statistik tab 
 | 2 | `13-statistics-tab.png` |
 
 ## Security Coverage
-- Owner-scoped RLS on `character_adventure_arcs` via character ownership
+- Owner-scoped RLS on `character_adventure_arcs` via character ownership; INSERT also requires active `project_members` link; `character_id`/`project_id` immutable on UPDATE
 - Active project members can read arcs for their project (SELECT only)
 - Client writes only through authenticated owner paths
 

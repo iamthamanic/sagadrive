@@ -29,10 +29,44 @@ COMMENT ON COLUMN public.character_adventure_arcs.developments IS
 
 ALTER TABLE public.character_adventure_arcs ENABLE ROW LEVEL SECURITY;
 
--- Owner can fully manage arcs for their characters.
-CREATE POLICY "Owners manage character adventure arcs"
+-- Owner can read arcs for their characters (incl. historical completed/left).
+CREATE POLICY "Owners select character adventure arcs"
   ON public.character_adventure_arcs
-  FOR ALL
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.characters c
+      WHERE c.id = character_adventure_arcs.character_id
+        AND c.owner_user_id = auth.uid()
+    )
+  );
+
+-- Insert only when the owner has an active membership linking that character to the project.
+CREATE POLICY "Owners insert adventure arcs for active memberships"
+  ON public.character_adventure_arcs
+  FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1
+      FROM public.characters c
+      WHERE c.id = character_adventure_arcs.character_id
+        AND c.owner_user_id = auth.uid()
+    )
+    AND EXISTS (
+      SELECT 1
+      FROM public.project_members pm
+      WHERE pm.project_id = character_adventure_arcs.project_id
+        AND pm.character_id = character_adventure_arcs.character_id
+        AND pm.user_id = auth.uid()
+        AND pm.status = 'active'
+    )
+  );
+
+-- Owner may update developments/status/summary; identity columns stay fixed via trigger.
+CREATE POLICY "Owners update character adventure arcs"
+  ON public.character_adventure_arcs
+  FOR UPDATE
   USING (
     EXISTS (
       SELECT 1
@@ -42,6 +76,18 @@ CREATE POLICY "Owners manage character adventure arcs"
     )
   )
   WITH CHECK (
+    EXISTS (
+      SELECT 1
+      FROM public.characters c
+      WHERE c.id = character_adventure_arcs.character_id
+        AND c.owner_user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Owners delete character adventure arcs"
+  ON public.character_adventure_arcs
+  FOR DELETE
+  USING (
     EXISTS (
       SELECT 1
       FROM public.characters c
@@ -74,8 +120,27 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.prevent_character_adventure_arc_retarget()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.character_id IS DISTINCT FROM OLD.character_id
+     OR NEW.project_id IS DISTINCT FROM OLD.project_id THEN
+    RAISE EXCEPTION 'character_adventure_arcs.character_id and project_id are immutable';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
 DROP TRIGGER IF EXISTS trg_character_adventure_arcs_updated_at ON public.character_adventure_arcs;
 CREATE TRIGGER trg_character_adventure_arcs_updated_at
   BEFORE UPDATE ON public.character_adventure_arcs
   FOR EACH ROW
   EXECUTE FUNCTION public.set_character_adventure_arcs_updated_at();
+
+DROP TRIGGER IF EXISTS trg_character_adventure_arcs_no_retarget ON public.character_adventure_arcs;
+CREATE TRIGGER trg_character_adventure_arcs_no_retarget
+  BEFORE UPDATE ON public.character_adventure_arcs
+  FOR EACH ROW
+  EXECUTE FUNCTION public.prevent_character_adventure_arc_retarget();
