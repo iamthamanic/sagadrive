@@ -7,7 +7,12 @@ import {
   isSagaDriveSpeciesTraitKey,
   sagaDriveSkillDefinitions,
   type SagaDriveSkillKey,
+  type SagaDriveSpeciesTraitKey,
 } from '../../rulesets/characterCreation';
+import {
+  getSagaDriveSpeciesTraitOptionCatalog,
+  normalizeSagaDriveSpeciesTraitOptionKey,
+} from '../../rulesets/speciesTraitOptions';
 import { normalizeCharacterAppearance } from '../avatar';
 import type {
   CharacterAttributeStorageDto,
@@ -20,6 +25,7 @@ import type {
   SagaDriveProfileDto,
   SagaDriveSpeciesProfileDto,
   SagaDriveSpeciesTraitDetailsDto,
+  SagaDriveSpeciesTraitInstanceDto,
   UpdateCharacterDto,
 } from '../types/character.types';
 
@@ -39,7 +45,7 @@ function createEmptyBackground(): SagaDriveBackgroundDto {
 }
 
 function createDefaultSagaDriveProfile(): SagaDriveProfileDto {
-  return { speciesTraits: [], speciesTraitDetails: {}, background: createEmptyBackground(), drive: 3, momentum: 0 };
+  return { speciesTraitInstances: [], background: createEmptyBackground(), drive: 3, momentum: 0 };
 }
 
 function clampInteger(value: number, min: number, max: number): number { return Math.max(min, Math.min(max, Math.round(value))); }
@@ -95,6 +101,65 @@ function normalizeSpeciesTraitDetails(value: unknown): SagaDriveSpeciesTraitDeta
   return result;
 }
 
+function normalizeLegacySpeciesTraitInstances(
+  traits: unknown,
+  details: unknown,
+): SagaDriveSpeciesTraitInstanceDto[] {
+  if (!Array.isArray(traits)) return [];
+  const normalizedDetails = normalizeSpeciesTraitDetails(details);
+  const result: SagaDriveSpeciesTraitInstanceDto[] = [];
+
+  for (const trait of traits) {
+    if (!isSagaDriveSpeciesTraitKey(trait)) continue;
+    const detail = normalizedDetails[trait];
+    const option = detail ? normalizeSagaDriveSpeciesTraitOptionKey(trait, detail) : undefined;
+    result.push({
+      trait,
+      ...(option ? { option } : detail ? { legacyDetail: detail } : {}),
+      source: 'species-creation',
+      acquiredAtLevel: 1,
+    });
+  }
+
+  return result;
+}
+
+function normalizeSpeciesTraitInstances(
+  value: unknown,
+  legacyTraits: unknown,
+  legacyDetails: unknown,
+): SagaDriveSpeciesTraitInstanceDto[] {
+  const candidates: SagaDriveSpeciesTraitInstanceDto[] = [];
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      if (!isRecord(entry) || typeof entry.trait !== 'string' || !isSagaDriveSpeciesTraitKey(entry.trait)) continue;
+      const trait = entry.trait;
+      const rawOption = typeof entry.option === 'string' ? entry.option : '';
+      const option = rawOption ? normalizeSagaDriveSpeciesTraitOptionKey(trait, rawOption) : undefined;
+      const legacyDetail = typeof entry.legacyDetail === 'string' ? entry.legacyDetail.trim() : '';
+      candidates.push({
+        trait,
+        ...(option ? { option } : legacyDetail ? { legacyDetail } : {}),
+        source: 'species-creation',
+        acquiredAtLevel: typeof entry.acquiredAtLevel === 'number' ? clampInteger(entry.acquiredAtLevel, 1, 20) : 1,
+      });
+    }
+  } else {
+    candidates.push(...normalizeLegacySpeciesTraitInstances(legacyTraits, legacyDetails));
+  }
+
+  const result: SagaDriveSpeciesTraitInstanceDto[] = [];
+  for (const candidate of candidates) {
+    const repeatable = Boolean(getSagaDriveSpeciesTraitOptionCatalog(candidate.trait));
+    if (!repeatable && result.some((entry) => entry.trait === candidate.trait)) continue;
+    if (candidate.option && result.some((entry) => entry.trait === candidate.trait && entry.option === candidate.option)) continue;
+    if (!candidate.option && !candidate.legacyDetail && repeatable && result.some((entry) => entry.trait === candidate.trait && !entry.option && !entry.legacyDetail)) continue;
+    result.push(candidate);
+  }
+  return result;
+}
+
 function normalizeSpeciesProfile(value: unknown): SagaDriveSpeciesProfileDto | undefined {
   if (!isRecord(value)) return undefined;
   const name = typeof value.name === 'string' ? value.name.trim() : '';
@@ -106,12 +171,10 @@ function normalizeSpeciesProfile(value: unknown): SagaDriveSpeciesProfileDto | u
 }
 
 function normalizeSagaDriveProfile(value?: Partial<SagaDriveProfileDto> | null): SagaDriveProfileDto {
-  const profile = createDefaultSagaDriveProfile();
   return {
     archetype: value?.archetype && isSagaDriveArchetypeKey(value.archetype) ? value.archetype : undefined,
     essence: value?.essence && isSagaDriveEssenceKey(value.essence) ? value.essence : undefined,
-    speciesTraits: Array.isArray(value?.speciesTraits) ? value.speciesTraits.filter(isSagaDriveSpeciesTraitKey) : profile.speciesTraits,
-    speciesTraitDetails: normalizeSpeciesTraitDetails(value?.speciesTraitDetails),
+    speciesTraitInstances: normalizeSpeciesTraitInstances(value?.speciesTraitInstances, value?.speciesTraits, value?.speciesTraitDetails),
     speciesProfile: normalizeSpeciesProfile(value?.speciesProfile),
     background: normalizeSagaDriveBackground(value?.background),
     archetypeTrainingSkill: value?.archetypeTrainingSkill && isSagaDriveSkillKey(value.archetypeTrainingSkill) ? value.archetypeTrainingSkill : undefined,
