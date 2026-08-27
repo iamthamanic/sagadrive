@@ -1,7 +1,7 @@
 # SagaDrive Core Rules
 
 > **Dokumentstatus:** Verbindlicher Core-Regelstand in Validierungsphase  
-> **Stand:** 26. August 2026  
+> **Stand:** 27. August 2026  
 > **Zuletzt abgeschlossener Entscheidungsblock:** Regelentwurf Abschnitte 2 bis 18  
 > **Aktueller Arbeitsblock:** 19 – Mathematische Prüfung und Spieltests  
 > **Ziel:** Universelles, analog vollständig spielbares Kernregelsystem mit optionalen digitalen Erweiterungen
@@ -392,43 +392,65 @@ Hintergründe vergeben keine Attributsboni und keine allgemeinen Kräfte.
 
 ### 4.5 Spezies
 
-Eine reguläre Spezies verwendet ein Merkmalsbudget von 3 Punkten.
+Spezies beschreibt den angeborenen, biologischen oder strukturellen Körper einer Figur. Sie bestimmt nicht den Archetyp, die Essenz, den Hintergrund oder die erlernten Fertigkeiten. Ein Mensch, Elf, Ork, Cyborg oder Alien kann deshalb grundsätzlich dieselben Archetypen und Essenzen wählen, sofern Weltprofil oder andere ausdrückliche Regeln nichts anderes festlegen.
+
+Eine reguläre Spezies verwendet ein **Merkmalsbudget von genau 3 Punkten**. Bei der Charaktererschaffung müssen alle 3 Punkte ausgegeben werden.
 
 - Keine allgemeinen Attributs- oder Fertigkeitsboni.
 - Keine kulturellen Sprachen.
 - Keine zusätzlichen vollständigen Aktionen.
 - Nachteile erzeugen keine zusätzlichen freien Merkmalspunkte.
 - Hybride Spezies verwenden dasselbe Gesamtbudget.
+- Nicht jedes Speziesmerkmal ist für jede reguläre Spezies verfügbar.
+- Ein Weltprofil darf weitere Spezies oder ausdrücklich abweichende Merkmalslisten definieren, muss diese Abweichung aber offen benennen.
 
-#### Merkmalskosten
+#### Speziesmerkmale
 
-**Kosten 1 – kleines Merkmal**
-
-Beispiele:
-
-- geschärfter einzelner Sinn,
-- natürliche Waffe: unbewaffneter Schaden steigt von d4+1 auf d6+1,
-- Vorteil gegen eine eng definierte Gefahrenart,
-- Anpassung an eine bestimmte Umgebung.
-
-**Kosten 2 – starkes Merkmal**
-
-Beispiele:
-
-- natürliche Schutzwirkung 1,
-- volle Kletter- oder Schwimmbewegung,
-- amphibisches Leben,
-- deutlich verbesserte Sichtform.
-
-**Kosten 3 – definierendes Merkmal**
-
-Beispiele:
-
-- Flugbewegung,
-- Überleben in einer extremen Umwelt ohne normale Schutzmittel,
-- außergewöhnlicher Körperbau mit klar definierter mechanischer Wirkung.
+| Merkmal | Kosten | Regelwirkung |
+|---|---:|---|
+| Geschärfter Sinn | 1 | Einen Sinn festlegen. Vorteil auf Wahrnehmungsproben, bei denen genau dieser Sinn entscheidend ist. Der Sinn muss bei der Charaktererschaffung benannt werden. |
+| Natürliche Waffe | 1 | Unbewaffneter Schaden steigt von d4+1 auf d6+1. Die körperliche Form, etwa Klauen, Zähne oder Hörner, wird beschrieben. |
+| Enge Resistenz | 1 | Eine klar eingegrenzte Gefahrenart festlegen. Vorteil auf passende Proben und Widerstände gegen genau diese Gefahr. Die Gefahrenart muss benannt werden. |
+| Umweltanpassung | 1 | Eine gewöhnliche Umgebung festlegen. Normale Nachteile, die ausschließlich aus dieser Umgebung entstehen, entfallen. Die Umgebung muss benannt werden. |
+| Ausdauernder Organismus | 1 | Vorteil auf Proben gegen langandauernde körperliche Erschöpfung. |
+| Geringer Ruhebedarf | 1 | Benötigt nur die Hälfte der für die Spezies üblichen Schlaf- oder Ruhezeit. Heilung und Erholung werden dadurch nicht beschleunigt. |
+| Natürlicher Schutz | 2 | Natürliche Schutzwirkung 1 nach den normalen Schutzregeln. |
+| Erweitertes Klettern | 2 | Beim Klettern kostet 1 Meter Bewegung 1 Meter statt der normalen 2 Meter. Schwierige Oberflächen, Gefahr oder Zeitdruck können weiterhin eine Athletikprobe verlangen. |
+| Erweitertes Schwimmen | 2 | Beim Schwimmen kostet 1 Meter Bewegung 1 Meter statt der normalen 2 Meter. Strömung, Gefahr oder andere schwierige Bedingungen können weiterhin eine Athletikprobe verlangen. |
+| Amphibisch | 2 | Kann an Land und unter Wasser normal atmen und leben. Normale Atemeinschränkungen durch Wasser entfallen. |
+| Erweiterte Sicht | 2 | Eine klar definierte besondere Sichtform festlegen, etwa Dunkelsicht, Wärmesicht oder Fernsicht. Die Sichtform gilt nur in ihrem festgelegten Anwendungsbereich und muss benannt werden. |
+| Flugfähig | 3 | Besitzt eine natürliche Flugbewegung in Höhe der normalen Bewegungsrate. |
+| Extremumwelt | 3 | Eine Extremumwelt festlegen. Kann dort ohne die normalerweise erforderlichen Schutzmittel überleben. Die Extremumwelt muss benannt werden. |
+| Außergewöhnlicher Körperbau | 3 | Reserviertes definierendes Merkmal für stark abweichende Anatomie. **Noch nicht verfügbar**, bis zulässige mechanische Varianten verbindlich definiert sind. |
 
 Speziesmerkmale dürfen keine vollen Zusatzaktionen, allgemeinen Attributsboni, allgemeinen Fertigkeitsboni, zusätzlichen Drive, zusätzliches Momentum oder einen Archetyp ersetzen.
+
+#### Zulässige Merkmale der Core-Spezies
+
+| Spezies | Zulässige Speziesmerkmale |
+|---|---|
+| Mensch | Geschärfter Sinn; Enge Resistenz; Umweltanpassung; Ausdauernder Organismus; Geringer Ruhebedarf |
+| Elf | Geschärfter Sinn; Enge Resistenz; Umweltanpassung; Ausdauernder Organismus; Geringer Ruhebedarf; Erweitertes Klettern; Erweiterte Sicht |
+| Zwerg | Geschärfter Sinn; Enge Resistenz; Umweltanpassung; Ausdauernder Organismus; Geringer Ruhebedarf; Natürlicher Schutz; Erweiterte Sicht |
+| Halbling | Geschärfter Sinn; Enge Resistenz; Umweltanpassung; Ausdauernder Organismus; Erweitertes Klettern |
+| Ork | Geschärfter Sinn; Natürliche Waffe; Enge Resistenz; Umweltanpassung; Ausdauernder Organismus; Natürlicher Schutz; Außergewöhnlicher Körperbau* |
+| Cyborg | Geschärfter Sinn; Natürliche Waffe; Enge Resistenz; Umweltanpassung; Geringer Ruhebedarf; Natürlicher Schutz; Erweitertes Klettern; Erweitertes Schwimmen; Erweiterte Sicht; Extremumwelt; Außergewöhnlicher Körperbau* |
+| Alien | Alle Core-Speziesmerkmale* |
+
+`*` **Außergewöhnlicher Körperbau** bleibt bis zur Definition seiner Varianten nicht wählbar.
+
+#### Alien-Speziesprofil
+
+**Alien** ist der freie Core-Spezies-Builder für eigene nicht-menschliche, hybride oder ungewöhnliche Körperformen.
+
+- Die Figur wird regeltechnisch als Spezies `Alien` geführt.
+- Das Speziesprofil erhält einen frei gewählten verpflichtenden Namen, zum Beispiel `Schneggl`.
+- Die Körperbeschreibung ist frei und hat ohne ein gewähltes Speziesmerkmal keine zusätzliche Regelwirkung.
+- Das Alien-Profil darf aus dem vollständigen verfügbaren Core-Merkmalskatalog wählen.
+- Auch ein Alien muss genau 3 Speziespunkte ausgeben.
+- Ein Alien-Profil ist keine Klasse, kein Archetyp und keine Essenz.
+
+Damit können Weltprofile oder Spieler eigene Spezies darstellen, ohne für jede denkbare Körperform einen neuen Core-Regelblock zu benötigen.
 
 ### 4.6 Essenzen
 
@@ -855,6 +877,13 @@ Bei Gleichstand entscheidet:
 Standardbewegung: **9 Meter pro Zug**.
 
 Optionales Raster: 1 Feld = 1,5 Meter; Standardbewegung = 6 Felder.
+
+Klettern und Schwimmen sind normale Bewegungsarten und grundsätzlich ohne Speziesmerkmal möglich.
+
+- Ohne ausdrückliche Sonderbewegung kostet **1 Meter Klettern oder Schwimmen 2 Meter Bewegung**.
+- **Erweitertes Klettern** reduziert diesen Bewegungsaufwand beim Klettern auf 1 Meter Bewegung pro 1 Meter Strecke.
+- **Erweitertes Schwimmen** reduziert diesen Bewegungsaufwand beim Schwimmen auf 1 Meter Bewegung pro 1 Meter Strecke.
+- Schwierige Oberflächen, starke Strömung, Gefahr, Zeitdruck oder vergleichbare Unsicherheit können weiterhin eine Athletikprobe verlangen. Erweiterte Bewegung ersetzt eine solche Probe nicht automatisch.
 
 ### 6.5 Widerstände
 
@@ -1816,7 +1845,7 @@ Verbindliche Reihenfolge:
 1. Weltprofil und aktive Module bestimmen.
 2. Zielstufe von 1 bis 20 bestimmen; Standard ist Stufe 1.
 3. Figurenkonzept festlegen.
-4. Spezies und Speziesmerkmale wählen.
+4. Spezies wählen; bei Alien das Speziesprofil benennen; zulässige Speziesmerkmale im Wert von genau 3 Punkten wählen und alle verpflichtenden Merkmalsdetails festlegen.
 5. Hintergrund wählen.
 6. Primärarchetyp wählen.
 7. Primäre Essenz wählen.
@@ -1978,6 +2007,8 @@ Vor endgültiger Freigabe müssen mindestens praktisch oder mathematisch geprüf
 - Sicherheitswert 10,
 - Widerstände,
 - Kompetenzunterschiede zwischen Stufenbereichen,
+- Speziesmerkmal-Budget, Merkmalskosten und speziesgebundene Allowlists,
+- Erweitertes Klettern und Erweitertes Schwimmen gegenüber der normalen Bewegungsregel,
 - Kampfwerte und erwartete Kampfdauer,
 - Begegnungsbudgets für unterschiedliche Gruppengrößen,
 - Schergen-, Elite- und Bossregeln,
@@ -2047,6 +2078,7 @@ Die SagaDrive Core Rules gelten als final validiert, wenn:
 
 | Datum | Stand |
 |---|---|
+| 27.08.2026 | Speziesmechanik konkretisiert: exakt 3 Speziespunkte verpflichtend, Core-Spezies mit festen Merkmals-Allowlists, Alien als frei benennbares Speziesprofil mit vollständigem verfügbarem Merkmalskatalog, Pflichtdetails für offene Merkmale, `Kletter- oder Schwimmbewegung` in `Erweitertes Klettern` und `Erweitertes Schwimmen` getrennt. Normales Klettern/Schwimmen kostet 2 Meter Bewegung pro Meter; die erweiterten Merkmale reduzieren dies auf 1:1. `Außergewöhnlicher Körperbau` bleibt sichtbar, aber bis zur Definition zulässiger Varianten nicht verfügbar. |
 | 26.08.2026 | Das 20-Stufen-Modell ausdrücklich bestätigt und in fünf benannte Ränge gegliedert: Novize (1–4), Spezialist (5–8), Experte (9–12), Meister (13–16), Legende (17–20). Römische Rangbezeichnungen entfernt, Fähigkeits- und Begegnungsränge angeglichen und direkte Erstellung höherstufiger Figuren mit vollständiger, chronologisch legaler Progression definiert. |
 | 26.08.2026 | Regelentwurf der zuvor offenen Abschnitte 2 bis 18 nach drei Reviewzyklen vollständig als verbindliche Validierungsfassung übernommen. Abschnitt 19 ist jetzt der aktive Arbeitsblock. Zahlenwerte sind verbindliche Playtestwerte, aber noch nicht endgültig empirisch validiert. |
 | 26.08.2026 | Athletik als umweltbezogene Bewegungs- und Kraftfertigkeit festgelegt; Kampfmanöver bleiben bei Nahkampf. Fortsetzungspunkt auf Akrobatik gesetzt. |
