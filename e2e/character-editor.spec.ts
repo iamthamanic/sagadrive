@@ -90,7 +90,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tooltip').getByText(/gewöhnlichen Lebensumgebung/i)).toBeVisible();
   await page.getByRole('button', { name: /Umweltanpassung: Umgebung erklären/i }).click();
   await environmentSelect.click();
-  await expect(page.getByRole('listbox').getByText(/großen Höhe und dünner Luft/i)).toBeVisible();
+  await expect(page.getByRole('listbox').getByText(/großer Höhe und dünner Luft/i)).toBeVisible();
   await page.getByRole('option', { name: /Hochgebirge & dünne Luft/i }).click();
   await page.getByRole('button', { name: /Umweltanpassung entfernen/i }).click();
 
