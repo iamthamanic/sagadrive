@@ -8,6 +8,7 @@ function rejectMatch(content, pattern, label) { if (pattern.test(content)) { con
 const runtime = read('src/modules/characters/avatar/characterStudio/CharacterStudioRuntime.ts');
 const editor = read('src/components/CharacterEditor.tsx');
 const speciesTraitsPanel = read('src/modules/characters/components/SpeciesTraitsPanel.tsx');
+const speciesTraitOptions = read('src/modules/rulesets/speciesTraitOptions.ts');
 const characterTypes = read('src/modules/characters/types/character.types.ts');
 const characterService = read('src/modules/characters/services/character.service.ts');
 const characterCreation = read('src/modules/rulesets/characterCreation.ts');
@@ -29,6 +30,8 @@ requireMatch(editor, /TabsTrigger value="attribute"[\s\S]*TabsTrigger value="arc
 rejectMatch(editor, /TabsTrigger value="talente"/, 'legacy Talente Parameter sub-tab remains');
 requireMatch(editor, /<SpeciesTraitsPanel/, 'species traits panel inside CharacterEditor');
 requireMatch(editor, /speciesTraitCost !== SAGA_DRIVE_SPECIES_TRAIT_BUDGET/, 'exact species trait budget save validation');
+requireMatch(editor, /speciesTraitInstances:\s*speciesTraitInstances\.map/, 'canonical species trait instance persistence');
+requireMatch(editor, /acquiredAtLevel:\s*1/, 'species creation traits remain level-one acquisitions');
 requireMatch(editor, /speciesProfile:\s*characterRace === 'alien'/, 'Alien species profile persistence');
 requireMatch(editor, /GenderReadingSelect/, 'gender reading field in CharacterEditor');
 requireMatch(editor, /SkillSelectField/, 'skill select fields in CharacterEditor');
@@ -41,13 +44,29 @@ rejectMatch(editor, /Dungeons & Dragons 5\.5e nutzt|Wähle Klasse|dnd-class/, 'a
 requireMatch(speciesTraitsPanel, /Name deiner Spezies \*/, 'required Alien species profile name field');
 requireMatch(speciesTraitsPanel, /Körperbeschreibung/, 'Alien body description field');
 requireMatch(speciesTraitsPanel, /Noch nicht verfügbar/, 'unavailable species trait treatment');
-requireMatch(speciesTraitsPanel, /trait\.detailRequired/, 'inline required species trait details');
+requireMatch(speciesTraitsPanel, /Weitere Auswahl/, 'repeatable species trait add control');
+requireMatch(speciesTraitsPanel, /jede Unteroption nur einmal/, 'repeatable species trait duplicate-option guidance');
+requireMatch(speciesTraitsPanel, /Die Speziespunkte steigen nicht automatisch mit der Charakterstufe/, 'species budget does not scale with level');
+requireMatch(speciesTraitsPanel, /SpeciesTraitOptionItem/, 'dropdown option rows with help tooltips');
+rejectMatch(speciesTraitsPanel, /trait\.detailPlaceholder|onTraitDetailChange|SpeciesTraitDetailValues/, 'legacy free-text species trait detail UI remains');
+
+requireMatch(speciesTraitOptions, /label:\s*'Sehen'/, 'sharpened sense option catalog');
+requireMatch(speciesTraitOptions, /label:\s*'Gift \/ Toxine'/, 'narrow resistance option catalog');
+requireMatch(speciesTraitOptions, /label:\s*'Hitze & Trockenheit'/, 'environment adaptation option catalog');
+requireMatch(speciesTraitOptions, /label:\s*'Dunkelsicht'/, 'enhanced sight option catalog');
+requireMatch(speciesTraitOptions, /label:\s*'Vakuum & Sauerstofflosigkeit'/, 'extreme environment option catalog');
+requireMatch(speciesTraitOptions, /normalizeSagaDriveSpeciesTraitOptionKey/, 'legacy option normalization');
 
 requireMatch(characterTypes, /endurance:\s*number/, 'SagaDrive Ausdauer attribute DTO');
 requireMatch(characterTypes, /mind:\s*number/, 'SagaDrive Verstand attribute DTO');
 requireMatch(characterTypes, /perception:\s*number/, 'SagaDrive Wahrnehmung attribute DTO');
 requireMatch(characterTypes, /sagadrive_profile\?:/, 'SagaDrive profile DTO contract');
-requireMatch(characterTypes, /SagaDriveSpeciesTraitDetailsDto/, 'structured species trait details DTO');
+requireMatch(characterTypes, /interface SagaDriveSpeciesTraitInstanceDto/, 'species trait instance DTO');
+requireMatch(characterTypes, /speciesTraitInstances:\s*SagaDriveSpeciesTraitInstanceDto\[\]/, 'canonical species trait instance collection');
+requireMatch(characterTypes, /source:\s*SagaDriveSpeciesTraitSource/, 'species trait source metadata');
+requireMatch(characterTypes, /acquiredAtLevel:\s*number/, 'species trait acquisition level metadata');
+requireMatch(characterTypes, /speciesTraits\?:\s*SagaDriveSpeciesTraitKey\[\]/, 'legacy species trait array read compatibility');
+requireMatch(characterTypes, /speciesTraitDetails\?:\s*SagaDriveSpeciesTraitDetailsDto/, 'legacy species trait detail read compatibility');
 requireMatch(characterTypes, /speciesProfile\?:\s*SagaDriveSpeciesProfileDto/, 'structured Alien species profile DTO');
 requireMatch(characterTypes, /notes\?:\s*string \| null/, 'persisted notes DTO contract');
 requireMatch(characterTypes, /type ItemType = 'weapon' \| 'armor' \| 'shield' \| 'tool'/, 'SagaDrive inventory item categories');
@@ -69,7 +88,9 @@ requireMatch(inventoryPanel, /Über Traglast: Bewegung −3 m/, 'overload conseq
 rejectMatch(inventoryPanel, /capacity = 30|Freier Inventarplatz|Jeder Gegenstand belegt einen Inventarplatz/, 'legacy fixed-slot inventory remains');
 
 requireMatch(characterService, /sagadrive_profile:/, 'SagaDrive profile persistence');
-requireMatch(characterService, /normalizeSpeciesTraitDetails/, 'structured species trait detail normalization');
+requireMatch(characterService, /normalizeSpeciesTraitInstances/, 'canonical species trait instance normalization');
+requireMatch(characterService, /normalizeLegacySpeciesTraitInstances/, 'legacy species trait migration on read');
+requireMatch(characterService, /legacyDetail/, 'unmapped legacy species trait detail preservation');
 requireMatch(characterService, /normalizeSpeciesProfile/, 'Alien species profile normalization');
 requireMatch(characterService, /notes:\s*payload\.notes\?\.trim\(\) \|\| null/, 'notes persistence');
 requireMatch(characterService, /value\?\.constitution/, 'legacy constitution attribute read fallback');
