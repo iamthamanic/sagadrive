@@ -210,7 +210,10 @@ export function SpeciesTraitsPanel({
                             )}
                             <Select
                               value={instance.option ?? ''}
-                              onValueChange={(value) => updateTraitOption(index, value as NonNullable<SagaDriveSpeciesTraitInstanceDto['option']>)}
+                              onValueChange={(value) => {
+                                const option = catalog.options.find((candidate) => candidate.value === value);
+                                if (option) updateTraitOption(index, option.value);
+                              }}
                             >
                               <SelectTrigger
                                 id={controlId}
