@@ -52,7 +52,13 @@ Die unterstützten SagaDrive-Spezies Mensch, Elf, Zwerg, Halbling, Ork, Cyborg u
 - Auth/Backend/Uploads: nicht Teil dieses Slices.
 
 ## Implementation Notes
-Pending implementation.
+- `AvatarAssetManifest` enthält jetzt eine diskriminierte Einstufung (`species-specific` oder `neutral-fallback`) sowie verpflichtende Provenienz- und Lizenzmetadaten.
+- Der bereits verwendete öffentliche Katalog `MJMoonbow/VRMavatars` ist upstream als `CC0-1.0` ausgewiesen. SagaDrive pinnt die Remote-Fallbacks auf Commit `6af59479c61ab13b6caa96a9b915498489f2b9cd`, statt veränderliche `main`-URLs zu laden.
+- Das Upstream-Orkmodell `fantasy´/orcs/Orc 1.vrm` ist als spezies-spezifisch klassifiziert. Mensch, Elf, Zwerg, Halbling, Cyborg, Alien und der allgemeine Neutral-Preset bleiben explizit als neutrale Fallbacks markiert, solange kein eindeutig passendes und lizenzgeprüftes Spezialasset vorliegt.
+- `docs/avatar assets.md` dokumentiert Quelle, Commit, CC0-Nutzungsrahmen, konkrete Asset-Pfade und das fail-closed Aufnahmeverfahren für zukünftige Assets.
+- `scripts/avatar-asset-catalog-regression-check.mjs` prüft Race-Preset-Mappings, Manifest-Vollständigkeit, Commit-Pinning, CC0-Metadaten, neutralen Unknown-Race-Fallback, Self-Host-Override und Dokumentationsabdeckung. Der Check ist in `npm run test-gate` eingebunden.
+- `src/modules/characters/avatar.ts` musste nicht geändert werden: Die bestehende Race->Preset-Zuordnung ist bereits deterministisch und wird vom neuen Regression-Contract explizit abgesichert.
+- Keine neuen Dependencies, Web3-Komponenten, Binärassets, Persistenz- oder Backendänderungen wurden eingeführt.
 
 ## Composition Gate
 Pending verification; der geplante Slice ist ein statischer Catalog-/Runtime-Lookup ohne Persistenz- oder Side-Effect-Kette.
