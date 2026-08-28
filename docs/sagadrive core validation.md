@@ -343,6 +343,11 @@ Pflichtkombinationen:
 
 ## C4. Gegner, Begegnungsbudgets und Bosse – #24
 
+> **Status:** durchgeführt (deterministische Simulation) – 2026-08-28  
+> **Skript:** `scripts/validate-enemy-encounter-boss-balance.mjs`  
+> **Report:** `.qa/runs/validate-enemy-encounter-boss-balance-report.md`  
+> **Ergebnis:** 290 Encounter-Zellen (Gruppen 3–6 × Bänder I–V × Routine/Standard/Schwer/Extrem × Boss/Elite/Schergen/Mixed) + 10 Boss-Szenarien, 0 Befunde. Gefallenstufen monoton, kein Schergen-Budget-Sprengen, kein Boss-Kollaps/Schleifkampf. Beobachtung: Solo-Boss-Niederlagengefahr wächst mit dem Band (Novize 0 % → Legende 58,3 % bei 4 Spielern, Budget 8 = Standard). Verdrahtet im Test Gate.
+
 Gruppengrößen:
 
 - 3,
