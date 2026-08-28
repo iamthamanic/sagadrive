@@ -1,7 +1,7 @@
 # Composition Gate — combat-action-economy
 
-- HEAD_SHA: PENDING
-- BASE_SHA: PENDING
+- HEAD_SHA: e61259219aab81bd749d60b44b1bc33bf729fc9a
+- BASE_SHA: 6ec7b1d
 - Date: 2026-08-28
 - Verdict: CLEAR
 
