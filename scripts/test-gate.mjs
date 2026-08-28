@@ -119,6 +119,14 @@ function checkCharacterEditorRegressions() {
   });
 }
 
+function checkAvatarRuntimeRegressions() {
+  console.log('Avatar runtime regression contract: checking VRM/GLB runtime, URL safety, portrait canvas, and dependencies...');
+  execFileSync(process.execPath, ['scripts/avatar-runtime-regression-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function scanAddedLinesForSecrets() {
   const base = resolveDiffBase();
   if (!base) {
@@ -194,6 +202,7 @@ execFileSync('npm', ['run', 'checks'], {
 checkChangedDenoFunctions();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
+checkAvatarRuntimeRegressions();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
