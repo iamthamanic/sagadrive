@@ -135,6 +135,14 @@ function checkAvatarAssetCatalogRegressions() {
   });
 }
 
+function checkEnemyEncounterBossValidation() {
+  console.log('Enemy/encounter/boss validation (#24): seeded C4 encounter simulation...');
+  execFileSync(process.execPath, ['scripts/validate-enemy-encounter-boss-balance.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkDamageHealingDyingValidation() {
   console.log('Damage/healing/dying validation (#23): exact damage & dying curves...');
   execFileSync(process.execPath, ['scripts/validate-damage-healing-dying.mjs'], {
@@ -239,6 +247,7 @@ checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
 checkDamageHealingDyingValidation();
+checkEnemyEncounterBossValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
