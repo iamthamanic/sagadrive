@@ -4,7 +4,9 @@ import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
 import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2 } from 'lucide-react';
-import { useCharacters } from '../modules/characters';
+import { useCharacters, type CharacterVm } from '../modules/characters';
+import { EntityBrowser, type EntityBrowserRenderContext } from './EntityBrowser';
+import { EntityBrowserCard } from './EntityBrowserCard';
 import {
   WorldProfileEditorDialog,
   getSpeciesDevelopmentMode,
@@ -23,6 +25,8 @@ const SPECIES_DEVELOPMENT_MODE_LABELS = {
   progressive: 'Progressiv',
   disabled: 'Deaktiviert',
 } as const;
+
+const CHARACTER_VIEW_MODE_STORAGE_KEY = 'sagadrive_library_characters_view_mode';
 
 export function Library({ onNavigate }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,6 +104,55 @@ export function Library({ onNavigate }: LibraryProps) {
     world.description.toLowerCase().includes(normalizedSearch)
   );
 
+  const renderCharacter = (char: CharacterVm, context: EntityBrowserRenderContext) => (
+    <EntityBrowserCard
+      title={char.name}
+      meta={`Level ${char.level} · ${char.race} · ${char.class}`}
+      imageUrl={char.portraitUrl}
+      imageAlt={`Portrait von ${char.name}`}
+      imageFallback={char.name}
+      variant={context.variant}
+      isCenter={context.isCenter}
+      onOpen={context.variant === 'list' || context.isCenter ? () => onNavigate('character-editor') : undefined}
+      actions={
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => onNavigate('character-editor')}
+          >
+            <Edit className="w-3 h-3 mr-1" />
+            <span className="text-xs">Bearbeiten</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={`${char.name} löschen`}
+            onClick={() => void handleDeleteCharacter(char.id, char.name)}
+          >
+            <Trash2 className="w-3 h-3 text-destructive" />
+          </Button>
+        </>
+      }
+    />
+  );
+
+  const charactersEmptyState = (
+    <div className="text-center py-12">
+      <User className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+      <p className="text-muted-foreground mb-4">
+        {searchQuery ? 'Keine Charaktere gefunden' : 'Noch keine Charaktere erstellt'}
+      </p>
+      {!searchQuery && (
+        <Button onClick={() => onNavigate('character-editor')}>
+          <Plus className="w-4 h-4 mr-2" />
+          Ersten Charakter erstellen
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
@@ -137,17 +190,6 @@ export function Library({ onNavigate }: LibraryProps) {
           </TabsList>
 
           <TabsContent value="characters" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                {isLoading ? 'Lädt...' : `${filteredCharacters.length} Charakter${filteredCharacters.length !== 1 ? 'e' : ''}`}
-              </p>
-              <Button size="sm" onClick={() => onNavigate('character-editor')}>
-                <Plus className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Neuer Charakter</span>
-                <span className="sm:hidden">Neu</span>
-              </Button>
-            </div>
-
             {error && (
               <div className="p-3 bg-destructive/10 border border-destructive rounded-lg">
                 <p className="text-sm text-destructive">{error}</p>
@@ -158,57 +200,26 @@ export function Library({ onNavigate }: LibraryProps) {
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
-            ) : filteredCharacters.length === 0 ? (
-              <div className="text-center py-12">
-                <User className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground mb-4">
-                  {searchQuery ? 'Keine Charaktere gefunden' : 'Noch keine Charaktere erstellt'}
-                </p>
-                <Button onClick={() => onNavigate('character-editor')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Ersten Charakter erstellen
-                </Button>
-              </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                {filteredCharacters.map((char) => (
-                  <Card key={char.id} className="hover:border-primary transition-colors">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <CardTitle className="text-sm md:text-base truncate">{char.name}</CardTitle>
-                          <CardDescription className="text-xs md:text-sm">
-                            Level {char.level} {char.race} {char.class}
-                          </CardDescription>
-                        </div>
-                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                          <User className="w-6 h-6 md:w-8 md:h-8 text-muted-foreground" />
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => onNavigate('character-editor')}
-                        >
-                          <Edit className="w-3 h-3 mr-1" />
-                          <span className="text-xs">Bearbeiten</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => void handleDeleteCharacter(char.id, char.name)}
-                        >
-                          <Trash2 className="w-3 h-3 text-destructive" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <EntityBrowser
+                storageKey={CHARACTER_VIEW_MODE_STORAGE_KEY}
+                items={filteredCharacters}
+                getId={(char) => char.id}
+                renderItem={renderCharacter}
+                emptyState={charactersEmptyState}
+                toolbarLeft={
+                  <span>
+                    {filteredCharacters.length} Charakter{filteredCharacters.length !== 1 ? 'e' : ''}
+                  </span>
+                }
+                toolbarRight={
+                  <Button size="sm" onClick={() => onNavigate('character-editor')}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Neuer Charakter</span>
+                    <span className="sm:hidden">Neu</span>
+                  </Button>
+                }
+              />
             )}
           </TabsContent>
 

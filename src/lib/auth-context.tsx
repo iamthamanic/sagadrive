@@ -1,5 +1,12 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from './supabase';
+import {
+  isLocalAdminSession,
+  LOCAL_ADMIN_PASSWORD,
+  LOCAL_ADMIN_STORAGE_KEY,
+  LOCAL_ADMIN_USER_ID,
+  LOCAL_ADMIN_USERNAME,
+} from './localAdmin';
 import type { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -12,13 +19,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const LOCAL_ADMIN_STORAGE_KEY = 'sagadrive-local-admin-session';
-const LOCAL_ADMIN_USERNAME = 'admin';
-const LOCAL_ADMIN_PASSWORD = '1234';
-
 function createLocalAdminUser(): User {
   return {
-    id: 'local-admin',
+    id: LOCAL_ADMIN_USER_ID,
     aud: 'authenticated',
     role: 'authenticated',
     email: 'admin@local.sagadrive',
@@ -37,12 +40,7 @@ function createLocalAdminUser(): User {
 }
 
 function getStoredLocalAdminUser(): User | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  const hasLocalAdminSession = window.localStorage.getItem(LOCAL_ADMIN_STORAGE_KEY) === 'true';
-  return hasLocalAdminSession ? createLocalAdminUser() : null;
+  return isLocalAdminSession() ? createLocalAdminUser() : null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

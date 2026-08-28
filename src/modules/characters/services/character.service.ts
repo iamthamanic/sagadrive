@@ -1,4 +1,5 @@
 import { supabase } from '../../../lib/supabase';
+import { isLocalAdminSession, LOCAL_ADMIN_USER_ID } from '../../../lib/localAdmin';
 import {
   createEmptySagaDriveSkillRanks,
   isSagaDriveArchetypeKey,
@@ -227,6 +228,10 @@ class CharacterService {
   }
 
   private async getAuthenticatedUserId(): Promise<string> {
+    if (isLocalAdminSession()) {
+      return LOCAL_ADMIN_USER_ID;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
     return user.id;
