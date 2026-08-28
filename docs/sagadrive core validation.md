@@ -278,6 +278,11 @@ Zu beobachten:
 
 ## C2. Schaden, Schutz, Heilung und Sterben – #23
 
+> **Status:** durchgeführt (deterministische Engine) – 2026-08-28  
+> **Skript:** `scripts/validate-damage-healing-dying.mjs`  
+> **Report:** `.qa/runs/validate-damage-healing-dying-report.md`  
+> **Ergebnis:** 720 Szenario-Reihen (5 Schadensklassen × Schutz 0–5 × Dr 0–2 × Bänder I/III/V × 3 Ausdauerprofile), 0 Befunde. Exakte Schadensfaltungen inkl. Krit (nur Würfel verdoppelt), Dying-State-Machine (§8.5), Härtegrade Heroisch/Standard/Hart (§16.4), Erholungspfade (§8.8). Verdrahtet im Test Gate.
+
 Testprofile:
 
 - niedrige/mittlere/hohe Ausdauer,
