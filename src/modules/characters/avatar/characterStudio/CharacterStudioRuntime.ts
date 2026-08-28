@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { VRM, VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+import { normalizeAvatarModelUrl } from '../../avatar';
 import type { CharacterAvatarDto } from '../../types/character.types';
 import type { AvatarAssetManifest } from '../manifests';
 
@@ -166,13 +167,26 @@ export class CharacterStudioRuntime {
   }
 
   async loadModel(url: string, avatar: CharacterAvatarDto, manifest: AvatarAssetManifest): Promise<void> {
+    if (this.disposed) return;
+
     const version = ++this.loadVersion;
     this.currentAvatar = avatar;
     this.currentManifest = manifest;
+
+    const safeUrl = normalizeAvatarModelUrl(url);
+    if (!safeUrl) {
+      this.removeCurrentModel();
+      this.onStateChange({
+        status: 'error',
+        message: 'Die 3D-Modell-URL ist nicht zulässig. Erlaubt sind lokale oder HTTPS-VRM/GLB-Dateien.',
+      });
+      return;
+    }
+
     this.onStateChange({ status: 'loading', message: `Lade ${manifest.displayName} …` });
 
     try {
-      const gltf = await this.loader.loadAsync(url);
+      const gltf = await this.loader.loadAsync(safeUrl);
       const vrm = getVrm(gltf.userData as unknown);
       if (vrm) {
         VRMUtils.removeUnnecessaryVertices(gltf.scene);
