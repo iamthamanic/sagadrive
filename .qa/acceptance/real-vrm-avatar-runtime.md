@@ -49,11 +49,14 @@ Die bestehende prozedurale Avatar-Vorschau wird durch die bereits im SagaDrive-C
 - Out of scope: keine neue Auth-/Backend-/Upload-Fläche in Issue #2.
 
 ## Implementation Notes
-- Der aktuelle `main` enthält die zentrale Runtime bereits aus dem früher gemergten Character-Studio-Slice (#15): Three.js WebGLRenderer, `GLTFLoader` + `VRMLoaderPlugin`, OrbitControls, VRM-Update, Resize, Camera-Fit, `loadVersion` gegen stale loads und vollständiges Dispose.
+- Der aktuelle `main` enthielt die zentrale Runtime bereits aus dem früher gemergten Character-Studio-Slice (#15): Three.js WebGLRenderer, `GLTFLoader` + `VRMLoaderPlugin`, OrbitControls, VRM-Update, Resize, Camera-Fit, `loadVersion` gegen stale loads und vollständiges Dispose.
+- `CharacterStudioRuntime.loadModel()` validiert die Modell-URL jetzt zusätzlich selbst über `normalizeAvatarModelUrl()` und übergibt ausschließlich den normalisierten Wert an `GLTFLoader.loadAsync()`. Ungültige URLs entfernen ein eventuell aktives Modell und liefern einen deutschen Fehlerzustand.
+- Der Runtime-Einstieg ignoriert Aufrufe nach `dispose()`, sodass kein neuer Netzwerk-/Render-Ladevorgang nach dem Lifecycle-Ende gestartet wird.
 - `CharacterEditor` verwendet bereits `avatarCanvasRef` sowohl für `AvatarCanvas` als auch für `canvas.toBlob(...)` bei „Portrait erzeugen“.
 - `package.json` und `package-lock.json` enthalten `three@0.183.2`, `@pixiv/three-vrm@3.5.1` und `@types/three@0.183.1` konsistent.
 - Aktuelle `@pixiv/three-vrm`-Dokumentation bestätigt das vorhandene `GLTFLoader.register(() => new VRMLoaderPlugin(...))`, `gltf.userData.vrm`, VRM-Optimierung, `VRMUtils.rotateVRM0(vrm)` und `vrm.update(delta)` Pattern.
-- Produktcode musste im Implement-Schritt nicht dupliziert oder neu abstrahiert werden; die verbleibende Arbeit für Issue #2 ist Verifikation gegen diese Acceptance-Kriterien.
+- Neuer `scripts/avatar-runtime-regression-check.mjs` prüft Renderer/Loader/Orbit/VRM-Update, URL-Trust-Boundary, stale-load/dispose-Pfade, gemeinsames Portrait-Canvas, package-/lockfile-Konsistenz und verbotene direkte Web3-Abhängigkeiten. `scripts/test-gate.mjs` führt diesen Vertrag jetzt standardmäßig aus.
+- Geänderte Dateien im Implement-Schritt: `src/modules/characters/avatar/characterStudio/CharacterStudioRuntime.ts`, `scripts/avatar-runtime-regression-check.mjs`, `scripts/test-gate.mjs`, dieses Acceptance-Artefakt.
 - Quick/standard checks in dieser Chat-Laufzeit noch nicht ausgeführt, da kein lokaler Repo-Checkout mit ausführbarer Toolchain verfügbar ist.
 
 ## Composition Gate
