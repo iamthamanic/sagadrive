@@ -246,6 +246,11 @@ Der Character Editor wird damit gleichzeitig UX-Test und erster realer Contract-
 
 ## C1. Kampf & Aktionsökonomie – #22
 
+> **Status:** durchgeführt (deterministische Engine) – 2026-08-28  
+> **Skript:** `scripts/validate-combat-action-economy.mjs`  
+> **Report:** `.qa/runs/validate-combat-action-economy-report.md`  
+> **Ergebnis:** 10 Szenario-Blöcke (alle 11 Pflichtszenarien) über Bänder I/III/V, 57 Probe-Reihen, 0 Befunde. Aktionsökonomie als State-Machine (§7.3), Advantage-Folding §2.5, Deckung §7.7 (Volldeckung fail-closed), Reichweite §7.8, Überraschung §7.2. Verdrahtet im Test Gate.
+
 Pflichtszenarien:
 
 - Nahkampfduell,
