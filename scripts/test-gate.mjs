@@ -32,7 +32,7 @@ function resolveDiffBase() {
 
   if (currentRef === 'main' && hasRef('HEAD^')) return 'HEAD^';
   if (hasRef('origin/main')) return git(['merge-base', 'HEAD', 'origin/main']);
-  if (hasRef('main')) return git(['merge-base', 'HEAD', 'main');
+  if (hasRef('main')) return git(['merge-base', 'HEAD', 'main']);
   if (hasRef('HEAD^')) return 'HEAD^';
 
   return undefined;
