@@ -5,6 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
 import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2 } from 'lucide-react';
 import { useCharacters } from '../modules/characters';
+import { EntityBrowser, type EntityBrowserRenderContext } from './EntityBrowser';
+import { EntityBrowserCard } from './EntityBrowserCard';
+import { cn } from './ui/utils';
 import {
   WorldProfileEditorDialog,
   getSpeciesDevelopmentMode,
@@ -23,6 +26,37 @@ const SPECIES_DEVELOPMENT_MODE_LABELS = {
   progressive: 'Progressiv',
   disabled: 'Deaktiviert',
 } as const;
+
+const CHARACTER_VIEW_MODE_STORAGE_KEY = 'sagadrive_library_characters_view_mode';
+
+type CharacterCardData = {
+  id: string;
+  name: string;
+  level: number;
+  race: string;
+  className: string;
+  portraitUrl?: string;
+};
+
+function renderCharacterCard(
+  char: CharacterCardData,
+  { variant, isCenter, onActivate }: EntityBrowserRenderContext,
+  actions: React.ReactNode,
+): React.ReactNode {
+  return (
+    <EntityBrowserCard
+      title={char.name}
+      meta={`Level ${char.level} ${char.race} ${char.className}`}
+      imageUrl={char.portraitUrl}
+      imageAlt={`Portrait von ${char.name}`}
+      imageFallback={char.name}
+      variant={variant}
+      isCenter={isCenter}
+      onOpen={onActivate}
+      actions={actions}
+    />
+  );
+}
 
 export function Library({ onNavigate }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -94,6 +128,77 @@ export function Library({ onNavigate }: LibraryProps) {
     char.name.toLowerCase().includes(normalizedSearch) ||
     char.class.toLowerCase().includes(normalizedSearch) ||
     char.race.toLowerCase().includes(normalizedSearch)
+  );
+
+  const renderCharacter = (char: CharacterVm, context: EntityBrowserRenderContext) => (
+    <EntityBrowserCard
+      title={char.name}
+      meta={`Level ${char.level} · ${char.race} · ${char.class}`}
+      imageUrl={char.portraitUrl}
+      imageAlt={`Portrait von ${char.name}`}
+      imageFallback={char.name}
+      variant={context.variant}
+      isCenter={context.isCenter}
+      onOpen={context.isCenter || context.variant === 'list' ? () => onNavigate('character-editor') : undefined}
+      actions={
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => onNavigate('character-editor')}
+          >
+            <Edit className="w-3 h-3 mr-1" />
+            <span className="text-xs">Bearbeiten</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={`${char.name} löschen`}
+            onClick={() => void handleDeleteCharacter(char.id, char.name)}
+          >
+            <Trash2 className="w-3 h-3 text-destructive" />
+          </Button>
+        </>
+      }
+    />
+  );
+
+  const renderCharacterCard = (
+    char: (typeof filteredCharacters)[number],
+    context: EntityBrowserRenderContext,
+  ) => (
+    <EntityBrowserCard
+      title={char.name}
+      meta={`Level ${char.level} · ${char.race} · ${char.class}`}
+      imageUrl={char.portraitUrl}
+      imageAlt={`Portrait von ${char.name}`}
+      imageFallback={char.name}
+      variant={context.variant === 'carousel' ? 'carousel' : 'list'}
+      isCenter={context.isCenter}
+      onOpen={context.isCenter || context.variant === 'list' ? () => onNavigate('character-editor') : undefined}
+      actions={
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => onNavigate('character-editor')}
+          >
+            <Edit className="w-3 h-3 mr-1" />
+            <span className="text-xs">Bearbeiten</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={`${char.name} löschen`}
+            onClick={() => void handleDeleteCharacter(char.id, char.name)}
+          >
+            <Trash2 className="w-3 h-3 text-destructive" />
+          </Button>
+        </>
+      }
+    />
   );
   const filteredWorlds = worlds.filter((world) =>
     world.name.toLowerCase().includes(normalizedSearch) ||
