@@ -135,6 +135,14 @@ function checkAvatarAssetCatalogRegressions() {
   });
 }
 
+function checkDamageHealingDyingValidation() {
+  console.log('Damage/healing/dying validation (#23): exact damage & dying curves...');
+  execFileSync(process.execPath, ['scripts/validate-damage-healing-dying.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkCombatActionEconomyValidation() {
   console.log('Combat action economy validation (#22): deterministic C1 scenario play-through...');
   execFileSync(process.execPath, ['scripts/validate-combat-action-economy.mjs'], {
@@ -230,6 +238,7 @@ checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
+checkDamageHealingDyingValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
