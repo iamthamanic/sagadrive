@@ -32,7 +32,7 @@ function resolveDiffBase() {
 
   if (currentRef === 'main' && hasRef('HEAD^')) return 'HEAD^';
   if (hasRef('origin/main')) return git(['merge-base', 'HEAD', 'origin/main']);
-  if (hasRef('main')) return git(['merge-base', 'HEAD', 'main']);
+  if (hasRef('main')) return git(['merge-base', 'HEAD', 'main');
   if (hasRef('HEAD^')) return 'HEAD^';
 
   return undefined;
@@ -127,6 +127,14 @@ function checkAvatarRuntimeRegressions() {
   });
 }
 
+function checkAvatarAssetCatalogRegressions() {
+  console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
+  execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function scanAddedLinesForSecrets() {
   const base = resolveDiffBase();
   if (!base) {
@@ -203,6 +211,7 @@ checkChangedDenoFunctions();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkAvatarRuntimeRegressions();
+checkAvatarAssetCatalogRegressions();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
