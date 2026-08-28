@@ -1,7 +1,7 @@
 # Composition Gate — core-probability-curve
 
-- HEAD_SHA: PENDING
-- BASE_SHA: PENDING
+- HEAD_SHA: 1e1c056f7337248b1bcc64ffad9b5773e099e87c
+- BASE_SHA: 8c1fe476ef9201f499561b8b2d754538c7692266
 - Date: 2026-08-28
 - Verdict: CLEAR
 
