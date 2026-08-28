@@ -97,7 +97,7 @@ test('world profiles are created and configured through the library', async ({ p
   await expect(page.getByText('Noch keine Welten erstellt')).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '01-library-worlds-tab.png'), fullPage: true });
 
-  await page.getByRole('button', { name: 'Neue Welt' }).click();
+  await page.getByRole('button', { name: 'Erste Welt erstellen' }).click();
   await expect(page.getByRole('heading', { name: 'Neue Welt' })).toBeVisible();
   await expect(page.getByText('Speziesentwicklung').first()).toBeVisible();
   const modeSelect = page.getByRole('combobox', { name: 'Speziesentwicklung: Verfügbarkeit' });

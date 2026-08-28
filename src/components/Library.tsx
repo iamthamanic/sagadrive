@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
@@ -30,6 +29,7 @@ const SPECIES_DEVELOPMENT_MODE_LABELS = {
 
 const CHARACTER_VIEW_MODE_STORAGE_KEY = 'sagadrive_library_characters_view_mode';
 const ADVENTURE_VIEW_MODE_STORAGE_KEY = 'sagadrive_library_adventures_view_mode';
+const WORLD_VIEW_MODE_STORAGE_KEY = 'sagadrive_library_worlds_view_mode';
 
 const PROJECT_STATUS_LABELS: Record<ProjectVm['status'], string> = {
   active: 'Aktiv',
@@ -158,6 +158,45 @@ export function Library({ onNavigate }: LibraryProps) {
     />
   );
 
+  const renderWorld = (world: WorldProfileVm, context: EntityBrowserRenderContext) => {
+    const speciesDevelopmentMode = getSpeciesDevelopmentMode(world.modules);
+    return (
+      <EntityBrowserCard
+        title={world.name}
+        meta={world.description || 'Keine Beschreibung'}
+        imageFallback={world.name}
+        imageAlt={`Welt ${world.name}`}
+        metaChips={[
+          `Speziesentwicklung: ${SPECIES_DEVELOPMENT_MODE_LABELS[speciesDevelopmentMode]}`,
+        ]}
+        variant={context.variant}
+        isCenter={context.isCenter}
+        onOpen={context.variant === 'list' || context.isCenter ? () => openEditWorld(world) : undefined}
+        actions={
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => openEditWorld(world)}
+            >
+              <Edit className="w-3 h-3 mr-1" />
+              <span className="text-xs">Bearbeiten</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label={`${world.name} löschen`}
+              onClick={() => void handleDeleteWorld(world)}
+            >
+              <Trash2 className="w-3 h-3 text-destructive" />
+            </Button>
+          </>
+        }
+      />
+    );
+  };
+
   const renderCharacter = (char: CharacterVm, context: EntityBrowserRenderContext) => (
     <EntityBrowserCard
       title={char.name}
@@ -190,6 +229,21 @@ export function Library({ onNavigate }: LibraryProps) {
         </>
       }
     />
+  );
+
+  const worldsEmptyState = (
+    <div className="text-center py-12">
+      <Globe2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+      <p className="text-muted-foreground mb-4">
+        {searchQuery ? 'Keine Welten gefunden' : 'Noch keine Welten erstellt'}
+      </p>
+      {!searchQuery && (
+        <Button onClick={openCreateWorld}>
+          <Plus className="w-4 h-4 mr-2" />
+          Erste Welt erstellen
+        </Button>
+      )}
+    </div>
   );
 
   const charactersEmptyState = (
@@ -327,17 +381,6 @@ export function Library({ onNavigate }: LibraryProps) {
           </TabsContent>
 
           <TabsContent value="worlds" className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm text-muted-foreground">
-                {worldsLoading ? 'Lädt...' : `${filteredWorlds.length} Welt${filteredWorlds.length !== 1 ? 'en' : ''}`}
-              </p>
-              <Button size="sm" onClick={openCreateWorld}>
-                <Plus className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Neue Welt</span>
-                <span className="sm:hidden">Neu</span>
-              </Button>
-            </div>
-
             {worldsError && (
               <div className="p-3 bg-destructive/10 border border-destructive rounded-lg">
                 <p className="text-sm text-destructive">{worldsError}</p>
@@ -348,61 +391,26 @@ export function Library({ onNavigate }: LibraryProps) {
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
               </div>
-            ) : filteredWorlds.length === 0 ? (
-              <div className="text-center py-12">
-                <Globe2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground mb-4">
-                  {searchQuery ? 'Keine Welten gefunden' : 'Noch keine Welten erstellt'}
-                </p>
-                {!searchQuery && (
-                  <Button onClick={openCreateWorld}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Erste Welt erstellen
-                  </Button>
-                )}
-              </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                {filteredWorlds.map((world) => {
-                  const speciesDevelopmentMode = getSpeciesDevelopmentMode(world.modules);
-                  return (
-                    <Card key={world.id} className="hover:border-primary transition-colors">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <CardTitle className="text-sm md:text-base truncate">{world.name}</CardTitle>
-                            <CardDescription className="mt-1 line-clamp-2 text-xs md:text-sm">
-                              {world.description || 'Keine Beschreibung'}
-                            </CardDescription>
-                          </div>
-                          <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                            <Globe2 className="w-6 h-6 text-muted-foreground" />
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-xs text-muted-foreground">
-                          Speziesentwicklung: <span className="font-medium text-foreground">{SPECIES_DEVELOPMENT_MODE_LABELS[speciesDevelopmentMode]}</span>
-                        </p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="flex-1" onClick={() => openEditWorld(world)}>
-                            <Edit className="w-3 h-3 mr-1" />
-                            <span className="text-xs">Bearbeiten</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            aria-label={`${world.name} löschen`}
-                            onClick={() => void handleDeleteWorld(world)}
-                          >
-                            <Trash2 className="w-3 h-3 text-destructive" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+              <EntityBrowser
+                storageKey={WORLD_VIEW_MODE_STORAGE_KEY}
+                items={filteredWorlds}
+                getId={(world) => world.id}
+                renderItem={renderWorld}
+                emptyState={worldsEmptyState}
+                toolbarLeft={
+                  <span>
+                    {filteredWorlds.length} Welt{filteredWorlds.length !== 1 ? 'en' : ''}
+                  </span>
+                }
+                toolbarRight={
+                  <Button size="sm" onClick={openCreateWorld}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Neue Welt</span>
+                    <span className="sm:hidden">Neu</span>
+                  </Button>
+                }
+              />
             )}
           </TabsContent>
         </Tabs>
