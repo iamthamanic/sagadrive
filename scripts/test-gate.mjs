@@ -135,6 +135,14 @@ function checkAvatarAssetCatalogRegressions() {
   });
 }
 
+function checkCoreProbabilityValidation() {
+  console.log('Core probability validation (#19): exact A1 matrix over the core probe...');
+  execFileSync(process.execPath, ['scripts/validate-core-probability.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function scanAddedLinesForSecrets() {
   const base = resolveDiffBase();
   if (!base) {
@@ -212,6 +220,7 @@ checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();
+checkCoreProbabilityValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 

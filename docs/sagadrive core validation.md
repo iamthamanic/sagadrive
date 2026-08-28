@@ -66,6 +66,12 @@ Die versehentlich erzeugten Duplikate #34, #35 und #36 sind geschlossen und nich
 
 ## A1. Kernwahrscheinlichkeiten – #19
 
+> **Status:** durchgeführt (deterministische Engine) – 2026-08-28  
+> **Skript:** `scripts/validate-core-probability.mjs`  
+> **Report:** `.qa/runs/validate-core-probability-report.md`  
+> **Ergebnis:** 1862 Probe-Reihen / 266 Profile, 0 Befunde; exakte Deckung mit §19.1-Referenzwerten (+5 vs ZW15: 55 % / 79,75 % / 30,25 %).  
+> Verdrahtet im Test Gate (`checkCoreProbabilityValidation`). Änderungen an Core-Konstanten (EB, Caps, Spezialisierung, Schwierigkeitsskala) laufen künftig automatisch gegen diese Matrix.
+
 ### Was muss geprüft werden?
 
 Die vollständige Kernprobe:
