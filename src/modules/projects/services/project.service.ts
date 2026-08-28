@@ -1,4 +1,5 @@
 import { supabase } from '../../../lib/supabase';
+import { isLocalAdminSession, LOCAL_ADMIN_USER_ID } from '../../../lib/localAdmin';
 import { projectMemberService } from './project-member.service';
 import type {
   ProjectDto,
@@ -110,14 +111,25 @@ class ProjectService {
   }
 
   /**
+   * Resolve the current user id. Local-admin sessions (local-only stack) have no Supabase
+   * JWT, so `supabase.auth.getUser()` cannot resolve them; fall back to the documented
+   * local-admin identity instead (same pattern as character.service, see #48).
+   */
+  private async getAuthenticatedUserId(): Promise<string> {
+    if (isLocalAdminSession()) {
+      return LOCAL_ADMIN_USER_ID;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+    return user.id;
+  }
+
+  /**
    * Create new project (as GM)
    */
   async createProject(payload: CreateProjectDto): Promise<ProjectVm> {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    const userId = await this.getAuthenticatedUserId();
 
     const code = this.generateProjectCode();
 
@@ -126,7 +138,7 @@ class ProjectService {
       name: payload.name,
       description: payload.description || null,
       world_id: payload.world_id || null,
-      gm_user_id: user.id,
+      gm_user_id: userId,
       status: 'active',
     };
 
@@ -143,7 +155,7 @@ class ProjectService {
     // The GM-controlled membership policy permits this bootstrap row.
     await supabase.from(this.membersTableName).insert({
       project_id: data.id,
-      user_id: user.id,
+      user_id: userId,
       role: 'gm',
       status: 'active',
     });
@@ -155,16 +167,12 @@ class ProjectService {
    * Get user's projects (as GM or active player).
    */
   async getUserProjects(): Promise<ProjectVm[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    const userId = await this.getAuthenticatedUserId();
 
     const { data: gmProjects, error: gmError } = await supabase
       .from(this.tableName)
       .select('*')
-      .eq('gm_user_id', user.id)
+      .eq('gm_user_id', userId)
       .order('created_at', { ascending: false });
 
     if (gmError) {
@@ -174,7 +182,7 @@ class ProjectService {
     const { data: memberRecords, error: memberError } = await supabase
       .from(this.membersTableName)
       .select('*, projects!inner(*)')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('status', 'active');
 
     if (memberError) {
@@ -285,13 +293,8 @@ class ProjectService {
    * Leave project (as player). Kicked rows stay server/GM-controlled denial records.
    */
   async leaveProject(projectId: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    await projectMemberService.leave(projectId, user.id);
+    const userId = await this.getAuthenticatedUserId();
+    await projectMemberService.leave(projectId, userId);
   }
 }
 

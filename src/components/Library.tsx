@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
 import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2 } from 'lucide-react';
 import { useCharacters, type CharacterVm } from '../modules/characters';
+import { useProjects, type ProjectVm } from '../modules/projects';
+import { useAuth } from '../lib/auth-context';
 import { EntityBrowser, type EntityBrowserRenderContext } from './EntityBrowser';
 import { EntityBrowserCard } from './EntityBrowserCard';
 import {
@@ -27,12 +29,22 @@ const SPECIES_DEVELOPMENT_MODE_LABELS = {
 } as const;
 
 const CHARACTER_VIEW_MODE_STORAGE_KEY = 'sagadrive_library_characters_view_mode';
+const ADVENTURE_VIEW_MODE_STORAGE_KEY = 'sagadrive_library_adventures_view_mode';
+
+const PROJECT_STATUS_LABELS: Record<ProjectVm['status'], string> = {
+  active: 'Aktiv',
+  paused: 'Pausiert',
+  completed: 'Abgeschlossen',
+  archived: 'Archiviert',
+};
 
 export function Library({ onNavigate }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [worldEditorOpen, setWorldEditorOpen] = useState(false);
   const [editingWorld, setEditingWorld] = useState<WorldProfileVm | null>(null);
+  const { user } = useAuth();
   const { characters, isLoading, error, deleteCharacter } = useCharacters();
+  const { projects, isLoading: projectsLoading, error: projectsError } = useProjects();
   const {
     worlds,
     isLoading: worldsLoading,
@@ -93,6 +105,13 @@ export function Library({ onNavigate }: LibraryProps) {
     }
   };
 
+  const openProject = (project: ProjectVm) => {
+    // GM opens the session hub; players currently have no dedicated project view,
+    // so they land on the existing join/browse flow (documented in acceptance).
+    const isGM = user !== null && project.gmUserId === user.id;
+    onNavigate(isGM ? 'gamemaster' : 'join');
+  };
+
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const filteredCharacters = characters.filter(char =>
     char.name.toLowerCase().includes(normalizedSearch) ||
@@ -102,6 +121,41 @@ export function Library({ onNavigate }: LibraryProps) {
   const filteredWorlds = worlds.filter((world) =>
     world.name.toLowerCase().includes(normalizedSearch) ||
     world.description.toLowerCase().includes(normalizedSearch)
+  );
+  const filteredProjects = projects.filter((project) =>
+    project.name.toLowerCase().includes(normalizedSearch) ||
+    (project.description ?? '').toLowerCase().includes(normalizedSearch) ||
+    project.code.toLowerCase().includes(normalizedSearch)
+  );
+
+  const renderProject = (project: ProjectVm, context: EntityBrowserRenderContext) => (
+    <EntityBrowserCard
+      title={project.name}
+      meta={project.description || 'Keine Beschreibung'}
+      imageFallback={project.name}
+      imageAlt={`Abenteuer ${project.name}`}
+      metaChips={[
+        PROJECT_STATUS_LABELS[project.status],
+        `${project.members.length} Mitglied${project.members.length !== 1 ? 'er' : ''}`,
+        `Code: ${project.code}`,
+      ]}
+      variant={context.variant}
+      isCenter={context.isCenter}
+      onOpen={context.variant === 'list' || context.isCenter ? () => openProject(project) : undefined}
+      actions={
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={() => openProject(project)}
+        >
+          <BookOpen className="w-3 h-3 mr-1" />
+          <span className="text-xs">
+            {user !== null && project.gmUserId === user.id ? 'Leiten' : 'Öffnen'}
+          </span>
+        </Button>
+      }
+    />
   );
 
   const renderCharacter = (char: CharacterVm, context: EntityBrowserRenderContext) => (
@@ -148,6 +202,21 @@ export function Library({ onNavigate }: LibraryProps) {
         <Button onClick={() => onNavigate('character-editor')}>
           <Plus className="w-4 h-4 mr-2" />
           Ersten Charakter erstellen
+        </Button>
+      )}
+    </div>
+  );
+
+  const adventuresEmptyState = (
+    <div className="text-center py-12">
+      <BookOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+      <p className="text-muted-foreground mb-4">
+        {searchQuery ? 'Keine Abenteuer gefunden' : 'Noch keine Abenteuer gestartet'}
+      </p>
+      {!searchQuery && (
+        <Button onClick={() => onNavigate('join')}>
+          <Plus className="w-4 h-4 mr-2" />
+          Projekt starten
         </Button>
       )}
     </div>
@@ -224,44 +293,37 @@ export function Library({ onNavigate }: LibraryProps) {
           </TabsContent>
 
           <TabsContent value="adventures" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">2 Abenteuer</p>
-              <Button size="sm" onClick={() => onNavigate('adventure-editor')}>
-                <Plus className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Neues Abenteuer</span>
-                <span className="sm:hidden">Neu</span>
-              </Button>
-            </div>
+            {projectsError && (
+              <div className="p-3 bg-destructive/10 border border-destructive rounded-lg">
+                <p className="text-sm text-destructive">{projectsError}</p>
+              </div>
+            )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-              {[
-                { title: 'Das vergessene Königreich', genre: 'Fantasy', scenes: 5 },
-                { title: 'Schatten über Neverwinter', genre: 'Fantasy', scenes: 8 },
-              ].map((adv, i) => (
-                <Card key={i} className="hover:border-primary transition-colors">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm md:text-base">{adv.title}</CardTitle>
-                    <CardDescription className="text-xs md:text-sm">
-                      {adv.genre} • {adv.scenes} Szenen
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="aspect-video bg-muted rounded-lg mb-3 flex items-center justify-center">
-                      <BookOpen className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Edit className="w-3 h-3 mr-1" />
-                        <span className="text-xs">Bearbeiten</span>
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="w-3 h-3 text-destructive" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {projectsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <EntityBrowser
+                storageKey={ADVENTURE_VIEW_MODE_STORAGE_KEY}
+                items={filteredProjects}
+                getId={(project) => project.id}
+                renderItem={renderProject}
+                emptyState={adventuresEmptyState}
+                toolbarLeft={
+                  <span>
+                    {filteredProjects.length} Abenteuer{filteredProjects.length !== 1 ? 'er' : ''}
+                  </span>
+                }
+                toolbarRight={
+                  <Button size="sm" onClick={() => onNavigate('join')}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Projekt starten</span>
+                    <span className="sm:hidden">Neu</span>
+                  </Button>
+                }
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="worlds" className="space-y-4">
