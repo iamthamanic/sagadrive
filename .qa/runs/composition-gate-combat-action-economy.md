@@ -1,7 +1,7 @@
 # Composition Gate — combat-action-economy
 
 - HEAD_SHA: e61259219aab81bd749d60b44b1bc33bf729fc9a
-- BASE_SHA: 6ec7b1d
+- BASE_SHA: 6ec7b1d96287f601c40a4f5f98a4c392beb05d2e
 - Date: 2026-08-28
 - Verdict: CLEAR
 
