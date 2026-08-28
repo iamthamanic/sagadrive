@@ -135,6 +135,14 @@ function checkAvatarAssetCatalogRegressions() {
   });
 }
 
+function checkCombatActionEconomyValidation() {
+  console.log('Combat action economy validation (#22): deterministic C1 scenario play-through...');
+  execFileSync(process.execPath, ['scripts/validate-combat-action-economy.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkCoreProbabilityValidation() {
   console.log('Core probability validation (#19): exact A1 matrix over the core probe...');
   execFileSync(process.execPath, ['scripts/validate-core-probability.mjs'], {
@@ -221,6 +229,7 @@ checkCharacterEditorRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
+checkCombatActionEconomyValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
