@@ -541,6 +541,9 @@ Zu testen:
 
 ---
 
+
+**F1-Status (2026-08-29, #30):** Umgesetzt. Deterministische Engine `scripts/validate-world-profiles-modules.mjs` — 3 vollständige §4.7-Profile (Fantasy 4/0, Gegenwart 0/3, SciFi 1/4), §16.2-Prioritätsresolver mit 3 Konfliktfällen, §16.3-Deaktivierungen mit Ersatzregeln, 6 Cross-Setting-Abbildungen, 4 fail-closed Negativpfade. 0 Findings, Report deterministic (MD5 82f3868bcd6a75d88a122f68b466cdd2): `.qa/runs/validate-world-profiles-modules-report.md`.
+
 # Phase G – analoger End-to-End-Playtest
 
 ## G1. Vollständige Testsitzungen – #31

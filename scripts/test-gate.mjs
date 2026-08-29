@@ -135,6 +135,14 @@ function checkAvatarAssetCatalogRegressions() {
   });
 }
 
+function checkWorldProfilesValidation() {
+  console.log('World profiles validation (#30): deterministic §4.7/§16 audit...');
+  execFileSync(process.execPath, ['scripts/validate-world-profiles-modules.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkDriveMomentumValidation() {
   console.log('Drive/momentum validation (#26): deterministic §2.10–2.12/§16.3 audit...');
   execFileSync(process.execPath, ['scripts/validate-drive-momentum.mjs'], {
@@ -275,6 +283,7 @@ checkEnemyEncounterBossValidation();
 checkCharacterCreationValidation();
 checkPowersEssencesValidation();
 checkDriveMomentumValidation();
+checkWorldProfilesValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
