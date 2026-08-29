@@ -51,6 +51,8 @@ export interface SagaDriveProfileDto {
   /** Legacy read compatibility. New saves use speciesTraitInstances only. */
   speciesTraitDetails?: SagaDriveSpeciesTraitDetailsDto;
   speciesProfile?: SagaDriveSpeciesProfileDto;
+  /** Stable origin metadata. Concrete background choices remain canonical character data. */
+  backgroundTemplateId?: string | null;
   background: SagaDriveBackgroundDto;
   archetypeTrainingSkill?: SagaDriveSkillKey;
   drive: number;

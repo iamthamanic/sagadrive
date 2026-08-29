@@ -26,9 +26,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('SagaDrive Core').first()).toBeVisible();
   await expect(page.getByRole('combobox', { name: /Regelset/i }).first()).toBeVisible();
 
-  for (const tab of ['Spezies', 'Hintergrund', 'Parameter', 'Look', 'Inventar', 'Statistik']) {
+  for (const tab of ['Spezies', 'Parameter', 'Look', 'Inventar', 'Statistik']) {
     await expect(page.getByRole('tab', { name: new RegExp(`^${tab}$`, 'i') })).toBeVisible();
   }
+  await expect(page.getByRole('tab', { name: /^Hintergrund$/i })).toHaveCount(0);
 
   await page.getByRole('tab', { name: /^Spezies$/i }).click();
   await expect(page.getByText('Spezies', { exact: true }).first()).toBeVisible();
@@ -125,20 +126,19 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
 
   await page.getByRole('tab', { name: /^Parameter$/i }).click();
+  await expect(page.getByRole('tab', { name: /^Kompetenzen$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Archetype$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Essenz$/i })).toBeVisible();
-  await expect(page.getByRole('tab', { name: /^Talente$/i })).toHaveCount(0);
-  await expect(page.getByText('Paktbasiert')).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: /^Attribute$/i })).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '01-info-core-tabs.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /^Archetype$/i }).click();
   await page.getByRole('radio', { name: /Kämpfer/i }).click();
   await expect(page.getByText(/Archetyp-Punkt \(1 von 10\)/i).first()).toBeVisible();
   await expect(page.getByText(/Kampfroutine/i).first()).toBeVisible();
-  await expect(page.getByText('Freie Punkte').first()).toBeVisible();
-  await expect(page.getByText('Gesamtpunkte').first()).toBeVisible();
+  await expect(page.getByText(/Parameter → Kompetenzen/i).first()).toBeVisible();
+  await expect(page.getByText('Freie Fertigkeitspunkte')).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '02-info-archetype-essence.png'), fullPage: true });
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-skills-budget-specialization.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /^Essenz$/i }).click();
   await expect(page.getByText('Gebunden').first()).toBeVisible();
@@ -147,32 +147,47 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText(/mentaler Kämpfer|vollständig regelkonform/i).first()).toBeVisible();
   await expect(page.getByText(/Feuerball/i)).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '05-abilities-core-ability.png'), fullPage: true });
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '10-edge-unusual-combination.png'), fullPage: true });
 
-  await page.getByRole('tab', { name: /^Attribute$/i }).click();
-  await expect(page.getByText('Standardverteilung').first()).toBeVisible();
+  await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
+  await expect(page.getByText('Grundattribute').first()).toBeVisible();
   await expect(page.getByText(/15 \/ 15 Punkte/i).first()).toBeVisible();
   await expect(page.getByText('Ausdauer').first()).toBeVisible();
   await expect(page.getByText('Verstand').first()).toBeVisible();
   await expect(page.getByText('Wahrnehmung').first()).toBeVisible();
-  await expect(page.getByText('Traglast').first()).toBeVisible();
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '03-values-derived-stats.png'), fullPage: true });
+  await expect(page.getByText('Straßenarzt').first()).toBeVisible();
+  await expect(page.getByText('Grenzscout').first()).toBeVisible();
+  await expect(page.getByText('Eigenen Hintergrund erstellen').first()).toBeVisible();
 
-  await page.getByRole('tab', { name: /Hintergrund/i }).click();
-  await expect(page.getByText('Mechanischer Hintergrund').first()).toBeVisible();
+  await page.getByRole('button', { name: /Straßenarzt/i }).click();
+  await expect(page.getByText(/Template gewählt/i).first()).toBeVisible();
+  await expect(page.getByText('Medizin').first()).toBeVisible();
+  await expect(page.getByText('Menschenkenntnis').first()).toBeVisible();
+  await expect(page.getByText(/2 \/ 2/).first()).toBeVisible();
+  await expect(page.getByText(/Empfohlen/).first()).toBeVisible();
+  await page.getByRole('button', { name: /Medizin: Notfallmedizin/i }).click();
+  await page.getByLabel('Milieuzugang').fill('Notaufnahmen');
+  await page.getByLabel('Kontakt').fill('Dr. Sera Malk');
+  await page.getByLabel('Komplikation').fill('Alte Schulden');
+  await page.getByLabel('Zusätzliche Kommunikationsform').fill('Gebärdensprache');
+  await expect(page.getByText(/Hintergrund ist regelkonform vollständig/i)).toBeVisible();
+  await expect(page.getByText('Fertigkeiten & Quellen').first()).toBeVisible();
+  await expect(page.getByText('Freie Punkte').first()).toBeVisible();
+  await expect(page.getByText('Gesamt').first()).toBeVisible();
   await expect(page.getByTestId('character-lore-project-context')).toBeVisible();
   await expect(page.getByTestId('character-bg-generate')).toBeVisible();
   await expect(page.getByRole('heading', { name: /^Notizen$/i })).toBeVisible();
   await expect(page.locator('#notes')).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '06-background-core-fields.png'), fullPage: true });
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '09-notes-in-background.png'), fullPage: true });
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-skills-budget-specialization.png'), fullPage: true });
+
+  await page.getByText('Medizin', { exact: true }).last().click();
+  await expect(page.getByText(/Standardattribut: Verstand/i).last()).toBeVisible();
+  await expect(page.getByText(/Standardbeziehung – keine Voraussetzung/i)).toBeVisible();
 
   await page.getByRole('tab', { name: /Inventar/i }).click();
   await expect(page.getByText(/^Last 0 \/ 13$/).first()).toBeVisible();
   await expect(page.getByText(/Keine festen Slots/i).first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '07-inventory-load.png'), fullPage: true });
-
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '08-character-summary.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /Statistik/i }).click();
   await expect(page.getByText(/Speichere den Charakter zuerst/i)).toBeVisible();
@@ -182,7 +197,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('tab', { name: /Spezies/i }).click();
   await page.getByPlaceholder('Charaktername').first().fill('Validierungsprobe');
   await page.getByRole('button', { name: /Speichern/i }).first().click();
-  await expect(page.locator('[data-sonner-toast]').filter({ hasText: /Speziesmerkmale|Hintergrundangaben|Fertigkeitspunkte|Attribute|Namen|gelesen|Vervollständige/i }).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('[data-sonner-toast]').filter({ hasText: /Speziesmerkmale|Hintergrund|Fertigkeitspunkte|Attribute|Namen|gelesen|Vervollständige/i }).first()).toBeVisible({ timeout: 10_000 });
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '11-edge-invalid-build.png'), fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -191,8 +206,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-species-mobile-repeatable.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /^Parameter$/i }).click();
-  await page.getByRole('tab', { name: /^Archetype$/i }).click();
-  await page.getByRole('button', { name: /Archetyp erklären/i }).click();
-  await expect(page.getByText(/besonders gut tut/i).first()).toBeVisible();
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '12-mobile-tooltips.png'), fullPage: true });
+  await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
+  await expect(page.getByText('Eigenen Hintergrund erstellen').first()).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '12-mobile-competencies.png'), fullPage: true });
 });

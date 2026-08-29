@@ -7,6 +7,8 @@ function rejectMatch(content, pattern, label) { if (pattern.test(content)) { con
 
 const runtime = read('src/modules/characters/avatar/characterStudio/CharacterStudioRuntime.ts');
 const editor = read('src/components/CharacterEditor.tsx');
+const backgroundPanel = read('src/modules/characters/components/CharacterBackgroundPanel.tsx');
+const backgroundTemplates = read('src/modules/rulesets/backgroundTemplates.ts');
 const speciesTraitsPanel = read('src/modules/characters/components/SpeciesTraitsPanel.tsx');
 const speciesTraitOptions = read('src/modules/rulesets/speciesTraitOptions.ts');
 const characterTypes = read('src/modules/characters/types/character.types.ts');
@@ -25,12 +27,15 @@ const projectService = read('src/modules/projects/services/project.service.ts');
 requireMatch(runtime, /this\.applyAppearance\(this\.currentAvatar \?\? avatar, this\.currentManifest \?\? manifest\)/, 'latest avatar appearance replay after async model load');
 requireMatch(editor, /ruleset_key:\s*ruleset/, 'SagaDrive Core ruleset in CharacterEditor save payload');
 requireMatch(editor, /dnd_background:\s*null/, 'D&D metadata cleared in SagaDrive Core save payload');
-requireMatch(editor, /TabsTrigger value="info"[\s\S]*TabsTrigger value="background"[\s\S]*TabsTrigger value="values"[\s\S]*TabsTrigger value="appearance"[\s\S]*TabsTrigger value="inventory"[\s\S]*TabsTrigger value="statistics"/, 'SagaDrive Core editor tabs');
+requireMatch(editor, /TabsTrigger value="info"[\s\S]*TabsTrigger value="values"[\s\S]*TabsTrigger value="appearance"[\s\S]*TabsTrigger value="inventory"[\s\S]*TabsTrigger value="statistics"/, 'SagaDrive Core editor tabs');
+rejectMatch(editor, /TabsTrigger value="background"/, 'legacy dedicated Hintergrund editor tab remains');
 rejectMatch(editor, /TabsTrigger value="notes"/, 'legacy Notizen editor tab remains');
-requireMatch(editor, /CharacterNotesSection/, 'notes section inside Hintergrund tab');
+requireMatch(editor, /CharacterNotesSection/, 'notes section inside Kompetenzen');
+requireMatch(editor, /CharacterBackgroundPanel/, 'template-first background panel inside Kompetenzen');
 requireMatch(editor, /CharacterStatisticsPanel/, 'statistics panel inside CharacterEditor');
 requireMatch(editor, /savedCharacterId/, 'saved character id retained for statistics');
-requireMatch(editor, /TabsTrigger value="attribute"[\s\S]*TabsTrigger value="archetype"[\s\S]*TabsTrigger value="essenz"/, 'Parameter sub-tabs for Attribute, Archetyp and Essenz');
+requireMatch(editor, /TabsTrigger value="competencies"[\s\S]*TabsTrigger value="archetype"[\s\S]*TabsTrigger value="essenz"/, 'Parameter sub-tabs for Kompetenzen, Archetyp and Essenz');
+rejectMatch(editor, /TabsTrigger value="attribute"/, 'legacy Attribute-only Parameter sub-tab remains');
 rejectMatch(editor, /TabsTrigger value="talente"/, 'legacy Talente Parameter sub-tab remains');
 requireMatch(editor, /<SpeciesTraitsPanel/, 'species traits panel inside CharacterEditor');
 requireMatch(editor, /speciesTraitCost !== SAGA_DRIVE_SPECIES_TRAIT_BUDGET/, 'exact species trait budget save validation');
@@ -38,12 +43,20 @@ requireMatch(editor, /speciesTraitInstances:\s*speciesTraitInstances\.map/, 'can
 requireMatch(editor, /acquiredAtLevel:\s*1/, 'species creation traits remain level-one acquisitions');
 requireMatch(editor, /speciesProfile:\s*characterRace === 'alien'/, 'Alien species profile persistence');
 requireMatch(editor, /GenderReadingSelect/, 'gender reading field in CharacterEditor');
-requireMatch(editor, /SkillSelectField/, 'skill select fields in CharacterEditor');
+requireMatch(editor, /backgroundTemplateId:\s*backgroundTemplateId \?\? null/, 'background template origin persistence');
 requireMatch(editor, /SAGA_DRIVE_START_ATTRIBUTE_ARRAY/, 'SagaDrive start attribute distribution validation');
 requireMatch(editor, /sagadrive_profile:\s*sagaDriveProfile/, 'SagaDrive profile save payload');
 requireMatch(editor, /notes:\s*notes\.trim\(\)/, 'persistent notes save payload');
 rejectMatch(editor, /starter-fireball|Feuerball/, 'free starter fireball remains in CharacterEditor');
 rejectMatch(editor, /Dungeons & Dragons 5\.5e nutzt|Wähle Klasse|dnd-class/, 'active D&D creation UI remains in CharacterEditor');
+
+requireMatch(backgroundTemplates, /id:\s*'street-doctor'/, 'Straßenarzt background template');
+requireMatch(backgroundTemplates, /skillPool:\s*\['medicine', 'insight', 'survival', 'awareness'\]/, 'Straßenarzt fixed four-skill pool');
+requireMatch(backgroundTemplates, /recommendedTraining:\s*\['medicine', 'insight'\]/, 'optional recommended background trainings');
+requireMatch(backgroundTemplates, /validateSagaDriveBackgroundTemplateCatalog/, 'background template catalog validation');
+requireMatch(backgroundPanel, /Eigenen Hintergrund erstellen/, 'first-class custom background mode');
+requireMatch(backgroundPanel, /Training · 2 wählen/, 'two background training choices');
+requireMatch(backgroundPanel, /Standard:/, 'standard attribute relationship inside template flow');
 
 requireMatch(speciesTraitsPanel, /Name deiner Spezies \*/, 'required Alien species profile name field');
 requireMatch(speciesTraitsPanel, /Körperbeschreibung/, 'Alien body description field');
@@ -72,6 +85,7 @@ requireMatch(characterTypes, /endurance:\s*number/, 'SagaDrive Ausdauer attribut
 requireMatch(characterTypes, /mind:\s*number/, 'SagaDrive Verstand attribute DTO');
 requireMatch(characterTypes, /perception:\s*number/, 'SagaDrive Wahrnehmung attribute DTO');
 requireMatch(characterTypes, /sagadrive_profile\?:/, 'SagaDrive profile DTO contract');
+requireMatch(characterTypes, /backgroundTemplateId\?:\s*string \| null/, 'optional background template metadata');
 requireMatch(characterTypes, /interface SagaDriveSpeciesTraitInstanceDto/, 'species trait instance DTO');
 requireMatch(characterTypes, /speciesTraitInstances:\s*SagaDriveSpeciesTraitInstanceDto\[\]/, 'canonical species trait instance collection');
 requireMatch(characterTypes, /source:\s*SagaDriveSpeciesTraitSource/, 'species trait source metadata');
@@ -92,6 +106,8 @@ requireMatch(characterCreation, /exceptional-body[\s\S]*available:\s*false/, 'ex
 requireMatch(characterCreation, /sagaDriveSpeciesTraitKeysByRace/, 'species-specific trait allowlists');
 requireMatch(characterCreation, /key:\s*'athletics'.*label:\s*'Athletik'/s, 'SagaDrive skill definitions');
 requireMatch(skillsPanel, /Mindestens.*Fertigkeiten.*Wert 1 oder höher/s, 'minimum trained skill validation');
+requireMatch(skillsPanel, /Standardbeziehung – keine Voraussetzung/, 'skill-standard-attribute relationship semantics');
+requireMatch(skillsPanel, /Hintergrund-Pool/, 'background pool source distinction');
 requireMatch(abilitiesPanel, /Regelgebundene Fähigkeiten/, 'rule-bound abilities panel');
 rejectMatch(abilitiesPanel, /Fähigkeit hinzufügen|setDialogOpen/, 'free-form ability creation remains');
 requireMatch(inventoryPanel, /capacity = 5 \+ 2 \* strength/, 'SagaDrive carrying capacity formula');
@@ -99,6 +115,7 @@ requireMatch(inventoryPanel, /Über Traglast: Bewegung −3 m/, 'overload conseq
 rejectMatch(inventoryPanel, /capacity = 30|Freier Inventarplatz|Jeder Gegenstand belegt einen Inventarplatz/, 'legacy fixed-slot inventory remains');
 
 requireMatch(characterService, /sagadrive_profile:/, 'SagaDrive profile persistence');
+requireMatch(characterService, /normalizeBackgroundTemplateId/, 'background template backward compatibility');
 requireMatch(characterService, /normalizeSpeciesTraitInstances/, 'canonical species trait instance normalization');
 requireMatch(characterService, /normalizeLegacySpeciesTraitInstances/, 'legacy species trait migration on read');
 requireMatch(characterService, /legacyDetail/, 'unmapped legacy species trait detail preservation');
