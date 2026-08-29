@@ -135,6 +135,14 @@ function checkAvatarAssetCatalogRegressions() {
   });
 }
 
+function checkCharacterCreationValidation() {
+  console.log('Character creation validation (#20): deterministic §17/§13 build audit...');
+  execFileSync(process.execPath, ['scripts/validate-character-creation-progression.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkEnemyEncounterBossValidation() {
   console.log('Enemy/encounter/boss validation (#24): seeded C4 encounter simulation...');
   execFileSync(process.execPath, ['scripts/validate-enemy-encounter-boss-balance.mjs'], {
@@ -248,6 +256,7 @@ checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
 checkDamageHealingDyingValidation();
 checkEnemyEncounterBossValidation();
+checkCharacterCreationValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
