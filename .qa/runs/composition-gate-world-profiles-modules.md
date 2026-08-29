@@ -1,34 +1,34 @@
-# Composition Gate Proof — validate-world-profiles-modules (#30)
+# Composition Gate — world-profiles-modules
 
-- HEAD_SHA: Commit `feat(rules): world profiles & modules validation engine (#30)` auf `validate/world-profiles-modules`
-- BASE_SHA: `3fe478d` (main nach #76)
+- HEAD_SHA: 16bfec61fd232de829e529ae427a436d32a35f00
+- BASE_SHA: 25a4f9e10ddd268a5e91aab3caf14b15c3eb1769
+- Date: 2026-08-27
+- Verdict: CLEAR
 
-## Ablageklassen
-- **UI-Flows:** keiner berührt (Diff nur `scripts/`, `.qa/`, `docs/`)
-- **Service-Schicht:** keine
-- **Backend/Persistenz:** keine Migration, kein Schema-Diff
-- **Domain-Regeln:** NEU — `scripts/validate-world-profiles-modules.mjs` (§4.7 20-Felder-Audit, §16.1 Modulvertrag, §16.2 4-Stufen-Prioritäts-Resolver, §16.3 Deaktivierungs-Audit, §16.5 unabhängige Skalen)
+## Event
+Ein Benutzer erstellt oder bearbeitet ein owner-scoped Weltprofil und setzt dessen Weltmodul `species-development`, ohne dass diese Konfiguration bereits Charaktere oder Abenteuer verändert.
 
-## Risiko-Matrix
-| Risiko | Bewertung | Behandlung |
-|---|---|---|
-| Stille Core-Abweichung über Weltprofil | hoch | §4.7/20-Abweichungsliste ist Pflicht; Negativpfad (Drive-Max still auf 4) wird fail-closed abgelehnt |
-| Deaktivierte Ressource ohne Ersatz | hoch | §16.3-Audit verlangt Ersatzregel oder Nicht-Verfügbar-Markierung; Negativpfade Momentum + Spirituell-Sperrung abgelehnt |
-| Modulpriorität mehrdeutig | mittel | §16.2-Resolver deterministisch; aktives Modul schlägt Weltprofil und Core; Profil-Überschreibversuch abgelehnt |
-| Cross-Setting braucht neue Subsysteme | mittel | 6 Abbildungen nutzen ausschließlich Core-Mechaniken aus #19/#20/#25 (Probe, Ränge, Essenz-Aktivierung); nur Flavor/Tags/Quellen differieren |
-| Magie/Tech Kopplung | niedrig | Achsen unabhängig (4/0, 0/3, 1/4) geprüft gegen §16.5-Skala 0–4 |
+## Hop chain
+`worldModuleRegistry.ts` definiert stabile Modul-/Setting-IDs und fail-safe Defaults → `WorldProfileEditorDialog` löst Registry-Einstellungen generisch auf und patcht nur den bekannten Modulwert → `useWorldProfiles` bindet die Operation an den aktuell authentifizierten Benutzer → `worldProfileService` validiert Name, normalisiert bekannte Module unter Erhalt unbekannter Modulkeys und schreibt `world_profiles` → Migration `008_world_profiles.sql` erzwingt owner-scoped RLS → erneutes Lesen normalisiert bekannte Werte deterministisch → Bibliothek zeigt die gespeicherte Welt und den effektiven Speziesentwicklungsmodus.
 
-## Simulationsprofil
-- 3 Pflichtprofile (Eldenmark, Graustadt, Orbita), alle 20 §4.7-Felder + Skalen + Deklarationen
-- 3 §16.2-Konfliktfälle deterministisch aufgelöst (Modul>Core, Maximalgewinn-Bounds analog #26-Invarianten, Konflikt-Deklaration §16.1)
-- 4 Negativpfade fail-closed mit Regelstelle in der Message
-- Report deterministisch (MD5 `82f3868bcd6a75d88a122f68b466cdd2`, kein RNG)
+## Simulations
+| Case | Intended | Composed | Result |
+|------|----------|----------|--------|
+| N-actors | Zehn Benutzer können jeweils eigene Weltprofile mit unabhängigen Modulkonfigurationen besitzen; keine Welt darf in einen anderen Owner-Kontext fan-outen. | Jeder CRUD-Pfad filtert auf `owner_user_id`; die Datenbank erzwingt zusätzlich SELECT/INSERT/UPDATE/DELETE gegen `auth.uid()`. Es existiert kein Worker, Broadcast oder globaler World-Config-State. | pass |
+| Invalid/missing | Leerer Name darf nicht gespeichert werden; fehlender oder unbekannter `species-development.mode` darf nicht versehentlich reguläre Progression aktivieren; unbekannte zukünftige Module dürfen beim Bearbeiten nicht verschwinden. | UI und Service blockieren leere Namen, die DB besitzt zusätzlich einen Trim-Check. Registry/Normalizer fallen bei ungültigem bekannten Modus auf `explicit` zurück. Der Normalizer kopiert unbekannte Modulkeys und unbekannte Settings weiter. | pass |
+| Two consumers / crash | Wiederholtes Lesen oder zwei Clients dürfen Modulwerte nicht duplizieren/umdeuten; ein abgebrochener Client-Save darf keinen zweiten Side Effect erzeugen. | Weltprofile werden nur über explizite CRUD-Operationen gespeichert. Reads sind idempotent, Module sind keyed Records statt Append-Listen, und es gibt keine Queue/Outbox/Side-Effect-Kette. Der letzte erfolgreiche owner-scoped DB-Write ist der gespeicherte Zustand. | pass |
+
+## Flags
+| Tag | Severity | Hops | Why local review missed it | Fix |
+|-----|----------|------|----------------------------|-----|
+| identity: `world` vs. `WorldProfile` | flag | Library → persistence → bestehende World-Funktion | Im Repo existiert bereits eine projektgebundene `world`-Edge-Function und `world_graphs`; ein generisches neues `worlds`-Modell hätte zwei Bedeutungen unter demselben Namen erzeugt. | done: neue Library-/Regelentität heißt intern `WorldProfile` und persistiert in `world_profiles`; bestehende `projects.world_id`, `world_graphs` und `supabase/functions/world` bleiben unberührt. |
+| reinterpret: fehlender Modulwert | flag | Persistenz → Registry → UI | Ein fehlender oder unbekannter Modus könnte sonst zwischen Clients unterschiedliche Bedeutung bekommen. | done: stabiler Registry-Default `explicit`; `progressive` wird nur bei explizit gültigem Wert aktiv. |
 
 ## Skip reason
-n/a — Engine-Slice analog #19–#26; Service/Persistenz-Immunität nicht anwendbar, Komposition direkt geprüft.
-
-## Verdict: CLEAR
+n/a
 
 ## Notes
-- `docs/sagadrive core rules.md` unverändert; alle Abweichungen leben als deklarierte Profildaten.
-- **Datei-Historie:** Dieser Pfad trug zuvor den UI-Proof des Weltprofil-Editors (`species-development`-Module, HEAD `16bfec61`, gemergt via #45/#58-Linie). Der historische Inhalt bleibt im Git-Verlauf (`git log -- .qa/runs/composition-gate-world-profiles-modules.md`, u. a. `c0dae15`, `8cf2b11`); er wird durch diesen Validation-Slice-Proof ersetzt, da beide Features denselben Feature-Slug `validate-world-profiles-modules` bzw. `world-profiles-modules` verwenden.
+- Der Welt-Branch enthält den aktuellen Stand von `feat/species-traits-by-species` bis `25a4f9e10ddd268a5e91aab3caf14b15c3eb1769`, einschließlich des korrigierten Browser-Assertions für Umweltanpassung.
+- Dieses Ticket erzeugt bewusst keine Adventure↔World- oder Character↔World-Verknüpfung.
+- Der Character Editor liest `world_profiles` noch nicht und behält daher exakt sein bestehendes Speziesverhalten.
+- `Progressiv` ist in dieser Ausbaustufe eine Weltregel-Konfiguration, aber noch kein eigenständiger Punktegenerator. Konkrete Erwerbsquellen folgen separat.
