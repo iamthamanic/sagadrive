@@ -17,6 +17,7 @@ import type {
   SagaDriveSpeciesTraitInstanceDto,
 } from '../modules/characters';
 import { DerivedStatCard } from './DerivedStatCard';
+import { CharacterAssistantButton } from './assistant/CharacterAssistantButton';
 import { CharacterArchetypePanel } from '../modules/characters/components/CharacterArchetypePanel';
 import { CharacterBackgroundComposer } from '../modules/characters/components/CharacterBackgroundComposer';
 import { CharacterEssencePanel } from '../modules/characters/components/CharacterEssencePanel';
@@ -422,6 +423,7 @@ export function CharacterEditor() {
                 ))}
               </SelectContent>
             </Select>
+            <CharacterAssistantButton />
             <Button variant="outline" onClick={() => trackActivity('Character Editor: Vorschau fokussiert')}>
               <Eye className="mr-2 h-4 w-4" />Vorschau
             </Button>
