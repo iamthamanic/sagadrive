@@ -135,6 +135,14 @@ function checkAvatarAssetCatalogRegressions() {
   });
 }
 
+function checkPowersEssencesValidation() {
+  console.log('Powers/essences validation (#25): deterministic §12 power model audit...');
+  execFileSync(process.execPath, ['scripts/validate-powers-essences-ranks.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkCharacterCreationValidation() {
   console.log('Character creation validation (#20): deterministic §17/§13 build audit...');
   execFileSync(process.execPath, ['scripts/validate-character-creation-progression.mjs'], {
@@ -257,6 +265,7 @@ checkCombatActionEconomyValidation();
 checkDamageHealingDyingValidation();
 checkEnemyEncounterBossValidation();
 checkCharacterCreationValidation();
+checkPowersEssencesValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
