@@ -111,18 +111,20 @@ class ProjectService {
   }
 
   /**
-   * Resolve the current user id. Local-admin sessions (local-only stack) have no Supabase
-   * JWT, so `supabase.auth.getUser()` cannot resolve them; fall back to the documented
-   * local-admin identity instead (same pattern as character.service, see #48).
+   * Resolve the current user id. A real GoTrue session wins so requests carry
+   * a genuine JWT (RLS requires the `authenticated` role with a stable UUID);
+   * the local-admin constant is only a fallback for offline/UI-only sessions
+   * on the local-only stack (same pattern as character.service).
    */
   private async getAuthenticatedUserId(): Promise<string> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) return user.id;
+
     if (isLocalAdminSession()) {
       return LOCAL_ADMIN_USER_ID;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-    return user.id;
+    throw new Error('User not authenticated');
   }
 
   /**

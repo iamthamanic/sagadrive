@@ -228,13 +228,17 @@ class CharacterService {
   }
 
   private async getAuthenticatedUserId(): Promise<string> {
+    // Real GoTrue session wins: requests carry a genuine JWT so RLS sees the
+    // `authenticated` role with a stable UUID. The local-admin constant is only
+    // a fallback for offline/UI-only sessions without a stack session.
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) return user.id;
+
     if (isLocalAdminSession()) {
       return LOCAL_ADMIN_USER_ID;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-    return user.id;
+    throw new Error('User not authenticated');
   }
 
   async getUserCharacters(): Promise<CharacterVm[]> {
