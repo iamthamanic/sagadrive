@@ -427,6 +427,8 @@ Besonders kritisch:
 - sekundäre Essenz,
 - Fähigkeiten aus mehreren Archetypen.
 
+**D1-Status (2026-08-29, #25):** Umgesetzt. Deterministische Engine `scripts/validate-powers-essences-ranks.mjs` — 30 repräsentative Kräfte, alle 5 Essenzen × Ränge I–V, alle D1-Dimensionen; §12.6-Budget verhindert Schaden+Fläche+Dauer+Kontrolle gleichzeitig maximal; §12.2-Aktivierung exakt (32 Zeilen in 25–95 %); §12.4-Aufrechterhaltung und §12.5-Gegenwirkung (Gleichstand erhält bestehenden Effekt) fail-closed; §12.3-Begrenzungsmodelle ohne unbegrenzte Rückfüllung; sekundäre Essenz und Multi-Archetyp geprüft; 0 Findings. Report: `.qa/runs/validate-powers-essences-ranks-report.md`.
+
 ---
 
 ## D2. Drive und Momentum – #26
