@@ -135,6 +135,14 @@ function checkAvatarAssetCatalogRegressions() {
   });
 }
 
+function checkDriveMomentumValidation() {
+  console.log('Drive/momentum validation (#26): deterministic §2.10–2.12/§16.3 audit...');
+  execFileSync(process.execPath, ['scripts/validate-drive-momentum.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkPowersEssencesValidation() {
   console.log('Powers/essences validation (#25): deterministic §12 power model audit...');
   execFileSync(process.execPath, ['scripts/validate-powers-essences-ranks.mjs'], {
@@ -266,6 +274,7 @@ checkDamageHealingDyingValidation();
 checkEnemyEncounterBossValidation();
 checkCharacterCreationValidation();
 checkPowersEssencesValidation();
+checkDriveMomentumValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
