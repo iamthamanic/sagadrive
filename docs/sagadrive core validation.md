@@ -451,6 +451,8 @@ Zu messen:
 
 Wichtig: Eine deaktivierte Ressource macht davon abhängige Fähigkeiten niemals stillschweigend kostenlos.
 
+**D2-Status (2026-08-29, #26):** Umgesetzt. Deterministische Engine `scripts/validate-drive-momentum.mjs` — 60 exakte Reroll-Zeilen (1−(1−p)², Gewinn ≤ 25pp, Wahlrecht alt/neu geprüft), Drive/Momentum-Ledgers (Caps 5/3, 1-Drive-pro-Probe, Verfall), alle vier §2.12-Varianten spielbar mit fail-closed Ablehnungen, §16.3-Abhängigkeiten mit Ersatzbegrenzungen. 0 Findings. Report: `.qa/runs/validate-drive-momentum-report.md`.
+
 ---
 
 # Phase E – Nichtkampf und Bewegung außerhalb normaler Kämpfe
