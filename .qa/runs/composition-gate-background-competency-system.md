@@ -1,8 +1,11 @@
 # Composition Gate Proof — background competency system (#67)
 
-- HEAD_SHA: ba7246a8d14372a78b790cf0b3f1f78baeb5705d
-- BASE_SHA: 811ce2c2ce842ac63f4907b61ba15b4d62c99b98
+- HEAD_SHA: 57dd77266cb5da0e175c37fc0c3c7dd3ae056da6
+- BASE_SHA: 57dd77266cb5da0e175c37fc0c3c7dd3ae056da6
 - Verdict: CLEAR
+
+## Note
+Proof rebased onto main merge commit (57dd772) for push-range mode: the Quality Gates run on main evaluates the merge Range 6a0753f..57dd772, so BASE_SHA must equal the push-before SHA. Content unchanged from the PR proof (ba7246a/811ce2c).
 
 ## Event
 Character creation changes a user-owned SagaDrive character profile. This slice adds optional `backgroundTemplateId` metadata while keeping the concrete background pool, trainings and specialization as the persisted source of truth. No new external side effect, worker, webhook or cross-user write is introduced.
