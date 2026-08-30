@@ -2,6 +2,7 @@
  * ArchetypeSkillChoice — Auswahl des Archetyp-Fertigkeitspunkts mit sichtbarer Regelwirkung.
  * Location: src/modules/characters/components/ArchetypeSkillChoice.tsx
  */
+import { useState } from 'react';
 import { Badge } from '../../../components/ui/badge';
 import {
   SAGA_DRIVE_START_SKILL_CAP,
@@ -51,6 +52,59 @@ function getDerivedStatHints(skillKey: SagaDriveSkillKey): string[] {
   return [];
 }
 
+/** Fan destinations as viewBox-% per breakpoint variant (viewBox width = 100, preserveAspectRatio="none"). */
+const CONNECTOR_VARIANTS = [
+  { className: 'md:hidden', height: 24, targets: [50] },
+  { className: 'hidden md:block lg:hidden', height: 32, targets: [25, 75] },
+  { className: 'hidden lg:block', height: 32, targets: [12.5, 37.5, 62.5, 87.5] },
+] as const;
+
+interface ArchetypeConnectorProps {
+  skills: readonly SagaDriveSkillKey[];
+  activeSkill: SagaDriveSkillKey | null;
+}
+
+/**
+ * ArchetypeConnector — verbindet die mittig gewählte Archetyp-Karte visuell mit den
+ * Spaltenzentren des Skills-Grids. Rein dekorativ (aria-hidden), Breakpoint-Varianten
+ * sind rein CSS-gecoupelt, keine DOM-Messung nötig.
+ */
+function ArchetypeConnector({ skills, activeSkill }: ArchetypeConnectorProps) {
+  const activeIndex = activeSkill ? skills.indexOf(activeSkill) : -1;
+
+  return (
+    <div className="relative h-6 sm:h-8" aria-hidden="true">
+      {CONNECTOR_VARIANTS.map((variant) => (
+        <svg
+          key={variant.className}
+          className={`absolute inset-0 h-full w-full text-primary ${variant.className}`}
+          viewBox={`0 0 100 ${variant.height}`}
+          preserveAspectRatio="none"
+          fill="none"
+        >
+          {variant.targets.map((targetX, pathIndex) => {
+            // Single-line mobile variant highlights whenever any skill is touched.
+            const active = variant.targets.length === 1 ? activeIndex >= 0 : pathIndex === activeIndex;
+            const midY = variant.height / 2;
+            const d = `M 50 0 Q 50 ${midY} ${targetX} ${variant.height}`;
+            return (
+              <path
+                key={targetX}
+                d={d}
+                stroke="currentColor"
+                strokeWidth={active ? 2.5 : 1.5}
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+                className={`transition-all duration-200 ${active ? 'opacity-100' : 'opacity-40'}`}
+              />
+            );
+          })}
+        </svg>
+      ))}
+    </div>
+  );
+}
+
 export function ArchetypeSkillChoice({
   skills,
   selectedSkill,
@@ -60,6 +114,8 @@ export function ArchetypeSkillChoice({
   attributes,
   experienceBonus = 1,
 }: ArchetypeSkillChoiceProps) {
+  const [activeSkill, setActiveSkill] = useState<SagaDriveSkillKey | null>(null);
+
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-1">
@@ -69,7 +125,9 @@ export function ArchetypeSkillChoice({
         </RuleHelp>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2">
+      <ArchetypeConnector skills={skills} activeSkill={activeSkill} />
+
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {skills.map((skillKey) => {
           const skill = getSagaDriveSkill(skillKey);
           const attribute = getSagaDriveAttribute(skill.attribute);
@@ -87,6 +145,10 @@ export function ArchetypeSkillChoice({
               type="button"
               disabled={disabled}
               onClick={() => onSelect(skillKey)}
+              onMouseEnter={() => setActiveSkill(skillKey)}
+              onMouseLeave={() => setActiveSkill((current) => (current === skillKey ? null : current))}
+              onFocus={() => setActiveSkill(skillKey)}
+              onBlur={() => setActiveSkill((current) => (current === skillKey ? null : current))}
               className={
                 selected
                   ? 'rounded-lg border border-primary bg-primary/10 p-3 text-left transition-colors'
