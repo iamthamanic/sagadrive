@@ -58,11 +58,19 @@ function getDerivedStatHints(skillKey: SagaDriveSkillKey): string[] {
  * die Spaltenzentren des Grids. Rein dekorativ (aria-hidden), Breakpoint-Varianten
  * sind rein CSS-gecoupelt, keine DOM-Messung nötig.
  */
-const CONNECTOR_VARIANTS = [
+interface ConnectorVariant {
+  key: string;
+  className: string;
+  height: number;
+  targets: readonly number[];
+  railY: number | null;
+}
+
+const CONNECTOR_VARIANTS: readonly ConnectorVariant[] = [
   { key: 'mobile', className: 'md:hidden', height: 14, targets: [50], railY: null },
   { key: 'tablet', className: 'hidden md:block lg:hidden', height: 18, targets: [25, 75], railY: 6 },
   { key: 'desktop', className: 'hidden lg:block', height: 18, targets: [12.5, 37.5, 62.5, 87.5], railY: 6 },
-] as const;
+];
 
 interface ArchetypeConnectorProps {
   skills: readonly SagaDriveSkillKey[];
