@@ -52,11 +52,16 @@ function getDerivedStatHints(skillKey: SagaDriveSkillKey): string[] {
   return [];
 }
 
-/** Fan destinations as viewBox-% per breakpoint variant (viewBox width = 100, preserveAspectRatio="none"). */
+/**
+ * Orthogonale Bracket-Verbindungen (kantig, wie ein Organigramm): kurzer Abwärtstiel
+ * aus der Kartenmitte, horizontal verlaufende Sammelschiene, senkrechte Abfälle auf
+ * die Spaltenzentren des Grids. Rein dekorativ (aria-hidden), Breakpoint-Varianten
+ * sind rein CSS-gecoupelt, keine DOM-Messung nötig.
+ */
 const CONNECTOR_VARIANTS = [
-  { className: 'md:hidden', height: 24, targets: [50] },
-  { className: 'hidden md:block lg:hidden', height: 32, targets: [25, 75] },
-  { className: 'hidden lg:block', height: 32, targets: [12.5, 37.5, 62.5, 87.5] },
+  { key: 'mobile', className: 'md:hidden', height: 14, targets: [50], railY: null },
+  { key: 'tablet', className: 'hidden md:block lg:hidden', height: 18, targets: [25, 75], railY: 6 },
+  { key: 'desktop', className: 'hidden lg:block', height: 18, targets: [12.5, 37.5, 62.5, 87.5], railY: 6 },
 ] as const;
 
 interface ArchetypeConnectorProps {
@@ -64,36 +69,46 @@ interface ArchetypeConnectorProps {
   activeSkill: SagaDriveSkillKey | null;
 }
 
-/**
- * ArchetypeConnector — verbindet die mittig gewählte Archetyp-Karte visuell mit den
- * Spaltenzentren des Skills-Grids. Rein dekorativ (aria-hidden), Breakpoint-Varianten
- * sind rein CSS-gecoupelt, keine DOM-Messung nötig.
- */
 function ArchetypeConnector({ skills, activeSkill }: ArchetypeConnectorProps) {
   const activeIndex = activeSkill ? skills.indexOf(activeSkill) : -1;
 
   return (
-    <div className="relative h-6 sm:h-8" aria-hidden="true">
+    <div className="relative h-[14px] md:h-[18px] -mt-px" aria-hidden="true">
       {CONNECTOR_VARIANTS.map((variant) => (
         <svg
-          key={variant.className}
+          key={variant.key}
           className={`absolute inset-0 h-full w-full text-primary ${variant.className}`}
           viewBox={`0 0 100 ${variant.height}`}
           preserveAspectRatio="none"
           fill="none"
         >
-          {variant.targets.map((targetX, pathIndex) => {
-            // Single-line mobile variant highlights whenever any skill is touched.
+          {variant.railY !== null && (
+            <line
+              x1={variant.targets[0]}
+              y1={variant.railY}
+              x2={variant.targets[variant.targets.length - 1]}
+              y2={variant.railY}
+              stroke="currentColor"
+              strokeWidth={1.5}
+              vectorEffect="non-scaling-stroke"
+              className="opacity-40 transition-opacity duration-200"
+            />
+          )}
+          {variant.targets.map((targetX) => {
+            const pathIndex = variant.targets.indexOf(targetX);
             const active = variant.targets.length === 1 ? activeIndex >= 0 : pathIndex === activeIndex;
-            const midY = variant.height / 2;
-            const d = `M 50 0 Q 50 ${midY} ${targetX} ${variant.height}`;
+            const railY = variant.railY;
+            const path = railY === null
+              ? `M 50 0 L ${targetX} ${variant.height}`
+              : `M 50 0 L 50 ${railY} L ${targetX} ${railY} L ${targetX} ${variant.height}`;
             return (
               <path
                 key={targetX}
-                d={d}
+                d={path}
                 stroke="currentColor"
                 strokeWidth={active ? 2.5 : 1.5}
-                strokeLinecap="round"
+                strokeLinecap="square"
+                strokeLinejoin="miter"
                 vectorEffect="non-scaling-stroke"
                 className={`transition-all duration-200 ${active ? 'opacity-100' : 'opacity-40'}`}
               />
@@ -127,7 +142,7 @@ export function ArchetypeSkillChoice({
 
       <ArchetypeConnector skills={skills} activeSkill={activeSkill} />
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {skills.map((skillKey) => {
           const skill = getSagaDriveSkill(skillKey);
           const attribute = getSagaDriveAttribute(skill.attribute);

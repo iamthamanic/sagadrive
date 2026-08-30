@@ -82,7 +82,7 @@ export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'a
   };
 
   return (
-    <div className="relative px-0 py-2 md:py-4" role="radiogroup" aria-labelledby={labelledBy}>
+    <div className="relative px-0 pb-1 md:pb-2" role="radiogroup" aria-labelledby={labelledBy}>
       <style>{`
         .archetype-carousel-item { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .archetype-carousel-item:not(.is-center) { opacity: 0.62; filter: blur(1px); }
@@ -201,7 +201,7 @@ export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'a
       )}
 
       {options.length > 1 && (
-        <div className="archetype-carousel-dots">
+        <div className="archetype-carousel-dots hidden">
           {options.map((option, index) => (
             <button key={option.value} type="button" className={`archetype-carousel-dot ${index === current ? 'active' : ''}`} onClick={() => api?.scrollTo(index)} aria-label={`${option.label} anzeigen`} />
           ))}
