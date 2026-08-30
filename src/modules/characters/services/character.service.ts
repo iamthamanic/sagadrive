@@ -1,5 +1,6 @@
 import { supabase } from '../../../lib/supabase';
 import { isLocalAdminSession, LOCAL_ADMIN_USER_ID } from '../../../lib/localAdmin';
+import { getSagaDriveBackgroundTemplate } from '../../rulesets/backgroundTemplates';
 import {
   createEmptySagaDriveSkillRanks,
   isSagaDriveArchetypeKey,
@@ -8,7 +9,6 @@ import {
   isSagaDriveSpeciesTraitKey,
   sagaDriveSkillDefinitions,
   type SagaDriveSkillKey,
-  type SagaDriveSpeciesTraitKey,
 } from '../../rulesets/characterCreation';
 import {
   getSagaDriveSpeciesTraitOptionCatalog,
@@ -46,7 +46,7 @@ function createEmptyBackground(): SagaDriveBackgroundDto {
 }
 
 function createDefaultSagaDriveProfile(): SagaDriveProfileDto {
-  return { speciesTraitInstances: [], background: createEmptyBackground(), drive: 3, momentum: 0 };
+  return { speciesTraitInstances: [], backgroundTemplateId: null, background: createEmptyBackground(), drive: 3, momentum: 0 };
 }
 
 function clampInteger(value: number, min: number, max: number): number { return Math.max(min, Math.min(max, Math.round(value))); }
@@ -89,6 +89,11 @@ function normalizeSagaDriveBackground(value?: Partial<SagaDriveBackgroundDto>): 
     complication: typeof value?.complication === 'string' ? value.complication : '',
     communication: typeof value?.communication === 'string' ? value.communication : '',
   };
+}
+
+function normalizeBackgroundTemplateId(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  return getSagaDriveBackgroundTemplate(value) ? value : null;
 }
 
 function normalizeSpeciesTraitDetails(value: unknown): SagaDriveSpeciesTraitDetailsDto {
@@ -172,15 +177,17 @@ function normalizeSpeciesProfile(value: unknown): SagaDriveSpeciesProfileDto | u
 }
 
 function normalizeSagaDriveProfile(value?: Partial<SagaDriveProfileDto> | null): SagaDriveProfileDto {
+  if (!value) return createDefaultSagaDriveProfile();
   return {
-    archetype: value?.archetype && isSagaDriveArchetypeKey(value.archetype) ? value.archetype : undefined,
-    essence: value?.essence && isSagaDriveEssenceKey(value.essence) ? value.essence : undefined,
-    speciesTraitInstances: normalizeSpeciesTraitInstances(value?.speciesTraitInstances, value?.speciesTraits, value?.speciesTraitDetails),
-    speciesProfile: normalizeSpeciesProfile(value?.speciesProfile),
-    background: normalizeSagaDriveBackground(value?.background),
-    archetypeTrainingSkill: value?.archetypeTrainingSkill && isSagaDriveSkillKey(value.archetypeTrainingSkill) ? value.archetypeTrainingSkill : undefined,
-    drive: typeof value?.drive === 'number' ? clampInteger(value.drive, 0, 5) : 3,
-    momentum: typeof value?.momentum === 'number' ? clampInteger(value.momentum, 0, 3) : 0,
+    archetype: value.archetype && isSagaDriveArchetypeKey(value.archetype) ? value.archetype : undefined,
+    essence: value.essence && isSagaDriveEssenceKey(value.essence) ? value.essence : undefined,
+    speciesTraitInstances: normalizeSpeciesTraitInstances(value.speciesTraitInstances, value.speciesTraits, value.speciesTraitDetails),
+    speciesProfile: normalizeSpeciesProfile(value.speciesProfile),
+    backgroundTemplateId: normalizeBackgroundTemplateId(value.backgroundTemplateId),
+    background: normalizeSagaDriveBackground(value.background),
+    archetypeTrainingSkill: value.archetypeTrainingSkill && isSagaDriveSkillKey(value.archetypeTrainingSkill) ? value.archetypeTrainingSkill : undefined,
+    drive: typeof value.drive === 'number' ? clampInteger(value.drive, 0, 5) : 3,
+    momentum: typeof value.momentum === 'number' ? clampInteger(value.momentum, 0, 3) : 0,
   };
 }
 
@@ -229,15 +236,11 @@ class CharacterService {
 
   private async getAuthenticatedUserId(): Promise<string> {
     // Real GoTrue session wins: requests carry a genuine JWT so RLS sees the
-    // `authenticated` role with a stable UUID. The local-admin constant is only
+    // authenticated role with a stable UUID. The local-admin constant is only
     // a fallback for offline/UI-only sessions without a stack session.
     const { data: { user } } = await supabase.auth.getUser();
     if (user) return user.id;
-
-    if (isLocalAdminSession()) {
-      return LOCAL_ADMIN_USER_ID;
-    }
-
+    if (isLocalAdminSession()) return LOCAL_ADMIN_USER_ID;
     throw new Error('User not authenticated');
   }
 
