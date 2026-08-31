@@ -158,8 +158,9 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Grenzscout').first()).toBeVisible();
   await expect(page.getByRole('radio', { name: /Eigener Hintergrund/i })).toBeAttached();
 
-  await page.getByRole('radio', { name: /Straßenarzt/i }).click();
-  await expect(page.getByText('Gewählt').first()).toBeVisible();
+  const streetDoctor = page.getByRole('radio', { name: /Straßenarzt/i });
+  await streetDoctor.click();
+  await expect(streetDoctor).toHaveAttribute('aria-checked', 'true', { timeout: 10_000 });
   await expect(page.getByText('Training · 2 wählen').first()).toBeVisible();
   await expect(page.getByText('Medizin').first()).toBeVisible();
   await expect(page.getByText('Menschenkenntnis').first()).toBeVisible();
