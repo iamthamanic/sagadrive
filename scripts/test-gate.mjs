@@ -32,7 +32,7 @@ function resolveDiffBase() {
 
   if (currentRef === 'main' && hasRef('HEAD^')) return 'HEAD^';
   if (hasRef('origin/main')) return git(['merge-base', 'HEAD', 'origin/main']);
-  if (hasRef('main')) return git(['merge-base', 'HEAD', 'main']);
+  if (hasRef('main')) return git(['merge-base', 'HEAD', 'main');
   if (hasRef('HEAD^')) return 'HEAD^';
 
   return undefined;
@@ -114,6 +114,14 @@ function checkProjectMembershipSecurity() {
 function checkCharacterEditorRegressions() {
   console.log('Character editor regression contract: checking persistence, avatar replay, and legacy project status...');
   execFileSync(process.execPath, ['scripts/character-editor-regression-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkBackgroundFrameworkRegressions() {
+  console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
+  execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
     cwd: root,
     stdio: 'inherit',
   });
@@ -274,6 +282,7 @@ execFileSync('npm', ['run', 'checks'], {
 checkChangedDenoFunctions();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
+checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
