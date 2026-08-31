@@ -42,6 +42,12 @@ for (const [id, name] of expectedFrameworks) {
   requireMatch(source, new RegExp(`id:\\s*'${escapedId}'[\\s\\S]{0,180}?name:\\s*'${escapedName}'`), `${name} framework (${id})`);
 }
 
+const frameworkCount = (source.match(/\n    examples:\s*\[/g) ?? []).length;
+if (frameworkCount !== expectedFrameworks.length) {
+  console.error(`Background framework regression check failed: expected ${expectedFrameworks.length} frameworks, found ${frameworkCount}.`);
+  process.exit(1);
+}
+
 requireMatch(source, /examples:\s*readonly string\[\]/, 'framework example contract');
 requireMatch(source, /worldProfileIds\?:\s*readonly string\[\]/, 'world-profile framework filtering contract');
 requireMatch(source, /skillPool:\s*readonly \[SagaDriveSkillKey, SagaDriveSkillKey, SagaDriveSkillKey, SagaDriveSkillKey\]/, 'fixed four-skill framework pool');
