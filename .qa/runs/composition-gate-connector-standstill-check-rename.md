@@ -1,6 +1,6 @@
 # Composition Gate Proof — connector-standstill + probe-check-rename + auth-seed
 
-- HEAD_SHA: 486b0ee7022491cf8e69ecdb9be0f6dbb4e0da6c
+- HEAD_SHA: 03e1248df68394ae3cb1024bd6bbedd075182008
 - BASE_SHA: aa82b0ba767b7b0152dd26491c42b7aaad7ca741
 - Date: 2026-08-31
 - Verdict: CLEAR
