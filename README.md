@@ -61,7 +61,7 @@ Output-Verzeichnis:
 Der aktuelle **Neuer-Charakter-Flow** konzentriert sich bewusst ausschließlich auf **SagaDrive Core**. Der Character Editor verwendet sechs Tabs:
 
 - `Spezies`
-- `Hintergrund` (inkl. freier Notizen unter der Hintergrundgeschichte)
+- `Hintergrund` (inkl. Template-Karussell mit Connector zu Pool-Skill-Nodes sowie freier Notizen unter der Hintergrundgeschichte)
 - `Parameter` (Attribute / Archetyp / Essenz)
 - `Look`
 - `Inventar`
