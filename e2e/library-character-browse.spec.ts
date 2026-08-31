@@ -22,7 +22,7 @@ type StoredCharacter = {
 const MOCK_CHARACTERS: StoredCharacter[] = [
   {
     id: 'char-1',
-    owner_user_id: 'local-admin',
+    owner_user_id: '00000000-0000-4000-8000-000000000001',
     name: 'Kara Sturmklinge',
     description: null,
     class: 'Wanderer',
@@ -35,7 +35,7 @@ const MOCK_CHARACTERS: StoredCharacter[] = [
   },
   {
     id: 'char-2',
-    owner_user_id: 'local-admin',
+    owner_user_id: '00000000-0000-4000-8000-000000000001',
     name: 'Bror Steinfuss',
     description: null,
     class: 'Schmied',

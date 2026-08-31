@@ -65,12 +65,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const storedLocalAdmin = isLocalAdminSession();
     if (storedLocalAdmin) {
-      // Prefer a real GoTrue session from a previous shortcut login so requests
-      // carry a genuine JWT (RLS requires the authenticated role).
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
         if (session?.user) {
           setUser(session.user);
-        } else {
+          setIsLoading(false);
+          return;
+        }
+        // Session expired/dead: silently re-login against the seeded GoTrue
+        // admin user so the app resumes with a genuine JWT. If the stack is
+        // unreachable or the seed row is missing, fall back to the offline UI
+        // user (valid UUID, same owner id as the seeded account).
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: LOCAL_ADMIN_EMAIL,
+            password: LOCAL_ADMIN_PASSWORD,
+          });
+          if (error || !data.user) throw error ?? new Error('local re-login failed');
+          setUser(data.user);
+        } catch {
           setUser(getStoredLocalAdminUser());
         }
         setIsLoading(false);
@@ -137,7 +149,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     window.localStorage.removeItem(LOCAL_ADMIN_STORAGE_KEY);
-    if (user?.id === LOCAL_ADMIN_USER_ID) {
+    if (user?.id === LOCAL_ADMIN_USER_ID && user.app_metadata?.provider === 'local-admin') {
+      // Offline-UI-Fallback-Objekt (provider 'local-admin') besitzt keine echte
+      // GoTrue-Session — supabase.auth.signOut() wäre ein No-op/401. Der echte
+      // geseedete User (gleiche UUID, provider 'email') läuft normal hinein.
       setUser(null);
       return;
     }
