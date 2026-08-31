@@ -53,6 +53,9 @@ Roadmap: nicht vorhanden — Scope aus Chat, bestehendem Background-Kompetenzdes
 | 4 | `04-frameworks-mobile.png` |
 
 ## Implementation Notes
-- Files touched: pending
-- Tests: pending
-- Known limitations: pending
+- Files touched: Framework-Katalog, Background-Karussell, deterministischer Framework-Regression-Check, Test-Gate-Verkabelung, Character-Editor-Playwright-Test und diese Acceptance-Datei.
+- Der Katalog enthält genau 17 setting-neutrale Frameworks. Die sechs bisherigen internen Template-Schlüssel bleiben für bestehende Daten erhalten, zeigen aber die neuen universellen Framework-Namen.
+- Framework-Karten zeigen `Hintergrund Framework`, settingübergreifende Beispiele und weiterhin die vier Skill-Pools; der freie Hintergrund bleibt erhalten.
+- Regeln und Persistenz bleiben unverändert: vier feste Pool-Skills, zwei Trainings, eine Spezialisierung; Essenz und Attribute bleiben getrennt.
+- Tests: neuer Framework-Regression-Check ist in `npm run test-gate` eingebunden; Playwright wurde auf die neuen Framework-Namen und den `Heilung & Fürsorge`-Flow aktualisiert.
+- Known limitations: konkrete Weltprofil-Presets und ein mögliches späteres `2 feste + 2 wählbare`-Modell sind nicht Teil dieses Slices.
