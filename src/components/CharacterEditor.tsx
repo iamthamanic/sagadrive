@@ -428,7 +428,8 @@ export function CharacterEditor() {
   const attributeDerivedTargets: Partial<Record<SagaDriveAttributeKey, string[]>> = useMemo(() => {
     const maneuverUsesStrength = attributes.strength + finalSkillRanks.athletics >= attributes.dexterity + finalSkillRanks.acrobatics;
     const targets: Partial<Record<SagaDriveAttributeKey, string[]>> = {
-      strength: ['carry-capacity', ...(maneuverUsesStrength ? ['maneuver-resistance'] : [])],
+      // Bewegung hängt indirekt an STÄ (Überlastung bei Last > Traglast).
+      strength: ['carry-capacity', 'movement', ...(maneuverUsesStrength ? ['maneuver-resistance'] : [])],
       dexterity: ['reflex-resistance', 'defense', ...(maneuverUsesStrength ? [] : ['maneuver-resistance'])],
       endurance: ['health', 'body-resistance', 'recovery'],
       mind: ['mind-resistance'],
@@ -658,7 +659,16 @@ export function CharacterEditor() {
                               onClick={() => setConnectedAttribute(attribute.key)}
                               onMouseEnter={() => setHoveredAttribute(attribute.key)}
                               onMouseLeave={() => setHoveredAttribute((current) => (current === attribute.key ? null : current))}
-                              onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setConnectedAttribute(attribute.key); } }}
+                              onKeyDown={(event) => {
+                                if (event.key !== 'Enter' && event.key !== ' ') return;
+                                const target = event.target;
+                                if (!(target instanceof Element)) return;
+                                // Nested controls (RuleHelp, Select) must keep their own Enter/Space.
+                                if (target.closest('button, a, input, textarea, select, [role="combobox"], [role="listbox"], [data-slot="select-trigger"]')) return;
+                                if (target !== event.currentTarget && target.closest('[data-attr-card]') !== event.currentTarget) return;
+                                event.preventDefault();
+                                setConnectedAttribute(attribute.key);
+                              }}
                               className={`relative flex h-full cursor-pointer flex-col pt-0.5 items-center justify-center gap-2 rounded-lg border bg-card p-3 text-center transition-colors ${connectedAttribute === attribute.key ? 'border-primary bg-primary/5' : selectedSkill && sagaDriveSkillDefinitions.find((skill) => skill.key === selectedSkill)?.attribute === attribute.key ? 'border-primary/60 bg-primary/5' : 'border-border hover:border-primary/60'}`}
                             >
                               <div className="flex w-full items-start justify-center"><span className="opacity-60 [&_svg]:size-3" onClick={(event) => event.stopPropagation()} onPointerDown={(event) => event.stopPropagation()}><RuleHelp label={attribute.label}>{attribute.description}</RuleHelp></span></div>
@@ -666,7 +676,7 @@ export function CharacterEditor() {
                                 <p className="text-sm font-semibold leading-tight">{attribute.label}</p>
                                 <span className="inline-flex items-center rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{attribute.shortLabel}</span>
                               </div>
-                              <Select value={String(attributes[attribute.key])} onValueChange={(value) => { setAttribute(attribute.key, value); setConnectedAttribute(attribute.key); }}><SelectTrigger size="sm" className="w-full min-w-[4.75rem] justify-center gap-1.5 px-3" aria-label={`${attribute.label} Wert`} onClick={(event) => { event.stopPropagation(); setConnectedAttribute(attribute.key); }} onPointerDown={(event) => event.stopPropagation()}><SelectValue /></SelectTrigger><SelectContent>{[1, 2, 3, 4].map((value) => {
+                              <Select value={String(attributes[attribute.key])} onValueChange={(value) => { setAttribute(attribute.key, value); setConnectedAttribute(attribute.key); }}><SelectTrigger className="w-full min-h-11 min-w-[4.75rem] justify-center gap-1.5 px-3" aria-label={`${attribute.label} Wert`} onClick={(event) => { event.stopPropagation(); setConnectedAttribute(attribute.key); }} onPointerDown={(event) => event.stopPropagation()}><SelectValue /></SelectTrigger><SelectContent>{[1, 2, 3, 4].map((value) => {
                                   const extraHint = getAttributeOptionExtraDerivedHint(attribute.key, value, attributes, finalSkillRanks.athletics, finalSkillRanks.acrobatics);
                                   return (
                                     <SelectItem key={value} value={String(value)} textValue={String(value)} className={extraHint ? 'pr-10' : undefined}>

@@ -102,18 +102,40 @@ function SelectLabel({
   );
 }
 
+function SelectItemText({
+  className,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.ItemText>) {
+  return (
+    <SelectPrimitive.ItemText
+      data-slot="select-item-text"
+      className={cn(className)}
+      {...props}
+    />
+  );
+}
+
+function childrenIncludeSelectItemText(children: React.ReactNode): boolean {
+  return React.Children.toArray(children).some(
+    (child) => React.isValidElement(child) && child.type === SelectItemText,
+  );
+}
+
 function SelectItem({
   className,
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Item>) {
-  // Plain text/number stays ItemText (SelectValue). Zusammengesetzte Children können
-  // SelectItemText + Nebenelemente (z.B. Dropdown-only Tooltip) selbst strukturieren.
+  // Plain text/number → ItemText. Zusammengesetzte Children ohne SelectItemText
+  // (z.B. GenderReadingSelect) weiter auto-wrappen. Explizites SelectItemText +
+  // Nebenelemente (Dropdown-Tooltip) unverändert durchreichen.
   const content =
     typeof children === 'string' || typeof children === 'number' ? (
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-    ) : (
+    ) : childrenIncludeSelectItemText(children) ? (
       children
+    ) : (
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
     );
 
   return (
@@ -132,19 +154,6 @@ function SelectItem({
       </span>
       {content}
     </SelectPrimitive.Item>
-  );
-}
-
-function SelectItemText({
-  className,
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.ItemText>) {
-  return (
-    <SelectPrimitive.ItemText
-      data-slot="select-item-text"
-      className={cn(className)}
-      {...props}
-    />
   );
 }
 
