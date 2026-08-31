@@ -1,7 +1,10 @@
 /**
  * DerivedStatCard — Abgeleiteter Wert mit sichtbarer Formel-Aufschlüsselung im Character Editor.
+ * Die Anzeigezahl leuchtet kurz auf, wenn sich der berechnete Wert ändert (z.B. nach
+ * Änderung eines verbundenen Grundattributs).
  * Location: src/components/DerivedStatCard.tsx
  */
+import { useEffect, useRef, useState } from 'react';
 import { RuleHelp } from '../modules/characters/components/RuleHelp';
 
 export interface DerivedStatTerm {
@@ -19,21 +22,49 @@ export interface DerivedStatCardProps {
   terms: DerivedStatTerm[];
   help?: string;
   footnote?: string;
+  /** Verbunden mit dem aktiven Grundattribut — gleiche Primary-Umrandung wie die Attributkarte. */
+  highlighted?: boolean;
 }
 
 function formatSigned(value: number): string {
   return value >= 0 ? `+${value}` : String(value);
 }
 
-export function DerivedStatCard({ label, displayValue, base, prefix, terms, help, footnote }: DerivedStatCardProps) {
+const FLASH_CSS = `
+  @keyframes derived-value-flash {
+    0% { color: var(--primary); text-shadow: 0 0 12px color-mix(in srgb, var(--primary) 55%, transparent); transform: scale(1.08); }
+    100% { color: inherit; text-shadow: 0 0 0 transparent; transform: scale(1); }
+  }
+  .derived-value-flash {
+    display: inline-block;
+    animation: derived-value-flash 700ms ease-out;
+  }
+`;
+
+export function DerivedStatCard({ label, displayValue, base, prefix, terms, help, footnote, highlighted = false }: DerivedStatCardProps) {
+  const previousValueRef = useRef(displayValue);
+  const [flashGeneration, setFlashGeneration] = useState(0);
+
+  useEffect(() => {
+    if (previousValueRef.current === displayValue) return;
+    previousValueRef.current = displayValue;
+    setFlashGeneration((generation) => generation + 1);
+  }, [displayValue]);
+
   return (
-    <div className="rounded-lg border border-border bg-muted/15 p-3">
+    <div className={`rounded-lg border p-3 transition-colors ${highlighted ? 'border-primary bg-primary/5' : 'border-border bg-muted/15'}`}>
+      {flashGeneration > 0 ? <style>{FLASH_CSS}</style> : null}
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1">
           <span className="text-xs font-medium text-muted-foreground">{label}</span>
           {help ? <RuleHelp label={label}>{help}</RuleHelp> : null}
         </div>
-        <span className="shrink-0 text-lg font-semibold">{displayValue}</span>
+        <span
+          key={flashGeneration}
+          className={`shrink-0 text-lg font-semibold ${flashGeneration > 0 ? 'derived-value-flash' : ''}`}
+        >
+          {displayValue}
+        </span>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-1">

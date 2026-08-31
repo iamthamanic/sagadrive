@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
-import { Camera, Eye, Save, Upload, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
+import { Camera, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import {
   AvatarCanvas,
@@ -17,6 +17,7 @@ import type {
   SagaDriveSpeciesTraitInstanceDto,
 } from '../modules/characters';
 import { DerivedStatCard } from './DerivedStatCard';
+import { AttributeDerivedConnector } from './AttributeDerivedConnector';
 import { CharacterAssistantButton } from './assistant/CharacterAssistantButton';
 import { CharacterArchetypePanel } from '../modules/characters/components/CharacterArchetypePanel';
 import { CharacterBackgroundComposer } from '../modules/characters/components/CharacterBackgroundComposer';
@@ -68,7 +69,8 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Select, SelectContent, SelectItem, SelectItemText, SelectTrigger, SelectValue } from './ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Separator } from './ui/separator';
 import { Slider } from './ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -110,6 +112,40 @@ function isValidStartAttributeDistribution(attributes: CharacterAttributesDto): 
 }
 
 function uniqueSkills(values: readonly SkillSlot[]): SagaDriveSkillKey[] { return Array.from(new Set(values.filter(isSagaDriveSkillKey))); }
+
+/** Label -> data-derived-card Selector für den Bracket-Tree. */
+const DERIVED_SELECTOR_BY_LABEL: Record<string, string> = {
+  Gesundheit: 'health', Verteidigung: 'defense', Initiative: 'initiative', Körperwiderstand: 'body-resistance',
+  Reflexwiderstand: 'reflex-resistance', Geistwiderstand: 'mind-resistance', Manöverwiderstand: 'maneuver-resistance',
+  Bewegung: 'movement', Erholung: 'recovery', Traglast: 'carry-capacity',
+};
+
+/**
+ * Tooltip-Text für Attribut-Dropdown-Optionen, die über die Standard-Abgeleiteten hinaus
+ * Manöverwiderstand an dieses Attribut hängen (max(STÄ+Athletik, GES+Akrobatik)).
+ * null = keine Zusatzwirkung bei diesem Wert.
+ */
+function getAttributeOptionExtraDerivedHint(
+  attribute: SagaDriveAttributeKey,
+  optionValue: number,
+  attributes: CharacterAttributesDto,
+  athleticsRank: number,
+  acrobaticsRank: number,
+): string | null {
+  if (attribute === 'strength') {
+    const wins = optionValue + athleticsRank >= attributes.dexterity + acrobaticsRank;
+    return wins
+      ? 'Zusätzlich Manöverwiderstand: Bei diesem Wert gewinnt STÄ+Athletik gegen GES+Akrobatik.'
+      : null;
+  }
+  if (attribute === 'dexterity') {
+    const wins = attributes.strength + athleticsRank < optionValue + acrobaticsRank;
+    return wins
+      ? 'Zusätzlich Manöverwiderstand: Bei diesem Wert gewinnt GES+Akrobatik gegen STÄ+Athletik.'
+      : null;
+  }
+  return null;
+}
 
 function areSpeciesTraitInstancesValid(
   instances: readonly SagaDriveSpeciesTraitInstanceDto[],
@@ -381,6 +417,66 @@ export function CharacterEditor() {
 
   const setAttribute = (attribute: SagaDriveAttributeKey, value: string) => setAttributes((current) => ({ ...current, [attribute]: parseStartAttribute(value) }));
 
+  // --- Attribute -> abgeleitete Werte (Bracket-Tree im Kompetenzen-Tab) ---
+  const [connectedAttribute, setConnectedAttribute] = useState<SagaDriveAttributeKey | null>(null);
+  const [hoveredAttribute, setHoveredAttribute] = useState<SagaDriveAttributeKey | null>(null);
+  const activeAttribute = hoveredAttribute ?? connectedAttribute;
+  const attributeConnectorAnimated = activeAttribute !== null && activeAttribute === connectedAttribute;
+
+  // Ziel-Selektoren pro Attribut. Manöverwiderstand dynamically targets the attribute that
+  // currently dominates max(STÄ + Athletik, GES + Akrobatik) — handled separately below.
+  const attributeDerivedTargets: Partial<Record<SagaDriveAttributeKey, string[]>> = useMemo(() => {
+    const maneuverUsesStrength = attributes.strength + finalSkillRanks.athletics >= attributes.dexterity + finalSkillRanks.acrobatics;
+    const targets: Partial<Record<SagaDriveAttributeKey, string[]>> = {
+      // Bewegung hängt indirekt an STÄ (Überlastung bei Last > Traglast).
+      strength: ['carry-capacity', 'movement', ...(maneuverUsesStrength ? ['maneuver-resistance'] : [])],
+      dexterity: ['reflex-resistance', 'defense', ...(maneuverUsesStrength ? [] : ['maneuver-resistance'])],
+      endurance: ['health', 'body-resistance', 'recovery'],
+      mind: ['mind-resistance'],
+      perception: ['initiative'],
+      charisma: [],
+    };
+    return targets;
+  }, [attributes.dexterity, attributes.strength, finalSkillRanks.acrobatics, finalSkillRanks.athletics]);
+  const connectedTargetSelectors = useMemo(
+    () => (activeAttribute ? attributeDerivedTargets[activeAttribute] ?? [] : []),
+    [activeAttribute, attributeDerivedTargets],
+  );
+  // Bei aktiver Attributkarte: verbundene Boxen oben (max. 3), der Rest darunter ausgegraut.
+  // Ohne Auswahl bleiben alle abgeleiteten Werte gleichwertig sichtbar.
+  const connectedDerivedCards = useMemo(() => {
+    if (!activeAttribute || connectedTargetSelectors.length === 0) return [];
+    return connectedTargetSelectors
+      .map((selector) => derivedStatCards.find((entry) => DERIVED_SELECTOR_BY_LABEL[entry.label] === selector))
+      .filter((entry): entry is (typeof derivedStatCards)[number] => entry !== undefined);
+  }, [activeAttribute, connectedTargetSelectors, derivedStatCards]);
+  const dimmedDerivedCards = useMemo(() => {
+    if (!activeAttribute) return [];
+    const connected = new Set(connectedTargetSelectors);
+    return derivedStatCards.filter((entry) => !connected.has(DERIVED_SELECTOR_BY_LABEL[entry.label]));
+  }, [activeAttribute, connectedTargetSelectors, derivedStatCards]);
+  const visibleDerivedCards = activeAttribute ? connectedDerivedCards : derivedStatCards;
+  // Klick neben die Attribut-/Zielkarten: Auswahl zurücksetzen.
+  useEffect(() => {
+    if (!connectedAttribute) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('[data-attr-card]')) return;
+      if (target.closest('[data-derived-card]')) return;
+      if (target.closest('[data-attr-connector]')) return;
+      // Select-Content liegt im Portal außerhalb der Karte — Dropdown darf die Auswahl nicht löschen.
+      if (target.closest('[data-slot="select-content"]')) return;
+      if (target.closest('[data-radix-popper-content-wrapper]')) return;
+      if (target.closest('[role="listbox"]')) return;
+      setConnectedAttribute(null);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [connectedAttribute]);
+
+
+
   const uploadPortrait = async (file: File) => {
     setUploading(true);
     try { const url = await characterService.uploadPortrait(file); setPortraitUrl(url); toast.success('Portrait gespeichert'); }
@@ -463,8 +559,8 @@ export function CharacterEditor() {
   };
 
   const handleRemoveImage = (event: MouseEvent) => { event.stopPropagation(); setPortraitUrl(''); if (fileInputRef.current) fileInputRef.current.value = ''; };
-  const handleTabChange = (value: string) => { if (isEditorTab(value)) setActiveTab(value); };
-  const handleValuesSubTabChange = (value: string) => { if (isValuesSubTab(value)) setActiveValuesSubTab(value); };
+  const handleTabChange = (value: string) => { if (isEditorTab(value)) { setActiveTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
+  const handleValuesSubTabChange = (value: string) => { if (isValuesSubTab(value)) { setActiveValuesSubTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
   const previewSubtitle = [essence?.label, archetype?.label, speciesDisplayName].filter(Boolean).join(' · ');
   const totalStartSkillPoints = freeSkillPointsUsed + selectedBackgroundTraining.length + (archetypeTrainingSkill ? 1 : 0);
 
@@ -547,19 +643,98 @@ export function CharacterEditor() {
                     </TabsList>
 
                     <TabsContent value="competencies" className="mt-4 space-y-7">
-                      <section className="space-y-4">
+                      <section className="space-y-4" data-attr-connector-section>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div><h3 className="font-semibold">Grundattribute</h3><p className="mt-1 text-sm text-muted-foreground">Attribute sind deine Basis. Fertigkeiten nutzen ein Standardattribut, Hintergründe vergeben aber niemals Attributspunkte.</p></div>
+                          <div><h3 className="font-semibold">Grundattribute</h3><p className="mt-1 text-sm text-muted-foreground">Attribute sind deine Basis. Fertigkeiten nutzen ein Standardattribut, Hintergründe vergeben aber niemals Attributspunkte. Klicke auf eine Attributkarte, um die daraus berechneten abgeleiteten Werte zu sehen.</p></div>
                           <Badge variant={attributeDistributionValid ? 'default' : 'destructive'}>{attributePointsUsed} / {attributePointBudget} Punkte</Badge>
                         </div>
-                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                          {sagaDriveAttributeDefinitions.map((attribute) => (
-                            <div key={attribute.key} className={`rounded-lg border bg-card p-4 transition-colors ${selectedSkill && sagaDriveSkillDefinitions.find((skill) => skill.key === selectedSkill)?.attribute === attribute.key ? 'border-primary/60 bg-primary/5' : 'border-border'}`}>
-                              <div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-1"><p className="font-semibold">{attribute.label}</p><RuleHelp label={attribute.label}>{attribute.description}</RuleHelp></div><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{attribute.description}</p></div><Select value={String(attributes[attribute.key])} onValueChange={(value) => setAttribute(attribute.key, value)}><SelectTrigger className="w-20" aria-label={`${attribute.label} Wert`}><SelectValue /></SelectTrigger><SelectContent>{[1, 2, 3, 4].map((value) => <SelectItem key={value} value={String(value)}>{value}</SelectItem>)}</SelectContent></Select></div>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                          {sagaDriveAttributeDefinitions.map((attribute) => {
+                            return (
+                            <div
+                              key={attribute.key}
+                              data-attr-card={attribute.key}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => setConnectedAttribute(attribute.key)}
+                              onMouseEnter={() => setHoveredAttribute(attribute.key)}
+                              onMouseLeave={() => setHoveredAttribute((current) => (current === attribute.key ? null : current))}
+                              onKeyDown={(event) => {
+                                if (event.key !== 'Enter' && event.key !== ' ') return;
+                                const target = event.target;
+                                if (!(target instanceof Element)) return;
+                                // Nested controls (RuleHelp, Select) must keep their own Enter/Space.
+                                if (target.closest('button, a, input, textarea, select, [role="combobox"], [role="listbox"], [data-slot="select-trigger"]')) return;
+                                if (target !== event.currentTarget && target.closest('[data-attr-card]') !== event.currentTarget) return;
+                                event.preventDefault();
+                                setConnectedAttribute(attribute.key);
+                              }}
+                              className={`relative flex h-full cursor-pointer flex-col pt-0.5 items-center justify-center gap-2 rounded-lg border bg-card p-3 text-center transition-colors ${connectedAttribute === attribute.key ? 'border-primary bg-primary/5' : selectedSkill && sagaDriveSkillDefinitions.find((skill) => skill.key === selectedSkill)?.attribute === attribute.key ? 'border-primary/60 bg-primary/5' : 'border-border hover:border-primary/60'}`}
+                            >
+                              <div className="flex w-full items-start justify-center"><span className="opacity-60 [&_svg]:size-3" onClick={(event) => event.stopPropagation()} onPointerDown={(event) => event.stopPropagation()}><RuleHelp label={attribute.label}>{attribute.description}</RuleHelp></span></div>
+                              <div className="flex w-full flex-col items-center gap-1">
+                                <p className="text-sm font-semibold leading-tight">{attribute.label}</p>
+                                <span className="inline-flex items-center rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{attribute.shortLabel}</span>
+                              </div>
+                              <Select value={String(attributes[attribute.key])} onValueChange={(value) => { setAttribute(attribute.key, value); setConnectedAttribute(attribute.key); }}><SelectTrigger className="w-full min-h-11 min-w-[4.75rem] justify-center gap-1.5 px-3" aria-label={`${attribute.label} Wert`} onClick={(event) => { event.stopPropagation(); setConnectedAttribute(attribute.key); }} onPointerDown={(event) => event.stopPropagation()}><SelectValue /></SelectTrigger><SelectContent>{[1, 2, 3, 4].map((value) => {
+                                  const extraHint = getAttributeOptionExtraDerivedHint(attribute.key, value, attributes, finalSkillRanks.athletics, finalSkillRanks.acrobatics);
+                                  return (
+                                    <SelectItem key={value} value={String(value)} textValue={String(value)} className={extraHint ? 'pr-10' : undefined}>
+                                      <SelectItemText>{value}</SelectItemText>
+                                      {extraHint ? (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button
+                                              type="button"
+                                              aria-label="Zusätzlichen abgeleiteten Wert erklären"
+                                              className="pointer-events-auto ml-auto inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-primary hover:bg-primary/10"
+                                              onClick={(event) => event.stopPropagation()}
+                                              onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); }}
+                                            >
+                                              <CircleHelp className="pointer-events-none size-3.5" />
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="right" sideOffset={8} className="max-w-[260px] text-left leading-relaxed">
+                                            {extraHint}
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      ) : null}
+                                    </SelectItem>
+                                  );
+                                })}</SelectContent></Select>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
-                        <div><div className="mb-3"><h3 className="font-semibold">Abgeleitete Werte</h3><p className="text-sm text-muted-foreground">Diese Werte werden aus Attributen, Fertigkeiten und Erfahrungsbonus berechnet und nicht direkt bearbeitet.</p></div><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{derivedStatCards.map((entry) => <DerivedStatCard key={entry.label} {...entry} />)}</div></div>
+                        {activeAttribute === 'charisma' ? (
+                          <p className="text-center text-[11px] text-muted-foreground">Charisma fließt in keinen abgeleiteten Wert ein.</p>
+                        ) : null}
+                        <div className="space-y-1">
+                          {!activeAttribute ? (
+                            <div className="mb-3"><h3 className="font-semibold">Abgeleitete Werte</h3><p className="text-sm text-muted-foreground">Diese Werte werden aus Attributen, Fertigkeiten und Erfahrungsbonus berechnet und nicht direkt bearbeitet. Klicke auf eine Attributkarte, um nur die relevanten Werte zu sehen.</p></div>
+                          ) : null}
+                          <AttributeDerivedConnector
+                            sourceAttribute={activeAttribute}
+                            animated={attributeConnectorAnimated}
+                            targetSelectors={connectedTargetSelectors}
+                          />
+                          <div className={activeAttribute ? (visibleDerivedCards.length <= 1 ? 'grid gap-3 grid-cols-1 max-w-md' : visibleDerivedCards.length === 2 ? 'grid gap-3 sm:grid-cols-2' : 'grid gap-3 sm:grid-cols-3') : 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3'}>
+                            {visibleDerivedCards.map((entry) => (
+                              <div key={entry.label} data-derived-card={DERIVED_SELECTOR_BY_LABEL[entry.label]} className="[&>div]:h-full">
+                                <DerivedStatCard {...entry} highlighted={Boolean(activeAttribute)} />
+                              </div>
+                            ))}
+                          </div>
+                          {activeAttribute && dimmedDerivedCards.length > 0 ? (
+                            <div className="mt-4 grid gap-3 opacity-40 sm:grid-cols-2 xl:grid-cols-3">
+                              {dimmedDerivedCards.map((entry) => (
+                                <div key={entry.label} data-derived-card={DERIVED_SELECTOR_BY_LABEL[entry.label]} className="[&>div]:h-full">
+                                  <DerivedStatCard {...entry} />
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
                       </section>
 
                       <Separator />
