@@ -119,6 +119,14 @@ function checkCharacterEditorRegressions() {
   });
 }
 
+function checkBackgroundFrameworkRegressions() {
+  console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
+  execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarRuntimeRegressions() {
   console.log('Avatar runtime regression contract: checking VRM/GLB runtime, URL safety, portrait canvas, and dependencies...');
   execFileSync(process.execPath, ['scripts/avatar-runtime-regression-check.mjs'], {
@@ -274,6 +282,7 @@ execFileSync('npm', ['run', 'checks'], {
 checkChangedDenoFunctions();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
+checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();

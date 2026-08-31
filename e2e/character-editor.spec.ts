@@ -154,12 +154,15 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Ausdauer').first()).toBeVisible();
   await expect(page.getByText('Verstand').first()).toBeVisible();
   await expect(page.getByText('Wahrnehmung').first()).toBeVisible();
-  await expect(page.getByText('Straßenarzt').first()).toBeVisible();
-  await expect(page.getByText('Grenzscout').first()).toBeVisible();
-  await expect(page.getByText('Eigenen Hintergrund erstellen').first()).toBeVisible();
+  await expect(page.getByText('Bühne & Öffentlichkeit').first()).toBeVisible();
+  await expect(page.getByText('Natur & Wildnis').first()).toBeAttached();
+  await expect(page.getByText('Hintergrund Framework').first()).toBeVisible();
+  await expect(page.getByRole('radio', { name: /Eigener Hintergrund/i })).toBeAttached();
 
-  await page.getByRole('button', { name: /Straßenarzt/i }).click();
-  await expect(page.getByText(/Template gewählt/i).first()).toBeVisible();
+  const healingFramework = page.getByRole('radio', { name: /Heilung & Fürsorge/i });
+  await healingFramework.click();
+  await expect(healingFramework).toHaveAttribute('aria-checked', 'true', { timeout: 10_000 });
+  await expect(page.getByText('Training · 2 wählen').first()).toBeVisible();
   await expect(page.getByText('Medizin').first()).toBeVisible();
   await expect(page.getByText('Menschenkenntnis').first()).toBeVisible();
   await expect(page.getByText(/2 \/ 2/).first()).toBeVisible();
@@ -207,6 +210,6 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByRole('tab', { name: /^Parameter$/i }).click();
   await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
-  await expect(page.getByText('Eigenen Hintergrund erstellen').first()).toBeVisible();
+  await expect(page.getByRole('radio', { name: /Heilung & Fürsorge/i })).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '12-mobile-competencies.png'), fullPage: true });
 });

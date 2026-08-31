@@ -8,6 +8,7 @@ function rejectMatch(content, pattern, label) { if (pattern.test(content)) { con
 const runtime = read('src/modules/characters/avatar/characterStudio/CharacterStudioRuntime.ts');
 const editor = read('src/components/CharacterEditor.tsx');
 const backgroundPanel = read('src/modules/characters/components/CharacterBackgroundPanel.tsx');
+const backgroundCarousel = read('src/modules/characters/components/BackgroundCarousel.tsx');
 const backgroundTemplates = read('src/modules/rulesets/backgroundTemplates.ts');
 const speciesTraitsPanel = read('src/modules/characters/components/SpeciesTraitsPanel.tsx');
 const speciesTraitOptions = read('src/modules/rulesets/speciesTraitOptions.ts');
@@ -54,9 +55,11 @@ requireMatch(backgroundTemplates, /id:\s*'street-doctor'/, 'Straßenarzt backgro
 requireMatch(backgroundTemplates, /skillPool:\s*\['medicine', 'insight', 'survival', 'awareness'\]/, 'Straßenarzt fixed four-skill pool');
 requireMatch(backgroundTemplates, /recommendedTraining:\s*\['medicine', 'insight'\]/, 'optional recommended background trainings');
 requireMatch(backgroundTemplates, /validateSagaDriveBackgroundTemplateCatalog/, 'background template catalog validation');
-requireMatch(backgroundPanel, /Eigenen Hintergrund erstellen/, 'first-class custom background mode');
+requireMatch(backgroundPanel, /BackgroundCarousel/, 'background template carousel');
+requireMatch(backgroundCarousel, /Eigener Hintergrund/, 'first-class custom background mode');
 requireMatch(backgroundPanel, /Training · 2 wählen/, 'two background training choices');
 requireMatch(backgroundPanel, /Standard:/, 'standard attribute relationship inside template flow');
+requireMatch(backgroundPanel, /BackgroundSkillConnector|data-background-skill-grid/, 'background skill connector graph');
 
 requireMatch(speciesTraitsPanel, /Name deiner Spezies \*/, 'required Alien species profile name field');
 requireMatch(speciesTraitsPanel, /Körperbeschreibung/, 'Alien body description field');

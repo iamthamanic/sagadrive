@@ -61,7 +61,7 @@ Output-Verzeichnis:
 Der aktuelle **Neuer-Charakter-Flow** konzentriert sich bewusst ausschließlich auf **SagaDrive Core**. Der Character Editor verwendet sechs Tabs:
 
 - `Spezies`
-- `Hintergrund` (inkl. freier Notizen unter der Hintergrundgeschichte)
+- `Hintergrund` (inkl. Template-Karussell mit Connector zu Pool-Skill-Nodes sowie freier Notizen unter der Hintergrundgeschichte)
 - `Parameter` (Attribute / Archetyp / Essenz)
 - `Look`
 - `Inventar`
@@ -158,6 +158,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-08-31** — Hintergrund: Template-Karussell inkl. Custom-Slide, Bracket-Connector zu Pool-Skill-Nodes, Training/Spezialisierung am Node (`feat/background-skill-nodes`)
 - **2026-08-31** — Kompetenzen: Attributkarten verbinden per Bracket-Linien die abhängigen abgeleiteten Werte; Filter + ausgegraute Restwerte, Wert-Flash, Manöverwiderstand-Hinweise im Dropdown (`feat/attribute-derived-connector`)
 - **2026-08-28** — Avatar-Asset-Katalog: commit-gepinnte CC0-Provenienz, explizite neutrale Fallbacks und lizenzgeprüftes Ork-VRM (`issue/3-avatar-race-asset-catalog`, siehe `docs/avatar assets.md`)
 - **2026-08-27** — Bibliothek-Tab Welten (owner-scoped Weltprofile, Modul Speziesentwicklung); Character Editor: Notizen unter Hintergrund, Tab Statistik mit Abenteuer-Bögen (`feat/world-profiles-and-statistics`, siehe `docs/world profiles.md`)
