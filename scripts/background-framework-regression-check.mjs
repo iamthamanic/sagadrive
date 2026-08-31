@@ -53,8 +53,8 @@ requireMatch(source, /worldProfileIds\?:\s*readonly string\[\]/, 'world-profile 
 requireMatch(source, /skillPool:\s*readonly \[SagaDriveSkillKey, SagaDriveSkillKey, SagaDriveSkillKey, SagaDriveSkillKey\]/, 'fixed four-skill framework pool');
 requireMatch(source, /recommendedTraining:\s*readonly \[SagaDriveSkillKey, SagaDriveSkillKey\]/, 'two framework training recommendations');
 requireMatch(source, /validateSagaDriveBackgroundTemplateCatalog/, 'framework catalog runtime validation');
-requireMatch(carousel, />Hintergrund Framework</, 'framework terminology in carousel');
-requireMatch(carousel, />Freier Hintergrund</, 'free background terminology in carousel');
+requireMatch(carousel, /'Hintergrund Framework'/, 'framework terminology in carousel');
+requireMatch(carousel, /'Freier Hintergrund'/, 'free background terminology in carousel');
 requireMatch(carousel, /option\.template\.examples\.join/, 'cross-setting examples shown in carousel');
 
 rejectMatch(source, /name:\s*'Grenzscout'/, 'legacy Grenzscout remains a visible Core framework name');
