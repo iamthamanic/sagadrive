@@ -22,13 +22,16 @@ import {
   CollapsibleTrigger,
 } from '../../../components/ui/collapsible';
 
+export type CarouselScrollPhase = 'scrolling' | 'settled';
+
 interface ArchetypeCarouselProps {
   selectedArchetype?: SagaDriveArchetypeKey;
   onSelect: (value: SagaDriveArchetypeKey) => void;
   labelledBy?: string;
+  onScrollPhaseChange?: (phase: CarouselScrollPhase) => void;
 }
 
-export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'archetype-label' }: ArchetypeCarouselProps) {
+export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'archetype-label', onScrollPhaseChange }: ArchetypeCarouselProps) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const skipSelectRef = useRef(false);
@@ -45,6 +48,32 @@ export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'a
       api.off('reInit', syncIndex);
     };
   }, [api]);
+
+  // Embla feuert 'select' beim Scroll-Start und 'settle' nach Slide-Ende —
+  // abgeleitete UI (Connector-Fade) koppelt sich an diese Phasen.
+  useEffect(() => {
+    if (!api || !onScrollPhaseChange) return;
+    // Bewegungs-Debounce: 'scroll' feuert kontinuierlich waehrend der Bewegung.
+    // 'settled' geht erst raus, wenn 120ms lang kein scroll-Event mehr kam —
+    // also exakt, wenn das Karussell wirklich steht (inkl. Ease-out-Schwanz),
+    // nicht schon bei ~86% wie beim reinen Timer-Raten.
+    let quietTimer: ReturnType<typeof setTimeout> | undefined;
+    const onScrolling = () => {
+      if (quietTimer) clearTimeout(quietTimer);
+      onScrollPhaseChange('scrolling');
+    };
+    const onScrollActivity = () => {
+      if (quietTimer) clearTimeout(quietTimer);
+      quietTimer = setTimeout(() => onScrollPhaseChange('settled'), 120);
+    };
+    api.on('select', onScrolling);
+    api.on('scroll', onScrollActivity);
+    return () => {
+      api.off('select', onScrolling);
+      api.off('scroll', onScrollActivity);
+      if (quietTimer) clearTimeout(quietTimer);
+    };
+  }, [api, onScrollPhaseChange]);
 
   useEffect(() => {
     if (!api || selectedArchetype) return;
@@ -82,20 +111,13 @@ export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'a
   };
 
   return (
-    <div className="relative px-0 pb-1 md:pb-2" role="radiogroup" aria-labelledby={labelledBy}>
+    <div className="relative px-0" role="radiogroup" aria-labelledby={labelledBy}>
       <style>{`
         .archetype-carousel-item { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .archetype-carousel-item:not(.is-center) { opacity: 0.62; filter: blur(1px); }
         .archetype-carousel-item:not(.is-center) > div { transform: scale(0.9); }
         .archetype-carousel-item.is-center { opacity: 1; filter: blur(0); z-index: 10; }
         .archetype-carousel-item.is-center > div { transform: scale(1); }
-        .archetype-carousel-dots { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
-        .archetype-carousel-dot {
-          width: 8px; height: 8px; border-radius: 50%;
-          background-color: hsl(var(--primary)); opacity: 0.3;
-          transition: opacity 0.3s ease; cursor: pointer;
-        }
-        .archetype-carousel-dot.active { opacity: 1; }
         .archetype-carousel-nav-buttons {
           position: absolute; top: 0; left: 0; right: 0; bottom: 0;
           pointer-events: none; z-index: 20;
@@ -197,14 +219,6 @@ export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'a
           <Button type="button" variant="outline" size="icon" className="archetype-carousel-nav-button right-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:right-2 md:h-11 md:w-11" onClick={() => api?.scrollNext()} aria-label="Nächster Archetyp">
             <ChevronRight className="size-5" />
           </Button>
-        </div>
-      )}
-
-      {options.length > 1 && (
-        <div className="archetype-carousel-dots hidden">
-          {options.map((option, index) => (
-            <button key={option.value} type="button" className={`archetype-carousel-dot ${index === current ? 'active' : ''}`} onClick={() => api?.scrollTo(index)} aria-label={`${option.label} anzeigen`} />
-          ))}
         </div>
       )}
     </div>

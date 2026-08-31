@@ -253,7 +253,7 @@ export function CharacterBackgroundPanel({
             <span className="absolute -left-3 top-0 flex h-6 w-6 items-center justify-center rounded-full border border-primary bg-background text-xs font-semibold text-primary">3</span>
             <div className="space-y-3">
               <div>
-                <div className="flex items-center gap-1"><p className="font-medium">Spezialisierung</p><RuleHelp label="Spezialisierung">Eine passende Spezialisierung gibt +2 auf anwendbare Proben. Die erste Spezialisierung benötigt Fertigkeitswert 1.</RuleHelp></div>
+                <div className="flex items-center gap-1"><p className="font-medium">Spezialisierung</p><RuleHelp label="Spezialisierung">Eine passende Spezialisierung gibt +2 auf anwendbare Checks. Die erste Spezialisierung benötigt Fertigkeitswert 1.</RuleHelp></div>
                 <p className="text-sm text-muted-foreground">Wähle ein Fachgebiet auf einer deiner beiden trainierten Fertigkeiten.</p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
