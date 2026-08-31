@@ -2,7 +2,7 @@
  * ArchetypeSkillChoice — Auswahl des Archetyp-Fertigkeitspunkts mit sichtbarer Regelwirkung.
  * Location: src/modules/characters/components/ArchetypeSkillChoice.tsx
  */
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Badge } from '../../../components/ui/badge';
 import {
   SAGA_DRIVE_START_SKILL_CAP,
@@ -12,6 +12,7 @@ import {
   type SagaDriveSkillKey,
 } from '../../rulesets/characterCreation';
 import { RuleHelp } from './RuleHelp';
+import type { CarouselScrollPhase } from './ArchetypeCarousel';
 
 interface ArchetypeSkillChoiceProps {
   skills: readonly SagaDriveSkillKey[];
@@ -21,6 +22,8 @@ interface ArchetypeSkillChoiceProps {
   freeRanks: Record<SagaDriveSkillKey, number>;
   attributes: Record<SagaDriveAttributeKey, number>;
   experienceBonus?: number;
+  scrollPhase?: CarouselScrollPhase;
+  onStandstill?: () => void;
 }
 
 function getCompetencyLabel(rank: number): string {
@@ -53,77 +56,236 @@ function getDerivedStatHints(skillKey: SagaDriveSkillKey): string[] {
 }
 
 /**
- * Orthogonale Bracket-Verbindungen (kantig, wie ein Organigramm): kurzer Abwärtstiel
- * aus der Kartenmitte, horizontal verlaufende Sammelschiene, senkrechte Abfälle auf
- * die Spaltenzentren des Grids. Rein dekorativ (aria-hidden), Breakpoint-Varianten
- * sind rein CSS-gecoupelt, keine DOM-Messung nötig.
+ * Bracket-Verbindung nach dem browo-hr TreeHook-Muster (HrKo_TreeHook.tsx):
+ * ein einziges px-genaues SVG-Overlay, gemessen per getBoundingClientRect +
+ * ResizeObserver statt skalierten Prozent-ViewBoxes. Jedes Segment (Stiel,
+ * Sammelschiene, Abfaelle) wird genau einmal gezeichnet und trifft exakt an
+ * denselben Junction-Koordinaten — dadurch durchgehende Linien. Der Basislayer
+ * ist grau wie Sekundaertext. Die Route zur gewaehlten Box laeuft dauerhaft
+ * als Primary-blauer Flow (Marching-Ants); beim Hover ueber eine andere Box
+ * zeichnet sich zusaetzlich eine weisse, statische Route nach. Waehrend eines
+ * Carousel-Slides (scrollPhase='scrolling') wird die Geometrie eingefroren und
+ * das Overlay ausgeblendet; der Standstill-Watcher meldet das echte Ende der
+ * Bewegung, dann misst der Connector neu und remountet das SVG per Key mit
+ * Fade-in (Opacity + Clip-Wipe von oben nach unten). Rein dekorativ (aria-hidden).
  */
-interface ConnectorVariant {
-  key: string;
-  className: string;
-  height: number;
-  targets: readonly number[];
-  railY: number | null;
-}
-
-const CONNECTOR_VARIANTS: readonly ConnectorVariant[] = [
-  { key: 'mobile', className: 'md:hidden', height: 14, targets: [50], railY: null },
-  { key: 'tablet', className: 'hidden md:block lg:hidden', height: 18, targets: [25, 75], railY: 6 },
-  { key: 'desktop', className: 'hidden lg:block', height: 18, targets: [12.5, 37.5, 62.5, 87.5], railY: 6 },
-];
-
 interface ArchetypeConnectorProps {
   skills: readonly SagaDriveSkillKey[];
   activeSkill: SagaDriveSkillKey | null;
+  selectedSkill: SagaDriveSkillKey | null;
+  scrollPhase: CarouselScrollPhase;
+  onStandstill: () => void;
 }
 
-function ArchetypeConnector({ skills, activeSkill }: ArchetypeConnectorProps) {
-  const activeIndex = activeSkill ? skills.indexOf(activeSkill) : -1;
+function ArchetypeConnector({ skills, activeSkill, selectedSkill, scrollPhase, onStandstill }: ArchetypeConnectorProps) {
+  const connectorRef = useRef<HTMLDivElement>(null);
+  const scrollPhaseRef = useRef<CarouselScrollPhase>(scrollPhase);
+  const onStandstillRef = useRef(onStandstill);
+  onStandstillRef.current = onStandstill;
+
+  const [layout, setLayout] = useState<{ width: number; height: number; sourceX: number; targets: number[] }>({
+    width: 0,
+    height: 0,
+    sourceX: 0,
+    targets: [],
+  });
+  const [fadeGeneration, setFadeGeneration] = useState(0);
+
+  const measure = useCallback(() => {
+    const el = connectorRef.current;
+    if (!el) return;
+    if (scrollPhaseRef.current === 'scrolling') return;
+    const rect = el.getBoundingClientRect();
+    if (rect.width === 0) return;
+
+    const panel = el.closest('[data-archetype-panel]');
+    const card = panel?.querySelector('.archetype-carousel-item.is-center [data-slot="card"]');
+    const cardRect = card?.getBoundingClientRect();
+    const sourceX = cardRect ? cardRect.left + cardRect.width / 2 - rect.left : rect.width / 2;
+
+    const grid = panel?.querySelector('[data-archetype-skill-grid]');
+    const seen = new Set<number>();
+    const targets: number[] = [];
+    for (const button of Array.from(grid?.querySelectorAll(':scope > button') ?? [])) {
+      const b = button.getBoundingClientRect();
+      const center = Math.round(Math.min(rect.width, Math.max(0, b.left + b.width / 2 - rect.left)) * 10) / 10;
+      if (seen.has(center)) continue;
+      seen.add(center);
+      targets.push(center);
+    }
+
+    const round1 = (v: number) => Math.round(v * 10) / 10;
+    const next = {
+      width: round1(rect.width),
+      height: round1(rect.height),
+      sourceX: round1(Math.min(rect.width, Math.max(0, sourceX))),
+      targets: targets.map(round1),
+    };
+    setLayout((current) => {
+      const same =
+        current.width === next.width &&
+        current.height === next.height &&
+        current.sourceX === next.sourceX &&
+        current.targets.length === next.targets.length &&
+        current.targets.every((t, i) => t === next.targets[i]);
+      return same ? current : next;
+    });
+  }, []);
+
+  useEffect(() => {
+    scrollPhaseRef.current = scrollPhase;
+    if (scrollPhase === 'settled') {
+      measure();
+      setFadeGeneration((gen) => gen + 1);
+    }
+  }, [scrollPhase, measure]);
+
+  // Standstill-Watcher: Solange 'scrolling', beobachtet ein rAF-Loop die
+  // Position der mittleren Archetyp-Karte pro Frame. Erst 3 stabile Frames
+  // (±0.5px) melden Bewegungsende nach oben — unabhaengig von Emblas
+  // Event-Sparsamkeit beim programmatischen scrollTo und timing-sicher
+  // gegenueber dem Ease-out-Schwanz.
+  useEffect(() => {
+    if (scrollPhase !== 'scrolling') return;
+    let frame: number | undefined;
+    let stableCount = 0;
+    let lastX: number | null = null;
+    const getCardX = () => {
+      const panel = connectorRef.current?.closest('[data-archetype-panel]');
+      const card = panel?.querySelector('.archetype-carousel-item.is-center [data-slot="card"]');
+      return card ? card.getBoundingClientRect().left : null;
+    };
+    const tick = () => {
+      const x = getCardX();
+      if (x !== null && lastX !== null && Math.abs(x - lastX) <= 0.5) {
+        stableCount += 1;
+        if (stableCount >= 3) {
+          onStandstillRef.current();
+          return;
+        }
+      } else {
+        stableCount = 0;
+      }
+      lastX = x;
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [scrollPhase]);
+
+  useEffect(() => {
+    measure();
+    const el = connectorRef.current;
+    const grid = el?.closest('[data-archetype-panel]')?.querySelector('[data-archetype-skill-grid]') ?? null;
+    const ro = new ResizeObserver(() => measure());
+    if (el) ro.observe(el);
+    if (grid) ro.observe(grid);
+    window.addEventListener('resize', measure);
+    const t1 = setTimeout(measure, 50);
+    const t2 = setTimeout(measure, 350);
+    const t3 = setTimeout(measure, 700);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [measure, skills, selectedSkill]);
+
+  const railY = layout.height >= 72 ? 24 : layout.height >= 56 ? 18 : layout.height >= 36 ? 12 : 10;
+  const railLeft = layout.targets.length ? Math.min(...layout.targets, layout.sourceX) : 0;
+  const railRight = layout.targets.length ? Math.max(...layout.targets, layout.sourceX) : layout.width;
+  const selectedIndex = selectedSkill ? skills.indexOf(selectedSkill) : -1;
+  const hoverIndex = activeSkill ? skills.indexOf(activeSkill) : -1;
+  const selectedTarget = selectedIndex >= 0 ? layout.targets[selectedIndex] : undefined;
+  const hoverTarget = hoverIndex >= 0 && hoverIndex !== selectedIndex ? layout.targets[hoverIndex] : undefined;
+  const hasGeometry = layout.width > 0 && layout.targets.length > 0;
 
   return (
-    <div className="relative h-[14px] md:h-[18px] -mt-px" aria-hidden="true">
-      {CONNECTOR_VARIANTS.map((variant) => (
+    <div ref={connectorRef} className="relative h-14 md:h-[72px] -mt-px" aria-hidden="true">
+      <style>{`
+        @keyframes archetype-connector-draw {
+          from { stroke-dashoffset: 100; }
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes archetype-connector-flow {
+          from { stroke-dashoffset: 0; }
+          to { stroke-dashoffset: -15; }
+        }
+        @keyframes archetype-connector-fade {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes archetype-connector-reveal {
+          from { clip-path: inset(0 0 100% 0); }
+          to { clip-path: inset(0 0 0% 0); }
+        }
+        .archetype-connector-fade {
+          animation:
+            archetype-connector-fade 200ms ease-out both,
+            archetype-connector-reveal 340ms cubic-bezier(0.33, 1, 0.68, 1) both;
+        }
+        .archetype-connector-hide {
+          opacity: 0;
+          pointer-events: none;
+        }
+        .archetype-connector-route {
+          stroke-dasharray: 100;
+          animation: archetype-connector-draw 450ms cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        .archetype-connector-route--flow {
+          stroke-dasharray: 10 5;
+          animation: archetype-connector-flow 0.75s linear infinite;
+        }
+      `}</style>
+      {hasGeometry && (
         <svg
-          key={variant.key}
-          className={`absolute inset-0 h-full w-full text-primary ${variant.className}`}
-          viewBox={`0 0 100 ${variant.height}`}
-          preserveAspectRatio="none"
+          key={`${skills.join('|')}-${fadeGeneration}`}
+          className={`${scrollPhase === 'settled' ? 'archetype-connector-fade' : 'archetype-connector-hide'} absolute inset-0 overflow-visible`}
+          width={layout.width}
+          height={layout.height}
           fill="none"
         >
-          {variant.railY !== null && (
-            <line
-              x1={variant.targets[0]}
-              y1={variant.railY}
-              x2={variant.targets[variant.targets.length - 1]}
-              y2={variant.railY}
-              stroke="currentColor"
-              strokeWidth={1.5}
-              vectorEffect="non-scaling-stroke"
-              className="opacity-40 transition-opacity duration-200"
-            />
-          )}
-          {variant.targets.map((targetX) => {
-            const pathIndex = variant.targets.indexOf(targetX);
-            const active = variant.targets.length === 1 ? activeIndex >= 0 : pathIndex === activeIndex;
-            const railY = variant.railY;
-            const path = railY === null
-              ? `M 50 0 L ${targetX} ${variant.height}`
-              : `M 50 0 L 50 ${railY} L ${targetX} ${railY} L ${targetX} ${variant.height}`;
-            return (
+          <g className="text-muted-foreground" strokeLinecap="round">
+            <line x1={layout.sourceX} y1={0} x2={layout.sourceX} y2={railY} stroke="currentColor" strokeWidth={1} />
+            <line x1={railLeft} y1={railY} x2={railRight} y2={railY} stroke="currentColor" strokeWidth={1} />
+            {layout.targets.map((targetX, index) => (
+              <line key={`drop-${index}`} x1={targetX} y1={railY} x2={targetX} y2={layout.height} stroke="currentColor" strokeWidth={1} />
+            ))}
+          </g>
+          {selectedTarget !== undefined && (
+            <g className="text-primary">
               <path
-                key={targetX}
-                d={path}
+                key={`sel-${selectedIndex}-${Math.round(selectedTarget)}`}
+                d={`M ${layout.sourceX} 0 L ${layout.sourceX} ${railY} L ${selectedTarget} ${railY} L ${selectedTarget} ${layout.height}`}
+                className="archetype-connector-route archetype-connector-route--flow"
+                pathLength={100}
                 stroke="currentColor"
-                strokeWidth={active ? 2.5 : 1.5}
-                strokeLinecap="square"
-                strokeLinejoin="miter"
-                vectorEffect="non-scaling-stroke"
-                className={`transition-all duration-200 ${active ? 'opacity-100' : 'opacity-40'}`}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
-            );
-          })}
+            </g>
+          )}
+          {hoverTarget !== undefined && (
+            <g className="text-foreground">
+              <path
+                key={`hover-${hoverIndex}-${Math.round(hoverTarget)}`}
+                d={`M ${layout.sourceX} 0 L ${layout.sourceX} ${railY} L ${hoverTarget} ${railY} L ${hoverTarget} ${layout.height}`}
+                className="archetype-connector-route"
+                pathLength={100}
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
+          )}
         </svg>
-      ))}
+      )}
     </div>
   );
 }
@@ -136,21 +298,22 @@ export function ArchetypeSkillChoice({
   freeRanks,
   attributes,
   experienceBonus = 1,
+  scrollPhase = 'settled',
+  onStandstill,
 }: ArchetypeSkillChoiceProps) {
   const [activeSkill, setActiveSkill] = useState<SagaDriveSkillKey | null>(null);
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-1">
-        <p className="text-xs font-medium text-muted-foreground">Archetyp-Punkt (1 von 10) · welche typische Fertigkeit?</p>
-        <RuleHelp label="Archetyp-Punkt">
-          Du legst genau 1 der 10 Start-Fertigkeitspunkte in eine typische Fertigkeit deines Archetyps. Die Wahl bestimmt, welche Proben du ab Stufe 1 trainiert würfeln kannst und welche abgeleiteten Werte sich ändern.
-        </RuleHelp>
-      </div>
+    <div className="space-y-2 -mt-6">
+      <ArchetypeConnector
+        skills={skills}
+        activeSkill={activeSkill}
+        selectedSkill={selectedSkill}
+        scrollPhase={scrollPhase}
+        onStandstill={onStandstill ?? (() => {})}
+      />
 
-      <ArchetypeConnector skills={skills} activeSkill={activeSkill} />
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-archetype-skill-grid>
         {skills.map((skillKey) => {
           const skill = getSagaDriveSkill(skillKey);
           const attribute = getSagaDriveAttribute(skill.attribute);
@@ -174,8 +337,8 @@ export function ArchetypeSkillChoice({
               onBlur={() => setActiveSkill((current) => (current === skillKey ? null : current))}
               className={
                 selected
-                  ? 'rounded-lg border border-primary bg-primary/10 p-3 text-left transition-colors'
-                  : 'rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/60 disabled:cursor-not-allowed disabled:opacity-45'
+                  ? 'flex flex-col rounded-lg border border-primary bg-primary/10 p-3 text-left transition-colors'
+                  : 'flex flex-col rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/60 disabled:cursor-not-allowed disabled:opacity-45'
               }
             >
               <div className="flex items-start justify-between gap-2">
@@ -202,7 +365,7 @@ export function ArchetypeSkillChoice({
 
               <p className="mt-2 text-xs">
                 <span className="font-medium">{getCompetencyLabel(projectedRank)}</span>
-                <span className="text-muted-foreground"> · Probe typisch d20 + {attribute.shortLabel} + {projectedRank} + {projectedRank > 0 ? experienceBonus : 0} = </span>
+                <span className="text-muted-foreground"> · Check typisch d20 + {attribute.shortLabel} + {projectedRank} + {projectedRank > 0 ? experienceBonus : 0} = </span>
                 <span className="font-semibold">{probeModifier > 0 ? `+${probeModifier}` : probeModifier}</span>
               </p>
 
@@ -217,6 +380,13 @@ export function ArchetypeSkillChoice({
           );
         })}
       </div>
+
+      <p className="flex items-center gap-1 text-xs text-muted-foreground">
+        <span>Archetyp-Punkt (1 von 10) · welche typische Fertigkeit?</span>
+        <RuleHelp label="Archetyp-Punkt">
+          Du legst genau 1 der 10 Start-Fertigkeitspunkte in eine typische Fertigkeit deines Archetyps. Die Wahl bestimmt, welche Checks du ab Stufe 1 trainiert würfeln kannst und welche abgeleiteten Werte sich ändern.
+        </RuleHelp>
+      </p>
     </div>
   );
 }

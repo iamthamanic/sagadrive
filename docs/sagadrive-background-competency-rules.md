@@ -165,4 +165,4 @@ Medizin
 Verstand
 ```
 
-Diese Darstellung erklärt die Basisprobe. Sie bedeutet ausdrücklich nicht `Straßenarzt → Verstand +1`.
+Diese Darstellung erklärt den Basischeck. Sie bedeutet ausdrücklich nicht `Straßenarzt → Verstand +1`.

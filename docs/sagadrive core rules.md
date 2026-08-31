@@ -49,17 +49,17 @@ Der Kern muss vollständig mit Würfeln, Papier und Charakterbogen spielbar blei
 
 ---
 
-## 2. Proben und Auflösung
+## 2. Checks und Auflösung
 
-### 2.1 Basisprobe
+### 2.1 Basischeck
 
-Wenn der Ausgang einer Handlung unsicher ist und sowohl Erfolg als auch Fehlschlag relevante Folgen besitzen, wird eine Probe verlangt.
+Wenn der Ausgang einer Handlung unsicher ist und sowohl Erfolg als auch Fehlschlag relevante Folgen besitzen, wird ein Check verlangt.
 
 ```text
 d20 + Attribut + Fertigkeit + Erfahrungsbonus + Spezialisierung + ausdrückliche Modifikatoren
 ```
 
-Dabei gelten nur die Bestandteile, die auf die konkrete Probe anwendbar sind.
+Dabei gelten nur die Bestandteile, die auf den konkreten Check anwendbar sind.
 
 - Der Erfahrungsbonus gilt nur bei trainierten Fertigkeiten.
 - Der Spezialisierungsbonus gilt nur, wenn die Spezialisierung eindeutig anwendbar ist.
@@ -90,10 +90,10 @@ Im direkten Kampf ist Erfolg gegen Preis nur bei ausdrücklich dafür vorgesehen
 Eine trainierte Figur kann unter kontrollierten Bedingungen sorgfältig arbeiten und statt eines d20-Wurfs einen Sicherheitswert verwenden.
 
 ```text
-Sicherheitswert = 10 + alle auf die Probe anwendbaren Werte und Boni
+Sicherheitswert = 10 + alle auf den Check anwendbaren Werte und Boni
 ```
 
-Sicheres Arbeiten benötigt zusätzliche Zeit oder einen anderen vor der Probe festgelegten Aufwand. Es ist im direkten Kampf oder unter unmittelbarer Bedrohung nicht möglich, sofern keine Fähigkeit ausdrücklich etwas anderes erlaubt.
+Sicheres Arbeiten benötigt zusätzliche Zeit oder einen anderen vor dem Check festgelegten Aufwand. Es ist im direkten Kampf oder unter unmittelbarer Bedrohung nicht möglich, sofern keine Fähigkeit ausdrücklich etwas anderes erlaubt.
 
 ### 2.5 Vorteil und Nachteil
 
@@ -108,7 +108,7 @@ Numerische Boni und Abzüge existieren nur, wenn eine ausdrücklich definierte F
 
 Dieselbe benannte Quelle kann denselben Wurf nicht mehrfach verändern.
 
-### 2.6 Widerstände, vergleichende Proben und Gleichstand
+### 2.6 Widerstände, vergleichende Checks und Gleichstand
 
 Bei einer gerichteten Handlung gegen ein Ziel wird grundsätzlich gegen einen statischen Widerstand gewürfelt.
 
@@ -119,7 +119,7 @@ Widerstand = 10 + passendes Attribut + passende Fertigkeit
              + ausdrückliche Modifikatoren
 ```
 
-Nur wenn beide Seiten gleichzeitig und aktiv dasselbe Ergebnis anstreben, wird eine vergleichende Probe verwendet. Dabei werden zuerst die Erfolgsgrade und danach die Gesamtergebnisse verglichen.
+Nur wenn beide Seiten gleichzeitig und aktiv dasselbe Ergebnis anstreben, wird ein vergleichender Check verwendet. Dabei werden zuerst die Erfolgsgrade und danach die Gesamtergebnisse verglichen.
 
 Bei vollständigem Gleichstand bleibt der Status quo bestehen.
 
@@ -128,7 +128,7 @@ Bei vollständigem Gleichstand bleibt der Status quo bestehen.
 - Tauziehen oder vergleichbare Konkurrenz: Keine Seite erzielt Fortschritt.
 - Es wird nicht automatisch erneut gewürfelt.
 
-Eine normale Probe, deren Ergebnis exakt den Zielwert erreicht, ist ein Erfolg.
+Ein normaler Check, dessen Ergebnis exakt den Zielwert erreicht, ist ein Erfolg.
 
 ### 2.7 Schwierigkeiten
 
@@ -159,11 +159,11 @@ Ein bereits existierendes Hindernis verändert seinen Zielwert nicht, nur weil e
 
 ### 2.8 Zusammenarbeit
 
-SagaDrive unterscheidet unterstützte Einzelproben, Gruppenproben und Gemeinschaftsprojekte.
+SagaDrive unterscheidet unterstützte Einzelchecks, Gruppenchecks und Gemeinschaftsprojekte.
 
-#### Unterstützte Einzelprobe
+#### Unterstützter Einzelcheck
 
-Kann eine Person das Ziel stellvertretend für alle erreichen, führt sie die Probe aus.
+Kann eine Person das Ziel stellvertretend für alle erreichen, führt sie den Check aus.
 
 - Bis zu zwei qualifizierte Helfende können unterstützen.
 - Jede qualifizierte Hilfe zählt als eigenständige Vorteilsquelle.
@@ -171,9 +171,9 @@ Kann eine Person das Ziel stellvertretend für alle erreichen, führt sie die Pr
 - Für Fachhandlungen muss eine unterstützende Figur die relevante Spezialisierung besitzen, sofern ihre Hilfe fachlich denselben Teil der Aufgabe betrifft.
 - Mehrere verbleibende Vorteilsquellen erzeugen weiterhin nur den normalen Vorteil nach Abschnitt 2.5.
 
-#### Gruppenprobe
+#### Gruppencheck
 
-Muss jedes Gruppenmitglied selbst handeln, führt jede Figur eine eigene Probe aus.
+Muss jedes Gruppenmitglied selbst handeln, führt jede Figur einen eigenen Check aus.
 
 | Ergebnis | Gruppenwert |
 |---|---:|
@@ -197,7 +197,7 @@ Mehrstufige oder länger dauernde Vorhaben verwenden Fortschrittspunkte.
 | Groß | 12 |
 | Episch | 16 |
 
-Pro Arbeitsintervall werden höchstens drei Projektproben ausgeführt. Weitere Beteiligte unterstützen diese Proben oder übernehmen erzählerische Aufgaben.
+Pro Arbeitsintervall werden höchstens drei Projektchecks ausgeführt. Weitere Beteiligte unterstützen diese Checks oder übernehmen erzählerische Aufgaben.
 
 | Ergebnis | Fortschritt |
 |---|---:|
@@ -208,9 +208,9 @@ Pro Arbeitsintervall werden höchstens drei Projektproben ausgeführt. Weitere B
 
 ### 2.9 Verdeckte Informationen
 
-Proben werden grundsätzlich offen ausgeführt. Der GM darf eine Probe verdeckt ausführen, wenn bereits die Kenntnis des Würfelergebnisses verborgene Informationen offenlegen würde.
+Checks werden grundsätzlich offen ausgeführt. Der GM darf einen Check verdeckt ausführen, wenn bereits die Kenntnis des Würfelergebnisses verborgene Informationen offenlegen würde.
 
-Verdeckte Proben verändern weder Berechnung noch Erfolgsgrade. Der GM verändert ein verdecktes Ergebnis nicht nachträglich.
+Verdeckte Checks verändern weder Berechnung noch Erfolgsgrade. Der GM verändert ein verdecktes Ergebnis nicht nachträglich.
 
 ### 2.10 Drive
 
@@ -222,9 +222,9 @@ Drive kann ausgegeben werden für:
 - Einführung eines plausiblen charakterbezogenen Details,
 - Aktivierung einer ausdrücklich markierten Drive-Fähigkeit.
 
-Für eine eigene Probe kann höchstens 1 Drive ausgegeben werden.
+Für einen eigenen Check kann höchstens 1 Drive ausgegeben werden.
 
-Bei einer Wiederholung wird die gesamte Probe einschließlich Vorteil oder Nachteil unter denselben Bedingungen erneut gewürfelt. Die spielende Person darf anschließend das alte oder das neue Ergebnis wählen.
+Bei einer Wiederholung wird der gesamte Check einschließlich Vorteil oder Nachteil unter denselben Bedingungen erneut gewürfelt. Die spielende Person darf anschließend das alte oder das neue Ergebnis wählen.
 
 Drive wird durch das freiwillige Akzeptieren einer klar benannten, charakterbezogenen Komplikation zurückgewonnen.
 
@@ -309,11 +309,11 @@ Archetypen, Hintergründe, Spezies und Essenzen vergeben bei der regulären Char
 
 Jede Fertigkeit besitzt ein Standardattribut.
 
-Außerhalb des direkten Kampfes kann ein anderes Attribut verwendet werden, wenn die beschriebene Vorgehensweise tatsächlich eine andere Art der Handlung darstellt. Das alternative Attribut muss vor der Probe feststehen.
+Außerhalb des direkten Kampfes kann ein anderes Attribut verwendet werden, wenn die beschriebene Vorgehensweise tatsächlich eine andere Art der Handlung darstellt. Das alternative Attribut muss vor dem Check feststehen.
 
 Im direkten Kampf gilt das für die Handlung definierte Attribut, sofern keine ausdrückliche Regel etwas anderes erlaubt.
 
-### 3.6 Reine Attributsproben
+### 3.6 Reine Attributschecks
 
 Existiert keine relevante Fertigkeit:
 
@@ -321,7 +321,7 @@ Existiert keine relevante Fertigkeit:
 d20 + Attribut + ausdrückliche Modifikatoren
 ```
 
-Eine Fertigkeit mit Wert 0 gilt dagegen als untrainierte Fertigkeitsprobe. Sicheres Arbeiten steht bei reinen Attributsproben nicht zur Verfügung.
+Eine Fertigkeit mit Wert 0 gilt dagegen als untrainierter Fertigkeitscheck. Sicheres Arbeiten steht bei reinen Attributschecks nicht zur Verfügung.
 
 ### 3.7 Attributsentwicklung
 
@@ -408,15 +408,15 @@ Eine reguläre Spezies verwendet ein **Merkmalsbudget von genau 3 Punkten**. Bei
 
 | Merkmal | Kosten | Regelwirkung |
 |---|---:|---|
-| Geschärfter Sinn | 1 | Einen Sinn festlegen. Vorteil auf Wahrnehmungsproben, bei denen genau dieser Sinn entscheidend ist. Der Sinn muss bei der Charaktererschaffung benannt werden. |
+| Geschärfter Sinn | 1 | Einen Sinn festlegen. Vorteil auf Wahrnehmungschecks, bei denen genau dieser Sinn entscheidend ist. Der Sinn muss bei der Charaktererschaffung benannt werden. |
 | Natürliche Waffe | 1 | Unbewaffneter Schaden steigt von d4+1 auf d6+1. Die körperliche Form, etwa Klauen, Zähne oder Hörner, wird beschrieben. |
-| Enge Resistenz | 1 | Eine klar eingegrenzte Gefahrenart festlegen. Vorteil auf passende Proben und Widerstände gegen genau diese Gefahr. Die Gefahrenart muss benannt werden. |
+| Enge Resistenz | 1 | Eine klar eingegrenzte Gefahrenart festlegen. Vorteil auf passende Checks und Widerstände gegen genau diese Gefahr. Die Gefahrenart muss benannt werden. |
 | Umweltanpassung | 1 | Eine gewöhnliche Umgebung festlegen. Normale Nachteile, die ausschließlich aus dieser Umgebung entstehen, entfallen. Die Umgebung muss benannt werden. |
-| Ausdauernder Organismus | 1 | Vorteil auf Proben gegen langandauernde körperliche Erschöpfung. |
+| Ausdauernder Organismus | 1 | Vorteil auf Checks gegen langandauernde körperliche Erschöpfung. |
 | Geringer Ruhebedarf | 1 | Benötigt nur die Hälfte der für die Spezies üblichen Schlaf- oder Ruhezeit. Heilung und Erholung werden dadurch nicht beschleunigt. |
 | Natürlicher Schutz | 2 | Natürliche Schutzwirkung 1 nach den normalen Schutzregeln. |
-| Erweitertes Klettern | 2 | Beim Klettern kostet 1 Meter Bewegung 1 Meter statt der normalen 2 Meter. Schwierige Oberflächen, Gefahr oder Zeitdruck können weiterhin eine Athletikprobe verlangen. |
-| Erweitertes Schwimmen | 2 | Beim Schwimmen kostet 1 Meter Bewegung 1 Meter statt der normalen 2 Meter. Strömung, Gefahr oder andere schwierige Bedingungen können weiterhin eine Athletikprobe verlangen. |
+| Erweitertes Klettern | 2 | Beim Klettern kostet 1 Meter Bewegung 1 Meter statt der normalen 2 Meter. Schwierige Oberflächen, Gefahr oder Zeitdruck können weiterhin einen Athletikcheck verlangen. |
+| Erweitertes Schwimmen | 2 | Beim Schwimmen kostet 1 Meter Bewegung 1 Meter statt der normalen 2 Meter. Strömung, Gefahr oder andere schwierige Bedingungen können weiterhin einen Athletikcheck verlangen. |
 | Amphibisch | 2 | Kann an Land und unter Wasser normal atmen und leben. Normale Atemeinschränkungen durch Wasser entfallen. |
 | Erweiterte Sicht | 2 | Eine klar definierte besondere Sichtform festlegen, etwa Dunkelsicht, Wärmesicht oder Fernsicht. Die Sichtform gilt nur in ihrem festgelegten Anwendungsbereich und muss benannt werden. |
 | Flugfähig | 3 | Besitzt eine natürliche Flugbewegung in Höhe der normalen Bewegungsrate. |
@@ -527,10 +527,10 @@ Es gibt keine zusätzliche Fertigkeit Belastbarkeit. Reines körperliches Aushal
 Eine passende Spezialisierung gibt:
 
 ```text
-+2 auf die Probe
++2 auf den Check
 ```
 
-- Höchstens eine Spezialisierung pro Probe.
+- Höchstens eine Spezialisierung pro Check.
 - Fachhandlungen können eine passende Spezialisierung voraussetzen.
 - Fachhandlungen müssen vor dem Wurf als solche erkennbar sein.
 
@@ -610,7 +610,7 @@ Nicht verwendete Fertigkeitsentwicklungen dürfen zurückgestellt werden.
 
 | Kategorie | Regel |
 |---|---|
-| Automatische Handlung | Keine Probe |
+| Automatische Handlung | Kein Check |
 | Gewöhnliche Handlung | Darf mit Fertigkeitswert 0 versucht werden |
 | Trainierte Handlung | Fertigkeitswert 1+ erforderlich |
 | Fachhandlung | Training und passende Spezialisierung erforderlich |
@@ -632,7 +632,7 @@ Sprachen sind keine Fertigkeiten. Das Weltprofil bestimmt die gemeinsame Standar
 
 Werkzeuge sind Ausrüstung:
 
-- geeignete Werkzeuge: normale Probe,
+- geeignete Werkzeuge: normaler Check,
 - unvollständige oder improvisierte Werkzeuge: Nachteil,
 - passender zusätzlicher Zeitaufwand kann diesen Nachteil ersetzen,
 - fehlt ein unverzichtbares Werkzeug, ist die Handlung unmöglich,
@@ -650,7 +650,7 @@ Athletik beschreibt trainierte körperliche Bewegung und kontrollierte Kraftanwe
 
 Typische Anwendungen: Klettern, Schwimmen, Springen, Sprinten, Tauchen, Heben, Ziehen, Festhalten, gewaltsames Öffnen und kraftvolles Lösen aus körperlichen Behinderungen.
 
-Normale Bewegung benötigt keine Probe. Ausdauer + Athletik kann außerhalb des direkten Kampfes für langfristige sportliche Leistung verwendet werden. Reines Aushalten verwendet Ausdauer. Kampfmanöver werden mit Nahkampf eingeleitet.
+Normale Bewegung benötigt keinen Check. Ausdauer + Athletik kann außerhalb des direkten Kampfes für langfristige sportliche Leistung verwendet werden. Reines Aushalten verwendet Ausdauer. Kampfmanöver werden mit Nahkampf eingeleitet.
 
 Geeignete Spezialisierungen: Klettern, Schwimmen, Tauchen, Springen, Sprinten, Kraftakt, Rettung.
 
@@ -708,7 +708,7 @@ Geeignete Spezialisierungen können einzelne Waffenfamilien, unbewaffneter Kampf
 
 Fernkampf beschreibt gezielte Angriffe mit Projektilen, Wurfwaffen und anderen direkt bedienten Distanzwaffen.
 
-Reichweite, Sicht und Deckung verändern die Probe nur nach den ausdrücklichen Kampfregeln.
+Reichweite, Sicht und Deckung verändern den Check nur nach den ausdrücklichen Kampfregeln.
 
 Geeignete Spezialisierungen können Bögen, Schusswaffen, Wurfwaffen oder settingbezogene Waffengruppen sein.
 
@@ -730,7 +730,7 @@ Geeignete Spezialisierungen: Hinterhalte, Geräusche, visuelle Suche, Wachsamkei
 
 Menschenkenntnis beschreibt das Einschätzen von Stimmung, Absicht, Motivation und sozialer Dynamik.
 
-Sie erlaubt keine Gedankenleserei. Gegen Täuschungsversuche wird sie normalerweise als Widerstand oder aktive Gegenprobe verwendet.
+Sie erlaubt keine Gedankenleserei. Gegen Täuschungsversuche wird sie normalerweise als Widerstand oder aktiven Gegencheck verwendet.
 
 Geeignete Spezialisierungen: Lügen erkennen, Verhandlungspartner, Gruppendynamik, Motivation, Stressreaktionen.
 
@@ -752,7 +752,7 @@ Ermitteln beschreibt systematische Suche, Rekonstruktion und methodische Informa
 
 Typische Anwendungen: Tatorte auswerten, Quellen vergleichen, Archive durchsuchen, Zusammenhänge rekonstruieren und gezielte Recherche.
 
-Eine für den Fortgang zwingend notwendige Information wird niemals ausschließlich hinter einer einzelnen erfolgreichen Probe verborgen. Die Probe entscheidet über Tiefe, Geschwindigkeit, Kosten, Sicherheit oder Zusatzinformationen.
+Eine für den Fortgang zwingend notwendige Information wird niemals ausschließlich hinter einem einzelnen erfolgreichen Check verborgen. Der Check entscheidet über Tiefe, Geschwindigkeit, Kosten, Sicherheit oder Zusatzinformationen.
 
 Geeignete Spezialisierungen: Tatorte, Archive, digitale Recherche, Forensik, Befragungsanalyse.
 
@@ -790,7 +790,7 @@ Geeignete Spezialisierungen: Notfallmedizin, Chirurgie, Diagnose, Toxikologie, P
 
 Steuern beschreibt die aktive Kontrolle von Fahrzeugen, Reittieren oder vergleichbaren Bewegungssystemen unter schwierigen Bedingungen.
 
-Routinefahrt benötigt keine Probe. Navigation verwendet andere passende Fertigkeiten.
+Routinefahrt benötigt keinen Check. Navigation verwendet andere passende Fertigkeiten.
 
 Geeignete Spezialisierungen: Bodenfahrzeuge, Motorräder, Fluggeräte, Wasserfahrzeuge, Raumfahrzeuge, Reittiere.
 
@@ -883,7 +883,7 @@ Klettern und Schwimmen sind normale Bewegungsarten und grundsätzlich ohne Spezi
 - Ohne ausdrückliche Sonderbewegung kostet **1 Meter Klettern oder Schwimmen 2 Meter Bewegung**.
 - **Erweitertes Klettern** reduziert diesen Bewegungsaufwand beim Klettern auf 1 Meter Bewegung pro 1 Meter Strecke.
 - **Erweitertes Schwimmen** reduziert diesen Bewegungsaufwand beim Schwimmen auf 1 Meter Bewegung pro 1 Meter Strecke.
-- Schwierige Oberflächen, starke Strömung, Gefahr, Zeitdruck oder vergleichbare Unsicherheit können weiterhin eine Athletikprobe verlangen. Erweiterte Bewegung ersetzt eine solche Probe nicht automatisch.
+- Schwierige Oberflächen, starke Strömung, Gefahr, Zeitdruck oder vergleichbare Unsicherheit können weiterhin einen Athletikcheck verlangen. Erweiterte Bewegung ersetzt einen solchen Check nicht automatisch.
 
 ### 6.5 Widerstände
 
@@ -943,7 +943,7 @@ Eine Hauptaktion kann für eine zweite normale Bewegung verwendet werden.
 
 **Lösen:** Hauptaktion; eigene Bewegung löst für den Rest des Zuges keine Gelegenheitsangriffe aus.
 
-**Verteidigen:** Hauptaktion; Angriffe gegen die Figur haben bis zum Beginn ihres nächsten Zuges Nachteil. Eigene aktive Reflexproben erhalten in diesem Zeitraum Vorteil.
+**Verteidigen:** Hauptaktion; Angriffe gegen die Figur haben bis zum Beginn ihres nächsten Zuges Nachteil. Eigene aktive Reflexchecks erhalten in diesem Zeitraum Vorteil.
 
 **Helfen:** Qualifizierte Hilfe nach Abschnitt 2.8.
 
@@ -998,7 +998,7 @@ Nahkampf gegen Verteidigung.
 
 - Teildeckung: Fernkampfangriffe gegen das Ziel haben Nachteil.
 - Volldeckung: Ziel kann nicht direkt anvisiert werden.
-- Unklare Sicht: relevante Angriffe und Sichtproben haben Nachteil.
+- Unklare Sicht: relevante Angriffe und Sichtchecks haben Nachteil.
 - Angriff aus dem Verborgenen: Vorteil; die angreifende Figur wird danach normalerweise sichtbar.
 - Höhenunterschiede geben keinen allgemeinen Zahlenbonus.
 
@@ -1006,7 +1006,7 @@ Nahkampf gegen Verteidigung.
 
 Waffen besitzen eine normale und gegebenenfalls eine maximale Reichweite.
 
-- bis normale Reichweite: normale Probe,
+- bis normale Reichweite: normaler Check,
 - über normale bis maximale Reichweite: Nachteil,
 - über maximale Reichweite: Angriff unmöglich.
 
@@ -1176,7 +1176,7 @@ Kampfunfähig, liegend und nimmt die Umgebung nicht bewusst wahr.
 | Stufe | Wirkung |
 |---:|---|
 | 1 | Bewegung -3 Meter |
-| 2 | zusätzlich Nachteil auf körperliche Fertigkeitsproben |
+| 2 | zusätzlich Nachteil auf körperliche Fertigkeitschecks |
 | 3 | zusätzlich keine Reaktionen und Erholung halbiert |
 
 Jede weitere Erschöpfungsstufe verursacht Schaden in Höhe der Erholung, statt eine zusätzliche Stufe zu erzeugen.
@@ -1333,7 +1333,7 @@ Einmal pro Zug nach einem erfolgreichen Angriff oder Kampfmanöver:
 
 Hauptaktion; Ermitteln gegen passenden Zielwert oder Widerstand.
 
-- Erfolg: Eine relevante mechanische Eigenschaft des Ziels oder Problems wird aufgedeckt; die nächste passende Probe eines Verbündeten erhält Vorteil.
+- Erfolg: Eine relevante mechanische Eigenschaft des Ziels oder Problems wird aufgedeckt; der nächste passende Check eines Verbündeten erhält Vorteil.
 - Kritischer Erfolg: zusätzlich +1 Momentum, höchstens einmal pro Runde durch diese Fähigkeit.
 
 #### Heiler – Feldversorgung
@@ -1384,15 +1384,15 @@ Eine besondere Kraft ist eine Fähigkeit mit mindestens:
 - Widerstand,
 - Begrenzung.
 
-### 12.2 Aktivierungsprobe
+### 12.2 Aktivierungscheck
 
-Wenn eine Kraft eine Aktivierungsprobe verlangt:
+Wenn eine Kraft einen Aktivierungscheck verlangt:
 
 ```text
 d20 + festgelegtes Attribut + Erfahrungsbonus + ausdrückliche Modifikatoren
 ```
 
-Eine erschlossene Essenz zählt für diese Aktivierungsprobe als Training. Es gibt keine eigene Essenz-Fertigkeit.
+Eine erschlossene Essenz zählt für diesen Aktivierungscheck als Training. Es gibt keine eigene Essenz-Fertigkeit.
 
 ### 12.3 Begrenzungsmodelle
 
@@ -1414,7 +1414,7 @@ Eine Figur kann standardmäßig nur einen besonderen aufrechterhaltenen Effekt g
 
 ### 12.5 Gegenwirkung
 
-Eine direkte Gegenwirkung verwendet eine vergleichende Kraftprobe. Bei vollständigem Gleichstand bleibt der bestehende Effekt bestehen.
+Eine direkte Gegenwirkung verwendet einen vergleichenden Kraftcheck. Bei vollständigem Gleichstand bleibt der bestehende Effekt bestehen.
 
 ### 12.6 Wirkungsbudget nach Rang
 
@@ -1552,7 +1552,7 @@ Ein Fehlschlag erzeugt nicht bloß denselben Wurf erneut.
 
 Längere Recherche verwendet Gemeinschaftsprojekte.
 
-Eine zwingend notwendige Information wird nicht hinter einem einzelnen Wurf verborgen. Proben bestimmen Geschwindigkeit, Tiefe, Risiko, Kosten und zusätzliche Erkenntnisse.
+Eine zwingend notwendige Information wird nicht hinter einem einzelnen Wurf verborgen. Checks bestimmen Geschwindigkeit, Tiefe, Risiko, Kosten und zusätzliche Erkenntnisse.
 
 ### 14.4 Soziale Haltung
 
@@ -1661,7 +1661,7 @@ Distanzleiste:
 Start = 2
 ```
 
-Jede Runde wählen beide Seiten eine plausible Fertigkeit oder Fahrhandlung und führen eine vergleichende Probe aus.
+Jede Runde wählen beide Seiten eine plausible Fertigkeit oder Fahrhandlung und führen einen vergleichenden Check aus.
 
 - Sieg: Distanz 1 in Richtung der siegenden Seite.
 - Kritischer Erfolg gegen Fehlschlag oder schlechter: Distanz 2.
@@ -1902,7 +1902,7 @@ SagaDrive verwendet bewusst weniger Bonusarten und eine einfachere Aktionsökono
 
 ### 18.3 Das Schwarze Auge
 
-DSA dient vor allem als Kontrast für detaillierte Fertigkeitsmodelle. SagaDrive verwendet keine dreifache Attributsprobe und keine vergleichbar kleinteilige allgemeine Kompetenzverwaltung.
+DSA dient vor allem als Kontrast für detaillierte Fertigkeitsmodelle. SagaDrive verwendet keine dreifache Attributscheck und keine vergleichbar kleinteilige allgemeine Kompetenzverwaltung.
 
 ### 18.4 Savage Worlds
 
@@ -1934,7 +1934,7 @@ Die Regelarchitektur der Abschnitte 1 bis 18 ist beschlossen. Die dort enthalten
 
 ### 19.1 Bereits rechnerisch plausibilisierte Grundwerte
 
-Für typische Gesamtboni wurden die Erfolgswahrscheinlichkeiten der Kernprobe geprüft.
+Für typische Gesamtboni wurden die Erfolgswahrscheinlichkeiten des Kernchecks geprüft.
 
 Beispiele ohne Vorteil/Nachteil:
 

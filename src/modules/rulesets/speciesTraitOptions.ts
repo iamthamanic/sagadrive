@@ -48,12 +48,12 @@ const SHARPENED_SENSE_OPTIONS: readonly SagaDriveSpeciesTraitOption[] = [
   {
     value: 'sense-sight',
     label: 'Sehen',
-    description: 'Vorteil auf Wahrnehmungsproben, bei denen sichtbare Details entscheidend sind. Dies verleiht keine Dunkelsicht oder andere neue Sichtform.',
+    description: 'Vorteil auf Wahrnehmungschecks, bei denen sichtbare Details entscheidend sind. Dies verleiht keine Dunkelsicht oder andere neue Sichtform.',
   },
   {
     value: 'sense-hearing',
     label: 'Hören',
-    description: 'Vorteil auf Wahrnehmungsproben, bei denen Geräusche entscheidend sind. Dies verleiht keine Echoortung.',
+    description: 'Vorteil auf Wahrnehmungschecks, bei denen Geräusche entscheidend sind. Dies verleiht keine Echoortung.',
   },
   {
     value: 'sense-smell-chemical',
@@ -232,7 +232,7 @@ export const sagaDriveSpeciesTraitOptionCatalogs: Readonly<Partial<Record<SagaDr
   'extreme-environment': {
     label: 'Extremumwelt',
     placeholder: 'Extremumwelt wählen',
-    helpIntro: 'Extremumwelt erlaubt dauerhaftes Überleben in genau einer extremen Umgebung ohne die normalerweise erforderlichen Schutzmittel. Enge Resistenz schützt dagegen nur bei passenden Proben und Widerständen gegen einzelne Gefahrenwirkungen.',
+    helpIntro: 'Extremumwelt erlaubt dauerhaftes Überleben in genau einer extremen Umgebung ohne die normalerweise erforderlichen Schutzmittel. Enge Resistenz schützt dagegen nur bei passenden Checks und Widerständen gegen einzelne Gefahrenwirkungen.',
     options: EXTREME_ENVIRONMENT_OPTIONS,
   },
 };

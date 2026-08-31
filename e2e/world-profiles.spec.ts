@@ -55,7 +55,7 @@ test('world profiles are created and configured through the library', async ({ p
       const now = new Date().toISOString();
       const world: StoredWorld = {
         id: 'world-1',
-        owner_user_id: String(body.owner_user_id ?? 'local-admin'),
+        owner_user_id: String(body.owner_user_id ?? '00000000-0000-4000-8000-000000000001'),
         name: String(body.name ?? ''),
         description: typeof body.description === 'string' ? body.description : null,
         modules: body.modules ?? {},

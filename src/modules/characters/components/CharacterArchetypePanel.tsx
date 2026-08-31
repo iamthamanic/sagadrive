@@ -2,13 +2,14 @@
  * CharacterArchetypePanel — Archetyp-Auswahl per Karussell mit genau einem Archetyp-Startpunkt.
  * Die globale Fertigkeitsverteilung lebt unter Parameter > Kompetenzen.
  */
+import { useCallback, useRef, useState } from 'react';
 import {
   sagaDriveArchetypeOptions,
   type SagaDriveArchetypeKey,
   type SagaDriveSkillKey,
 } from '../../rulesets/characterCreation';
 import type { AbilityDto, CharacterAttributesDto } from '../types/character.types';
-import { ArchetypeCarousel } from './ArchetypeCarousel';
+import { ArchetypeCarousel, type CarouselScrollPhase } from './ArchetypeCarousel';
 import { ArchetypeSkillChoice } from './ArchetypeSkillChoice';
 import { RuleHelp } from './RuleHelp';
 
@@ -35,9 +36,18 @@ export function CharacterArchetypePanel({
   experienceBonus = 1,
 }: CharacterArchetypePanelProps) {
   const selectedOption = sagaDriveArchetypeOptions.find((option) => option.value === selectedArchetype);
+  const [scrollPhase, setScrollPhase] = useState<CarouselScrollPhase>('settled');
+
+  // Phase 'settled' kommt ausschliesslich aus dem Standstill-Watcher des Connectors:
+  // er beobachtet die Kartenposition per rAF und meldet sich, sobald sie 3 Frames
+  // stabil ist — das Karussell steht also real, bevor die Linien erscheinen.
+  const handleScrollPhaseChange = useCallback((phase: CarouselScrollPhase) => {
+    setScrollPhase(phase);
+  }, []);
+  const handleStandstill = useCallback(() => setScrollPhase('settled'), []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-archetype-panel>
       <div>
         <div className="flex items-center gap-1">
           <h3 id="archetype-label" className="font-semibold">Archetyp</h3>
@@ -48,7 +58,12 @@ export function CharacterArchetypePanel({
         <p className="text-sm text-muted-foreground">Was tut dein Charakter besonders gut?</p>
       </div>
 
-      <ArchetypeCarousel selectedArchetype={selectedArchetype} onSelect={onArchetypeChange} labelledBy="archetype-label" />
+      <ArchetypeCarousel
+        selectedArchetype={selectedArchetype}
+        onSelect={onArchetypeChange}
+        labelledBy="archetype-label"
+        onScrollPhaseChange={handleScrollPhaseChange}
+      />
 
       {selectedOption ? (
         <>
@@ -60,6 +75,8 @@ export function CharacterArchetypePanel({
             freeRanks={freeRanks}
             attributes={attributes}
             experienceBonus={experienceBonus}
+            scrollPhase={scrollPhase}
+            onStandstill={handleStandstill}
           />
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm">
             <p className="font-medium">Der Archetyp liefert genau 1 deiner 10 Start-Fertigkeitspunkte.</p>

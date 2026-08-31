@@ -105,7 +105,7 @@ export function SkillSelectField({
         </RuleHelp>
       ) : (
         <RuleHelp label="Fertigkeit">
-          Wähle eine Fertigkeit. Proben nutzen typischerweise d20 + Standardattribut + Fertigkeitswert + Erfahrungsbonus.
+          Wähle eine Fertigkeit. Checks nutzen typischerweise d20 + Standardattribut + Fertigkeitswert + Erfahrungsbonus.
         </RuleHelp>
       )}
     </div>

@@ -69,12 +69,12 @@ Die versehentlich erzeugten Duplikate #34, #35 und #36 sind geschlossen und nich
 > **Status:** durchgeführt (deterministische Engine) – 2026-08-28  
 > **Skript:** `scripts/validate-core-probability.mjs`  
 > **Report:** `.qa/runs/validate-core-probability-report.md`  
-> **Ergebnis:** 1862 Probe-Reihen / 266 Profile, 0 Befunde; exakte Deckung mit §19.1-Referenzwerten (+5 vs ZW15: 55 % / 79,75 % / 30,25 %).  
+> **Ergebnis:** 1862 Check-Reihen / 266 Profile, 0 Befunde; exakte Deckung mit §19.1-Referenzwerten (+5 vs ZW15: 55 % / 79,75 % / 30,25 %).  
 > Verdrahtet im Test Gate (`checkCoreProbabilityValidation`). Änderungen an Core-Konstanten (EB, Caps, Spezialisierung, Schwierigkeitsskala) laufen künftig automatisch gegen diese Matrix.
 
 ### Was muss geprüft werden?
 
-Die vollständige Kernprobe:
+Der vollständige Kerncheck:
 
 ```text
 d20 + Attribut + Fertigkeit + Erfahrungsbonus + Spezialisierung + ausdrückliche Modifikatoren
@@ -249,7 +249,7 @@ Der Character Editor wird damit gleichzeitig UX-Test und erster realer Contract-
 > **Status:** durchgeführt (deterministische Engine) – 2026-08-28  
 > **Skript:** `scripts/validate-combat-action-economy.mjs`  
 > **Report:** `.qa/runs/validate-combat-action-economy-report.md`  
-> **Ergebnis:** 10 Szenario-Blöcke (alle 11 Pflichtszenarien) über Bänder I/III/V, 57 Probe-Reihen, 0 Befunde. Aktionsökonomie als State-Machine (§7.3), Advantage-Folding §2.5, Deckung §7.7 (Volldeckung fail-closed), Reichweite §7.8, Überraschung §7.2. Verdrahtet im Test Gate.
+> **Ergebnis:** 10 Szenario-Blöcke (alle 11 Pflichtszenarien) über Bänder I/III/V, 57 Check-Reihen, 0 Befunde. Aktionsökonomie als State-Machine (§7.3), Advantage-Folding §2.5, Deckung §7.7 (Volldeckung fail-closed), Reichweite §7.8, Überraschung §7.2. Verdrahtet im Test Gate.
 
 Pflichtszenarien:
 
@@ -451,7 +451,7 @@ Zu messen:
 
 Wichtig: Eine deaktivierte Ressource macht davon abhängige Fähigkeiten niemals stillschweigend kostenlos.
 
-**D2-Status (2026-08-29, #26):** Umgesetzt. Deterministische Engine `scripts/validate-drive-momentum.mjs` — 60 exakte Reroll-Zeilen (1−(1−p)², Gewinn ≤ 25pp, Wahlrecht alt/neu geprüft), Drive/Momentum-Ledgers (Caps 5/3, 1-Drive-pro-Probe, Verfall), alle vier §2.12-Varianten spielbar mit fail-closed Ablehnungen, §16.3-Abhängigkeiten mit Ersatzbegrenzungen. 0 Findings. Report: `.qa/runs/validate-drive-momentum-report.md`.
+**D2-Status (2026-08-29, #26):** Umgesetzt. Deterministische Engine `scripts/validate-drive-momentum.mjs` — 60 exakte Reroll-Zeilen (1−(1−p)², Gewinn ≤ 25pp, Wahlrecht alt/neu geprüft), Drive/Momentum-Ledgers (Caps 5/3, 1-Drive-pro-Check, Verfall), alle vier §2.12-Varianten spielbar mit fail-closed Ablehnungen, §16.3-Abhängigkeiten mit Ersatzbegrenzungen. 0 Findings. Report: `.qa/runs/validate-drive-momentum-report.md`.
 
 ---
 
@@ -474,7 +474,7 @@ Zu validieren:
 - Fail Forward,
 - kein einzelner Wurf als Sackgasse,
 - Projektfortschritt,
-- Gruppenprobe,
+- Gruppencheck,
 - soziale Haltung,
 - Fortschrittsziel 3/5,
 - Kontakte und Ruf ohne pauschale Boni.

@@ -25,7 +25,7 @@ type StoredMember = {
   joined_at: string;
 };
 
-const USER_ID = 'local-admin';
+const USER_ID = '00000000-0000-4000-8000-000000000001';
 
 const MOCK_PROJECTS: StoredProject[] = [
   {
