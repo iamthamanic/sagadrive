@@ -22,6 +22,7 @@ Roadmap: Fortsetzung von PR #82 (Hintergrund-Skill-Nodes).
 - [ ] Milieu/Kontakt/Komplikation/Kommunikation bleiben unter `Verankerung in der Welt` getrennt.
 
 ## Edge Cases
+- [ ] Karussell übernimmt beim Mount die zentrierte Option (wie Archetyp), damit Connector und Nodes sofort sichtbar sind.
 - [ ] Custom-Modus: Pool-Selects erscheinen unter dem Karussell; Connector erst nach 4 Pool-Skills.
 - [ ] Template-Wechsel aktualisiert Pool/Training wie bisher.
 - [ ] Bei 2 Trainings sind weitere Nodes disabled.
