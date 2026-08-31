@@ -1,5 +1,5 @@
 /**
- * BackgroundCarousel — Swipebare Hintergrund-Auswahl (Templates + Custom), analog zum Archetyp-Karussell.
+ * BackgroundCarousel — Swipebare Hintergrund-Framework-Auswahl (Frameworks + Custom), analog zum Archetyp-Karussell.
  * Location: src/modules/characters/components/BackgroundCarousel.tsx
  */
 import { useEffect, useRef, useState } from 'react';
@@ -164,9 +164,10 @@ export function BackgroundCarousel({
             const title = option.kind === 'template' ? option.template.name : 'Eigener Hintergrund';
             const summary = option.kind === 'template'
               ? option.template.description
-              : 'Wähle selbst vier passende Fertigkeiten. Training und Spezialisierung folgen denselben Regeln.';
+              : 'Kein Framework passt? Benenne deine Vergangenheit selbst und wähle vier passende Fertigkeiten.';
             const playstyle = option.kind === 'template' ? option.template.playstyle : 'Volle Freiheit · gleiche Regeln';
             const poolPreview = option.kind === 'template' ? skillLabels(option.template.skillPool) : 'Vier freie Pool-Fertigkeiten';
+            const examples = option.kind === 'template' ? option.template.examples.join(' · ') : null;
 
             return (
               <CarouselItem
@@ -199,17 +200,21 @@ export function BackgroundCarousel({
                       ) : null}
                     </div>
                     <CardHeader className="space-y-1.5 p-3 md:p-3.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                        {option.kind === 'template' ? 'Hintergrund Framework' : 'Freier Hintergrund'}
+                      </p>
                       <div className="flex items-center gap-1">
                         <CardTitle className="text-sm md:text-base">{title}</CardTitle>
                         <span className="inline-flex" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
                           <RuleHelp label={title}>
                             {option.kind === 'template'
-                              ? `${option.template.description} Playstyle: ${option.template.playstyle}`
+                              ? `${option.template.description} Beispiele: ${option.template.examples.join(', ')}. Playstyle: ${option.template.playstyle}`
                               : 'Eigener Hintergrund: vier freie Pool-Fertigkeiten, zwei Trainings mit Hintergrund +1, eine Spezialisierung.'}
                           </RuleHelp>
                         </span>
                       </div>
                       <p className="text-xs leading-relaxed text-muted-foreground line-clamp-3">{summary}</p>
+                      {examples ? <p className="text-[11px] text-muted-foreground line-clamp-2"><span className="font-medium">Beispiele:</span> {examples}</p> : null}
                       <p className="text-[11px] font-medium text-muted-foreground">{playstyle}</p>
                       {isCenter ? (
                         <div className="flex flex-wrap gap-1.5 pt-0.5">
@@ -233,10 +238,10 @@ export function BackgroundCarousel({
 
       {options.length > 1 ? (
         <div className="background-carousel-nav-buttons">
-          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button left-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:left-2 md:h-11 md:w-11" onClick={() => api?.scrollPrev()} aria-label="Vorheriger Hintergrund">
+          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button left-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:left-2 md:h-11 md:w-11" onClick={() => api?.scrollPrev()} aria-label="Vorheriges Hintergrund Framework">
             <ChevronLeft className="size-5" />
           </Button>
-          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button right-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:right-2 md:h-11 md:w-11" onClick={() => api?.scrollNext()} aria-label="Nächster Hintergrund">
+          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button right-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:right-2 md:h-11 md:w-11" onClick={() => api?.scrollNext()} aria-label="Nächstes Hintergrund Framework">
             <ChevronRight className="size-5" />
           </Button>
         </div>
