@@ -174,7 +174,7 @@ export function CharacterBackgroundPanel({
   const customMode = backgroundTemplateId === null;
   const hasChoice = backgroundTemplateId !== undefined;
   const specializationSuggestions = selectedTemplate?.specializationSuggestions.filter((entry) => trainedSkills.includes(entry.skillId)) ?? [];
-  const backgroundLabel = selectedTemplate?.name ?? backgroundName.trim() || 'Eigener Hintergrund';
+  const backgroundLabel = selectedTemplate?.name ?? (backgroundName.trim() || 'Eigener Hintergrund');
 
   return (
     <section className="space-y-5" aria-labelledby="background-competency-heading">
