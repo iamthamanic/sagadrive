@@ -107,6 +107,15 @@ function SelectItem({
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Item>) {
+  // Plain text/number stays ItemText (SelectValue). Zusammengesetzte Children können
+  // SelectItemText + Nebenelemente (z.B. Dropdown-only Tooltip) selbst strukturieren.
+  const content =
+    typeof children === 'string' || typeof children === 'number' ? (
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    ) : (
+      children
+    );
+
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
@@ -121,8 +130,21 @@ function SelectItem({
           <CheckIcon className="size-4" />
         </SelectPrimitive.ItemIndicator>
       </span>
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      {content}
     </SelectPrimitive.Item>
+  );
+}
+
+function SelectItemText({
+  className,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.ItemText>) {
+  return (
+    <SelectPrimitive.ItemText
+      data-slot="select-item-text"
+      className={cn(className)}
+      {...props}
+    />
   );
 }
 
@@ -180,6 +202,7 @@ export {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectItemText,
   SelectLabel,
   SelectScrollDownButton,
   SelectScrollUpButton,
