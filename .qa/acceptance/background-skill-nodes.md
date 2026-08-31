@@ -53,6 +53,11 @@ Roadmap: nicht vorhanden — Scope aus aktuellem Chat, Core Rules und bestehende
 | 4 | `04-background-mobile.png` |
 
 ## Implementation Notes
-- Files touched: pending
-- Tests: pending
-- Known limitations: pending
+- Files touched: `src/modules/characters/components/CharacterBackgroundPanel.tsx`, `.qa/acceptance/background-skill-nodes.md`.
+- Der bestehende Template-/Custom-State und alle Callback-/Persistenzverträge bleiben unverändert; die Änderung ist UI-only.
+- Pool und Training werden bei Templates nicht mehr als zwei separate Skill-Card-Sätze gerendert. Die vier Skill-Nodes sind direkt die Trainings-Controls und zeigen `Pool`, `Empfohlen` bzw. `Hintergrund +1`.
+- Nach zwei Trainings wird der bestehende Spezialisierungs-Editor freigeschaltet; eine gesetzte Spezialisierung erscheint zusätzlich als untergeordneter Branch am zugehörigen Skill-Node.
+- Mobile verwendet eine vertikale Rail statt eines horizontalen Graphen; primäre Controls und Vorschlagsbuttons verwenden mindestens 44px Höhe.
+- Der soziale Teil wurde in `Verankerung in der Welt` umbenannt und visuell vom mechanischen Skill-Graphen getrennt.
+- Tests: bestehende CI-/Character-Editor-Gates sollen über PR laufen; keine neue Regel- oder Persistenzlogik eingeführt.
+- Known limitations: Der übergeordnete Guided-Wizard und die spätere Zusammenführung mit dem allgemeinen Skill-Graphen sind ausdrücklich nicht Teil dieses Slices.
