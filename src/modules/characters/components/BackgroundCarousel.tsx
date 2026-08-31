@@ -61,6 +61,7 @@ export function BackgroundCarousel({
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const skipSelectRef = useRef(false);
+  const userDrivenRef = useRef(false);
   const options = buildOptions(templates);
 
   useEffect(() => {
@@ -95,12 +96,8 @@ export function BackgroundCarousel({
     };
   }, [api, onScrollPhaseChange]);
 
-  useEffect(() => {
-    if (!api || selectedId !== undefined) return;
-    const option = options[api.selectedScrollSnap()];
-    if (option) onSelect(option.id);
-  }, [api, onSelect, options, selectedId]);
-
+  // Kein Auto-Select beim Mount: leerer Hilfszustand bleibt, bis der User
+  // swipet/klickt (anders als Archetyp, der immer sofort einen Wert braucht).
   useEffect(() => {
     if (!api || selectedId === undefined) return;
     const index = options.findIndex((option) => optionMatches(option, selectedId));
@@ -116,6 +113,7 @@ export function BackgroundCarousel({
         skipSelectRef.current = false;
         return;
       }
+      if (selectedId === undefined && !userDrivenRef.current) return;
       const option = options[api.selectedScrollSnap()];
       if (!option) return;
       if (selectedId === undefined || option.id !== selectedId) onSelect(option.id);
@@ -126,7 +124,12 @@ export function BackgroundCarousel({
     };
   }, [api, onSelect, options, selectedId]);
 
+  const markUserDriven = () => {
+    userDrivenRef.current = true;
+  };
+
   const handleCardClick = (index: number) => {
+    markUserDriven();
     if (index === current) {
       const option = options[index];
       if (option && (selectedId === undefined || option.id !== selectedId)) onSelect(option.id);
@@ -136,7 +139,7 @@ export function BackgroundCarousel({
   };
 
   return (
-    <div className="relative px-0" role="radiogroup" aria-labelledby={labelledBy}>
+    <div className="relative px-0" role="radiogroup" aria-labelledby={labelledBy} onPointerDown={markUserDriven}>
       <style>{`
         .background-carousel-item { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .background-carousel-item:not(.is-center) { opacity: 0.62; filter: blur(1px); }
@@ -231,10 +234,10 @@ export function BackgroundCarousel({
 
       {options.length > 1 ? (
         <div className="background-carousel-nav-buttons">
-          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button left-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:left-2 md:h-11 md:w-11" onClick={() => api?.scrollPrev()} aria-label="Vorheriger Hintergrund">
+          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button left-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:left-2 md:h-11 md:w-11" onClick={() => { markUserDriven(); api?.scrollPrev(); }} aria-label="Vorheriger Hintergrund">
             <ChevronLeft className="size-5" />
           </Button>
-          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button right-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:right-2 md:h-11 md:w-11" onClick={() => api?.scrollNext()} aria-label="Nächster Hintergrund">
+          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button right-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:right-2 md:h-11 md:w-11" onClick={() => { markUserDriven(); api?.scrollNext(); }} aria-label="Nächster Hintergrund">
             <ChevronRight className="size-5" />
           </Button>
         </div>
