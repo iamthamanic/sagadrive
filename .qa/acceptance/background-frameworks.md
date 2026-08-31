@@ -52,6 +52,12 @@ Roadmap: nicht vorhanden — Scope aus Chat, bestehendem Background-Kompetenzdes
 | 3 | `03-custom-background.png` |
 | 4 | `04-frameworks-mobile.png` |
 
+## Composition Gate
+- Proof: `.qa/runs/composition-gate-background-frameworks.md`
+- Proof code SHA: `647712d5859cf440170699b03c3850f01b3cb716`
+- Base SHA: `4fde896761678bedba45b7f555a09835fb392953`
+- Verdict: **CLEAR** — Katalog → Karussell → Character-State → bestehender Save-Pfad wurde für N-actors, invalid/missing und two-consumers/crash geprüft; kein neuer Side-Effect-Hop.
+
 ## Implementation Notes
 - Files touched: Framework-Katalog, Background-Karussell, deterministischer Framework-Regression-Check, Test-Gate-Verkabelung, Character-Editor-Playwright-Test und diese Acceptance-Datei.
 - Der Katalog enthält genau 17 setting-neutrale Frameworks. Die sechs bisherigen internen Template-Schlüssel bleiben für bestehende Daten erhalten, zeigen aber die neuen universellen Framework-Namen.
