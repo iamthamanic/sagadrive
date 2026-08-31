@@ -1,6 +1,6 @@
 # Composition Gate — attribute-derived-connector
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 7755328785582ecedef0099e4df3a135e56a7d9a
 - BASE_SHA: 8de289eb2c612bb1c9431c9b418b42a36700ffb9
 - Date: 2026-08-31
 - Verdict: SKIPPED
