@@ -71,7 +71,16 @@ Roadmap/Design-Artefakt: im Repository nicht vorhanden; Scope basiert auf dem ak
 - Die 17 bestehenden Framework-Pools werden nicht inhaltlich verändert.
 - Framework-Icons sind rein visuell und haben keine Regelwirkung.
 
+## Composition Gate
+- Proof: `.qa/runs/composition-gate-background-training-selection.md`
+- Proof code SHA: `99293902db366b88009d86f1d0542d0f10cf941a`
+- Base SHA: `dea1502ddef740ace9646a48a98838fbebcd131f`
+- Verdict: **CLEAR** — Framework-Pool → neutraler Editor-State → 4/2-Node-UI → bestehende Charakterpersistenz wurde für N-actors, invalid/missing und two-consumers/crash geprüft; kein neuer Side-Effect-Hop.
+
 ## Implementation Notes
-- Files touched: pending
-- Tests: pending
-- Known limitations: pending
+- Files touched: `src/modules/rulesets/backgroundTemplates.ts`, `src/modules/characters/components/BackgroundCarousel.tsx`, `src/modules/characters/components/CharacterBackgroundPanel.tsx`, `scripts/background-framework-regression-check.mjs`, `scripts/character-editor-regression-check.mjs`, `e2e/character-editor.spec.ts` sowie QA-Artefakte.
+- Das Core-Framework-Modell enthält keine statischen Trainingsempfehlungen mehr. Der noch bestehende CharacterEditor-Aufrufer wird vorübergehend über einen neutralen, immer leeren `recommendedTraining`-Kompatibilitätswert auf `0 / 2` gehalten; dieser Bridge-Wert ist nicht Teil des Framework-Katalogs und sollte bei einem späteren CharacterEditor-Refactor vollständig entfernt werden.
+- Nach `2 / 2` rendert der Background-Graph nur die zwei trainierten Nodes. `Auswahl ändern` öffnet den Vierer-Pool erneut und behält die bestehende Auswahl bis zur tatsächlichen Änderung.
+- Alle 17 Frameworks verwenden stabile ID→Lucide-Icon-Mappings; Custom verwendet `PencilLine`.
+- Tests: `npm run test-gate` ist für Code-SHA `99293902db366b88009d86f1d0542d0f10cf941a` erfolgreich gelaufen; Character-Editor-E2E enthält den vollständigen `0/2 → 1/2 → 2/2 → Auswahl ändern → neue 2/2`-Pfad.
+- Known limitations: Build-Assistent-Empfehlungen selbst sind nicht Teil dieses Slices; der neutrale Compatibility-View existiert nur, solange der Parent-Editor noch das historische Feld liest.
