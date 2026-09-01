@@ -372,9 +372,22 @@ export function validateSagaDriveBackgroundTemplateCatalog(
 const catalogErrors = validateSagaDriveBackgroundTemplateCatalog();
 if (catalogErrors.length > 0) throw new Error(`Invalid SagaDrive background framework catalog: ${catalogErrors.join('; ')}`);
 
-export function getSagaDriveBackgroundTemplate(id: string | null | undefined): SagaDriveBackgroundTemplate | undefined {
+/**
+ * Compatibility view for the pre-neutral CharacterEditor call site. The framework
+ * catalog itself no longer contains recommendations; this legacy field is always
+ * empty so selecting a framework starts at 0 / 2 until the editor call site is folded
+ * into the next CharacterEditor refactor.
+ */
+type SagaDriveBackgroundTemplateSelection = SagaDriveBackgroundTemplate & {
+  readonly recommendedTraining: readonly ['', ''];
+};
+
+const EMPTY_BACKGROUND_TRAINING = ['', ''] as const;
+
+export function getSagaDriveBackgroundTemplate(id: string | null | undefined): SagaDriveBackgroundTemplateSelection | undefined {
   if (!id) return undefined;
-  return sagaDriveBackgroundTemplates.find((template) => template.id === id);
+  const template = sagaDriveBackgroundTemplates.find((entry) => entry.id === id);
+  return template ? { ...template, recommendedTraining: EMPTY_BACKGROUND_TRAINING } : undefined;
 }
 
 export function getSagaDriveBackgroundTemplatesForWorldProfile(worldProfileId?: string | null): readonly SagaDriveBackgroundTemplate[] {
