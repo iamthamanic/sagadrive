@@ -113,17 +113,9 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('button', { name: /Erweiterte Sicht entfernen/i }).click();
 
   await page.getByRole('button', { name: /Extremumwelt, 3 Punkte/i }).click();
-  const extremeSelect = page.getByRole('combobox', { name: 'Erweiterte Sicht: Sichtform' });
+  const extremeSelect = page.getByRole('combobox', { name: 'Extremumwelt: Extremumwelt' });
   await expect(extremeSelect).toBeVisible();
   await extremeSelect.click();
-  await expect(page.getByRole('listbox').getByText(/Natürliche Dunkelheit allein/i)).toBeVisible();
-  await page.getByRole('option', { name: /Dunkelsicht/i }).click();
-  await page.getByRole('button', { name: /Erweiterte Sicht entfernen/i }).click();
-
-  await page.getByRole('button', { name: /Extremumwelt, 3 Punkte/i }).click();
-  const extremeEnvironmentSelect = page.getByRole('combobox', { name: 'Extremumwelt: Extremumwelt' });
-  await expect(extremeEnvironmentSelect).toBeVisible();
-  await extremeEnvironmentSelect.click();
   await expect(page.getByRole('listbox').getByText(/ohne Atemluft/i)).toBeVisible();
   await page.getByRole('option', { name: /Vakuum & Sauerstofflosigkeit/i }).click();
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
