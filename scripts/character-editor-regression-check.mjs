@@ -7,6 +7,8 @@ function rejectMatch(content, pattern, label) { if (pattern.test(content)) { con
 
 const runtime = read('src/modules/characters/avatar/characterStudio/CharacterStudioRuntime.ts');
 const editor = read('src/components/CharacterEditor.tsx');
+const attributePanel = read('src/modules/characters/components/CharacterAttributeBonusPanel.tsx');
+const attributeProgression = read('src/modules/rulesets/attributeProgression.ts');
 const backgroundPanel = read('src/modules/characters/components/CharacterBackgroundPanel.tsx');
 const backgroundCarousel = read('src/modules/characters/components/BackgroundCarousel.tsx');
 const backgroundTemplates = read('src/modules/rulesets/backgroundTemplates.ts');
@@ -45,11 +47,28 @@ requireMatch(editor, /acquiredAtLevel:\s*1/, 'species creation traits remain lev
 requireMatch(editor, /speciesProfile:\s*characterRace === 'alien'/, 'Alien species profile persistence');
 requireMatch(editor, /GenderReadingSelect/, 'gender reading field in CharacterEditor');
 requireMatch(editor, /backgroundTemplateId:\s*backgroundTemplateId \?\? null/, 'background template origin persistence');
-requireMatch(editor, /SAGA_DRIVE_START_ATTRIBUTE_ARRAY/, 'SagaDrive start attribute distribution validation');
+requireMatch(editor, /CharacterAttributeBonusPanel/, 'dedicated attribute bonus allocation panel');
+requireMatch(editor, /getSagaDriveFinalAttributeBonuses\(baseAttributes, attributeAdvancements, characterLevel\)/, 'final attributes derived from base plus milestones');
+requireMatch(editor, /getSagaDriveExperienceBonus\(characterLevel\)/, 'level-sensitive SagaDrive experience bonus');
+requireMatch(editor, /attributeProgression:\s*\{[\s\S]*base:\s*\{ \.\.\.baseAttributes \}/, 'attribute source progression persistence');
+rejectMatch(editor, /SAGA_DRIVE_START_ATTRIBUTE_ARRAY|getSagaDriveAttributePointBudget/, 'legacy fixed-array attribute validation remains in CharacterEditor');
 requireMatch(editor, /sagadrive_profile:\s*sagaDriveProfile/, 'SagaDrive profile save payload');
 requireMatch(editor, /notes:\s*notes\.trim\(\)/, 'persistent notes save payload');
 rejectMatch(editor, /starter-fireball|Feuerball/, 'free starter fireball remains in CharacterEditor');
 rejectMatch(editor, /Dungeons & Dragons 5\.5e nutzt|Wähle Klasse|dnd-class/, 'active D&D creation UI remains in CharacterEditor');
+
+requireMatch(attributePanel, /d20 \+ Attributbonus \+ Fertigkeit \+ weitere Boni/, 'visible d20 attribute-bonus formula');
+requireMatch(attributePanel, /SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET/, '15-point start attribute bonus budget UI');
+requireMatch(attributePanel, /\[0, 1, 2, 3, 4\]/, 'regular zero-to-four start bonus choices');
+requireMatch(attributePanel, /createBalancedSagaDriveAttributeBonuses/, 'balanced attribute quick preset');
+requireMatch(attributePanel, /Stufe 8 · \+1/, 'level-eight attribute advancement source');
+requireMatch(attributePanel, /Stufe 16 · \+1/, 'level-sixteen attribute advancement source');
+requireMatch(attributePanel, /Start \{formatBonus\(startBonus\)\}/, 'start bonus source label');
+requireMatch(attributePanel, /Permanentes \+1 · keine Neuverteilung der Startboni/, 'no automatic respec guidance');
+requireMatch(attributeProgression, /getSagaDriveStartAttributeBonusUsed/, 'start attribute budget helper');
+requireMatch(attributeProgression, /!== SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET/, 'exact start attribute budget validation');
+requireMatch(attributeProgression, /getRequiredSagaDriveAttributeMilestones/, 'required level milestone validation');
+requireMatch(attributeProgression, /SAGA_DRIVE_ATTRIBUTE_BONUS_CAP/, 'final attribute cap validation');
 
 requireMatch(backgroundTemplates, /id:\s*'street-doctor'/, 'Heilung & Fürsorge legacy template id');
 requireMatch(backgroundTemplates, /skillPool:\s*\['medicine', 'insight', 'survival', 'awareness'\]/, 'Heilung & Fürsorge fixed four-skill pool');
@@ -95,6 +114,8 @@ requireMatch(characterTypes, /mind:\s*number/, 'SagaDrive Verstand attribute DTO
 requireMatch(characterTypes, /perception:\s*number/, 'SagaDrive Wahrnehmung attribute DTO');
 requireMatch(characterTypes, /sagadrive_profile\?:/, 'SagaDrive profile DTO contract');
 requireMatch(characterTypes, /backgroundTemplateId\?:\s*string \| null/, 'optional background template metadata');
+requireMatch(characterTypes, /interface SagaDriveAttributeProgressionDto/, 'attribute progression source DTO');
+requireMatch(characterTypes, /attributeProgression\?:\s*SagaDriveAttributeProgressionDto/, 'optional persisted attribute progression metadata');
 requireMatch(characterTypes, /interface SagaDriveSpeciesTraitInstanceDto/, 'species trait instance DTO');
 requireMatch(characterTypes, /speciesTraitInstances:\s*SagaDriveSpeciesTraitInstanceDto\[\]/, 'canonical species trait instance collection');
 requireMatch(characterTypes, /source:\s*SagaDriveSpeciesTraitSource/, 'species trait source metadata');
@@ -107,6 +128,13 @@ requireMatch(characterTypes, /type ItemType = 'weapon' \| 'armor' \| 'shield' \|
 
 requireMatch(characterCreation, /label:\s*'Gebunden'/, 'canonical Gebunden essence label');
 rejectMatch(characterCreation, /Paktbasiert/, 'legacy Paktbasiert essence label remains');
+requireMatch(characterCreation, /SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET = 15/, 'fifteen SagaDrive start attribute bonus points');
+requireMatch(characterCreation, /SAGA_DRIVE_START_ATTRIBUTE_BONUS_CAP = 4/, 'level-one attribute bonus cap');
+requireMatch(characterCreation, /SAGA_DRIVE_ATTRIBUTE_BONUS_CAP = 5/, 'regular final attribute bonus cap');
+requireMatch(characterCreation, /SAGA_DRIVE_BALANCED_ATTRIBUTE_ARRAY = \[4, 3, 3, 2, 2, 1\]/, 'balanced optional attribute preset');
+requireMatch(characterCreation, /createEmptySagaDriveAttributeBonuses/, 'zero-valued attribute creation baseline');
+requireMatch(characterCreation, /getSagaDriveExperienceBonus/, 'rank-based experience bonus helper');
+rejectMatch(characterCreation, /getSagaDriveAttributePointBudget/, 'legacy attribute point-buy helper remains');
 requireMatch(characterCreation, /SAGA_DRIVE_START_TOTAL_SKILL_POINTS = 10/, 'ten SagaDrive start skill points');
 requireMatch(characterCreation, /SAGA_DRIVE_SPECIES_TRAIT_BUDGET = 3/, 'three-point species trait budget');
 requireMatch(characterCreation, /key:\s*'enhanced-climbing'.*label:\s*'Erweitertes Klettern'/s, 'enhanced climbing species trait');
@@ -125,6 +153,9 @@ rejectMatch(inventoryPanel, /capacity = 30|Freier Inventarplatz|Jeder Gegenstand
 
 requireMatch(characterService, /sagadrive_profile:/, 'SagaDrive profile persistence');
 requireMatch(characterService, /normalizeBackgroundTemplateId/, 'background template backward compatibility');
+requireMatch(characterService, /normalizeAttributeProgression/, 'attribute progression source normalization');
+requireMatch(characterService, /total !== 15/, 'persisted attribute base budget validation');
+requireMatch(characterService, /isSagaDriveAttributeKey/, 'persisted attribute milestone key validation');
 requireMatch(characterService, /normalizeSpeciesTraitInstances/, 'canonical species trait instance normalization');
 requireMatch(characterService, /normalizeLegacySpeciesTraitInstances/, 'legacy species trait migration on read');
 requireMatch(characterService, /legacyDetail/, 'unmapped legacy species trait detail preservation');
