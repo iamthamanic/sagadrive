@@ -10,8 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Loader2, AlertCircle, Moon, Sun } from 'lucide-react';
 import { toast } from 'sonner';
-import { ImageWithFallback } from '../figma/ImageWithFallback';
-import logoImage from 'figma:asset/5cdcbab5ea0860d6cbb920fecd888377cdc015a0.png';
+import { SagaDriveLogo } from '../SagaDriveLogo';
 
 export function LoginScreen() {
   const { signIn, signUp } = useAuth();
@@ -80,19 +79,7 @@ export function LoginScreen() {
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center mb-2">
-            <div className="login-logo-wrap relative w-32 h-32">
-              <span className="login-logo-sparkle login-logo-sparkle-1" aria-hidden="true" />
-              <span className="login-logo-sparkle login-logo-sparkle-2" aria-hidden="true" />
-              <span className="login-logo-sparkle login-logo-sparkle-3" aria-hidden="true" />
-              <span className="login-logo-sparkle login-logo-sparkle-4" aria-hidden="true" />
-              <span className="login-logo-sparkle login-logo-sparkle-5" aria-hidden="true" />
-              <span className="login-logo-sparkle login-logo-sparkle-6" aria-hidden="true" />
-              <ImageWithFallback
-                src={logoImage}
-                alt="SagaDrive Logo"
-                className="login-logo-image w-full h-full object-contain"
-              />
-            </div>
+            <SagaDriveLogo className="h-32 w-32" />
           </div>
           <div>
             <h1 className="text-3xl">SagaDrive</h1>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SagaDrive">
+  <!-- Brand colors: primary teal #0891B2, accent gold #E8A641 — mark fills almost entire canvas -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(32 32) scale(1.22) translate(-32 -33)">
+    <!-- Outer book (teal) -->
+    <path
+      d="M10 18 L32 12 L54 18 L54 48 L32 54 L10 48 Z"
+      stroke="#0891B2"
+      stroke-width="3.4"
+    />
+    <!-- Inner page edge (gold) -->
+    <path
+      d="M16 22 L32 17 L48 22 L48 44 L32 49 L16 44 Z"
+      stroke="#E8A641"
+      stroke-width="2.8"
+    />
+    <!-- Center fold -->
+    <path d="M32 17 L32 49" stroke="#0891B2" stroke-width="2.2" />
+    <!-- SD monogram circle -->
+    <circle cx="32" cy="33" r="9.5" stroke="#0891B2" stroke-width="2.4" />
+    <!-- Simplified SD mark -->
+    <path
+      d="M29 29.5 C27.2 29.5 26.2 30.6 26.2 32 C26.2 34.8 37.8 31.2 37.8 34 C37.8 35.4 36.7 36.6 34.8 36.6"
+      stroke="#0891B2"
+      stroke-width="2.2"
+    />
+    <path d="M34.2 28.8 L34.2 37.2" stroke="#0891B2" stroke-width="2.2" />
+  </g>
+</svg>

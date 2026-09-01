@@ -1,5 +1,6 @@
 import { supabase } from '../../../lib/supabase';
-import { isLocalAdminSession, LOCAL_ADMIN_USER_ID } from '../../../lib/localAdmin';
+import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
+import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../../lib/networkTimeout';
 import { projectMemberService } from './project-member.service';
 import type {
   ProjectDto,
@@ -8,6 +9,7 @@ import type {
   JoinProjectDto,
   ProjectMemberDto,
   ProjectMemberVm,
+  ProjectSummaryVm,
   SessionDto,
   SessionVm,
 } from '../types/project.types';
@@ -111,27 +113,10 @@ class ProjectService {
   }
 
   /**
-   * Resolve the current user id. A real GoTrue session wins so requests carry
-   * a genuine JWT (RLS requires the `authenticated` role with a stable UUID);
-   * the local-admin constant is only a fallback for offline/UI-only sessions
-   * on the local-only stack (same pattern as character.service).
-   */
-  private async getAuthenticatedUserId(): Promise<string> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) return user.id;
-
-    if (isLocalAdminSession()) {
-      return LOCAL_ADMIN_USER_ID;
-    }
-
-    throw new Error('User not authenticated');
-  }
-
-  /**
    * Create new project (as GM)
    */
   async createProject(payload: CreateProjectDto): Promise<ProjectVm> {
-    const userId = await this.getAuthenticatedUserId();
+    const userId = await getAuthenticatedUserId();
 
     const code = this.generateProjectCode();
 
@@ -168,8 +153,104 @@ class ProjectService {
   /**
    * Get user's projects (as GM or active player).
    */
+  async getUserProjectSummaries(): Promise<ProjectSummaryVm[]> {
+    return raceWithTimeoutReject(
+      this.fetchUserProjectSummaries(),
+      SUPABASE_QUERY_TIMEOUT_MS,
+      'Failed to fetch projects: request timed out',
+    );
+  }
+
   async getUserProjects(): Promise<ProjectVm[]> {
-    const userId = await this.getAuthenticatedUserId();
+    return raceWithTimeoutReject(
+      this.fetchUserProjects(),
+      SUPABASE_QUERY_TIMEOUT_MS,
+      'Failed to fetch projects: request timed out',
+    );
+  }
+
+  private countByProjectId(rows: ReadonlyArray<{ project_id: string }>): Map<string, number> {
+    const counts = new Map<string, number>();
+    for (const row of rows) {
+      counts.set(row.project_id, (counts.get(row.project_id) ?? 0) + 1);
+    }
+    return counts;
+  }
+
+  private async fetchUserProjectSummaries(): Promise<ProjectSummaryVm[]> {
+    const userId = await getAuthenticatedUserId();
+
+    const { data: gmProjects, error: gmError } = await supabase
+      .from(this.tableName)
+      .select('id, code, name, description, gm_user_id, status')
+      .eq('gm_user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (gmError) {
+      throw new Error(`Failed to fetch GM projects: ${gmError.message}`);
+    }
+
+    const { data: memberRecords, error: memberError } = await supabase
+      .from(this.membersTableName)
+      .select('projects!inner(id, code, name, description, gm_user_id, status)')
+      .eq('user_id', userId)
+      .eq('status', 'active');
+
+    if (memberError) {
+      console.error('Failed to fetch player projects:', memberError);
+    }
+
+    type ProjectSummaryRow = Pick<ProjectDto, 'id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'>;
+    const combined = new Map<string, ProjectSummaryRow>();
+
+    for (const project of gmProjects ?? []) {
+      if (!isRecord(project) || typeof project.id !== 'string') continue;
+      combined.set(project.id, project as ProjectSummaryRow);
+    }
+
+    for (const record of memberRecords ?? []) {
+      if (!isRecord(record)) continue;
+      const project = record.projects;
+      if (!isRecord(project) || typeof project.id !== 'string') continue;
+      combined.set(project.id, project as ProjectSummaryRow);
+    }
+
+    const projectIds = [...combined.keys()];
+    if (projectIds.length === 0) return [];
+
+    const [{ data: memberRows, error: membersBatchError }, { data: sessionRows, error: sessionsBatchError }] =
+      await Promise.all([
+        supabase.from(this.membersTableName).select('project_id').in('project_id', projectIds),
+        supabase.from(this.sessionsTableName).select('project_id').in('project_id', projectIds),
+      ]);
+
+    if (membersBatchError) {
+      throw new Error(`Failed to fetch project members: ${membersBatchError.message}`);
+    }
+    if (sessionsBatchError) {
+      throw new Error(`Failed to fetch project sessions: ${sessionsBatchError.message}`);
+    }
+
+    const memberCounts = this.countByProjectId((memberRows ?? []) as Array<{ project_id: string }>);
+    const sessionCounts = this.countByProjectId((sessionRows ?? []) as Array<{ project_id: string }>);
+
+    return projectIds.map((id) => {
+      const project = combined.get(id)!;
+      return {
+        id: project.id,
+        code: project.code,
+        name: project.name,
+        description: project.description,
+        gmUserId: project.gm_user_id,
+        status: project.status,
+        memberCount: memberCounts.get(id) ?? 0,
+        sessionCount: sessionCounts.get(id) ?? 0,
+      };
+    });
+  }
+
+  private async fetchUserProjects(): Promise<ProjectVm[]> {
+    const userId = await getAuthenticatedUserId();
 
     const { data: gmProjects, error: gmError } = await supabase
       .from(this.tableName)
@@ -295,7 +376,7 @@ class ProjectService {
    * Leave project (as player). Kicked rows stay server/GM-controlled denial records.
    */
   async leaveProject(projectId: string): Promise<void> {
-    const userId = await this.getAuthenticatedUserId();
+    const userId = await getAuthenticatedUserId();
     await projectMemberService.leave(projectId, userId);
   }
 }

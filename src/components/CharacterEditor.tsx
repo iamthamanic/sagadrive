@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { Camera, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import {
-  AvatarCanvas,
-  characterService,
-  createCharacterStudioAvatar,
-  getAvatarRacePreset,
-} from '../modules/characters';
+import { AvatarCanvas } from '../modules/characters/avatar/AvatarCanvas';
+import { createCharacterStudioAvatar, getAvatarRacePreset } from '../modules/characters/avatar';
+import { characterService } from '../modules/characters/services/character.service';
 import type {
   AbilityDto,
   CharacterAttributesDto,

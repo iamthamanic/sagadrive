@@ -1,5 +1,6 @@
 import { supabase } from '../../../lib/supabase';
-import { isLocalAdminSession, LOCAL_ADMIN_USER_ID } from '../../../lib/localAdmin';
+import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
+import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../../lib/networkTimeout';
 import { getSagaDriveBackgroundTemplate } from '../../rulesets/backgroundTemplates';
 import {
   createEmptySagaDriveSkillRanks,
@@ -20,6 +21,7 @@ import type {
   CharacterAttributesDto,
   CharacterDto,
   CharacterVm,
+  CharacterSummaryVm,
   CreateCharacterDto,
   ItemDto,
   SagaDriveBackgroundDto,
@@ -234,25 +236,42 @@ class CharacterService {
     };
   }
 
-  private async getAuthenticatedUserId(): Promise<string> {
-    // Real GoTrue session wins: requests carry a genuine JWT so RLS sees the
-    // authenticated role with a stable UUID. The local-admin constant is only
-    // a fallback for offline/UI-only sessions without a stack session.
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) return user.id;
-    if (isLocalAdminSession()) return LOCAL_ADMIN_USER_ID;
-    throw new Error('User not authenticated');
+  async getUserCharacterSummaries(): Promise<CharacterSummaryVm[]> {
+    const userId = await getAuthenticatedUserId();
+    const { data, error } = await raceWithTimeoutReject(
+      supabase
+        .from(this.tableName)
+        .select('id, name, class, race, level, portrait_url')
+        .eq('owner_user_id', userId)
+        .eq('character_type', 'pc')
+        .order('created_at', { ascending: false }),
+      SUPABASE_QUERY_TIMEOUT_MS,
+      'Failed to fetch characters: request timed out',
+    );
+    if (error) throw new Error(`Failed to fetch characters: ${error.message}`);
+    return (data ?? []).map((row) => ({
+      id: row.id as string,
+      name: typeof row.name === 'string' ? row.name : '',
+      class: typeof row.class === 'string' ? row.class : '',
+      race: typeof row.race === 'string' ? row.race : '',
+      level: typeof row.level === 'number' ? row.level : 1,
+      portraitUrl: typeof row.portrait_url === 'string' ? row.portrait_url : undefined,
+    }));
   }
 
   async getUserCharacters(): Promise<CharacterVm[]> {
-    const userId = await this.getAuthenticatedUserId();
-    const { data, error } = await supabase.from(this.tableName).select('*').eq('owner_user_id', userId).eq('character_type', 'pc').order('created_at', { ascending: false });
+    const userId = await getAuthenticatedUserId();
+    const { data, error } = await raceWithTimeoutReject(
+      supabase.from(this.tableName).select('*').eq('owner_user_id', userId).eq('character_type', 'pc').order('created_at', { ascending: false }),
+      SUPABASE_QUERY_TIMEOUT_MS,
+      'Failed to fetch characters: request timed out',
+    );
     if (error) throw new Error(`Failed to fetch characters: ${error.message}`);
     return (data || []).map((character) => this.mapToViewModel(character as CharacterDto));
   }
 
   async getCharacterById(id: string): Promise<CharacterVm> {
-    const userId = await this.getAuthenticatedUserId();
+    const userId = await getAuthenticatedUserId();
     const { data, error } = await supabase.from(this.tableName).select('*').eq('id', id).eq('owner_user_id', userId).single();
     if (error) throw new Error(`Failed to fetch character: ${error.message}`);
     if (!data) throw new Error('Character not found');
@@ -260,7 +279,7 @@ class CharacterService {
   }
 
   async createCharacter(payload: CreateCharacterDto): Promise<CharacterVm> {
-    const userId = await this.getAuthenticatedUserId();
+    const userId = await getAuthenticatedUserId();
     const rulesetKey = payload.ruleset_key ?? 'sagadrive-core';
     const characterData: Partial<CharacterDto> = {
       owner_user_id: userId,
@@ -293,7 +312,7 @@ class CharacterService {
   }
 
   async updateCharacter(id: string, payload: UpdateCharacterDto): Promise<CharacterVm> {
-    const userId = await this.getAuthenticatedUserId();
+    const userId = await getAuthenticatedUserId();
     const rulesetPatch = payload.ruleset_key ? { ruleset_key: payload.ruleset_key, dnd_background: payload.ruleset_key === 'dnd-5.5e' ? payload.dnd_background ?? null : null } : {};
     const updatePayload = {
       ...payload,
@@ -312,20 +331,20 @@ class CharacterService {
   }
 
   async deleteCharacter(id: string): Promise<void> {
-    const userId = await this.getAuthenticatedUserId();
+    const userId = await getAuthenticatedUserId();
     const { error } = await supabase.from(this.tableName).delete().eq('id', id).eq('owner_user_id', userId);
     if (error) throw new Error(`Failed to delete character: ${error.message}`);
   }
 
   async searchCharacters(query: string): Promise<CharacterVm[]> {
-    const userId = await this.getAuthenticatedUserId();
+    const userId = await getAuthenticatedUserId();
     const { data, error } = await supabase.from(this.tableName).select('*').eq('owner_user_id', userId).eq('character_type', 'pc').ilike('name', `%${query}%`).order('created_at', { ascending: false });
     if (error) throw new Error(`Failed to search characters: ${error.message}`);
     return (data || []).map((character) => this.mapToViewModel(character as CharacterDto));
   }
 
   async uploadPortrait(file: File): Promise<string> {
-    const userId = await this.getAuthenticatedUserId();
+    const userId = await getAuthenticatedUserId();
     const extension = CHARACTER_PORTRAIT_MIME_EXTENSIONS[file.type];
     if (!extension) throw new Error('Invalid file type. Only PNG, JPEG, WEBP and GIF images are allowed.');
     if (file.size > CHARACTER_PORTRAIT_MAX_BYTES) throw new Error('File too large. Maximum size is 5MB.');

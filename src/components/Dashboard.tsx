@@ -1,20 +1,22 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Plus, Users, Gamepad2, TrendingUp, Calendar } from 'lucide-react';
-import { useProjects } from '../modules/projects';
-import { useCharacters } from '../modules/characters';
+import { useProjectSummaries } from '../modules/projects/hooks/useProjectSummaries';
+import { useCharacterSummaries } from '../modules/characters/hooks/useCharacterSummaries';
+import { useAuth } from '../lib/auth-context';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const { projects, isLoading: projectsLoading } = useProjects();
-  const { characters, isLoading: charactersLoading } = useCharacters();
+  const { user } = useAuth();
+  const { projects, isLoading: projectsLoading } = useProjectSummaries();
+  const { characters, isLoading: charactersLoading } = useCharacterSummaries();
 
   const activeProjects = projects.filter(p => p.status === 'active');
-  const totalSessions = projects.reduce((sum, p) => sum + p.totalSessions, 0);
-  const totalMembers = projects.reduce((sum, p) => sum + p.members.length, 0);
+  const totalSessions = projects.reduce((sum, p) => sum + p.sessionCount, 0);
+  const totalMembers = projects.reduce((sum, p) => sum + p.memberCount, 0);
 
   return (
     <div className="w-full h-full overflow-y-auto">
@@ -138,11 +140,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                       <div className="flex items-center gap-3">
                         <span className="flex items-center gap-1">
                           <Users className="w-4 h-4" />
-                          {project.members.length}
+                          {project.memberCount}
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
-                          {project.totalSessions}
+                          {project.sessionCount}
                         </span>
                       </div>
                       <span className="text-xs px-2 py-1 bg-muted rounded">
@@ -153,12 +155,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                       className="w-full" 
                       size="sm"
                       onClick={() => {
-                        const userMember = project.members.find(m => m.role === 'gm');
-                        if (userMember) {
-                          onNavigate('gamemaster');
-                        } else {
-                          onNavigate('player-view');
-                        }
+                        const isGM = user !== null && project.gmUserId === user.id;
+                        onNavigate(isGM ? 'gamemaster' : 'join');
                       }}
                     >
                       Öffnen

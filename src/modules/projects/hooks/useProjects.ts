@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { projectService } from '../services/project.service';
+import { ENTITY_CACHE_KEYS, entityCache } from '../../../lib/entityCache';
 import type { ProjectVm, CreateProjectDto, JoinProjectDto } from '../types/project.types';
 
 /**
@@ -34,6 +35,7 @@ export function useProjects() {
       setError(null);
       const newProject = await projectService.createProject(payload);
       setProjects((prev) => [newProject, ...prev]);
+      entityCache.invalidate(ENTITY_CACHE_KEYS.projectSummaries);
       return newProject;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to create project';
@@ -47,6 +49,7 @@ export function useProjects() {
       setError(null);
       const project = await projectService.joinProject(payload);
       setProjects((prev) => [project, ...prev]);
+      entityCache.invalidate(ENTITY_CACHE_KEYS.projectSummaries);
       return project;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to join project';

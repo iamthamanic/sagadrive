@@ -1,25 +1,31 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
 import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2 } from 'lucide-react';
-import { useCharacters, type CharacterVm } from '../modules/characters';
-import { useProjects, type ProjectVm } from '../modules/projects';
+import { useCharacterSummaries } from '../modules/characters/hooks/useCharacterSummaries';
+import type { CharacterSummaryVm } from '../modules/characters/types/character.types';
+import { useProjectSummaries } from '../modules/projects/hooks/useProjectSummaries';
+import type { ProjectSummaryVm } from '../modules/projects/types/project.types';
 import { useAuth } from '../lib/auth-context';
 import { EntityBrowser, type EntityBrowserRenderContext } from './EntityBrowser';
 import { EntityBrowserCard } from './EntityBrowserCard';
-import {
-  WorldProfileEditorDialog,
-  getSpeciesDevelopmentMode,
-  useWorldProfiles,
-  type CreateWorldProfileDto,
-  type WorldProfileVm,
-} from '../modules/worlds';
+import { getSpeciesDevelopmentMode } from '../modules/worlds/worldModuleRegistry';
+import { useWorldProfiles } from '../modules/worlds/hooks/useWorldProfiles';
+import type { CreateWorldProfileDto, WorldProfileVm } from '../modules/worlds/types/world.types';
 import { toast } from 'sonner';
+
+const WorldProfileEditorDialog = lazy(() =>
+  import('../modules/worlds/components/WorldProfileEditorDialog').then((module) => ({
+    default: module.WorldProfileEditorDialog,
+  })),
+);
 
 interface LibraryProps {
   onNavigate: (view: string) => void;
 }
+
+type LibraryTab = 'characters' | 'adventures' | 'worlds';
 
 const SPECIES_DEVELOPMENT_MODE_LABELS = {
   explicit: 'Explizit',
@@ -31,7 +37,7 @@ const CHARACTER_VIEW_MODE_STORAGE_KEY = 'sagadrive_library_characters_view_mode'
 const ADVENTURE_VIEW_MODE_STORAGE_KEY = 'sagadrive_library_adventures_view_mode';
 const WORLD_VIEW_MODE_STORAGE_KEY = 'sagadrive_library_worlds_view_mode';
 
-const PROJECT_STATUS_LABELS: Record<ProjectVm['status'], string> = {
+const PROJECT_STATUS_LABELS: Record<ProjectSummaryVm['status'], string> = {
   active: 'Aktiv',
   paused: 'Pausiert',
   completed: 'Abgeschlossen',
@@ -40,11 +46,18 @@ const PROJECT_STATUS_LABELS: Record<ProjectVm['status'], string> = {
 
 export function Library({ onNavigate }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<LibraryTab>('characters');
+  const [visitedTabs, setVisitedTabs] = useState<Set<LibraryTab>>(() => new Set(['characters']));
   const [worldEditorOpen, setWorldEditorOpen] = useState(false);
   const [editingWorld, setEditingWorld] = useState<WorldProfileVm | null>(null);
   const { user } = useAuth();
-  const { characters, isLoading, error, deleteCharacter } = useCharacters();
-  const { projects, isLoading: projectsLoading, error: projectsError } = useProjects();
+
+  const { characters, isLoading, error, deleteCharacter } = useCharacterSummaries({
+    enabled: visitedTabs.has('characters'),
+  });
+  const { projects, isLoading: projectsLoading, error: projectsError } = useProjectSummaries({
+    enabled: visitedTabs.has('adventures'),
+  });
   const {
     worlds,
     isLoading: worldsLoading,
@@ -52,7 +65,13 @@ export function Library({ onNavigate }: LibraryProps) {
     createWorld,
     updateWorld,
     deleteWorld,
-  } = useWorldProfiles();
+  } = useWorldProfiles({ enabled: visitedTabs.has('worlds') });
+
+  const handleTabChange = (value: string) => {
+    const tab = value as LibraryTab;
+    setActiveTab(tab);
+    setVisitedTabs((current) => new Set(current).add(tab));
+  };
 
   const handleDeleteCharacter = async (id: string, name: string) => {
     if (!confirm(`Möchtest du "${name}" wirklich löschen?`)) {
@@ -105,9 +124,7 @@ export function Library({ onNavigate }: LibraryProps) {
     }
   };
 
-  const openProject = (project: ProjectVm) => {
-    // GM opens the session hub; players currently have no dedicated project view,
-    // so they land on the existing join/browse flow (documented in acceptance).
+  const openProject = (project: ProjectSummaryVm) => {
     const isGM = user !== null && project.gmUserId === user.id;
     onNavigate(isGM ? 'gamemaster' : 'join');
   };
@@ -128,7 +145,7 @@ export function Library({ onNavigate }: LibraryProps) {
     project.code.toLowerCase().includes(normalizedSearch)
   );
 
-  const renderProject = (project: ProjectVm, context: EntityBrowserRenderContext) => (
+  const renderProject = (project: ProjectSummaryVm, context: EntityBrowserRenderContext) => (
     <EntityBrowserCard
       title={project.name}
       meta={project.description || 'Keine Beschreibung'}
@@ -136,7 +153,7 @@ export function Library({ onNavigate }: LibraryProps) {
       imageAlt={`Abenteuer ${project.name}`}
       metaChips={[
         PROJECT_STATUS_LABELS[project.status],
-        `${project.members.length} Mitglied${project.members.length !== 1 ? 'er' : ''}`,
+        `${project.memberCount} Mitglied${project.memberCount !== 1 ? 'er' : ''}`,
         `Code: ${project.code}`,
       ]}
       variant={context.variant}
@@ -197,7 +214,7 @@ export function Library({ onNavigate }: LibraryProps) {
     );
   };
 
-  const renderCharacter = (char: CharacterVm, context: EntityBrowserRenderContext) => (
+  const renderCharacter = (char: CharacterSummaryVm, context: EntityBrowserRenderContext) => (
     <EntityBrowserCard
       title={char.name}
       meta={`Level ${char.level} · ${char.race} · ${char.class}`}
@@ -296,7 +313,7 @@ export function Library({ onNavigate }: LibraryProps) {
           />
         </div>
 
-        <Tabs defaultValue="characters" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="characters">
               <User className="w-4 h-4 mr-2" />
@@ -416,15 +433,19 @@ export function Library({ onNavigate }: LibraryProps) {
         </Tabs>
       </div>
 
-      <WorldProfileEditorDialog
-        open={worldEditorOpen}
-        world={editingWorld}
-        onOpenChange={(open) => {
-          setWorldEditorOpen(open);
-          if (!open) setEditingWorld(null);
-        }}
-        onSave={handleSaveWorld}
-      />
+      {worldEditorOpen && (
+        <Suspense fallback={null}>
+          <WorldProfileEditorDialog
+            open={worldEditorOpen}
+            world={editingWorld}
+            onOpenChange={(open) => {
+              setWorldEditorOpen(open);
+              if (!open) setEditingWorld(null);
+            }}
+            onSave={handleSaveWorld}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

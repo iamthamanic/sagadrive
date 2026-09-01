@@ -4,6 +4,5 @@ export * from './types/characterAdventureArc.types';
 export * from './services/character.service';
 export * from './services/characterAdventureArc.service';
 export * from './hooks/useCharacters';
-export * from './avatar';
-export * from './avatar/AvatarCanvas';
+export * from './hooks/useCharacterSummaries';
 export * from './lore';

@@ -7,3 +7,4 @@ export * from './types/project.types';
 export * from './services/project.service';
 export * from './services/project-member.service';
 export * from './hooks/useProjects';
+export * from './hooks/useProjectSummaries';
