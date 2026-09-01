@@ -238,33 +238,28 @@ export function CharacterAttributeBonusPanel({
             <div
               key={attribute.key}
               data-attr-card={attribute.key}
-              role="button"
-              tabIndex={0}
-              onClick={() => setConnectedAttribute(attribute.key)}
               onMouseEnter={() => setHoveredAttribute(attribute.key)}
               onMouseLeave={() => setHoveredAttribute((current) => (current === attribute.key ? null : current))}
-              onKeyDown={(event) => {
-                if (event.key !== 'Enter' && event.key !== ' ') return;
-                const target = event.target;
-                if (!(target instanceof Element)) return;
-                if (target.closest('button, a, input, textarea, select, [role="combobox"], [role="listbox"], [data-slot="select-trigger"]')) return;
-                event.preventDefault();
-                setConnectedAttribute(attribute.key);
-              }}
-              className={`relative flex h-full cursor-pointer flex-col items-center gap-2 rounded-lg border bg-card p-3 text-center transition-colors ${connectedAttribute === attribute.key ? 'border-primary bg-primary/5' : selectedSkillAttribute === attribute.key ? 'border-primary/60 bg-primary/5' : 'border-border hover:border-primary/60'}`}
+              className={`relative flex h-full flex-col items-center gap-2 rounded-lg border bg-card p-3 text-center transition-colors ${connectedAttribute === attribute.key ? 'border-primary bg-primary/5' : selectedSkillAttribute === attribute.key ? 'border-primary/60 bg-primary/5' : 'border-border hover:border-primary/60'}`}
             >
-              <div className="flex w-full items-start justify-center"><span className="opacity-60 [&_svg]:size-3" onClick={(event) => event.stopPropagation()} onPointerDown={(event) => event.stopPropagation()}><RuleHelp label={attribute.label}>{attribute.description}</RuleHelp></span></div>
+              <div className="flex w-full items-start justify-center"><span className="opacity-60 [&_svg]:size-3"><RuleHelp label={attribute.label}>{attribute.description}</RuleHelp></span></div>
               <div className="flex w-full flex-col items-center gap-1">
                 <p className="text-sm font-semibold leading-tight">{attribute.label}</p>
                 <span className="inline-flex items-center rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{attribute.shortLabel}</span>
               </div>
-              <div className="my-1">
+              <button
+                type="button"
+                aria-pressed={connectedAttribute === attribute.key}
+                aria-label={`${attribute.label}: abhängige Werte anzeigen`}
+                onClick={() => setConnectedAttribute(attribute.key)}
+                className="my-1 min-h-11 w-full rounded-md px-2 py-1 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Finaler Bonus</p>
                 <p className="text-2xl font-semibold tabular-nums">{formatBonus(finalBonus)}</p>
                 <p className="text-[11px] text-muted-foreground">d20 {formatBonus(finalBonus)}</p>
-              </div>
+              </button>
               <Select value={String(startBonus)} onValueChange={(value) => { setBaseAttribute(attribute.key, Number.parseInt(value, 10)); setConnectedAttribute(attribute.key); }}>
-                <SelectTrigger className="min-h-11 w-full justify-center gap-1.5 px-2" aria-label={`${attribute.label} Startbonus`} onClick={(event) => event.stopPropagation()} onPointerDown={(event) => event.stopPropagation()}>
+                <SelectTrigger className="min-h-11 w-full justify-center gap-1.5 px-2" aria-label={`${attribute.label} Startbonus`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -318,7 +313,7 @@ export function CharacterAttributeBonusPanel({
       {activeAttribute === 'charisma' ? <p className="text-center text-[11px] text-muted-foreground">Charisma fließt in keinen abgeleiteten Wert ein.</p> : null}
       <div className="space-y-1">
         {!activeAttribute ? (
-          <div className="mb-3"><h3 className="font-semibold">Abgeleitete Werte</h3><p className="text-sm text-muted-foreground">Diese Werte werden aus finalen Attributboni, Fertigkeiten und Erfahrungsbonus berechnet und nicht direkt bearbeitet. Klicke auf eine Attributkarte, um nur die relevanten Werte zu sehen.</p></div>
+          <div className="mb-3"><h3 className="font-semibold">Abgeleitete Werte</h3><p className="text-sm text-muted-foreground">Diese Werte werden aus finalen Attributboni, Fertigkeiten und Erfahrungsbonus berechnet und nicht direkt bearbeitet. Klicke auf den finalen Bonus einer Attributkarte, um nur die relevanten Werte zu sehen.</p></div>
         ) : null}
         <AttributeDerivedConnector sourceAttribute={activeAttribute} animated={attributeConnectorAnimated} targetSelectors={connectedTargetSelectors} />
         <div className={activeAttribute ? (visibleDerivedCards.length <= 1 ? 'grid max-w-md grid-cols-1 gap-3' : visibleDerivedCards.length === 2 ? 'grid gap-3 sm:grid-cols-2' : 'grid gap-3 sm:grid-cols-3') : 'grid gap-3 sm:grid-cols-2 xl:grid-cols-3'}>
