@@ -5,6 +5,7 @@ import { getSagaDriveBackgroundTemplate } from '../../rulesets/backgroundTemplat
 import {
   createEmptySagaDriveSkillRanks,
   isSagaDriveArchetypeKey,
+  isSagaDriveAttributeKey,
   isSagaDriveEssenceKey,
   isSagaDriveSkillKey,
   isSagaDriveSpeciesTraitKey,
@@ -24,6 +25,7 @@ import type {
   CharacterSummaryVm,
   CreateCharacterDto,
   ItemDto,
+  SagaDriveAttributeProgressionDto,
   SagaDriveBackgroundDto,
   SagaDriveProfileDto,
   SagaDriveSpeciesProfileDto,
@@ -65,6 +67,34 @@ function normalizeAttributes(value?: CharacterAttributeStorageDto): CharacterAtt
     mind: typeof value?.mind === 'number' ? value.mind : typeof value?.intelligence === 'number' ? value.intelligence : DEFAULT_ATTRIBUTES.mind,
     perception: typeof value?.perception === 'number' ? value.perception : typeof value?.wisdom === 'number' ? value.wisdom : DEFAULT_ATTRIBUTES.perception,
     charisma: typeof value?.charisma === 'number' ? value.charisma : DEFAULT_ATTRIBUTES.charisma,
+  };
+}
+
+function normalizeAttributeProgression(value: unknown): SagaDriveAttributeProgressionDto | undefined {
+  if (!isRecord(value) || !isRecord(value.base)) return undefined;
+  const rawBase = value.base;
+  const base: CharacterAttributesDto = {
+    strength: clampInteger(typeof rawBase.strength === 'number' ? rawBase.strength : 0, 0, 4),
+    dexterity: clampInteger(typeof rawBase.dexterity === 'number' ? rawBase.dexterity : 0, 0, 4),
+    endurance: clampInteger(typeof rawBase.endurance === 'number' ? rawBase.endurance : 0, 0, 4),
+    mind: clampInteger(typeof rawBase.mind === 'number' ? rawBase.mind : 0, 0, 4),
+    perception: clampInteger(typeof rawBase.perception === 'number' ? rawBase.perception : 0, 0, 4),
+    charisma: clampInteger(typeof rawBase.charisma === 'number' ? rawBase.charisma : 0, 0, 4),
+  };
+  const total = Object.values(base).reduce((sum, attribute) => sum + attribute, 0);
+  if (total !== 15) return undefined;
+
+  const level8 = typeof value.level8 === 'string' && isSagaDriveAttributeKey(value.level8) ? value.level8 : undefined;
+  let level16 = typeof value.level16 === 'string' && isSagaDriveAttributeKey(value.level16) ? value.level16 : undefined;
+  if (level16) {
+    const beforeLevel16 = base[level16] + (level8 === level16 ? 1 : 0);
+    if (beforeLevel16 >= 5) level16 = undefined;
+  }
+
+  return {
+    base,
+    ...(level8 ? { level8 } : {}),
+    ...(level16 ? { level16 } : {}),
   };
 }
 
@@ -188,6 +218,7 @@ function normalizeSagaDriveProfile(value?: Partial<SagaDriveProfileDto> | null):
     backgroundTemplateId: normalizeBackgroundTemplateId(value.backgroundTemplateId),
     background: normalizeSagaDriveBackground(value.background),
     archetypeTrainingSkill: value.archetypeTrainingSkill && isSagaDriveSkillKey(value.archetypeTrainingSkill) ? value.archetypeTrainingSkill : undefined,
+    attributeProgression: normalizeAttributeProgression(value.attributeProgression),
     drive: typeof value.drive === 'number' ? clampInteger(value.drive, 0, 5) : 3,
     momentum: typeof value.momentum === 'number' ? clampInteger(value.momentum, 0, 3) : 0,
   };
