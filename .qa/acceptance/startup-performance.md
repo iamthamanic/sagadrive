@@ -54,5 +54,5 @@ Die App startet zu langsam (Ladebildschirm, leeres Dashboard, schwerer Erst-Load
 ## Composition Gate
 - HEAD_SHA: local
 - Verdict: SKIPPED
-- Proof: `.qa/runs/composition-gate-startup-performance.md`
+- Proof: `.qa/runs/composition-gate-startup-library-performance.md`
 - Skip reason: no producer→consumer hop-chain in this ticket

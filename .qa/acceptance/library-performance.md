@@ -57,4 +57,4 @@ Die Bibliothek lädt zu langsam trotz App-weitem Lazy Loading. Scriptony-Pattern
 
 ## Composition Gate
 - Verdict: SKIPPED
-- Proof: `.qa/runs/composition-gate-library-performance.md`
+- Proof: `.qa/runs/composition-gate-startup-library-performance.md`
