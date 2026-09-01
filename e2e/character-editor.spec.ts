@@ -150,7 +150,39 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
   await expect(page.getByText('Grundattribute').first()).toBeVisible();
-  await expect(page.getByText(/15 \/ 15 Punkte/i).first()).toBeVisible();
+  await expect(page.getByText(/d20 \+ Attributbonus \+ Fertigkeit \+ weitere Boni/i).first()).toBeVisible();
+  await expect(page.getByText(/^0 \/ 15 Start-Bonuspunkte$/i).first()).toBeVisible();
+  await expect(page.getByText(/Grundbonus von \+0 bedeutet/i).first()).toBeVisible();
+  await page.getByRole('button', { name: /Ausgewogen · 4 · 3 · 3 · 2 · 2 · 1/i }).click();
+  await expect(page.getByText(/^15 \/ 15 Start-Bonuspunkte$/i).first()).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Stärke Startbonus' })).toHaveText(/\+4/);
+  await expect(page.getByText('Start +4').first()).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '14-attribute-bonus-pool.png'), fullPage: true });
+
+  await page.getByLabel('Stufe').click();
+  await page.getByRole('option', { name: '8', exact: true }).click();
+  const level8Attribute = page.getByRole('combobox', { name: 'Stufe 8 · +1 Attribut' });
+  await expect(level8Attribute).toBeVisible();
+  await level8Attribute.click();
+  await page.getByRole('option', { name: /Verstand · aktuell \+2/i }).click();
+  await expect(page.getByText('Stufe 8 +1').first()).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '15-attribute-level-8-source.png'), fullPage: true });
+
+  await page.getByLabel('Stufe').click();
+  await page.getByRole('option', { name: '16', exact: true }).click();
+  const level16Attribute = page.getByRole('combobox', { name: 'Stufe 16 · +1 Attribut' });
+  await expect(level16Attribute).toBeVisible();
+  await level16Attribute.click();
+  await page.getByRole('option', { name: /Verstand · aktuell \+3/i }).click();
+  await expect(page.getByText('Stufe 16 +1').first()).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '16-attribute-level-16-source.png'), fullPage: true });
+
+  await page.getByLabel('Stufe').click();
+  await page.getByRole('option', { name: '1', exact: true }).click();
+  await expect(page.getByText('Stufe 8 +1')).toHaveCount(0);
+  await expect(page.getByText('Stufe 16 +1')).toHaveCount(0);
+  await expect(page.getByText(/^15 \/ 15 Start-Bonuspunkte$/i).first()).toBeVisible();
+
   await expect(page.getByText('Ausdauer').first()).toBeVisible();
   await expect(page.getByText('Verstand').first()).toBeVisible();
   await expect(page.getByText('Wahrnehmung').first()).toBeVisible();
@@ -244,5 +276,6 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('tab', { name: /^Parameter$/i }).click();
   await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
   await expect(page.getByRole('radio', { name: /Heilung & Fürsorge/i })).toBeVisible();
+  await expect(page.getByText(/^15 \/ 15 Start-Bonuspunkte$/i).first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '12-mobile-competencies.png'), fullPage: true });
 });
