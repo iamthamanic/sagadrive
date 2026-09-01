@@ -4,7 +4,6 @@ import process from 'node:process';
 const source = readFileSync(new URL('../src/modules/rulesets/backgroundTemplates.ts', import.meta.url), 'utf8');
 const carousel = readFileSync(new URL('../src/modules/characters/components/BackgroundCarousel.tsx', import.meta.url), 'utf8');
 const panel = readFileSync(new URL('../src/modules/characters/components/CharacterBackgroundPanel.tsx', import.meta.url), 'utf8');
-const catalogSource = source.split('export function validateSagaDriveBackgroundTemplate', 1)[0] ?? source;
 
 function requireMatch(content, pattern, label) {
   if (pattern.test(content)) return;
@@ -88,7 +87,7 @@ requireMatch(panel, /Auswahl ändern/, 'change-selection action after two traini
 requireMatch(panel, /data-training-view=/, 'collapsed versus pool training view');
 requireMatch(panel, /visibleSkillNodes/, 'dynamic two-versus-four node rendering');
 
-rejectMatch(catalogSource, /recommendedTraining/, 'static framework training recommendations remain in the Core catalog');
+rejectMatch(source, /recommendedTraining/, 'static or compatibility background training recommendations remain');
 rejectMatch(panel, />Empfohlen</, 'static Empfohlen badge remains in the background training UI');
 rejectMatch(source, /name:\s*'Grenzscout'/, 'legacy Grenzscout remains a visible Core framework name');
 rejectMatch(source, /name:\s*'Konzerntechniker'/, 'legacy Konzerntechniker remains a visible Core framework name');
