@@ -58,30 +58,31 @@ Output-Verzeichnis:
 
 ## SagaDrive Core Character Editor
 
-Der aktuelle **Neuer-Charakter-Flow** konzentriert sich bewusst ausschließlich auf **SagaDrive Core**. Der Character Editor verwendet sechs Tabs:
+Der aktuelle **Neuer-Charakter-Flow** konzentriert sich bewusst ausschließlich auf **SagaDrive Core**. Der Character Editor verwendet fünf Haupttabs:
 
 - `Spezies`
-- `Hintergrund` (inkl. Template-Karussell mit Connector zu Pool-Skill-Nodes sowie freier Notizen unter der Hintergrundgeschichte)
-- `Parameter` (Attribute / Archetyp / Essenz)
+- `Parameter` (Kompetenzen mit Attributen, Hintergrund und Fertigkeiten / Archetyp / Essenz)
 - `Look`
 - `Inventar`
 - `Statistik` (Abenteuer-Bögen und Entwicklungseinträge nach dem Speichern)
 
-Die UI behandelt SagaDrive Core nicht als umbenannte D&D-Maske. Sie verwendet die Core-Begriffe **Spezies**, **Archetyp**, **Essenz**, **Ausdauer**, **Verstand** und **Wahrnehmung**, die Startattributverteilung `4,3,3,2,2,1`, alle 18 Core-Fertigkeiten sowie die definierten Fertigkeitsbudgets und -grenzen. Die fünf Primärarchetypen liefern ihre jeweilige Rang-I-Kernfähigkeit automatisch; freie Platzhalterfähigkeiten werden nicht erzeugt.
+Die UI behandelt SagaDrive Core nicht als umbenannte D&D-Maske. Sie verwendet die Core-Begriffe **Spezies**, **Archetyp**, **Essenz**, **Ausdauer**, **Verstand** und **Wahrnehmung**, alle 18 Core-Fertigkeiten sowie die definierten Fertigkeitsbudgets und -grenzen. Attribute sind direkte d20-Grundboni: Eine Startfigur verteilt genau **15 Attribut-Bonuspunkte** frei auf die sechs Attribute, jeweils von `+0` bis maximal `+4`. `+4, +3, +3, +2, +2, +1` steht als ausgewogenes Schnellstart-Preset bereit, ist aber keine Pflicht. Auf Stufe 8 und 16 kommt jeweils ein neues permanentes `+1` hinzu; regulärer Endbonus ist `+5`. Die fünf Primärarchetypen liefern ihre jeweilige Rang-I-Kernfähigkeit automatisch; freie Platzhalterfähigkeiten werden nicht erzeugt.
+
+Die 15 Attribut-Bonuspunkte und die **10 Start-Fertigkeitspunkte** sind getrennte Ressourcen. Fertigkeitspunkte bleiben `2 Hintergrund + 1 Primärarchetyp + 7 frei`; sie werden nicht mit Attribut-Bonuspunkten verrechnet. Die UI zeigt die Check-Grundformel ausdrücklich als `d20 + Attributbonus + Fertigkeit + weitere Boni` und trennt bei höheren Stufen die Startbasis von den Progressionsquellen `Stufe 8 +1` und `Stufe 16 +1`.
 
 Spezies und ihre angeborenen Merkmale werden gemeinsam im Spezies-Tab konfiguriert. Jede Core-Spezies besitzt eine feste Merkmals-Allowlist und muss genau `3 / 3` Speziespunkte ausgeben. Konfigurierbare Merkmale verlangen ihre Details direkt an der Merkmalskarte. `Alien` dient als freier Spezies-Builder mit verpflichtendem Profilnamen und optionaler Körperbeschreibung; `Außergewöhnlicher Körperbau` bleibt bis zur Definition verbindlicher Varianten sichtbar, aber nicht auswählbar.
 
-Regelbegriffe und abgeleitete Werte besitzen kontextuelle Hilfen. Im Kompetenzen-Subtab verbinden Attributkarten per Bracket-Linien die davon abhängigen abgeleiteten Werte (Filter, ausgegraute Restwerte, Wert-Flash). Attribute, Fertigkeitsbudgets, Verteidigung, Gesundheit, Widerstände, Erholung und Traglast werden aus den Core-Regeln abgeleitet statt frei eingegeben. Das Inventar verwendet **Lastpunkte** statt fester Slots; `Traglast = 5 + 2 × Stärke` und Überlastungsfolgen werden direkt in der UI angezeigt. Der Look-Tab ist ausdrücklich kosmetisch und verändert keine Regelwerte.
+Regelbegriffe und abgeleitete Werte besitzen kontextuelle Hilfen. Im Kompetenzen-Subtab verbinden Attributkarten per Bracket-Linien die davon abhängigen abgeleiteten Werte (Filter, ausgegraute Restwerte, Wert-Flash). Abgeleitete Werte verwenden immer den finalen Attributbonus aus Startbasis plus legalen Stufensteigerungen. Fertigkeitsbudgets, Verteidigung, Gesundheit, Widerstände, Erholung und Traglast werden aus den Core-Regeln abgeleitet statt frei eingegeben. Das Inventar verwendet **Lastpunkte** statt fester Slots; `Traglast = 5 + 2 × Stärke` und Überlastungsfolgen werden direkt in der UI angezeigt. Der Look-Tab ist ausdrücklich kosmetisch und verändert keine Regelwerte.
 
 Die regelrelevanten Character-Creation-Daten werden getrennt gespeichert:
 
-- `attributes` – SagaDrive-Attribute
+- `attributes` – finale SagaDrive-Attributboni für bestehende Verbraucher
 - `skills` – berechnete Fertigkeitsstände
-- `sagadrive_profile` – Essenz, Speziesmerkmale samt strukturierten Merkmalsdetails und optionalem Alien-Speziesprofil, mechanischer Hintergrund, Archetyp-Punkt, Drive/Momentum
+- `sagadrive_profile` – Essenz, Speziesmerkmale samt strukturierten Merkmalsdetails und optionalem Alien-Speziesprofil, mechanischer Hintergrund, Archetyp-Punkt, Drive/Momentum sowie `attributeProgression` mit Startbasis und Stufe-8-/Stufe-16-Quelle
 - `background_story` – freie bzw. generierte Lore
 - `notes` – freie Spielnotizen
 
-Alte Attributdaten mit `constitution`, `intelligence` und `wisdom` werden beim Lesen weiterhin auf `Ausdauer`, `Verstand` und `Wahrnehmung` normalisiert. D&D-Metadaten bleiben im Datenvertrag aus Kompatibilitätsgründen erhalten, sind aber **nicht Teil des aktuell ausgebauten Neuer-Charakter-Flows**.
+Alte Attributdaten mit `constitution`, `intelligence` und `wisdom` werden beim Lesen weiterhin auf `Ausdauer`, `Verstand` und `Wahrnehmung` normalisiert. Bestehende SagaDrive-Profile ohne `attributeProgression` bleiben lesbar; neue Saves persistieren die Attributquellen zusätzlich zum finalen `attributes`-Wert. D&D-Metadaten bleiben im Datenvertrag aus Kompatibilitätsgründen erhalten, sind aber **nicht Teil des aktuell ausgebauten Neuer-Charakter-Flows**.
 
 ## Character-Lore-KI
 
@@ -158,6 +159,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-01** — Attribute: 15 direkte d20-Start-Bonuspunkte (`+0…+4`), ausgewogenes `4/3/3/2/2/1`-Preset, permanente `+1`-Quellen auf Stufe 8/16, finales Cap `+5` und getrennte Persistenz der Progressionsquellen (`feat/attribute-bonus-progression`)
 - **2026-09-01** — Startup- & Bibliothek-Performance: Route-Lazy-Loading (Three.js/VRM aus Initial-Chunk), schnellerer Auth-Fail-open, DevTrack nur in Dev, farbiges Favicon, Summary-DTOs + Batch-Queries für Bibliothek/Dashboard, Tab-lazy Fetch + 30s Cache (`feat/startup-library-performance`)
 - **2026-08-31** — Hintergrund: Template-Karussell inkl. Custom-Slide, Bracket-Connector zu Pool-Skill-Nodes, Training/Spezialisierung am Node (`feat/background-skill-nodes`)
 - **2026-08-31** — Kompetenzen: Attributkarten verbinden per Bracket-Linien die abhängigen abgeleiteten Werte; Filter + ausgegraute Restwerte, Wert-Flash, Manöverwiderstand-Hinweise im Dropdown (`feat/attribute-derived-connector`)
