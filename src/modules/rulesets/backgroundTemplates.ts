@@ -12,7 +12,8 @@ export interface SagaDriveBackgroundSpecializationSuggestion {
 /**
  * A Core background framework is a setting-neutral scaffold for a character's past.
  * The persisted character background remains the concrete biography; the framework
- * only supplies a useful four-skill pool, recommendations and world-facing prompts.
+ * supplies a four-skill pool and world-facing prompts. Training choices stay neutral
+ * and are made by the player; recommendations belong to the Build-Assistent layer.
  */
 export interface SagaDriveBackgroundTemplate {
   id: string;
@@ -21,7 +22,6 @@ export interface SagaDriveBackgroundTemplate {
   playstyle: string;
   examples: readonly string[];
   skillPool: readonly [SagaDriveSkillKey, SagaDriveSkillKey, SagaDriveSkillKey, SagaDriveSkillKey];
-  recommendedTraining: readonly [SagaDriveSkillKey, SagaDriveSkillKey];
   specializationSuggestions: readonly SagaDriveBackgroundSpecializationSuggestion[];
   milieuSuggestions: readonly string[];
   contactSuggestions: readonly string[];
@@ -39,7 +39,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Auftreten · Einfluss · Menschen lesen · Inszenierung',
     examples: ['Barde', 'Schauspielerin', 'Influencer', 'Holostar'],
     skillPool: ['performance', 'persuasion', 'insight', 'deception'],
-    recommendedTraining: ['performance', 'persuasion'],
     specializationSuggestions: [
       { skillId: 'performance', name: 'Musik' },
       { skillId: 'performance', name: 'Rede' },
@@ -57,7 +56,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Athletik · Bewegung · Wachsamkeit · Präsenz',
     examples: ['Gladiatorin', 'Profiboxer', 'Pro-Bender', 'Null-G-Racer'],
     skillPool: ['athletics', 'acrobatics', 'awareness', 'performance'],
-    recommendedTraining: ['athletics', 'acrobatics'],
     specializationSuggestions: [
       { skillId: 'athletics', name: 'Sprinten' },
       { skillId: 'athletics', name: 'Kraftakt' },
@@ -76,7 +74,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Überleben · Wachsamkeit · Bewegung · Distanz',
     examples: ['Jäger', 'Nomadin', 'Farmer', 'Kolonist'],
     skillPool: ['survival', 'awareness', 'athletics', 'ranged'],
-    recommendedTraining: ['survival', 'awareness'],
     specializationSuggestions: [
       { skillId: 'survival', name: 'Navigation' },
       { skillId: 'survival', name: 'Spuren' },
@@ -94,7 +91,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Wissen · Recherche · Beobachtung · Argumentation',
     examples: ['Gelehrter', 'Magieschülerin', 'Wissenschaftler', 'Xenobiologin'],
     skillPool: ['knowledge', 'investigation', 'awareness', 'persuasion'],
-    recommendedTraining: ['knowledge', 'investigation'],
     specializationSuggestions: [
       { skillId: 'knowledge', name: 'Naturwissenschaften' },
       { skillId: 'investigation', name: 'Archive' },
@@ -113,7 +109,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Technik · Analyse · Wissen · Präzision',
     examples: ['Schmied', 'Mechanikerin', 'Techniker', 'Raumschiffingenieurin'],
     skillPool: ['technology', 'investigation', 'knowledge', 'sleight'],
-    recommendedTraining: ['technology', 'investigation'],
     specializationSuggestions: [
       { skillId: 'technology', name: 'Mechanik' },
       { skillId: 'technology', name: 'Sicherheitssysteme' },
@@ -132,7 +127,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Medizin · Menschen lesen · Überleben · Wachsamkeit',
     examples: ['Kräuterheilerin', 'Sanitäter', 'Ärztin', 'Cyberdoc'],
     skillPool: ['medicine', 'insight', 'survival', 'awareness'],
-    recommendedTraining: ['medicine', 'insight'],
     specializationSuggestions: [
       { skillId: 'medicine', name: 'Notfallmedizin' },
       { skillId: 'medicine', name: 'Diagnose' },
@@ -151,7 +145,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Athletik · Nahkampf · Fernkampf · Druck',
     examples: ['Legionär', 'Stadtwache', 'Soldatin', 'Stationssicherheit'],
     skillPool: ['athletics', 'melee', 'ranged', 'intimidation'],
-    recommendedTraining: ['athletics', 'ranged'],
     specializationSuggestions: [
       { skillId: 'athletics', name: 'Kraftakt' },
       { skillId: 'ranged', name: 'Schusswaffen' },
@@ -170,7 +163,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Täuschen · Heimlichkeit · Fingerfertigkeit · Mobilität',
     examples: ['Diebin', 'Schmuggler', 'Fixerin', 'Betrüger'],
     skillPool: ['driving', 'deception', 'stealth', 'sleight'],
-    recommendedTraining: ['driving', 'deception'],
     specializationSuggestions: [
       { skillId: 'driving', name: 'Bodenfahrzeuge' },
       { skillId: 'deception', name: 'Falsche Identität' },
@@ -189,7 +181,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Recherche · Beobachtung · Menschenkenntnis · Gespräch',
     examples: ['Detektiv', 'Inquisitorin', 'Journalist', 'Nachrichtenanalystin'],
     skillPool: ['investigation', 'awareness', 'insight', 'persuasion'],
-    recommendedTraining: ['investigation', 'awareness'],
     specializationSuggestions: [
       { skillId: 'investigation', name: 'Tatorte' },
       { skillId: 'investigation', name: 'Forensik' },
@@ -207,7 +198,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Verhandeln · Menschenkenntnis · Wissen · Täuschung',
     examples: ['Kaufmann', 'Händlerin', 'Broker', 'Karawanenvermittlerin'],
     skillPool: ['persuasion', 'insight', 'deception', 'knowledge'],
-    recommendedTraining: ['persuasion', 'insight'],
     specializationSuggestions: [
       { skillId: 'persuasion', name: 'Verhandeln' },
       { skillId: 'persuasion', name: 'Verkauf' },
@@ -225,7 +215,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Einfluss · Wissen · Menschen lesen · Auftreten',
     examples: ['Adeliger', 'Patrizierin', 'Konzernspross', 'Diplomatentochter'],
     skillPool: ['persuasion', 'knowledge', 'insight', 'performance'],
-    recommendedTraining: ['persuasion', 'knowledge'],
     specializationSuggestions: [
       { skillId: 'persuasion', name: 'Diplomatie' },
       { skillId: 'persuasion', name: 'Führung' },
@@ -243,7 +232,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Wissen · Menschenkenntnis · Wachsamkeit · Einfluss',
     examples: ['Akolyth', 'Mönchin', 'Jedi-Schüler', 'Ordensmitglied'],
     skillPool: ['knowledge', 'insight', 'awareness', 'persuasion'],
-    recommendedTraining: ['knowledge', 'insight'],
     specializationSuggestions: [
       { skillId: 'knowledge', name: 'Okkultes' },
       { skillId: 'knowledge', name: 'Kulturen' },
@@ -261,7 +249,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Steuern · Navigation · Wachsamkeit · Technik',
     examples: ['Seefahrerin', 'Kurier', 'Kutscherin', 'Raumpilot'],
     skillPool: ['driving', 'survival', 'awareness', 'technology'],
-    recommendedTraining: ['driving', 'survival'],
     specializationSuggestions: [
       { skillId: 'driving', name: 'Raumfahrzeuge' },
       { skillId: 'driving', name: 'Reittiere' },
@@ -279,7 +266,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Wissen · Recherche · Systeme · Koordination',
     examples: ['Schreiber', 'Buchhalterin', 'Office Manager', 'Stationsadministratorin'],
     skillPool: ['knowledge', 'investigation', 'technology', 'persuasion'],
-    recommendedTraining: ['knowledge', 'investigation'],
     specializationSuggestions: [
       { skillId: 'investigation', name: 'Archive' },
       { skillId: 'technology', name: 'Computer' },
@@ -297,7 +283,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Menschen lesen · Einfluss · Wachsamkeit · Präzision',
     examples: ['Wirtin', 'Koch', 'Kellnerin', 'Bordsteward'],
     skillPool: ['insight', 'persuasion', 'awareness', 'sleight'],
-    recommendedTraining: ['insight', 'persuasion'],
     specializationSuggestions: [
       { skillId: 'insight', name: 'Motivation' },
       { skillId: 'persuasion', name: 'Vermittlung' },
@@ -315,7 +300,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Menschen lesen · Einfluss · Wachsamkeit · Überleben',
     examples: ['Großfamilie', 'Straßenviertel', 'Dorfkind', 'Koloniegemeinschaft'],
     skillPool: ['insight', 'persuasion', 'awareness', 'survival'],
-    recommendedTraining: ['insight', 'awareness'],
     specializationSuggestions: [
       { skillId: 'insight', name: 'Gruppendynamik' },
       { skillId: 'persuasion', name: 'Vermittlung' },
@@ -333,7 +317,6 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     playstyle: 'Wissen · Recherche · Einfluss · Menschen lesen',
     examples: ['Anwältin', 'Magistrat', 'Senatorin', 'Konzernjurist'],
     skillPool: ['knowledge', 'investigation', 'persuasion', 'insight'],
-    recommendedTraining: ['knowledge', 'persuasion'],
     specializationSuggestions: [
       { skillId: 'knowledge', name: 'Recht' },
       { skillId: 'persuasion', name: 'Verhandeln' },
@@ -355,13 +338,9 @@ export function validateSagaDriveBackgroundTemplate(template: SagaDriveBackgroun
   if (!template.description.trim()) errors.push('description must not be empty');
   if (template.examples.length < 2 || template.examples.some((example) => !example.trim())) errors.push('examples must contain at least two non-empty entries');
   if (template.skillPool.length !== 4 || pool.size !== 4) errors.push('skillPool must contain exactly four distinct skills');
-  if (template.recommendedTraining.length !== 2 || new Set(template.recommendedTraining).size !== 2) errors.push('recommendedTraining must contain exactly two distinct skills');
 
   for (const skill of template.skillPool) {
     if (!knownSkills.has(skill)) errors.push(`unknown pool skill: ${skill}`);
-  }
-  for (const skill of template.recommendedTraining) {
-    if (!pool.has(skill)) errors.push(`recommended training is outside pool: ${skill}`);
   }
   for (const suggestion of template.specializationSuggestions) {
     if (!pool.has(suggestion.skillId)) errors.push(`specialization skill is outside pool: ${suggestion.skillId}`);
