@@ -1,6 +1,7 @@
 import type {
   CharacterRulesetKey,
   SagaDriveArchetypeKey,
+  SagaDriveAttributeKey,
   SagaDriveEssenceKey,
   SagaDriveSkillKey,
   SagaDriveSpeciesTraitKey,
@@ -42,6 +43,22 @@ export interface SagaDriveSpeciesProfileDto {
   bodyDescription: string;
 }
 
+export interface CharacterAttributesDto {
+  strength: number;
+  dexterity: number;
+  endurance: number;
+  mind: number;
+  perception: number;
+  charisma: number;
+}
+
+/** Source-of-truth split for the final attribute bonuses stored in `attributes`. */
+export interface SagaDriveAttributeProgressionDto {
+  base: CharacterAttributesDto;
+  level8?: SagaDriveAttributeKey;
+  level16?: SagaDriveAttributeKey;
+}
+
 export interface SagaDriveProfileDto {
   archetype?: SagaDriveArchetypeKey;
   essence?: SagaDriveEssenceKey;
@@ -55,17 +72,10 @@ export interface SagaDriveProfileDto {
   backgroundTemplateId?: string | null;
   background: SagaDriveBackgroundDto;
   archetypeTrainingSkill?: SagaDriveSkillKey;
+  /** Optional for backward compatibility; all new SagaDrive saves include it. */
+  attributeProgression?: SagaDriveAttributeProgressionDto;
   drive: number;
   momentum: number;
-}
-
-export interface CharacterAttributesDto {
-  strength: number;
-  dexterity: number;
-  endurance: number;
-  mind: number;
-  perception: number;
-  charisma: number;
 }
 
 export interface CharacterAttributeStorageDto extends Partial<CharacterAttributesDto> {
