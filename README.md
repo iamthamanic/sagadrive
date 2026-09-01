@@ -158,6 +158,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-01** — Startup- & Bibliothek-Performance: Route-Lazy-Loading (Three.js/VRM aus Initial-Chunk), schnellerer Auth-Fail-open, DevTrack nur in Dev, farbiges Favicon, Summary-DTOs + Batch-Queries für Bibliothek/Dashboard, Tab-lazy Fetch + 30s Cache (`feat/startup-library-performance`)
 - **2026-08-31** — Hintergrund: Template-Karussell inkl. Custom-Slide, Bracket-Connector zu Pool-Skill-Nodes, Training/Spezialisierung am Node (`feat/background-skill-nodes`)
 - **2026-08-31** — Kompetenzen: Attributkarten verbinden per Bracket-Linien die abhängigen abgeleiteten Werte; Filter + ausgegraute Restwerte, Wert-Flash, Manöverwiderstand-Hinweise im Dropdown (`feat/attribute-derived-connector`)
 - **2026-08-28** — Avatar-Asset-Katalog: commit-gepinnte CC0-Provenienz, explizite neutrale Fallbacks und lizenzgeprüftes Ork-VRM (`issue/3-avatar-race-asset-catalog`, siehe `docs/avatar assets.md`)

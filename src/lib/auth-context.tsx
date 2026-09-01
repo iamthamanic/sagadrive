@@ -8,6 +8,12 @@ import {
   LOCAL_ADMIN_USER_ID,
   LOCAL_ADMIN_USERNAME,
 } from './localAdmin';
+import {
+  AUTH_SESSION_TIMEOUT_MS,
+  isTimedOut,
+  raceWithTimeout,
+  raceWithTimeoutOrSymbol,
+} from './networkTimeout';
 import type { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -63,50 +69,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    const SESSION_TIMEOUT_MS = AUTH_SESSION_TIMEOUT_MS;
+
+    const finish = (nextUser: User | null) => {
+      if (cancelled) return;
+      setUser(nextUser);
+      setIsLoading(false);
+    };
+
     const storedLocalAdmin = isLocalAdminSession();
     if (storedLocalAdmin) {
-      supabase.auth.getSession().then(async ({ data: { session } }) => {
-        if (session?.user) {
-          setUser(session.user);
-          setIsLoading(false);
-          return;
-        }
-        // Session expired/dead: silently re-login against the seeded GoTrue
-        // admin user so the app resumes with a genuine JWT. If the stack is
-        // unreachable or the seed row is missing, fall back to the offline UI
-        // user (valid UUID, same owner id as the seeded account).
-        try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: LOCAL_ADMIN_EMAIL,
-            password: LOCAL_ADMIN_PASSWORD,
-          });
-          if (error || !data.user) throw error ?? new Error('local re-login failed');
-          setUser(data.user);
-        } catch {
-          setUser(getStoredLocalAdminUser());
-        }
-        setIsLoading(false);
-      }).catch(() => {
-        setUser(getStoredLocalAdminUser());
-        setIsLoading(false);
-      });
-      return;
+      raceWithTimeoutOrSymbol(supabase.auth.getSession(), SESSION_TIMEOUT_MS)
+        .then(async (sessionResult) => {
+          if (isTimedOut(sessionResult)) {
+            finish(getStoredLocalAdminUser());
+            return;
+          }
+
+          const { data: { session } } = sessionResult;
+          if (session?.user) {
+            finish(session.user);
+            return;
+          }
+
+          // Stack responded but session expired — try one silent re-login.
+          try {
+            const loginResult = await raceWithTimeoutOrSymbol(
+              supabase.auth.signInWithPassword({
+                email: LOCAL_ADMIN_EMAIL,
+                password: LOCAL_ADMIN_PASSWORD,
+              }),
+              SESSION_TIMEOUT_MS,
+            );
+            if (isTimedOut(loginResult)) {
+              throw new Error('local re-login timeout');
+            }
+            const { data, error } = loginResult;
+            if (error || !data.user) throw error ?? new Error('local re-login failed');
+            finish(data.user);
+          } catch {
+            finish(getStoredLocalAdminUser());
+          }
+        })
+        .catch(() => {
+          finish(getStoredLocalAdminUser());
+        });
+      return () => {
+        cancelled = true;
+      };
     }
 
-    // Check for existing Supabase session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
+    // Check for existing Supabase session — timeout fail-open to login when the
+    // self-host stack is down so AuthGate does not spin forever.
+    raceWithTimeout(
+      supabase.auth.getSession(),
+      { data: { session: null }, error: null },
+      SESSION_TIMEOUT_MS,
+    )
+      .then(({ data: { session } }) => {
+        finish(session?.user ?? null);
+      })
+      .catch(() => {
+        finish(null);
+      });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      if (!cancelled) setUser(session?.user ?? null);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

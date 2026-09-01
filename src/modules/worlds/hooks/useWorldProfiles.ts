@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../lib/auth-context';
+import { ENTITY_CACHE_KEYS, entityCache } from '../../../lib/entityCache';
+import { useCachedEntityList } from '../../../lib/useCachedEntityList';
 import { worldProfileService } from '../services/worldProfile.service';
 import type {
   CreateWorldProfileDto,
   UpdateWorldProfileDto,
   WorldProfileVm,
 } from '../types/world.types';
+
+interface UseWorldProfilesOptions {
+  enabled?: boolean;
+}
 
 interface UseWorldProfilesReturn {
   worlds: WorldProfileVm[];
@@ -17,96 +23,86 @@ interface UseWorldProfilesReturn {
   refreshWorlds: () => Promise<void>;
 }
 
-export function useWorldProfiles(): UseWorldProfilesReturn {
+export function useWorldProfiles(options: UseWorldProfilesOptions = {}): UseWorldProfilesReturn {
+  const { enabled = true } = options;
   const { user } = useAuth();
-  const [worlds, setWorlds] = useState<WorldProfileVm[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchWorlds = useCallback(async () => {
-    if (!user) {
-      setWorlds([]);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await worldProfileService.getUserWorldProfiles(user.id);
-      setWorlds(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Welten konnten nicht geladen werden.');
-    } finally {
-      setIsLoading(false);
-    }
+  const fetcher = useCallback(async () => {
+    if (!user) return [] as WorldProfileVm[];
+    return worldProfileService.getUserWorldProfiles(user.id);
   }, [user]);
 
+  const { items, isLoading, error, refresh } = useCachedEntityList<WorldProfileVm[]>(
+    ENTITY_CACHE_KEYS.worldSummaries,
+    fetcher,
+    [],
+    { enabled: enabled && Boolean(user) },
+  );
+
   useEffect(() => {
-    void fetchWorlds();
-  }, [fetchWorlds]);
+    if (!user) {
+      entityCache.invalidate(ENTITY_CACHE_KEYS.worldSummaries);
+    }
+  }, [user]);
 
   const createWorld = useCallback(async (payload: CreateWorldProfileDto): Promise<WorldProfileVm | null> => {
     if (!user) {
-      setError('User not authenticated');
       return null;
     }
 
     try {
-      setError(null);
       const world = await worldProfileService.createWorldProfile(user.id, payload);
-      setWorlds((current) => [world, ...current]);
+      entityCache.invalidate(ENTITY_CACHE_KEYS.worldSummaries);
+      await refresh();
       return world;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Welt konnte nicht erstellt werden.');
+      console.error('Error creating world:', err);
       return null;
     }
-  }, [user]);
+  }, [refresh, user]);
 
   const updateWorld = useCallback(async (
     id: string,
     payload: UpdateWorldProfileDto,
   ): Promise<WorldProfileVm | null> => {
     if (!user) {
-      setError('User not authenticated');
       return null;
     }
 
     try {
-      setError(null);
       const world = await worldProfileService.updateWorldProfile(user.id, id, payload);
-      setWorlds((current) => current.map((entry) => entry.id === id ? world : entry));
+      entityCache.invalidate(ENTITY_CACHE_KEYS.worldSummaries);
+      await refresh();
       return world;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Welt konnte nicht gespeichert werden.');
+      console.error('Error updating world:', err);
       return null;
     }
-  }, [user]);
+  }, [refresh, user]);
 
   const deleteWorld = useCallback(async (id: string): Promise<boolean> => {
     if (!user) {
-      setError('User not authenticated');
       return false;
     }
 
     try {
-      setError(null);
       await worldProfileService.deleteWorldProfile(user.id, id);
-      setWorlds((current) => current.filter((entry) => entry.id !== id));
+      entityCache.invalidate(ENTITY_CACHE_KEYS.worldSummaries);
+      await refresh();
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Welt konnte nicht gelöscht werden.');
+      console.error('Error deleting world:', err);
       return false;
     }
-  }, [user]);
+  }, [refresh, user]);
 
   return {
-    worlds,
+    worlds: items,
     isLoading,
     error,
     createWorld,
     updateWorld,
     deleteWorld,
-    refreshWorlds: fetchWorlds,
+    refreshWorlds: refresh,
   };
 }

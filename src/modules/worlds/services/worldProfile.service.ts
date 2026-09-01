@@ -37,7 +37,7 @@ class WorldProfileService {
     if (!ownerUserId) throw new Error('User not authenticated');
     const { data, error } = await supabase
       .from(this.tableName)
-      .select('*')
+      .select('id, name, description, modules, created_at, updated_at')
       .eq('owner_user_id', ownerUserId)
       .order('created_at', { ascending: false });
 

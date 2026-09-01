@@ -253,3 +253,13 @@ export interface CharacterVm {
   createdAt: Date;
   updatedAt: Date;
 }
+
+/** Slim list row for Bibliothek/Dashboard — avoids full JSONB normalization. */
+export interface CharacterSummaryVm {
+  id: string;
+  name: string;
+  class: string;
+  race: string;
+  level: number;
+  portraitUrl?: string;
+}

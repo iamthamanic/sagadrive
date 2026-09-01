@@ -85,6 +85,18 @@ export interface ProjectVm {
   lastSessionDate: string | null;
 }
 
+/** Slim list row for Bibliothek/Dashboard — no per-project member/session arrays. */
+export interface ProjectSummaryVm {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  gmUserId: string;
+  status: 'active' | 'paused' | 'completed' | 'archived';
+  memberCount: number;
+  sessionCount: number;
+}
+
 // ============================================
 // Create DTOs (for creating new records)
 // ============================================
