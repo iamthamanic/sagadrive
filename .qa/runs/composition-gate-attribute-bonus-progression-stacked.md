@@ -1,6 +1,6 @@
 # Composition Gate — attribute-bonus-progression-stacked
 
-- HEAD_SHA: a518bcee96e9aae602245822d6ce9c97c95f4deb
+- HEAD_SHA: a675a0ee86ad0fc7fd34f8a3ac783874cb39ac1a
 - BASE_SHA: 270093380b432f64828d4a804e3acc59dab0a48f
 - Date: 2026-09-01
 - Verdict: CLEAR
