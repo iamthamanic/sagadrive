@@ -8,6 +8,10 @@ export type SagaDriveAttributeKey =
   | 'perception'
   | 'charisma';
 
+export type SagaDriveAttributeAdvancementMilestone = 'level8' | 'level16';
+
+export type SagaDriveAttributeAdvancements = Partial<Record<SagaDriveAttributeAdvancementMilestone, SagaDriveAttributeKey>>;
+
 export type SagaDriveArchetypeKey = 'fighter' | 'thinker' | 'healer' | 'rebel' | 'diplomat';
 export type SagaDriveEssenceKey = 'physical' | 'mental' | 'spiritual' | 'bound' | 'technological';
 export type SagaDriveRaceKey = 'human' | 'elf' | 'dwarf' | 'halfling' | 'orc' | 'cyborg' | 'alien';
@@ -106,7 +110,11 @@ export interface SagaDriveSpeciesTraitDefinition {
   unavailableReason?: string;
 }
 
-export const SAGA_DRIVE_START_ATTRIBUTE_ARRAY = [4, 3, 3, 2, 2, 1] as const;
+/** Recommended level-one preset. It is a shortcut, not a required distribution. */
+export const SAGA_DRIVE_BALANCED_ATTRIBUTE_ARRAY = [4, 3, 3, 2, 2, 1] as const;
+export const SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET = 15;
+export const SAGA_DRIVE_START_ATTRIBUTE_BONUS_CAP = 4;
+export const SAGA_DRIVE_ATTRIBUTE_BONUS_CAP = 5;
 export const SAGA_DRIVE_START_FREE_SKILL_POINTS = 7;
 export const SAGA_DRIVE_START_TOTAL_SKILL_POINTS = 10;
 export const SAGA_DRIVE_START_MIN_TRAINED_SKILLS = 6;
@@ -127,6 +135,15 @@ export const sagaDriveAttributeDefinitions: readonly SagaDriveAttributeDefinitio
   { key: 'perception', label: 'Wahrnehmung', shortLabel: 'WAH', description: 'Aufmerksamkeit, Intuition, Orientierung und das Erkennen relevanter Details.' },
   { key: 'charisma', label: 'Charisma', shortLabel: 'CHA', description: 'Präsenz, Ausdruck, Einfluss und soziale Durchsetzung.' },
 ];
+
+export const SAGA_DRIVE_BALANCED_ATTRIBUTE_BONUSES: Readonly<Record<SagaDriveAttributeKey, number>> = {
+  strength: 4,
+  dexterity: 3,
+  endurance: 3,
+  mind: 2,
+  perception: 2,
+  charisma: 1,
+};
 
 export const sagaDriveArchetypeOptions: readonly SagaDriveArchetypeOption[] = [
   {
@@ -243,6 +260,7 @@ export const dnd55BackgroundOptions: readonly CharacterCreationOption[] = [
 
 export function isCharacterRulesetKey(value: string): value is CharacterRulesetKey { return value === 'sagadrive-core' || value === 'dnd-5.5e'; }
 export function isSagaDriveArchetypeKey(value: string): value is SagaDriveArchetypeKey { return sagaDriveArchetypeOptions.some((option) => option.value === value); }
+export function isSagaDriveAttributeKey(value: string): value is SagaDriveAttributeKey { return sagaDriveAttributeDefinitions.some((attribute) => attribute.key === value); }
 export function isSagaDriveEssenceKey(value: string): value is SagaDriveEssenceKey { return sagaDriveEssenceOptions.some((option) => option.value === value); }
 export function isSagaDriveRaceKey(value: string): value is SagaDriveRaceKey { return sagaDriveRaceOptions.some((option) => option.value === value); }
 export function isSagaDriveSkillKey(value: string): value is SagaDriveSkillKey { return sagaDriveSkillDefinitions.some((skill) => skill.key === value); }
@@ -258,14 +276,41 @@ export function getSagaDriveSpeciesTraitKeysForRace(value: string): readonly Sag
 export function getSagaDriveSpeciesTraitsForRace(value: string): readonly SagaDriveSpeciesTraitDefinition[] { const allowed = new Set(getSagaDriveSpeciesTraitKeysForRace(value)); return sagaDriveSpeciesTraitDefinitions.filter((trait) => allowed.has(trait.key)); }
 export function getSagaDriveSpeciesTraitCost(values: readonly SagaDriveSpeciesTraitKey[]): number { return values.reduce((sum, key) => sum + getSagaDriveSpeciesTrait(key).cost, 0); }
 
+export function createEmptySagaDriveAttributeBonuses(): Record<SagaDriveAttributeKey, number> {
+  return { strength: 0, dexterity: 0, endurance: 0, mind: 0, perception: 0, charisma: 0 };
+}
+
+export function createBalancedSagaDriveAttributeBonuses(): Record<SagaDriveAttributeKey, number> {
+  return { ...SAGA_DRIVE_BALANCED_ATTRIBUTE_BONUSES };
+}
+
 export function createEmptySagaDriveSkillRanks(): Record<SagaDriveSkillKey, number> {
   return { athletics: 0, acrobatics: 0, sleight: 0, stealth: 0, melee: 0, ranged: 0, awareness: 0, insight: 0, survival: 0, investigation: 0, knowledge: 0, technology: 0, medicine: 0, driving: 0, persuasion: 0, deception: 0, intimidation: 0, performance: 0 };
 }
 
-/** Total attribute points available for standard distribution at a given character level. */
-export function getSagaDriveAttributePointBudget(level: number): number {
+export function getSagaDriveAttributeAdvancementCount(level: number): 0 | 1 | 2 {
   const normalizedLevel = Math.min(20, Math.max(1, Math.round(level)));
-  const baseTotal = SAGA_DRIVE_START_ATTRIBUTE_ARRAY.reduce((sum, value) => sum + value, 0);
-  const levelUpBonuses = (normalizedLevel >= 16 ? 2 : normalizedLevel >= 8 ? 1 : 0);
-  return baseTotal + levelUpBonuses;
+  if (normalizedLevel >= 16) return 2;
+  if (normalizedLevel >= 8) return 1;
+  return 0;
+}
+
+export function getSagaDriveFinalAttributeBonuses(
+  base: Readonly<Record<SagaDriveAttributeKey, number>>,
+  advancements: SagaDriveAttributeAdvancements,
+  level: number,
+): Record<SagaDriveAttributeKey, number> {
+  const result = { ...base };
+  if (level >= 8 && advancements.level8) result[advancements.level8] += 1;
+  if (level >= 16 && advancements.level16) result[advancements.level16] += 1;
+  return result;
+}
+
+export function getSagaDriveExperienceBonus(level: number): 1 | 2 | 3 | 4 | 5 {
+  const normalizedLevel = Math.min(20, Math.max(1, Math.round(level)));
+  if (normalizedLevel >= 17) return 5;
+  if (normalizedLevel >= 13) return 4;
+  if (normalizedLevel >= 9) return 3;
+  if (normalizedLevel >= 5) return 2;
+  return 1;
 }
