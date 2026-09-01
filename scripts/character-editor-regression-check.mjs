@@ -51,13 +51,18 @@ requireMatch(editor, /notes:\s*notes\.trim\(\)/, 'persistent notes save payload'
 rejectMatch(editor, /starter-fireball|Feuerball/, 'free starter fireball remains in CharacterEditor');
 rejectMatch(editor, /Dungeons & Dragons 5\.5e nutzt|Wähle Klasse|dnd-class/, 'active D&D creation UI remains in CharacterEditor');
 
-requireMatch(backgroundTemplates, /id:\s*'street-doctor'/, 'Straßenarzt background template');
-requireMatch(backgroundTemplates, /skillPool:\s*\['medicine', 'insight', 'survival', 'awareness'\]/, 'Straßenarzt fixed four-skill pool');
-requireMatch(backgroundTemplates, /recommendedTraining:\s*\['medicine', 'insight'\]/, 'optional recommended background trainings');
+requireMatch(backgroundTemplates, /id:\s*'street-doctor'/, 'Heilung & Fürsorge legacy template id');
+requireMatch(backgroundTemplates, /skillPool:\s*\['medicine', 'insight', 'survival', 'awareness'\]/, 'Heilung & Fürsorge fixed four-skill pool');
+rejectMatch(backgroundTemplates, /recommendedTraining:\s*\['medicine', 'insight'\]/, 'static recommended background trainings remain');
+requireMatch(backgroundTemplates, /EMPTY_BACKGROUND_TRAINING = \['', ''\] as const/, 'neutral legacy editor training bridge');
 requireMatch(backgroundTemplates, /validateSagaDriveBackgroundTemplateCatalog/, 'background template catalog validation');
 requireMatch(backgroundPanel, /BackgroundCarousel/, 'background template carousel');
 requireMatch(backgroundCarousel, /Eigener Hintergrund/, 'first-class custom background mode');
+requireMatch(backgroundCarousel, /BACKGROUND_FRAMEWORK_ICON_BY_ID/, 'framework-specific background icons');
 requireMatch(backgroundPanel, /Training · 2 wählen/, 'two background training choices');
+requireMatch(backgroundPanel, /Auswahl ändern/, 'background training edit action');
+requireMatch(backgroundPanel, /visibleSkillNodes/, 'collapsed two-node background training graph');
+rejectMatch(backgroundPanel, />Empfohlen</, 'static Empfohlen badge remains in background training flow');
 requireMatch(backgroundPanel, /Standard:/, 'standard attribute relationship inside template flow');
 requireMatch(backgroundPanel, /BackgroundSkillConnector|data-background-skill-grid/, 'background skill connector graph');
 
