@@ -41,6 +41,18 @@ function isProjectDto(value: unknown): value is ProjectDto {
  * Project Service
  * Handles all project-related API calls (campaigns/adventures)
  */
+function isProjectSummaryRow(value: unknown): value is Pick<ProjectDto, 'id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'> {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === 'string' &&
+    typeof value.code === 'string' &&
+    typeof value.name === 'string' &&
+    (typeof value.description === 'string' || value.description === null) &&
+    typeof value.gm_user_id === 'string' &&
+    isProjectStatus(value.status)
+  );
+}
+
 class ProjectService {
   private readonly tableName = 'projects';
   private readonly membersTableName = 'project_members';
@@ -204,15 +216,15 @@ class ProjectService {
     const combined = new Map<string, ProjectSummaryRow>();
 
     for (const project of gmProjects ?? []) {
-      if (!isRecord(project) || typeof project.id !== 'string') continue;
-      combined.set(project.id, project as ProjectSummaryRow);
+      if (!isProjectSummaryRow(project)) continue;
+      combined.set(project.id, project);
     }
 
     for (const record of memberRecords ?? []) {
       if (!isRecord(record)) continue;
       const project = record.projects;
-      if (!isRecord(project) || typeof project.id !== 'string') continue;
-      combined.set(project.id, project as ProjectSummaryRow);
+      if (!isProjectSummaryRow(project)) continue;
+      combined.set(project.id, project);
     }
 
     const projectIds = [...combined.keys()];

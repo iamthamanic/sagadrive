@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react';
 import { projectService } from '../services/project.service';
 import { ENTITY_CACHE_KEYS, entityCache } from '../../../lib/entityCache';
-import type { ProjectVm, CreateProjectDto, JoinProjectDto } from '../types/project.types';
+import type { ProjectDto, ProjectVm, CreateProjectDto, JoinProjectDto } from '../types/project.types';
+
+function toProjectDtoUpdates(updates: Partial<ProjectVm>): Partial<ProjectDto> {
+  const dto: Partial<ProjectDto> = {};
+  if (updates.name !== undefined) dto.name = updates.name;
+  if (updates.description !== undefined) dto.description = updates.description;
+  if (updates.status !== undefined) dto.status = updates.status;
+  if (updates.worldId !== undefined) dto.world_id = updates.worldId;
+  if (updates.code !== undefined) dto.code = updates.code;
+  return dto;
+}
 
 /**
  * Custom hook for managing projects
@@ -61,7 +71,7 @@ export function useProjects() {
   const updateProject = async (id: string, updates: Partial<ProjectVm>) => {
     try {
       setError(null);
-      const updated = await projectService.updateProject(id, updates as any);
+      const updated = await projectService.updateProject(id, toProjectDtoUpdates(updates));
       setProjects((prev) => prev.map((p) => (p.id === id ? updated : p)));
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to update project';

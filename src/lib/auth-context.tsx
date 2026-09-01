@@ -95,14 +95,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Stack responded but session expired — try one silent re-login.
           try {
-            const { data, error } = await raceWithTimeout(
+            const loginResult = await raceWithTimeoutOrSymbol(
               supabase.auth.signInWithPassword({
                 email: LOCAL_ADMIN_EMAIL,
                 password: LOCAL_ADMIN_PASSWORD,
               }),
-              { data: { user: null, session: null }, error: new Error('local re-login timeout') },
               SESSION_TIMEOUT_MS,
             );
+            if (isTimedOut(loginResult)) {
+              throw new Error('local re-login timeout');
+            }
+            const { data, error } = loginResult;
             if (error || !data.user) throw error ?? new Error('local re-login failed');
             finish(data.user);
           } catch {
