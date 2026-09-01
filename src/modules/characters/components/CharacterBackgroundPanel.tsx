@@ -1,6 +1,6 @@
 /**
  * CharacterBackgroundPanel — Hintergrund-Auswahl per Karussell mit Bracket-Connector
- * zu den vier Pool-Skill-Nodes (Training + Spezialisierungs-Branch).
+ * zu den Pool-Skill-Nodes (2-aus-4-Training + Spezialisierungs-Branch).
  * Location: src/modules/characters/components/CharacterBackgroundPanel.tsx
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -68,7 +68,6 @@ function SuggestionButtons({ values, onSelect }: { values: readonly string[] | u
 interface BackgroundSkillNodeProps {
   skillKey: SagaDriveSkillKey;
   selected: boolean;
-  recommended: boolean;
   disabled: boolean;
   specializationName?: string;
   onToggle: () => void;
@@ -78,7 +77,6 @@ interface BackgroundSkillNodeProps {
 function BackgroundSkillNode({
   skillKey,
   selected,
-  recommended,
   disabled,
   specializationName,
   onToggle,
@@ -99,7 +97,7 @@ function BackgroundSkillNode({
         onFocus={() => onHoverChange(skillKey)}
         onBlur={() => onHoverChange(null)}
         aria-pressed={selected}
-        className={`min-h-28 w-full rounded-lg border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-45 ${selected ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-primary/50 hover:bg-muted/20'}`}
+        className={`min-h-28 w-full rounded-lg border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default ${disabled && !selected ? 'disabled:opacity-45' : ''} ${selected ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-primary/50 hover:bg-muted/20'}`}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -109,7 +107,6 @@ function BackgroundSkillNode({
           {selected ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> : null}
         </div>
         <div className="mt-3 flex min-h-6 flex-wrap gap-1.5">
-          {recommended ? <Badge variant="secondary">Empfohlen</Badge> : null}
           {selected ? <Badge variant="outline">Hintergrund +1</Badge> : <Badge variant="outline">Pool</Badge>}
         </div>
       </button>
@@ -129,8 +126,8 @@ function BackgroundSkillNode({
 }
 
 /**
- * Bracket-Connector vom zentrierten Hintergrund-Karussell zu den Pool-Skill-Nodes.
- * Technik analog ArchetypeConnector: SVG im Zwischenraum, Standstill-Fade beim Scroll.
+ * Bracket-Connector vom zentrierten Hintergrund-Karussell zu den aktuell sichtbaren Skill-Nodes.
+ * Vor Abschluss sind das vier Pool-Skills, danach nur die beiden gewählten Trainings.
  */
 interface BackgroundSkillConnectorProps {
   skills: readonly SagaDriveSkillKey[];
@@ -385,19 +382,40 @@ export function CharacterBackgroundPanel({
   const poolSkills = skillPool.filter(isSagaDriveSkillKey);
   const trainedSkills = training.filter(isSagaDriveSkillKey);
   const trainingSet = new Set(trainedSkills);
-  const recommendationSet = new Set(selectedTemplate?.recommendedTraining ?? []);
   const allSkillKeys = getAllSkillKeys();
   const customMode = backgroundTemplateId === null;
   const hasChoice = backgroundTemplateId !== undefined;
+  const trainingComplete = trainedSkills.length === 2;
   const specializationSuggestions = selectedTemplate?.specializationSuggestions.filter((entry) => trainedSkills.includes(entry.skillId)) ?? [];
   const showSkillGraph = hasChoice && poolSkills.length === 4;
+  const poolIdentity = poolSkills.join('|');
 
   const [scrollPhase, setScrollPhase] = useState<CarouselScrollPhase>('settled');
   const [activeSkill, setActiveSkill] = useState<SagaDriveSkillKey | null>(null);
+  const [editingTraining, setEditingTraining] = useState(false);
+  const visibleSkillNodes = trainingComplete && !editingTraining ? trainedSkills : poolSkills;
+
+  useEffect(() => {
+    setEditingTraining(false);
+    setActiveSkill(null);
+  }, [backgroundTemplateId, poolIdentity]);
+
+  useEffect(() => {
+    if (activeSkill && !visibleSkillNodes.includes(activeSkill)) setActiveSkill(null);
+  }, [activeSkill, visibleSkillNodes]);
+
   const handleScrollPhaseChange = useCallback((phase: CarouselScrollPhase) => {
     setScrollPhase(phase);
   }, []);
   const handleStandstill = useCallback(() => setScrollPhase('settled'), []);
+  const handleTrainingToggle = (skill: SagaDriveSkillKey) => {
+    const wasSelected = trainingSet.has(skill);
+    onTrainingToggle(skill);
+    if (editingTraining && !wasSelected && trainedSkills.length === 1) {
+      setEditingTraining(false);
+      setActiveSkill(null);
+    }
+  };
 
   return (
     <section className="space-y-5" aria-labelledby="background-competency-heading" data-background-panel>
@@ -409,7 +427,7 @@ export function CharacterBackgroundPanel({
               Dein Hintergrund erklärt, welche vier Fertigkeiten zu deiner Vergangenheit passen. Zwei davon erhalten je +1. Attribute werden dadurch nicht erhöht.
             </RuleHelp>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">Wähle eine Vergangenheit im Karussell. Die Linien zeigen, welche Fertigkeiten daraus folgen — trainiere zwei davon direkt an den Nodes.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Wähle eine Vergangenheit im Karussell und entscheide selbst, welche zwei der vier Pool-Fertigkeiten du trainierst. Nach der Wahl zeigt der Graph nur noch deine beiden Trainings.</p>
         </div>
         <Badge variant={complete ? 'default' : 'outline'}>{complete ? 'Hintergrund vollständig' : 'Hintergrund offen'}</Badge>
       </div>
@@ -462,37 +480,61 @@ export function CharacterBackgroundPanel({
           {showSkillGraph ? (
             <div className="space-y-2 -mt-2">
               <BackgroundSkillConnector
-                skills={poolSkills}
+                skills={visibleSkillNodes}
                 trainedSkills={trainedSkills}
                 activeSkill={activeSkill}
                 scrollPhase={scrollPhase}
                 onStandstill={handleStandstill}
               />
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" data-background-skill-grid>
-                {poolSkills.map((skillKey) => (
+              <div
+                className={`grid gap-3 sm:grid-cols-2 ${visibleSkillNodes.length > 2 ? 'xl:grid-cols-4' : 'mx-auto w-full max-w-2xl'}`}
+                data-background-skill-grid
+                data-training-view={trainingComplete && !editingTraining ? 'selected' : 'pool'}
+              >
+                {visibleSkillNodes.map((skillKey) => (
                   <BackgroundSkillNode
                     key={skillKey}
                     skillKey={skillKey}
                     selected={trainingSet.has(skillKey)}
-                    recommended={recommendationSet.has(skillKey)}
-                    disabled={!trainingSet.has(skillKey) && trainedSkills.length >= 2}
-                    specializationName={specializationSkill === skillKey ? specializationName : undefined}
-                    onToggle={() => onTrainingToggle(skillKey)}
+                    disabled={
+                      (trainingComplete && !editingTraining)
+                      || (editingTraining && !trainingSet.has(skillKey) && trainedSkills.length >= 2)
+                    }
+                    specializationName={!editingTraining && specializationSkill === skillKey ? specializationName : undefined}
+                    onToggle={() => handleTrainingToggle(skillKey)}
                     onHoverChange={(skill) => setActiveSkill(skill)}
                   />
                 ))}
               </div>
 
-              <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="font-medium">Training · 2 wählen</p>
-                  <p className="text-sm text-muted-foreground">Klicke direkt auf zwei der vier Nodes. Beide erhalten <strong>Hintergrund +1</strong>.</p>
+                  <p className="font-medium">{trainingComplete && !editingTraining ? 'Deine Hintergrund-Trainings' : 'Training · 2 wählen'}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {trainingComplete && !editingTraining
+                      ? 'Der Graph zeigt nur noch deine zwei gewählten Fertigkeiten. Beide erhalten Hintergrund +1.'
+                      : editingTraining && trainingComplete
+                        ? 'Wähle zuerst eines deiner bisherigen Trainings ab und anschließend einen anderen Pool-Skill.'
+                        : 'Klicke direkt auf zwei der vier Nodes. Beide erhalten Hintergrund +1.'}
+                  </p>
                 </div>
-                <Badge variant={trainedSkills.length === 2 ? 'default' : 'outline'}>{trainedSkills.length} / 2</Badge>
+                <div className="flex min-h-11 flex-wrap items-center gap-2">
+                  <Badge variant={trainingComplete ? 'default' : 'outline'}>{trainedSkills.length} / 2</Badge>
+                  {trainingComplete && !editingTraining ? (
+                    <Button type="button" variant="outline" className="min-h-11" onClick={() => { setEditingTraining(true); setActiveSkill(null); }}>
+                      Auswahl ändern
+                    </Button>
+                  ) : null}
+                  {editingTraining && trainingComplete ? (
+                    <Button type="button" variant="outline" className="min-h-11" onClick={() => { setEditingTraining(false); setActiveSkill(null); }}>
+                      Auswahl beibehalten
+                    </Button>
+                  ) : null}
+                </div>
               </div>
 
-              {trainedSkills.length === 2 ? (
+              {trainingComplete && !editingTraining ? (
                 <div className="space-y-3 rounded-lg border border-border bg-card p-4">
                   <div>
                     <div className="flex items-center gap-1">
@@ -524,7 +566,9 @@ export function CharacterBackgroundPanel({
                 </div>
               ) : (
                 <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
-                  Wähle zuerst zwei Trainings. Danach wird die Spezialisierung freigeschaltet.
+                  {editingTraining && trainingComplete
+                    ? 'Bearbeite deine zwei Trainings. Die Spezialisierung bleibt gespeichert und erscheint wieder, sobald du die Auswahl bestätigst.'
+                    : 'Wähle zuerst zwei Trainings. Danach wird die Spezialisierung freigeschaltet.'}
                 </div>
               )}
             </div>
