@@ -77,10 +77,11 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tooltip').getByText(/Weltprofil-Modul „Speziesentwicklung“/i)).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '02-species-repeatable-two-resistances.png'), fullPage: true });
 
-  await page.locator('#level').click();
+  const levelSelect = page.getByRole('combobox', { name: /^Stufe Stufe$/ });
+  await levelSelect.click();
   await page.getByRole('option', { name: '10', exact: true }).click();
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
-  await page.locator('#level').click();
+  await levelSelect.click();
   await page.getByRole('option', { name: '1', exact: true }).click();
 
   await page.getByRole('button', { name: /Enge Resistenz abwählen/i }).click();
@@ -159,7 +160,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Start +4').first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '14-attribute-bonus-pool.png'), fullPage: true });
 
-  await page.locator('#level').click();
+  await levelSelect.click();
   await page.getByRole('option', { name: '8', exact: true }).click();
   const level8Attribute = page.getByRole('combobox', { name: 'Stufe 8 · +1 Attribut' });
   await expect(level8Attribute).toBeVisible();
@@ -168,7 +169,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Stufe 8 +1').first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '15-attribute-level-8-source.png'), fullPage: true });
 
-  await page.locator('#level').click();
+  await levelSelect.click();
   await page.getByRole('option', { name: '16', exact: true }).click();
   const level16Attribute = page.getByRole('combobox', { name: 'Stufe 16 · +1 Attribut' });
   await expect(level16Attribute).toBeVisible();
@@ -177,7 +178,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Stufe 16 +1').first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '16-attribute-level-16-source.png'), fullPage: true });
 
-  await page.locator('#level').click();
+  await levelSelect.click();
   await page.getByRole('option', { name: '1', exact: true }).click();
   await expect(page.getByText('Stufe 8 +1')).toHaveCount(0);
   await expect(page.getByText('Stufe 16 +1')).toHaveCount(0);
