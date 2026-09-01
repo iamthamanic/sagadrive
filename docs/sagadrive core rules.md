@@ -1,7 +1,7 @@
 # SagaDrive Core Rules
 
 > **Dokumentstatus:** Verbindlicher Core-Regelstand in Validierungsphase  
-> **Stand:** 27. August 2026  
+> **Stand:** 1. September 2026  
 > **Zuletzt abgeschlossener Entscheidungsblock:** Regelentwurf Abschnitte 2 bis 18  
 > **Aktueller Arbeitsblock:** 19 – Mathematische Prüfung und Spieltests  
 > **Ziel:** Universelles, analog vollständig spielbares Kernregelsystem mit optionalen digitalen Erweiterungen
@@ -56,11 +56,12 @@ Der Kern muss vollständig mit Würfeln, Papier und Charakterbogen spielbar blei
 Wenn der Ausgang einer Handlung unsicher ist und sowohl Erfolg als auch Fehlschlag relevante Folgen besitzen, wird ein Check verlangt.
 
 ```text
-d20 + Attribut + Fertigkeit + Erfahrungsbonus + Spezialisierung + ausdrückliche Modifikatoren
+d20 + Attributbonus + Fertigkeit + Erfahrungsbonus + Spezialisierung + ausdrückliche Modifikatoren
 ```
 
 Dabei gelten nur die Bestandteile, die auf den konkreten Check anwendbar sind.
 
+- Der Attributbonus ist der auf dem Charakterbogen angegebene Attributswert und wird ohne weitere Umrechnung addiert.
 - Der Erfahrungsbonus gilt nur bei trainierten Fertigkeiten.
 - Der Spezialisierungsbonus gilt nur, wenn die Spezialisierung eindeutig anwendbar ist.
 - Numerische Modifikatoren existieren nur, wenn eine Fähigkeit, Ausrüstung, Bedingung oder Regel sie ausdrücklich vergibt.
@@ -113,7 +114,7 @@ Dieselbe benannte Quelle kann denselben Wurf nicht mehrfach verändern.
 Bei einer gerichteten Handlung gegen ein Ziel wird grundsätzlich gegen einen statischen Widerstand gewürfelt.
 
 ```text
-Widerstand = 10 + passendes Attribut + passende Fertigkeit
+Widerstand = 10 + passender Attributbonus + passende Fertigkeit
              + Erfahrungsbonus bei Training
              + anwendbare Spezialisierung
              + ausdrückliche Modifikatoren
@@ -273,33 +274,36 @@ SagaDrive verwendet sechs universelle Attribute.
 
 ### 3.2 Wertebereich
 
-Attribute werden direkt verwendet. Es gibt keine aus Attributswerten abgeleiteten separaten Modifikatoren.
+Attribute sind direkte Bonuswerte. Ein Attribut `+X` wird ohne Umrechnung als `+X` auf einen passenden d20-Check addiert. Es gibt keinen davon getrennten Attributsmodifikator.
 
-| Wert | Einordnung |
+| Bonus | Einordnung |
 |---:|---|
-| 0 | Nur durch ausdrücklich vorgesehene Merkmale, Zustände oder Kreaturenregeln |
-| 1–4 | Regulärer Bereich bei der Charaktererschaffung |
-| 5 | Menschlicher Spitzenwert |
-| 6+ | Übermenschlich und nur durch ausdrücklich vorgesehene Regeln |
+| +0 | Kein positiver Grundbonus; regulär bei der Charaktererschaffung möglich |
+| +1 bis +4 | Regulärer Bereich bei der Charaktererschaffung |
+| +5 | Menschlicher Spitzenwert; regulär erst durch Attributsentwicklung erreichbar |
+| +6 oder höher | Übermenschlich und nur durch ausdrücklich vorgesehene Regeln |
+
+Negative Attributboni gehören nicht zur regulären Charaktererschaffung. Eine ausdrücklich definierte Regel, ein Zustand oder ein Merkmal kann einen negativen Modifikator erzeugen, ohne dadurch zusätzliche Start-Bonuspunkte zu vergeben.
 
 ### 3.3 Startattribute
 
-Standardverteilung:
+Eine Stufe-1-Figur erhält **genau 15 Attribut-Bonuspunkte**. In der Verteilungsansicht beginnen alle sechs Attribute bei `+0`; anschließend werden die 15 Punkte frei auf die sechs Attribute verteilt.
+
+Grenzen:
+
+- alle 15 Start-Bonuspunkte müssen verteilt werden,
+- jedes Startattribut darf zwischen `+0` und `+4` liegen,
+- ein Start-Bonuspunkte-Pool darf nicht in Fertigkeitspunkte oder andere Ressourcen umgewandelt werden.
+
+Empfohlene ausgewogene Verteilung:
 
 ```text
-4, 3, 3, 2, 2, 1
++4, +3, +3, +2, +2, +1
 ```
 
-Alternativ können zehn Attributspunkte verwendet werden.
+Diese Verteilung ist ein Schnellstart-Preset und **keine Pflicht**. Andere Verteilungen sind legal, solange sie exakt 15 Punkte verwenden und kein Startattribut über `+4` liegt.
 
-| Attributswert | Kosten |
-|---:|---:|
-| 1 | 0 |
-| 2 | 1 |
-| 3 | 2 |
-| 4 | 4 |
-
-Kein reguläres Startattribut darf unter 1 oder über 4 liegen. Nicht ausgegebene Punkte verfallen.
+Die 15 Attribut-Bonuspunkte und die 10 Fertigkeitspunkte nach Abschnitt 5.4 sind zwei getrennte Ressourcen mit unterschiedlichen Aufgaben. Ein Attributbonus beschreibt breite Grundbegabung; ein Fertigkeitspunkt beschreibt konkrete erlernte Kompetenz.
 
 ### 3.4 Quellen von Attributswerten
 
@@ -318,18 +322,24 @@ Im direkten Kampf gilt das für die Handlung definierte Attribut, sofern keine a
 Existiert keine relevante Fertigkeit:
 
 ```text
-d20 + Attribut + ausdrückliche Modifikatoren
+d20 + Attributbonus + ausdrückliche Modifikatoren
 ```
 
-Eine Fertigkeit mit Wert 0 gilt dagegen als untrainierter Fertigkeitscheck. Sicheres Arbeiten steht bei reinen Attributschecks nicht zur Verfügung.
+Ein Attributbonus von `+0` fügt keinen positiven Bonus hinzu, verhindert den Check aber nicht. Eine Fertigkeit mit Wert 0 gilt dagegen als untrainierter Fertigkeitscheck. Sicheres Arbeiten steht bei reinen Attributschecks nicht zur Verfügung.
 
 ### 3.7 Attributsentwicklung
 
-Eine Figur erhöht auf Stufe 8 und Stufe 16 jeweils ein Attribut um 1.
+Die bei der Charaktererschaffung verteilten 15 Start-Bonuspunkte bilden die dauerhafte Basis der Figur. Ein normaler Stufenaufstieg verteilt diese Basis **nicht neu**.
 
-- Reguläres Maximum: 5
-- Werte ab 6: nur über ausdrücklich übermenschliche Regeln
+- Auf Stufe 8 erhöht die Figur genau ein Attribut dauerhaft um `+1`.
+- Auf Stufe 16 erhöht die Figur genau ein Attribut dauerhaft um ein weiteres `+1`.
+- Jede Steigerung ist eine neue Progressionsquelle zusätzlich zur Stufe-1-Basis.
+- Reguläres Maximum des finalen Attributbonus: `+5`.
+- Würde eine Steigerung ein Attribut über `+5` erhöhen, muss ein anderes Attribut gewählt werden.
+- Werte ab `+6` sind nur über ausdrücklich übermenschliche Regeln möglich.
 - Eine Attributssteigerung darf nicht gegen andere Entwicklungsoptionen eingetauscht werden, sofern ein Modul dies nicht ausdrücklich erlaubt.
+
+Eine freie Neuverteilung bereits vergebener Start-Bonuspunkte ist kein Stufenaufstieg. Ein Weltprofil oder Modul kann einen ausdrücklichen Respec erlauben; der Core tut dies nicht automatisch.
 
 ---
 
@@ -1389,7 +1399,7 @@ Eine besondere Kraft ist eine Fähigkeit mit mindestens:
 Wenn eine Kraft einen Aktivierungscheck verlangt:
 
 ```text
-d20 + festgelegtes Attribut + Erfahrungsbonus + ausdrückliche Modifikatoren
+d20 + festgelegter Attributbonus + Erfahrungsbonus + ausdrückliche Modifikatoren
 ```
 
 Eine erschlossene Essenz zählt für diesen Aktivierungscheck als Training. Es gibt keine eigene Essenz-Fertigkeit.
@@ -1445,7 +1455,7 @@ Dauerhaft weltverändernde Effekte werden als Projekt, Ritual oder Abenteuerziel
 | 5 | Rang Spezialist, EB +2, Fertigkeitslimit 4, Fertigkeitsentwicklung, Fähigkeiten des Rangs Spezialist verfügbar |
 | 6 | freie Fähigkeit, zweiter Archetyp möglich |
 | 7 | Fertigkeitsentwicklung |
-| 8 | Attribut +1, freie Fähigkeit |
+| 8 | permanenter Attributbonus +1, freie Fähigkeit |
 | 9 | Rang Experte, EB +3, Fertigkeitsentwicklung, Fähigkeiten des Rangs Experte verfügbar |
 | 10 | freie Fähigkeit, sekundäre Essenz möglich |
 | 11 | Fertigkeitsentwicklung |
@@ -1453,7 +1463,7 @@ Dauerhaft weltverändernde Effekte werden als Projekt, Ritual oder Abenteuerziel
 | 13 | Rang Meister, EB +4, Fertigkeitslimit 5, Fertigkeitsentwicklung, Fähigkeiten des Rangs Meister verfügbar |
 | 14 | freie Fähigkeit |
 | 15 | Fertigkeitsentwicklung |
-| 16 | Attribut +1, freie Fähigkeit |
+| 16 | permanenter Attributbonus +1, freie Fähigkeit |
 | 17 | Rang Legende, EB +5, Fertigkeitsentwicklung, Fähigkeiten des Rangs Legende verfügbar |
 | 18 | freie Fähigkeit, vierter Archetyp möglich |
 | 19 | Fertigkeitsentwicklung |
@@ -1494,7 +1504,7 @@ Neue Figuren steigen auf der aktuellen Gruppenstufe ein und erhalten alle regul�
 
 Ein neuer Charakter darf direkt auf jeder regulären Charakterstufe von 1 bis 20 erstellt werden. Stufe 1 ist der Standard, aber keine Pflicht.
 
-Ein höherstufiger Charakter wird regeltechnisch immer aus der vollständigen Stufe-1-Basis plus allen Entwicklungen der Stufen 2 bis zur gewählten Zielstufe aufgebaut. Er erhält deshalb nicht nur den Bonus seiner Zielstufe, sondern sämtliche bis dahin vorgesehenen Fertigkeitsentwicklungen, freien Fähigkeiten und Attributssteigerungen.
+Ein höherstufiger Charakter wird regeltechnisch immer aus der vollständigen Stufe-1-Basis plus allen Entwicklungen der Stufen 2 bis zur gewählten Zielstufe aufgebaut. Er erhält deshalb nicht nur den Bonus seiner Zielstufe, sondern sämtliche bis dahin vorgesehenen Fertigkeitsentwicklungen, freien Fähigkeiten und Attributssteigerungen. Die 15 Start-Bonuspunkte bleiben dabei die unveränderte Stufe-1-Basis; die Steigerungen auf Stufe 8 und 16 werden zusätzlich dokumentiert.
 
 Automatisch aus der Zielstufe folgen:
 
@@ -1849,7 +1859,7 @@ Verbindliche Reihenfolge:
 5. Hintergrund wählen.
 6. Primärarchetyp wählen.
 7. Primäre Essenz wählen.
-8. Attribute verteilen.
+8. Genau 15 Attribut-Bonuspunkte auf die sechs Startattribute von jeweils `+0` bis `+4` verteilen; optional das ausgewogene Preset `+4, +3, +3, +2, +2, +1` verwenden.
 9. Hintergrund-Fertigkeitspunkte anwenden.
 10. Archetyp-Fertigkeitspunkt anwenden.
 11. Freie Fertigkeitspunkte verteilen.
@@ -1862,7 +1872,7 @@ Verbindliche Reihenfolge:
 18. Drive auf 3 setzen.
 19. Gruppen-Momentum auf 0 setzen.
 20. Fertigkeitsgrenzen, Voraussetzungen und Merkmalsbudget der Stufe-1-Basis prüfen.
-21. Bei Zielstufe über 1 alle Entwicklungen der Stufen 2 bis Zielstufe anwenden und deren Voraussetzungen chronologisch prüfen.
+21. Bei Zielstufe über 1 alle Entwicklungen der Stufen 2 bis Zielstufe anwenden und deren Voraussetzungen chronologisch prüfen; die Start-Bonuspunkte werden dabei nicht neu verteilt.
 22. Rang, Erfahrungsbonus, Fertigkeitslimit und alle abgeleiteten Werte für die Zielstufe abschließend berechnen.
 
 ---
@@ -1882,6 +1892,7 @@ Die folgenden Systeme dienen nur als Orientierung für bekannte Spielkonzepte. S
 
 Wesentliche Unterschiede:
 
+- SagaDrive verwendet den Attributwert direkt als Bonus und rechnet keinen separaten Ability-Modifier aus einem höheren Score aus,
 - keine getrennten Klassenstufen,
 - keine allgemeine Bonusaktion,
 - kleinerer Erfahrungsbonus,
@@ -1902,17 +1913,17 @@ SagaDrive verwendet bewusst weniger Bonusarten und eine einfachere Aktionsökono
 
 ### 18.3 Das Schwarze Auge
 
-DSA dient vor allem als Kontrast für detaillierte Fertigkeitsmodelle. SagaDrive verwendet keine dreifache Attributscheck und keine vergleichbar kleinteilige allgemeine Kompetenzverwaltung.
+DSA dient vor allem als Kontrast für detaillierte Fertigkeitsmodelle und eine stärker vereinheitlichte AP-Kaufökonomie. SagaDrive hält Attribut-Bonuspunkte und Fertigkeitspunkte bewusst als getrennte Ressourcen und verwendet keine dreifache Attributsprobe oder vergleichbar kleinteilige allgemeine Kompetenzverwaltung.
 
 ### 18.4 Savage Worlds
 
-Relevant ist die Idee eines universellen Kernsystems mit Weltanpassungen, benannten Erfahrungsrängen und Metaressourcen. SagaDrive verwendet jedoch seine eigene d20-Auflösung, seine eigenen Ranggrenzen, Erfolgsgrade, Progression und Konfliktstruktur.
+Relevant ist die Idee eines universellen Kernsystems mit Weltanpassungen, benannten Erfahrungsrängen, getrennten Attribut-/Fertigkeitsentwicklungen und Metaressourcen. SagaDrive verwendet jedoch seine eigene d20-Auflösung, direkte numerische Attributboni, seine eigenen Ranggrenzen, Erfolgsgrade, Progression und Konfliktstruktur.
 
 ### 18.5 Begriffsentsprechungen
 
 | SagaDrive | Allgemeine Entsprechung |
 |---|---|
-| Attribut | grundlegende Eigenschaft |
+| Attribut | grundlegende Eigenschaft und direkter d20-Grundbonus |
 | Fertigkeit | erlernte Kompetenz |
 | Spezialisierung | enges Fachgebiet |
 | Archetyp | funktionale Charakterausrichtung |
@@ -2001,6 +2012,8 @@ Bewusst nicht Bestandteil des Core:
 Vor endgültiger Freigabe müssen mindestens praktisch oder mathematisch geprüft werden:
 
 - Erfolgswahrscheinlichkeiten aller typischen Attribut- und Fertigkeitskombinationen,
+- Verteilungen des 15-Punkte-Attribut-Bonusbudgets einschließlich Startwert `+0` und Extremverteilungen bis zum Startcap `+4`,
+- Attributssteigerungen auf Stufe 8 und 16 sowie das reguläre Endcap `+5`,
 - Erfahrungsbonus über alle Stufenbereiche,
 - Spezialisierungsbonus +2,
 - Vorteil und Nachteil über relevante Zielwerte,
@@ -2078,6 +2091,7 @@ Die SagaDrive Core Rules gelten als final validiert, wenn:
 
 | Datum | Stand |
 |---|---|
+| 01.09.2026 | Attributmodell als direkte d20-Grundboni präzisiert: Stufe-1-Figuren verteilen exakt 15 Attribut-Bonuspunkte frei von `+0` bis `+4`; `+4/+3/+3/+2/+2/+1` bleibt nur als ausgewogenes Preset. Der frühere kostenbasierte 10-Punkte-Attributskauf entfällt. Stufe 8 und 16 geben jeweils ein zusätzliches permanentes `+1`, ohne die Startbasis neu zu verteilen; reguläres Endcap bleibt `+5`. Attribut- und Fertigkeitspunkte sind ausdrücklich getrennte Ressourcen. |
 | 27.08.2026 | Speziesmechanik konkretisiert: exakt 3 Speziespunkte verpflichtend, Core-Spezies mit festen Merkmals-Allowlists, Alien als frei benennbares Speziesprofil mit vollständigem verfügbarem Merkmalskatalog, Pflichtdetails für offene Merkmale, `Kletter- oder Schwimmbewegung` in `Erweitertes Klettern` und `Erweitertes Schwimmen` getrennt. Normales Klettern/Schwimmen kostet 2 Meter Bewegung pro Meter; die erweiterten Merkmale reduzieren dies auf 1:1. `Außergewöhnlicher Körperbau` bleibt sichtbar, aber bis zur Definition zulässiger Varianten nicht verfügbar. |
 | 26.08.2026 | Das 20-Stufen-Modell ausdrücklich bestätigt und in fünf benannte Ränge gegliedert: Novize (1–4), Spezialist (5–8), Experte (9–12), Meister (13–16), Legende (17–20). Römische Rangbezeichnungen entfernt, Fähigkeits- und Begegnungsränge angeglichen und direkte Erstellung höherstufiger Figuren mit vollständiger, chronologisch legaler Progression definiert. |
 | 26.08.2026 | Regelentwurf der zuvor offenen Abschnitte 2 bis 18 nach drei Reviewzyklen vollständig als verbindliche Validierungsfassung übernommen. Abschnitt 19 ist jetzt der aktive Arbeitsblock. Zahlenwerte sind verbindliche Playtestwerte, aber noch nicht endgültig empirisch validiert. |
