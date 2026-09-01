@@ -456,8 +456,6 @@ export function CharacterEditor() {
     () => (activeAttribute ? attributeDerivedTargets[activeAttribute] ?? [] : []),
     [activeAttribute, attributeDerivedTargets],
   );
-  // Bei aktiver Attributkarte: verbundene Boxen oben (max. 3), der Rest darunter ausgegraut.
-  // Ohne Auswahl bleiben alle abgeleiteten Werte gleichwertig sichtbar.
   const connectedDerivedCards = useMemo(() => {
     if (!activeAttribute || connectedTargetSelectors.length === 0) return [];
     return connectedTargetSelectors
@@ -470,7 +468,6 @@ export function CharacterEditor() {
     return derivedStatCards.filter((entry) => !connected.has(DERIVED_SELECTOR_BY_LABEL[entry.label]));
   }, [activeAttribute, connectedTargetSelectors, derivedStatCards]);
   const visibleDerivedCards = activeAttribute ? connectedDerivedCards : derivedStatCards;
-  // Klick neben die Attribut-/Zielkarten: Auswahl zurücksetzen.
   useEffect(() => {
     if (!connectedAttribute) return;
     const onPointerDown = (event: PointerEvent) => {
@@ -479,7 +476,6 @@ export function CharacterEditor() {
       if (target.closest('[data-attr-card]')) return;
       if (target.closest('[data-derived-card]')) return;
       if (target.closest('[data-attr-connector]')) return;
-      // Select-Content liegt im Portal außerhalb der Karte — Dropdown darf die Auswahl nicht löschen.
       if (target.closest('[data-slot="select-content"]')) return;
       if (target.closest('[data-radix-popper-content-wrapper]')) return;
       if (target.closest('[role="listbox"]')) return;
@@ -538,7 +534,7 @@ export function CharacterEditor() {
       essence: essenceProfile,
       speciesTraitInstances: speciesTraitInstances.map((instance) => ({
         trait: instance.trait,
-        ...(instance.option ? { option } : {}),
+        ...(instance.option ? { option: instance.option } : {}),
         source: 'species-creation',
         acquiredAtLevel: 1,
       })),
@@ -552,7 +548,7 @@ export function CharacterEditor() {
 
     setSaving(true);
     try {
-      trackActivity(`Character Editor: Charakter \"${characterName}\" wird gespeichert`);
+      trackActivity(`Character Editor: Charakter "${characterName}" wird gespeichert`);
       const savedCharacter = await characterService.createCharacter({
         name: characterName.trim(), description: description.trim(), class: characterArchetype, race: characterRace, ruleset_key: ruleset, dnd_background: null, level: characterLevel,
         background_story: backgroundStory.trim() || undefined, notes: notes.trim(), personality_traits: personalityTraits.length > 0 ? personalityTraits : undefined, ideals: ideals.length > 0 ? ideals : undefined, bonds: bonds.length > 0 ? bonds : undefined, flaws: flaws.length > 0 ? flaws : undefined,
@@ -560,7 +556,7 @@ export function CharacterEditor() {
         attributes, skills: finalSkillRanks, sagadrive_profile: sagaDriveProfile, abilities, inventory, portrait_url: portraitUrl || undefined,
       });
       setSavedCharacterId(savedCharacter.id);
-      trackActivity(`Character Editor: Charakter \"${characterName}\" gespeichert (ID: ${savedCharacter.id})`);
+      trackActivity(`Character Editor: Charakter "${characterName}" gespeichert (ID: ${savedCharacter.id})`);
       toast.success('Charakter erfolgreich gespeichert');
     } catch (error) {
       console.error('Character save error:', error);
@@ -680,7 +676,7 @@ export function CharacterEditor() {
                                 event.preventDefault();
                                 setConnectedAttribute(attribute.key);
                               }}
-                              className={`relative flex h-full cursor-pointer flex-col pt-0.5 items-center justify-center gap-2 rounded-lg border bg-card p-3 text-center transition-colors ${connectedAttribute === attribute.key ? 'border-primary bg-primary/5' : selectedSkill && sagaDriveSkillDefinitions.find((skill) => skill.key === attribute.key)?.attribute === attribute.key ? 'border-primary/60 bg-primary/5' : 'border-border hover:border-primary/60'}`}
+                              className={`relative flex h-full cursor-pointer flex-col pt-0.5 items-center justify-center gap-2 rounded-lg border bg-card p-3 text-center transition-colors ${connectedAttribute === attribute.key ? 'border-primary bg-primary/5' : selectedSkill && sagaDriveSkillDefinitions.find((skill) => skill.key === selectedSkill)?.attribute === attribute.key ? 'border-primary/60 bg-primary/5' : 'border-border hover:border-primary/60'}`}
                             >
                               <div className="flex w-full items-start justify-center"><span className="opacity-60 [&_svg]:size-3" onClick={(event) => event.stopPropagation()} onPointerDown={(event) => event.stopPropagation()}><RuleHelp label={attribute.label}>{attribute.description}</RuleHelp></span></div>
                               <div className="flex w-full flex-col items-center gap-1">
