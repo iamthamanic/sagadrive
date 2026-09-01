@@ -53,8 +53,9 @@ rejectMatch(editor, /Dungeons & Dragons 5\.5e nutzt|Wähle Klasse|dnd-class/, 'a
 
 requireMatch(backgroundTemplates, /id:\s*'street-doctor'/, 'Heilung & Fürsorge legacy template id');
 requireMatch(backgroundTemplates, /skillPool:\s*\['medicine', 'insight', 'survival', 'awareness'\]/, 'Heilung & Fürsorge fixed four-skill pool');
-rejectMatch(backgroundTemplates, /recommendedTraining:\s*\['medicine', 'insight'\]/, 'static recommended background trainings remain');
-requireMatch(backgroundTemplates, /EMPTY_BACKGROUND_TRAINING = \['', ''\] as const/, 'neutral legacy editor training bridge');
+rejectMatch(backgroundTemplates, /recommendedTraining/, 'legacy background training recommendation or compatibility field remains');
+rejectMatch(editor, /recommendedTraining/, 'CharacterEditor still reads legacy background training recommendations');
+requireMatch(editor, /setBackgroundTraining\(\['', ''\]\);/, 'neutral background training initialization in CharacterEditor');
 requireMatch(backgroundTemplates, /validateSagaDriveBackgroundTemplateCatalog/, 'background template catalog validation');
 requireMatch(backgroundPanel, /BackgroundCarousel/, 'background template carousel');
 requireMatch(backgroundCarousel, /Eigener Hintergrund/, 'first-class custom background mode');
