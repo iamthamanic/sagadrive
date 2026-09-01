@@ -19,6 +19,7 @@ Roadmap/Design-Artefakt: im Repository nicht vorhanden; Scope basiert auf dem ak
 - [ ] Beim Wechsel auf ein Hintergrund Framework werden dessen vier Pool-Fertigkeiten geladen, aber **kein Training automatisch vorausgewählt**.
 - [ ] Solange weniger als zwei Trainings gewählt sind, zeigt der Graph alle vier Pool-Nodes als auswählbare Optionen.
 - [ ] Es gibt im Background-Flow keinerlei statische `Empfohlen`-Badges oder Framework-Daten für empfohlene Trainings mehr.
+- [ ] `CharacterEditor` liest kein `recommendedTraining`-Compatibility-Feld mehr; der neutrale Startzustand `0 / 2` wird direkt im Editor gesetzt.
 - [ ] Der Nutzer kann zwei beliebige Skills aus dem Framework-Pool auswählen; jeder gewählte Skill zeigt `Hintergrund +1`.
 - [ ] Sobald genau zwei Trainings gewählt sind, zeigt der Graph nur noch diese beiden trainierten Nodes.
 - [ ] Nach `2 / 2` erscheint eine gut sichtbare sekundäre Aktion `Auswahl ändern`.
