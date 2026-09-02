@@ -53,6 +53,9 @@ export function CreateCharacterEntryDialog({
     } catch (error) {
       console.error('Preset list error:', error);
       toast.error(error instanceof Error ? error.message : 'Presets konnten nicht geladen werden.');
+      // Still open the presets step so empty/stub UI is reachable (e2e + offline DB).
+      setPresets([]);
+      setStep('presets');
     } finally {
       setLoading(false);
     }

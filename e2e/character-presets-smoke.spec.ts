@@ -52,7 +52,10 @@ test('create chooser shows two cards and Preset tab under Einstellungen', async 
   });
 
   await page.getByRole('button', { name: /Preset wählen/i }).click();
-  await expect(page.getByText(/Noch keine Presets|SagaDrive-Presets bald/i).first()).toBeVisible({
+  await expect(page.getByRole('heading', { name: /Preset wählen/i })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText(/Noch keine Presets|SagaDrive-Presets bald|Deine Presets/i).first()).toBeVisible({
     timeout: 10_000,
   });
   await page.screenshot({
@@ -83,12 +86,5 @@ test('create chooser shows two cards and Preset tab under Einstellungen', async 
   });
 });
 
-test('documents save→release→from-preset Verify-UI gap', async () => {
-  // BLOCKER: no shared valid-sheet Playwright fixture; see file header + acceptance Screenshots 03/05.
-  test.info().annotations.push({
-    type: 'blocker',
-    description:
-      '03/05 evidence requires green Speichern + Als Preset speichern + Version freigeben + Preset wählen; deferred until valid-sheet fixture.',
-  });
-  expect(true).toBe(true);
-});
+// Verify-UI 03/05 (save → release → from-preset) blocked until a shared valid-sheet fixture exists.
+// See file header + .qa/acceptance/character-presets.md Screenshots.
