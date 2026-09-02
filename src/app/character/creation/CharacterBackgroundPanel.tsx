@@ -20,8 +20,14 @@ import {
   type SagaDriveSkillKey,
 } from '../../../modules/rulesets/characterCreation';
 import type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
-import { useSelectionGraph } from '../../../modules/characters/hooks/useSelectionGraph';
+import type { SagaDriveBackgroundSkillPoints } from '../../../modules/rulesets/skillProgression';
+import { SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS } from '../../../modules/rulesets/skillProgression';
 import { BackgroundCarousel } from './BackgroundCarousel';
+import {
+  BackgroundSkillPointsAllocator,
+  backgroundSkillsWithPoints,
+  sumBackgroundSkillPointsUsed,
+} from './BackgroundSkillPointsAllocator';
 import { RuleHelp } from '../shared/RuleHelp';
 import { SkillSelectField } from '../progression';
 
@@ -32,7 +38,8 @@ interface CharacterBackgroundPanelProps {
   worldProfileId?: string | null;
   backgroundName: string;
   skillPool: readonly SkillSlot[];
-  training: readonly SkillSlot[];
+  backgroundSkillPoints: SagaDriveBackgroundSkillPoints;
+  onBackgroundSkillPointsChange: (points: SagaDriveBackgroundSkillPoints) => void;
   specializationSkill: SkillSlot;
   specializationName: string;
   milieuAccess: string;
@@ -44,9 +51,9 @@ interface CharacterBackgroundPanelProps {
   onTemplateSelect: (templateId: string | null) => void;
   onBackgroundNameChange: (value: string) => void;
   onPoolSkillChange: (index: number, value: string) => void;
-  onTrainingToggle: (skill: SagaDriveSkillKey) => void;
   onSpecializationSkillChange: (skill: SkillSlot) => void;
   onSpecializationNameChange: (value: string) => void;
+  onSpecializationApply?: (skill: SagaDriveSkillKey, name: string) => void;
   onMilieuAccessChange: (value: string) => void;
   onContactChange: (value: string) => void;
   onComplicationChange: (value: string) => void;
@@ -68,37 +75,32 @@ function SuggestionButtons({ values, onSelect }: { values: readonly string[] | u
 
 interface BackgroundSkillNodeProps {
   skillKey: SagaDriveSkillKey;
-  selected: boolean;
-  disabled: boolean;
+  pointValue: 0 | 1 | 2;
   specializationName?: string;
-  onToggle: () => void;
   onHoverChange: (skill: SagaDriveSkillKey | null) => void;
 }
 
 function BackgroundSkillNode({
   skillKey,
-  selected,
-  disabled,
+  pointValue,
   specializationName,
-  onToggle,
   onHoverChange,
 }: BackgroundSkillNodeProps) {
   const skill = getSagaDriveSkill(skillKey);
   const attribute = getSagaDriveAttribute(skill.attribute);
-  const hasSpecialization = Boolean(selected && specializationName?.trim());
+  const hasSpecialization = Boolean(pointValue > 0 && specializationName?.trim());
+  const selected = pointValue > 0;
 
   return (
     <div className="min-w-0" data-background-skill-node={skillKey}>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={onToggle}
+      <div
+        role="group"
+        aria-label={`${skill.label} Hintergrundpunkte`}
         onMouseEnter={() => onHoverChange(skillKey)}
         onMouseLeave={() => onHoverChange(null)}
         onFocus={() => onHoverChange(skillKey)}
         onBlur={() => onHoverChange(null)}
-        aria-pressed={selected}
-        className={`min-h-28 w-full rounded-lg border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default ${disabled && !selected ? 'disabled:opacity-45' : ''} ${selected ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-primary/50 hover:bg-muted/20'}`}
+        className={`min-h-28 w-full rounded-lg border p-3 text-left transition-colors ${selected ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -108,9 +110,9 @@ function BackgroundSkillNode({
           {selected ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> : null}
         </div>
         <div className="mt-3 flex min-h-6 flex-wrap gap-1.5">
-          {selected ? <Badge variant="outline">Hintergrund +1</Badge> : <Badge variant="outline">Pool</Badge>}
+          {pointValue > 0 ? <Badge variant="outline">Hintergrund +{pointValue}</Badge> : <Badge variant="outline">Pool</Badge>}
         </div>
-      </button>
+      </div>
 
       {hasSpecialization ? (
         <div className="relative mx-auto mt-0 max-w-[12rem] pt-5 text-center">
@@ -174,7 +176,7 @@ function BackgroundSkillConnector({
     const seen = new Set<number>();
     const targets: number[] = [];
     for (const node of Array.from(grid?.querySelectorAll(':scope > [data-background-skill-node]') ?? [])) {
-      const button = node.querySelector('button');
+      const button = node.querySelector('[role="group"]');
       const box = (button ?? node).getBoundingClientRect();
       const center = Math.round(Math.min(rect.width, Math.max(0, box.left + box.width / 2 - rect.left)) * 10) / 10;
       if (seen.has(center)) continue;
@@ -358,7 +360,8 @@ export function CharacterBackgroundPanel({
   worldProfileId,
   backgroundName,
   skillPool,
-  training,
+  backgroundSkillPoints,
+  onBackgroundSkillPointsChange,
   specializationSkill,
   specializationName,
   milieuAccess,
@@ -370,9 +373,9 @@ export function CharacterBackgroundPanel({
   onTemplateSelect,
   onBackgroundNameChange,
   onPoolSkillChange,
-  onTrainingToggle,
   onSpecializationSkillChange,
   onSpecializationNameChange,
+  onSpecializationApply,
   onMilieuAccessChange,
   onContactChange,
   onComplicationChange,
@@ -381,43 +384,24 @@ export function CharacterBackgroundPanel({
   const templates = getSagaDriveBackgroundTemplatesForWorldProfile(worldProfileId);
   const selectedTemplate = getSagaDriveBackgroundTemplate(backgroundTemplateId);
   const poolSkills = skillPool.filter(isSagaDriveSkillKey);
-  const trainedSkills = training.filter(isSagaDriveSkillKey);
-  const trainingSet = new Set(trainedSkills);
+  const backgroundPointsUsed = sumBackgroundSkillPointsUsed(backgroundSkillPoints);
+  const backgroundPointsComplete = backgroundPointsUsed === SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS;
+  const occupiedBackgroundSkills = backgroundSkillsWithPoints(backgroundSkillPoints);
   const allSkillKeys = getAllSkillKeys();
   const customMode = backgroundTemplateId === null;
   const hasChoice = backgroundTemplateId !== undefined;
   const showSkillGraph = hasChoice && poolSkills.length === 4;
-  const poolIdentity = poolSkills.join('|');
+  const visibleSkillNodes = backgroundPointsComplete ? occupiedBackgroundSkills : poolSkills;
+  const skillGraphViewMode = backgroundPointsComplete ? 'collapsed' : 'pool';
 
   const [scrollPhase, setScrollPhase] = useState<CarouselScrollPhase>('settled');
-  const {
-    visibleNodes: visibleSkillNodes,
-    viewMode: skillGraphViewMode,
-    isComplete: trainingComplete,
-    editing: editingTraining,
-    activeItem: activeSkill,
-    setActiveItem: setActiveSkill,
-    isNodeDisabled: isTrainingNodeDisabled,
-    handleToggleComplete,
-    startEditing,
-    cancelEditing,
-  } = useSelectionGraph({
-    poolItems: poolSkills,
-    selectedItems: trainedSkills,
-    maxSelections: 2,
-    resetKey: `${backgroundTemplateId ?? 'unset'}|${poolIdentity}`,
-  });
-  const specializationSuggestions = selectedTemplate?.specializationSuggestions.filter((entry) => trainedSkills.includes(entry.skillId)) ?? [];
+  const [activeSkill, setActiveSkill] = useState<SagaDriveSkillKey | null>(null);
+  const specializationSuggestions = selectedTemplate?.specializationSuggestions.filter((entry) => occupiedBackgroundSkills.includes(entry.skillId)) ?? [];
 
   const handleScrollPhaseChange = useCallback((phase: CarouselScrollPhase) => {
     setScrollPhase(phase);
   }, []);
   const handleStandstill = useCallback(() => setScrollPhase('settled'), []);
-  const handleTrainingToggle = (skill: SagaDriveSkillKey) => {
-    const wasSelected = trainingSet.has(skill);
-    onTrainingToggle(skill);
-    handleToggleComplete(wasSelected, trainedSkills.length);
-  };
 
   return (
     <section className="space-y-5" aria-labelledby="background-competency-heading" data-background-panel>
@@ -426,10 +410,10 @@ export function CharacterBackgroundPanel({
           <div className="flex items-center gap-1">
             <h3 id="background-competency-heading" className="font-semibold">Hintergrund</h3>
             <RuleHelp label="Hintergrund">
-              Dein Hintergrund erklärt, welche vier Fertigkeiten zu deiner Vergangenheit passen. Zwei davon erhalten je +1. Attribute werden dadurch nicht erhöht.
+              Dein Hintergrund definiert vier Framework-Fertigkeiten. Du verteilst 2 stackbare Hintergrundpunkte (+2 auf einen Skill oder +1/+1). Attribute werden dadurch nicht erhöht.
             </RuleHelp>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">Wähle eine Vergangenheit im Karussell und entscheide selbst, welche zwei der vier Pool-Fertigkeiten du trainierst. Nach der Wahl zeigt der Graph nur noch deine beiden Trainings.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Wähle eine Vergangenheit im Karussell, verteile 2 Hintergrundpunkte auf die vier Pool-Fertigkeiten und lege danach eine Spezialisierung fest. Nach Abschluss zeigt der Graph nur noch belegte Skills.</p>
         </div>
         <Badge variant={complete ? 'default' : 'outline'}>{complete ? 'Hintergrund vollständig' : 'Hintergrund offen'}</Badge>
       </div>
@@ -444,7 +428,7 @@ export function CharacterBackgroundPanel({
 
       {!hasChoice ? (
         <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-6 text-center text-sm text-muted-foreground">
-          Wähle einen Hintergrund im Karussell. Danach siehst du die vier Pool-Fertigkeiten und trainierst zwei davon direkt im Graphen.
+          Wähle einen Hintergrund im Karussell. Danach siehst du die vier Pool-Fertigkeiten und verteilst 2 Hintergrundpunkte darauf.
         </div>
       ) : (
         <div className="space-y-4">
@@ -458,7 +442,7 @@ export function CharacterBackgroundPanel({
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <div>
                     <p className="font-medium">Vier Pool-Fertigkeiten festlegen</p>
-                    <p className="text-sm text-muted-foreground">Diese Auswahl definiert deinen Kompetenzrahmen. Training folgt direkt darunter.</p>
+                    <p className="text-sm text-muted-foreground">Diese Auswahl definiert deinen Kompetenzrahmen. Hintergrundpunkte folgen direkt darunter.</p>
                   </div>
                   <Badge variant={poolSkills.length === 4 ? 'default' : 'outline'}>{poolSkills.length} / 4</Badge>
                 </div>
@@ -483,7 +467,7 @@ export function CharacterBackgroundPanel({
             <div className="space-y-2 -mt-2">
               <BackgroundSkillConnector
                 skills={visibleSkillNodes}
-                trainedSkills={trainedSkills}
+                trainedSkills={occupiedBackgroundSkills}
                 activeSkill={activeSkill}
                 scrollPhase={scrollPhase}
                 onStandstill={handleStandstill}
@@ -498,56 +482,34 @@ export function CharacterBackgroundPanel({
                   <BackgroundSkillNode
                     key={skillKey}
                     skillKey={skillKey}
-                    selected={trainingSet.has(skillKey)}
-                    disabled={isTrainingNodeDisabled(skillKey)}
-                    specializationName={!editingTraining && specializationSkill === skillKey ? specializationName : undefined}
-                    onToggle={() => handleTrainingToggle(skillKey)}
+                    pointValue={(backgroundSkillPoints[skillKey] ?? 0) as 0 | 1 | 2}
+                    specializationName={backgroundPointsComplete && specializationSkill === skillKey ? specializationName : undefined}
                     onHoverChange={(skill) => setActiveSkill(skill)}
                   />
                 ))}
               </div>
 
-              <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-medium">{trainingComplete && !editingTraining ? 'Deine Hintergrund-Trainings' : 'Training · 2 wählen'}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {trainingComplete && !editingTraining
-                      ? 'Der Graph zeigt nur noch deine zwei gewählten Fertigkeiten. Beide erhalten Hintergrund +1.'
-                      : editingTraining && trainingComplete
-                        ? 'Wähle zuerst eines deiner bisherigen Trainings ab und anschließend einen anderen Pool-Skill.'
-                        : 'Klicke direkt auf zwei der vier Nodes. Beide erhalten Hintergrund +1.'}
-                  </p>
-                </div>
-                <div className="flex min-h-11 flex-wrap items-center gap-2">
-                  <Badge variant={trainingComplete ? 'default' : 'outline'}>{trainedSkills.length} / 2</Badge>
-                  {trainingComplete && !editingTraining ? (
-                    <Button type="button" variant="outline" className="min-h-11" onClick={startEditing}>
-                      Auswahl ändern
-                    </Button>
-                  ) : null}
-                  {editingTraining && trainingComplete ? (
-                    <Button type="button" variant="outline" className="min-h-11" onClick={cancelEditing}>
-                      Auswahl beibehalten
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
+              <BackgroundSkillPointsAllocator
+                poolSkills={poolSkills}
+                points={backgroundSkillPoints}
+                onChange={onBackgroundSkillPointsChange}
+              />
 
-              {trainingComplete && !editingTraining ? (
+              {backgroundPointsComplete ? (
                 <div className="space-y-3 rounded-lg border border-border bg-card p-4">
                   <div>
                     <div className="flex items-center gap-1">
                       <p className="font-medium">Spezialisierung</p>
                       <RuleHelp label="Spezialisierung">Eine passende Spezialisierung gibt +2 auf anwendbare Checks. Die erste Spezialisierung benötigt Fertigkeitswert 1.</RuleHelp>
                     </div>
-                    <p className="text-sm text-muted-foreground">Wähle ein Fachgebiet auf einem deiner beiden trainierten Nodes. Nach der Wahl erscheint es direkt als untergeordneter Branch am Skill.</p>
+                    <p className="text-sm text-muted-foreground">Wähle ein Fachgebiet auf einem deiner Hintergrund-Skills. Nach der Wahl erscheint es direkt als untergeordneter Branch am Skill.</p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <SkillSelectField
                       value={specializationSkill}
                       onValueChange={(value) => onSpecializationSkillChange(isSagaDriveSkillKey(value) ? value : '')}
-                      skillOptions={trainedSkills}
-                      placeholder="Trainierte Fertigkeit wählen"
+                      skillOptions={occupiedBackgroundSkills}
+                      placeholder="Hintergrund-Fertigkeit wählen"
                       ariaLabel="Spezialisierung Fertigkeit wählen"
                     />
                     <Input value={specializationName} onChange={(event) => onSpecializationNameChange(event.target.value)} placeholder="Fachgebiet, z. B. Notfallmedizin" aria-label="Spezialisierung Fachgebiet" />
@@ -556,7 +518,14 @@ export function CharacterBackgroundPanel({
                     <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                       <span>Vorschläge:</span>
                       {specializationSuggestions.map((entry) => (
-                        <Button key={`${entry.skillId}-${entry.name}`} type="button" size="sm" variant="outline" className="min-h-11 px-2 text-xs" onClick={() => { onSpecializationSkillChange(entry.skillId); onSpecializationNameChange(entry.name); }}>
+                        <Button key={`${entry.skillId}-${entry.name}`} type="button" size="sm" variant="outline" className="min-h-11 px-2 text-xs" onClick={() => {
+                          if (onSpecializationApply) {
+                            onSpecializationApply(entry.skillId, entry.name);
+                          } else {
+                            onSpecializationSkillChange(entry.skillId);
+                            onSpecializationNameChange(entry.name);
+                          }
+                        }}>
                           {getSagaDriveSkill(entry.skillId).label}: {entry.name}
                         </Button>
                       ))}
@@ -565,9 +534,7 @@ export function CharacterBackgroundPanel({
                 </div>
               ) : (
                 <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
-                  {editingTraining && trainingComplete
-                    ? 'Bearbeite deine zwei Trainings. Die Spezialisierung bleibt gespeichert und erscheint wieder, sobald du die Auswahl bestätigst.'
-                    : 'Wähle zuerst zwei Trainings. Danach wird die Spezialisierung freigeschaltet.'}
+                  Verteile zuerst alle 2 Hintergrundpunkte. Danach wird die Spezialisierung freigeschaltet.
                 </div>
               )}
             </div>
@@ -598,8 +565,8 @@ export function CharacterBackgroundPanel({
 
       <div className={`rounded-lg border px-4 py-3 text-sm ${complete ? 'border-primary/30 bg-primary/5' : validationAttempted ? 'border-destructive/40 bg-destructive/5 text-destructive' : 'border-border bg-muted/10'}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-medium">{complete ? 'Hintergrund ist regelkonform vollständig.' : 'Noch offen: Template/Name, 4 Pool-Skills, 2 Trainings, 1 Spezialisierung sowie Milieu, Kontakt, Komplikation und Kommunikationsform.'}</p>
-          <span className="text-xs">{poolSkills.length}/4 Pool · {trainedSkills.length}/2 Training · {specializationSkill && specializationName.trim() ? '1/1 Spezialisierung' : '0/1 Spezialisierung'}</span>
+          <p className="font-medium">{complete ? 'Hintergrund ist regelkonform vollständig.' : 'Noch offen: Template/Name, 4 Pool-Skills, 2 Hintergrundpunkte, 1 Spezialisierung sowie Milieu, Kontakt, Komplikation und Kommunikationsform.'}</p>
+          <span className="text-xs">{poolSkills.length}/4 Pool · {backgroundPointsUsed}/2 Punkte · {specializationSkill && specializationName.trim() ? '1/1 Spezialisierung' : '0/1 Spezialisierung'}</span>
         </div>
       </div>
     </section>

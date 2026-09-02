@@ -14,7 +14,7 @@ interface UseCachedEntityListResult<T> {
   items: T;
   isLoading: boolean;
   error: string | null;
-  refresh: () => Promise<void>;
+  refresh: (options?: { force?: boolean }) => Promise<void>;
 }
 
 export function useCachedEntityList<T>(
@@ -30,12 +30,13 @@ export function useCachedEntityList<T>(
   const [isLoading, setIsLoading] = useState(enabled && !entityCache.hasFresh(cacheKey));
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (options?: { force?: boolean }) => {
     if (!enabled) return;
 
-    const fresh = entityCache.hasFresh(cacheKey);
+    const force = options?.force === true;
+    const fresh = !force && entityCache.hasFresh(cacheKey);
     const existing = entityCache.get<T>(cacheKey);
-    if (existing) {
+    if (existing && !force) {
       setItems(existing);
       if (fresh) {
         setIsLoading(false);
@@ -44,7 +45,7 @@ export function useCachedEntityList<T>(
     }
 
     try {
-      setIsLoading(!existing);
+      setIsLoading(!existing || force);
       setError(null);
       const data = await fetcher();
       entityCache.set(cacheKey, data);

@@ -83,9 +83,11 @@ requireMatch(carousel, /'Freier Hintergrund'/, 'free background terminology in c
 requireMatch(carousel, /option\.template\.examples\.join/, 'cross-setting examples shown in carousel');
 requireMatch(carousel, /data-background-framework-icon/, 'framework icon test hook');
 requireMatch(carousel, /:\s*PencilLine\s*;/, 'custom background PencilLine icon');
-requireMatch(panel, /Auswahl ändern/, 'change-selection action after two trainings');
+requireMatch(panel, /BackgroundSkillPointsAllocator/, 'stackable background point allocator');
 requireMatch(panel, /data-training-view=/, 'collapsed versus pool training view');
-requireMatch(panel, /visibleSkillNodes/, 'dynamic two-versus-four node rendering');
+requireMatch(panel, /visibleSkillNodes/, 'dynamic occupied-versus-four node rendering');
+
+rejectMatch(panel, /Auswahl ändern/, 'legacy two-toggle edit action remains');
 
 rejectMatch(source, /recommendedTraining/, 'static or compatibility background training recommendations remain');
 rejectMatch(panel, />Empfohlen</, 'static Empfohlen badge remains in the background training UI');
@@ -97,4 +99,4 @@ rejectMatch(source, /name:\s*'Schmuggler'/, 'legacy Schmuggler remains a visible
 rejectMatch(source, /name:\s*'Ermittler'/, 'legacy Ermittler remains a visible Core framework name');
 rejectMatch(source, /Natur & Grenzland/, 'deprecated Natur & Grenzland terminology remains');
 
-console.log(`Background framework regression check passed (${expectedFrameworks.length} Core frameworks, neutral 2-of-4 training, unique icons).`);
+console.log(`Background framework regression check passed (${expectedFrameworks.length} Core frameworks, stackable 2-point allocator, unique icons).`);

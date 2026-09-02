@@ -7,6 +7,7 @@ function rejectMatch(content, pattern, label) { if (pattern.test(content)) { con
 
 const runtime = read('src/modules/characters/avatar/characterStudio/CharacterStudioRuntime.ts');
 const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const backgroundAllocator = read('src/app/character/creation/BackgroundSkillPointsAllocator.tsx');
 const backgroundPanel = read('src/app/character/creation/CharacterBackgroundPanel.tsx');
 const backgroundCarousel = read('src/app/character/creation/BackgroundCarousel.tsx');
 const backgroundTemplates = read('src/domains/rules/sagadrive/background-templates/index.ts');
@@ -65,17 +66,22 @@ requireMatch(backgroundTemplates, /id:\s*'street-doctor'/, 'Heilung & Fürsorge 
 requireMatch(backgroundTemplates, /skillPool:\s*\['medicine', 'insight', 'survival', 'awareness'\]/, 'Heilung & Fürsorge fixed four-skill pool');
 rejectMatch(backgroundTemplates, /recommendedTraining/, 'legacy background training recommendation or compatibility field remains');
 rejectMatch(editor, /recommendedTraining/, 'CharacterEditor still reads legacy background training recommendations');
-requireMatch(editor, /setBackgroundTraining\(\['', ''\]\);/, 'neutral background training initialization in CharacterEditor');
+requireMatch(editor, /setBackgroundSkillPoints\(\{\}\)/, 'neutral background skill points initialization in CharacterEditor');
+requireMatch(editor, /skillProvenanceStatus:\s*'complete'/, 'complete skill provenance on save');
+requireMatch(editor, /resolveSagaDriveSkillRanks/, 'full skill rank resolution in CharacterEditor');
+requireMatch(editor, /getSagaDriveExperienceBonus\(characterLevel\)/, 'level-scaled global experience bonus');
+requireMatch(backgroundAllocator, /2 Hintergrund-Fertigkeitspunkte/, 'two stackable background points copy');
+requireMatch(backgroundPanel, /BackgroundSkillPointsAllocator/, 'stackable background point allocator in panel');
+requireMatch(backgroundPanel, /visibleSkillNodes/, 'collapsed occupied-node background graph');
+rejectMatch(backgroundPanel, /Training · 2 wählen/, 'legacy two-toggle background training copy');
+rejectMatch(backgroundPanel, /Auswahl ändern/, 'legacy background training edit action');
+requireMatch(backgroundPanel, /Standard:/, 'standard attribute relationship inside template flow');
+requireMatch(backgroundPanel, /BackgroundSkillConnector|data-background-skill-grid/, 'background skill connector graph');
 requireMatch(backgroundTemplates, /validateSagaDriveBackgroundTemplateCatalog/, 'background template catalog validation');
 requireMatch(backgroundPanel, /BackgroundCarousel/, 'background template carousel');
 requireMatch(backgroundCarousel, /Eigener Hintergrund/, 'first-class custom background mode');
 requireMatch(backgroundCarousel, /BACKGROUND_FRAMEWORK_ICON_BY_ID/, 'framework-specific background icons');
-requireMatch(backgroundPanel, /Training · 2 wählen/, 'two background training choices');
-requireMatch(backgroundPanel, /Auswahl ändern/, 'background training edit action');
-requireMatch(backgroundPanel, /visibleSkillNodes/, 'collapsed two-node background training graph');
 rejectMatch(backgroundPanel, />Empfohlen</, 'static Empfohlen badge remains in background training flow');
-requireMatch(backgroundPanel, /Standard:/, 'standard attribute relationship inside template flow');
-requireMatch(backgroundPanel, /BackgroundSkillConnector|data-background-skill-grid/, 'background skill connector graph');
 
 requireMatch(speciesTraitsPanel, /Name deiner Spezies \*/, 'required Alien species profile name field');
 requireMatch(speciesTraitsPanel, /Körperbeschreibung/, 'Alien body description field');
@@ -124,8 +130,11 @@ requireMatch(characterCreation, /key:\s*'enhanced-swimming'.*label:\s*'Erweitert
 requireMatch(characterCreation, /exceptional-body[\s\S]*available:\s*false/, 'exceptional body remains unavailable');
 requireMatch(characterCreation, /sagaDriveSpeciesTraitKeysByRace/, 'species-specific trait allowlists');
 requireMatch(characterCreation, /key:\s*'athletics'.*label:\s*'Athletik'/s, 'SagaDrive skill definitions');
-requireMatch(skillsPanel, /Mindestens.*Fertigkeiten.*Wert 1 oder höher/s, 'minimum trained skill validation');
-requireMatch(skillsPanel, /Standardbeziehung – keine Voraussetzung/, 'skill-standard-attribute relationship semantics');
+requireMatch(skillsPanel, /7 frei \+ 2 Hintergrund \(stackbar\) \+ 1 Archetyp|Freie Punkte.*Hintergrund.*Archetyp/s, 'three primary start source counters');
+requireMatch(skillsPanel, /SkillCheckFormulaPanel/, 'full skill check formula panel');
+requireMatch(skillsPanel, /SkillProgressionSlotsPanel/, 'level 3-19 progression slots panel');
+rejectMatch(skillsPanel, /Mindestens.*Fertigkeiten.*Wert 1 oder höher/s, 'legacy minimum-six trained skills rule');
+requireMatch(skillsPanel, /Standardbeziehung – keine Voraussetzung|globalen und anwendbaren Erfahrungsbonus/s, 'skill relationship or formula semantics');
 requireMatch(skillsPanel, /Hintergrund-Pool/, 'background pool source distinction');
 requireMatch(abilitiesPanel, /Regelgebundene Fähigkeiten/, 'rule-bound abilities panel');
 rejectMatch(abilitiesPanel, /Fähigkeit hinzufügen|setDialogOpen/, 'free-form ability creation remains');
@@ -153,6 +162,14 @@ requireMatch(rulesetMigration, /ADD COLUMN IF NOT EXISTS ruleset_key TEXT NOT NU
 requireMatch(rulesetMigration, /CHECK \(ruleset_key IN \('sagadrive-core', 'dnd-5\.5e'\)\)/, 'ruleset key database constraint');
 requireMatch(sagaDriveProfileMigration, /ADD COLUMN IF NOT EXISTS sagadrive_profile JSONB/, 'SagaDrive profile migration');
 requireMatch(sagaDriveProfileMigration, /ADD COLUMN IF NOT EXISTS notes TEXT/, 'character notes migration');
+const abilitiesMigration = read('supabase/migrations/014_character_abilities_emotion_profiles.sql');
+requireMatch(abilitiesMigration, /ADD COLUMN IF NOT EXISTS abilities JSONB/, 'abilities column migration');
+requireMatch(abilitiesMigration, /ADD COLUMN IF NOT EXISTS emotion_profiles JSONB/, 'emotion_profiles column migration');
+requireMatch(characterRepository, /abilities:\s*payload\.abilities \?\? \[\]/, 'abilities persisted on create');
+requireMatch(read('src/infrastructure/character/character-service.ts'), /invalidate\(ENTITY_CACHE_KEYS\.characterSummaries\)/, 'character list cache invalidation after writes');
+requireMatch(read('src/modules/characters/characterEditorBootstrap.ts'), /kind:\s*'character-edit'/, 'character-edit bootstrap for library reload');
+requireMatch(read('src/app/character/edit/CharacterEditor.tsx'), /hydrateEditorFromPersistedCharacter/, 'editor hydrate from persisted character');
+requireMatch(read('src/components/Library.tsx'), /refreshCharacters\(\{\s*force:\s*true\s*\}\)/, 'library force-refreshes character summaries');
 
 requireMatch(characterRepository, /supabase\.storage[\s\S]*?\.from\(CHARACTER_PORTRAIT_BUCKET\)[\s\S]*?\.upload\(filePath, file/, 'portrait upload through configured Supabase Storage client');
 requireMatch(characterRepository, /createSignedUrl\(filePath, 31_536_000\)/, 'private portrait signed URL creation');

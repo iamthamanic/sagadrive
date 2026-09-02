@@ -1,10 +1,12 @@
+/**
+ * CharacterSkillsPanel — Three start sources (7/2/1), formula panel, and level slots (#91).
+ * Location: src/app/character/progression/CharacterSkillsPanel.tsx
+ */
 import { Minus, Plus } from 'lucide-react';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import {
   SAGA_DRIVE_START_FREE_SKILL_POINTS,
-  SAGA_DRIVE_START_MIN_TRAINED_SKILLS,
-  SAGA_DRIVE_START_SKILL_CAP,
   createEmptySagaDriveSkillRanks,
   getSagaDriveAttribute,
   getSagaDriveSkill,
@@ -12,18 +14,37 @@ import {
   sagaDriveSkillDefinitions,
   type SagaDriveSkillKey,
 } from '../../../modules/rulesets/characterCreation';
-import { getSagaDriveFinalSkillRanks } from '../../../modules/rulesets/skillProgression';
+import type { CharacterAttributesDto } from '../../../modules/characters/types/character.types';
+import {
+  SAGA_DRIVE_START_ARCHETYPE_SKILL_POINTS,
+  SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS,
+  getSagaDriveSkillCap,
+  resolveSagaDriveSkillRanks,
+  sumBackgroundSkillPointsUsed,
+  type SagaDriveBackgroundSkillPoints,
+  type SagaDriveSkillAdvanceDto,
+  type SagaDriveSkillProvenanceStatus,
+  type SagaDriveSpecializationRecordDto,
+  type SagaDriveStartSkillBuild,
+} from '../../../modules/rulesets/skillProgression';
+import { SkillCheckFormulaPanel } from './SkillCheckFormulaPanel';
+import { SkillProgressionSlotsPanel } from './SkillProgressionSlotsPanel';
 import { SkillRuleHelpContent } from './skillRuleHelp';
 import { RuleHelp } from './RuleHelp';
 
 interface CharacterSkillsPanelProps {
+  characterLevel: number;
+  attributes: CharacterAttributesDto;
   freeRanks: Record<SagaDriveSkillKey, number>;
   onFreeRanksChange: (ranks: Record<SagaDriveSkillKey, number>) => void;
   backgroundPoolSkills: readonly SagaDriveSkillKey[];
-  backgroundTrainedSkills: readonly SagaDriveSkillKey[];
+  backgroundSkillPoints: SagaDriveBackgroundSkillPoints;
   archetypeTrainingSkill?: SagaDriveSkillKey;
-  specializationSkill?: SagaDriveSkillKey;
-  specializationName?: string;
+  skillAdvances: SagaDriveSkillAdvanceDto[];
+  onSkillAdvancesChange: (advances: SagaDriveSkillAdvanceDto[]) => void;
+  specializations: SagaDriveSpecializationRecordDto[];
+  onSpecializationsChange: (entries: SagaDriveSpecializationRecordDto[]) => void;
+  skillProvenanceStatus?: SagaDriveSkillProvenanceStatus;
   selectedSkill?: SagaDriveSkillKey;
   onSelectedSkillChange?: (skill: SagaDriveSkillKey) => void;
 }
@@ -37,30 +58,47 @@ function rankLabel(rank: number): string {
   return 'Weltklasse';
 }
 
-export { getSagaDriveFinalSkillRanks };
+function sumBackgroundPoints(points: SagaDriveBackgroundSkillPoints): number {
+  return sumBackgroundSkillPointsUsed(points);
+}
 
 export function CharacterSkillsPanel({
+  characterLevel,
+  attributes,
   freeRanks,
   onFreeRanksChange,
   backgroundPoolSkills,
-  backgroundTrainedSkills,
+  backgroundSkillPoints,
   archetypeTrainingSkill,
-  specializationSkill,
-  specializationName,
+  skillAdvances,
+  onSkillAdvancesChange,
+  specializations,
+  onSpecializationsChange,
+  skillProvenanceStatus,
   selectedSkill,
   onSelectedSkillChange,
 }: CharacterSkillsPanelProps) {
   const freeUsed = sagaDriveSkillDefinitions.reduce((sum, skill) => sum + freeRanks[skill.key], 0);
-  const finalRanks = getSagaDriveFinalSkillRanks(freeRanks, backgroundTrainedSkills, archetypeTrainingSkill);
-  const trainedCount = sagaDriveSkillDefinitions.filter((skill) => finalRanks[skill.key] > 0).length;
-  const hasOverflow = sagaDriveSkillDefinitions.some((skill) => finalRanks[skill.key] > SAGA_DRIVE_START_SKILL_CAP);
-  const totalPoints = freeUsed + backgroundTrainedSkills.length + (archetypeTrainingSkill ? 1 : 0);
+  const backgroundUsed = sumBackgroundPoints(backgroundSkillPoints);
+  const startBuild: SagaDriveStartSkillBuild = {
+    freeSkillRanks: freeRanks,
+    backgroundSkillPoints,
+    archetypeTrainingSkill,
+  };
+  const finalRanks = resolveSagaDriveSkillRanks(
+    { ...startBuild, skillAdvances, specializations, provenanceStatus: skillProvenanceStatus ?? 'complete' },
+    characterLevel,
+  );
+  const skillCap = getSagaDriveSkillCap(characterLevel);
+  const hasOverflow = sagaDriveSkillDefinitions.some((skill) => finalRanks[skill.key] > skillCap);
   const selected = selectedSkill ? getSagaDriveSkill(selectedSkill) : undefined;
+  const backgroundSpec = specializations.find((entry) => entry.source === 'background');
+  const provenanceLegacy = skillProvenanceStatus === 'legacy-unresolved';
 
   const changeFreeRank = (skill: SagaDriveSkillKey, delta: -1 | 1) => {
     const currentFree = freeRanks[skill];
     const currentFinal = finalRanks[skill];
-    if (delta > 0 && (freeUsed >= SAGA_DRIVE_START_FREE_SKILL_POINTS || currentFinal >= SAGA_DRIVE_START_SKILL_CAP)) return;
+    if (delta > 0 && (freeUsed >= SAGA_DRIVE_START_FREE_SKILL_POINTS || currentFinal >= skillCap)) return;
     if (delta < 0 && currentFree <= 0) return;
     onFreeRanksChange({ ...freeRanks, [skill]: currentFree + delta });
   };
@@ -68,19 +106,29 @@ export function CharacterSkillsPanel({
   return (
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Hintergrund</p><p className="mt-1 text-lg font-semibold">{backgroundTrainedSkills.length} / 2</p></div>
-        <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Archetyp</p><p className="mt-1 text-lg font-semibold">{archetypeTrainingSkill ? 1 : 0} / 1</p></div>
         <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Freie Punkte</p><p className="mt-1 text-lg font-semibold">{freeUsed} / {SAGA_DRIVE_START_FREE_SKILL_POINTS}</p></div>
-        <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Gesamt</p><p className="mt-1 text-lg font-semibold">{totalPoints} / 10</p><p className="text-[11px] text-muted-foreground">{trainedCount} / {SAGA_DRIVE_START_MIN_TRAINED_SKILLS} trainiert</p></div>
+        <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Hintergrund</p><p className="mt-1 text-lg font-semibold">{backgroundUsed} / {SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS}</p></div>
+        <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Archetyp</p><p className="mt-1 text-lg font-semibold">{archetypeTrainingSkill ? SAGA_DRIVE_START_ARCHETYPE_SKILL_POINTS : 0} / {SAGA_DRIVE_START_ARCHETYPE_SKILL_POINTS}</p></div>
+        <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Level-Cap</p><p className="mt-1 text-lg font-semibold">{skillCap}</p><p className="text-[11px] text-muted-foreground">Start gesamt 10 Punkte</p></div>
       </div>
 
-      {(freeUsed !== SAGA_DRIVE_START_FREE_SKILL_POINTS || trainedCount < SAGA_DRIVE_START_MIN_TRAINED_SKILLS || hasOverflow) && (
+      {(freeUsed !== SAGA_DRIVE_START_FREE_SKILL_POINTS || backgroundUsed !== SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS || !archetypeTrainingSkill || hasOverflow) && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm">
           {freeUsed !== SAGA_DRIVE_START_FREE_SKILL_POINTS && <p>Vergib genau {SAGA_DRIVE_START_FREE_SKILL_POINTS} freie Fertigkeitspunkte.</p>}
-          {trainedCount < SAGA_DRIVE_START_MIN_TRAINED_SKILLS && <p>Mindestens {SAGA_DRIVE_START_MIN_TRAINED_SKILLS} Fertigkeiten müssen Wert 1 oder höher erreichen.</p>}
-          {hasOverflow && <p>Auf Stufe 1 darf keine Fertigkeit höher als {SAGA_DRIVE_START_SKILL_CAP} sein.</p>}
+          {backgroundUsed !== SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS && <p>Verteile genau {SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS} Hintergrundpunkte im Hintergrund-Panel.</p>}
+          {!archetypeTrainingSkill && <p>Wähle unter Archetype eine typische Fertigkeit (+1).</p>}
+          {hasOverflow && <p>Auf Stufe {characterLevel} darf keine Fertigkeit höher als {skillCap} sein.</p>}
         </div>
       )}
+
+      <SkillProgressionSlotsPanel
+        characterLevel={characterLevel}
+        startBuild={startBuild}
+        skillAdvances={skillAdvances}
+        specializations={specializations}
+        onSkillAdvancesChange={onSkillAdvancesChange}
+        onSpecializationsChange={onSpecializationsChange}
+      />
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="space-y-4">
@@ -102,10 +150,11 @@ export function CharacterSkillsPanel({
                   {attributeSkills.map((skill) => {
                     const freeRank = freeRanks[skill.key];
                     const finalRank = finalRanks[skill.key];
-                    const isSpecialized = specializationSkill === skill.key && Boolean(specializationName?.trim());
+                    const backgroundValue = backgroundSkillPoints[skill.key] ?? 0;
+                    const devSpecs = specializations.filter((entry) => entry.skill === skill.key && entry.source === 'skill-development');
+                    const isBackgroundSpecialized = backgroundSpec?.skill === skill.key && Boolean(backgroundSpec.name.trim());
                     const focused = selectedSkill === skill.key;
                     const inBackgroundPool = backgroundPoolSkills.includes(skill.key);
-                    const backgroundTrained = backgroundTrainedSkills.includes(skill.key);
                     const archetypeTrained = archetypeTrainingSkill === skill.key;
                     return (
                       <div key={skill.key} className={`rounded-lg border bg-card p-3 transition-colors ${focused ? 'border-primary ring-1 ring-primary/30' : inBackgroundPool ? 'border-primary/30' : 'border-border'}`}>
@@ -120,14 +169,15 @@ export function CharacterSkillsPanel({
                         </button>
                         <div className="mt-2 flex min-h-6 flex-wrap gap-1.5">
                           {inBackgroundPool && <Badge variant="outline">Hintergrund-Pool</Badge>}
-                          {backgroundTrained && <Badge variant="outline">Hintergrund +1</Badge>}
+                          {backgroundValue > 0 && <Badge variant="outline">Hintergrund +{backgroundValue}</Badge>}
                           {archetypeTrained && <Badge variant="outline">Archetyp +1</Badge>}
                           {freeRank > 0 && <Badge variant="secondary">Frei +{freeRank}</Badge>}
-                          {isSpecialized && <Badge>{specializationName} +2</Badge>}
+                          {isBackgroundSpecialized && <Badge>{backgroundSpec?.name} +2</Badge>}
+                          {devSpecs.map((entry) => <Badge key={`${entry.acquiredAtLevel}-${entry.name}`} variant="secondary">{entry.name}</Badge>)}
                         </div>
                         <div className="mt-3 flex items-center justify-end gap-2">
                           <Button type="button" variant="outline" size="icon" className="size-10" onClick={() => changeFreeRank(skill.key, -1)} disabled={freeRank <= 0} aria-label={`${skill.label} freien Punkt entfernen`}><Minus className="h-4 w-4" /></Button>
-                          <Button type="button" variant="outline" size="icon" className="size-10" onClick={() => changeFreeRank(skill.key, 1)} disabled={freeUsed >= SAGA_DRIVE_START_FREE_SKILL_POINTS || finalRank >= SAGA_DRIVE_START_SKILL_CAP} aria-label={`${skill.label} freien Punkt hinzufügen`}><Plus className="h-4 w-4" /></Button>
+                          <Button type="button" variant="outline" size="icon" className="size-10" onClick={() => changeFreeRank(skill.key, 1)} disabled={freeUsed >= SAGA_DRIVE_START_FREE_SKILL_POINTS || finalRank >= skillCap} aria-label={`${skill.label} freien Punkt hinzufügen`}><Plus className="h-4 w-4" /></Button>
                         </div>
                       </div>
                     );
@@ -139,23 +189,28 @@ export function CharacterSkillsPanel({
         </div>
 
         <aside className="h-fit rounded-lg border border-border bg-card p-4 xl:sticky xl:top-4">
-          {selected ? (
-            <div className="space-y-3">
-              <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Fertigkeitsdetails</p><h3 className="mt-1 font-semibold">{selected.label}</h3><p className="mt-1 text-sm text-muted-foreground">{selected.summary}</p></div>
-              <div className="rounded-lg border border-border bg-muted/10 p-3 text-sm"><p className="font-medium">Standardattribut: {getSagaDriveAttribute(selected.attribute).label}</p><p className="mt-1 text-xs text-muted-foreground">Standardbeziehung – keine Voraussetzung. Außerhalb direkter Kämpfe kann bei passender Vorgehensweise ein anderes Attribut gelten.</p></div>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between gap-3"><span className="text-muted-foreground">Finaler Rang</span><strong>{finalRanks[selected.key]}</strong></div>
-                <div className="flex justify-between gap-3"><span className="text-muted-foreground">Hintergrund</span><strong>{backgroundTrainedSkills.includes(selected.key) ? '+1' : '—'}</strong></div>
-                <div className="flex justify-between gap-3"><span className="text-muted-foreground">Archetyp</span><strong>{archetypeTrainingSkill === selected.key ? '+1' : '—'}</strong></div>
-                <div className="flex justify-between gap-3"><span className="text-muted-foreground">Frei</span><strong>{freeRanks[selected.key] > 0 ? `+${freeRanks[selected.key]}` : '—'}</strong></div>
-              </div>
-              {specializationSkill === selected.key && specializationName?.trim() ? <Badge>{specializationName} +2</Badge> : null}
-            </div>
+          {selected && selectedSkill ? (
+            <SkillCheckFormulaPanel
+              skillKey={selectedSkill}
+              characterLevel={characterLevel}
+              attributes={attributes}
+              finalRank={finalRanks[selectedSkill]}
+              freeRank={freeRanks[selectedSkill]}
+              backgroundPoints={backgroundSkillPoints}
+              archetypePoint={archetypeTrainingSkill === selectedSkill}
+              specializationName={
+                backgroundSpec?.skill === selectedSkill ? backgroundSpec.name
+                  : specializations.find((entry) => entry.skill === selectedSkill && entry.source === 'skill-development')?.name
+              }
+              provenanceLegacy={provenanceLegacy}
+            />
           ) : (
-            <div><p className="font-medium">Beziehungen verstehen</p><p className="mt-1 text-sm text-muted-foreground">Wähle eine Fertigkeit. SagaDrive hebt dann ihr Standardattribut hervor und zeigt, aus welchen Quellen ihr Rang entsteht.</p></div>
+            <div><p className="font-medium">Beziehungen verstehen</p><p className="mt-1 text-sm text-muted-foreground">Wähle eine Fertigkeit. SagaDrive zeigt Herkunft, globalen und anwendbaren Erfahrungsbonus sowie die volle d20-Formel.</p></div>
           )}
         </aside>
       </div>
     </div>
   );
 }
+
+export { createEmptySagaDriveSkillRanks, resolveSagaDriveSkillRanks };

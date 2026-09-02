@@ -5,6 +5,7 @@
 export { CharacterArchetypePanel } from './CharacterArchetypePanel';
 export { CharacterBackgroundComposer } from './CharacterBackgroundComposer';
 export { CharacterBackgroundPanel } from './CharacterBackgroundPanel';
+export { BackgroundSkillPointsAllocator } from './BackgroundSkillPointsAllocator';
 export { CharacterEssencePanel } from './CharacterEssencePanel';
 export { GenderReadingSelect } from './GenderReadingSelect';
 export { SelectedSpeciesChip } from './SelectedSpeciesChip';

@@ -134,9 +134,14 @@ Für den aktuellen Character-/Lore-Stand sind bei bestehenden Datenbanken diese 
 007_sagadrive_character_profile.sql
 008_world_profiles.sql
 009_character_adventure_arcs.sql
+010_characters_v3_columns.sql
+011_seed_local_admin.sql
+012_character_presets.sql
+013_character_presets_rls_hardening.sql
+014_character_abilities_emotion_profiles.sql
 ```
 
-`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz, `006` richtet den privaten owner-scoped Portrait-Storage ein, `007` ergänzt `sagadrive_profile` sowie persistente Character-Notizen, `008` legt owner-scoped Weltprofile an und `009` speichert Abenteuer-Bögen inkl. Entwicklungsgeschichte. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
+`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz, `006` richtet den privaten owner-scoped Portrait-Storage ein, `007` ergänzt `sagadrive_profile` sowie persistente Character-Notizen, `008` legt owner-scoped Weltprofile an, `009` speichert Abenteuer-Bögen inkl. Entwicklungsgeschichte, `010`–`013` bringen V3-Spalten/Presets nach und `014` ergänzt `abilities`/`emotion_profiles` für Character-Save. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
 
 ## Quality Gates
 
@@ -157,6 +162,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-02** — Skill Progression v2 Character Editor UX: 7/2/1 Startquellen, stackbare Hintergrundpunkte, Formelpanel (global/applied EB), Level-3–19-Slots; Migration `014` (`abilities`/`emotion_profiles`); Bibliothek lädt Charaktere zum Bearbeiten (`feat/skill-progression-v2-character-editor-ux`, #91)
 - **2026-09-02** — Character Presets hardening: migration `013` (source ownership + origin=user RLS), snapshot re-validate on read/bootstrap, `normalizeSafeUrl` for portrait URLs (`feat/character-presets`)
 - **2026-09-02** — Character Presets MVP: Create-Chooser (eigen/preset), versionierte Presets unter Einstellungen → Preset, Migration `012_character_presets` (`feat/character-presets`)
 - **2026-09-01** — Startup- & Bibliothek-Performance: Route-Lazy-Loading (Three.js/VRM aus Initial-Chunk), schnellerer Auth-Fail-open, DevTrack nur in Dev, farbiges Favicon, Summary-DTOs + Batch-Queries für Bibliothek/Dashboard, Tab-lazy Fetch + 30s Cache (`feat/startup-library-performance`)
@@ -166,7 +172,6 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-08-27** — Bibliothek-Tab Welten (owner-scoped Weltprofile, Modul Speziesentwicklung); Character Editor: Notizen unter Hintergrund, Tab Statistik mit Abenteuer-Bögen (`feat/world-profiles-and-statistics`, siehe `docs/world profiles.md`)
 - **2026-08-27** — Speziesmerkmale: speziesgebundene Allowlists, exakt 3/3 Punkte, Merkmalsdetails direkt an den Cards, Alien-Profil-Builder, `Erweitertes Klettern`/`Erweitertes Schwimmen`; Talente-Subtab entfernt (`feat/species-traits-by-species`)
 - **2026-08-27** — Character Editor Chrome: Tab „Spezies“, Name/Geschlecht/Stufe in Preview, Regelset neben Vorschau, Archetyp-Kernfähigkeit einklappbar, flachere Archetyp-Karten (`feat/alien-species-sketch`)
-- **2026-08-27** — Alien-Spezies-Skizze: Outline-Lineup mit fünf Gestalten (Schnecke, Geist, Grey, Kristall, Tentakel) (`feat/alien-species-sketch`)
 - **2026-08-27** — Spezies-Karussell: Wappen pro Spezies (Shimmer/Puls bei Auswahl), Colorway-Header, überarbeitete Skizzen und Skalierung Zwerg/Halbling (`feat/character-editor-ui-polish`)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:

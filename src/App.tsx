@@ -64,6 +64,21 @@ function LazyView({ children }: { children: ReactNode }) {
   return <Suspense fallback={<ViewLoadingFallback />}>{children}</Suspense>;
 }
 
+function CharacterEditorView() {
+  // Capture edit id once per mount so clearing sessionStorage after hydrate
+  // does not remount the editor mid-load.
+  const [mountKey] = useState(
+    () => (typeof sessionStorage !== 'undefined'
+      ? sessionStorage.getItem('sagadrive:character-edit-id')
+      : null) ?? 'new-character',
+  );
+  return (
+    <LazyView>
+      <CharacterEditor key={mountKey} />
+    </LazyView>
+  );
+}
+
 export default function App() {
   const [currentView, setCurrentView] = useState<AppView>("dashboard");
   const [inSession, setInSession] = useState(false);
@@ -82,11 +97,7 @@ export default function App() {
       case "dashboard":
         return <Dashboard onNavigate={handleNavigate} />;
       case "character-editor":
-        return (
-          <LazyView>
-            <CharacterEditor />
-          </LazyView>
-        );
+        return <CharacterEditorView />;
       case "adventure-editor":
         return <Dashboard onNavigate={handleNavigate} />;
       case "gamemaster":

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
@@ -15,6 +15,7 @@ import { getSpeciesDevelopmentMode } from '../modules/worlds/worldModuleRegistry
 import { useWorldProfiles } from '../modules/worlds/hooks/useWorldProfiles';
 import type { CreateWorldProfileDto, WorldProfileVm } from '../modules/worlds/types/world.types';
 import { toast } from 'sonner';
+import { setCharacterEditorBootstrap } from '../modules/characters/characterEditorBootstrap';
 
 const WorldProfileEditorDialog = lazy(() =>
   import('../modules/worlds/components/WorldProfileEditorDialog').then((module) => ({
@@ -54,7 +55,7 @@ export function Library({ onNavigate }: LibraryProps) {
   const [editingWorld, setEditingWorld] = useState<WorldProfileVm | null>(null);
   const { user } = useAuth();
 
-  const { characters, isLoading, error, deleteCharacter } = useCharacterSummaries({
+  const { characters, isLoading, error, deleteCharacter, refreshCharacters } = useCharacterSummaries({
     enabled: visitedTabs.has('characters'),
   });
   const { projects, isLoading: projectsLoading, error: projectsError } = useProjectSummaries({
@@ -68,6 +69,12 @@ export function Library({ onNavigate }: LibraryProps) {
     updateWorld,
     deleteWorld,
   } = useWorldProfiles({ enabled: visitedTabs.has('worlds') });
+
+  // Always re-fetch character summaries when Library mounts so saves from the
+  // editor are visible immediately (cache may still look "fresh" otherwise).
+  useEffect(() => {
+    void refreshCharacters({ force: true });
+  }, [refreshCharacters]);
 
   const handleTabChange = (value: string) => {
     const tab = value as LibraryTab;
@@ -225,14 +232,20 @@ export function Library({ onNavigate }: LibraryProps) {
       imageFallback={char.name}
       variant={context.variant}
       isCenter={context.isCenter}
-      onOpen={context.variant === 'list' || context.isCenter ? () => onNavigate('character-editor') : undefined}
+      onOpen={context.variant === 'list' || context.isCenter ? () => {
+        setCharacterEditorBootstrap({ kind: 'character-edit', characterId: char.id });
+        onNavigate('character-editor');
+      } : undefined}
       actions={
         <>
           <Button
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={() => onNavigate('character-editor')}
+            onClick={() => {
+              setCharacterEditorBootstrap({ kind: 'character-edit', characterId: char.id });
+              onNavigate('character-editor');
+            }}
           >
             <Edit className="w-3 h-3 mr-1" />
             <span className="text-xs">Bearbeiten</span>
