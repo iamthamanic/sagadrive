@@ -28,6 +28,9 @@ export interface DerivedStatComputation {
 export interface ComputeSagaDriveDerivedStatsInput {
   attributes: DerivedStatAttributeMap;
   finalSkillRanks: DerivedStatSkillRankMap;
+  /** Global EB for non-skill-bound formulas (health, resistances). */
   experienceBonus: number;
+  /** When set, initiative uses applicable EB from awareness rank at this level. */
+  level?: number;
   overloaded: boolean;
 }

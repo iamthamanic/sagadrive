@@ -9,6 +9,13 @@ import type {
   SagaDriveSkillKey,
   SagaDriveSpeciesTraitKey,
 } from '../../rules/sagadrive/character-creation';
+import type {
+  SagaDriveBackgroundSkillPoints,
+  SagaDriveSkillAdvanceDto,
+  SagaDriveSkillProvenanceStatus,
+  SagaDriveSpecializationRecordDto,
+  SagaDriveSpecializationSource,
+} from '../../rules/sagadrive/skill-progression';
 import type { SagaDriveSpeciesTraitOptionKey } from '../../rules/sagadrive/species-trait-options';
 import type { CharacterAttributesDto } from './character.entity';
 
@@ -17,12 +24,15 @@ export type SagaDriveAttributeAdvancesDto = Partial<Record<8 | 16, SagaDriveAttr
 export interface SagaDriveSpecializationDto {
   skill: SagaDriveSkillKey;
   name: string;
+  source?: SagaDriveSpecializationSource;
+  acquiredAtLevel?: number;
 }
 
 export interface SagaDriveBackgroundDto {
   name: string;
   skillPool: SagaDriveSkillKey[];
   trainedSkills: SagaDriveSkillKey[];
+  backgroundSkillPoints?: SagaDriveBackgroundSkillPoints;
   specialization?: SagaDriveSpecializationDto;
   milieuAccess: string;
   contact: string;
@@ -59,6 +69,10 @@ export interface SagaDriveProfileDto {
   backgroundTemplateId?: string | null;
   background: SagaDriveBackgroundDto;
   archetypeTrainingSkill?: SagaDriveSkillKey;
+  freeSkillRanks?: Partial<Record<SagaDriveSkillKey, number>>;
+  skillAdvances?: SagaDriveSkillAdvanceDto[];
+  specializations?: SagaDriveSpecializationRecordDto[];
+  skillProvenanceStatus?: SagaDriveSkillProvenanceStatus;
   baseAttributes?: CharacterAttributesDto;
   attributeAdvances?: SagaDriveAttributeAdvancesDto;
   presetReleaseMode?: SagaDrivePresetReleaseMode;

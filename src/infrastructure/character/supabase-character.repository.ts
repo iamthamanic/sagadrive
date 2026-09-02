@@ -8,7 +8,7 @@ import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../lib/netw
 import { normalizeCharacterAppearance } from '../../modules/characters/avatar';
 import type { CreateCharacterDto, UpdateCharacterDto } from '../../domains/character/contracts/character.commands';
 import type { CharacterSummaryVm, CharacterVm } from '../../domains/character/contracts/character.views';
-import { assertValidSagaDriveAttributePersistence } from '../../domains/character/use-cases/assert-character-persistence';
+import { assertValidSagaDriveCharacterPersistence } from '../../domains/character/use-cases/assert-character-persistence';
 import {
   normalizeAttributes,
   normalizeInventory,
@@ -108,7 +108,8 @@ export class SupabaseCharacterRepository {
     const attributes = normalizeAttributes(payload.attributes);
     const level = payload.level || 1;
     const sagadriveProfile = rulesetKey === 'sagadrive-core' ? normalizeSagaDriveProfile(payload.sagadrive_profile) : null;
-    if (sagadriveProfile) assertValidSagaDriveAttributePersistence(attributes, sagadriveProfile, level);
+    const skills = normalizeSkills(payload.skills);
+    if (sagadriveProfile) assertValidSagaDriveCharacterPersistence(attributes, skills, sagadriveProfile, level);
     const characterData: Partial<CharacterDto> = {
       owner_user_id: userId,
       character_type: 'pc',
@@ -150,7 +151,8 @@ export class SupabaseCharacterRepository {
       const level = typeof payload.level === 'number'
         ? payload.level
         : (await this.getCharacterById(id)).level;
-      assertValidSagaDriveAttributePersistence(attributes, sagadriveProfile, level);
+      const skills = payload.skills ? normalizeSkills(payload.skills) : (await this.getCharacterById(id)).skills;
+      assertValidSagaDriveCharacterPersistence(attributes, skills, sagadriveProfile, level);
     }
     const updatePayload = {
       ...payload,

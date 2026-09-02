@@ -8,6 +8,7 @@ import {
   type SagaDriveAttributeKey,
   type SagaDriveSkillKey,
 } from '../character-creation';
+import { getSagaDriveAppliedExperienceBonus } from '../skill-progression';
 import type {
   ComputeSagaDriveDerivedStatsInput,
   DerivedStatComputation,
@@ -22,7 +23,7 @@ function skillShortLabel(key: SagaDriveSkillKey): string {
 }
 
 export function computeSagaDriveDerivedStats(input: ComputeSagaDriveDerivedStatsInput): DerivedStatComputation[] {
-  const { attributes, finalSkillRanks, experienceBonus, overloaded } = input;
+  const { attributes, finalSkillRanks, experienceBonus, level, overloaded } = input;
   const carryCapacity = 5 + 2 * attributes.strength;
   const movement = overloaded ? 6 : 9;
 
@@ -36,7 +37,10 @@ export function computeSagaDriveDerivedStats(input: ComputeSagaDriveDerivedStats
   const maneuverUsesAthletics = athleticsManeuver >= acrobaticsManeuver;
 
   const awarenessRank = finalSkillRanks.awareness;
-  const initiativeBonus = attributes.perception + awarenessRank + (awarenessRank > 0 ? experienceBonus : 0);
+  const initiativeExperienceBonus = typeof level === 'number'
+    ? getSagaDriveAppliedExperienceBonus(awarenessRank, level)
+    : (awarenessRank > 0 ? experienceBonus : 0);
+  const initiativeBonus = attributes.perception + awarenessRank + initiativeExperienceBonus;
 
   const health = 12 + 2 * attributes.endurance + 2 * experienceBonus;
   const defense = 10 + attributes.dexterity + experienceBonus + defenseSkill;
@@ -79,12 +83,12 @@ export function computeSagaDriveDerivedStats(input: ComputeSagaDriveDerivedStats
       label: 'Initiative',
       displayValue: `d20 + ${initiativeBonus}`,
       prefix: 'd20 +',
-      help: 'd20 + Wahrnehmung + Aufmerksamkeit + Erfahrungsbonus, wenn Aufmerksamkeit trainiert ist.',
+      help: 'd20 + Wahrnehmung + Aufmerksamkeit + anwendbarer Erfahrungsbonus (bei trainierter Aufmerksamkeit).',
       terms: [
         { label: attributeShortLabel('perception'), contribution: attributes.perception, detail: `Wahrnehmung ${attributes.perception}` },
         { label: skillShortLabel('awareness'), contribution: awarenessRank, detail: `Aufmerksamkeit ${awarenessRank}` },
         ...(awarenessRank > 0
-          ? [{ label: 'EB', contribution: experienceBonus, detail: `Erfahrungsbonus ${experienceBonus}` }]
+          ? [{ label: 'EB', contribution: initiativeExperienceBonus, detail: `Anwendbarer Erfahrungsbonus ${initiativeExperienceBonus}` }]
           : []),
       ],
       footnote: awarenessRank === 0 ? 'Erfahrungsbonus zählt erst ab Aufmerksamkeit 1.' : undefined,
