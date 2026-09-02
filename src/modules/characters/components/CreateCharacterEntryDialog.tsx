@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from '../../../components/ui/dialog';
 import { clearCharacterEditorBootstrap, setCharacterEditorBootstrap } from '../characterEditorBootstrap';
-import { characterPresetService } from '../services/characterPreset.service';
+import { assertValidSnapshot, characterPresetService } from '../services/characterPreset.service';
 import type { CharacterPresetVm } from '../types/characterPreset.types';
 
 type CreateStep = 'chooser' | 'presets' | 'versions';
@@ -72,6 +72,12 @@ export function CreateCharacterEntryDialog({
     const version = preset.versions.find((entry) => entry.level === level);
     if (!version) {
       toast.error('Version nicht gefunden.');
+      return;
+    }
+    try {
+      assertValidSnapshot(version.snapshot);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Preset-Version ungültig.');
       return;
     }
     setCharacterEditorBootstrap({

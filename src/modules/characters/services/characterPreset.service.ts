@@ -5,7 +5,7 @@
 import { supabase } from '../../../lib/supabase';
 import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
 import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../../lib/networkTimeout';
-import { normalizeCharacterAppearance } from '../avatar';
+import { normalizeCharacterAppearance, normalizeSafeUrl } from '../avatar';
 import {
   applySagaDriveAttributeAdvances,
   isValidSagaDriveAttributeBuild,
@@ -84,7 +84,8 @@ function normalizeSkills(value: unknown): Record<SagaDriveSkillKey, number> {
   return result;
 }
 
-function assertValidSnapshot(snapshot: CharacterPresetSnapshot): void {
+/** Fail closed: invalid snapshots must not be written or hydrated into the editor. */
+export function assertValidSnapshot(snapshot: CharacterPresetSnapshot): void {
   if (snapshot.schemaVersion !== 1) {
     throw new Error('Ungültiger Preset-Snapshot (Schema).');
   }
@@ -164,6 +165,13 @@ function assertValidSnapshot(snapshot: CharacterPresetSnapshot): void {
   }
 }
 
+function withSafePortraitUrl(snapshot: CharacterPresetSnapshot): CharacterPresetSnapshot {
+  if (!snapshot.portrait_url) return snapshot;
+  const safePortrait = normalizeSafeUrl(snapshot.portrait_url);
+  if (safePortrait === snapshot.portrait_url) return snapshot;
+  return { ...snapshot, portrait_url: safePortrait };
+}
+
 function normalizeSnapshot(value: unknown): CharacterPresetSnapshot | null {
   if (!isRecord(value) || value.schemaVersion !== 1) return null;
   if (typeof value.name !== 'string' || typeof value.race !== 'string' || typeof value.class !== 'string') return null;
@@ -204,7 +212,10 @@ function normalizeSnapshot(value: unknown): CharacterPresetSnapshot | null {
   if (Array.isArray(value.ideals)) snapshot.ideals = value.ideals.filter((entry): entry is string => typeof entry === 'string');
   if (Array.isArray(value.bonds)) snapshot.bonds = value.bonds.filter((entry): entry is string => typeof entry === 'string');
   if (Array.isArray(value.flaws)) snapshot.flaws = value.flaws.filter((entry): entry is string => typeof entry === 'string');
-  if (typeof value.portrait_url === 'string' && value.portrait_url.trim()) snapshot.portrait_url = value.portrait_url;
+  if (typeof value.portrait_url === 'string' && value.portrait_url.trim()) {
+    const safePortrait = normalizeSafeUrl(value.portrait_url);
+    if (safePortrait) snapshot.portrait_url = safePortrait;
+  }
   return snapshot;
 }
 
@@ -215,6 +226,15 @@ function normalizeVersions(value: unknown): CharacterPresetVersionDto[] {
     if (!isRecord(item) || typeof item.level !== 'number' || typeof item.created_at !== 'string') continue;
     const snapshot = normalizeSnapshot(item.snapshot);
     if (!snapshot) continue;
+    try {
+      assertValidSnapshot(snapshot);
+    } catch (error) {
+      console.error(
+        'Skipping invalid preset version on read:',
+        error instanceof Error ? error.message : error,
+      );
+      continue;
+    }
     versions.push({ level: item.level, snapshot, created_at: item.created_at });
   }
   return versions.sort((a, b) => a.level - b.level || a.created_at.localeCompare(b.created_at));
@@ -293,7 +313,8 @@ class CharacterPresetService {
     if (input.rulesetKey !== 'sagadrive-core') {
       throw new Error('Presets sind derzeit nur für SagaDrive Core verfügbar.');
     }
-    assertValidSnapshot(input.snapshot);
+    const snapshot = withSafePortraitUrl(input.snapshot);
+    assertValidSnapshot(snapshot);
 
     const existing = await this.getPresetForCharacter(input.sourceCharacterId);
     if (existing) {
@@ -301,15 +322,15 @@ class CharacterPresetService {
     }
 
     const version: CharacterPresetVersionDto = {
-      level: input.snapshot.level,
-      snapshot: input.snapshot,
+      level: snapshot.level,
+      snapshot,
       created_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
       .from(TABLE)
       .insert({
         owner_user_id: userId,
-        display_name: input.displayName.trim() || `${input.snapshot.name.trim()} Preset`,
+        display_name: input.displayName.trim() || `${snapshot.name.trim()} Preset`,
         ruleset_key: 'sagadrive-core',
         origin: 'user',
         source_character_id: input.sourceCharacterId,
@@ -324,7 +345,8 @@ class CharacterPresetService {
 
   async releaseVersion(input: ReleaseCharacterPresetVersionInput): Promise<CharacterPresetVm> {
     const userId = await getAuthenticatedUserId();
-    assertValidSnapshot(input.snapshot);
+    const snapshot = withSafePortraitUrl(input.snapshot);
+    assertValidSnapshot(snapshot);
 
     const { data: existing, error: loadError } = await supabase
       .from(TABLE)
@@ -338,15 +360,15 @@ class CharacterPresetService {
 
     const dto = existing as CharacterPresetDto;
     const versions = normalizeVersions(dto.versions);
-    if (versions.some((version) => version.level === input.snapshot.level)) {
-      throw new Error(`Für Level ${input.snapshot.level} existiert bereits eine Preset-Version.`);
+    if (versions.some((version) => version.level === snapshot.level)) {
+      throw new Error(`Für Level ${snapshot.level} existiert bereits eine Preset-Version.`);
     }
 
     const nextVersions = [
       ...versions,
       {
-        level: input.snapshot.level,
-        snapshot: input.snapshot,
+        level: snapshot.level,
+        snapshot,
         created_at: new Date().toISOString(),
       },
     ].sort((a, b) => a.level - b.level || a.created_at.localeCompare(b.created_at));

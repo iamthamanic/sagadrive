@@ -64,7 +64,7 @@ Der aktuelle **Neuer-Charakter-Flow** konzentriert sich bewusst ausschließlich 
 - `Parameter` (Attribute / Kompetenzen inkl. Hintergrund-Framework / Archetyp / Essenz)
 - `Look`
 - `Inventar`
-- `Einstellungen` mit Subtabs `Statistik` (Abenteuer-Bögen) und `Preset` (versionierte Sheet-Snapshots, Migration `012_character_presets`)
+- `Einstellungen` mit Subtabs `Statistik` (Abenteuer-Bögen) und `Preset` (versionierte Sheet-Snapshots, Migrationen `012`/`013_character_presets`)
 
 Die UI behandelt SagaDrive Core nicht als umbenannte D&D-Maske. Sie verwendet die Core-Begriffe **Spezies**, **Archetyp**, **Essenz**, **Ausdauer**, **Verstand** und **Wahrnehmung**, die Startattributverteilung `4,3,3,2,2,1`, alle 18 Core-Fertigkeiten sowie die definierten Fertigkeitsbudgets und -grenzen. Die fünf Primärarchetypen liefern ihre jeweilige Rang-I-Kernfähigkeit automatisch; freie Platzhalterfähigkeiten werden nicht erzeugt.
 
@@ -157,6 +157,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-02** — Character Presets hardening: migration `013` (source ownership + origin=user RLS), snapshot re-validate on read/bootstrap, `normalizeSafeUrl` for portrait URLs (`feat/character-presets`)
 - **2026-09-02** — Character Presets MVP: Create-Chooser (eigen/preset), versionierte Presets unter Einstellungen → Preset, Migration `012_character_presets` (`feat/character-presets`)
 - **2026-09-01** — Startup- & Bibliothek-Performance: Route-Lazy-Loading (Three.js/VRM aus Initial-Chunk), schnellerer Auth-Fail-open, DevTrack nur in Dev, farbiges Favicon, Summary-DTOs + Batch-Queries für Bibliothek/Dashboard, Tab-lazy Fetch + 30s Cache (`feat/startup-library-performance`)
 - **2026-08-31** — Hintergrund: Template-Karussell inkl. Custom-Slide, Bracket-Connector zu Pool-Skill-Nodes, Training/Spezialisierung am Node (`feat/background-skill-nodes`)

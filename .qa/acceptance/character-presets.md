@@ -57,17 +57,21 @@ AGENTS.md has no formal F-xx/B-xx Secure-by-Default table; apply practical owner
 
 - Owner-only SELECT/INSERT/UPDATE/DELETE on `character_presets` via `owner_user_id = auth.uid()`
 - `source_character_id` ON DELETE SET NULL (preset survives; no cross-owner retarget)
-- Service validates snapshot completeness before write (client validation is UX-only)
+- Migration `013`: INSERT/UPDATE `WITH CHECK` requires `origin = 'user'` and `source_character_id` null OR owned by `auth.uid()`; `origin` immutable on UPDATE
+- Service validates snapshot completeness before write **and** re-validates on read / bootstrap before editor hydrate
+- Snapshot `portrait_url` sanitized with `normalizeSafeUrl` (https or same-origin path) on persist and hydrate
 - `published` always false in MVP; no public marketplace read policy
-- No secrets in logs; portrait URLs treated as opaque strings already owned by user storage paths
+- No secrets in logs
 
 ## Implementation Notes
 - Migration `012_character_presets.sql`: owner RLS, versions JSONB, `source_character_id` ON DELETE SET NULL, `published` forced false.
-- Types/service: `characterPreset.types.ts`, `characterPreset.service.ts` with `assertValidSnapshot`, create/release/rename/duplicate/delete, `maybeAutoReleaseVersion`.
+- Migration `013_character_presets_rls_hardening.sql`: source ownership + origin=user client writes.
+- Types/service: `characterPreset.types.ts`, `characterPreset.service.ts` with exported `assertValidSnapshot`, create/release/rename/duplicate/delete, `maybeAutoReleaseVersion`, safe portrait URLs.
 - UI: `CreateCharacterEntryDialog` (Dashboard + Bibliothek create CTAs); `CharacterPresetPanel` under Einstellungen → Preset; Statistik moved to Einstellungen subtab.
-- Editor: bootstrap from preset snapshot; save uses update when `savedCharacterId` set; `presetReleaseMode` on `sagadrive_profile`; auto-release after level-up save.
+- Editor: bootstrap from preset snapshot (assert + URL sanitize); save uses update when `savedCharacterId` set; `presetReleaseMode` on `sagadrive_profile`; auto-release after level-up save.
 - Regression: `scripts/character-presets-regression-check.mjs` wired into `test-gate.mjs`; character-editor regression + e2e updated for Einstellungen/chooser.
-- Known limitations: no Bibliothek load-by-id for existing characters (pre-existing); system/marketplace stubs only; migration must be applied to backend.
+- Verify-UI gap: screenshots 03/05 (version pick + post-save list) need a shared valid-sheet Playwright fixture; documented in `e2e/character-presets-smoke.spec.ts`.
+- Known limitations: no Bibliothek load-by-id for existing characters (pre-existing); system/marketplace stubs only; migrations 012+013 must be applied to backend.
 
 ## Composition Gate
 - HEAD_SHA: b7458019865d20a7e94c6f016ac5abed5a7bb093 (product; QA stamp may follow)

@@ -33,7 +33,8 @@ import { SpeciesCarousel } from '../modules/characters/components/SpeciesCarouse
 import { SpeciesTraitsPanel } from '../modules/characters/components/SpeciesTraitsPanel';
 import { CharacterTraitEditor } from '../modules/characters/components/CharacterTraitEditor';
 import { takeCharacterEditorBootstrap } from '../modules/characters/characterEditorBootstrap';
-import { characterPresetService } from '../modules/characters/services/characterPreset.service';
+import { assertValidSnapshot, characterPresetService } from '../modules/characters/services/characterPreset.service';
+import { normalizeSafeUrl } from '../modules/characters/avatar';
 import type { CharacterPresetReleaseMode, CharacterPresetSnapshot } from '../modules/characters/types/characterPreset.types';
 import { buildSagaDriveDerivedStatCards } from '../modules/characters/utils/derivedStats';
 import { getSagaDriveBackgroundTemplate } from '../modules/rulesets/backgroundTemplates';
@@ -431,6 +432,13 @@ export function CharacterEditor() {
     const bootstrap = takeCharacterEditorBootstrap();
     if (!bootstrap || bootstrap.kind !== 'preset-snapshot') return;
     const { snapshot } = bootstrap;
+    try {
+      assertValidSnapshot(snapshot);
+    } catch (error) {
+      console.error('Preset bootstrap rejected:', error instanceof Error ? error.message : error);
+      toast.error(error instanceof Error ? error.message : 'Preset konnte nicht geladen werden.');
+      return;
+    }
     const profile = snapshot.sagadrive_profile;
     const appearance = snapshot.appearance;
     const resolved = resolveSagaDriveAttributeBuildState(snapshot.attributes, profile);
@@ -467,7 +475,7 @@ export function CharacterEditor() {
     setBonds(snapshot.bonds ?? []);
     setFlaws(snapshot.flaws ?? []);
     setNotes(snapshot.notes ?? '');
-    setPortraitUrl(snapshot.portrait_url ?? '');
+    setPortraitUrl(snapshot.portrait_url ? (normalizeSafeUrl(snapshot.portrait_url) ?? '') : '');
     setPresetReleaseMode(profile.presetReleaseMode === 'auto' ? 'auto' : 'manual');
     setBodySize([appearance.body_size ?? 50]);
     setHeight([appearance.height ?? 50]);
