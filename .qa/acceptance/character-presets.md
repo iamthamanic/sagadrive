@@ -74,7 +74,8 @@ AGENTS.md has no formal F-xx/B-xx Secure-by-Default table; apply practical owner
 - Known limitations: no Bibliothek load-by-id for existing characters (pre-existing); system/marketplace stubs only; migrations 012+013 must be applied to backend.
 
 ## Composition Gate
-- HEAD_SHA: b7458019865d20a7e94c6f016ac5abed5a7bb093 (product; QA stamp may follow)
+- HEAD_SHA: ed569483213f23ecff7418cd7ec974a4206a73e9
+- BASE_SHA: cea1e6dbfa52dac93538b2dd59e71064dd303bc3
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-character-presets.md`
 - Skip reason: n/a
