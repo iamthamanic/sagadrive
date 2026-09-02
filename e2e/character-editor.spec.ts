@@ -299,6 +299,57 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(progressionSlots.getByText(/Medizin: 1 → 2/)).toBeVisible();
   await page.screenshot({ path: path.join(V2_EVIDENCE_DIR, '04-progression-slot.png'), fullPage: true });
 
+  // (33) Repeated level slots carry unique accessible names.
+  await expect(progressionSlots.getByRole('combobox', { name: 'Level 3 Entwicklung' })).toBeVisible();
+  await expect(progressionSlots.getByRole('combobox', { name: 'Level 3 Fertigkeit' })).toBeVisible();
+
+  // Raise to level 7 to unlock the L5/L7 development slots.
+  await page.getByLabel('Stufe').click();
+  await page.getByRole('option', { name: '7', exact: true }).click();
+
+  // (27/28) L5 learn Fingerfertigkeit, L7 rank-up Fingerfertigkeit, then remove L5:
+  // the dependent L7 decision must be pruned deterministically without a render crash.
+  await progressionSlots.getByRole('combobox', { name: 'Level 5 Entwicklung' }).click();
+  await page.getByRole('option', { name: 'Neuen Skill 0→1' }).click();
+  await progressionSlots.getByRole('combobox', { name: 'Level 5 Fertigkeit' }).click();
+  await page.getByRole('option', { name: /Fingerfertigkeit \(Rang 0\)/ }).click();
+  await expect(progressionSlots.getByText(/Fingerfertigkeit: 0 → 1/)).toBeVisible();
+  await progressionSlots.getByRole('combobox', { name: 'Level 7 Entwicklung' }).click();
+  await page.getByRole('option', { name: 'Bestehenden Skill +1' }).click();
+  await progressionSlots.getByRole('combobox', { name: 'Level 7 Fertigkeit' }).click();
+  await page.getByRole('option', { name: /Fingerfertigkeit \(Rang 1\)/ }).click();
+  await expect(progressionSlots.getByText(/Fingerfertigkeit: 1 → 2/)).toBeVisible();
+  await progressionSlots.getByRole('combobox', { name: 'Level 5 Entwicklung' }).click();
+  await page.getByRole('option', { name: /zurücksetzen/ }).click();
+  await expect(progressionSlots.getByText(/Fingerfertigkeit: 1 → 2/)).toHaveCount(0);
+  await expect(progressionSlots.getByText(/Fingerfertigkeit: 0 → 1/)).toHaveCount(0);
+  await expect(progressionSlots).toBeVisible();
+  await page.screenshot({ path: path.join(V2_EVIDENCE_DIR, '05-progression-cascade-prune.png'), fullPage: true });
+
+  // (26) Specialization draft flow: kind first, then skill, then name — only complete decisions persist.
+  await progressionSlots.getByRole('combobox', { name: 'Level 5 Entwicklung' }).click();
+  await page.getByRole('option', { name: 'Spezialisierung' }).click();
+  await expect(progressionSlots.getByRole('combobox', { name: 'Level 5 Entwicklung' })).toContainText('Spezialisierung');
+  await progressionSlots.getByRole('combobox', { name: 'Level 5 Fertigkeit' }).click();
+  await page.getByRole('option', { name: /Überzeugen \(Rang 1\)/ }).click();
+  const specNameInput = progressionSlots.getByRole('textbox', { name: 'Level 5 Spezialisierungsname' });
+  await expect(specNameInput).toBeVisible();
+  await specNameInput.fill('Verhandeln');
+  await expect(progressionSlots.getByText(/Spezialisierung „Verhandeln" auf Überzeugen/)).toBeVisible();
+  await page.screenshot({ path: path.join(V2_EVIDENCE_DIR, '06-progression-specialization.png'), fullPage: true });
+
+  // (29/30) Normal check has NO automatic specialization bonus; situational bonus shown separately.
+  await page.getByText('Medizin', { exact: true }).last().click();
+  const normalCheckFormula = page.getByText(/Normaler Medizin-Check/i).locator('..');
+  await expect(normalCheckFormula).toBeVisible();
+  await expect(normalCheckFormula.getByText(/Spezialisierung/)).toHaveCount(0);
+  const situationalBonus = page.getByTestId('specialization-situational-bonus');
+  await expect(situationalBonus).toBeVisible();
+  await expect(situationalBonus).toContainText('Notfallmedizin');
+  await expect(situationalBonus).toContainText('+2');
+  await expect(situationalBonus).toContainText(/Gesamt in passender Situation: d20 \+\d+/);
+  await page.screenshot({ path: path.join(V2_EVIDENCE_DIR, '07-skill-check-situational-spec.png'), fullPage: true });
+
   await page.getByRole('tab', { name: /Einstellungen/i }).click();
   await page.getByRole('tab', { name: /^Statistik$/i }).click();
   await expect(page.getByText(/Speichere den Charakter zuerst/i)).toBeVisible();
@@ -352,6 +403,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
     await expect(page.getByText('2 / 2').first()).toBeVisible();
     await expect(page.getByTestId('skill-progression-slots')).toBeVisible();
     await expect(page.getByText(/Medizin: 1 → 2/)).toBeVisible();
+    await expect(page.getByText('Verhandeln').first()).toBeVisible();
   } else {
     test.info().annotations.push({
       type: 'note',
