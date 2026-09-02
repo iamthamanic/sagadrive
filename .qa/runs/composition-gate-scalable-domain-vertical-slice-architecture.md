@@ -1,8 +1,9 @@
 # Composition Gate — scalable-domain-vertical-slice-architecture
 
-- HEAD_SHA: 146691ac5293062c780a7c10c84cb15567d8d5dc (feature 8c97f55c9776ee357523f37fde917d64643500cd, base 20d8912dfebb0541f1fced82b46a41e52eb51609)
+- HEAD_SHA: 57bad005395c75bcb94936d5cb00f04e393cb280
+- BASE_SHA: 20d8912dfebb0541f1fced82b46a41e52eb51609
 - Date: 2026-09-02
-- Verdict: **SKIPPED**
+- Verdict: SKIPPED
 
 ## Event
 
@@ -18,8 +19,8 @@ UI (CharacterEditor) → characterService facade → supabaseCharacterRepository
 
 | Case | Intended | Composed | Result |
 |------|----------|----------|--------|
-| 1 event, N actors | N/A — no fan-out | N/A | skip |
-| Invalid/missing fallback | Normalization fail-closed (unchanged) | Same use-cases, same semantics | pass |
+| N-actors | N/A — no fan-out | N/A | skip |
+| Invalid/missing | Normalization fail-closed (unchanged) | Same use-cases, same semantics | pass |
 | Two consumers / crash | N/A — no outbox/worker | N/A | skip |
 
 ## Flags

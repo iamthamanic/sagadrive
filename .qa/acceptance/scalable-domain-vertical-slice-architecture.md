@@ -73,7 +73,8 @@ Architectural refactor — preserve existing auth/RLS; no new endpoints.
 
 ## Composition Gate
 
-- HEAD_SHA: 146691ac5293062c780a7c10c84cb15567d8d5dc
+- HEAD_SHA: 57bad005395c75bcb94936d5cb00f04e393cb280
+- BASE_SHA: 20d8912dfebb0541f1fced82b46a41e52eb51609
 - Verdict: SKIPPED
 - Proof: `.qa/runs/composition-gate-scalable-domain-vertical-slice-architecture.md`
 - Skip reason: structural refactor; no runtime hop chain
