@@ -3,7 +3,30 @@
  * Location: src/modules/characters/components/BackgroundCarousel.tsx
  */
 import { useEffect, useRef, useState } from 'react';
-import { BookOpen, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  Compass,
+  Crown,
+  Drama,
+  Fingerprint,
+  Flame,
+  GraduationCap,
+  HandPlatter,
+  Handshake,
+  HeartPulse,
+  PencilLine,
+  Scale,
+  Search,
+  Shapes,
+  Shield,
+  Trees,
+  Trophy,
+  UsersRound,
+  Wrench,
+  type LucideIcon,
+} from 'lucide-react';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Card, CardHeader, CardTitle } from '../../../components/ui/card';
@@ -34,6 +57,26 @@ interface BackgroundCarouselProps {
   labelledBy?: string;
   onScrollPhaseChange?: (phase: CarouselScrollPhase) => void;
 }
+
+const BACKGROUND_FRAMEWORK_ICON_BY_ID: Readonly<Record<string, LucideIcon>> = {
+  'stage-public': Drama,
+  'sport-competition': Trophy,
+  'border-scout': Trees,
+  'academy-research': GraduationCap,
+  'corporate-technician': Wrench,
+  'street-doctor': HeartPulse,
+  soldier: Shield,
+  smuggler: Fingerprint,
+  investigator: Search,
+  'trade-networks': Handshake,
+  'privilege-elite': Crown,
+  'faith-order': Flame,
+  'travel-transport': Compass,
+  'organization-administration': ClipboardList,
+  'service-supply': HandPlatter,
+  'family-community': UsersRound,
+  'law-institutions': Scale,
+};
 
 function buildOptions(templates: readonly SagaDriveBackgroundTemplate[]): BackgroundCarouselOption[] {
   return [
@@ -168,6 +211,9 @@ export function BackgroundCarousel({
             const playstyle = option.kind === 'template' ? option.template.playstyle : 'Volle Freiheit · gleiche Regeln';
             const poolPreview = option.kind === 'template' ? skillLabels(option.template.skillPool) : 'Vier freie Pool-Fertigkeiten';
             const examples = option.kind === 'template' ? option.template.examples.join(' · ') : null;
+            const FrameworkIcon = option.kind === 'template'
+              ? BACKGROUND_FRAMEWORK_ICON_BY_ID[option.template.id] ?? Shapes
+              : PencilLine;
 
             return (
               <CarouselItem
@@ -189,10 +235,11 @@ export function BackgroundCarousel({
                     }}
                   >
                     <div className="relative flex aspect-[8/5] items-center justify-center overflow-hidden bg-gradient-to-br from-primary/15 via-muted/50 to-accent/10">
-                      <div className={`flex h-14 w-14 items-center justify-center rounded-2xl md:h-16 md:w-16 ${isCenter ? 'bg-primary/20 text-primary' : 'bg-muted/70 text-muted-foreground'}`}>
-                        {option.kind === 'custom'
-                          ? <Sparkles className="h-7 w-7 md:h-8 md:w-8" aria-hidden="true" />
-                          : <BookOpen className="h-7 w-7 md:h-8 md:w-8" aria-hidden="true" />}
+                      <div
+                        className={`flex h-14 w-14 items-center justify-center rounded-2xl md:h-16 md:w-16 ${isCenter ? 'bg-primary/20 text-primary' : 'bg-muted/70 text-muted-foreground'}`}
+                        data-background-framework-icon={option.kind === 'template' ? option.template.id : 'custom'}
+                      >
+                        <FrameworkIcon className="h-7 w-7 md:h-8 md:w-8" aria-hidden="true" />
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
                       {isSelected && isCenter ? (

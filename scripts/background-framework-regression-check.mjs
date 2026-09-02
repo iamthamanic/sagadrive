@@ -3,6 +3,7 @@ import process from 'node:process';
 
 const source = readFileSync(new URL('../src/modules/rulesets/backgroundTemplates.ts', import.meta.url), 'utf8');
 const carousel = readFileSync(new URL('../src/modules/characters/components/BackgroundCarousel.tsx', import.meta.url), 'utf8');
+const panel = readFileSync(new URL('../src/modules/characters/components/CharacterBackgroundPanel.tsx', import.meta.url), 'utf8');
 
 function requireMatch(content, pattern, label) {
   if (pattern.test(content)) return;
@@ -36,10 +37,35 @@ const expectedFrameworks = [
   ['law-institutions', 'Recht & Institutionen'],
 ];
 
+const expectedIcons = [
+  ['stage-public', 'Drama'],
+  ['sport-competition', 'Trophy'],
+  ['border-scout', 'Trees'],
+  ['academy-research', 'GraduationCap'],
+  ['corporate-technician', 'Wrench'],
+  ['street-doctor', 'HeartPulse'],
+  ['soldier', 'Shield'],
+  ['smuggler', 'Fingerprint'],
+  ['investigator', 'Search'],
+  ['trade-networks', 'Handshake'],
+  ['privilege-elite', 'Crown'],
+  ['faith-order', 'Flame'],
+  ['travel-transport', 'Compass'],
+  ['organization-administration', 'ClipboardList'],
+  ['service-supply', 'HandPlatter'],
+  ['family-community', 'UsersRound'],
+  ['law-institutions', 'Scale'],
+];
+
 for (const [id, name] of expectedFrameworks) {
   const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   requireMatch(source, new RegExp(`id:\\s*'${escapedId}'[\\s\\S]{0,180}?name:\\s*'${escapedName}'`), `${name} framework (${id})`);
+}
+
+for (const [id, icon] of expectedIcons) {
+  const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  requireMatch(carousel, new RegExp(`['"]?${escapedId}['"]?\\s*:\\s*${icon}\\b`), `${id} icon ${icon}`);
 }
 
 const frameworkCount = (source.match(/\n    examples:\s*\[/g) ?? []).length;
@@ -51,12 +77,18 @@ if (frameworkCount !== expectedFrameworks.length) {
 requireMatch(source, /examples:\s*readonly string\[\]/, 'framework example contract');
 requireMatch(source, /worldProfileIds\?:\s*readonly string\[\]/, 'world-profile framework filtering contract');
 requireMatch(source, /skillPool:\s*readonly \[SagaDriveSkillKey, SagaDriveSkillKey, SagaDriveSkillKey, SagaDriveSkillKey\]/, 'fixed four-skill framework pool');
-requireMatch(source, /recommendedTraining:\s*readonly \[SagaDriveSkillKey, SagaDriveSkillKey\]/, 'two framework training recommendations');
 requireMatch(source, /validateSagaDriveBackgroundTemplateCatalog/, 'framework catalog runtime validation');
 requireMatch(carousel, /'Hintergrund Framework'/, 'framework terminology in carousel');
 requireMatch(carousel, /'Freier Hintergrund'/, 'free background terminology in carousel');
 requireMatch(carousel, /option\.template\.examples\.join/, 'cross-setting examples shown in carousel');
+requireMatch(carousel, /data-background-framework-icon/, 'framework icon test hook');
+requireMatch(carousel, /:\s*PencilLine\s*;/, 'custom background PencilLine icon');
+requireMatch(panel, /Auswahl ändern/, 'change-selection action after two trainings');
+requireMatch(panel, /data-training-view=/, 'collapsed versus pool training view');
+requireMatch(panel, /visibleSkillNodes/, 'dynamic two-versus-four node rendering');
 
+rejectMatch(source, /recommendedTraining/, 'static or compatibility background training recommendations remain');
+rejectMatch(panel, />Empfohlen</, 'static Empfohlen badge remains in the background training UI');
 rejectMatch(source, /name:\s*'Grenzscout'/, 'legacy Grenzscout remains a visible Core framework name');
 rejectMatch(source, /name:\s*'Konzerntechniker'/, 'legacy Konzerntechniker remains a visible Core framework name');
 rejectMatch(source, /name:\s*'Straßenarzt'/, 'legacy Straßenarzt remains a visible Core framework name');
@@ -65,4 +97,4 @@ rejectMatch(source, /name:\s*'Schmuggler'/, 'legacy Schmuggler remains a visible
 rejectMatch(source, /name:\s*'Ermittler'/, 'legacy Ermittler remains a visible Core framework name');
 rejectMatch(source, /Natur & Grenzland/, 'deprecated Natur & Grenzland terminology remains');
 
-console.log(`Background framework regression check passed (${expectedFrameworks.length} Core frameworks).`);
+console.log(`Background framework regression check passed (${expectedFrameworks.length} Core frameworks, neutral 2-of-4 training, unique icons).`);

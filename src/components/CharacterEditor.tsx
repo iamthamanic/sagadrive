@@ -380,7 +380,7 @@ export function CharacterEditor() {
     }
     setBackgroundName(template.name);
     setBackgroundSkillPool([template.skillPool[0], template.skillPool[1], template.skillPool[2], template.skillPool[3]]);
-    setBackgroundTraining([template.recommendedTraining[0], template.recommendedTraining[1]]);
+    setBackgroundTraining(['', '']);
     setSpecializationSkill('');
     setSpecializationName('');
   };

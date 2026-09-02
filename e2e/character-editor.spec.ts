@@ -159,14 +159,47 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Hintergrund Framework').first()).toBeVisible();
   await expect(page.getByRole('radio', { name: /Eigener Hintergrund/i })).toBeAttached();
 
+  const backgroundPanel = page.locator('[data-background-panel]');
   const healingFramework = page.getByRole('radio', { name: /Heilung & Fürsorge/i });
   await healingFramework.click();
   await expect(healingFramework).toHaveAttribute('aria-checked', 'true', { timeout: 10_000 });
-  await expect(page.getByText('Training · 2 wählen').first()).toBeVisible();
-  await expect(page.getByText('Medizin').first()).toBeVisible();
-  await expect(page.getByText('Menschenkenntnis').first()).toBeVisible();
-  await expect(page.getByText(/2 \/ 2/).first()).toBeVisible();
-  await expect(page.getByText(/Empfohlen/).first()).toBeVisible();
+  await expect(backgroundPanel.getByText('Training · 2 wählen').first()).toBeVisible();
+  await expect(backgroundPanel.getByText(/^0 \/ 2$/).first()).toBeVisible();
+  await expect(backgroundPanel.getByText('Empfohlen')).toHaveCount(0);
+
+  const medicineNode = backgroundPanel.locator('[data-background-skill-node="medicine"]');
+  const insightNode = backgroundPanel.locator('[data-background-skill-node="insight"]');
+  const survivalNode = backgroundPanel.locator('[data-background-skill-node="survival"]');
+  const awarenessNode = backgroundPanel.locator('[data-background-skill-node="awareness"]');
+  await expect(medicineNode).toHaveCount(1);
+  await expect(insightNode).toHaveCount(1);
+  await expect(survivalNode).toHaveCount(1);
+  await expect(awarenessNode).toHaveCount(1);
+
+  await medicineNode.locator('button').click();
+  await expect(backgroundPanel.getByText(/^1 \/ 2$/).first()).toBeVisible();
+  await insightNode.locator('button').click();
+  await expect(backgroundPanel.getByText(/^2 \/ 2$/).first()).toBeVisible();
+  await expect(backgroundPanel.getByRole('button', { name: 'Auswahl ändern' })).toBeVisible();
+  await expect(medicineNode).toHaveCount(1);
+  await expect(insightNode).toHaveCount(1);
+  await expect(survivalNode).toHaveCount(0);
+  await expect(awarenessNode).toHaveCount(0);
+  await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'selected');
+
+  await backgroundPanel.getByRole('button', { name: 'Auswahl ändern' }).click();
+  await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'pool');
+  await expect(survivalNode).toHaveCount(1);
+  await expect(awarenessNode).toHaveCount(1);
+  await insightNode.locator('button').click();
+  await expect(backgroundPanel.getByText(/^1 \/ 2$/).first()).toBeVisible();
+  await awarenessNode.locator('button').click();
+  await expect(backgroundPanel.getByRole('button', { name: 'Auswahl ändern' })).toBeVisible();
+  await expect(medicineNode).toHaveCount(1);
+  await expect(awarenessNode).toHaveCount(1);
+  await expect(insightNode).toHaveCount(0);
+  await expect(survivalNode).toHaveCount(0);
+
   await page.getByRole('button', { name: /Medizin: Notfallmedizin/i }).click();
   await page.getByLabel('Milieuzugang').fill('Notaufnahmen');
   await page.getByLabel('Kontakt').fill('Dr. Sera Malk');
