@@ -25,11 +25,13 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.setViewportSize({ width: 1440, height: 900 });
   await ensureLoggedIn(page);
   await page.getByRole('button', { name: 'Charakter erstellen' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Charakter erstellen' })).toBeVisible();
+  await page.getByRole('button', { name: /Eigenen Charakter erstellen/i }).click();
   await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible();
   await expect(page.getByText('SagaDrive Core').first()).toBeVisible();
   await expect(page.getByRole('combobox', { name: /Regelset/i }).first()).toBeVisible();
 
-  for (const tab of ['Spezies', 'Parameter', 'Look', 'Inventar', 'Statistik']) {
+  for (const tab of ['Spezies', 'Parameter', 'Look', 'Inventar', 'Einstellungen']) {
     await expect(page.getByRole('tab', { name: new RegExp(`^${tab}$`, 'i') })).toBeVisible();
   }
   await expect(page.getByRole('tab', { name: /^Hintergrund$/i })).toHaveCount(0);
@@ -230,8 +232,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText(/Keine festen Slots/i).first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '07-inventory-load.png'), fullPage: true });
 
-  await page.getByRole('tab', { name: /Statistik/i }).click();
+  await page.getByRole('tab', { name: /Einstellungen/i }).click();
+  await page.getByRole('tab', { name: /^Statistik$/i }).click();
   await expect(page.getByText(/Speichere den Charakter zuerst/i)).toBeVisible();
+  await expect(page.getByRole('tab', { name: /^Preset$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /Notizen/i })).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '13-statistics-tab.png'), fullPage: true });
 

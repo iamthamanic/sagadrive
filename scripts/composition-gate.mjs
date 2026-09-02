@@ -22,7 +22,7 @@ function git(args) {
 
 function hasRef(ref) {
   try {
-    git(['rev-parse', '--verify', '--quiet', ref]);
+    git(['cat-file', '-e', `${ref}^{commit}`]);
     return true;
   } catch {
     return false;
@@ -39,14 +39,24 @@ function resolveRange() {
   const pushBeforeSha = process.env.COMPOSITION_GATE_PUSH_BEFORE_SHA ?? '';
 
   if (eventName === 'pull_request' && !isZeroSha(prBaseSha) && hasRef(prBaseSha)) {
-    return {
-      base: git(['merge-base', 'HEAD', prBaseSha]),
-      mode: 'pull-request',
-    };
+    try {
+      return {
+        base: git(['merge-base', 'HEAD', prBaseSha]),
+        mode: 'pull-request',
+      };
+    } catch {
+      // Fall through when PR base is not an ancestor (shallow / rewritten history).
+    }
   }
 
   if (eventName === 'push' && !isZeroSha(pushBeforeSha) && hasRef(pushBeforeSha)) {
-    return { base: git(['rev-parse', pushBeforeSha]), mode: 'push' };
+    try {
+      // Ensure the range is usable before committing to push-before mode.
+      git(['diff', '--name-only', '--diff-filter=ACMR', `${pushBeforeSha}..HEAD`, '--', '.']);
+      return { base: git(['rev-parse', pushBeforeSha]), mode: 'push' };
+    } catch {
+      // github.event.before can point at a replaced tip not present in this clone.
+    }
   }
 
   const baseRef = process.env.GITHUB_BASE_REF ?? '';
@@ -85,8 +95,14 @@ function resolveRange() {
 }
 
 function changedFiles(base) {
-  const output = git(['diff', '--name-only', '--diff-filter=ACMR', `${base}..HEAD`, '--', '.']);
-  return output ? output.split('\n').filter(Boolean) : [];
+  try {
+    const output = git(['diff', '--name-only', '--diff-filter=ACMR', `${base}..HEAD`, '--', '.']);
+    return output ? output.split('\n').filter(Boolean) : [];
+  } catch (error) {
+    throw new Error(
+      `Composition Gate could not list changes for ${base}..HEAD: ${error instanceof Error ? error.message : error}`,
+    );
+  }
 }
 
 function isToolingOrDocs(path) {
