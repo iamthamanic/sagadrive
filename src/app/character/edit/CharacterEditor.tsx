@@ -93,6 +93,7 @@ import {
   isValidBackgroundSkillPoints,
   isValidSagaDriveSkillAdvances,
   isValidStartSkillBuild,
+  normalizeFreeSkillRanks,
   resolveSagaDriveSkillBuildState,
   sumBackgroundSkillPointsUsed,
   type SagaDriveBackgroundSkillPoints,
@@ -486,7 +487,7 @@ export function CharacterEditor() {
     skills: Record<SagaDriveSkillKey, number>;
     profile: SagaDriveProfileDto;
     appearance: CharacterAppearanceDto;
-    freeSkillRanks?: Record<SagaDriveSkillKey, number>;
+    freeSkillRanks?: Partial<Record<SagaDriveSkillKey, number>>;
     inventory?: ItemDto[];
     backgroundStory?: string;
     notes?: string;
@@ -499,6 +500,7 @@ export function CharacterEditor() {
   }) => {
     const { profile, appearance } = payload;
     const resolved = resolveSagaDriveAttributeBuildState(payload.attributes, profile);
+    const hydratedFreeSkillRanks = normalizeFreeSkillRanks(payload.freeSkillRanks ?? profile.freeSkillRanks);
 
     setCharacterName(payload.name);
     setDescription(payload.description);
@@ -513,13 +515,13 @@ export function CharacterEditor() {
     setSpeciesBodyDescription(profile.speciesProfile?.bodyDescription ?? '');
     setBaseAttributes(resolved.baseAttributes);
     setAttributeAdvances(resolved.attributeAdvances);
-    setFreeSkillRanks(payload.freeSkillRanks ?? profile.freeSkillRanks ?? createEmptySagaDriveSkillRanks());
+    setFreeSkillRanks(hydratedFreeSkillRanks);
     setArchetypeTrainingSkill(profile.archetypeTrainingSkill && isSagaDriveSkillKey(profile.archetypeTrainingSkill) ? profile.archetypeTrainingSkill : undefined);
     setBackgroundTemplateId(profile.backgroundTemplateId === undefined ? undefined : profile.backgroundTemplateId);
     setBackgroundName(profile.background?.name ?? '');
     setBackgroundSkillPool(padBackgroundSkills(profile.background?.skillPool ?? [], 4));
     const resolvedSkills = resolveSagaDriveSkillBuildState(payload.skills, {
-      freeSkillRanks: payload.freeSkillRanks ?? profile.freeSkillRanks,
+      freeSkillRanks: hydratedFreeSkillRanks,
       backgroundSkillPoints: profile.background?.backgroundSkillPoints,
       trainedSkills: profile.background?.trainedSkills,
       skillPool: profile.background?.skillPool,
