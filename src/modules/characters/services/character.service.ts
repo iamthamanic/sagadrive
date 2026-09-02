@@ -223,10 +223,16 @@ function assertValidSagaDriveAttributePersistence(
   }
 }
 
+function normalizePresetReleaseMode(value: unknown): 'manual' | 'auto' | undefined {
+  if (value === 'auto' || value === 'manual') return value;
+  return undefined;
+}
+
 function normalizeSagaDriveProfile(value?: Partial<SagaDriveProfileDto> | null): SagaDriveProfileDto {
   if (!value) return createDefaultSagaDriveProfile();
   const baseAttributes = normalizeOptionalBaseAttributes(value.baseAttributes);
   const attributeAdvances = normalizeSagaDriveAttributeAdvances(value.attributeAdvances) as SagaDriveAttributeAdvancesDto;
+  const presetReleaseMode = normalizePresetReleaseMode(value.presetReleaseMode);
   return {
     archetype: value.archetype && isSagaDriveArchetypeKey(value.archetype) ? value.archetype : undefined,
     essence: value.essence && isSagaDriveEssenceKey(value.essence) ? value.essence : undefined,
@@ -236,6 +242,7 @@ function normalizeSagaDriveProfile(value?: Partial<SagaDriveProfileDto> | null):
     background: normalizeSagaDriveBackground(value.background),
     archetypeTrainingSkill: value.archetypeTrainingSkill && isSagaDriveSkillKey(value.archetypeTrainingSkill) ? value.archetypeTrainingSkill : undefined,
     ...(baseAttributes ? { baseAttributes, attributeAdvances } : Object.keys(attributeAdvances).length > 0 ? { attributeAdvances } : {}),
+    ...(presetReleaseMode ? { presetReleaseMode } : {}),
     drive: typeof value.drive === 'number' ? clampInteger(value.drive, 0, 5) : 3,
     momentum: typeof value.momentum === 'number' ? clampInteger(value.momentum, 0, 3) : 0,
   };

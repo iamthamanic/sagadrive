@@ -1,8 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Plus, Users, Gamepad2, TrendingUp, Calendar } from 'lucide-react';
+import { useState } from 'react';
 import { useProjectSummaries } from '../modules/projects/hooks/useProjectSummaries';
 import { useCharacterSummaries } from '../modules/characters/hooks/useCharacterSummaries';
+import { CreateCharacterEntryDialog } from '../modules/characters/components/CreateCharacterEntryDialog';
 import { useAuth } from '../lib/auth-context';
 
 interface DashboardProps {
@@ -13,6 +15,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const { user } = useAuth();
   const { projects, isLoading: projectsLoading } = useProjectSummaries();
   const { characters, isLoading: charactersLoading } = useCharacterSummaries();
+  const [createCharacterOpen, setCreateCharacterOpen] = useState(false);
 
   const activeProjects = projects.filter(p => p.status === 'active');
   const totalSessions = projects.reduce((sum, p) => sum + p.sessionCount, 0);
@@ -78,12 +81,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
             <Card 
               className="cursor-pointer hover:bg-accent/10 hover:border-accent/40 transition-all" 
-              onClick={() => {
-                console.log('🎯 Dashboard: "Neuer Charakter" clicked!');
-                console.log('🔄 Dashboard: Calling onNavigate("character-editor")');
-                onNavigate('character-editor');
-                console.log('✅ Dashboard: onNavigate called');
-              }}
+              onClick={() => setCreateCharacterOpen(true)}
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -223,7 +221,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   <Gamepad2 className="w-4 h-4 mr-2" />
                   Projekt erstellen
                 </Button>
-                <Button variant="outline" onClick={() => onNavigate('character-editor')}>
+                <Button variant="outline" onClick={() => setCreateCharacterOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Charakter erstellen
                 </Button>
@@ -232,6 +230,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </Card>
         )}
       </div>
+
+      <CreateCharacterEntryDialog
+        open={createCharacterOpen}
+        onOpenChange={setCreateCharacterOpen}
+        onNavigateToEditor={() => onNavigate('character-editor')}
+      />
     </div>
   );
 }

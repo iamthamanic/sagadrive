@@ -55,6 +55,8 @@ export interface CharacterAttributesDto {
   charisma: number;
 }
 
+export type SagaDrivePresetReleaseMode = 'manual' | 'auto';
+
 export interface SagaDriveProfileDto {
   archetype?: SagaDriveArchetypeKey;
   essence?: SagaDriveEssenceKey;
@@ -76,6 +78,8 @@ export interface SagaDriveProfileDto {
   baseAttributes?: CharacterAttributesDto;
   /** Permanent advances at levels 8 and 16 (attribute key chosen per slot). */
   attributeAdvances?: SagaDriveAttributeAdvancesDto;
+  /** Preset auto-release after successful save when level increased (default manual). */
+  presetReleaseMode?: SagaDrivePresetReleaseMode;
   drive: number;
   momentum: number;
 }

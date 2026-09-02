@@ -24,6 +24,7 @@ import { CharacterEssencePanel } from '../modules/characters/components/Characte
 import { CharacterInventoryPanel, getInventoryLoad } from '../modules/characters/components/CharacterInventoryPanel';
 import { CharacterNotesSection } from '../modules/characters/components/CharacterNotesSection';
 import { CharacterStatisticsPanel } from '../modules/characters/components/CharacterStatisticsPanel';
+import { CharacterPresetPanel } from '../modules/characters/components/CharacterPresetPanel';
 import { RuleHelp } from '../modules/characters/components/RuleHelp';
 import { CharacterSkillsPanel, getSagaDriveFinalSkillRanks } from '../modules/characters/components/CharacterSkillsPanel';
 import { GenderReadingSelect } from '../modules/characters/components/GenderReadingSelect';
@@ -31,6 +32,9 @@ import { SelectedSpeciesChip } from '../modules/characters/components/SelectedSp
 import { SpeciesCarousel } from '../modules/characters/components/SpeciesCarousel';
 import { SpeciesTraitsPanel } from '../modules/characters/components/SpeciesTraitsPanel';
 import { CharacterTraitEditor } from '../modules/characters/components/CharacterTraitEditor';
+import { takeCharacterEditorBootstrap } from '../modules/characters/characterEditorBootstrap';
+import { characterPresetService } from '../modules/characters/services/characterPreset.service';
+import type { CharacterPresetReleaseMode, CharacterPresetSnapshot } from '../modules/characters/types/characterPreset.types';
 import { buildSagaDriveDerivedStatCards } from '../modules/characters/utils/derivedStats';
 import { getSagaDriveBackgroundTemplate } from '../modules/rulesets/backgroundTemplates';
 import {
@@ -88,8 +92,9 @@ import { Slider } from './ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 type ActivityTrackingWindow = Window & { trackActivity?: (description: string) => void };
-type EditorTab = 'info' | 'values' | 'appearance' | 'inventory' | 'statistics';
+type EditorTab = 'info' | 'values' | 'appearance' | 'inventory' | 'settings';
 type ValuesSubTab = 'competencies' | 'archetype' | 'essenz';
+type SettingsSubTab = 'statistics' | 'preset';
 type ValidationProblem = { tab: EditorTab; message: string; valuesSubTab?: ValuesSubTab };
 type SkillSlot = SagaDriveSkillKey | '';
 type BackgroundSkillPool = [SkillSlot, SkillSlot, SkillSlot, SkillSlot];
@@ -102,11 +107,27 @@ const trackActivity = (description: string) => {
 };
 
 function isEditorTab(value: string): value is EditorTab {
-  return value === 'info' || value === 'values' || value === 'appearance' || value === 'inventory' || value === 'statistics';
+  return value === 'info' || value === 'values' || value === 'appearance' || value === 'inventory' || value === 'settings';
 }
 
 function isValuesSubTab(value: string): value is ValuesSubTab {
   return value === 'competencies' || value === 'archetype' || value === 'essenz';
+}
+
+function isSettingsSubTab(value: string): value is SettingsSubTab {
+  return value === 'statistics' || value === 'preset';
+}
+
+function padBackgroundSkills(skills: readonly SagaDriveSkillKey[], size: 4): BackgroundSkillPool {
+  const slots: SkillSlot[] = [...skills.slice(0, size)];
+  while (slots.length < size) slots.push('');
+  return slots as BackgroundSkillPool;
+}
+
+function padBackgroundTraining(skills: readonly SagaDriveSkillKey[]): BackgroundTraining {
+  const slots: SkillSlot[] = [...skills.slice(0, 2)];
+  while (slots.length < 2) slots.push('');
+  return slots as BackgroundTraining;
 }
 
 function parseStartAttribute(value: string): 0 | 1 | 2 | 3 | 4 {
@@ -201,8 +222,10 @@ function retainSpeciesTraitInstancesForRace(
 export function CharacterEditor() {
   const [activeTab, setActiveTab] = useState<EditorTab>('info');
   const [activeValuesSubTab, setActiveValuesSubTab] = useState<ValuesSubTab>('competencies');
+  const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<SettingsSubTab>('statistics');
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [savedCharacterId, setSavedCharacterId] = useState<string | null>(null);
+  const [persistedLevel, setPersistedLevel] = useState<number | null>(null);
   const [characterLevel, setCharacterLevel] = useState(1);
   const [ruleset, setRuleset] = useState<CharacterRulesetKey>('sagadrive-core');
   const [characterName, setCharacterName] = useState('');
@@ -214,6 +237,7 @@ export function CharacterEditor() {
   const [speciesTraitInstances, setSpeciesTraitInstances] = useState<SagaDriveSpeciesTraitInstanceDto[]>([]);
   const [speciesProfileName, setSpeciesProfileName] = useState('');
   const [speciesBodyDescription, setSpeciesBodyDescription] = useState('');
+  const [presetReleaseMode, setPresetReleaseMode] = useState<CharacterPresetReleaseMode>('manual');
 
   const initialPreset = getAvatarRacePreset('human');
   const [bodySize, setBodySize] = useState([initialPreset.bodySize]);
@@ -253,6 +277,7 @@ export function CharacterEditor() {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarCanvasRef = useRef<HTMLCanvasElement>(null);
+  const bootstrapAppliedRef = useRef(false);
 
   const currentAvatar = useMemo(() => createCharacterStudioAvatar({
     race: characterRace, head: headStyle, ears, hairStyle, clothing, accessory: accessory === 'none' ? undefined : accessory,
@@ -317,6 +342,146 @@ export function CharacterEditor() {
     && Boolean(communication.trim());
   const genderReadingComplete = Boolean(genderReading);
   const skillsComplete = Boolean(archetypeTrainingSkill) && freeSkillPointsUsed === SAGA_DRIVE_START_FREE_SKILL_POINTS && trainedSkillCount >= SAGA_DRIVE_START_MIN_TRAINED_SKILLS && !skillOverflow;
+
+  const collectValidationProblems = (): ValidationProblem[] => {
+    const problems: ValidationProblem[] = [];
+    if (!characterName.trim()) problems.push({ tab: 'info', message: 'Bitte gib deinem Charakter einen Namen.' });
+    if (ruleset === 'dnd-5.5e') problems.push({ tab: 'info', message: 'D&D 5.5e ist in diesem Editor noch nicht verfügbar. Wähle SagaDrive Core.' });
+    if (!genderReadingComplete) problems.push({ tab: 'info', message: 'Bitte wähle, wie dein Charakter gelesen wird (männlich, weiblich oder divers).' });
+    if (speciesTraitCost !== SAGA_DRIVE_SPECIES_TRAIT_BUDGET) problems.push({ tab: 'info', message: `Wähle Speziesmerkmale im Wert von genau ${SAGA_DRIVE_SPECIES_TRAIT_BUDGET} Punkten.` });
+    if (characterRace === 'alien' && !speciesProfileName.trim()) problems.push({ tab: 'info', message: 'Gib deinem Alien-Speziesprofil einen Namen.' });
+    if (!speciesTraitInstancesValid) problems.push({ tab: 'info', message: 'Vervollständige alle Speziesmerkmale und verwende jede Unteroption höchstens einmal.' });
+    if (!backgroundComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige deinen mechanischen Hintergrund unter Kompetenzen.' });
+    if (!attributeDistributionValid) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: `Verteile genau ${SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte (+0 bis +4) und alle für Level ${characterLevel} verfügbaren Attributsteigerungen, ohne einen Endwert über +${SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} zu erzeugen.` });
+    if (!characterArchetype) problems.push({ tab: 'values', valuesSubTab: 'archetype', message: 'Bitte wähle einen Archetyp.' });
+    if (!skillsComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige die 10 Start-Fertigkeitspunkte und trainiere mindestens sechs Fertigkeiten.' });
+    if (!essenceProfile) problems.push({ tab: 'values', valuesSubTab: 'essenz', message: 'Bitte wähle eine primäre Essenz.' });
+    return problems;
+  };
+
+  const buildPresetSnapshot = (): CharacterPresetSnapshot => {
+    const sagaDriveProfile: SagaDriveProfileDto = {
+      archetype: characterArchetype,
+      essence: essenceProfile,
+      speciesTraitInstances: speciesTraitInstances.map((instance) => ({
+        trait: instance.trait,
+        ...(instance.option ? { option: instance.option } : {}),
+        source: 'species-creation',
+        acquiredAtLevel: 1,
+      })),
+      speciesProfile: characterRace === 'alien' ? { name: speciesProfileName.trim(), bodyDescription: speciesBodyDescription.trim() } : undefined,
+      backgroundTemplateId: backgroundTemplateId ?? null,
+      background: {
+        name: backgroundName.trim(),
+        skillPool: selectedBackgroundPool,
+        trainedSkills: selectedBackgroundTraining,
+        specialization: isSagaDriveSkillKey(specializationSkill)
+          ? { skill: specializationSkill, name: specializationName.trim() }
+          : undefined,
+        milieuAccess: milieuAccess.trim(),
+        contact: contact.trim(),
+        complication: complication.trim(),
+        communication: communication.trim(),
+      },
+      archetypeTrainingSkill,
+      baseAttributes,
+      attributeAdvances,
+      presetReleaseMode,
+      drive: 3,
+      momentum: 0,
+    };
+    return {
+      schemaVersion: 1,
+      name: characterName.trim(),
+      description: description.trim(),
+      class: characterArchetype ?? '',
+      race: characterRace,
+      ruleset_key: ruleset,
+      level: characterLevel,
+      background_story: backgroundStory.trim() || undefined,
+      notes: notes.trim(),
+      personality_traits: personalityTraits.length > 0 ? personalityTraits : undefined,
+      ideals: ideals.length > 0 ? ideals : undefined,
+      bonds: bonds.length > 0 ? bonds : undefined,
+      flaws: flaws.length > 0 ? flaws : undefined,
+      appearance: {
+        body_size: currentAvatar.body.size,
+        height: currentAvatar.body.height,
+        face_features: currentAvatar.traits.head ?? headStyle,
+        hair_style: currentAvatar.traits.hair ?? hairStyle,
+        hair_color: currentAvatar.colors.hair,
+        skin_tone: currentAvatar.colors.skin,
+        clothing: currentAvatar.traits.clothing ?? clothing,
+        gender_reading: genderReading,
+        avatar: currentAvatar,
+      },
+      attributes,
+      freeSkillRanks,
+      skills: finalSkillRanks,
+      sagadrive_profile: sagaDriveProfile,
+      abilities,
+      inventory,
+      portrait_url: portraitUrl || undefined,
+    };
+  };
+
+  useEffect(() => {
+    if (bootstrapAppliedRef.current) return;
+    bootstrapAppliedRef.current = true;
+    const bootstrap = takeCharacterEditorBootstrap();
+    if (!bootstrap || bootstrap.kind !== 'preset-snapshot') return;
+    const { snapshot } = bootstrap;
+    const profile = snapshot.sagadrive_profile;
+    const appearance = snapshot.appearance;
+    const resolved = resolveSagaDriveAttributeBuildState(snapshot.attributes, profile);
+
+    setCharacterName(bootstrap.characterName || snapshot.name);
+    setDescription(snapshot.description ?? '');
+    setRuleset(snapshot.ruleset_key === 'dnd-5.5e' ? 'dnd-5.5e' : 'sagadrive-core');
+    setCharacterLevel(snapshot.level);
+    setCharacterRace(snapshot.race);
+    setCharacterArchetype(profile.archetype && isSagaDriveArchetypeKey(profile.archetype) ? profile.archetype : undefined);
+    setEssenceProfile(profile.essence && isSagaDriveEssenceKey(profile.essence) ? profile.essence : undefined);
+    setGenderReading(appearance.gender_reading);
+    setSpeciesTraitInstances(profile.speciesTraitInstances ?? []);
+    setSpeciesProfileName(profile.speciesProfile?.name ?? '');
+    setSpeciesBodyDescription(profile.speciesProfile?.bodyDescription ?? '');
+    setBaseAttributes(resolved.baseAttributes);
+    setAttributeAdvances(resolved.attributeAdvances);
+    setFreeSkillRanks(snapshot.freeSkillRanks ?? createEmptySagaDriveSkillRanks());
+    setArchetypeTrainingSkill(profile.archetypeTrainingSkill && isSagaDriveSkillKey(profile.archetypeTrainingSkill) ? profile.archetypeTrainingSkill : undefined);
+    setBackgroundTemplateId(profile.backgroundTemplateId === undefined ? undefined : profile.backgroundTemplateId);
+    setBackgroundName(profile.background?.name ?? '');
+    setBackgroundSkillPool(padBackgroundSkills(profile.background?.skillPool ?? [], 4));
+    setBackgroundTraining(padBackgroundTraining(profile.background?.trainedSkills ?? []));
+    setSpecializationSkill(profile.background?.specialization?.skill && isSagaDriveSkillKey(profile.background.specialization.skill) ? profile.background.specialization.skill : '');
+    setSpecializationName(profile.background?.specialization?.name ?? '');
+    setMilieuAccess(profile.background?.milieuAccess ?? '');
+    setContact(profile.background?.contact ?? '');
+    setComplication(profile.background?.complication ?? '');
+    setCommunication(profile.background?.communication ?? '');
+    setInventory(snapshot.inventory ?? []);
+    setBackgroundStory(snapshot.background_story ?? '');
+    setPersonalityTraits(snapshot.personality_traits ?? []);
+    setIdeals(snapshot.ideals ?? []);
+    setBonds(snapshot.bonds ?? []);
+    setFlaws(snapshot.flaws ?? []);
+    setNotes(snapshot.notes ?? '');
+    setPortraitUrl(snapshot.portrait_url ?? '');
+    setPresetReleaseMode(profile.presetReleaseMode === 'auto' ? 'auto' : 'manual');
+    setBodySize([appearance.body_size ?? 50]);
+    setHeight([appearance.height ?? 50]);
+    setHeadStyle(appearance.face_features || appearance.avatar?.traits.head || 'human-balanced');
+    setEars(appearance.avatar?.traits.ears || 'round');
+    setHairStyle(appearance.hair_style || appearance.avatar?.traits.hair || 'short');
+    setHairColor(appearance.hair_color || appearance.avatar?.colors.hair || '#3f2a1d');
+    setSkinTone(appearance.skin_tone || appearance.avatar?.colors.skin || '#c58c6a');
+    setClothing(appearance.clothing || appearance.avatar?.traits.clothing || 'casual');
+    setAccessory(appearance.avatar?.traits.accessory ?? 'none');
+    setSavedCharacterId(null);
+    setPersistedLevel(null);
+    toast.success('Preset geladen — neuer Charakter im Editor.');
+  }, []);
 
   const loreContext = useMemo<CharacterLoreContext>(() => ({
     ruleset,
@@ -511,18 +676,7 @@ export function CharacterEditor() {
   };
 
   const handleSaveCharacter = async () => {
-    const problems: ValidationProblem[] = [];
-    if (!characterName.trim()) problems.push({ tab: 'info', message: 'Bitte gib deinem Charakter einen Namen.' });
-    if (ruleset === 'dnd-5.5e') problems.push({ tab: 'info', message: 'D&D 5.5e ist in diesem Editor noch nicht verfügbar. Wähle SagaDrive Core.' });
-    if (!genderReadingComplete) problems.push({ tab: 'info', message: 'Bitte wähle, wie dein Charakter gelesen wird (männlich, weiblich oder divers).' });
-    if (speciesTraitCost !== SAGA_DRIVE_SPECIES_TRAIT_BUDGET) problems.push({ tab: 'info', message: `Wähle Speziesmerkmale im Wert von genau ${SAGA_DRIVE_SPECIES_TRAIT_BUDGET} Punkten.` });
-    if (characterRace === 'alien' && !speciesProfileName.trim()) problems.push({ tab: 'info', message: 'Gib deinem Alien-Speziesprofil einen Namen.' });
-    if (!speciesTraitInstancesValid) problems.push({ tab: 'info', message: 'Vervollständige alle Speziesmerkmale und verwende jede Unteroption höchstens einmal.' });
-    if (!backgroundComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige deinen mechanischen Hintergrund unter Kompetenzen.' });
-    if (!attributeDistributionValid) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: `Verteile genau ${SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte (+0 bis +4) und alle für Level ${characterLevel} verfügbaren Attributsteigerungen, ohne einen Endwert über +${SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} zu erzeugen.` });
-    if (!characterArchetype) problems.push({ tab: 'values', valuesSubTab: 'archetype', message: 'Bitte wähle einen Archetyp.' });
-    if (!skillsComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige die 10 Start-Fertigkeitspunkte und trainiere mindestens sechs Fertigkeiten.' });
-    if (!essenceProfile) problems.push({ tab: 'values', valuesSubTab: 'essenz', message: 'Bitte wähle eine primäre Essenz.' });
+    const problems = collectValidationProblems();
     const firstProblem = problems[0];
     if (firstProblem) {
       setValidationAttempted(true);
@@ -548,26 +702,51 @@ export function CharacterEditor() {
       archetypeTrainingSkill,
       baseAttributes,
       attributeAdvances,
+      presetReleaseMode,
       drive: 3,
       momentum: 0,
+    };
+
+    const savePayload = {
+      name: characterName.trim(), description: description.trim(), class: characterArchetype, race: characterRace, ruleset_key: ruleset, dnd_background: null as null, level: characterLevel,
+      background_story: backgroundStory.trim() || undefined, notes: notes.trim(), personality_traits: personalityTraits.length > 0 ? personalityTraits : undefined, ideals: ideals.length > 0 ? ideals : undefined, bonds: bonds.length > 0 ? bonds : undefined, flaws: flaws.length > 0 ? flaws : undefined,
+      appearance: { body_size: currentAvatar.body.size, height: currentAvatar.body.height, face_features: currentAvatar.traits.head ?? headStyle, hair_style: currentAvatar.traits.hair ?? hairStyle, hair_color: currentAvatar.colors.hair, skin_tone: currentAvatar.colors.skin, clothing: currentAvatar.traits.clothing ?? clothing, gender_reading: genderReading, avatar: currentAvatar },
+      attributes, skills: finalSkillRanks, sagadrive_profile: sagaDriveProfile, abilities, inventory, portrait_url: portraitUrl || undefined,
     };
 
     setSaving(true);
     try {
       trackActivity(`Character Editor: Charakter "${characterName}" wird gespeichert`);
-      const savedCharacter = await characterService.createCharacter({
-        name: characterName.trim(), description: description.trim(), class: characterArchetype, race: characterRace, ruleset_key: ruleset, dnd_background: null, level: characterLevel,
-        background_story: backgroundStory.trim() || undefined, notes: notes.trim(), personality_traits: personalityTraits.length > 0 ? personalityTraits : undefined, ideals: ideals.length > 0 ? ideals : undefined, bonds: bonds.length > 0 ? bonds : undefined, flaws: flaws.length > 0 ? flaws : undefined,
-        appearance: { body_size: currentAvatar.body.size, height: currentAvatar.body.height, face_features: currentAvatar.traits.head ?? headStyle, hair_style: currentAvatar.traits.hair ?? hairStyle, hair_color: currentAvatar.colors.hair, skin_tone: currentAvatar.colors.skin, clothing: currentAvatar.traits.clothing ?? clothing, gender_reading: genderReading, avatar: currentAvatar },
-        attributes, skills: finalSkillRanks, sagadrive_profile: sagaDriveProfile, abilities, inventory, portrait_url: portraitUrl || undefined,
-      });
+      const previousLevel = persistedLevel ?? characterLevel;
+      const savedCharacter = savedCharacterId
+        ? await characterService.updateCharacter(savedCharacterId, savePayload)
+        : await characterService.createCharacter(savePayload);
       setSavedCharacterId(savedCharacter.id);
+      setPersistedLevel(savedCharacter.level);
       // Round-trip through service normalize so editor state matches persisted base vs advances.
       const resolved = resolveSagaDriveAttributeBuildState(savedCharacter.attributes, savedCharacter.sagaDriveProfile);
       setBaseAttributes(resolved.baseAttributes);
       setAttributeAdvances(resolved.attributeAdvances);
+      if (savedCharacter.sagaDriveProfile.presetReleaseMode === 'auto' || savedCharacter.sagaDriveProfile.presetReleaseMode === 'manual') {
+        setPresetReleaseMode(savedCharacter.sagaDriveProfile.presetReleaseMode);
+      }
+
+      if (presetReleaseMode === 'auto' && savedCharacter.level > previousLevel) {
+        const autoReleased = await characterPresetService.maybeAutoReleaseVersion({
+          characterId: savedCharacter.id,
+          previousLevel,
+          snapshot: buildPresetSnapshot(),
+          releaseMode: 'auto',
+        });
+        if (autoReleased) {
+          toast.success(`Charakter gespeichert · Preset Level ${savedCharacter.level} freigegeben`);
+        } else {
+          toast.success('Charakter erfolgreich gespeichert');
+        }
+      } else {
+        toast.success('Charakter erfolgreich gespeichert');
+      }
       trackActivity(`Character Editor: Charakter "${characterName}" gespeichert (ID: ${savedCharacter.id})`);
-      toast.success('Charakter erfolgreich gespeichert');
     } catch (error) {
       console.error('Character save error:', error);
       toast.error(error instanceof Error ? error.message : 'Fehler beim Speichern');
@@ -579,6 +758,7 @@ export function CharacterEditor() {
   const handleRemoveImage = (event: MouseEvent) => { event.stopPropagation(); setPortraitUrl(''); if (fileInputRef.current) fileInputRef.current.value = ''; };
   const handleTabChange = (value: string) => { if (isEditorTab(value)) { setActiveTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
   const handleValuesSubTabChange = (value: string) => { if (isValuesSubTab(value)) { setActiveValuesSubTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
+  const handleSettingsSubTabChange = (value: string) => { if (isSettingsSubTab(value)) setActiveSettingsSubTab(value); };
   const previewSubtitle = [essence?.label, archetype?.label, speciesDisplayName].filter(Boolean).join(' · ');
   const totalStartSkillPoints = freeSkillPointsUsed + selectedBackgroundTraining.length + (archetypeTrainingSkill ? 1 : 0);
 
@@ -644,7 +824,7 @@ export function CharacterEditor() {
                   <TabsTrigger value="values" className="px-1 py-2 text-xs md:px-2 md:text-sm">Parameter</TabsTrigger>
                   <TabsTrigger value="appearance" className="px-1 py-2 text-xs md:px-2 md:text-sm">Look</TabsTrigger>
                   <TabsTrigger value="inventory" className="px-1 py-2 text-xs md:px-2 md:text-sm">Inventar</TabsTrigger>
-                  <TabsTrigger value="statistics" className="px-1 py-2 text-xs md:px-2 md:text-sm">Statistik</TabsTrigger>
+                  <TabsTrigger value="settings" className="px-1 py-2 text-xs md:px-2 md:text-sm">Einstellungen</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="info" className="space-y-6">
@@ -883,7 +1063,29 @@ export function CharacterEditor() {
                 </TabsContent>
 
                 <TabsContent value="inventory"><CharacterInventoryPanel items={inventory} onChange={setInventory} strength={attributes.strength} /></TabsContent>
-                <TabsContent value="statistics" className="space-y-4"><CharacterStatisticsPanel characterId={savedCharacterId} /></TabsContent>
+                <TabsContent value="settings" className="space-y-4">
+                  <Tabs value={activeSettingsSubTab} onValueChange={handleSettingsSubTabChange}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="statistics" className="px-3 py-2 text-xs md:text-sm">Statistik</TabsTrigger>
+                      <TabsTrigger value="preset" className="px-3 py-2 text-xs md:text-sm">Preset</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="statistics" className="mt-4 space-y-4">
+                      <CharacterStatisticsPanel characterId={savedCharacterId} />
+                    </TabsContent>
+                    <TabsContent value="preset" className="mt-4 space-y-4">
+                      <CharacterPresetPanel
+                        characterId={savedCharacterId}
+                        characterName={characterName}
+                        characterLevel={characterLevel}
+                        ruleset={ruleset}
+                        releaseMode={presetReleaseMode}
+                        onReleaseModeChange={setPresetReleaseMode}
+                        validateForPreset={() => collectValidationProblems()[0]?.message ?? null}
+                        buildSnapshot={buildPresetSnapshot}
+                      />
+                    </TabsContent>
+                  </Tabs>
+                </TabsContent>
               </Tabs>
             </CardContent>
           </Card>

@@ -119,6 +119,14 @@ function checkCharacterEditorRegressions() {
   });
 }
 
+function checkCharacterPresetsRegressions() {
+  console.log('Character presets regression contract: checking create chooser, settings Preset tab, and RLS migration...');
+  execFileSync(process.execPath, ['scripts/character-presets-regression-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -282,6 +290,7 @@ execFileSync('npm', ['run', 'checks'], {
 checkChangedDenoFunctions();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
+checkCharacterPresetsRegressions();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();

@@ -1,0 +1,440 @@
+/**
+ * characterPreset.service — Owner-scoped CRUD + append-only Level versions for character presets.
+ * Location: src/modules/characters/services/characterPreset.service.ts
+ */
+import { supabase } from '../../../lib/supabase';
+import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
+import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../../lib/networkTimeout';
+import { normalizeCharacterAppearance } from '../avatar';
+import {
+  applySagaDriveAttributeAdvances,
+  isValidSagaDriveAttributeBuild,
+  type SagaDriveAttributeAdvances,
+} from '../../rulesets/attributeProgression';
+import {
+  SAGA_DRIVE_SPECIES_TRAIT_BUDGET,
+  SAGA_DRIVE_START_FREE_SKILL_POINTS,
+  SAGA_DRIVE_START_MIN_TRAINED_SKILLS,
+  SAGA_DRIVE_START_SKILL_CAP,
+  createEmptySagaDriveSkillRanks,
+  getSagaDriveSpeciesTraitCost,
+  isCharacterRulesetKey,
+  isSagaDriveArchetypeKey,
+  isSagaDriveEssenceKey,
+  isSagaDriveSkillKey,
+  sagaDriveSkillDefinitions,
+  type CharacterRulesetKey,
+  type SagaDriveSkillKey,
+} from '../../rulesets/characterCreation';
+import type { CharacterAttributesDto, CharacterGenderReading, SagaDriveProfileDto } from '../types/character.types';
+import type {
+  CharacterPresetDto,
+  CharacterPresetOrigin,
+  CharacterPresetSnapshot,
+  CharacterPresetVersionDto,
+  CharacterPresetVm,
+  CreateCharacterPresetInput,
+  ReleaseCharacterPresetVersionInput,
+} from '../types/characterPreset.types';
+
+const TABLE = 'character_presets';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isPresetOrigin(value: unknown): value is CharacterPresetOrigin {
+  return value === 'user' || value === 'system';
+}
+
+function isGenderReading(value: unknown): value is CharacterGenderReading {
+  return value === 'masculine-read' || value === 'feminine-read' || value === 'diverse';
+}
+
+function attributesEqual(left: CharacterAttributesDto, right: CharacterAttributesDto): boolean {
+  return left.strength === right.strength
+    && left.dexterity === right.dexterity
+    && left.endurance === right.endurance
+    && left.mind === right.mind
+    && left.perception === right.perception
+    && left.charisma === right.charisma;
+}
+
+function normalizeFreeSkillRanks(value: unknown): Record<SagaDriveSkillKey, number> {
+  const result = createEmptySagaDriveSkillRanks();
+  if (!isRecord(value)) return result;
+  for (const skill of sagaDriveSkillDefinitions) {
+    const rank = value[skill.key];
+    if (typeof rank === 'number' && Number.isFinite(rank)) {
+      result[skill.key] = Math.max(0, Math.min(SAGA_DRIVE_START_SKILL_CAP, Math.round(rank)));
+    }
+  }
+  return result;
+}
+
+function normalizeSkills(value: unknown): Record<SagaDriveSkillKey, number> {
+  const result = createEmptySagaDriveSkillRanks();
+  if (!isRecord(value)) return result;
+  for (const skill of sagaDriveSkillDefinitions) {
+    const rank = value[skill.key];
+    if (typeof rank === 'number' && Number.isFinite(rank)) {
+      result[skill.key] = Math.max(0, Math.min(5, Math.round(rank)));
+    }
+  }
+  return result;
+}
+
+function assertValidSnapshot(snapshot: CharacterPresetSnapshot): void {
+  if (snapshot.schemaVersion !== 1) {
+    throw new Error('Ungültiger Preset-Snapshot (Schema).');
+  }
+  if (snapshot.ruleset_key !== 'sagadrive-core') {
+    throw new Error('Presets sind derzeit nur für SagaDrive Core verfügbar.');
+  }
+  if (!snapshot.name.trim()) {
+    throw new Error('Preset-Snapshot braucht einen Charakternamen.');
+  }
+  if (!isGenderReading(snapshot.appearance?.gender_reading)) {
+    throw new Error('Preset-Snapshot braucht eine gültige Geschlechts-Lesart.');
+  }
+  const level = snapshot.level;
+  if (!Number.isInteger(level) || level < 1 || level > 20) {
+    throw new Error('Preset-Level muss zwischen 1 und 20 liegen.');
+  }
+
+  const profile = snapshot.sagadrive_profile;
+  if (!profile || !isSagaDriveArchetypeKey(profile.archetype)) {
+    throw new Error('Preset-Snapshot braucht einen Archetyp.');
+  }
+  if (!isSagaDriveEssenceKey(profile.essence)) {
+    throw new Error('Preset-Snapshot braucht eine Essenz.');
+  }
+  if (!profile.archetypeTrainingSkill || !isSagaDriveSkillKey(profile.archetypeTrainingSkill)) {
+    throw new Error('Preset-Snapshot braucht die Archetyp-Fertigkeit.');
+  }
+
+  const bg = profile.background;
+  const pool = Array.isArray(bg?.skillPool) ? bg.skillPool.filter(isSagaDriveSkillKey) : [];
+  const trained = Array.isArray(bg?.trainedSkills) ? bg.trainedSkills.filter(isSagaDriveSkillKey) : [];
+  if (!bg?.name?.trim() || pool.length !== 4 || trained.length !== 2) {
+    throw new Error('Preset-Snapshot: Hintergrund unvollständig (Name, 4er-Pool, 2 Training).');
+  }
+  if (!trained.every((skill) => pool.includes(skill))) {
+    throw new Error('Preset-Snapshot: Hintergrund-Training muss im Skill-Pool liegen.');
+  }
+  if (!bg.specialization?.name?.trim() || !isSagaDriveSkillKey(bg.specialization.skill) || !trained.includes(bg.specialization.skill)) {
+    throw new Error('Preset-Snapshot: Spezialisierung unvollständig.');
+  }
+  if (![bg.milieuAccess, bg.contact, bg.complication, bg.communication].every((field) => typeof field === 'string' && field.trim())) {
+    throw new Error('Preset-Snapshot: Hintergrund-Felder (Milieu/Kontakt/Komplikation/Kommunikation) unvollständig.');
+  }
+
+  const traitKeys = (profile.speciesTraitInstances ?? []).map((instance) => instance.trait);
+  if (getSagaDriveSpeciesTraitCost(traitKeys) !== SAGA_DRIVE_SPECIES_TRAIT_BUDGET) {
+    throw new Error(`Preset-Snapshot: Speziesmerkmale müssen genau ${SAGA_DRIVE_SPECIES_TRAIT_BUDGET} Punkte ergeben.`);
+  }
+  if (snapshot.race === 'alien' && !profile.speciesProfile?.name?.trim()) {
+    throw new Error('Preset-Snapshot: Alien-Speziesprofil braucht einen Namen.');
+  }
+
+  const freeRanks = normalizeFreeSkillRanks(snapshot.freeSkillRanks);
+  const freeUsed = sagaDriveSkillDefinitions.reduce((sum, skill) => sum + freeRanks[skill.key], 0);
+  if (freeUsed !== SAGA_DRIVE_START_FREE_SKILL_POINTS) {
+    throw new Error(`Preset-Snapshot: genau ${SAGA_DRIVE_START_FREE_SKILL_POINTS} freie Fertigkeitspunkte nötig.`);
+  }
+  const skills = normalizeSkills(snapshot.skills);
+  const trainedCount = sagaDriveSkillDefinitions.filter((skill) => skills[skill.key] > 0).length;
+  if (trainedCount < SAGA_DRIVE_START_MIN_TRAINED_SKILLS) {
+    throw new Error(`Preset-Snapshot: mindestens ${SAGA_DRIVE_START_MIN_TRAINED_SKILLS} trainierte Fertigkeiten nötig.`);
+  }
+  if (sagaDriveSkillDefinitions.some((skill) => skills[skill.key] > SAGA_DRIVE_START_SKILL_CAP)) {
+    throw new Error(`Preset-Snapshot: Fertigkeitsrang über Cap ${SAGA_DRIVE_START_SKILL_CAP}.`);
+  }
+
+  if (!profile.baseAttributes) {
+    throw new Error('Preset-Snapshot: baseAttributes fehlen.');
+  }
+  const advances = (profile.attributeAdvances ?? {}) as SagaDriveAttributeAdvances;
+  if (!isValidSagaDriveAttributeBuild(profile.baseAttributes, advances, level)) {
+    throw new Error('Preset-Snapshot: Attributverteilung ungültig.');
+  }
+  const expected = applySagaDriveAttributeAdvances(profile.baseAttributes, advances, level);
+  if (!attributesEqual(snapshot.attributes, expected)) {
+    throw new Error('Preset-Snapshot: finale Attribute passen nicht zu Basis + Steigerungen.');
+  }
+}
+
+function normalizeSnapshot(value: unknown): CharacterPresetSnapshot | null {
+  if (!isRecord(value) || value.schemaVersion !== 1) return null;
+  if (typeof value.name !== 'string' || typeof value.race !== 'string' || typeof value.class !== 'string') return null;
+  if (typeof value.level !== 'number') return null;
+  const rulesetKey: CharacterRulesetKey = typeof value.ruleset_key === 'string' && isCharacterRulesetKey(value.ruleset_key)
+    ? value.ruleset_key
+    : 'sagadrive-core';
+  const appearance = normalizeCharacterAppearance(isRecord(value.appearance) ? value.appearance : undefined);
+  const profile = isRecord(value.sagadrive_profile) ? (value.sagadrive_profile as unknown as SagaDriveProfileDto) : null;
+  if (!profile) return null;
+
+  const snapshot: CharacterPresetSnapshot = {
+    schemaVersion: 1,
+    name: value.name,
+    description: typeof value.description === 'string' ? value.description : '',
+    class: value.class,
+    race: value.race,
+    ruleset_key: rulesetKey,
+    level: value.level,
+    appearance,
+    attributes: {
+      strength: typeof (value.attributes as CharacterAttributesDto | undefined)?.strength === 'number' ? (value.attributes as CharacterAttributesDto).strength : 0,
+      dexterity: typeof (value.attributes as CharacterAttributesDto | undefined)?.dexterity === 'number' ? (value.attributes as CharacterAttributesDto).dexterity : 0,
+      endurance: typeof (value.attributes as CharacterAttributesDto | undefined)?.endurance === 'number' ? (value.attributes as CharacterAttributesDto).endurance : 0,
+      mind: typeof (value.attributes as CharacterAttributesDto | undefined)?.mind === 'number' ? (value.attributes as CharacterAttributesDto).mind : 0,
+      perception: typeof (value.attributes as CharacterAttributesDto | undefined)?.perception === 'number' ? (value.attributes as CharacterAttributesDto).perception : 0,
+      charisma: typeof (value.attributes as CharacterAttributesDto | undefined)?.charisma === 'number' ? (value.attributes as CharacterAttributesDto).charisma : 0,
+    },
+    freeSkillRanks: normalizeFreeSkillRanks(value.freeSkillRanks),
+    skills: normalizeSkills(value.skills),
+    sagadrive_profile: profile,
+    abilities: Array.isArray(value.abilities) ? value.abilities as CharacterPresetSnapshot['abilities'] : [],
+    inventory: Array.isArray(value.inventory) ? value.inventory as CharacterPresetSnapshot['inventory'] : [],
+  };
+  if (typeof value.background_story === 'string') snapshot.background_story = value.background_story;
+  if (typeof value.notes === 'string') snapshot.notes = value.notes;
+  if (Array.isArray(value.personality_traits)) snapshot.personality_traits = value.personality_traits.filter((entry): entry is string => typeof entry === 'string');
+  if (Array.isArray(value.ideals)) snapshot.ideals = value.ideals.filter((entry): entry is string => typeof entry === 'string');
+  if (Array.isArray(value.bonds)) snapshot.bonds = value.bonds.filter((entry): entry is string => typeof entry === 'string');
+  if (Array.isArray(value.flaws)) snapshot.flaws = value.flaws.filter((entry): entry is string => typeof entry === 'string');
+  if (typeof value.portrait_url === 'string' && value.portrait_url.trim()) snapshot.portrait_url = value.portrait_url;
+  return snapshot;
+}
+
+function normalizeVersions(value: unknown): CharacterPresetVersionDto[] {
+  if (!Array.isArray(value)) return [];
+  const versions: CharacterPresetVersionDto[] = [];
+  for (const item of value) {
+    if (!isRecord(item) || typeof item.level !== 'number' || typeof item.created_at !== 'string') continue;
+    const snapshot = normalizeSnapshot(item.snapshot);
+    if (!snapshot) continue;
+    versions.push({ level: item.level, snapshot, created_at: item.created_at });
+  }
+  return versions.sort((a, b) => a.level - b.level || a.created_at.localeCompare(b.created_at));
+}
+
+function mapToViewModel(dto: CharacterPresetDto, sourceMissing: boolean): CharacterPresetVm {
+  return {
+    id: dto.id,
+    displayName: dto.display_name,
+    rulesetKey: isCharacterRulesetKey(dto.ruleset_key) ? dto.ruleset_key : 'sagadrive-core',
+    origin: isPresetOrigin(dto.origin) ? dto.origin : 'user',
+    sourceCharacterId: dto.source_character_id,
+    sourceCharacterMissing: sourceMissing,
+    published: dto.published === true,
+    versions: normalizeVersions(dto.versions),
+    createdAt: new Date(dto.created_at),
+    updatedAt: new Date(dto.updated_at),
+  };
+}
+
+class CharacterPresetService {
+  async listUserPresets(): Promise<CharacterPresetVm[]> {
+    const userId = await getAuthenticatedUserId();
+    const { data, error } = await raceWithTimeoutReject(
+      supabase
+        .from(TABLE)
+        .select('*')
+        .eq('owner_user_id', userId)
+        .eq('origin', 'user')
+        .order('created_at', { ascending: false }),
+      SUPABASE_QUERY_TIMEOUT_MS,
+      'Presets konnten nicht geladen werden: Zeitüberschreitung',
+    );
+    if (error) throw new Error(`Presets konnten nicht geladen werden: ${error.message}`);
+
+    const rows = (data ?? []) as CharacterPresetDto[];
+    const sourceIds = Array.from(new Set(rows.map((row) => row.source_character_id).filter((id): id is string => Boolean(id))));
+    const existingSourceIds = new Set<string>();
+    if (sourceIds.length > 0) {
+      const { data: characters, error: charactersError } = await supabase
+        .from('characters')
+        .select('id')
+        .eq('owner_user_id', userId)
+        .in('id', sourceIds);
+      if (charactersError) {
+        console.error('Preset source character lookup failed:', charactersError.message);
+      } else {
+        for (const row of characters ?? []) {
+          if (typeof row.id === 'string') existingSourceIds.add(row.id);
+        }
+      }
+    }
+
+    return rows.map((row) => {
+      const missing = Boolean(row.source_character_id) && !existingSourceIds.has(row.source_character_id as string);
+      return mapToViewModel(row, missing);
+    });
+  }
+
+  async getPresetForCharacter(characterId: string): Promise<CharacterPresetVm | null> {
+    const userId = await getAuthenticatedUserId();
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('*')
+      .eq('owner_user_id', userId)
+      .eq('source_character_id', characterId)
+      .eq('origin', 'user')
+      .maybeSingle();
+    if (error) throw new Error(`Preset konnte nicht geladen werden: ${error.message}`);
+    if (!data) return null;
+    return mapToViewModel(data as CharacterPresetDto, false);
+  }
+
+  async createPresetFromCharacter(input: CreateCharacterPresetInput): Promise<CharacterPresetVm> {
+    const userId = await getAuthenticatedUserId();
+    if (input.rulesetKey !== 'sagadrive-core') {
+      throw new Error('Presets sind derzeit nur für SagaDrive Core verfügbar.');
+    }
+    assertValidSnapshot(input.snapshot);
+
+    const existing = await this.getPresetForCharacter(input.sourceCharacterId);
+    if (existing) {
+      throw new Error('Für diesen Charakter existiert bereits ein Preset. Nutze „Version freigeben“.');
+    }
+
+    const version: CharacterPresetVersionDto = {
+      level: input.snapshot.level,
+      snapshot: input.snapshot,
+      created_at: new Date().toISOString(),
+    };
+    const { data, error } = await supabase
+      .from(TABLE)
+      .insert({
+        owner_user_id: userId,
+        display_name: input.displayName.trim() || `${input.snapshot.name.trim()} Preset`,
+        ruleset_key: 'sagadrive-core',
+        origin: 'user',
+        source_character_id: input.sourceCharacterId,
+        published: false,
+        versions: [version],
+      })
+      .select()
+      .single();
+    if (error) throw new Error(`Preset konnte nicht gespeichert werden: ${error.message}`);
+    return mapToViewModel(data as CharacterPresetDto, false);
+  }
+
+  async releaseVersion(input: ReleaseCharacterPresetVersionInput): Promise<CharacterPresetVm> {
+    const userId = await getAuthenticatedUserId();
+    assertValidSnapshot(input.snapshot);
+
+    const { data: existing, error: loadError } = await supabase
+      .from(TABLE)
+      .select('*')
+      .eq('id', input.presetId)
+      .eq('owner_user_id', userId)
+      .single();
+    if (loadError || !existing) {
+      throw new Error(loadError ? `Preset nicht gefunden: ${loadError.message}` : 'Preset nicht gefunden.');
+    }
+
+    const dto = existing as CharacterPresetDto;
+    const versions = normalizeVersions(dto.versions);
+    if (versions.some((version) => version.level === input.snapshot.level)) {
+      throw new Error(`Für Level ${input.snapshot.level} existiert bereits eine Preset-Version.`);
+    }
+
+    const nextVersions = [
+      ...versions,
+      {
+        level: input.snapshot.level,
+        snapshot: input.snapshot,
+        created_at: new Date().toISOString(),
+      },
+    ].sort((a, b) => a.level - b.level || a.created_at.localeCompare(b.created_at));
+
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update({ versions: nextVersions, published: false, updated_at: new Date().toISOString() })
+      .eq('id', input.presetId)
+      .eq('owner_user_id', userId)
+      .select()
+      .single();
+    if (error) throw new Error(`Version konnte nicht freigegeben werden: ${error.message}`);
+    return mapToViewModel(data as CharacterPresetDto, false);
+  }
+
+  async renamePreset(presetId: string, displayName: string): Promise<CharacterPresetVm> {
+    const userId = await getAuthenticatedUserId();
+    const trimmed = displayName.trim();
+    if (!trimmed) throw new Error('Preset-Name darf nicht leer sein.');
+    const { data, error } = await supabase
+      .from(TABLE)
+      .update({ display_name: trimmed, published: false, updated_at: new Date().toISOString() })
+      .eq('id', presetId)
+      .eq('owner_user_id', userId)
+      .select()
+      .single();
+    if (error) throw new Error(`Preset konnte nicht umbenannt werden: ${error.message}`);
+    return mapToViewModel(data as CharacterPresetDto, false);
+  }
+
+  async duplicatePreset(presetId: string): Promise<CharacterPresetVm> {
+    const userId = await getAuthenticatedUserId();
+    const { data: existing, error: loadError } = await supabase
+      .from(TABLE)
+      .select('*')
+      .eq('id', presetId)
+      .eq('owner_user_id', userId)
+      .single();
+    if (loadError || !existing) {
+      throw new Error(loadError ? `Preset nicht gefunden: ${loadError.message}` : 'Preset nicht gefunden.');
+    }
+    const dto = existing as CharacterPresetDto;
+    const versions = normalizeVersions(dto.versions);
+    const { data, error } = await supabase
+      .from(TABLE)
+      .insert({
+        owner_user_id: userId,
+        display_name: `${dto.display_name} (Kopie)`,
+        ruleset_key: dto.ruleset_key,
+        origin: 'user',
+        source_character_id: null,
+        published: false,
+        versions,
+      })
+      .select()
+      .single();
+    if (error) throw new Error(`Preset konnte nicht dupliziert werden: ${error.message}`);
+    return mapToViewModel(data as CharacterPresetDto, false);
+  }
+
+  async deletePreset(presetId: string): Promise<void> {
+    const userId = await getAuthenticatedUserId();
+    const { error } = await supabase.from(TABLE).delete().eq('id', presetId).eq('owner_user_id', userId);
+    if (error) throw new Error(`Preset konnte nicht gelöscht werden: ${error.message}`);
+  }
+
+  /**
+   * Auto-release after successful character save when level increased.
+   * No-op when no linked preset, level already released, or validation fails.
+   */
+  async maybeAutoReleaseVersion(input: {
+    characterId: string;
+    previousLevel: number;
+    snapshot: CharacterPresetSnapshot;
+    releaseMode: 'manual' | 'auto';
+  }): Promise<CharacterPresetVm | null> {
+    if (input.releaseMode !== 'auto') return null;
+    if (input.snapshot.level <= input.previousLevel) return null;
+    const linked = await this.getPresetForCharacter(input.characterId);
+    if (!linked) return null;
+    if (linked.versions.some((version) => version.level === input.snapshot.level)) return linked;
+    try {
+      return await this.releaseVersion({ presetId: linked.id, snapshot: input.snapshot });
+    } catch (error) {
+      console.error('Auto preset release skipped:', error instanceof Error ? error.message : error);
+      return null;
+    }
+  }
+}
+
+export const characterPresetService = new CharacterPresetService();

@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2 } from 'lucide-react';
 import { useCharacterSummaries } from '../modules/characters/hooks/useCharacterSummaries';
 import type { CharacterSummaryVm } from '../modules/characters/types/character.types';
+import { CreateCharacterEntryDialog } from '../modules/characters/components/CreateCharacterEntryDialog';
 import { useProjectSummaries } from '../modules/projects/hooks/useProjectSummaries';
 import type { ProjectSummaryVm } from '../modules/projects/types/project.types';
 import { useAuth } from '../lib/auth-context';
@@ -48,6 +49,7 @@ export function Library({ onNavigate }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<LibraryTab>('characters');
   const [visitedTabs, setVisitedTabs] = useState<Set<LibraryTab>>(() => new Set(['characters']));
+  const [createCharacterOpen, setCreateCharacterOpen] = useState(false);
   const [worldEditorOpen, setWorldEditorOpen] = useState(false);
   const [editingWorld, setEditingWorld] = useState<WorldProfileVm | null>(null);
   const { user } = useAuth();
@@ -270,7 +272,7 @@ export function Library({ onNavigate }: LibraryProps) {
         {searchQuery ? 'Keine Charaktere gefunden' : 'Noch keine Charaktere erstellt'}
       </p>
       {!searchQuery && (
-        <Button onClick={() => onNavigate('character-editor')}>
+        <Button onClick={() => setCreateCharacterOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Ersten Charakter erstellen
         </Button>
@@ -353,7 +355,7 @@ export function Library({ onNavigate }: LibraryProps) {
                   </span>
                 }
                 toolbarRight={
-                  <Button size="sm" onClick={() => onNavigate('character-editor')}>
+                  <Button size="sm" onClick={() => setCreateCharacterOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     <span className="hidden sm:inline">Neuer Charakter</span>
                     <span className="sm:hidden">Neu</span>
@@ -446,6 +448,12 @@ export function Library({ onNavigate }: LibraryProps) {
           />
         </Suspense>
       )}
+
+      <CreateCharacterEntryDialog
+        open={createCharacterOpen}
+        onOpenChange={setCreateCharacterOpen}
+        onNavigateToEditor={() => onNavigate('character-editor')}
+      />
     </div>
   );
 }
