@@ -37,9 +37,8 @@ import {
   CharacterTraitEditor,
   RuleHelp,
   getInventoryLoad,
-  resolveSagaDriveSkillRanks,
 } from '../progression';
-import { takeCharacterEditorBootstrap, clearCharacterEditorBootstrap } from '../../../modules/characters/characterEditorBootstrap';
+import { takeCharacterEditorBootstrap, clearCharacterEditorBootstrap } from '../shared/characterEditorBootstrap';
 import { assertValidSnapshot, characterPresetService } from '../../../modules/characters/services/characterPreset.service';
 import { normalizeSafeUrl } from '../../../modules/characters/avatar';
 import type { CharacterPresetReleaseMode, CharacterPresetSnapshot } from '../../../modules/characters/types/characterPreset.types';
@@ -91,10 +90,11 @@ import {
   getSagaDriveExperienceBonus,
   getSagaDriveSkillCap,
   isValidBackgroundSkillPoints,
-  isValidSagaDriveSkillAdvances,
+  isValidSagaDriveSkillDevelopment,
   isValidStartSkillBuild,
   normalizeFreeSkillRanks,
   resolveSagaDriveSkillBuildState,
+  resolveSagaDriveSkillRanksSafe,
   sumBackgroundSkillPointsUsed,
   type SagaDriveBackgroundSkillPoints,
   type SagaDriveSkillAdvanceDto,
@@ -330,7 +330,9 @@ export function CharacterEditor() {
     specializations,
     provenanceStatus: skillProvenanceStatus ?? 'complete' as const,
   }), [archetypeTrainingSkill, backgroundSkillPoints, freeSkillRanks, skillAdvances, skillProvenanceStatus, specializations]);
-  const finalSkillRanks = useMemo(() => resolveSagaDriveSkillRanks(skillBuild, characterLevel), [characterLevel, skillBuild]);
+  // Safe resolve prunes invalid dependent development decisions instead of throwing,
+  // so removing an earlier slot can never crash the editor render.
+  const finalSkillRanks = useMemo(() => resolveSagaDriveSkillRanksSafe(skillBuild, characterLevel), [characterLevel, skillBuild]);
 
   const abilities = useMemo<AbilityDto[]>(() => {
     if (!archetype) return [];
@@ -385,7 +387,7 @@ export function CharacterEditor() {
     && freeSkillPointsUsed === SAGA_DRIVE_START_FREE_SKILL_POINTS
     && backgroundPointsUsed === SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS
     && isValidStartSkillBuild(startSkillBuild, selectedBackgroundPool, characterArchetype)
-    && isValidSagaDriveSkillAdvances(skillAdvances, startSkillBuild, characterLevel)
+    && isValidSagaDriveSkillDevelopment(startSkillBuild, skillAdvances, specializations, characterLevel)
     && !skillOverflow;
 
   const collectValidationProblems = (): ValidationProblem[] => {
@@ -399,7 +401,7 @@ export function CharacterEditor() {
     if (!backgroundComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige deinen mechanischen Hintergrund unter Kompetenzen.' });
     if (!attributeDistributionValid) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: `Verteile genau ${SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte (+0 bis +4) und alle für Level ${characterLevel} verfügbaren Attributsteigerungen, ohne einen Endwert über +${SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} zu erzeugen.` });
     if (!characterArchetype) problems.push({ tab: 'values', valuesSubTab: 'archetype', message: 'Bitte wähle einen Archetyp.' });
-    if (!skillsComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige die drei Startquellen (7 frei, 2 Hintergrund, 1 Archetyp) und alle Fertigkeitsentwicklungen bis zu deinem Level.' });
+    if (!skillsComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige die drei Startquellen (7 frei, 2 Hintergrund, 1 Archetyp) und alle Fertigkeitsentwicklungen bis zu deinem Level. Pro Entwicklungsstufe ist genau eine Entscheidung erlaubt; Spezialisierungen brauchen ihren Mindestrang (1/3/5) bereits zum Erwerbszeitpunkt.' });
     if (!essenceProfile) problems.push({ tab: 'values', valuesSubTab: 'essenz', message: 'Bitte wähle eine primäre Essenz.' });
     return problems;
   };

@@ -147,12 +147,27 @@ export class SupabaseCharacterRepository {
       : {};
     const attributes = payload.attributes ? normalizeAttributes(payload.attributes) : undefined;
     const sagadriveProfile = payload.sagadrive_profile ? normalizeSagaDriveProfile(payload.sagadrive_profile) : undefined;
-    if (attributes && sagadriveProfile) {
-      const level = typeof payload.level === 'number'
-        ? payload.level
-        : (await this.getCharacterById(id)).level;
-      const skills = payload.skills ? normalizeSkills(payload.skills) : (await this.getCharacterById(id)).skills;
-      assertValidSagaDriveCharacterPersistence(attributes, skills, sagadriveProfile, level);
+    // Any SagaDrive-relevant field in the patch triggers validation of the full
+    // effective future state (patch values merged over the stored character).
+    const touchesSagaDriveState = Boolean(
+      payload.attributes
+        || payload.skills
+        || payload.sagadrive_profile
+        || typeof payload.level === 'number'
+        || payload.ruleset_key,
+    );
+    if (touchesSagaDriveState) {
+      // Loaded exactly once; owner-scoped, so foreign characters stay unreachable.
+      const existing = await this.getCharacterById(id);
+      const effectiveRuleset = payload.ruleset_key ?? existing.rulesetKey;
+      if (effectiveRuleset === 'sagadrive-core') {
+        assertValidSagaDriveCharacterPersistence(
+          attributes ?? existing.attributes,
+          payload.skills ? normalizeSkills(payload.skills) : existing.skills,
+          sagadriveProfile ?? existing.sagaDriveProfile,
+          typeof payload.level === 'number' ? payload.level : existing.level,
+        );
+      }
     }
     const updatePayload = {
       ...payload,

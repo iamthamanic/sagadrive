@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../../components/ui/dialog';
-import { clearCharacterEditorBootstrap, setCharacterEditorBootstrap } from '../../../modules/characters/characterEditorBootstrap';
+import { clearCharacterEditorBootstrap, setCharacterEditorBootstrap } from '../shared/characterEditorBootstrap';
 import { assertValidSnapshot, characterPresetService } from '../../../modules/characters/services/characterPreset.service';
 import type { CharacterPresetVm } from '../../../modules/characters/types/characterPreset.types';
 

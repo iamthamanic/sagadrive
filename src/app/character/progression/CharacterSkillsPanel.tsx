@@ -19,7 +19,7 @@ import {
   SAGA_DRIVE_START_ARCHETYPE_SKILL_POINTS,
   SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS,
   getSagaDriveSkillCap,
-  resolveSagaDriveSkillRanks,
+  resolveSagaDriveSkillRanksSafe,
   sumBackgroundSkillPointsUsed,
   type SagaDriveBackgroundSkillPoints,
   type SagaDriveSkillAdvanceDto,
@@ -85,7 +85,8 @@ export function CharacterSkillsPanel({
     backgroundSkillPoints,
     archetypeTrainingSkill,
   };
-  const finalRanks = resolveSagaDriveSkillRanks(
+  // Safe resolve: invalid dependent development decisions are pruned for display instead of throwing.
+  const finalRanks = resolveSagaDriveSkillRanksSafe(
     { ...startBuild, skillAdvances, specializations, provenanceStatus: skillProvenanceStatus ?? 'complete' },
     characterLevel,
   );
@@ -213,4 +214,4 @@ export function CharacterSkillsPanel({
   );
 }
 
-export { createEmptySagaDriveSkillRanks, resolveSagaDriveSkillRanks };
+export { createEmptySagaDriveSkillRanks, resolveSagaDriveSkillRanksSafe };
