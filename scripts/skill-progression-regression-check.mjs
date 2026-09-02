@@ -42,8 +42,11 @@ requireMatch(rules, /export function normalizeLegacyBackgroundSkillPoints/, 'leg
 requireMatch(rules, /result\[skill\] = 1/, 'legacy maps each trained skill to +1');
 requireMatch(rules, /export function resolveSagaDriveSkillRanks/, 'full rank resolution');
 requireMatch(rules, /export function assertSagaDriveSkillPersistence/, 'fail-closed persistence assert');
+requireMatch(rules, /build\.provenanceStatus !== 'complete'/, 'persistence assert gates on raw-data-derived provenance status');
+forbidMatch(rules, /hasCompleteSkillProvenance\(\{\s*freeSkillRanks: build\.freeSkillRanks/, 'completeness re-derivation on compat-enriched build data');
 requireMatch(rules, /SAGA_DRIVE_SPECIALIZATION_BONUS = 2/, 'situational specialization bonus constant');
 requireMatch(rules, /export function isValidSagaDriveSkillDevelopment/, 'chronological one-decision-per-slot validation');
+requireMatch(rules, /for \(const unlockedLevel of getSagaDriveSkillAdvanceLevels\(normalizedLevel\)\)/, 'every unlocked development slot must hold one decision');
 requireMatch(rules, /export function sanitizeSagaDriveSkillDevelopment/, 'deterministic dependent-slot prune');
 requireMatch(rules, /export function resolveSagaDriveSkillRanksSafe/, 'non-throwing editor rank resolution');
 requireMatch(rules, /skillPool\.length !== 4/, 'background framework pool of exactly four');

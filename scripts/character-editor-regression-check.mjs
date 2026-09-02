@@ -144,6 +144,9 @@ requireMatch(skillsPanel, /legacyFinalRanks/, 'legacy final ranks displayed in s
 const slotsPanel = read('src/app/character/progression/SkillProgressionSlotsPanel.tsx');
 requireMatch(slotsPanel, /draftsByLevel/, 'local per-level draft state for incomplete slot decisions');
 requireMatch(slotsPanel, /sanitizeSagaDriveSkillDevelopment/, 'domain-driven dependent slot pruning');
+requireMatch(slotsPanel, /const trimmedName = decision\.name\?\.trim\(\)/, 'persisted specialization skill change commits immediately when a name exists');
+requireMatch(slotsPanel, /setDraft\(level, kind === 'specialization'/, 'kind switch on a persisted decision only drafts the replacement');
+rejectMatch(slotsPanel, /persisted\.kind !== kind\) \{\s*const \{ advances, specs \} = withoutSlot\(level\);/, 'kind switch must not commit removal before the replacement completes');
 requireMatch(slotsPanel, /aria-label=\{`Level \$\{level\} Entwicklung`\}/, 'unique accessible name for slot kind select');
 requireMatch(slotsPanel, /aria-label=\{`Level \$\{level\} Fertigkeit`\}/, 'unique accessible name for slot skill select');
 requireMatch(slotsPanel, /aria-label=\{`Level \$\{level\} Spezialisierungsname`\}/, 'unique accessible name for slot specialization name');

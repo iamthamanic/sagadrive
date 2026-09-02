@@ -18,6 +18,7 @@ const esbuild = join(root, 'node_modules', '.bin', 'esbuild');
 const entries = {
   rules: 'src/domains/rules/sagadrive/skill-progression/index.ts',
   persistence: 'src/domains/character/use-cases/assert-character-persistence.ts',
+  normalize: 'src/domains/character/use-cases/normalize-character.ts',
 };
 for (const [name, entry] of Object.entries(entries)) {
   execFileSync(esbuild, [join(root, entry), '--bundle', '--format=esm', `--outfile=${join(outdir, `${name}.mjs`)}`], { stdio: 'inherit' });
@@ -25,6 +26,7 @@ for (const [name, entry] of Object.entries(entries)) {
 
 const rules = await import(pathToFileURL(join(outdir, 'rules.mjs')).href);
 const persistence = await import(pathToFileURL(join(outdir, 'persistence.mjs')).href);
+const normalize = await import(pathToFileURL(join(outdir, 'normalize.mjs')).href);
 
 let failures = 0;
 function check(condition, message) {
@@ -256,7 +258,7 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   check(points.medicine === 1 && points.insight === 1 && Object.keys(points).length === 2, 'legacy trainedSkills map to +1/+1');
 }
 
-// (14) True legacy data (final ranks only, no provenance) stays readable.
+// (14) True legacy data (final ranks + real legacy trainedSkills, no v2 provenance) stays readable.
 {
   const legacyProfile = profileFor({ backgroundSkillPoints: {}, specializations: [] });
   delete legacyProfile.freeSkillRanks;
@@ -264,12 +266,50 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   delete legacyProfile.specializations;
   delete legacyProfile.archetypeTrainingSkill;
   legacyProfile.background.backgroundSkillPoints = undefined;
-  legacyProfile.background.trainedSkills = [];
+  legacyProfile.background.trainedSkills = ['medicine', 'insight'];
   legacyProfile.background.specialization = undefined;
   const legacySkills = rules.normalizeFreeSkillRanks({ medicine: 4, melee: 3 });
   expectPass(
     () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, legacySkills, legacyProfile, 7),
     'legacy character without provenance stays readable and keeps final ranks',
+  );
+}
+
+// (14b) Legacy trainedSkills [a,b] must not be re-derived as v2 provenance inside the guard:
+// the compat-synthesized background points are compatibility only, the persistence gate
+// follows the provenance status derived from the RAW profile data.
+{
+  const legacyProfile = profileFor({ backgroundSkillPoints: {}, specializations: [] });
+  delete legacyProfile.freeSkillRanks;
+  delete legacyProfile.skillAdvances;
+  delete legacyProfile.specializations;
+  delete legacyProfile.archetypeTrainingSkill;
+  legacyProfile.background.backgroundSkillPoints = undefined;
+  legacyProfile.background.trainedSkills = ['medicine', 'insight'];
+  legacyProfile.background.specialization = undefined;
+  const legacySkills = rules.normalizeFreeSkillRanks({ medicine: 4, insight: 2 });
+  expectPass(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, legacySkills, legacyProfile, 7),
+    'legacy trainedSkills profile without v2 provenance passes persistence assert',
+  );
+  // Final ranks and legacy trainedSkills survive the read-path normalization unchanged.
+  const normalizedProfile = normalize.normalizeSagaDriveProfile(legacyProfile);
+  const normalizedSkills = normalize.normalizeSkills(legacySkills);
+  check(normalizedSkills.medicine === 4 && normalizedSkills.insight === 2, 'legacy final ranks preserved through character normalization');
+  check(
+    normalizedProfile.background.trainedSkills.length === 2
+      && normalizedProfile.background.trainedSkills.includes('medicine')
+      && normalizedProfile.background.trainedSkills.includes('insight'),
+    'legacy trainedSkills preserved through character normalization',
+  );
+  expectPass(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, normalizedSkills, normalizedProfile, 7),
+    'normalized legacy profile still passes persistence assert',
+  );
+  // A client-supplied 'complete' string without provenance data has no authority either.
+  expectPass(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, legacySkills, { ...legacyProfile, skillProvenanceStatus: 'complete' }, 7),
+    'client complete + no provenance data stays legacy-readable',
   );
 }
 
@@ -316,14 +356,20 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   );
 }
 
-// (18) Partial update `level`: lowering level below existing advances invalidates finals.
+// (18) Partial update `level`: every unlocked slot up to the new level needs exactly one
+// decision — a level-5 character with only the L3 slot filled is incomplete, even when
+// the final ranks still match. Lowering below existing advances keeps failing on finals.
 {
   const build = validBuild();
   build.skillAdvances = [{ level: 3, kind: 'rank-up', skill: 'melee' }];
   const storedSkills = finalSkillsFor(build, 3);
-  expectPass(
+  check(
+    !rules.isValidSagaDriveSkillDevelopment(build, build.skillAdvances, build.specializations, 5),
+    'level 5 with only a level-3 decision is rejected (unfilled L5 slot)',
+  );
+  expectThrow(
     () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, storedSkills, profileFor(build), 5),
-    'level-up with dormant budget and matching finals passes',
+    'level-up to 5 with an unfilled L5 slot fails even with matching finals',
   );
   expectThrow(
     () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, storedSkills, profileFor(build), 1),

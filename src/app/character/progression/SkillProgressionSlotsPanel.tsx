@@ -123,11 +123,17 @@ export function SkillProgressionSlotsPanel({
       clearSlot(level);
       return;
     }
-    // Changing the kind of a persisted decision replaces it once the new draft completes.
     if (persisted.kind && persisted.kind !== kind) {
-      const { advances, specs } = withoutSlot(level);
-      commitDevelopment(advances, specs);
-      setDraft(level, { kind });
+      // Kind switch on a persisted decision only drafts the replacement; the persisted
+      // decision stays in place until the new choice completes (skill picked for
+      // rank-up/learn, name entered for specialization). The completing commit then
+      // replaces this level's decision wholesale and sanitize cascades at that point.
+      // Skill/name carry over only where meaningful: a specialization draft keeps them
+      // (its name input drives the commit), while rank-up/learn complete via the skill
+      // select, where a carried-over skill could not be re-picked.
+      setDraft(level, kind === 'specialization'
+        ? { kind, skill: persisted.skill, name: persisted.name }
+        : { kind });
       return;
     }
     setDraft(level, { kind, skill: persisted.skill, name: persisted.name });
@@ -136,8 +142,24 @@ export function SkillProgressionSlotsPanel({
   const chooseSkill = (level: SagaDriveSkillAdvanceLevel, skill: SagaDriveSkillKey, decision: SlotDraft) => {
     const kind = decision.kind || 'rank-up';
     if (kind === 'specialization') {
-      // Specialization stays a draft until a name completes it.
-      setDraft(level, { kind, skill, name: decision.name });
+      const trimmedName = decision.name?.trim() ?? '';
+      if (!trimmedName) {
+        // Specialization stays a draft until a name completes it.
+        setDraft(level, { kind, skill, name: decision.name });
+        return;
+      }
+      // A complete (persisted) specialization: changing only the skill commits
+      // immediately, replacing this level's specialization so the domain sanitize
+      // validates the new decision right away.
+      const { advances, specs } = withoutSlot(level);
+      const ranks = resolveSagaDriveSkillRanksSafe({ ...startBuild, skillAdvances: advances }, level);
+      const existingCount = specs.filter((entry) => entry.skill === skill).length;
+      if (!isValidSpecializationForSkillRank(ranks[skill], existingCount)) return;
+      commitDevelopment(advances, [
+        ...specs,
+        { skill, name: trimmedName, source: 'skill-development', acquiredAtLevel: level },
+      ]);
+      setDraft(level, undefined);
       return;
     }
     const { advances, specs } = withoutSlot(level);

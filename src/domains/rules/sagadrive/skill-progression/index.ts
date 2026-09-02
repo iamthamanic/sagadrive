@@ -424,6 +424,11 @@ export function isValidSagaDriveSkillDevelopment(
     if (!isValidSkillAdvanceEntry(advance, workingRanks)) return false;
     workingRanks = applySkillAdvances(workingRanks, [advance], entry.level);
   }
+  // §13.3: a character of this level is built from ALL developments up to it — every
+  // unlocked slot must hold exactly one decision. Above-level slots stay dormant.
+  for (const unlockedLevel of getSagaDriveSkillAdvanceLevels(normalizedLevel)) {
+    if (!seenLevels.has(unlockedLevel)) return false;
+  }
   return true;
 }
 
@@ -579,19 +584,19 @@ export function skillRankMapsEqual(left: SagaDriveSkillRankMap, right: SagaDrive
 
 export function assertSagaDriveSkillPersistence(
   finalSkills: SagaDriveSkillRankMap,
-  build: SagaDrivePersistedSkillBuild,
+  build: SagaDriveResolvedSkillBuild,
   level: number,
   skillPool: readonly SagaDriveSkillKey[],
   archetypeKey?: SagaDriveArchetypeKey,
 ): void {
-  // Provenance status is derived from data only. A client-supplied 'legacy-unresolved'
-  // string never skips validation; true legacy data (no reconstructible provenance)
-  // stays readable and keeps its stored final ranks.
-  if (!hasCompleteSkillProvenance({
-    freeSkillRanks: build.freeSkillRanks,
-    background: { backgroundSkillPoints: build.backgroundSkillPoints },
-    skillAdvances: build.skillAdvances,
-  })) {
+  // Gate on the provenance status derived from the RAW persisted profile data by
+  // resolveSagaDriveSkillBuildState. Re-deriving completeness here would run on the
+  // compat-enriched build: background points synthesized from legacy trainedSkills
+  // would look like fresh v2 provenance and a true legacy character would wrongly
+  // fail validation. A client-supplied status string never reaches this guard;
+  // true legacy data (no reconstructible provenance) stays readable and keeps its
+  // stored final ranks.
+  if (build.provenanceStatus !== 'complete') {
     return;
   }
 
