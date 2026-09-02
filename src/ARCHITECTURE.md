@@ -1,4 +1,33 @@
-# 🎲 SagaDrive - Complete Architecture
+# SagaDrive Frontend Architecture
+
+> Product/data vision below. For **code layout and import boundaries**, see [Layered Architecture](#layered-architecture-94).
+
+## Layered Architecture (#94)
+
+SagaDrive uses a **Modular Monolith** with explicit layers:
+
+| Layer | Path | May import | Must NOT import |
+|-------|------|------------|-----------------|
+| Rules kernel | `src/domains/rules/sagadrive/*` | stdlib, sibling rule slices | React, UI, Supabase, `app/`, `infrastructure/` |
+| Character domain | `src/domains/character/*` | rules kernel (public API) | React, UI, Supabase |
+| Infrastructure | `src/infrastructure/*` | domains, `lib/supabase` | React UI (`components/`, `app/`) |
+| App slices | `src/app/<area>/<slice>/` | domains, infrastructure, `shared/ui` | other slices' private internals |
+| Shared UI | `src/shared/ui/` | `components/ui` | domain rules |
+
+**Vertical slices (Character, migrated in #94):**
+
+- `app/character/edit/` — CharacterEditor orchestration
+- `app/character/creation/` — species, background, archetype, essence panels
+- `app/character/progression/` — skills, abilities, statistics, inventory, presets
+
+**Compatibility:** Legacy imports under `src/modules/characters` and `src/modules/rulesets` re-export canonical paths until remaining domains migrate.
+
+**Validation:** `node scripts/architecture-boundary-check.mjs` (part of `npm run test-gate`).
+
+Design reference: `.qa/design/scalable-domain-vertical-slice-architecture.md`
+
+---
+
 
 ## Vision
 **SagaDrive** ist eine D&D Beyond + Roll20 Alternative mit maximaler Flexibilität für alle TTRPG-Systeme.

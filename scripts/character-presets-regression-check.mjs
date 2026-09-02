@@ -26,13 +26,14 @@ const migration = read('supabase/migrations/012_character_presets.sql');
 const migrationHardening = read('supabase/migrations/013_character_presets_rls_hardening.sql');
 const types = read('src/modules/characters/types/characterPreset.types.ts');
 const service = read('src/modules/characters/services/characterPreset.service.ts');
-const panel = read('src/modules/characters/components/CharacterPresetPanel.tsx');
-const dialog = read('src/modules/characters/components/CreateCharacterEntryDialog.tsx');
-const editor = read('src/components/CharacterEditor.tsx');
+const panel = read('src/app/character/progression/CharacterPresetPanel.tsx');
+const dialog = read('src/app/character/creation/CreateCharacterEntryDialog.tsx');
+const editor = read('src/app/character/edit/CharacterEditor.tsx');
 const library = read('src/components/Library.tsx');
 const dashboard = read('src/components/Dashboard.tsx');
-const characterTypes = read('src/modules/characters/types/character.types.ts');
-const characterService = read('src/modules/characters/services/character.service.ts');
+const characterTypes = read('src/domains/character/domain/sagadrive-profile.entity.ts');
+const characterNormalize = read('src/domains/character/use-cases/normalize-character.ts');
+const characterRepository = read('src/infrastructure/character/supabase-character.repository.ts');
 
 requireMatch(migration, /CREATE TABLE IF NOT EXISTS public\.character_presets/, 'character_presets table');
 requireMatch(migration, /owner_user_id = auth\.uid\(\)/, 'owner RLS on character_presets');
@@ -60,7 +61,7 @@ requireMatch(service, /\(Kopie\)/, 'duplicate name suffix');
 requireMatch(service, /sourceCharacterMissing/, 'deleted source character note support');
 
 requireMatch(characterTypes, /presetReleaseMode\?:/, 'release mode on sagadrive profile');
-requireMatch(characterService, /presetReleaseMode/, 'release mode normalized in character service');
+requireMatch(characterNormalize, /presetReleaseMode/, 'release mode normalized in character service');
 
 requireMatch(panel, /Als Preset speichern/, 'save as preset CTA');
 requireMatch(panel, /Version freigeben/, 'release version CTA');
