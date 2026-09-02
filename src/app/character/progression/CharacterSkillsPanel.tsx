@@ -12,6 +12,7 @@ import {
   sagaDriveSkillDefinitions,
   type SagaDriveSkillKey,
 } from '../../../modules/rulesets/characterCreation';
+import { getSagaDriveFinalSkillRanks } from '../../../modules/rulesets/skillProgression';
 import { SkillRuleHelpContent } from './skillRuleHelp';
 import { RuleHelp } from './RuleHelp';
 
@@ -27,22 +28,6 @@ interface CharacterSkillsPanelProps {
   onSelectedSkillChange?: (skill: SagaDriveSkillKey) => void;
 }
 
-function getSourceRank(skill: SagaDriveSkillKey, backgroundTrainedSkills: readonly SagaDriveSkillKey[], archetypeTrainingSkill?: SagaDriveSkillKey): number {
-  return (backgroundTrainedSkills.includes(skill) ? 1 : 0) + (archetypeTrainingSkill === skill ? 1 : 0);
-}
-
-export function getSagaDriveFinalSkillRanks(
-  freeRanks: Record<SagaDriveSkillKey, number>,
-  backgroundTrainedSkills: readonly SagaDriveSkillKey[],
-  archetypeTrainingSkill?: SagaDriveSkillKey,
-): Record<SagaDriveSkillKey, number> {
-  const result = createEmptySagaDriveSkillRanks();
-  for (const skill of sagaDriveSkillDefinitions) {
-    result[skill.key] = freeRanks[skill.key] + getSourceRank(skill.key, backgroundTrainedSkills, archetypeTrainingSkill);
-  }
-  return result;
-}
-
 function rankLabel(rank: number): string {
   if (rank <= 0) return 'Untrainiert';
   if (rank === 1) return 'Trainiert';
@@ -51,6 +36,8 @@ function rankLabel(rank: number): string {
   if (rank === 4) return 'Meisterlich';
   return 'Weltklasse';
 }
+
+export { getSagaDriveFinalSkillRanks };
 
 export function CharacterSkillsPanel({
   freeRanks,

@@ -1,5 +1,5 @@
 /**
- * assert-character-persistence — Server-side SagaDrive attribute build validation.
+ * assert-character-persistence — Server-side SagaDrive build validation before persistence.
  * Location: src/domains/character/use-cases/assert-character-persistence.ts
  */
 import {
@@ -7,6 +7,11 @@ import {
   isValidSagaDriveAttributeBuild,
   type SagaDriveAttributeAdvances,
 } from '../../rules/sagadrive/attribute-progression';
+import {
+  assertSagaDriveSkillPersistence,
+  resolveSagaDriveSkillBuildState,
+  type SagaDriveSkillRankMap,
+} from '../../rules/sagadrive/skill-progression';
 import type { CharacterAttributesDto } from '../domain/character.entity';
 import type { SagaDriveProfileDto } from '../domain/sagadrive-profile.entity';
 
@@ -33,4 +38,42 @@ export function assertValidSagaDriveAttributePersistence(
   if (!attributesEqual(attributes, expected)) {
     throw new Error('Invalid SagaDrive attribute build: final attributes must match baseAttributes plus advances.');
   }
+}
+
+export function assertValidSagaDriveSkillPersistence(
+  skills: SagaDriveSkillRankMap,
+  profile: SagaDriveProfileDto,
+  level: number,
+): void {
+  const resolved = resolveSagaDriveSkillBuildState(skills, {
+    freeSkillRanks: profile.freeSkillRanks,
+    backgroundSkillPoints: profile.background.backgroundSkillPoints,
+    trainedSkills: profile.background.trainedSkills,
+    skillPool: profile.background.skillPool,
+    archetypeTrainingSkill: profile.archetypeTrainingSkill,
+    skillAdvances: profile.skillAdvances,
+    specializations: profile.specializations,
+    backgroundSpecialization: profile.background.specialization,
+  }, level);
+
+  assertSagaDriveSkillPersistence(
+    skills,
+    {
+      ...resolved,
+      provenanceStatus: profile.skillProvenanceStatus ?? resolved.provenanceStatus,
+    },
+    level,
+    profile.background.skillPool,
+    profile.archetype,
+  );
+}
+
+export function assertValidSagaDriveCharacterPersistence(
+  attributes: CharacterAttributesDto,
+  skills: SagaDriveSkillRankMap,
+  profile: SagaDriveProfileDto,
+  level: number,
+): void {
+  assertValidSagaDriveAttributePersistence(attributes, profile, level);
+  assertValidSagaDriveSkillPersistence(skills, profile, level);
 }

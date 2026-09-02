@@ -17,6 +17,13 @@ import {
   type SagaDriveAttributeAdvances,
 } from '../../rules/sagadrive/attribute-progression';
 import {
+  backgroundSkillPointsToTrainedSkills,
+  normalizeBackgroundSkillPoints,
+  normalizeFreeSkillRanks,
+  normalizeSkillAdvances,
+  normalizeSpecializationRecords,
+} from '../../rules/sagadrive/skill-progression';
+import {
   getSagaDriveSpeciesTraitOptionCatalog,
   normalizeSagaDriveSpeciesTraitOptionKey,
 } from '../../rules/sagadrive/species-trait-options';
@@ -74,14 +81,30 @@ function createDefaultSagaDriveProfile(): SagaDriveProfileDto {
 
 function normalizeSagaDriveBackground(value?: Partial<SagaDriveBackgroundDto>): SagaDriveBackgroundDto {
   const skillPool = Array.isArray(value?.skillPool) ? value.skillPool.filter(isSagaDriveSkillKey).slice(0, 4) : [];
-  const trainedSkills = Array.isArray(value?.trainedSkills) ? value.trainedSkills.filter((skill) => isSagaDriveSkillKey(skill) && skillPool.includes(skill)).slice(0, 2) : [];
+  const explicitBackgroundSkillPoints = normalizeBackgroundSkillPoints(value?.backgroundSkillPoints, skillPool);
+  const hasExplicitBackgroundPoints = Object.keys(explicitBackgroundSkillPoints).length > 0;
+  const trainedSkills = hasExplicitBackgroundPoints
+    ? backgroundSkillPointsToTrainedSkills(explicitBackgroundSkillPoints)
+    : Array.isArray(value?.trainedSkills)
+      ? value.trainedSkills.filter((skill) => isSagaDriveSkillKey(skill) && skillPool.includes(skill)).slice(0, 2)
+      : [];
   const specialization = value?.specialization && isSagaDriveSkillKey(value.specialization.skill) && typeof value.specialization.name === 'string'
-    ? { skill: value.specialization.skill, name: value.specialization.name.trim() }
+    ? {
+        skill: value.specialization.skill,
+        name: value.specialization.name.trim(),
+        ...(value.specialization.source === 'background' || value.specialization.source === 'skill-development'
+          ? { source: value.specialization.source }
+          : {}),
+        ...(typeof value.specialization.acquiredAtLevel === 'number'
+          ? { acquiredAtLevel: clampInteger(value.specialization.acquiredAtLevel, 1, 20) }
+          : {}),
+      }
     : undefined;
   return {
     name: typeof value?.name === 'string' ? value.name : '',
     skillPool,
     trainedSkills,
+    ...(hasExplicitBackgroundPoints ? { backgroundSkillPoints: explicitBackgroundSkillPoints } : {}),
     specialization,
     milieuAccess: typeof value?.milieuAccess === 'string' ? value.milieuAccess : '',
     contact: typeof value?.contact === 'string' ? value.contact : '',
@@ -197,14 +220,26 @@ export function normalizeSagaDriveProfile(value?: Partial<SagaDriveProfileDto> |
   const baseAttributes = normalizeOptionalBaseAttributes(value.baseAttributes);
   const attributeAdvances = normalizeSagaDriveAttributeAdvances(value.attributeAdvances) as SagaDriveAttributeAdvancesDto;
   const presetReleaseMode = normalizePresetReleaseMode(value.presetReleaseMode);
+  const background = normalizeSagaDriveBackground(value.background);
+  const freeSkillRanks = normalizeFreeSkillRanks(value.freeSkillRanks);
+  const skillAdvances = normalizeSkillAdvances(value.skillAdvances);
+  const specializations = normalizeSpecializationRecords(value.specializations);
+  const hasFreeSkillRanks = sagaDriveSkillDefinitions.some((skill) => (freeSkillRanks[skill.key] ?? 0) > 0);
+  const skillProvenanceStatus = value.skillProvenanceStatus === 'complete' || value.skillProvenanceStatus === 'legacy-unresolved'
+    ? value.skillProvenanceStatus
+    : undefined;
   return {
     archetype: value.archetype && isSagaDriveArchetypeKey(value.archetype) ? value.archetype : undefined,
     essence: value.essence && isSagaDriveEssenceKey(value.essence) ? value.essence : undefined,
     speciesTraitInstances: normalizeSpeciesTraitInstances(value.speciesTraitInstances, value.speciesTraits, value.speciesTraitDetails),
     speciesProfile: normalizeSpeciesProfile(value.speciesProfile),
     backgroundTemplateId: normalizeBackgroundTemplateId(value.backgroundTemplateId),
-    background: normalizeSagaDriveBackground(value.background),
+    background,
     archetypeTrainingSkill: value.archetypeTrainingSkill && isSagaDriveSkillKey(value.archetypeTrainingSkill) ? value.archetypeTrainingSkill : undefined,
+    ...(hasFreeSkillRanks ? { freeSkillRanks } : {}),
+    ...(skillAdvances.length > 0 ? { skillAdvances } : {}),
+    ...(specializations.length > 0 ? { specializations } : {}),
+    ...(skillProvenanceStatus ? { skillProvenanceStatus } : {}),
     ...(baseAttributes ? { baseAttributes, attributeAdvances } : Object.keys(attributeAdvances).length > 0 ? { attributeAdvances } : {}),
     ...(presetReleaseMode ? { presetReleaseMode } : {}),
     drive: typeof value.drive === 'number' ? clampInteger(value.drive, 0, 5) : 3,
