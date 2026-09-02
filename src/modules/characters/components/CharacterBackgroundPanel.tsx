@@ -19,7 +19,8 @@ import {
   isSagaDriveSkillKey,
   type SagaDriveSkillKey,
 } from '../../rulesets/characterCreation';
-import type { CarouselScrollPhase } from './ArchetypeCarousel';
+import type { CarouselScrollPhase } from '../hooks/carousel.types';
+import { useSelectionGraph } from '../hooks/useSelectionGraph';
 import { BackgroundCarousel } from './BackgroundCarousel';
 import { RuleHelp } from './RuleHelp';
 import { SkillSelectField } from './SkillSelectField';
@@ -385,24 +386,28 @@ export function CharacterBackgroundPanel({
   const allSkillKeys = getAllSkillKeys();
   const customMode = backgroundTemplateId === null;
   const hasChoice = backgroundTemplateId !== undefined;
-  const trainingComplete = trainedSkills.length === 2;
-  const specializationSuggestions = selectedTemplate?.specializationSuggestions.filter((entry) => trainedSkills.includes(entry.skillId)) ?? [];
   const showSkillGraph = hasChoice && poolSkills.length === 4;
   const poolIdentity = poolSkills.join('|');
 
   const [scrollPhase, setScrollPhase] = useState<CarouselScrollPhase>('settled');
-  const [activeSkill, setActiveSkill] = useState<SagaDriveSkillKey | null>(null);
-  const [editingTraining, setEditingTraining] = useState(false);
-  const visibleSkillNodes = trainingComplete && !editingTraining ? trainedSkills : poolSkills;
-
-  useEffect(() => {
-    setEditingTraining(false);
-    setActiveSkill(null);
-  }, [backgroundTemplateId, poolIdentity]);
-
-  useEffect(() => {
-    if (activeSkill && !visibleSkillNodes.includes(activeSkill)) setActiveSkill(null);
-  }, [activeSkill, visibleSkillNodes]);
+  const {
+    visibleNodes: visibleSkillNodes,
+    viewMode: skillGraphViewMode,
+    isComplete: trainingComplete,
+    editing: editingTraining,
+    activeItem: activeSkill,
+    setActiveItem: setActiveSkill,
+    isNodeDisabled: isTrainingNodeDisabled,
+    handleToggleComplete,
+    startEditing,
+    cancelEditing,
+  } = useSelectionGraph({
+    poolItems: poolSkills,
+    selectedItems: trainedSkills,
+    maxSelections: 2,
+    resetKey: `${backgroundTemplateId ?? 'unset'}|${poolIdentity}`,
+  });
+  const specializationSuggestions = selectedTemplate?.specializationSuggestions.filter((entry) => trainedSkills.includes(entry.skillId)) ?? [];
 
   const handleScrollPhaseChange = useCallback((phase: CarouselScrollPhase) => {
     setScrollPhase(phase);
@@ -411,10 +416,7 @@ export function CharacterBackgroundPanel({
   const handleTrainingToggle = (skill: SagaDriveSkillKey) => {
     const wasSelected = trainingSet.has(skill);
     onTrainingToggle(skill);
-    if (editingTraining && !wasSelected && trainedSkills.length === 1) {
-      setEditingTraining(false);
-      setActiveSkill(null);
-    }
+    handleToggleComplete(wasSelected, trainedSkills.length);
   };
 
   return (
@@ -490,17 +492,14 @@ export function CharacterBackgroundPanel({
               <div
                 className={`grid gap-3 sm:grid-cols-2 ${visibleSkillNodes.length > 2 ? 'xl:grid-cols-4' : 'mx-auto w-full max-w-2xl'}`}
                 data-background-skill-grid
-                data-training-view={trainingComplete && !editingTraining ? 'selected' : 'pool'}
+                data-training-view={skillGraphViewMode}
               >
                 {visibleSkillNodes.map((skillKey) => (
                   <BackgroundSkillNode
                     key={skillKey}
                     skillKey={skillKey}
                     selected={trainingSet.has(skillKey)}
-                    disabled={
-                      (trainingComplete && !editingTraining)
-                      || (editingTraining && !trainingSet.has(skillKey) && trainedSkills.length >= 2)
-                    }
+                    disabled={isTrainingNodeDisabled(skillKey)}
                     specializationName={!editingTraining && specializationSkill === skillKey ? specializationName : undefined}
                     onToggle={() => handleTrainingToggle(skillKey)}
                     onHoverChange={(skill) => setActiveSkill(skill)}
@@ -522,12 +521,12 @@ export function CharacterBackgroundPanel({
                 <div className="flex min-h-11 flex-wrap items-center gap-2">
                   <Badge variant={trainingComplete ? 'default' : 'outline'}>{trainedSkills.length} / 2</Badge>
                   {trainingComplete && !editingTraining ? (
-                    <Button type="button" variant="outline" className="min-h-11" onClick={() => { setEditingTraining(true); setActiveSkill(null); }}>
+                    <Button type="button" variant="outline" className="min-h-11" onClick={startEditing}>
                       Auswahl ändern
                     </Button>
                   ) : null}
                   {editingTraining && trainingComplete ? (
-                    <Button type="button" variant="outline" className="min-h-11" onClick={() => { setEditingTraining(false); setActiveSkill(null); }}>
+                    <Button type="button" variant="outline" className="min-h-11" onClick={cancelEditing}>
                       Auswahl beibehalten
                     </Button>
                   ) : null}

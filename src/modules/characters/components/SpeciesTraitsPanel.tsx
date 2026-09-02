@@ -1,5 +1,5 @@
 import { Plus, X } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import {
   SAGA_DRIVE_SPECIES_TRAIT_BUDGET,
   getCharacterCreationOptionLabel,
@@ -59,25 +59,13 @@ function DisabledActionHint({
   reason: string;
   children: ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
-
   return (
-    <Tooltip open={open} onOpenChange={setOpen}>
+    <Tooltip>
       <TooltipTrigger asChild>
         <span
           className="inline-flex w-full cursor-help sm:w-auto"
           tabIndex={0}
           aria-label={`${label}: ${reason}`}
-          onClick={(event) => {
-            event.preventDefault();
-            setOpen((current) => !current);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault();
-              setOpen((current) => !current);
-            }
-          }}
         >
           {children}
         </span>
