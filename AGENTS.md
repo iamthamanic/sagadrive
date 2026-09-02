@@ -49,7 +49,27 @@
 
 ## Module Structure
 
-### Frontend Modules
+### Layered Frontend Architecture (#94)
+
+```
+src/
+├── domains/           # Business rules & types — NO React, NO Supabase
+│   ├── character/     # domain, contracts, use-cases
+│   └── rules/
+│       └── sagadrive/ # UI-independent rules kernel slices
+├── infrastructure/    # Supabase adapters — NO UI
+├── app/               # Vertical slices (user journeys)
+│   └── character/
+│       ├── edit/      # CharacterEditor shell
+│       ├── creation/  # species, background, archetype, essence
+│       └── progression/ # skills, abilities, stats, inventory
+├── shared/ui/         # Presentation primitives (re-exports components/ui)
+└── modules/           # Legacy barrels during incremental migration
+```
+
+**Boundary enforcement:** `scripts/architecture-boundary-check.mjs` (wired into `npm run test-gate`).
+
+### Frontend Modules (legacy barrels)
 ```
 src/
 ├── modules/

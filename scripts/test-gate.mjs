@@ -281,6 +281,14 @@ function reportDependencyAudit() {
   }
 }
 
+function checkArchitectureBoundaries() {
+  console.log('Architecture boundary check (#94): domains/rules/infrastructure import rules...');
+  execFileSync(process.execPath, ['scripts/architecture-boundary-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -288,6 +296,7 @@ execFileSync('npm', ['run', 'checks'], {
 });
 
 checkChangedDenoFunctions();
+checkArchitectureBoundaries();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();

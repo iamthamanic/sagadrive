@@ -6,18 +6,22 @@ function requireMatch(content, pattern, label) { if (!pattern.test(content)) { c
 function rejectMatch(content, pattern, label) { if (pattern.test(content)) { console.error(`Character editor regression check failed: ${label}.`); process.exit(1); } }
 
 const runtime = read('src/modules/characters/avatar/characterStudio/CharacterStudioRuntime.ts');
-const editor = read('src/components/CharacterEditor.tsx');
-const backgroundPanel = read('src/modules/characters/components/CharacterBackgroundPanel.tsx');
-const backgroundCarousel = read('src/modules/characters/components/BackgroundCarousel.tsx');
-const backgroundTemplates = read('src/modules/rulesets/backgroundTemplates.ts');
-const speciesTraitsPanel = read('src/modules/characters/components/SpeciesTraitsPanel.tsx');
-const speciesTraitOptions = read('src/modules/rulesets/speciesTraitOptions.ts');
-const characterTypes = read('src/modules/characters/types/character.types.ts');
-const characterService = read('src/modules/characters/services/character.service.ts');
-const characterCreation = read('src/modules/rulesets/characterCreation.ts');
-const inventoryPanel = read('src/modules/characters/components/CharacterInventoryPanel.tsx');
-const abilitiesPanel = read('src/modules/characters/components/CharacterAbilitiesPanel.tsx');
-const skillsPanel = read('src/modules/characters/components/CharacterSkillsPanel.tsx');
+const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const backgroundPanel = read('src/app/character/creation/CharacterBackgroundPanel.tsx');
+const backgroundCarousel = read('src/app/character/creation/BackgroundCarousel.tsx');
+const backgroundTemplates = read('src/domains/rules/sagadrive/background-templates/index.ts');
+const speciesTraitsPanel = read('src/app/character/creation/SpeciesTraitsPanel.tsx');
+const speciesTraitOptions = read('src/domains/rules/sagadrive/species-trait-options/index.ts');
+const characterTypes = read('src/domains/character/domain/sagadrive-profile.entity.ts');
+const characterEntityTypes = read('src/domains/character/domain/character.entity.ts');
+const characterPersistenceTypes = read('src/infrastructure/character/character.persistence.ts');
+const characterNormalize = read('src/domains/character/use-cases/normalize-character.ts');
+const characterAssert = read('src/domains/character/use-cases/assert-character-persistence.ts');
+const characterRepository = read('src/infrastructure/character/supabase-character.repository.ts');
+const characterCreation = read('src/domains/rules/sagadrive/character-creation/index.ts');
+const inventoryPanel = read('src/app/character/progression/CharacterInventoryPanel.tsx');
+const abilitiesPanel = read('src/app/character/progression/CharacterAbilitiesPanel.tsx');
+const skillsPanel = read('src/app/character/progression/CharacterSkillsPanel.tsx');
 const loreService = read('src/modules/characters/lore/service.ts');
 const rulesetMigration = read('supabase/migrations/005_character_ruleset_metadata.sql');
 const portraitStorageMigration = read('supabase/migrations/006_character_portrait_storage.sql');
@@ -86,7 +90,7 @@ requireMatch(speciesTraitsPanel, /\{trait\.cost\} P/, 'per-instance species trai
 rejectMatch(speciesTraitsPanel, /trait\.detailPlaceholder|onTraitDetailChange|SpeciesTraitDetailValues/, 'legacy free-text species trait detail UI remains');
 rejectMatch(speciesTraitsPanel, /catalog\.options\.map\(\(option\)[\s\S]*option\.description/s, 'catalog descriptions dumped into field-level tooltip');
 
-const speciesTraitOptionItem = read('src/modules/characters/components/SpeciesTraitOptionItem.tsx');
+const speciesTraitOptionItem = read('src/app/character/creation/SpeciesTraitOptionItem.tsx');
 requireMatch(speciesTraitOptionItem, /option\.description/, 'per-option tooltip description');
 requireMatch(speciesTraitOptionItem, /title=\{option\.description\}/, 'per-option native description title');
 requireMatch(speciesTraitOptions, /label:\s*'Sehen'/, 'sharpened sense option catalog');
@@ -96,10 +100,10 @@ requireMatch(speciesTraitOptions, /label:\s*'Dunkelsicht'/, 'enhanced sight opti
 requireMatch(speciesTraitOptions, /label:\s*'Vakuum & Sauerstofflosigkeit'/, 'extreme environment option catalog');
 requireMatch(speciesTraitOptions, /normalizeSagaDriveSpeciesTraitOptionKey/, 'legacy option normalization');
 
-requireMatch(characterTypes, /endurance:\s*number/, 'SagaDrive Ausdauer attribute DTO');
-requireMatch(characterTypes, /mind:\s*number/, 'SagaDrive Verstand attribute DTO');
-requireMatch(characterTypes, /perception:\s*number/, 'SagaDrive Wahrnehmung attribute DTO');
-requireMatch(characterTypes, /sagadrive_profile\?:/, 'SagaDrive profile DTO contract');
+requireMatch(characterEntityTypes, /endurance:\s*number/, 'SagaDrive Ausdauer attribute DTO');
+requireMatch(characterEntityTypes, /mind:\s*number/, 'SagaDrive Verstand attribute DTO');
+requireMatch(characterEntityTypes, /perception:\s*number/, 'SagaDrive Wahrnehmung attribute DTO');
+requireMatch(characterPersistenceTypes, /sagadrive_profile\?:/, 'SagaDrive profile DTO contract');
 requireMatch(characterTypes, /backgroundTemplateId\?:\s*string \| null/, 'optional background template metadata');
 requireMatch(characterTypes, /interface SagaDriveSpeciesTraitInstanceDto/, 'species trait instance DTO');
 requireMatch(characterTypes, /speciesTraitInstances:\s*SagaDriveSpeciesTraitInstanceDto\[\]/, 'canonical species trait instance collection');
@@ -108,8 +112,8 @@ requireMatch(characterTypes, /acquiredAtLevel:\s*number/, 'species trait acquisi
 requireMatch(characterTypes, /speciesTraits\?:\s*SagaDriveSpeciesTraitKey\[\]/, 'legacy species trait array read compatibility');
 requireMatch(characterTypes, /speciesTraitDetails\?:\s*SagaDriveSpeciesTraitDetailsDto/, 'legacy species trait detail read compatibility');
 requireMatch(characterTypes, /speciesProfile\?:\s*SagaDriveSpeciesProfileDto/, 'structured Alien species profile DTO');
-requireMatch(characterTypes, /notes\?:\s*string \| null/, 'persisted notes DTO contract');
-requireMatch(characterTypes, /type ItemType = 'weapon' \| 'armor' \| 'shield' \| 'tool'/, 'SagaDrive inventory item categories');
+requireMatch(characterPersistenceTypes, /notes\?:\s*string \| null/, 'persisted notes DTO contract');
+requireMatch(characterEntityTypes, /type ItemType = 'weapon' \| 'armor' \| 'shield' \| 'tool'/, 'SagaDrive inventory item categories');
 
 requireMatch(characterCreation, /label:\s*'Gebunden'/, 'canonical Gebunden essence label');
 rejectMatch(characterCreation, /Paktbasiert/, 'legacy Paktbasiert essence label remains');
@@ -131,28 +135,28 @@ rejectMatch(inventoryPanel, /capacity = 30|Freier Inventarplatz|Jeder Gegenstand
 
 requireMatch(characterTypes, /baseAttributes\?:\s*CharacterAttributesDto/, 'SagaDrive baseAttributes profile persistence');
 requireMatch(characterTypes, /attributeAdvances\?:\s*SagaDriveAttributeAdvancesDto/, 'SagaDrive attributeAdvances profile persistence');
-requireMatch(characterService, /normalizeOptionalBaseAttributes/, 'baseAttributes normalization on profile read');
-requireMatch(characterService, /normalizeSagaDriveAttributeAdvances/, 'attributeAdvances normalization on profile read');
-requireMatch(characterService, /assertValidSagaDriveAttributePersistence/, 'server-side SagaDrive attribute build validation');
-requireMatch(characterService, /isValidSagaDriveAttributeBuild/, 'server validates attribute build with Core helper');
-requireMatch(characterService, /sagadrive_profile:/, 'SagaDrive profile persistence');
-requireMatch(characterService, /normalizeBackgroundTemplateId/, 'background template backward compatibility');
-requireMatch(characterService, /normalizeSpeciesTraitInstances/, 'canonical species trait instance normalization');
-requireMatch(characterService, /normalizeLegacySpeciesTraitInstances/, 'legacy species trait migration on read');
-requireMatch(characterService, /legacyDetail/, 'unmapped legacy species trait detail preservation');
-requireMatch(characterService, /normalizeSpeciesProfile/, 'Alien species profile normalization');
-requireMatch(characterService, /notes:\s*payload\.notes\?\.trim\(\) \|\| null/, 'notes persistence');
-requireMatch(characterService, /value\?\.constitution/, 'legacy constitution attribute read fallback');
-requireMatch(characterService, /value\?\.intelligence/, 'legacy intelligence attribute read fallback');
-requireMatch(characterService, /value\?\.wisdom/, 'legacy wisdom attribute read fallback');
+requireMatch(characterNormalize, /normalizeOptionalBaseAttributes/, 'baseAttributes normalization on profile read');
+requireMatch(characterNormalize, /normalizeSagaDriveAttributeAdvances/, 'attributeAdvances normalization on profile read');
+requireMatch(characterAssert, /assertValidSagaDriveAttributePersistence/, 'server-side SagaDrive attribute build validation');
+requireMatch(characterNormalize, /isValidSagaDriveAttributeBuild/, 'server validates attribute build with Core helper');
+requireMatch(characterRepository, /sagadrive_profile:/, 'SagaDrive profile persistence');
+requireMatch(characterNormalize, /normalizeBackgroundTemplateId/, 'background template backward compatibility');
+requireMatch(characterNormalize, /normalizeSpeciesTraitInstances/, 'canonical species trait instance normalization');
+requireMatch(characterNormalize, /normalizeLegacySpeciesTraitInstances/, 'legacy species trait migration on read');
+requireMatch(characterNormalize, /legacyDetail/, 'unmapped legacy species trait detail preservation');
+requireMatch(characterNormalize, /normalizeSpeciesProfile/, 'Alien species profile normalization');
+requireMatch(characterRepository, /notes:\s*payload\.notes\?\.trim\(\) \|\| null/, 'notes persistence');
+requireMatch(characterNormalize, /value\?\.constitution/, 'legacy constitution attribute read fallback');
+requireMatch(characterNormalize, /value\?\.intelligence/, 'legacy intelligence attribute read fallback');
+requireMatch(characterNormalize, /value\?\.wisdom/, 'legacy wisdom attribute read fallback');
 requireMatch(rulesetMigration, /ADD COLUMN IF NOT EXISTS ruleset_key TEXT NOT NULL DEFAULT 'sagadrive-core'/, 'ruleset key migration');
 requireMatch(rulesetMigration, /CHECK \(ruleset_key IN \('sagadrive-core', 'dnd-5\.5e'\)\)/, 'ruleset key database constraint');
 requireMatch(sagaDriveProfileMigration, /ADD COLUMN IF NOT EXISTS sagadrive_profile JSONB/, 'SagaDrive profile migration');
 requireMatch(sagaDriveProfileMigration, /ADD COLUMN IF NOT EXISTS notes TEXT/, 'character notes migration');
 
-requireMatch(characterService, /supabase\.storage[\s\S]*?\.from\(CHARACTER_PORTRAIT_BUCKET\)[\s\S]*?\.upload\(filePath, file/, 'portrait upload through configured Supabase Storage client');
-requireMatch(characterService, /createSignedUrl\(filePath, 31_536_000\)/, 'private portrait signed URL creation');
-rejectMatch(characterService, /https:\/\/\$\{projectId\}\.supabase\.co|make-server-9f6fb44c\/characters\/upload-portrait/, 'portrait upload still uses the fixed hosted make-server endpoint');
+requireMatch(characterRepository, /supabase\.storage[\s\S]*?\.from\(CHARACTER_PORTRAIT_BUCKET\)[\s\S]*?\.upload\(filePath, file/, 'portrait upload through configured Supabase Storage client');
+requireMatch(characterRepository, /createSignedUrl\(filePath, 31_536_000\)/, 'private portrait signed URL creation');
+rejectMatch(characterRepository, /https:\/\/\$\{projectId\}\.supabase\.co|make-server-9f6fb44c\/characters\/upload-portrait/, 'portrait upload still uses the fixed hosted make-server endpoint');
 requireMatch(portraitStorageMigration, /INSERT INTO storage\.buckets[\s\S]*?VALUES\s*\(\s*'character-portraits',\s*'character-portraits',\s*false,\s*5242880,/, 'private portrait storage bucket with 5MB limit');
 requireMatch(portraitStorageMigration, /storage\.foldername\(name\)\)\[1\] = auth\.uid\(\)::text/, 'owner-scoped portrait storage policies');
 requireMatch(loreService, /error\.context\.clone\(\)\.json\(\)/, 'structured Edge Function HTTP error parsing');
@@ -165,8 +169,8 @@ requireMatch(projectService, /value === 'active' \|\| value === 'paused' \|\| va
 const adventureArcMigration = read('supabase/migrations/009_character_adventure_arcs.sql');
 const adventureArcTypes = read('src/modules/characters/types/characterAdventureArc.types.ts');
 const adventureArcService = read('src/modules/characters/services/characterAdventureArc.service.ts');
-const notesSection = read('src/modules/characters/components/CharacterNotesSection.tsx');
-const statisticsPanel = read('src/modules/characters/components/CharacterStatisticsPanel.tsx');
+const notesSection = read('src/app/character/progression/CharacterNotesSection.tsx');
+const statisticsPanel = read('src/app/character/progression/CharacterStatisticsPanel.tsx');
 
 requireMatch(adventureArcMigration, /CREATE TABLE IF NOT EXISTS public\.character_adventure_arcs/, 'character adventure arcs table');
 requireMatch(adventureArcMigration, /UNIQUE \(character_id, project_id\)/, 'one arc per character-project pair');

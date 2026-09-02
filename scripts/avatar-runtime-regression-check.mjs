@@ -22,7 +22,7 @@ function requireDependency(record, name, expected, label) {
 const runtime = read('src/modules/characters/avatar/characterStudio/CharacterStudioRuntime.ts');
 const canvas = read('src/modules/characters/avatar/AvatarCanvas.tsx');
 const manifests = read('src/modules/characters/avatar/manifests.ts');
-const editor = read('src/components/CharacterEditor.tsx');
+const editor = read('src/app/character/edit/CharacterEditor.tsx');
 const packageJson = JSON.parse(read('package.json'));
 const packageLock = JSON.parse(read('package-lock.json'));
 
