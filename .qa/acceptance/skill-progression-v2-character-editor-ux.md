@@ -66,5 +66,5 @@ Issue #91: Wire Character Editor to #90 domain contracts — three start sources
 
 - Verdict: **CLEAR**
 - Proof: `.qa/runs/composition-gate-skill-progression-v2-character-editor-ux.md`
-- Proof code SHA: `887ce3935bdd839202106bea88286db148dd7e4d`
+- Proof code SHA: 8e3dc649d6cb294c14fb40f475d246bfd7c16cbc
 - Reason: Single explicit save hop (+ one owner-scoped reload); migration 014 only supplies columns already required by that hop.

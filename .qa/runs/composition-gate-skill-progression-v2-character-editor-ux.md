@@ -1,6 +1,6 @@
 # Composition Gate — skill-progression-v2-character-editor-ux
 
-- HEAD_SHA: 887ce3935bdd839202106bea88286db148dd7e4d
+- HEAD_SHA: 8e3dc649d6cb294c14fb40f475d246bfd7c16cbc
 - BASE_SHA: 269882de798a82a796683684fb5c983f69c5a4be
 - Date: 2026-09-02
 - Verdict: CLEAR
