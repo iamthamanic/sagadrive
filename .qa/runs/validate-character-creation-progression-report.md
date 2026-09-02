@@ -5,17 +5,18 @@ Deterministische Prüfung von §17 (Erschaffung) und §13 (Progression). Kein RN
 - Stufe-1-Basen (§17, 6 Pflichtkonzepte): 6/6
 - Progressionen bis Stufe 20 (§13): 3/3
 - §13.3-Direkterschaffungs-Äquivalenzen: 3
-- Negative Pfade korrekt abgelehnt: 19
+- Negative Pfade korrekt abgelehnt: 20
 - Findings: 0
 
 ## Negative Pfade (fail-closed, mit Regelstelle)
 
-- §3.3 Attributswert 5 → abgelehnt: §3.3: §3.3: X1: Attributswert 5 außerhalb 1–4.
-- §3.3 Attributsbudget überschritten → abgelehnt: §3.3: §3.3: X2: Attributskosten 11 > 10 (nicht ausgegebene Punkte verfallen).
+- §3.3 Attributswert 5 → abgelehnt: §3.3: §3.3: X1: Attributswert 5 außerhalb +0…+4.
+- §3.3 Attributsbudget überschritten → abgelehnt: §3.3: §3.3: X2: Attribut-Bonuspunkte 16 ≠ 15.
+- §3.3 Attribut unter +0 → abgelehnt: §3.3: §3.3: X2b: Attributswert -1 außerhalb +0…+4.
 - §4.5 Merkmalsbudget nur 2 Punkte → abgelehnt: §4.5: §4.5: X3: Merkmalsbudget 2 ≠ 3 — Nachteile erzeugen keine Zusatzpunkte.
 - §4.5 Merkmal nicht in Speziesliste → abgelehnt: §4.5: §4.5: X4: „Natürliche Waffe" ist für Elf nicht zulässig.
 - §4.5 Außergewöhnlicher Körperbau nicht verfügbar → abgelehnt: §4.5: §4.5: X5: unbekanntes Merkmal „Außergewöhnlicher Körperbau".
-- §4.4 Hintergrund twice on same skill → abgelehnt: §4.4: §4.4: X6: Hintergrund-Fertigkeiten müssen unterschiedlich sein.
+- §4.4 Hintergrund mit 3 Punkteinträgen → abgelehnt: §4.4: §4.4: X6: Hintergrund vergibt genau 2 Punkte (als 2 Einträge), erhalten 3.
 - §4.4 Fertigkeit außerhalb der Hintergrundliste → abgelehnt: §4.4: §4.4: X7: „Heimlichkeit" ist nicht in der Hintergrundliste Labor ([Technik, Ermitteln, Wissen, Aufmerksamkeit]).
 - §5.3 Startwert über Limit (Start-Maximum) → abgelehnt: §5.3: §5.3: X8: „Technik" würde 4 über Fertigkeitslimit 3 (Stufe 1) steigen.
 - §5.4 freie Punkte ungleich 7 → abgelehnt: §5.4: §5.4: X9: freie Fertigkeitspunkte 6 ≠ 7 (nicht ausgegebene verfallen).
@@ -40,7 +41,7 @@ Deterministische Prüfung von §17 (Erschaffung) und §13 (Progression). Kein RN
 
 ### B1 Nullpunkt: Spezies Mensch, Hintergrund Labor, Primärarchetyp Denker, primäre Essenz Technologisch
     Merkmale (Mensch): Geschärfter Sinn, Umweltanpassung, Enge Resistenz = 3/3 Punkte
-    Attribute per Punktekauf: 1/3/2/4/3/1 = 9/10 Punkte
+    Attribute: Bonuspool 1/3/2/4/3/2 = 15/15
     Technik += 1 → 1 (Hintergrund, Stufe 1)
     Ermitteln += 1 → 1 (Hintergrund, Stufe 1)
     Wissen += 1 → 1 (Primärarchetyp, Stufe 1)
@@ -82,16 +83,14 @@ Deterministische Prüfung von §17 (Erschaffung) und §13 (Progression). Kein RN
 
 ### B2 Lumenglanz: Spezies Elf, Hintergrund Kloster, Primärarchetyp Heiler, primäre Essenz Spirituell
     Merkmale (Elf): Erweiterte Sicht, Geringer Ruhebedarf = 3/3 Punkte
-    Attribute: Standardarray 4/3/3/2/2/1
-    Medizin += 1 → 1 (Hintergrund, Stufe 1)
-    Wissen += 1 → 1 (Hintergrund, Stufe 1)
+    Attribute: empfohlene Verteilung 4/3/3/2/2/1 = 15/15
+    Medizin += 2 → 2 (Hintergrund, Stufe 1)
     Menschenkenntnis += 1 → 1 (Primärarchetyp, Stufe 1)
-    Medizin += 1 → 2 (frei, Stufe 1)
     Überleben += 1 → 1 (frei, Stufe 1)
     Aufmerksamkeit += 1 → 1 (frei, Stufe 1)
     Ermitteln += 1 → 1 (frei, Stufe 1)
     Überzeugen += 1 → 1 (frei, Stufe 1)
-    Wissen += 1 → 2 (frei, Stufe 1)
+    Wissen += 2 → 2 (frei, Stufe 1)
     Akrobatik += 1 → 1 (frei, Stufe 1)
     Spezialisierung 1 in Medizin: „Feldchirurgie" (Wert 2)
     Kernfähigkeit Feldversorgung (Novize, §11.3)
@@ -125,7 +124,7 @@ Deterministische Prüfung von §17 (Erschaffung) und §13 (Progression). Kein RN
 
 ### B3 Rostfaust: Spezies Ork, Hintergrund Militär, Primärarchetyp Kämpfer, primäre Essenz Körperlich
     Merkmale (Ork): Natürliche Waffe, Natürlicher Schutz = 3/3 Punkte
-    Attribute: Standardarray 4/3/3/2/2/1
+    Attribute: empfohlene Verteilung 4/3/3/2/2/1 = 15/15
     Nahkampf += 1 → 1 (Hintergrund, Stufe 1)
     Überleben += 1 → 1 (Hintergrund, Stufe 1)
     Athletik += 1 → 1 (Primärarchetyp, Stufe 1)
@@ -167,7 +166,7 @@ Deterministische Prüfung von §17 (Erschaffung) und §13 (Progression). Kein RN
 
 ### B4 Spiegelbild: Spezies Halbling, Hintergrund Straße, Primärarchetyp Rebell, primäre Essenz Mental
     Merkmale (Halbling): Enge Resistenz, Erweitertes Klettern = 3/3 Punkte
-    Attribute per Punktekauf: 1/4/2/3/3/1 = 9/10 Punkte
+    Attribute: Bonuspool 1/4/2/3/3/2 = 15/15
     Heimlichkeit += 1 → 1 (Hintergrund, Stufe 1)
     Täuschen += 1 → 1 (Hintergrund, Stufe 1)
     Akrobatik += 1 → 1 (Primärarchetyp, Stufe 1)
@@ -185,7 +184,7 @@ Deterministische Prüfung von §17 (Erschaffung) und §13 (Progression). Kein RN
 
 ### B5 Vek-tor: Spezies Cyborg, Hintergrund Werkstatt, Primärarchetyp Diplomat, primäre Essenz Technologisch
     Merkmale (Cyborg): Geschärfter Sinn, Erweiterte Sicht = 3/3 Punkte
-    Attribute per Punktekauf: 1/2/2/3/1/4 = 8/10 Punkte
+    Attribute: Bonuspool 2/2/2/3/2/4 = 15/15
     Technik += 1 → 1 (Hintergrund, Stufe 1)
     Wissen += 1 → 1 (Hintergrund, Stufe 1)
     Überzeugen += 1 → 1 (Primärarchetyp, Stufe 1)
@@ -202,7 +201,7 @@ Deterministische Prüfung von §17 (Erschaffung) und §13 (Progression). Kein RN
 
 ### B6 Vesper: Spezies Alien (Profil „Schneggl"), Hintergrund Bühne, Primärarchetyp Rebell, primäre Essenz Gebunden
     Merkmale (Alien): Flugfähig = 3/3 Punkte
-    Attribute per Punktekauf: 1/4/2/2/3/2 = 9/10 Punkte
+    Attribute: Bonuspool 1/4/2/2/3/3 = 15/15
     Auftreten += 1 → 1 (Hintergrund, Stufe 1)
     Täuschen += 1 → 1 (Hintergrund, Stufe 1)
     Heimlichkeit += 1 → 1 (Primärarchetyp, Stufe 1)

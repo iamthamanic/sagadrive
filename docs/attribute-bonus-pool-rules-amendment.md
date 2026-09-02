@@ -1,50 +1,19 @@
 # SagaDrive Core – Attribut-Bonuspool Amendment
 
-> Status: verbindliche Änderung für den aktuellen Character-Editor-Branch. Dieses Amendment ersetzt bis zur Konsolidierung im Hauptdokument die widersprechenden Teile von §3.2 und §3.3 der `sagadrive core rules.md`.
+> **Status: SUPERSEDED** (2. September 2026)  
+> Inhalt vollständig in `docs/sagadrive core rules.md` integriert (§3.2, §3.3, §3.7).  
+> Kanonische Quelle ist ausschließlich der Core. Dieses Amendment wird nicht mehr fortgeschrieben.
+>
+> Ursprünglich: verbindliche Änderung für den Character-Editor-Branch (PR #84), bis zur Konsolidierung im Hauptdokument.
 
-## Attributwerte
+## Historischer Inhalt (nur Referenz)
 
-Attribute sind direkte Boni. Bei einem reinen Attributscheck gilt:
+Die folgenden Regeln gelten weiterhin – aber nur in der kanonischen Formulierung des Core:
 
-```text
-d20 + Attributbonus + ausdrückliche Modifikatoren
-```
+- 15 Attribut-Bonuspunkte auf Stufe 1, Attribute starten bei +0, regulär `+0…+4`
+- Empfohlene ausgewogene Verteilung `+4/+3/+3/+2/+2/+1` (keine Pflicht)
+- Permanente Entwicklung `+1` auf Stufe 8 und Stufe 16; reguläres Maximum `+5`; kein kostenloses Respec
+- Keine Attributsboni durch Archetyp/Hintergrund/Spezies/Essenz
+- Fertigkeitspunkte bleiben ein getrenntes Budget (siehe Core §5.4: drei Quellen `7 frei / 2 Hintergrund / 1 Archetyp`)
 
-Bei einem Fertigkeitscheck bleibt die Core-Formel bestehen:
-
-```text
-d20 + Attributbonus + Fertigkeit + Erfahrungsbonus + Spezialisierung + ausdrückliche Modifikatoren
-```
-
-## Charaktererschaffung
-
-Eine Startfigur verfügt über **15 Attribut-Bonuspunkte**.
-
-- Die sechs Grundattribute starten regeltechnisch bei +0.
-- Die 15 Punkte werden frei auf die sechs Attribute verteilt.
-- Ein Grundattribut darf bei der regulären Charaktererschaffung zwischen **+0 und +4** liegen.
-- `+0` bedeutet keinen positiven Grundbonus, nicht Handlungsunfähigkeit.
-- Negative Grundattribute sind kein Bestandteil der regulären Charaktererschaffung.
-- Die Verteilung `+4, +3, +3, +2, +2, +1` ist die empfohlene ausgewogene Standardverteilung, aber keine Pflicht.
-- Archetypen, Hintergründe, Spezies und Essenzen vergeben weiterhin keine allgemeinen Attributsboni.
-
-## Permanente Entwicklung
-
-- Auf **Stufe 8** erhält die Figur genau **+1** auf ein bestehendes Attribut.
-- Auf **Stufe 16** erhält die Figur ein zweites Mal genau **+1** auf ein bestehendes Attribut.
-- Diese Steigerungen kommen zusätzlich zur bei der Erschaffung festgelegten Basisverteilung hinzu.
-- Ein Levelaufstieg erlaubt keine kostenlose Neuverteilung der bereits festgelegten Basiswerte.
-- Das reguläre Maximum eines finalen Attributbonus beträgt **+5**.
-- Werte von +6 oder höher benötigen weiterhin eine ausdrücklich übermenschliche Sonderregel.
-
-## Abgrenzung zu Fertigkeitspunkten
-
-Attribut-Bonuspunkte und Fertigkeitspunkte sind getrennte Budgets mit unterschiedlichen Aufgaben:
-
-- Attribute bilden breite Grundbegabung ab.
-- Fertigkeiten bilden konkrete Ausbildung ab.
-- Die Startfigur behält unverändert **10 Fertigkeitspunkte: 2 Hintergrund + 1 Primärarchetyp + 7 frei**.
-
-## Migration / Kompatibilität
-
-Bestehende Charaktere mit der bisherigen ausgewogenen Startverteilung bleiben numerisch gültig. Die neue Regel erweitert die legalen Startverteilungen um +0 und alternative Verteilungen mit Gesamtsumme 15; sie verändert die bestehende Check-Formel nicht.
+Siehe Issue #89 (Skill Progression v2, Teil 1/3).

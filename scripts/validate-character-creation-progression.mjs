@@ -1,17 +1,21 @@
 #!/usr/bin/env node
 /**
  * SagaDrive Character Creation & Progression Validation (#20, Epic #18)
+ * Updated for Skill Progression v2 Core (Issue #89): 15er attribute bonus pool,
+ * three skill sources with stackable background points, no min-6 trained skills.
  *
  * Deterministic validation of the §17 creation sequence and §13 progression.
  * No RNG: character building is bookkeeping and is verified exactly.
  *
- * Level-1 invariants (§17 step 20): attributes legal, species budget exactly
- * 3, skill budget 10 with all §5.4 caps, specialization ladder, archetype core
- * feature, drive 3 / momentum 0. Progression plans (B1/B2/B3) spend every §13
- * development event to level 20 with all §11.2/§13.1 gates. Negative paths
- * re-run each builder with one illegal mutation and assert exact rejection.
+ * Level-1 invariants (§17 step 20): attributes legal (sum 15, +0…+4), species
+ * budget exactly 3, skill sources 7/2/1 with §5.4 startcap 3, specialization
+ * ladder, archetype core feature, drive 3 / momentum 0. Progression plans
+ * (B1/B2/B3) spend every §13 development event to level 20 with all
+ * §11.2/§13.1 gates. Negative paths re-run each builder with one illegal
+ * mutation and assert exact rejection.
  *
- * Rank/EB/skillCap mirror scripts/lib/core-probe.mjs (§5.3 shared truth).
+ * Rank/EB/skillCap mirror scripts/lib/core-probe.mjs (§5.3 global EB bands).
+ * Applicable EB formula is documented in Core §5.3; runtime wiring is Issue 2/3.
  *
  * Location: scripts/validate-character-creation-progression.mjs
  */
@@ -23,15 +27,17 @@ import process from 'node:process';
 /** §3.1 fixed attribute order; position i in applyAttributes maps to ATTR_NAMES[i]. */
 const ATTR_NAMES = Object.freeze(['Stärke', 'Geschicklichkeit', 'Ausdauer', 'Verstand', 'Wahrnehmung', 'Charisma']);
 
-const ATTRIBUTE_COSTS = Object.freeze({ 1: 0, 2: 1, 3: 2, 4: 4 });
-const POINT_BUY_BUDGET = 10;
-const STANDARD_ARRAY = Object.freeze([4, 3, 3, 2, 2, 1]);
+/** §3.3: 15 attribute bonus points, each +0…+4 at creation. */
+const ATTRIBUTE_BONUS_BUDGET = 15;
+const ATTRIBUTE_CREATION_MIN = 0;
 const ATTRIBUTE_CREATION_MAX = 4;
 const ATTRIBUTE_CAP = 5;
+/** Recommended balanced spread only — not mandatory. */
+const RECOMMENDED_ATTRIBUTE_ARRAY = Object.freeze([4, 3, 3, 2, 2, 1]);
 
 const START_SKILL_MAX = 3;
-const MIN_SKILLS_AT_LEAST_1 = 6;
 const FREE_SKILL_POINTS = 7;
+const BACKGROUND_SKILL_POINTS = 2;
 
 const SPECIALIZATION_LADDER = Object.freeze({ 1: 1, 2: 3, 3: 5 });
 const MAX_SPECIALIZATIONS = 3;
@@ -169,33 +175,46 @@ function applySpeciesTraits(char, traits) {
   char.ledger.push(`  Merkmale (${char.species}): ${traits.join(', ')} = ${spent}/3 Punkte`);
 }
 
-/** §17 step 8 — attributes via point buy (§3.3) or standard array. */
-function applyAttributes(char, values, { standardArray = false } = {}) {
+/** §17 step 8 — attributes via 15-point bonus pool (§3.3); recommendedArray is optional check. */
+function applyAttributes(char, values, { recommendedArray = false } = {}) {
   requireCondition(Array.isArray(values) && values.length === 6, '§3.1', `${char.name}: sechs Attribute erforderlich.`);
-  if (standardArray) {
+  let sum = 0;
+  for (const value of values) {
+    requireCondition(
+      Number.isInteger(value) && value >= ATTRIBUTE_CREATION_MIN && value <= ATTRIBUTE_CREATION_MAX,
+      '§3.3',
+      `${char.name}: Attributswert ${value} außerhalb +${ATTRIBUTE_CREATION_MIN}…+${ATTRIBUTE_CREATION_MAX}.`,
+    );
+    sum += value;
+  }
+  requireCondition(sum === ATTRIBUTE_BONUS_BUDGET, '§3.3', `${char.name}: Attribut-Bonuspunkte ${sum} ≠ ${ATTRIBUTE_BONUS_BUDGET}.`);
+  if (recommendedArray) {
     const sorted = [...values].sort((a, b) => b - a).join(',');
-    requireCondition(sorted === STANDARD_ARRAY.join(','), '§3.3', `${char.name}: Standardarray muss 4,3,3,2,2,1 sein, erhalten: ${values.join(',')}.`);
-    char.ledger.push(`  Attribute: Standardarray ${values.join('/')}`);
+    requireCondition(
+      sorted === RECOMMENDED_ATTRIBUTE_ARRAY.join(','),
+      '§3.3',
+      `${char.name}: empfohlene Verteilung erwartet ${RECOMMENDED_ATTRIBUTE_ARRAY.join(',')}, erhalten: ${values.join(',')}.`,
+    );
+    char.ledger.push(`  Attribute: empfohlene Verteilung ${values.join('/')} = ${sum}/${ATTRIBUTE_BONUS_BUDGET}`);
   } else {
-    let cost = 0;
-    for (const value of values) {
-      requireCondition(Number.isInteger(value) && value >= 1 && value <= ATTRIBUTE_CREATION_MAX, '§3.3', `${char.name}: Attributswert ${value} außerhalb 1–4.`);
-      cost += ATTRIBUTE_COSTS[value];
-    }
-    requireCondition(cost <= POINT_BUY_BUDGET, '§3.3', `${char.name}: Attributskosten ${cost} > ${POINT_BUY_BUDGET} (nicht ausgegebene Punkte verfallen).`);
-    char.ledger.push(`  Attribute per Punktekauf: ${values.join('/')} = ${cost}/10 Punkte`);
+    char.ledger.push(`  Attribute: Bonuspool ${values.join('/')} = ${sum}/${ATTRIBUTE_BONUS_BUDGET}`);
   }
   char.attributes = [...values];
 }
 
-/** §17 steps 9–11 — skills: background 2/2, archetype 1, free 7 with §5.4 caps. */
+/** §17 steps 9–11 — skills: background 2 (stackable), archetype 1, free 7 with §5.4 startcap. */
 function applySkills(char, { backgroundTrained, archetypeSkill, freeSkills }) {
   const bgList = BACKGROUND_SKILLS[char.background];
   requireCondition(Array.isArray(bgList), '§4.4', `${char.name}: Hintergrund ${char.background} ohne Fertigkeitsliste.`);
-  requireCondition(backgroundTrained.length === 2, '§4.4', `${char.name}: Hintergrund trainiert genau 2 Fertigkeiten, erhalten ${backgroundTrained.length}.`);
-  requireCondition(new Set(backgroundTrained).size === 2, '§4.4', `${char.name}: Hintergrund-Fertigkeiten müssen unterschiedlich sein.`);
+  requireCondition(
+    Array.isArray(backgroundTrained) && backgroundTrained.length === BACKGROUND_SKILL_POINTS,
+    '§4.4',
+    `${char.name}: Hintergrund vergibt genau ${BACKGROUND_SKILL_POINTS} Punkte (als ${BACKGROUND_SKILL_POINTS} Einträge), erhalten ${backgroundTrained?.length ?? 0}.`,
+  );
+  const bgCounts = new Map();
   for (const skill of backgroundTrained) {
     requireCondition(bgList.includes(skill), '§4.4', `${char.name}: „${skill}" ist nicht in der Hintergrundliste ${char.background} ([${bgList.join(', ')}]).`);
+    bgCounts.set(skill, (bgCounts.get(skill) ?? 0) + 1);
   }
   const archetype = primaryArchetypeOf(char);
   requireCondition(ARCHETYPE_SKILLS[archetype].includes(archetypeSkill), '§4.2', `${char.name}: „${archetypeSkill}" ist nicht in der Archetypliste ${archetype}.`);
@@ -205,7 +224,7 @@ function applySkills(char, { backgroundTrained, archetypeSkill, freeSkills }) {
     requireCondition(ALL_SKILLS.includes(skill), '§5.1', `${char.name}: unbekannte Fertigkeit „${skill}".`);
     requireCondition(Number.isInteger(delta) && delta >= 0, '§5.4', `${char.name}: negativer Zuwachs für „${skill}".`);
   }
-  for (const skill of backgroundTrained) bumpSkill(char, skill, 1, 'Hintergrund');
+  for (const [skill, delta] of bgCounts) bumpSkill(char, skill, delta, 'Hintergrund');
   bumpSkill(char, archetypeSkill, 1, 'Primärarchetyp');
   for (const [skill, delta] of Object.entries(freeSkills)) {
     if (delta > 0) bumpSkill(char, skill, delta, 'frei');
@@ -213,8 +232,6 @@ function applySkills(char, { backgroundTrained, archetypeSkill, freeSkills }) {
   for (const value of char.skills.values()) {
     requireCondition(value <= START_SKILL_MAX, '§5.4', `${char.name}: Startwert ${value} > ${START_SKILL_MAX}.`);
   }
-  const trained = [...char.skills.values()].filter((value) => value >= 1).length;
-  requireCondition(trained >= MIN_SKILLS_AT_LEAST_1, '§5.4', `${char.name}: ${trained} Fertigkeiten ≥ 1, gefordert ≥ ${MIN_SKILLS_AT_LEAST_1}.`);
 }
 
 function bumpSkill(char, skill, delta, source) {
@@ -358,7 +375,8 @@ function auditLevel1Basis(char) {
   const row = rankRowFor(1);
   requireCondition(char.level === 1, '§17', `${char.name}: Basis muss Stufe 1 auditieren.`);
   requireCondition(char.attributes !== null, '§17', `${char.name}: Attribute nicht verteilt (Schritt 8).`);
-  requireCondition(char.skills.size >= MIN_SKILLS_AT_LEAST_1, '§17', `${char.name}: weniger als ${MIN_SKILLS_AT_LEAST_1} Fertigkeiten ≥ 1.`);
+  const attrSum = char.attributes.reduce((sum, value) => sum + value, 0);
+  requireCondition(attrSum === ATTRIBUTE_BONUS_BUDGET, '§17', `${char.name}: Attributsumme ${attrSum} ≠ ${ATTRIBUTE_BONUS_BUDGET}.`);
   requireCondition(char.speciesPointsSpent === SPECIES_BUDGET, '§17', `${char.name}: Merkmalsbudget nicht genau ${SPECIES_BUDGET}.`);
   requireCondition(char.drive === DRIVE_START, '§17', `${char.name}: Drive muss ${DRIVE_START} sein.`);
   requireCondition(
@@ -366,6 +384,9 @@ function auditLevel1Basis(char) {
     '§17/§11.3',
     `${char.name}: Kernfähigkeit des Primärarchetyps fehlt.`,
   );
+  for (const value of char.skills.values()) {
+    requireCondition(value <= START_SKILL_MAX, '§17', `${char.name}: Start-Fertigkeitswert ${value} > ${START_SKILL_MAX}.`);
+  }
   char.ledger.push(`  Audit [§17/20]: Rang ${row.rank}, EB +${row.experienceBonus}, Fertigkeitslimit ${row.skillCap}, Drive ${char.drive}, Gruppen-Momentum 0 — bestanden.`);
   return char;
 }
@@ -378,7 +399,7 @@ function buildAllConcepts() {
   {
     const char = newCharacter({ name: 'B1 Nullpunkt', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Technologisch' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
-    applyAttributes(char, [1, 3, 2, 4, 3, 1]);
+    applyAttributes(char, [1, 3, 2, 4, 3, 2]);
     applySkills(char, {
       backgroundTrained: ['Technik', 'Ermitteln'],
       archetypeSkill: 'Wissen',
@@ -395,11 +416,11 @@ function buildAllConcepts() {
   {
     const char = newCharacter({ name: 'B2 Lumenglanz', species: 'Elf', background: 'Kloster', archetype: 'Heiler', essence: 'Spirituell' });
     applySpeciesTraits(char, ['Erweiterte Sicht', 'Geringer Ruhebedarf']);
-    applyAttributes(char, [4, 3, 3, 2, 2, 1], { standardArray: true });
+    applyAttributes(char, [4, 3, 3, 2, 2, 1], { recommendedArray: true });
     applySkills(char, {
-      backgroundTrained: ['Medizin', 'Wissen'],
+      backgroundTrained: ['Medizin', 'Medizin'],
       archetypeSkill: 'Menschenkenntnis',
-      freeSkills: { Medizin: 1, Überleben: 1, Aufmerksamkeit: 1, Ermitteln: 1, Überzeugen: 1, Wissen: 1, Akrobatik: 1 },
+      freeSkills: { Überleben: 1, Aufmerksamkeit: 1, Ermitteln: 1, Überzeugen: 1, Wissen: 2, Akrobatik: 1 },
     });
     applySpecialization(char, 'Medizin', 'Feldchirurgie');
     applyArchetypeFeature(char);
@@ -412,7 +433,7 @@ function buildAllConcepts() {
   {
     const char = newCharacter({ name: 'B3 Rostfaust', species: 'Ork', background: 'Militär', archetype: 'Kämpfer', essence: 'Körperlich' });
     applySpeciesTraits(char, ['Natürliche Waffe', 'Natürlicher Schutz']);
-    applyAttributes(char, [4, 3, 3, 2, 2, 1], { standardArray: true });
+    applyAttributes(char, [4, 3, 3, 2, 2, 1], { recommendedArray: true });
     applySkills(char, {
       backgroundTrained: ['Nahkampf', 'Überleben'],
       archetypeSkill: 'Athletik',
@@ -429,7 +450,7 @@ function buildAllConcepts() {
   {
     const char = newCharacter({ name: 'B4 Spiegelbild', species: 'Halbling', background: 'Straße', archetype: 'Rebell', essence: 'Mental' });
     applySpeciesTraits(char, ['Enge Resistenz', 'Erweitertes Klettern']);
-    applyAttributes(char, [1, 4, 2, 3, 3, 1]);
+    applyAttributes(char, [1, 4, 2, 3, 3, 2]);
     applySkills(char, {
       backgroundTrained: ['Heimlichkeit', 'Täuschen'],
       archetypeSkill: 'Akrobatik',
@@ -446,7 +467,7 @@ function buildAllConcepts() {
   {
     const char = newCharacter({ name: 'B5 Vek-tor', species: 'Cyborg', background: 'Werkstatt', archetype: 'Diplomat', essence: 'Technologisch' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Erweiterte Sicht']);
-    applyAttributes(char, [1, 2, 2, 3, 1, 4]);
+    applyAttributes(char, [2, 2, 2, 3, 2, 4]);
     applySkills(char, {
       backgroundTrained: ['Technik', 'Wissen'],
       archetypeSkill: 'Überzeugen',
@@ -463,7 +484,7 @@ function buildAllConcepts() {
   {
     const char = newCharacter({ name: 'B6 Vesper', species: 'Alien', speciesProfile: 'Schneggl', background: 'Bühne', archetype: 'Rebell', essence: 'Gebunden' });
     applySpeciesTraits(char, ['Flugfähig']);
-    applyAttributes(char, [1, 4, 2, 2, 3, 2]);
+    applyAttributes(char, [1, 4, 2, 2, 3, 3]);
     applySkills(char, {
       backgroundTrained: ['Auftreten', 'Täuschen'],
       archetypeSkill: 'Heimlichkeit',
@@ -578,10 +599,15 @@ function directBasisSkillPlan(char) {
   for (const line of char.ledger) {
     const m = line.match(/^  (.+?) \+= (\d+) → \d+ \((.*?), Stufe \d+\)$/);
     if (!m) continue;
-    const [, skill, delta, source] = m;
-    if (source === 'Hintergrund') background.push(skill);
-    else if (source === 'Primärarchetyp') archetype.push(skill);
-    else if (source === 'frei') free[skill] = Number(delta);
+    const [, skill, deltaRaw, source] = m;
+    const delta = Number(deltaRaw);
+    if (source === 'Hintergrund') {
+      for (let i = 0; i < delta; i += 1) background.push(skill);
+    } else if (source === 'Primärarchetyp') {
+      for (let i = 0; i < delta; i += 1) archetype.push(skill);
+    } else if (source === 'frei') {
+      free[skill] = (free[skill] ?? 0) + delta;
+    }
   }
   return { backgroundTrained: background, archetypeSkill: archetype[0], freeSkills: free };
 }
@@ -613,12 +639,17 @@ function runNegativePaths() {
   reject('§3.3 Attributswert 5', () => {
     const char = newCharacter({ name: 'X1', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
-    applyAttributes(char, [5, 3, 2, 2, 1, 1]);
+    applyAttributes(char, [5, 3, 2, 2, 2, 1]);
   }, '§3.3');
   reject('§3.3 Attributsbudget überschritten', () => {
     const char = newCharacter({ name: 'X2', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
-    applyAttributes(char, [4, 4, 2, 2, 2, 1]);
+    applyAttributes(char, [4, 4, 3, 2, 2, 1]);
+  }, '§3.3');
+  reject('§3.3 Attribut unter +0', () => {
+    const char = newCharacter({ name: 'X2b', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
+    applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
+    applyAttributes(char, [-1, 4, 3, 3, 3, 3]);
   }, '§3.3');
 
   // 2. §4.5 species violations (2/3 points, wrong species list, unavailable trait).
@@ -635,17 +666,17 @@ function runNegativePaths() {
     applySpeciesTraits(char, ['Außergewöhnlicher Körperbau', 'Geschärfter Sinn', 'Enge Resistenz']);
   }, '§4.5');
 
-  // 3. §4.4 background violations.
-  reject('§4.4 Hintergrund twice on same skill', () => {
+  // 3. §4.4 background violations (stacking same skill is legal; wrong pool / wrong point count is not).
+  reject('§4.4 Hintergrund mit 3 Punkteinträgen', () => {
     const char = newCharacter({ name: 'X6', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
-    applyAttributes(char, [2, 3, 2, 4, 2, 1]);
-    applySkills(char, { backgroundTrained: ['Technik', 'Technik'], archetypeSkill: 'Wissen', freeSkills: {} });
+    applyAttributes(char, [2, 3, 2, 4, 2, 2]);
+    applySkills(char, { backgroundTrained: ['Technik', 'Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: {} });
   }, '§4.4');
   reject('§4.4 Fertigkeit außerhalb der Hintergrundliste', () => {
     const char = newCharacter({ name: 'X7', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
-    applyAttributes(char, [2, 3, 2, 4, 2, 1]);
+    applyAttributes(char, [2, 3, 2, 4, 2, 2]);
     applySkills(char, { backgroundTrained: ['Technik', 'Heimlichkeit'], archetypeSkill: 'Wissen', freeSkills: {} });
   }, '§4.4');
 
@@ -653,13 +684,13 @@ function runNegativePaths() {
   reject('§5.3 Startwert über Limit (Start-Maximum)', () => {
     const char = newCharacter({ name: 'X8', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
-    applyAttributes(char, [2, 3, 2, 4, 2, 1]);
+    applyAttributes(char, [2, 3, 2, 4, 2, 2]);
     applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 3, Wissen: 0, Aufmerksamkeit: 1, Überleben: 1, Steuern: 1, Akrobatik: 1 } });
   }, '§5.3');
   reject('§5.4 freie Punkte ungleich 7', () => {
     const char = newCharacter({ name: 'X9', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
-    applyAttributes(char, [2, 3, 2, 4, 2, 1]);
+    applyAttributes(char, [2, 3, 2, 4, 2, 2]);
     applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 1, Ermitteln: 2, Wissen: 1, Aufmerksamkeit: 1, Überleben: 1 } });
   }, '§5.4');
 
@@ -667,14 +698,14 @@ function runNegativePaths() {
   reject('§5.2 Spezialisierung auf Fertigkeit 0', () => {
     const char = newCharacter({ name: 'XA', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
-    applyAttributes(char, [2, 3, 2, 4, 2, 1]);
+    applyAttributes(char, [2, 3, 2, 4, 2, 2]);
     applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 2, Ermitteln: 1, Aufmerksamkeit: 1, Wissen: 1, Überleben: 1, Steuern: 1 } });
     applySpecialization(char, 'Akrobatik', 'Parkour');
   }, '§5.2');
   reject('§5.2 zweite Spezialisierung unter Wert 3', () => {
     const char = newCharacter({ name: 'XB', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
-    applyAttributes(char, [2, 3, 2, 4, 2, 1]);
+    applyAttributes(char, [2, 3, 2, 4, 2, 2]);
     applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 1, Ermitteln: 2, Wissen: 1, Aufmerksamkeit: 1, Überleben: 1, Steuern: 1 } });
     applySpecialization(char, 'Technik', 'Intrusion');
     applySpecialization(char, 'Technik', 'Drohnen');
@@ -684,7 +715,7 @@ function runNegativePaths() {
   const basisFor = (name) => {
     const char = newCharacter({ name, species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
-    applyAttributes(char, [2, 3, 2, 4, 2, 1]);
+    applyAttributes(char, [2, 3, 2, 4, 2, 2]);
     applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 2, Ermitteln: 1, Aufmerksamkeit: 1, Wissen: 1, Überleben: 1, Steuern: 1 } });
     applyArchetypeFeature(char);
     return char;

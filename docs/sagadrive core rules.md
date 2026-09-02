@@ -1,8 +1,8 @@
 # SagaDrive Core Rules
 
 > **Dokumentstatus:** Verbindlicher Core-Regelstand in Validierungsphase  
-> **Stand:** 27. August 2026  
-> **Zuletzt abgeschlossener Entscheidungsblock:** Regelentwurf Abschnitte 2 bis 18  
+> **Stand:** 2. September 2026  
+> **Zuletzt abgeschlossener Entscheidungsblock:** Skill Progression v2 Core (Issue #89) – Attribute-Bonuspool, drei Skillquellen, gestufter anwendbarer EB  
 > **Aktueller Arbeitsblock:** 19 – Mathematische Prüfung und Spieltests  
 > **Ziel:** Universelles, analog vollständig spielbares Kernregelsystem mit optionalen digitalen Erweiterungen
 
@@ -56,13 +56,14 @@ Der Kern muss vollständig mit Würfeln, Papier und Charakterbogen spielbar blei
 Wenn der Ausgang einer Handlung unsicher ist und sowohl Erfolg als auch Fehlschlag relevante Folgen besitzen, wird ein Check verlangt.
 
 ```text
-d20 + Attribut + Fertigkeit + Erfahrungsbonus + Spezialisierung + ausdrückliche Modifikatoren
+d20 + Attribut + Fertigkeit + anwendbarer Erfahrungsbonus + Spezialisierung + ausdrückliche Modifikatoren
 ```
 
 Dabei gelten nur die Bestandteile, die auf den konkreten Check anwendbar sind.
 
-- Der Erfahrungsbonus gilt nur bei trainierten Fertigkeiten.
-- Der Spezialisierungsbonus gilt nur, wenn die Spezialisierung eindeutig anwendbar ist.
+- Der **globale Erfahrungsbonus** ist der stufenabhängige Levelwert aus Abschnitt 4.1 bzw. 5.3.
+- Der **anwendbare Erfahrungsbonus** bei Fertigkeitschecks folgt Abschnitt 5.3: bei Fertigkeitsrang 0 ist er 0; sonst `min(globaler EB, Fertigkeitsrang + 1)`. Globaler und anwendbarer EB sind niemals gleichzusetzen.
+- Der Spezialisierungsbonus (+2) gilt nur, wenn die Spezialisierung eindeutig anwendbar ist; er ist weder Fertigkeitsrang noch Erfahrungsbonus.
 - Numerische Modifikatoren existieren nur, wenn eine Fähigkeit, Ausrüstung, Bedingung oder Regel sie ausdrücklich vergibt.
 - Der Gesamtwert wird mit einer Schwierigkeit oder einem Widerstand verglichen.
 
@@ -90,10 +91,11 @@ Im direkten Kampf ist Erfolg gegen Preis nur bei ausdrücklich dafür vorgesehen
 Eine trainierte Figur kann unter kontrollierten Bedingungen sorgfältig arbeiten und statt eines d20-Wurfs einen Sicherheitswert verwenden.
 
 ```text
-Sicherheitswert = 10 + alle auf den Check anwendbaren Werte und Boni
+Sicherheitswert = 10 + Attribut + Fertigkeit + anwendbarer Erfahrungsbonus
+                + Spezialisierung + ausdrückliche Modifikatoren
 ```
 
-Sicheres Arbeiten benötigt zusätzliche Zeit oder einen anderen vor dem Check festgelegten Aufwand. Es ist im direkten Kampf oder unter unmittelbarer Bedrohung nicht möglich, sofern keine Fähigkeit ausdrücklich etwas anderes erlaubt.
+Es gelten dieselben Bestandteile wie beim Basischeck (Abschnitt 2.1), inklusive des anwendbaren Erfahrungsbonus nach Abschnitt 5.3. Sicheres Arbeiten benötigt zusätzliche Zeit oder einen anderen vor dem Check festgelegten Aufwand. Es ist im direkten Kampf oder unter unmittelbarer Bedrohung nicht möglich, sofern keine Fähigkeit ausdrücklich etwas anderes erlaubt.
 
 ### 2.5 Vorteil und Nachteil
 
@@ -114,10 +116,12 @@ Bei einer gerichteten Handlung gegen ein Ziel wird grundsätzlich gegen einen st
 
 ```text
 Widerstand = 10 + passendes Attribut + passende Fertigkeit
-             + Erfahrungsbonus bei Training
+             + anwendbarer Erfahrungsbonus (Abschnitt 5.3)
              + anwendbare Spezialisierung
              + ausdrückliche Modifikatoren
 ```
+
+Enthält der Widerstand eine konkrete Fertigkeit, gilt der anwendbare Erfahrungsbonus dieser Fertigkeit. Widerstände ohne Fertigkeitsbindung (Abschnitt 6.5) verwenden den globalen Erfahrungsbonus.
 
 Nur wenn beide Seiten gleichzeitig und aktiv dasselbe Ergebnis anstreben, wird ein vergleichender Check verwendet. Dabei werden zuerst die Erfolgsgrade und danach die Gesamtergebnisse verglichen.
 
@@ -273,33 +277,38 @@ SagaDrive verwendet sechs universelle Attribute.
 
 ### 3.2 Wertebereich
 
-Attribute werden direkt verwendet. Es gibt keine aus Attributswerten abgeleiteten separaten Modifikatoren.
+Attribute sind direkte Boni. Es gibt keine aus Attributswerten abgeleiteten separaten Modifikatoren. Bei einem reinen Attributscheck gilt:
+
+```text
+d20 + Attributbonus + ausdrückliche Modifikatoren
+```
 
 | Wert | Einordnung |
 |---:|---|
-| 0 | Nur durch ausdrücklich vorgesehene Merkmale, Zustände oder Kreaturenregeln |
-| 1–4 | Regulärer Bereich bei der Charaktererschaffung |
-| 5 | Menschlicher Spitzenwert |
-| 6+ | Übermenschlich und nur durch ausdrücklich vorgesehene Regeln |
+| +0 | Regulärer Startwert ohne positiven Grundbonus; bedeutet keine Handlungsunfähigkeit |
+| +1–+4 | Regulärer Bereich der Basisverteilung bei der Charaktererschaffung |
+| +5 | Reguläres Maximum nach späterer Entwicklung (Stufe 8/16) |
+| +6+ | Übermenschlich und nur durch ausdrücklich vorgesehene Regeln |
+
+Negative Grundattribute sind kein Bestandteil der regulären Charaktererschaffung.
 
 ### 3.3 Startattribute
 
-Standardverteilung:
+Eine Startfigur verfügt über **15 Attribut-Bonuspunkte**.
+
+- Die sechs Grundattribute starten regeltechnisch bei +0.
+- Die 15 Punkte werden frei auf die sechs Attribute verteilt.
+- Ein Grundattribut darf bei der regulären Charaktererschaffung zwischen **+0 und +4** liegen.
+- Nicht ausgegebene Punkte verfallen.
+- Archetypen, Hintergründe, Spezies und Essenzen vergeben weiterhin keine allgemeinen Attributsboni.
+
+Empfohlene ausgewogene Verteilung (keine Pflicht):
 
 ```text
-4, 3, 3, 2, 2, 1
++4, +3, +3, +2, +2, +1
 ```
 
-Alternativ können zehn Attributspunkte verwendet werden.
-
-| Attributswert | Kosten |
-|---:|---:|
-| 1 | 0 |
-| 2 | 1 |
-| 3 | 2 |
-| 4 | 4 |
-
-Kein reguläres Startattribut darf unter 1 oder über 4 liegen. Nicht ausgegebene Punkte verfallen.
+Das frühere nichtlineare 10-Punkte-Point-Buy und das reguläre Minimum 1 gelten nicht mehr.
 
 ### 3.4 Quellen von Attributswerten
 
@@ -325,10 +334,12 @@ Eine Fertigkeit mit Wert 0 gilt dagegen als untrainierter Fertigkeitscheck. Sich
 
 ### 3.7 Attributsentwicklung
 
-Eine Figur erhöht auf Stufe 8 und Stufe 16 jeweils ein Attribut um 1.
-
-- Reguläres Maximum: 5
-- Werte ab 6: nur über ausdrücklich übermenschliche Regeln
+- Auf **Stufe 8** erhält die Figur genau **+1** auf ein bestehendes Attribut.
+- Auf **Stufe 16** erhält die Figur ein zweites Mal genau **+1** auf ein bestehendes Attribut.
+- Diese Steigerungen kommen zusätzlich zur bei der Erschaffung festgelegten Basisverteilung hinzu.
+- Ein Levelaufstieg erlaubt **kein kostenloses Respec** der bereits festgelegten Basiswerte.
+- Das reguläre Maximum eines finalen Attributbonus beträgt **+5**.
+- Werte von +6 oder höher benötigen weiterhin eine ausdrücklich übermenschliche Sonderregel.
 - Eine Attributssteigerung darf nicht gegen andere Entwicklungsoptionen eingetauscht werden, sofern ein Modul dies nicht ausdrücklich erlaubt.
 
 ---
@@ -339,15 +350,17 @@ Eine Figur erhöht auf Stufe 8 und Stufe 16 jeweils ein Attribut um 1.
 
 SagaDrive verwendet 20 Charakterstufen. Eine Stufe gibt den allgemeinen Erfahrungsrahmen einer Figur an, erhöht aber nicht automatisch sämtliche Werte.
 
-Die 20 Stufen sind in fünf benannte Ränge zu je vier Stufen gegliedert. Der Rang bündelt die großen Progressionssprünge des Systems: Erfahrungsbonus, maximalen Fertigkeitswert, maximal verfügbaren Fähigkeitsrang und den zugehörigen Begegnungsrang.
+Die 20 Stufen sind in fünf benannte Ränge zu je vier Stufen gegliedert. Der Rang bündelt die großen Progressionssprünge des Systems: **globalen Erfahrungsbonus**, maximalen Fertigkeitswert, maximal verfügbaren Fähigkeitsrang und den zugehörigen Begegnungsrang.
 
-| Rang | Charakterstufen | Erfahrungsbonus | Fertigkeitslimit | Maximaler Fähigkeitsrang |
+| Rang | Charakterstufen | Globaler Erfahrungsbonus | Fertigkeitslimit | Maximaler Fähigkeitsrang |
 |---|---:|---:|---:|---|
 | Novize | 1–4 | +1 | 3 | Novize |
 | Spezialist | 5–8 | +2 | 4 | Spezialist |
 | Experte | 9–12 | +3 | 4 | Experte |
 | Meister | 13–16 | +4 | 5 | Meister |
 | Legende | 17–20 | +5 | 5 | Legende |
+
+Der **globale Erfahrungsbonus** ist der verfügbare Levelwert der Figur. Er ändert sich nur mit den Rang-/Stufenbändern oben und wird durch Fertigkeitsrang **nicht** erhöht oder verringert. Ob und wie viel davon in einen Fertigkeitscheck einfließt, bestimmt der **anwendbare Erfahrungsbonus** nach Abschnitt 5.3.
 
 Der Rang ist keine eigene Klasse und besitzt keine getrennten Rangstufen. Ein Rangwechsel schaltet die entsprechenden Grenzen und Möglichkeiten frei, vergibt aber nur die Entwicklungen, die für die konkrete Charakterstufe in Abschnitt 13 vorgesehen sind.
 
@@ -381,12 +394,19 @@ Die fünf Archetypen und fünf Essenzen erzeugen 25 geführte Kombinationsprofil
 
 Ein Hintergrund enthält:
 
-- eine Liste aus vier passenden Fertigkeiten,
-- Training in zwei unterschiedlichen Fertigkeiten dieser Liste,
+- eine Liste aus genau **vier** passenden Fertigkeiten (Hintergrund-Framework-Pool),
+- **2 Hintergrund-Fertigkeitspunkte**, die frei auf diesen Viererpool verteilt werden,
 - eine Spezialisierung,
 - einen Milieuzugang,
 - eine Verbindung oder Kontaktperson,
 - eine charakterbezogene Komplikation.
+
+Die zwei Hintergrundpunkte bilden einen kleinen Punktepool:
+
+- Beide Punkte dürfen auf denselben Skill gelegt werden (`+2` auf einen Framework-Skill).
+- Alternativ dürfen sie auf zwei unterschiedliche Skills des Pools verteilt werden (`+1/+1`).
+- Es gibt **keine** Pflicht, zwei verschiedene Skills zu trainieren.
+- Jeder Fertigkeitspunkt bedeutet unabhängig von der Quelle `+1 Fertigkeitsrang`.
 
 Hintergründe vergeben keine Attributsboni und keine allgemeinen Kräfte.
 
@@ -530,6 +550,8 @@ Eine passende Spezialisierung gibt:
 +2 auf den Check
 ```
 
+Dieser Bonus ist situationsgebunden und **getrennt** von Fertigkeitsrang und Erfahrungsbonus. In vollständigen Check-Beispielen wird er als eigener Formelterm ausgewiesen.
+
 - Höchstens eine Spezialisierung pro Check.
 - Fachhandlungen können eine passende Spezialisierung voraussetzen.
 - Fachhandlungen müssen vor dem Wurf als solche erkennbar sein.
@@ -542,6 +564,19 @@ Eine passende Spezialisierung gibt:
 
 Maximal drei Spezialisierungen pro Fertigkeit.
 
+Beispiel (passende Spezialisierung anwendbar):
+
+```text
+CHECK
+d20
++2 Charisma          (Attribut)
++2 Überzeugen        (Fertigkeitsrang)
++2 anwendbarer EB    (global +2, Rang 2 → min(2, 2+1) = 2)
++2 Spezialisierung   (z. B. Verhandlung)
+────────────────────
+d20 +8
+```
+
 ### 5.3 Fertigkeitswerte und Erfahrungsbonus
 
 | Wert | Kompetenzstufe |
@@ -553,13 +588,52 @@ Maximal drei Spezialisierungen pro Fertigkeit.
 | 4 | Meisterlich |
 | 5 | Weltklasse |
 
-| Stufe | Rang | Erfahrungsbonus |
+#### Globaler Erfahrungsbonus
+
+Der globale Erfahrungsbonus ist der stufenabhängige Levelwert (identisch mit der Tabelle in Abschnitt 4.1):
+
+| Stufe | Rang | Globaler Erfahrungsbonus |
 |---:|---|---:|
 | 1–4 | Novize | +1 |
 | 5–8 | Spezialist | +2 |
 | 9–12 | Experte | +3 |
 | 13–16 | Meister | +4 |
 | 17–20 | Legende | +5 |
+
+#### Anwendbarer Erfahrungsbonus (Fertigkeitschecks)
+
+Ein Skill nutzt nicht automatisch den vollständigen globalen EB, sobald er Rang 1 erreicht.
+
+Normative Formel:
+
+```text
+bei Fertigkeitsrang 0:
+anwendbarer EB = 0
+
+bei Fertigkeitsrang 1+:
+anwendbarer EB = min(globaler EB, Fertigkeitsrang + 1)
+```
+
+Daraus folgt für die Ranggrenzen:
+
+| Fertigkeitsrang | Maximal anwendbarer EB |
+|---:|---:|
+| 0 | +0 |
+| 1 | +2 |
+| 2 | +3 |
+| 3 | +4 |
+| 4 | +5 |
+| 5 | +5 |
+
+Es gibt **keinen** automatischen Erfahrungsbonus für Skill 0. Globaler und anwendbarer EB dürfen niemals gleichgesetzt werden.
+
+#### Abgrenzung: nicht skillgebundene Formeln
+
+Formeln, deren Erfahrungsbonus **nicht** an einen konkreten Fertigkeitsrang gebunden ist (z. B. Gesundheit, Körper-/Reflex-/Geistwiderstand, Erholung), verwenden weiterhin den **vollen globalen EB**.
+
+Formeln, deren EB ausdrücklich von einem konkreten Skilltraining abhängt (z. B. Fertigkeitschecks, Initiative über Aufmerksamkeit, Manöverwiderstand über Athletik/Akrobatik-Anteil), verwenden den **anwendbaren EB** des betreffenden Skills.
+
+#### Fertigkeitslimit nach Stufe
 
 | Charakterstufe | Rang | Maximaler Fertigkeitswert |
 |---:|---|---:|
@@ -569,9 +643,97 @@ Maximal drei Spezialisierungen pro Fertigkeit.
 | 13–16 | Meister | 5 |
 | 17–20 | Legende | 5 |
 
+#### Vollständige Beispiele (Stufe 17, Charisma +2, globaler EB +5)
+
+Untrainiert:
+
+```text
+ÜBERZEUGEN 0
+
+CHECK
+d20
++2 Charisma          (Attribut)
++0 Überzeugen        (Fertigkeitsrang)
++0 anwendbarer EB    (Rang 0 → 0; globaler EB +5 bleibt ungenutzt)
+────────────────────
+d20 +2
+```
+
+Nach `Überzeugen 0→1`:
+
+```text
+Globaler EB             +5
+Durch Rang 1 nutzbar    +2   (= min(5, 1+1))
+
+CHECK
+d20
++2 Charisma          (Attribut)
++1 Überzeugen        (Fertigkeitsrang)
++2 anwendbarer EB
+────────────────────
+d20 +5
+```
+
+Nicht:
+
+```text
+d20 +2 +1 +5 = d20 +8
+```
+
+Weiterentwickelter Skill bei Stufe 17, Attribut +2:
+
+```text
+Skill 1:  d20 +2 Attribut +1 Skill +2 anwendbarer EB = d20 +5
+Skill 2:  d20 +2 Attribut +2 Skill +3 anwendbarer EB = d20 +7
+Skill 3:  d20 +2 Attribut +3 Skill +4 anwendbarer EB = d20 +9
+Skill 4:  d20 +2 Attribut +4 Skill +5 anwendbarer EB = d20 +11
+Skill 5:  d20 +2 Attribut +5 Skill +5 anwendbarer EB = d20 +12
+```
+
 ### 5.4 Fertigkeiten bei der Charaktererschaffung
 
-Eine Startfigur erhält 10 Fertigkeitspunkte. Empfohlene Standardverteilung:
+Start-Fertigkeiten kommen aus **drei getrennten Quellen**. Mathematisch sind es zehn Punkte; die Regel und UX-Semantik sind die drei Quellen:
+
+```text
+7 freie Fertigkeitspunkte
+→ frei auf alle 18 Core-Skills
+
+2 Hintergrund-Fertigkeitspunkte
+→ frei auf die 4 Skills des gewählten Hintergrund-Frameworks
+→ +2 auf denselben Skill erlaubt
+
+1 Archetyp-Fertigkeitspunkt
+→ auf einen der 4 typischen Skills des Primärarchetyps
+```
+
+Unabhängig von der Quelle gilt:
+
+```text
+1 Fertigkeitspunkt = +1 Fertigkeitsrang
+```
+
+| Quelle | Punkte | Zielraum |
+|---|---:|---|
+| Freie Verteilung | 7 | alle 18 Core-Skills |
+| Hintergrund | 2 | nur der Viererpool des Frameworks; Stapeln `+2` erlaubt |
+| Primärarchetyp | 1 | ein typischer Skill des Primärarchetyps |
+| Summe (intern) | 10 | — |
+
+Quellen dürfen sich addieren. Das **Startmaximum** pro Fertigkeit bleibt **3**. Beispiel:
+
+```text
+Medizin
+Hintergrund +2
+Archetyp     +1
+──────────────
+Medizin       3
+```
+
+Ein weiterer freier Punkt auf Medizin ist bei der Charaktererschaffung nicht erlaubt (Startcap 3).
+
+**Keine Mindestanzahl** trainierter Startskills. Spezialisierte Builds mit wenigen hohen Skills sind legal, solange Quellenregeln und Startcap eingehalten werden. Schwächen sollen im Abenteuer echte Konsequenzen haben; es gibt keine versteckte Ersatz-Mindestbreite.
+
+Empfohlene ausgewogene Verteilung (keine Pflicht):
 
 ```text
 3, 2, 2, 1, 1, 1
@@ -580,15 +742,32 @@ Eine Startfigur erhält 10 Fertigkeitspunkte. Empfohlene Standardverteilung:
 Grenzen:
 
 - maximaler Startwert 3,
-- mindestens sechs Fertigkeiten auf 1 oder höher,
-- nicht ausgegebene Punkte verfallen.
+- nicht ausgegebene Punkte verfallen,
+- keine Pflicht zu mindestens sechs trainierten Fertigkeiten.
 
-| Quelle | Fertigkeitspunkte |
-|---|---:|
-| Hintergrund | 2 Punkte in zwei unterschiedlichen Fertigkeiten seiner Viererliste |
-| Primärarchetyp | 1 Punkt aus seiner Fertigkeitsliste |
-| Freie Verteilung | 7 |
-| Gesamt | 10 |
+Beispiel Spezialisten-Start (legal):
+
+```text
+Nahkampf       3
+Athletik       3
+Einschüchtern  3
+Überleben      1
+```
+
+Derselbe körperlich maximierte Charakter kann vor Gericht schwach sein:
+
+```text
+Charisma    +0
+Überzeugen   0
+
+CHECK
+d20
++0 Charisma
++0 Überzeugen
++0 anwendbarer EB
+────────────────────
+d20 +0
+```
 
 ### 5.5 Fertigkeitsentwicklung
 
@@ -606,6 +785,8 @@ Je Entwicklung:
 
 Nicht verwendete Fertigkeitsentwicklungen dürfen zurückgestellt werden.
 
+Ein später gelerntes `0→1` erhöht den Fertigkeitsrang um 1 und nutzt danach nur den durch Rang 1 erlaubten anwendbaren EB (`min(globaler EB, 2)`), nicht automatisch den vollen globalen EB. Siehe Stufe-17-Beispiel in Abschnitt 5.3.
+
 ### 5.6 Handlungskategorien und passive Werte
 
 | Kategorie | Regel |
@@ -621,7 +802,7 @@ Aufmerksamkeitswiderstand:
 
 ```text
 10 + Wahrnehmung + Aufmerksamkeit
-   + Erfahrungsbonus bei trainierter Aufmerksamkeit
+   + anwendbarer Erfahrungsbonus der Fertigkeit Aufmerksamkeit
    + anwendbare Spezialisierung
    + ausdrückliche Modifikatoren
 ```
@@ -845,25 +1026,27 @@ Geeignete Spezialisierungen: Musik, Schauspiel, Rede, Tanz, Comedy oder andere k
 ### 6.1 Gesundheit
 
 ```text
-Gesundheit = 12 + (2 × Ausdauer) + (2 × Erfahrungsbonus)
+Gesundheit = 12 + (2 × Ausdauer) + (2 × globaler Erfahrungsbonus)
 ```
 
-Gesundheit wächst bewusst langsam. Stufen allein sollen Figuren widerstandsfähiger, aber nicht zu unverwundbaren Schadenspuffern machen.
+Gesundheit nutzt den **globalen** Erfahrungsbonus (nicht skillgebunden). Gesundheit wächst bewusst langsam. Stufen allein sollen Figuren widerstandsfähiger, aber nicht zu unverwundbaren Schadenspuffern machen.
 
 ### 6.2 Verteidigung
 
 ```text
-Verteidigung = 10 + Geschicklichkeit + Erfahrungsbonus + max(Nahkampf, Akrobatik)
+Verteidigung = 10 + Geschicklichkeit + globaler Erfahrungsbonus + max(Nahkampf, Akrobatik)
 ```
 
-Spezialisierungen werden nicht auf Verteidigung angerechnet.
+Verteidigung verwendet den globalen Erfahrungsbonus als Levelkomponente; die Fertigkeitswerte Nahkampf/Akrobatik gehen nur als Rangwert ein, ohne zusätzlichen anwendbaren EB. Spezialisierungen werden nicht auf Verteidigung angerechnet.
 
 ### 6.3 Initiative
 
 ```text
 d20 + Wahrnehmung + Aufmerksamkeit
-     + Erfahrungsbonus bei trainierter Aufmerksamkeit
+     + anwendbarer Erfahrungsbonus der Fertigkeit Aufmerksamkeit
 ```
+
+Initiative ist skillgebunden über Aufmerksamkeit und nutzt daher den anwendbaren EB (bei Aufmerksamkeit 0: +0 EB).
 
 Bei Gleichstand entscheidet:
 
@@ -888,18 +1071,22 @@ Klettern und Schwimmen sind normale Bewegungsarten und grundsätzlich ohne Spezi
 ### 6.5 Widerstände
 
 ```text
-Körperwiderstand = 10 + Ausdauer + Erfahrungsbonus
-Reflexwiderstand = 10 + Geschicklichkeit + Erfahrungsbonus
-Geistwiderstand = 10 + Verstand + Erfahrungsbonus
-Manöverwiderstand = 10 + Erfahrungsbonus
+Körperwiderstand = 10 + Ausdauer + globaler Erfahrungsbonus
+Reflexwiderstand = 10 + Geschicklichkeit + globaler Erfahrungsbonus
+Geistwiderstand = 10 + Verstand + globaler Erfahrungsbonus
+Manöverwiderstand = 10 + globaler Erfahrungsbonus
                     + max(Stärke + Athletik, Geschicklichkeit + Akrobatik)
 ```
+
+Körper-, Reflex- und Geistwiderstand sind nicht skillgebunden und verwenden den globalen EB. Manöverwiderstand verwendet den globalen EB als Levelkomponente; Athletik bzw. Akrobatik gehen nur als Rangwert ein.
 
 ### 6.6 Erholung
 
 ```text
-Erholung = Ausdauer + Erfahrungsbonus
+Erholung = Ausdauer + globaler Erfahrungsbonus
 ```
+
+Erholung ist nicht skillgebunden und verwendet den globalen Erfahrungsbonus.
 
 ### 6.7 Traglast
 
@@ -1081,8 +1268,11 @@ Bei 0 Gesundheit ist eine Figur kampfunfähig.
 Am Ende jedes eigenen Zuges:
 
 ```text
-d20 + Ausdauer + Erfahrungsbonus gegen Zielwert 15
+d20 + Ausdauer + globaler Erfahrungsbonus gegen Zielwert 15
 ```
+
+Dieser Stabilisierungscheck ist nicht skillgebunden und verwendet den globalen Erfahrungsbonus.
+
 
 | Ergebnis | Wirkung |
 |---|---|
@@ -1389,10 +1579,10 @@ Eine besondere Kraft ist eine Fähigkeit mit mindestens:
 Wenn eine Kraft einen Aktivierungscheck verlangt:
 
 ```text
-d20 + festgelegtes Attribut + Erfahrungsbonus + ausdrückliche Modifikatoren
+d20 + festgelegtes Attribut + globaler Erfahrungsbonus + ausdrückliche Modifikatoren
 ```
 
-Eine erschlossene Essenz zählt für diesen Aktivierungscheck als Training. Es gibt keine eigene Essenz-Fertigkeit.
+Eine erschlossene Essenz zählt für diesen Aktivierungscheck als Training und berechtigt zur Nutzung des **globalen** Erfahrungsbonus (keine Fertigkeitsbindung). Es gibt keine eigene Essenz-Fertigkeit.
 
 ### 12.3 Begrenzungsmodelle
 
@@ -1849,10 +2039,10 @@ Verbindliche Reihenfolge:
 5. Hintergrund wählen.
 6. Primärarchetyp wählen.
 7. Primäre Essenz wählen.
-8. Attribute verteilen.
-9. Hintergrund-Fertigkeitspunkte anwenden.
-10. Archetyp-Fertigkeitspunkt anwenden.
-11. Freie Fertigkeitspunkte verteilen.
+8. Attribute verteilen (15 Attribut-Bonuspunkte, jeweils +0…+4; empfohlen ausgewogen `+4/+3/+3/+2/+2/+1`).
+9. Hintergrund-Fertigkeitspunkte anwenden (2 Punkte frei auf den Framework-Viererpool; Stapeln erlaubt).
+10. Archetyp-Fertigkeitspunkt anwenden (1 Punkt auf einen typischen Skill des Primärarchetyps).
+11. Freie Fertigkeitspunkte verteilen (7 Punkte auf alle 18 Skills; Quellen stapeln; Startcap 3; keine Mindestanzahl trainierter Skills).
 12. Spezialisierung wählen.
 13. zusätzliche Sprache oder Kommunikationsform wählen.
 14. Archetyp-Kernfähigkeit und erste Essenzmanifestation wählen.
@@ -1922,7 +2112,8 @@ Relevant ist die Idee eines universellen Kernsystems mit Weltanpassungen, benann
 | Rang | vier Stufen umfassender Progressionsbereich: Novize, Spezialist, Experte, Meister oder Legende |
 | Drive | persönliche Metaressource |
 | Momentum | gemeinsame Gruppenressource |
-| Erfahrungsbonus | stufenabhängiger allgemeiner Kompetenzbonus bei Training |
+| Erfahrungsbonus (global) | stufenabhängiger verfügbarer Levelwert (+1…+5 nach Rang) |
+| Anwendbarer Erfahrungsbonus | bei Fertigkeitschecks: 0 bei Rang 0, sonst min(globaler EB, Rang+1) |
 
 ---
 
