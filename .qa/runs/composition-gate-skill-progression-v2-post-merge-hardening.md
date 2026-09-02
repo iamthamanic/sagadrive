@@ -1,6 +1,6 @@
 # Composition Gate Proof — Skill Progression v2 Post-Merge Hardening
 
-- HEAD_SHA: 0000000000000000000000000000000000000000
+- HEAD_SHA: 11745a710ca2c860717e77fe582d20050fc268cf
 - BASE_SHA: 7bd39ccdb90f09c86a8f2327a50ca07a317db387
 - Verdict: CLEAR
 
