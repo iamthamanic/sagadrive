@@ -13,6 +13,7 @@ import type {
   SagaDriveProfileDto,
   SagaDriveSpeciesTraitInstanceDto,
 } from '../modules/characters';
+import { AttributeD20Icon } from './AttributeD20Icon';
 import { DerivedStatCard } from './DerivedStatCard';
 import { AttributeDerivedConnector } from './AttributeDerivedConnector';
 import { CharacterAssistantButton } from './assistant/CharacterAssistantButton';
@@ -33,8 +34,23 @@ import { CharacterTraitEditor } from '../modules/characters/components/Character
 import { buildSagaDriveDerivedStatCards } from '../modules/characters/utils/derivedStats';
 import { getSagaDriveBackgroundTemplate } from '../modules/rulesets/backgroundTemplates';
 import {
+  SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS,
+  SAGA_DRIVE_ATTRIBUTE_BONUS_CAP,
+  SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET,
+  SAGA_DRIVE_START_ATTRIBUTE_BONUS_CAP,
+  applySagaDriveAttributeAdvances,
+  canAssignSagaDriveAttributeAdvance,
+  getSagaDriveAttributeAdvanceBudget,
+  getSagaDriveAttributeAdvanceLevels,
+  getSagaDriveAttributeBonusLevelGuide,
+  getSagaDriveBaseAttributePointsUsed,
+  isValidSagaDriveAttributeBuild,
+  resolveSagaDriveAttributeBuildState,
+  type SagaDriveAttributeAdvanceLevel,
+  type SagaDriveAttributeAdvances,
+} from '../modules/rulesets/attributeProgression';
+import {
   SAGA_DRIVE_SPECIES_TRAIT_BUDGET,
-  SAGA_DRIVE_START_ATTRIBUTE_ARRAY,
   SAGA_DRIVE_START_FREE_SKILL_POINTS,
   SAGA_DRIVE_START_MIN_TRAINED_SKILLS,
   SAGA_DRIVE_START_SKILL_CAP,
@@ -42,7 +58,6 @@ import {
   createEmptySagaDriveSkillRanks,
   getCharacterCreationOptionLabel,
   getSagaDriveArchetype,
-  getSagaDriveAttributePointBudget,
   getSagaDriveEssence,
   getSagaDriveSpeciesTrait,
   getSagaDriveSpeciesTraitCost,
@@ -94,18 +109,12 @@ function isValuesSubTab(value: string): value is ValuesSubTab {
   return value === 'competencies' || value === 'archetype' || value === 'essenz';
 }
 
-function isValidAttributeDistribution(attributes: CharacterAttributesDto, level: number): boolean {
-  const usedPoints = Object.values(attributes).reduce((sum, value) => sum + value, 0);
-  if (usedPoints !== getSagaDriveAttributePointBudget(level)) return false;
-  if (level === 1) return isValidStartAttributeDistribution(attributes);
-  return true;
-}
-
-function parseStartAttribute(value: string): 1 | 2 | 3 | 4 { if (value === '1') return 1; if (value === '2') return 2; if (value === '4') return 4; return 3; }
-
-function isValidStartAttributeDistribution(attributes: CharacterAttributesDto): boolean {
-  const current = Object.values(attributes).slice().sort((left, right) => right - left);
-  return current.length === SAGA_DRIVE_START_ATTRIBUTE_ARRAY.length && current.every((value, index) => value === SAGA_DRIVE_START_ATTRIBUTE_ARRAY[index]);
+function parseStartAttribute(value: string): 0 | 1 | 2 | 3 | 4 {
+  const parsed = Number.parseInt(value, 10);
+  if (parsed <= 0) return 0;
+  if (parsed >= 4) return 4;
+  if (parsed === 1 || parsed === 2 || parsed === 3) return parsed;
+  return 0;
 }
 
 function uniqueSkills(values: readonly SkillSlot[]): SagaDriveSkillKey[] { return Array.from(new Set(values.filter(isSagaDriveSkillKey))); }
@@ -217,7 +226,8 @@ export function CharacterEditor() {
   const [clothing, setClothing] = useState(initialPreset.clothing);
   const [accessory, setAccessory] = useState(initialPreset.accessory ?? 'none');
 
-  const [attributes, setAttributes] = useState<CharacterAttributesDto>(INITIAL_ATTRIBUTES);
+  const [baseAttributes, setBaseAttributes] = useState<CharacterAttributesDto>(INITIAL_ATTRIBUTES);
+  const [attributeAdvances, setAttributeAdvances] = useState<SagaDriveAttributeAdvances>({});
   const [freeSkillRanks, setFreeSkillRanks] = useState(createEmptySagaDriveSkillRanks);
   const [archetypeTrainingSkill, setArchetypeTrainingSkill] = useState<SagaDriveSkillKey | undefined>();
   const [backgroundTemplateId, setBackgroundTemplateId] = useState<string | null | undefined>(undefined);
@@ -255,6 +265,10 @@ export function CharacterEditor() {
   const speciesDisplayName = characterRace === 'alien' && speciesProfileName.trim() ? speciesProfileName.trim() : baseSpeciesLabel;
   const selectedBackgroundPool = useMemo(() => uniqueSkills(backgroundSkillPool), [backgroundSkillPool]);
   const selectedBackgroundTraining = useMemo(() => uniqueSkills(backgroundTraining), [backgroundTraining]);
+  const attributes = useMemo(
+    () => applySagaDriveAttributeAdvances(baseAttributes, attributeAdvances, characterLevel),
+    [attributeAdvances, baseAttributes, characterLevel],
+  );
   const finalSkillRanks = useMemo(() => getSagaDriveFinalSkillRanks(freeSkillRanks, selectedBackgroundTraining, archetypeTrainingSkill), [archetypeTrainingSkill, freeSkillRanks, selectedBackgroundTraining]);
 
   const abilities = useMemo<AbilityDto[]>(() => {
@@ -265,9 +279,11 @@ export function CharacterEditor() {
   const freeSkillPointsUsed = useMemo(() => sagaDriveSkillDefinitions.reduce((sum, skill) => sum + freeSkillRanks[skill.key], 0), [freeSkillRanks]);
   const trainedSkillCount = useMemo(() => sagaDriveSkillDefinitions.filter((skill) => finalSkillRanks[skill.key] > 0).length, [finalSkillRanks]);
   const skillOverflow = useMemo(() => sagaDriveSkillDefinitions.some((skill) => finalSkillRanks[skill.key] > SAGA_DRIVE_START_SKILL_CAP), [finalSkillRanks]);
-  const attributeDistributionValid = isValidAttributeDistribution(attributes, characterLevel);
-  const attributePointBudget = getSagaDriveAttributePointBudget(characterLevel);
-  const attributePointsUsed = (Object.values(attributes) as CharacterAttributesDto[keyof CharacterAttributesDto][]).reduce((sum, value) => sum + value, 0);
+  const attributeAdvanceLevels = getSagaDriveAttributeAdvanceLevels(characterLevel);
+  const attributeAdvanceBudget = getSagaDriveAttributeAdvanceBudget(characterLevel);
+  const attributeAdvancesUsed = attributeAdvanceLevels.filter((advanceLevel) => Boolean(attributeAdvances[advanceLevel])).length;
+  const attributePointsUsed = getSagaDriveBaseAttributePointsUsed(baseAttributes);
+  const attributeDistributionValid = isValidSagaDriveAttributeBuild(baseAttributes, attributeAdvances, characterLevel);
   const speciesTraitCost = getSagaDriveSpeciesTraitCost(speciesTraitInstances.map((instance) => instance.trait));
   const allowedSpeciesTraitKeys = useMemo(() => new Set(getSagaDriveSpeciesTraitKeysForRace(characterRace)), [characterRace]);
   const speciesTraitInstancesValid = areSpeciesTraitInstancesValid(speciesTraitInstances, allowedSpeciesTraitKeys);
@@ -351,7 +367,8 @@ export function CharacterEditor() {
     setSpeciesTraitInstances([]);
     setSpeciesProfileName('');
     setSpeciesBodyDescription('');
-    setAttributes(INITIAL_ATTRIBUTES);
+    setBaseAttributes(INITIAL_ATTRIBUTES);
+    setAttributeAdvances({});
     applyRacePreset('human', true);
     if (value === 'dnd-5.5e') toast.info('D&D 5.5e: Der vollständige Erstellungsflow folgt demnächst in diesem Editor.');
   };
@@ -412,7 +429,11 @@ export function CharacterEditor() {
     setBackgroundTraining([next[0] ?? '', next[1] ?? '']);
   };
 
-  const setAttribute = (attribute: SagaDriveAttributeKey, value: string) => setAttributes((current) => ({ ...current, [attribute]: parseStartAttribute(value) }));
+  const setAttribute = (attribute: SagaDriveAttributeKey, value: string) => setBaseAttributes((current) => ({ ...current, [attribute]: parseStartAttribute(value) }));
+  const setAttributeAdvance = (advanceLevel: SagaDriveAttributeAdvanceLevel, attribute: SagaDriveAttributeKey) => {
+    if (!canAssignSagaDriveAttributeAdvance(baseAttributes, attributeAdvances, characterLevel, advanceLevel, attribute)) return;
+    setAttributeAdvances((current) => ({ ...current, [advanceLevel]: attribute }));
+  };
 
   // --- Attribute -> abgeleitete Werte (Bracket-Tree im Kompetenzen-Tab) ---
   const [connectedAttribute, setConnectedAttribute] = useState<SagaDriveAttributeKey | null>(null);
@@ -439,8 +460,6 @@ export function CharacterEditor() {
     () => (activeAttribute ? attributeDerivedTargets[activeAttribute] ?? [] : []),
     [activeAttribute, attributeDerivedTargets],
   );
-  // Bei aktiver Attributkarte: verbundene Boxen oben (max. 3), der Rest darunter ausgegraut.
-  // Ohne Auswahl bleiben alle abgeleiteten Werte gleichwertig sichtbar.
   const connectedDerivedCards = useMemo(() => {
     if (!activeAttribute || connectedTargetSelectors.length === 0) return [];
     return connectedTargetSelectors
@@ -453,7 +472,6 @@ export function CharacterEditor() {
     return derivedStatCards.filter((entry) => !connected.has(DERIVED_SELECTOR_BY_LABEL[entry.label]));
   }, [activeAttribute, connectedTargetSelectors, derivedStatCards]);
   const visibleDerivedCards = activeAttribute ? connectedDerivedCards : derivedStatCards;
-  // Klick neben die Attribut-/Zielkarten: Auswahl zurücksetzen.
   useEffect(() => {
     if (!connectedAttribute) return;
     const onPointerDown = (event: PointerEvent) => {
@@ -462,7 +480,6 @@ export function CharacterEditor() {
       if (target.closest('[data-attr-card]')) return;
       if (target.closest('[data-derived-card]')) return;
       if (target.closest('[data-attr-connector]')) return;
-      // Select-Content liegt im Portal außerhalb der Karte — Dropdown darf die Auswahl nicht löschen.
       if (target.closest('[data-slot="select-content"]')) return;
       if (target.closest('[data-radix-popper-content-wrapper]')) return;
       if (target.closest('[role="listbox"]')) return;
@@ -471,8 +488,6 @@ export function CharacterEditor() {
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [connectedAttribute]);
-
-
 
   const uploadPortrait = async (file: File) => {
     setUploading(true);
@@ -504,7 +519,7 @@ export function CharacterEditor() {
     if (characterRace === 'alien' && !speciesProfileName.trim()) problems.push({ tab: 'info', message: 'Gib deinem Alien-Speziesprofil einen Namen.' });
     if (!speciesTraitInstancesValid) problems.push({ tab: 'info', message: 'Vervollständige alle Speziesmerkmale und verwende jede Unteroption höchstens einmal.' });
     if (!backgroundComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige deinen mechanischen Hintergrund unter Kompetenzen.' });
-    if (!attributeDistributionValid) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: `Die Attribute müssen genau ${attributePointBudget} Punkte auf Stufe ${characterLevel} verwenden.` });
+    if (!attributeDistributionValid) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: `Verteile genau ${SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte (+0 bis +4) und alle für Level ${characterLevel} verfügbaren Attributsteigerungen, ohne einen Endwert über +${SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} zu erzeugen.` });
     if (!characterArchetype) problems.push({ tab: 'values', valuesSubTab: 'archetype', message: 'Bitte wähle einen Archetyp.' });
     if (!skillsComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige die 10 Start-Fertigkeitspunkte und trainiere mindestens sechs Fertigkeiten.' });
     if (!essenceProfile) problems.push({ tab: 'values', valuesSubTab: 'essenz', message: 'Bitte wähle eine primäre Essenz.' });
@@ -531,6 +546,8 @@ export function CharacterEditor() {
       backgroundTemplateId: backgroundTemplateId ?? null,
       background: { name: backgroundName.trim(), skillPool: selectedBackgroundPool, trainedSkills: selectedBackgroundTraining, specialization: { skill: specializationSkill, name: specializationName.trim() }, milieuAccess: milieuAccess.trim(), contact: contact.trim(), complication: complication.trim(), communication: communication.trim() },
       archetypeTrainingSkill,
+      baseAttributes,
+      attributeAdvances,
       drive: 3,
       momentum: 0,
     };
@@ -545,6 +562,10 @@ export function CharacterEditor() {
         attributes, skills: finalSkillRanks, sagadrive_profile: sagaDriveProfile, abilities, inventory, portrait_url: portraitUrl || undefined,
       });
       setSavedCharacterId(savedCharacter.id);
+      // Round-trip through service normalize so editor state matches persisted base vs advances.
+      const resolved = resolveSagaDriveAttributeBuildState(savedCharacter.attributes, savedCharacter.sagaDriveProfile);
+      setBaseAttributes(resolved.baseAttributes);
+      setAttributeAdvances(resolved.attributeAdvances);
       trackActivity(`Character Editor: Charakter "${characterName}" gespeichert (ID: ${savedCharacter.id})`);
       toast.success('Charakter erfolgreich gespeichert');
     } catch (error) {
@@ -606,7 +627,7 @@ export function CharacterEditor() {
                 <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Erholung</p><p className="mt-1 text-lg font-semibold">{recovery}</p></div>
               </div>
               <Separator />
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">{sagaDriveAttributeDefinitions.map((attribute) => <div key={attribute.key} className="flex items-center justify-between gap-2"><span className="text-muted-foreground">{attribute.shortLabel}</span><span className="font-semibold">{attributes[attribute.key]}</span></div>)}</div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">{sagaDriveAttributeDefinitions.map((attribute) => <div key={attribute.key} className="flex items-center justify-between gap-2"><span className="text-muted-foreground">{attribute.shortLabel}</span><span className="font-semibold">+{attributes[attribute.key]}</span></div>)}</div>
               <Separator />
               <div className="flex items-center justify-between text-sm"><span className="text-muted-foreground">Start-Fertigkeiten</span><span className="font-semibold">{totalStartSkillPoints} / 10</span></div>
               <div className="flex items-center justify-between text-sm"><span className="text-muted-foreground">Inventarlast</span><span className={overloaded ? 'font-semibold text-destructive' : 'font-semibold'}>{inventoryLoad} / {carryCapacity}</span></div>
@@ -642,8 +663,34 @@ export function CharacterEditor() {
                     <TabsContent value="competencies" className="mt-4 space-y-7">
                       <section className="space-y-4" data-attr-connector-section>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div><h3 className="font-semibold">Grundattribute</h3><p className="mt-1 text-sm text-muted-foreground">Attribute sind deine Basis. Fertigkeiten nutzen ein Standardattribut, Hintergründe vergeben aber niemals Attributspunkte. Klicke auf eine Attributkarte, um die daraus berechneten abgeleiteten Werte zu sehen.</p></div>
-                          <Badge variant={attributeDistributionValid ? 'default' : 'destructive'}>{attributePointsUsed} / {attributePointBudget} Punkte</Badge>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="font-semibold">Grundattribute · d20 + Attributbonus</h3>
+                              <RuleHelp label="Attributbonus" contentClassName="max-h-[min(24rem,70vh)] max-w-[min(22rem,90vw)] overflow-y-auto">
+                                <div className="space-y-2 text-xs leading-relaxed">
+                                  <p>
+                                    Für jedes Grundattribut werden Bonuspunkte verteilt. Diese werden bei Attributschecks dem D20 Wurf dazu gerechnet. Auf Level 1 kannst du insgesamt {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Punkte verteilen. Je Attribut kann ein Bonus auf Level 1 maximal +{SAGA_DRIVE_START_ATTRIBUTE_BONUS_CAP} geben. Die Basisverteilung wird beim Levelaufstieg nicht neu verteilt. Auf Level {SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS[0]} wird das Cap auf +{SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} angehoben und du kannst einen weiteren Bonuspunkt auf ein Attribut deiner Wahl verteilen. Auf Level {SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS[1]} erhältst du einen weiteren Bonuspunkt welchen du wieder auf ein Grundattribut deiner Wahl verteilen kannst.
+                                  </p>
+                                  <p>
+                                    +0 bedeutet keinen positiven Bonus, nicht Handlungsunfähigkeit. Das bedeutet bei einem Check für dieses Attribut wird nur ein D20 gewürfelt und kein Bonus dazu gerechnet. Boni welche durch andere Mechaniken ausgelöst werden, sind davon nicht betroffen.
+                                  </p>
+                                  <p className="font-medium">Bonus-Obergrenzen nach Level:</p>
+                                  <ul className="list-disc space-y-0.5 pl-4">
+                                    {getSagaDriveAttributeBonusLevelGuide().map(({ levelLabel, maxBonus, description }) => (
+                                      <li key={levelLabel}>
+                                        Level {levelLabel}: Bonus max. +{maxBonus} ({description})
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  <p>
+                                    Wird ein Charakter auf einem höheren Level mit Bonuspunktveränderung erstellt gelten die entsprechenden Bonuspunkte-Regeln. Beispiel Charakter wird auf Level {SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS[0]} erstellt -&gt; Grundattribute können jeweils einen Bonus +{SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} bekommen. Es bleiben {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte (+0 bis +{SAGA_DRIVE_START_ATTRIBUTE_BONUS_CAP}) plus {getSagaDriveAttributeAdvanceBudget(SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS[0])} separater Entwicklungsslot — nicht {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET + getSagaDriveAttributeAdvanceBudget(SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS[0])} frei verteilbare Punkte.
+                                  </p>
+                                </div>
+                              </RuleHelp>
+                            </div>
+                            <p className="mt-1 text-sm text-muted-foreground">Verteile {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Bonuspunkte auf Level 1. Diese werden immer als Bonus dem D20 Wurf dazugerechnet. Für weitere Infos klick auf das Fragezeichen.</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2"><Badge variant={attributePointsUsed === SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET ? 'default' : 'destructive'}>{attributePointsUsed} / {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte</Badge>{attributeAdvanceBudget > 0 ? <Badge variant={attributeAdvancesUsed === attributeAdvanceBudget ? 'default' : 'destructive'}>{attributeAdvancesUsed} / {attributeAdvanceBudget} Entwicklung</Badge> : null}</div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                           {sagaDriveAttributeDefinitions.map((attribute) => {
@@ -660,7 +707,6 @@ export function CharacterEditor() {
                                 if (event.key !== 'Enter' && event.key !== ' ') return;
                                 const target = event.target;
                                 if (!(target instanceof Element)) return;
-                                // Nested controls (RuleHelp, Select) must keep their own Enter/Space.
                                 if (target.closest('button, a, input, textarea, select, [role="combobox"], [role="listbox"], [data-slot="select-trigger"]')) return;
                                 if (target !== event.currentTarget && target.closest('[data-attr-card]') !== event.currentTarget) return;
                                 event.preventDefault();
@@ -673,11 +719,14 @@ export function CharacterEditor() {
                                 <p className="text-sm font-semibold leading-tight">{attribute.label}</p>
                                 <span className="inline-flex items-center rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{attribute.shortLabel}</span>
                               </div>
-                              <Select value={String(attributes[attribute.key])} onValueChange={(value) => { setAttribute(attribute.key, value); setConnectedAttribute(attribute.key); }}><SelectTrigger className="w-full min-h-11 min-w-[4.75rem] justify-center gap-1.5 px-3" aria-label={`${attribute.label} Wert`} onClick={(event) => { event.stopPropagation(); setConnectedAttribute(attribute.key); }} onPointerDown={(event) => event.stopPropagation()}><SelectValue /></SelectTrigger><SelectContent>{[1, 2, 3, 4].map((value) => {
-                                  const extraHint = getAttributeOptionExtraDerivedHint(attribute.key, value, attributes, finalSkillRanks.athletics, finalSkillRanks.acrobatics);
+                              <AttributeD20Icon className="my-0.5" />
+                              <Select value={String(baseAttributes[attribute.key])} onValueChange={(value) => { setAttribute(attribute.key, value); setConnectedAttribute(attribute.key); }}><SelectTrigger className="w-full min-h-11 min-w-[4.75rem] justify-center gap-1 px-2 text-xs font-medium *:data-[slot=select-value]:line-clamp-none [&_svg:not([class*='size-'])]:size-3.5" aria-label={`${attribute.label} Grundbonus`} onClick={(event) => { event.stopPropagation(); setConnectedAttribute(attribute.key); }} onPointerDown={(event) => event.stopPropagation()}><SelectValue>+{baseAttributes[attribute.key]} Bonus</SelectValue></SelectTrigger><SelectContent>{[0, 1, 2, 3, 4].map((value) => {
+                                  const advanceCount = attributeAdvanceLevels.filter((advanceLevel) => attributeAdvances[advanceLevel] === attribute.key).length;
+                                  const finalValue = value + advanceCount;
+                                  const extraHint = getAttributeOptionExtraDerivedHint(attribute.key, finalValue, attributes, finalSkillRanks.athletics, finalSkillRanks.acrobatics);
                                   return (
-                                    <SelectItem key={value} value={String(value)} textValue={String(value)} className={extraHint ? 'pr-10' : undefined}>
-                                      <SelectItemText>{value}</SelectItemText>
+                                    <SelectItem key={value} value={String(value)} textValue={`+${value} Bonus`} disabled={finalValue > SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} className={extraHint ? 'pr-10' : undefined}>
+                                      <SelectItemText>+{value} Bonus</SelectItemText>
                                       {extraHint ? (
                                         <Tooltip>
                                           <TooltipTrigger asChild>
@@ -703,6 +752,17 @@ export function CharacterEditor() {
                             );
                           })}
                         </div>
+                        {attributeAdvanceLevels.length > 0 ? (
+                          <div className="rounded-lg border border-border bg-muted/10 p-4">
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between"><div><h4 className="font-medium">Permanente Attributentwicklung</h4><p className="text-sm text-muted-foreground">Ab Level 8 und 16 kannst du jeweils ein Attribut dauerhaft weiterentwickeln. Die Wahl erhöht deine bestehende Basis; sie erlaubt keine kostenlose Neuverteilung. Reguläres Maximum: +5.</p></div><Badge variant="outline">{attributeAdvanceBudget} Entwicklung durch Level</Badge></div>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                              {attributeAdvanceLevels.map((advanceLevel) => (
+                                <div key={advanceLevel} className="space-y-1.5"><Label>Permanente Entwicklung (Level {advanceLevel})</Label><Select value={attributeAdvances[advanceLevel]} onValueChange={(value) => { if (sagaDriveAttributeDefinitions.some((entry) => entry.key === value)) setAttributeAdvance(advanceLevel, value as SagaDriveAttributeKey); }}><SelectTrigger className="min-h-11"><SelectValue placeholder="Attribut wählen" /></SelectTrigger><SelectContent>{sagaDriveAttributeDefinitions.map((entry) => <SelectItem key={entry.key} value={entry.key} disabled={!canAssignSagaDriveAttributeAdvance(baseAttributes, attributeAdvances, characterLevel, advanceLevel, entry.key)}>{entry.label} · aktuell +{attributes[entry.key]}</SelectItem>)}</SelectContent></Select></div>
+                              ))}
+                            </div>
+                            {!attributeDistributionValid && attributePointsUsed === SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET ? <p className="mt-3 text-xs text-destructive">Vergib alle verfügbaren Entwicklungspunkte und achte darauf, dass kein Endwert +5 überschreitet.</p> : null}
+                          </div>
+                        ) : null}
                         {activeAttribute === 'charisma' ? (
                           <p className="text-center text-[11px] text-muted-foreground">Charisma fließt in keinen abgeleiteten Wert ein.</p>
                         ) : null}

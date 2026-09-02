@@ -2,7 +2,6 @@
  * SpeciesCarousel — Swipebare Spezies-Auswahl mit Skizzen, angelehnt an ProjectCarousel (Scriptony).
  * Location: src/modules/characters/components/SpeciesCarousel.tsx
  */
-import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { sagaDriveRaceOptions } from '../../rulesets/characterCreation';
 import { RuleHelp } from './RuleHelp';
@@ -16,8 +15,8 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  type CarouselApi,
 } from '../../../components/ui/carousel';
+import { useCarouselScrollSync } from '../hooks/useCarouselScrollSync';
 
 interface SpeciesCarouselProps {
   selectedRace: string;
@@ -26,58 +25,25 @@ interface SpeciesCarouselProps {
 }
 
 export function SpeciesCarousel({ selectedRace, onSelect, labelledBy = 'species-label' }: SpeciesCarouselProps) {
-  const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-  const skipSelectRef = useRef(false);
   const options = sagaDriveRaceOptions;
 
-  useEffect(() => {
-    if (!api) return;
-
-    const syncIndex = () => {
-      setCurrent(api.selectedScrollSnap());
-    };
-
-    syncIndex();
-    api.on('select', syncIndex);
-    api.on('reInit', syncIndex);
-
-    return () => {
-      api.off('select', syncIndex);
-      api.off('reInit', syncIndex);
-    };
-  }, [api]);
-
-  useEffect(() => {
-    if (!api) return;
-    const index = options.findIndex((option) => option.value === selectedRace);
-    if (index < 0 || index === api.selectedScrollSnap()) return;
-    skipSelectRef.current = true;
-    api.scrollTo(index);
-  }, [api, options, selectedRace]);
-
-  useEffect(() => {
-    if (!api) return;
-
-    const handleSelect = () => {
-      if (skipSelectRef.current) {
-        skipSelectRef.current = false;
-        return;
-      }
-      const option = options[api.selectedScrollSnap()];
-      if (option && option.value !== selectedRace) onSelect(option.value);
-    };
-
-    api.on('select', handleSelect);
-    return () => {
-      api.off('select', handleSelect);
-    };
-  }, [api, onSelect, options, selectedRace]);
-
-  const handleCardClick = (index: number) => {
-    if (index === current) return;
-    api?.scrollTo(index);
-  };
+  const {
+    setApi,
+    current,
+    handleCardClick,
+    scrollPrev,
+    scrollNext,
+  } = useCarouselScrollSync({
+    optionsLength: options.length,
+    getSelectedIndex: () => options.findIndex((option) => option.value === selectedRace),
+    getValueAtIndex: (index) => options[index]?.value,
+    isSelectionUnset: () => false,
+    shouldSyncScrollToSelection: () => true,
+    selectionSyncKey: selectedRace,
+    shouldEmitSelect: (_index, value) => value !== selectedRace,
+    onSelect,
+    selectOnCenterClick: false,
+  });
 
   return (
     <div className="relative px-0 py-2 md:py-4" role="radiogroup" aria-labelledby={labelledBy}>
@@ -219,11 +185,11 @@ export function SpeciesCarousel({ selectedRace, onSelect, labelledBy = 'species-
                         if (!isCenter) return;
                         if (event.key === 'ArrowLeft') {
                           event.preventDefault();
-                          api?.scrollPrev();
+                          scrollPrev();
                         }
                         if (event.key === 'ArrowRight') {
                           event.preventDefault();
-                          api?.scrollNext();
+                          scrollNext();
                         }
                       }}
                     >
@@ -272,7 +238,7 @@ export function SpeciesCarousel({ selectedRace, onSelect, labelledBy = 'species-
             variant="outline"
             size="icon"
             className="species-carousel-nav-button left-0 top-[32%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:left-2 md:h-11 md:w-11"
-            onClick={() => api?.scrollPrev()}
+            onClick={scrollPrev}
             aria-label="Vorherige Spezies"
           >
             <ChevronLeft className="size-5" />
@@ -282,7 +248,7 @@ export function SpeciesCarousel({ selectedRace, onSelect, labelledBy = 'species-
             variant="outline"
             size="icon"
             className="species-carousel-nav-button right-0 top-[32%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:right-2 md:h-11 md:w-11"
-            onClick={() => api?.scrollNext()}
+            onClick={scrollNext}
             aria-label="Nächste Spezies"
           >
             <ChevronRight className="size-5" />
@@ -297,7 +263,7 @@ export function SpeciesCarousel({ selectedRace, onSelect, labelledBy = 'species-
               key={option.value}
               type="button"
               className={`species-carousel-dot ${index === current ? 'active' : ''}`}
-              onClick={() => api?.scrollTo(index)}
+              onClick={() => handleCardClick(index)}
               aria-label={`${option.label} anzeigen`}
             />
           ))}

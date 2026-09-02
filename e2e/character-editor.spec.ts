@@ -15,7 +15,10 @@ async function ensureLoggedIn(page: Page) {
   await expect(page.getByRole('button', { name: 'Dashboard' }).first()).toBeVisible({ timeout: 15_000 });
 }
 
-test.beforeAll(() => { fs.mkdirSync(EVIDENCE_DIR, { recursive: true }); });
+test.beforeAll(() => {
+  fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
+  fs.mkdirSync('.qa/evidence/attribute-bonus-pool', { recursive: true });
+});
 
 test('character editor exposes the SagaDrive Core creation flow', async ({ page }) => {
   test.setTimeout(180_000);
@@ -150,7 +153,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
   await expect(page.getByText('Grundattribute').first()).toBeVisible();
-  await expect(page.getByText(/15 \/ 15 Punkte/i).first()).toBeVisible();
+  await expect(page.getByText(/15 \/ 15 Basis-Bonuspunkte/i).first()).toBeVisible();
+  await expect(page.getByText(/\+4 Bonus|\+3 Bonus|\+2 Bonus|\+1 Bonus/i).first()).toBeVisible();
   await expect(page.getByText('Ausdauer').first()).toBeVisible();
   await expect(page.getByText('Verstand').first()).toBeVisible();
   await expect(page.getByText('Wahrnehmung').first()).toBeVisible();
@@ -158,6 +162,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Natur & Wildnis').first()).toBeAttached();
   await expect(page.getByText('Hintergrund Framework').first()).toBeVisible();
   await expect(page.getByRole('radio', { name: /Eigener Hintergrund/i })).toBeAttached();
+  await page.screenshot({ path: path.join('.qa/evidence/attribute-bonus-pool', '01-attribute-budget-level-1.png'), fullPage: true });
 
   const backgroundPanel = page.locator('[data-background-panel]');
   const healingFramework = page.getByRole('radio', { name: /Heilung & Fürsorge/i });

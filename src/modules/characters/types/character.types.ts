@@ -1,11 +1,15 @@
 import type {
   CharacterRulesetKey,
   SagaDriveArchetypeKey,
+  SagaDriveAttributeKey,
   SagaDriveEssenceKey,
   SagaDriveSkillKey,
   SagaDriveSpeciesTraitKey,
 } from '../../rulesets/characterCreation';
 import type { SagaDriveSpeciesTraitOptionKey } from '../../rulesets/speciesTraitOptions';
+
+/** Level → attribute key for permanent advances at 8 and 16. */
+export type SagaDriveAttributeAdvancesDto = Partial<Record<8 | 16, SagaDriveAttributeKey>>;
 
 export interface SagaDriveSpecializationDto {
   skill: SagaDriveSkillKey;
@@ -42,6 +46,15 @@ export interface SagaDriveSpeciesProfileDto {
   bodyDescription: string;
 }
 
+export interface CharacterAttributesDto {
+  strength: number;
+  dexterity: number;
+  endurance: number;
+  mind: number;
+  perception: number;
+  charisma: number;
+}
+
 export interface SagaDriveProfileDto {
   archetype?: SagaDriveArchetypeKey;
   essence?: SagaDriveEssenceKey;
@@ -55,17 +68,16 @@ export interface SagaDriveProfileDto {
   backgroundTemplateId?: string | null;
   background: SagaDriveBackgroundDto;
   archetypeTrainingSkill?: SagaDriveSkillKey;
+  /**
+   * Level-1 base bonus distribution (+0…+4, sum 15).
+   * Final `attributes` on the character row remain the computed totals after advances.
+   * Absent on legacy profiles → treat stored attributes as base.
+   */
+  baseAttributes?: CharacterAttributesDto;
+  /** Permanent advances at levels 8 and 16 (attribute key chosen per slot). */
+  attributeAdvances?: SagaDriveAttributeAdvancesDto;
   drive: number;
   momentum: number;
-}
-
-export interface CharacterAttributesDto {
-  strength: number;
-  dexterity: number;
-  endurance: number;
-  mind: number;
-  perception: number;
-  charisma: number;
 }
 
 export interface CharacterAttributeStorageDto extends Partial<CharacterAttributesDto> {

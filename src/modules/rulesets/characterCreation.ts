@@ -243,6 +243,7 @@ export const dnd55BackgroundOptions: readonly CharacterCreationOption[] = [
 
 export function isCharacterRulesetKey(value: string): value is CharacterRulesetKey { return value === 'sagadrive-core' || value === 'dnd-5.5e'; }
 export function isSagaDriveArchetypeKey(value: string): value is SagaDriveArchetypeKey { return sagaDriveArchetypeOptions.some((option) => option.value === value); }
+export function isSagaDriveAttributeKey(value: string): value is SagaDriveAttributeKey { return sagaDriveAttributeDefinitions.some((definition) => definition.key === value); }
 export function isSagaDriveEssenceKey(value: string): value is SagaDriveEssenceKey { return sagaDriveEssenceOptions.some((option) => option.value === value); }
 export function isSagaDriveRaceKey(value: string): value is SagaDriveRaceKey { return sagaDriveRaceOptions.some((option) => option.value === value); }
 export function isSagaDriveSkillKey(value: string): value is SagaDriveSkillKey { return sagaDriveSkillDefinitions.some((skill) => skill.key === value); }
