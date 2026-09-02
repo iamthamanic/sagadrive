@@ -52,7 +52,7 @@ Roadmap: nicht vorhanden — aus aktuellem Character-Editor-Designgespräch abge
 
 ## Composition Gate
 - Proof: `.qa/runs/composition-gate-attribute-bonus-pool.md`
-- Proof code SHA: WORKTREE on tip `b18a1061d34632d0869843788d156a38081b3601`
+- Proof code SHA: `239a7fb18805aec84f74fc29f6972cdccf47def9`
 - Base SHA: `dea1502ddef740ace9646a48a98838fbebcd131f`
 - Verdict: **CLEAR** — `baseAttributes` + `attributeAdvances` in `sagadrive_profile`; Load via `resolveSagaDriveAttributeBuildState`; Final in `attributes`; tooltip/E2E aligned.
 
