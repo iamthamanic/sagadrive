@@ -352,6 +352,11 @@ Neue Features folgen der **#94 Layered Architecture** — nicht dem legacy `src/
 
 Vor Commit: `npm run test-gate` (inkl. `architecture-boundary-check`).
 
+### Agent config (Cursor / AgentShield)
+
+- Project rules + secure baseline: [`.cursor/`](.cursor/) (see [`.cursor/README.md`](.cursor/README.md)).
+- Before shipping changes that touch `.cursor/`: `npx ecc-agentshield scan --path .cursor` (block on critical/high).
+
 ### When Integrating Backend
 1. Update Edge Functions first
 2. Update frontend services

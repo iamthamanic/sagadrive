@@ -1,0 +1,61 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git checkout*)",
+      "Bash(git branch*)",
+      "Bash(git fetch*)",
+      "Bash(git pull*)",
+      "Bash(git push*)",
+      "Bash(gh *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(deno check *)",
+      "Bash(deno test *)",
+      "Read(*)",
+      "Edit(src/*)",
+      "Edit(supabase/*)",
+      "Edit(scripts/*)",
+      "Edit(e2e/*)",
+      "Edit(docs/*)",
+      "Edit(.qa/*)",
+      "Edit(.github/*)",
+      "Edit(public/*)",
+      "Edit(.cursor/*)",
+      "Edit(README.md)",
+      "Edit(AGENTS.md)",
+      "Edit(package.json)",
+      "Edit(package-lock.json)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(sudo *)",
+      "Bash(chmod 777 *)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | bash)",
+      "Bash(ssh *)",
+      "Bash(> /dev/*)",
+      "Bash(dd *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hook": ".cursor/hooks/warn-destructive-bash.sh"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hook": ".cursor/hooks/check-written-secrets.sh"
+      }
+    ]
+  }
+}

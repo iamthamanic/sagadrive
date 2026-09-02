@@ -1,0 +1,36 @@
+---
+description: SagaDrive project map — stack, architecture, quality gate
+alwaysApply: true
+---
+
+# SagaDrive
+
+Read [AGENTS.md](../../AGENTS.md) before changing code.
+
+## Stack
+
+- React + Vite + TypeScript + Tailwind + Radix
+- Supabase self-host (Auth, Postgres, Edge Functions, Storage)
+- UI/errors Deutsch; commits and PR text English
+- Quality gate: `npm run test-gate` (includes architecture-boundary-check)
+
+## Architecture (#94)
+
+- `src/domains/**` — pure business/rules (no React, no Supabase)
+- `src/infrastructure/**` — Supabase / network adapters only
+- `src/app/<domain>/<slice>/` — vertical user journeys
+- `src/modules/**` — legacy barrels; no new business logic for migrated areas
+- Character: `edit/` is composition root; consume `creation/` + `progression/` via public barrels only
+
+## Workflow
+
+- Issue branches from `main` — never commit directly to `main`
+- Acceptance: `.qa/acceptance/<slug>.md` when present
+- Composition proof: `.qa/runs/composition-gate-<slug>.md` (CLEAR/SKIPPED for current HEAD)
+- Ship only after `@ecc-check` READY / green CI
+
+## Security
+
+- Owner-scoped data stays owner-scoped (RLS + service checks)
+- Client writes must not invent elevated origins or cross-owner FKs
+- Security reviews list **all** severities including Low/Info
