@@ -1,9 +1,10 @@
 # Composition Gate — attribute-bonus-pool
 
-- HEAD_SHA: 239a7fb18805aec84f74fc29f6972cdccf47def9
-- BASE_SHA: dea1502ddef740ace9646a48a98838fbebcd131f
+- HEAD_SHA: d31afd1c8510139da38ae8aed44dafae35ce708b
+- BASE_SHA: 913b939749b0b9ebdf5cc1e8d7a75cd1b24f2e45
 - Date: 2026-09-02
 - Verdict: CLEAR
+- Note: Rebased onto main after #84 squash; hop chain unchanged (SHA refresh only).
 
 ## Event
 Spieler verteilt 15 Basis-Attribut-Bonuspunkte (+0…+4), optional permanente Level-8/16-Entwicklungen, sieht `d20 + Bonus`, und speichert den Charakter so, dass Basis und Entwicklung nachvollziehbar bleiben.
