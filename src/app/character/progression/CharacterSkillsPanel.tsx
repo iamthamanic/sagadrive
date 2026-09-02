@@ -19,7 +19,8 @@ import {
   SAGA_DRIVE_START_ARCHETYPE_SKILL_POINTS,
   SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS,
   getSagaDriveSkillCap,
-  resolveSagaDriveSkillRanks,
+  hasCompleteSkillProvenance,
+  resolveSagaDriveSkillRanksSafe,
   sumBackgroundSkillPointsUsed,
   type SagaDriveBackgroundSkillPoints,
   type SagaDriveSkillAdvanceDto,
@@ -45,6 +46,8 @@ interface CharacterSkillsPanelProps {
   specializations: SagaDriveSpecializationRecordDto[];
   onSpecializationsChange: (entries: SagaDriveSpecializationRecordDto[]) => void;
   skillProvenanceStatus?: SagaDriveSkillProvenanceStatus;
+  /** Stored final ranks of a legacy character without reconstructible provenance (display only). */
+  legacyFinalRanks?: Record<SagaDriveSkillKey, number> | null;
   selectedSkill?: SagaDriveSkillKey;
   onSelectedSkillChange?: (skill: SagaDriveSkillKey) => void;
 }
@@ -75,6 +78,7 @@ export function CharacterSkillsPanel({
   specializations,
   onSpecializationsChange,
   skillProvenanceStatus,
+  legacyFinalRanks,
   selectedSkill,
   onSelectedSkillChange,
 }: CharacterSkillsPanelProps) {
@@ -85,15 +89,22 @@ export function CharacterSkillsPanel({
     backgroundSkillPoints,
     archetypeTrainingSkill,
   };
-  const finalRanks = resolveSagaDriveSkillRanks(
-    { ...startBuild, skillAdvances, specializations, provenanceStatus: skillProvenanceStatus ?? 'complete' },
-    characterLevel,
-  );
+  // Legacy characters (pre Skill Progression v2) keep their stored final ranks visible;
+  // no provenance is invented. Once complete provenance is (re)entered, ranks resolve normally.
+  const provenanceLegacy = skillProvenanceStatus === 'legacy-unresolved'
+    && Boolean(legacyFinalRanks)
+    && !hasCompleteSkillProvenance({ freeSkillRanks: freeRanks, background: { backgroundSkillPoints }, skillAdvances });
+  // Safe resolve: invalid dependent development decisions are pruned for display instead of throwing.
+  const finalRanks = provenanceLegacy && legacyFinalRanks
+    ? legacyFinalRanks
+    : resolveSagaDriveSkillRanksSafe(
+      { ...startBuild, skillAdvances, specializations, provenanceStatus: skillProvenanceStatus ?? 'complete' },
+      characterLevel,
+    );
   const skillCap = getSagaDriveSkillCap(characterLevel);
   const hasOverflow = sagaDriveSkillDefinitions.some((skill) => finalRanks[skill.key] > skillCap);
   const selected = selectedSkill ? getSagaDriveSkill(selectedSkill) : undefined;
   const backgroundSpec = specializations.find((entry) => entry.source === 'background');
-  const provenanceLegacy = skillProvenanceStatus === 'legacy-unresolved';
 
   const changeFreeRank = (skill: SagaDriveSkillKey, delta: -1 | 1) => {
     const currentFree = freeRanks[skill];
@@ -112,7 +123,13 @@ export function CharacterSkillsPanel({
         <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Level-Cap</p><p className="mt-1 text-lg font-semibold">{skillCap}</p><p className="text-[11px] text-muted-foreground">Start gesamt 10 Punkte</p></div>
       </div>
 
-      {(freeUsed !== SAGA_DRIVE_START_FREE_SKILL_POINTS || backgroundUsed !== SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS || !archetypeTrainingSkill || hasOverflow) && (
+      {provenanceLegacy && (
+        <div className="rounded-lg border border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
+          Legacy-Charakter: Die gespeicherten finalen Fertigkeitswerte bleiben erhalten, die vollständige Herkunft ist nicht rekonstruierbar. Du kannst unverändert speichern oder die Startquellen (7 frei, 2 Hintergrund, 1 Archetyp) vollständig nachziehen.
+        </div>
+      )}
+
+      {!provenanceLegacy && (freeUsed !== SAGA_DRIVE_START_FREE_SKILL_POINTS || backgroundUsed !== SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS || !archetypeTrainingSkill || hasOverflow) && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm">
           {freeUsed !== SAGA_DRIVE_START_FREE_SKILL_POINTS && <p>Vergib genau {SAGA_DRIVE_START_FREE_SKILL_POINTS} freie Fertigkeitspunkte.</p>}
           {backgroundUsed !== SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS && <p>Verteile genau {SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS} Hintergrundpunkte im Hintergrund-Panel.</p>}
@@ -213,4 +230,4 @@ export function CharacterSkillsPanel({
   );
 }
 
-export { createEmptySagaDriveSkillRanks, resolveSagaDriveSkillRanks };
+export { createEmptySagaDriveSkillRanks, resolveSagaDriveSkillRanksSafe };

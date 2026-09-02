@@ -56,12 +56,11 @@ export function assertValidSagaDriveSkillPersistence(
     backgroundSpecialization: profile.background.specialization,
   }, level);
 
+  // resolved.provenanceStatus is derived from the actual data; the client-supplied
+  // profile.skillProvenanceStatus is intentionally not consulted (no validation bypass).
   assertSagaDriveSkillPersistence(
     skills,
-    {
-      ...resolved,
-      provenanceStatus: profile.skillProvenanceStatus ?? resolved.provenanceStatus,
-    },
+    resolved,
     level,
     profile.background.skillPool,
     profile.archetype,

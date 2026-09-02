@@ -17,6 +17,8 @@ export const SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS = 2;
 export const SAGA_DRIVE_START_ARCHETYPE_SKILL_POINTS = 1;
 export const SAGA_DRIVE_SKILL_ADVANCE_LEVELS = [3, 5, 7, 9, 11, 13, 15, 17, 19] as const;
 export const SAGA_DRIVE_MAX_SPECIALIZATIONS_PER_SKILL = 3;
+/** §5.2 situational specialization bonus; never part of the normal skill check. */
+export const SAGA_DRIVE_SPECIALIZATION_BONUS = 2;
 
 export type SagaDriveSkillAdvanceLevel = (typeof SAGA_DRIVE_SKILL_ADVANCE_LEVELS)[number];
 export type SagaDriveBackgroundSkillPoints = Partial<Record<SagaDriveSkillKey, 1 | 2>>;
@@ -223,12 +225,17 @@ export function isValidStartSkillBuild(
   skillPool: readonly SagaDriveSkillKey[],
   archetypeKey?: SagaDriveArchetypeKey,
 ): boolean {
+  // §4.4: the background framework pool is exactly four distinct valid SagaDrive skills.
+  if (skillPool.length !== 4) return false;
+  if (new Set(skillPool).size !== skillPool.length) return false;
+  if (!skillPool.every(isSagaDriveSkillKey)) return false;
   if (!isValidBackgroundSkillPoints(build.backgroundSkillPoints, skillPool)) return false;
   if (sumFreeSkillRanks(build.freeSkillRanks) !== SAGA_DRIVE_START_FREE_SKILL_POINTS) return false;
 
   const archetype = archetypeKey ? getSagaDriveArchetype(archetypeKey) : undefined;
-  if (build.archetypeTrainingSkill) {
-    if (!archetype?.skills.includes(build.archetypeTrainingSkill)) return false;
+  if (archetype) {
+    // A complete start build must spend the one archetype skill point on an archetype skill.
+    if (!build.archetypeTrainingSkill || !archetype.skills.includes(build.archetypeTrainingSkill)) return false;
   }
 
   const ranks = resolveSagaDriveStartSkillRanks(build);
@@ -338,6 +345,155 @@ export function isValidSpecializationForSkillRank(skillRank: number, existingCou
   return skillRank >= minRank;
 }
 
+/** One chronological skill-development decision: an advance or a skill-development specialization. */
+interface SagaDriveSkillDevelopmentEntry {
+  level: number;
+  kind: SagaDriveSkillAdvanceKind | 'specialization';
+  skill: SagaDriveSkillKey;
+  name?: string;
+  advance?: SagaDriveSkillAdvanceDto;
+  specialization?: SagaDriveSpecializationRecordDto;
+}
+
+function toDevelopmentTimeline(
+  advances: readonly SagaDriveSkillAdvanceDto[],
+  specializations: readonly SagaDriveSpecializationRecordDto[],
+): SagaDriveSkillDevelopmentEntry[] {
+  const entries: SagaDriveSkillDevelopmentEntry[] = [
+    ...advances.map((advance) => ({
+      level: advance.level,
+      kind: advance.kind as SagaDriveSkillDevelopmentEntry['kind'],
+      skill: advance.skill,
+      advance,
+    })),
+    ...specializations
+      .filter((entry) => entry.source === 'skill-development')
+      .map((specialization) => ({
+        level: specialization.acquiredAtLevel,
+        kind: 'specialization' as const,
+        skill: specialization.skill,
+        name: specialization.name,
+        specialization,
+      })),
+  ];
+  // Chronological order; an advance wins a same-level tie over a specialization (deterministic).
+  return entries.sort((left, right) => left.level - right.level || (left.kind === 'specialization' ? 1 : 0) - (right.kind === 'specialization' ? 1 : 0));
+}
+
+/**
+ * Central chronological validation of all skill-development decisions (#89/#90):
+ * one decision per advance level, rank prerequisites evaluated at acquisition time,
+ * specialization ladder counted from background + earlier development specializations.
+ */
+export function isValidSagaDriveSkillDevelopment(
+  build: SagaDriveStartSkillBuild,
+  advances: readonly SagaDriveSkillAdvanceDto[],
+  specializations: readonly SagaDriveSpecializationRecordDto[],
+  level: number,
+): boolean {
+  const normalizedLevel = clampLevel(level);
+  const specCounts = new Map<SagaDriveSkillKey, number>();
+  const ranks = resolveSagaDriveStartSkillRanks(build);
+
+  // Background specializations are acquired at creation and enter the ladder first.
+  const backgroundSpecs = specializations.filter((entry) => entry.source === 'background');
+  if (backgroundSpecs.length > 1) return false;
+  for (const spec of backgroundSpecs) {
+    const count = specCounts.get(spec.skill) ?? 0;
+    // Must be bound to a skill actually trained by the background, not just a high final rank.
+    if ((build.backgroundSkillPoints[spec.skill] ?? 0) <= 0) return false;
+    if (!isValidSpecializationForSkillRank(ranks[spec.skill], count)) return false;
+    specCounts.set(spec.skill, count + 1);
+  }
+
+  const seenLevels = new Set<number>();
+  let workingRanks = ranks;
+  for (const entry of toDevelopmentTimeline(advances, specializations)) {
+    if (!isSagaDriveSkillAdvanceLevel(entry.level)) return false;
+    if (entry.level > normalizedLevel) continue;
+    if (seenLevels.has(entry.level)) return false;
+    seenLevels.add(entry.level);
+    if (entry.kind === 'specialization') {
+      const count = specCounts.get(entry.skill) ?? 0;
+      if (!entry.name?.trim()) return false;
+      if (!isValidSpecializationForSkillRank(workingRanks[entry.skill], count)) return false;
+      specCounts.set(entry.skill, count + 1);
+      continue;
+    }
+    const advance: SagaDriveSkillAdvanceDto = { level: entry.level as SagaDriveSkillAdvanceLevel, kind: entry.kind, skill: entry.skill };
+    if (!isValidSkillAdvanceEntry(advance, workingRanks)) return false;
+    workingRanks = applySkillAdvances(workingRanks, [advance], entry.level);
+  }
+  // §13.3: a character of this level is built from ALL developments up to it — every
+  // unlocked slot must hold exactly one decision. Above-level slots stay dormant.
+  for (const unlockedLevel of getSagaDriveSkillAdvanceLevels(normalizedLevel)) {
+    if (!seenLevels.has(unlockedLevel)) return false;
+  }
+  return true;
+}
+
+/**
+ * Deterministic prune of skill-development decisions that became invalid (e.g. after an
+ * earlier slot was removed). Keeps later decisions that are still valid on their own.
+ */
+export function sanitizeSagaDriveSkillDevelopment(
+  build: SagaDriveStartSkillBuild,
+  advances: readonly SagaDriveSkillAdvanceDto[],
+  specializations: readonly SagaDriveSpecializationRecordDto[],
+  level: number,
+): { advances: SagaDriveSkillAdvanceDto[]; specializations: SagaDriveSpecializationRecordDto[] } {
+  const normalizedLevel = clampLevel(level);
+  const specCounts = new Map<SagaDriveSkillKey, number>();
+  let workingRanks = resolveSagaDriveStartSkillRanks(build);
+
+  const keptSpecializations: SagaDriveSpecializationRecordDto[] = [];
+  for (const spec of specializations.filter((entry) => entry.source === 'background')) {
+    if (keptSpecializations.length >= 1) break;
+    const count = specCounts.get(spec.skill) ?? 0;
+    if ((build.backgroundSkillPoints[spec.skill] ?? 0) <= 0) continue;
+    if (!isValidSpecializationForSkillRank(workingRanks[spec.skill], count)) continue;
+    specCounts.set(spec.skill, count + 1);
+    keptSpecializations.push(spec);
+  }
+
+  const keptAdvances: SagaDriveSkillAdvanceDto[] = [];
+  const seenLevels = new Set<number>();
+  for (const entry of toDevelopmentTimeline(advances, specializations)) {
+    if (!isSagaDriveSkillAdvanceLevel(entry.level)) continue;
+    if (entry.level > normalizedLevel) {
+      // Dormant decisions above the current level are preserved untouched.
+      if (entry.advance) keptAdvances.push(entry.advance);
+      else if (entry.specialization) keptSpecializations.push(entry.specialization);
+      continue;
+    }
+    if (seenLevels.has(entry.level)) continue;
+    if (entry.kind === 'specialization') {
+      const count = specCounts.get(entry.skill) ?? 0;
+      if (!entry.specialization || !entry.name?.trim()) continue;
+      if (!isValidSpecializationForSkillRank(workingRanks[entry.skill], count)) continue;
+      specCounts.set(entry.skill, count + 1);
+      seenLevels.add(entry.level);
+      keptSpecializations.push(entry.specialization);
+      continue;
+    }
+    const advance: SagaDriveSkillAdvanceDto = { level: entry.level as SagaDriveSkillAdvanceLevel, kind: entry.kind, skill: entry.skill };
+    if (!isValidSkillAdvanceEntry(advance, workingRanks)) continue;
+    workingRanks = applySkillAdvances(workingRanks, [advance], entry.level);
+    seenLevels.add(entry.level);
+    keptAdvances.push(advance);
+  }
+  return { advances: keptAdvances, specializations: keptSpecializations };
+}
+
+/** Non-throwing rank resolution for editor rendering: invalid development decisions are pruned first. */
+export function resolveSagaDriveSkillRanksSafe(
+  build: SagaDrivePersistedSkillBuild,
+  level: number,
+): SagaDriveSkillRankMap {
+  const { advances } = sanitizeSagaDriveSkillDevelopment(build, build.skillAdvances ?? [], build.specializations ?? [], level);
+  return resolveSagaDriveSkillRanks({ ...build, skillAdvances: advances }, level);
+}
+
 export function isValidSagaDriveSpecializations(
   specializations: readonly SagaDriveSpecializationRecordDto[],
   finalRanks: SagaDriveSkillRankMap,
@@ -352,13 +508,16 @@ export function isValidSagaDriveSpecializations(
   return true;
 }
 
+/**
+ * Data-derived provenance check. A client-supplied status string has no authority here:
+ * completeness follows only from reconstructible provenance data actually present.
+ */
 export function hasCompleteSkillProvenance(profile: {
   freeSkillRanks?: Partial<Record<SagaDriveSkillKey, number>>;
   background?: { backgroundSkillPoints?: SagaDriveBackgroundSkillPoints };
   skillAdvances?: SagaDriveSkillAdvanceDto[];
   skillProvenanceStatus?: SagaDriveSkillProvenanceStatus;
 }): boolean {
-  if (profile.skillProvenanceStatus === 'complete') return true;
   if (profile.freeSkillRanks && sumFreeSkillRanks(normalizeFreeSkillRanks(profile.freeSkillRanks)) === SAGA_DRIVE_START_FREE_SKILL_POINTS) {
     return true;
   }
@@ -425,17 +584,19 @@ export function skillRankMapsEqual(left: SagaDriveSkillRankMap, right: SagaDrive
 
 export function assertSagaDriveSkillPersistence(
   finalSkills: SagaDriveSkillRankMap,
-  build: SagaDrivePersistedSkillBuild,
+  build: SagaDriveResolvedSkillBuild,
   level: number,
   skillPool: readonly SagaDriveSkillKey[],
   archetypeKey?: SagaDriveArchetypeKey,
 ): void {
-  if (build.provenanceStatus === 'legacy-unresolved') return;
-  if (!hasCompleteSkillProvenance({
-    freeSkillRanks: build.freeSkillRanks,
-    background: { backgroundSkillPoints: build.backgroundSkillPoints },
-    skillAdvances: build.skillAdvances,
-  })) {
+  // Gate on the provenance status derived from the RAW persisted profile data by
+  // resolveSagaDriveSkillBuildState. Re-deriving completeness here would run on the
+  // compat-enriched build: background points synthesized from legacy trainedSkills
+  // would look like fresh v2 provenance and a true legacy character would wrongly
+  // fail validation. A client-supplied status string never reaches this guard;
+  // true legacy data (no reconstructible provenance) stays readable and keeps its
+  // stored final ranks.
+  if (build.provenanceStatus !== 'complete') {
     return;
   }
 
@@ -446,10 +607,15 @@ export function assertSagaDriveSkillPersistence(
     throw new Error('Invalid SagaDrive skill build: free skill ranks must sum to 7.');
   }
   if (!isValidStartSkillBuild(build, skillPool, archetypeKey)) {
-    throw new Error('Invalid SagaDrive skill build: start sources violate cap or archetype pool.');
+    throw new Error('Invalid SagaDrive skill build: start sources violate cap, pool or archetype contract.');
   }
-  if (!isValidSagaDriveSkillAdvances(build.skillAdvances ?? [], build, level)) {
-    throw new Error('Invalid SagaDrive skill build: skill advances violate caps or duplicate level slots.');
+  // §4.4/§13.3: a complete character creation includes exactly one background specialization.
+  const backgroundSpecs = (build.specializations ?? []).filter((entry) => entry.source === 'background');
+  if (backgroundSpecs.length !== 1) {
+    throw new Error('Invalid SagaDrive skill build: complete characters need exactly one background specialization.');
+  }
+  if (!isValidSagaDriveSkillDevelopment(build, build.skillAdvances ?? [], build.specializations ?? [], level)) {
+    throw new Error('Invalid SagaDrive skill build: one decision per development level, prerequisites at acquisition time.');
   }
 
   const expected = resolveSagaDriveSkillRanks(build, level);

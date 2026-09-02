@@ -15,7 +15,7 @@ import { getSpeciesDevelopmentMode } from '../modules/worlds/worldModuleRegistry
 import { useWorldProfiles } from '../modules/worlds/hooks/useWorldProfiles';
 import type { CreateWorldProfileDto, WorldProfileVm } from '../modules/worlds/types/world.types';
 import { toast } from 'sonner';
-import { setCharacterEditorBootstrap } from '../modules/characters/characterEditorBootstrap';
+import { setCharacterEditorBootstrap } from '../app/character/shared/characterEditorBootstrap';
 
 const WorldProfileEditorDialog = lazy(() =>
   import('../modules/worlds/components/WorldProfileEditorDialog').then((module) => ({

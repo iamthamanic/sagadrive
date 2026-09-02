@@ -6,6 +6,7 @@
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
 import './skill-progression.self-test.mjs';
+import './skill-progression-domain-check.mjs';
 
 function read(path) {
   return readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -14,6 +15,13 @@ function read(path) {
 function requireMatch(content, pattern, label) {
   if (!pattern.test(content)) {
     console.error(`Skill progression regression check failed: missing ${label}.`);
+    process.exit(1);
+  }
+}
+
+function forbidMatch(content, pattern, label) {
+  if (pattern.test(content)) {
+    console.error(`Skill progression regression check failed: forbidden ${label}.`);
     process.exit(1);
   }
 }
@@ -34,12 +42,24 @@ requireMatch(rules, /export function normalizeLegacyBackgroundSkillPoints/, 'leg
 requireMatch(rules, /result\[skill\] = 1/, 'legacy maps each trained skill to +1');
 requireMatch(rules, /export function resolveSagaDriveSkillRanks/, 'full rank resolution');
 requireMatch(rules, /export function assertSagaDriveSkillPersistence/, 'fail-closed persistence assert');
+requireMatch(rules, /build\.provenanceStatus !== 'complete'/, 'persistence assert gates on raw-data-derived provenance status');
+forbidMatch(rules, /hasCompleteSkillProvenance\(\{\s*freeSkillRanks: build\.freeSkillRanks/, 'completeness re-derivation on compat-enriched build data');
+requireMatch(rules, /SAGA_DRIVE_SPECIALIZATION_BONUS = 2/, 'situational specialization bonus constant');
+requireMatch(rules, /export function isValidSagaDriveSkillDevelopment/, 'chronological one-decision-per-slot validation');
+requireMatch(rules, /for \(const unlockedLevel of getSagaDriveSkillAdvanceLevels\(normalizedLevel\)\)/, 'every unlocked development slot must hold one decision');
+requireMatch(rules, /export function sanitizeSagaDriveSkillDevelopment/, 'deterministic dependent-slot prune');
+requireMatch(rules, /export function resolveSagaDriveSkillRanksSafe/, 'non-throwing editor rank resolution');
+requireMatch(rules, /skillPool\.length !== 4/, 'background framework pool of exactly four');
+forbidMatch(rules, /provenanceStatus === 'legacy-unresolved'\)\s*return/, 'client-controlled legacy validation bypass');
+forbidMatch(rules, /skillProvenanceStatus === 'complete'\) return true/, 'client-controlled complete shortcut');
 
 requireMatch(assertPersistence, /assertValidSagaDriveSkillPersistence/, 'skill persistence guard');
 requireMatch(assertPersistence, /assertValidSagaDriveCharacterPersistence/, 'combined character persistence guard');
+forbidMatch(assertPersistence, /profile\.skillProvenanceStatus \?\?/, 'client provenance status override');
 requireMatch(normalize, /backgroundSkillPoints/, 'background skill points normalization');
 requireMatch(normalize, /normalizeFreeSkillRanks/, 'free skill ranks normalization');
 requireMatch(derived, /getSagaDriveAppliedExperienceBonus/, 'initiative uses applied EB');
 requireMatch(repository, /assertValidSagaDriveCharacterPersistence/, 'repository enforces skill persistence');
+requireMatch(repository, /touchesSagaDriveState/, 'partial updates validate the effective combined state');
 
 console.log('Skill progression regression check passed.');
