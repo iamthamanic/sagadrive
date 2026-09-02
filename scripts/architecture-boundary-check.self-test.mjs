@@ -6,7 +6,9 @@
 import process from 'node:process';
 import {
   checkCharacterCrossSliceImports,
+  checkContentImportPaths,
   extractImportPaths,
+  resolveRelativeImport,
   runArchitectureBoundaryCheck,
 } from './architecture-boundary-check.mjs';
 
@@ -31,37 +33,65 @@ function assertNoCrossSliceViolation(label, filePath, content) {
 }
 
 assertViolation(
-  'private cross-slice import',
+  'private cross-slice import (slice root)',
   '/repo/src/app/character/edit/CharacterEditor.tsx',
   "import { Foo } from '../creation/CharacterArchetypePanel';",
   'private cross-slice import',
 );
 
+assertViolation(
+  'private cross-slice import (nested file)',
+  '/repo/src/app/character/edit/components/Header.tsx',
+  "import { Foo } from '../../creation/CharacterArchetypePanel';",
+  'private cross-slice import',
+);
+
 assertNoCrossSliceViolation(
-  'public slice import',
+  'public slice import (slice root)',
   '/repo/src/app/character/edit/CharacterEditor.tsx',
   "import { CharacterArchetypePanel } from '../creation';",
 );
 
+assertNoCrossSliceViolation(
+  'public slice import (nested file)',
+  '/repo/src/app/character/edit/components/Header.tsx',
+  "import { CharacterArchetypePanel } from '../../creation';",
+);
+
+const dynamicSupabase = "const client = await import('../../../lib/supabase');";
+const appDynamicViolations = checkContentImportPaths(
+  dynamicSupabase,
+  [
+    { label: 'Supabase client', test: (p) => p.includes('supabase') },
+    { label: 'Supabase lib', test: (p) => /(?:^|\/)lib\/supabase(?:\.|$)/.test(p) },
+  ],
+  'app',
+  'src/app/character/edit/CharacterEditor.tsx',
+);
 assert(
-  /from ['"]react/.test("import { useState } from 'react';"),
-  'domain React pattern should match react imports',
+  appDynamicViolations.some((entry) => entry.rule.includes('Supabase')),
+  `dynamic supabase import should fail, got ${JSON.stringify(appDynamicViolations)}`,
 );
 
 assert(
-  /from ['"][^'"]*supabase/.test("import { supabase } from '../../lib/supabase';"),
-  'domain Supabase pattern should match supabase imports',
+  extractImportPaths(dynamicSupabase).includes('../../../lib/supabase'),
+  'extractImportPaths should capture dynamic imports',
 );
 
 assert(
-  /from ['"][^'"]*\/domains\//.test("export * from '../../domains/rules/sagadrive';"),
-  'shared/ui domain pattern should match domain imports',
+  resolveRelativeImport('/repo/src/app/character/edit/components/Panel.tsx', '../../creation/Foo').endsWith(
+    'app/character/creation/Foo',
+  ),
+  'resolveRelativeImport should normalize nested cross-slice paths',
 );
 
-assert(
-  extractImportPaths("import { Foo } from '../creation';\nimport('./lazy').then(() => {});").includes('../creation'),
-  'extractImportPaths should capture static and dynamic imports',
+const domainReactViolations = checkContentImportPaths(
+  "import { useState } from 'react';",
+  [{ label: 'React', test: (p) => /^react(?:\/|$)/.test(p) }],
+  'domains',
+  'src/domains/character/example.ts',
 );
+assert(domainReactViolations.length === 1, 'domain React import should fail');
 
 const live = runArchitectureBoundaryCheck();
 assert(live.violations.length === 0, `live repo should pass, got ${JSON.stringify(live.violations)}`);
