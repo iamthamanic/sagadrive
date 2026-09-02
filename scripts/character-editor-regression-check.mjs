@@ -67,8 +67,12 @@ requireMatch(backgroundTemplates, /skillPool:\s*\['medicine', 'insight', 'surviv
 rejectMatch(backgroundTemplates, /recommendedTraining/, 'legacy background training recommendation or compatibility field remains');
 rejectMatch(editor, /recommendedTraining/, 'CharacterEditor still reads legacy background training recommendations');
 requireMatch(editor, /setBackgroundSkillPoints\(\{\}\)/, 'neutral background skill points initialization in CharacterEditor');
-requireMatch(editor, /skillProvenanceStatus:\s*'complete'/, 'complete skill provenance on save');
-requireMatch(editor, /resolveSagaDriveSkillRanks/, 'full skill rank resolution in CharacterEditor');
+requireMatch(editor, /skillProvenanceStatus:\s*effectiveSkillProvenanceStatus/, 'data-derived skill provenance status on save');
+requireMatch(editor, /hasCompleteSkillProvenance/, 'provenance completeness derived from data in CharacterEditor');
+requireMatch(editor, /resolveSagaDriveSkillRanksSafe/, 'non-throwing skill rank resolution in CharacterEditor');
+requireMatch(editor, /legacyFinalSkills/, 'legacy characters keep stored final skill ranks visible');
+requireMatch(editor, /setLegacyFinalSkills\(resolvedSkills\.provenanceStatus === 'legacy-unresolved' \? payload\.skills : null\)/, 'legacy final ranks hydrated without invented provenance');
+requireMatch(editor, /isValidSagaDriveSkillDevelopment/, 'chronological one-decision-per-slot validation in editor completion');
 requireMatch(editor, /getSagaDriveExperienceBonus\(characterLevel\)/, 'level-scaled global experience bonus');
 requireMatch(backgroundAllocator, /2 Hintergrund-Fertigkeitspunkte/, 'two stackable background points copy');
 requireMatch(backgroundPanel, /BackgroundSkillPointsAllocator/, 'stackable background point allocator in panel');
@@ -136,6 +140,17 @@ requireMatch(skillsPanel, /SkillProgressionSlotsPanel/, 'level 3-19 progression 
 rejectMatch(skillsPanel, /Mindestens.*Fertigkeiten.*Wert 1 oder höher/s, 'legacy minimum-six trained skills rule');
 requireMatch(skillsPanel, /Standardbeziehung – keine Voraussetzung|globalen und anwendbaren Erfahrungsbonus/s, 'skill relationship or formula semantics');
 requireMatch(skillsPanel, /Hintergrund-Pool/, 'background pool source distinction');
+requireMatch(skillsPanel, /legacyFinalRanks/, 'legacy final ranks displayed in skills panel');
+const slotsPanel = read('src/app/character/progression/SkillProgressionSlotsPanel.tsx');
+requireMatch(slotsPanel, /draftsByLevel/, 'local per-level draft state for incomplete slot decisions');
+requireMatch(slotsPanel, /sanitizeSagaDriveSkillDevelopment/, 'domain-driven dependent slot pruning');
+requireMatch(slotsPanel, /aria-label=\{`Level \$\{level\} Entwicklung`\}/, 'unique accessible name for slot kind select');
+requireMatch(slotsPanel, /aria-label=\{`Level \$\{level\} Fertigkeit`\}/, 'unique accessible name for slot skill select');
+requireMatch(slotsPanel, /aria-label=\{`Level \$\{level\} Spezialisierungsname`\}/, 'unique accessible name for slot specialization name');
+const formulaPanel = read('src/app/character/progression/SkillCheckFormulaPanel.tsx');
+requireMatch(formulaPanel, /SAGA_DRIVE_SPECIALIZATION_BONUS/, 'specialization bonus from domain rules, not a UI magic number');
+requireMatch(formulaPanel, /specialization-situational-bonus/, 'situational specialization bonus shown separately');
+rejectMatch(formulaPanel, /checkTotal = attributeValue \+ finalRank \+ appliedEb \+/, 'normal check must not include specialization bonus');
 requireMatch(abilitiesPanel, /Regelgebundene Fähigkeiten/, 'rule-bound abilities panel');
 rejectMatch(abilitiesPanel, /Fähigkeit hinzufügen|setDialogOpen/, 'free-form ability creation remains');
 requireMatch(inventoryPanel, /capacity = 5 \+ 2 \* strength/, 'SagaDrive carrying capacity formula');
@@ -167,7 +182,9 @@ requireMatch(abilitiesMigration, /ADD COLUMN IF NOT EXISTS abilities JSONB/, 'ab
 requireMatch(abilitiesMigration, /ADD COLUMN IF NOT EXISTS emotion_profiles JSONB/, 'emotion_profiles column migration');
 requireMatch(characterRepository, /abilities:\s*payload\.abilities \?\? \[\]/, 'abilities persisted on create');
 requireMatch(read('src/infrastructure/character/character-service.ts'), /invalidate\(ENTITY_CACHE_KEYS\.characterSummaries\)/, 'character list cache invalidation after writes');
-requireMatch(read('src/modules/characters/characterEditorBootstrap.ts'), /kind:\s*'character-edit'/, 'character-edit bootstrap for library reload');
+requireMatch(read('src/modules/characters/characterEditorBootstrap.ts'), /export \* from '\.\.\/\.\.\/app\/character\/shared\/characterEditorBootstrap'/, 'legacy bootstrap path is a compatibility barrel');
+requireMatch(read('src/app/character/shared/characterEditorBootstrap.ts'), /kind:\s*'character-edit'/, 'character-edit bootstrap implementation in character app slice');
+requireMatch(read('src/components/Library.tsx'), /app\/character\/shared\/characterEditorBootstrap/, 'library imports canonical bootstrap path');
 requireMatch(read('src/app/character/edit/CharacterEditor.tsx'), /hydrateEditorFromPersistedCharacter/, 'editor hydrate from persisted character');
 requireMatch(read('src/components/Library.tsx'), /refreshCharacters\(\{\s*force:\s*true\s*\}\)/, 'library force-refreshes character summaries');
 
