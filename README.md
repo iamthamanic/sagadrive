@@ -152,6 +152,12 @@ npm run test-gate
 npm run composition-gate
 ```
 
+Agent-Konfiguration (Cursor) liegt unter [`.cursor/`](.cursor/). Scan vor Änderungen daran:
+
+```bash
+npx ecc-agentshield scan --path .cursor
+```
+
 Zusätzlich läuft nach einem erfolgreichen Test Gate ein Chromium-Playwright-Job mit:
 
 ```bash
@@ -162,6 +168,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-02** — `.cursor/` AgentShield baseline: rules, permissions/hooks, empty MCP (`chore/cursor-agentshield`)
 - **2026-09-02** — Skill Progression v2 Character Editor UX: 7/2/1 Startquellen, stackbare Hintergrundpunkte, Formelpanel (global/applied EB), Level-3–19-Slots; Migration `014` (`abilities`/`emotion_profiles`); Bibliothek lädt Charaktere zum Bearbeiten (`feat/skill-progression-v2-character-editor-ux`, #91)
 - **2026-09-02** — Character Presets hardening: migration `013` (source ownership + origin=user RLS), snapshot re-validate on read/bootstrap, `normalizeSafeUrl` for portrait URLs (`feat/character-presets`)
 - **2026-09-02** — Character Presets MVP: Create-Chooser (eigen/preset), versionierte Presets unter Einstellungen → Preset, Migration `012_character_presets` (`feat/character-presets`)
