@@ -1,8 +1,8 @@
 # SagaDrive Core Rules – Hintergrund-Templates und Kompetenzfluss
 
-> **Status:** Verbindliche Core-Ergänzung für den Branch `feat/background-competency-system`  
-> **Datum:** 29. August 2026  
-> **Bezug:** `docs/sagadrive core rules.md`, insbesondere Abschnitte 3, 4.4, 5.8, 13 und 16  
+> **Status:** Verbindliche Core-Ergänzung (Hintergrund-Templates); Skillquellen/Stapeln abgestimmt mit Issue #89  
+> **Datum:** 2. September 2026  
+> **Bezug:** `docs/sagadrive core rules.md`, insbesondere Abschnitte 3, 4.4, 5.3–5.5, 5.8, 13 und 16  
 > **Ziel:** Hintergründe für Einsteiger als geführte Templates nutzbar machen, ohne die freie Charaktererschaffung oder die bestehende Attribut-/Fertigkeitslogik zu verändern.
 
 ## 1. Grundsatz
@@ -35,8 +35,9 @@ Die Empfehlungen sind Hilfen und keine zusätzlichen mechanischen Vorteile.
 Nach Wahl eines Hintergrund-Templates gilt:
 
 - Die vier Fertigkeiten des Templates bilden den festen Hintergrund-Pool.
-- Die spielende Person wählt **zwei unterschiedliche Fertigkeiten aus diesem Pool** und erhält in jeder davon **+1 Fertigkeitspunkt**.
-- Die spielende Person wählt **eine Spezialisierung**, die zu mindestens einer der beiden trainierten Fertigkeiten gehört und deren normale Voraussetzungen erfüllt.
+- Die spielende Person erhält **2 Hintergrund-Fertigkeitspunkte**, die frei auf diesen Viererpool verteilt werden dürfen.
+- Beide Punkte dürfen auf denselben Skill gelegt werden (`+2`) oder auf zwei Skills (`+1/+1`); es gibt keine Pflicht zu zwei verschiedenen Trainings.
+- Die spielende Person wählt **eine Spezialisierung**, die zu mindestens einer trainierten Hintergrund-Fertigkeit gehört und deren normale Voraussetzungen erfüllt.
 - Milieu, Kontakt/Verbindung und Komplikation können aus den Vorschlägen übernommen oder frei passend formuliert werden.
 - Empfohlene Trainings werden im digitalen Editor hervorgehoben, sind aber **nicht verpflichtend**.
 
@@ -49,7 +50,7 @@ Neben Templates bleibt ein vollständig freier Hintergrund immer zulässig.
 Ein freier Hintergrund verwendet dieselben mechanischen Grenzen wie ein Template:
 
 - genau vier unterschiedliche passende Core-Fertigkeiten,
-- Training in genau zwei unterschiedlichen Fertigkeiten dieses Pools,
+- 2 Hintergrundpunkte frei auf diesen Pool (Stapeln `+2` erlaubt),
 - genau eine zulässige Spezialisierung,
 - Milieuzugang,
 - Kontakt oder Verbindung,
@@ -68,16 +69,16 @@ Weltprofile definieren, welche Hintergrund-Templates standardmäßig verfügbar 
 
 ## 6. Start-Fertigkeitspunkte
 
-Die Verteilung der zehn Start-Fertigkeitspunkte bleibt unverändert:
+Start-Fertigkeiten werden primär als **drei Quellen** beschrieben (Core §5.4). Intern summieren sie sich auf zehn Punkte:
 
-| Quelle | Punkte |
-|---|---:|
-| Hintergrund | 2 Punkte in zwei unterschiedlichen Fertigkeiten des gewählten Viererpools |
-| Primärarchetyp | 1 Punkt in einer typischen Fertigkeit des Primärarchetyps |
-| Frei | 7 Punkte |
-| **Gesamt** | **10 Punkte** |
+| Quelle | Punkte | Zielraum |
+|---|---:|---|
+| Frei | 7 | alle 18 Core-Skills |
+| Hintergrund | 2 | nur Viererpool; Stapeln `+2` erlaubt |
+| Primärarchetyp | 1 | typischer Skill des Primärarchetyps |
+| **Summe (intern)** | **10** | — |
 
-Ein Hintergrund-Template verändert diese Summe nicht. Es führt nur die Auswahl der zwei Hintergrundpunkte.
+Quellen dürfen sich addieren; Startcap 3 bleibt verbindlich. Es gibt keine Mindestanzahl trainierter Startskills. Ein Hintergrund-Template verändert diese Summe nicht; es führt den Viererpool und die zwei Hintergrundpunkte.
 
 ## 7. Digitale Charaktererschaffung – verbindliche Semantik
 
@@ -105,13 +106,13 @@ Dabei gelten folgende Darstellungsregeln:
 
 Für SagaDrive Core gilt digital folgende empfohlene Reihenfolge innerhalb des Kompetenzsystems:
 
-1. Attribute festlegen.
+1. Attribute festlegen (15 Bonuspunkte, +0…+4).
 2. Hintergrund-Template auswählen oder freien Hintergrund erstellen.
-3. Die vier Hintergrund-Fertigkeiten sehen und zwei Trainings wählen.
+3. Die vier Hintergrund-Fertigkeiten sehen und 2 Hintergrundpunkte frei verteilen (Stapeln erlaubt).
 4. Eine passende Spezialisierung festlegen.
 5. Den Primärarchetyp-Punkt vergeben.
 6. Die sieben freien Fertigkeitspunkte verteilen.
-7. Gesamtverteilung und Quellen prüfen.
+7. Gesamtverteilung und Quellen prüfen (Startcap 3; keine Mindestbreite).
 
 Die Schritte sind eine UX-Führung und keine Regel, die spätere Korrekturen verhindert. Vor Abschluss der Charaktererschaffung dürfen Entscheidungen innerhalb der normalen Regeln geändert werden.
 

@@ -333,7 +333,7 @@ import { RuleHelp } from '@/modules/characters/components/RuleHelp';
 
 ## Verwandte Dokumente
 
-- `docs/attribute-bonus-pool-rules-amendment.md` — Regelwerk Attribute
+- `docs/attribute-bonus-pool-rules-amendment.md` — **SUPERSEDED**; kanonisch: `docs/sagadrive core rules.md` §3.2/§3.3/§3.7
 - `docs/sagadrive-background-competency-rules.md` — Hintergrund-Kompetenzen
 - `.qa/design/background-competency-system.md` — UX-Design Hintergrund
 - `.qa/acceptance/attribute-bonus-pool.md` — Acceptance Attribute-Bonus
