@@ -17,7 +17,7 @@ import { Label } from '../../../components/ui/label';
 import { Select, SelectContent, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
-import { RuleHelp } from '../progression/RuleHelp';
+import { RuleHelp } from '../shared/RuleHelp';
 import { SpeciesTraitIcon } from './SpeciesTraitIcon';
 import { SpeciesTraitOptionItem } from './SpeciesTraitOptionItem';
 

@@ -4,7 +4,7 @@
  */
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { sagaDriveRaceOptions } from '../../../modules/rulesets/characterCreation';
-import { RuleHelp } from '../progression/RuleHelp';
+import { RuleHelp } from '../shared/RuleHelp';
 import { SpeciesBannerFlag } from './SpeciesBannerFlag';
 import { getSpeciesColorway } from './speciesBanners';
 import { getSpeciesSketchUrl } from './speciesSketches';

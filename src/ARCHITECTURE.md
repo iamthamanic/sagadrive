@@ -11,18 +11,28 @@ SagaDrive uses a **Modular Monolith** with explicit layers:
 | Rules kernel | `src/domains/rules/sagadrive/*` | stdlib, sibling rule slices | React, UI, Supabase, `app/`, `infrastructure/` |
 | Character domain | `src/domains/character/*` | rules kernel (public API) | React, UI, Supabase |
 | Infrastructure | `src/infrastructure/*` | domains, `lib/supabase` | React UI (`components/`, `app/`) |
-| App slices | `src/app/<area>/<slice>/` | domains, infrastructure, `shared/ui` | other slices' private internals |
-| Shared UI | `src/shared/ui/` | `components/ui` | domain rules |
+| App slices | `src/app/<area>/<slice>/` | domains, infrastructure, `shared/ui`, sibling slice **public barrels only** | Supabase, other slices' **private** file imports |
+| Shared UI | `src/shared/ui/` | `components/ui` | domain rules, infrastructure, app slices |
+
+**Character slice boundaries:**
+
+| Slice | Role | May import from |
+|-------|------|-----------------|
+| `edit/` | Composition root (CharacterEditor) | `creation/index`, `progression/index`, `shared/` |
+| `creation/` | Species, background, archetype, essence | `shared/`; `progression/index` only for documented public APIs (e.g. `SkillSelectField`) |
+| `progression/` | Skills, abilities, stats, inventory | `shared/` only — not `creation/` or `edit/` privates |
+| `shared/` | Slice-neutral presentation (RuleHelp) | UI primitives — no domain/rules |
 
 **Vertical slices (Character, migrated in #94):**
 
-- `app/character/edit/` — CharacterEditor orchestration
-- `app/character/creation/` — species, background, archetype, essence panels
-- `app/character/progression/` — skills, abilities, statistics, inventory, presets
+- `app/character/edit/` — CharacterEditor composition root; imports `../creation` + `../progression` public barrels
+- `app/character/creation/` — species, background, archetype, essence panels (`creation/index.ts`)
+- `app/character/progression/` — skills, abilities, statistics, inventory, presets (`progression/index.ts`)
+- `app/character/shared/` — presentation helpers shared across character slices
 
 **Compatibility:** Legacy imports under `src/modules/characters` and `src/modules/rulesets` re-export canonical paths until remaining domains migrate.
 
-**Validation:** `node scripts/architecture-boundary-check.mjs` (part of `npm run test-gate`).
+**Validation:** `node scripts/architecture-boundary-check.mjs` scans `domains/`, `infrastructure/`, `app/`, and `shared/ui/` (part of `npm run test-gate`).
 
 Design reference: `.qa/design/scalable-domain-vertical-slice-architecture.md`
 

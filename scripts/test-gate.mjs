@@ -282,8 +282,12 @@ function reportDependencyAudit() {
 }
 
 function checkArchitectureBoundaries() {
-  console.log('Architecture boundary check (#94): domains/rules/infrastructure import rules...');
+  console.log('Architecture boundary check (#94): layer and slice import rules...');
   execFileSync(process.execPath, ['scripts/architecture-boundary-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+  execFileSync(process.execPath, ['scripts/architecture-boundary-check.self-test.mjs'], {
     cwd: root,
     stdio: 'inherit',
   });

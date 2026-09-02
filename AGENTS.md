@@ -11,7 +11,7 @@
 
 ## Project Context
 - **Repository:** https://github.com/iamthamanic/sagadrive
-- **Branch:** self-host-setup (für Self-Host Backend)
+- **Branch:** `main` (aktiver Entwicklungsbranch; Feature-Branches von `main` abzweigen)
 - **Tech Stack:**
   - **Frontend:** React + Vite + TypeScript + Tailwind CSS + Radix UI
   - **Backend:** Supabase Edge Functions (Deno)
@@ -60,9 +60,10 @@ src/
 ├── infrastructure/    # Supabase adapters — NO UI
 ├── app/               # Vertical slices (user journeys)
 │   └── character/
-│       ├── edit/      # CharacterEditor shell
+│       ├── edit/      # CharacterEditor composition root
 │       ├── creation/  # species, background, archetype, essence
-│       └── progression/ # skills, abilities, stats, inventory
+│       ├── progression/ # skills, abilities, stats, inventory
+│       └── shared/    # slice-neutral presentation helpers (e.g. RuleHelp)
 ├── shared/ui/         # Presentation primitives (re-exports components/ui)
 └── modules/           # Legacy barrels during incremental migration
 ```
@@ -254,34 +255,46 @@ supabase/functions/
 
 ## Integration Rules
 
-### Frontend → Backend
+### Frontend → Infrastructure (Supabase)
 
-1. **Supabase Client**
+**Direkte Supabase-Queries gehören in Infrastructure-Adapter — nicht in App-Slices oder Domains.**
+
+1. **Supabase Client** (nur in `src/lib/supabase.ts` + `src/infrastructure/**`)
    ```typescript
-   // src/lib/supabase.ts
+   // src/lib/supabase.ts — client factory; consumed by infrastructure adapters
    import { createClient } from '@supabase/supabase-js';
-   
+
    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'http://localhost:8000';
    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-   
+
    export const supabase = createClient(supabaseUrl, supabaseKey);
    ```
 
-2. **Edge Functions**
+2. **Repository / Adapter** (canonical pattern)
    ```typescript
-   // Call Edge Function
-   const { data, error } = await supabase.functions.invoke('ai-gm', {
-     body: { sessionId, action, context }
-   });
-   ```
+   // src/infrastructure/character/supabase-character.repository.ts
+   import { supabase } from '../../lib/supabase';
+   import { getAuthenticatedUserId } from '../../lib/authenticatedUser';
 
-3. **Database Queries**
-   ```typescript
-   // Use existing patterns
+   const userId = await getAuthenticatedUserId();
    const { data, error } = await supabase
      .from('characters')
      .select('*')
      .eq('owner_user_id', userId);
+   ```
+
+3. **App slices** consume repositories via infrastructure facades — never import `supabase` directly.
+   ```typescript
+   // src/app/character/edit/CharacterEditor.tsx
+   import { characterService } from '../../../infrastructure/character/character-service';
+   // or legacy barrel: '../../../modules/characters/services/character.service'
+   ```
+
+4. **Edge Functions** (Deno backend — separate from frontend infrastructure)
+   ```typescript
+   const { data, error } = await supabase.functions.invoke('ai-gm', {
+     body: { sessionId, action, context },
+   });
    ```
 
 ### Rulesets Integration
@@ -321,10 +334,23 @@ const ruleset = {
 3. Read `memory/YYYY-MM-DD.md` (recent context)
 
 ### When Adding Features
-1. Check existing patterns in `src/modules/`
-2. Follow module structure (index, hooks, types, services)
-3. Use existing UI components from `src/components/ui/`
-4. Test with Edge Functions
+
+Neue Features folgen der **#94 Layered Architecture** — nicht dem legacy `src/modules/`-Muster.
+
+1. **Fachliche Domain identifizieren** (character, project, session, …).
+2. **User Journey / Use Case** als Vertical Slice unter `src/app/<domain>/<slice>/`.
+3. **Pure Business-/Rules-Logik** nach `src/domains/**` (kein React, kein Supabase).
+4. **Supabase / Storage / Netzwerk** ausschließlich über `src/infrastructure/**`.
+5. **Generic UI** nach `src/shared/ui` bzw. bestehende `src/components/ui` Primitives.
+6. **Andere Domains** nur über deren öffentliche APIs konsumieren — keine privaten Slice-Internals.
+7. **`src/modules/**`** ist Legacy/Compatibility — für bereits migrierte Character-/SagaDrive-Rules-Bereiche **keine neue Implementierung** dort anlegen.
+8. **Keine neuen generischen** `services/`, `types/`, `utils/`-Dumping-Folder als Architekturstandard.
+9. **Keine Business Rules in React** — Rules-Kernel bleibt UI-frei.
+10. **Kein Supabase in Domain/Rules/App-Slices** — nur Infrastructure.
+
+**Character-Slice-Regel:** `edit/` ist der Composition Root; konsumiert `creation/` + `progression/` nur über deren `index.ts`. `creation/` und `progression/` importieren einander nicht privat (öffentliche Barrel nur wo dokumentiert, z. B. `SkillSelectField` in Background).
+
+Vor Commit: `npm run test-gate` (inkl. `architecture-boundary-check`).
 
 ### When Integrating Backend
 1. Update Edge Functions first

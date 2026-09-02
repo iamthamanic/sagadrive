@@ -5,7 +5,7 @@
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { sagaDriveArchetypeOptions, type SagaDriveArchetypeKey } from '../../../modules/rulesets/characterCreation';
 import { ArchetypeIcon } from './ArchetypeIcon';
-import { RuleHelp } from '../progression/RuleHelp';
+import { RuleHelp } from '../shared/RuleHelp';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Card, CardHeader, CardTitle } from '../../../components/ui/card';

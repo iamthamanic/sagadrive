@@ -4,7 +4,7 @@
  */
 import { Badge } from '../../../components/ui/badge';
 import { sagaDriveEssenceOptions, type SagaDriveEssenceKey } from '../../../modules/rulesets/characterCreation';
-import { RuleHelp } from '../progression/RuleHelp';
+import { RuleHelp } from '../shared/RuleHelp';
 
 interface CharacterEssencePanelProps {
   selectedEssence?: SagaDriveEssenceKey;
