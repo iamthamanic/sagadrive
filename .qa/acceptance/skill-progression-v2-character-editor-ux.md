@@ -64,6 +64,7 @@ Issue #91: Wire Character Editor to #90 domain contracts — three start sources
 
 ## Composition Gate
 
-- Verdict: **SKIPPED**
+- Verdict: **CLEAR**
 - Proof: `.qa/runs/composition-gate-skill-progression-v2-character-editor-ux.md`
-- Reason: UI slice consumes #90 domain APIs; single save hop (editor → character service → assert-character-persistence). No multi-actor fan-out or override retarget paths.
+- Proof code SHA: `887ce3935bdd839202106bea88286db148dd7e4d`
+- Reason: Single explicit save hop (+ one owner-scoped reload); migration 014 only supplies columns already required by that hop.
