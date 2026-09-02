@@ -454,7 +454,13 @@ export function sanitizeSagaDriveSkillDevelopment(
   const keptAdvances: SagaDriveSkillAdvanceDto[] = [];
   const seenLevels = new Set<number>();
   for (const entry of toDevelopmentTimeline(advances, specializations)) {
-    if (!isSagaDriveSkillAdvanceLevel(entry.level) || entry.level > normalizedLevel) continue;
+    if (!isSagaDriveSkillAdvanceLevel(entry.level)) continue;
+    if (entry.level > normalizedLevel) {
+      // Dormant decisions above the current level are preserved untouched.
+      if (entry.advance) keptAdvances.push(entry.advance);
+      else if (entry.specialization) keptSpecializations.push(entry.specialization);
+      continue;
+    }
     if (seenLevels.has(entry.level)) continue;
     if (entry.kind === 'specialization') {
       const count = specCounts.get(entry.skill) ?? 0;
