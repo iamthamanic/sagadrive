@@ -17,7 +17,7 @@ import {
   isSagaDriveSkillKey,
   type SagaDriveSkillKey,
 } from '../../../modules/rulesets/characterCreation';
-import { RuleHelp } from './RuleHelp';
+import { RuleHelp } from '../shared/RuleHelp';
 import { SkillIcon } from './SkillIcon';
 import { SkillRuleHelpContent } from './skillRuleHelp';
 

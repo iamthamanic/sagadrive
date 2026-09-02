@@ -41,7 +41,7 @@ import {
 import type { SagaDriveBackgroundTemplate } from '../../../modules/rulesets/backgroundTemplates';
 import type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
 import { useCarouselScrollSync } from '../../../modules/characters/hooks/useCarouselScrollSync';
-import { RuleHelp } from '../progression/RuleHelp';
+import { RuleHelp } from '../shared/RuleHelp';
 
 export type BackgroundCarouselSelection = string | null;
 

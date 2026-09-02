@@ -11,7 +11,7 @@ import {
   type SagaDriveAttributeKey,
   type SagaDriveSkillKey,
 } from '../../../modules/rulesets/characterCreation';
-import { RuleHelp } from '../progression/RuleHelp';
+import { RuleHelp } from '../shared/RuleHelp';
 import type { CarouselScrollPhase } from './ArchetypeCarousel';
 
 interface ArchetypeSkillChoiceProps {

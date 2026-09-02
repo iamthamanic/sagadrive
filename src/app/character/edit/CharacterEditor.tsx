@@ -17,21 +17,27 @@ import { AttributeD20Icon } from '../../../components/AttributeD20Icon';
 import { DerivedStatCard } from '../../../components/DerivedStatCard';
 import { AttributeDerivedConnector } from '../../../components/AttributeDerivedConnector';
 import { CharacterAssistantButton } from '../../../components/assistant/CharacterAssistantButton';
-import { CharacterArchetypePanel } from '../creation/CharacterArchetypePanel';
-import { CharacterBackgroundComposer } from '../creation/CharacterBackgroundComposer';
-import { CharacterBackgroundPanel } from '../creation/CharacterBackgroundPanel';
-import { CharacterEssencePanel } from '../creation/CharacterEssencePanel';
-import { CharacterInventoryPanel, getInventoryLoad } from '../progression/CharacterInventoryPanel';
-import { CharacterNotesSection } from '../progression/CharacterNotesSection';
-import { CharacterStatisticsPanel } from '../progression/CharacterStatisticsPanel';
-import { CharacterPresetPanel } from '../progression/CharacterPresetPanel';
-import { RuleHelp } from '../progression/RuleHelp';
-import { CharacterSkillsPanel, getSagaDriveFinalSkillRanks } from '../progression/CharacterSkillsPanel';
-import { GenderReadingSelect } from '../creation/GenderReadingSelect';
-import { SelectedSpeciesChip } from '../creation/SelectedSpeciesChip';
-import { SpeciesCarousel } from '../creation/SpeciesCarousel';
-import { SpeciesTraitsPanel } from '../creation/SpeciesTraitsPanel';
-import { CharacterTraitEditor } from '../progression/CharacterTraitEditor';
+import {
+  CharacterArchetypePanel,
+  CharacterBackgroundComposer,
+  CharacterBackgroundPanel,
+  CharacterEssencePanel,
+  GenderReadingSelect,
+  SelectedSpeciesChip,
+  SpeciesCarousel,
+  SpeciesTraitsPanel,
+} from '../creation';
+import {
+  CharacterInventoryPanel,
+  CharacterNotesSection,
+  CharacterPresetPanel,
+  CharacterSkillsPanel,
+  CharacterStatisticsPanel,
+  CharacterTraitEditor,
+  RuleHelp,
+  getInventoryLoad,
+  getSagaDriveFinalSkillRanks,
+} from '../progression';
 import { takeCharacterEditorBootstrap } from '../../../modules/characters/characterEditorBootstrap';
 import { assertValidSnapshot, characterPresetService } from '../../../modules/characters/services/characterPreset.service';
 import { normalizeSafeUrl } from '../../../modules/characters/avatar';

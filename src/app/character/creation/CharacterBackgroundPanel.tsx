@@ -22,8 +22,8 @@ import {
 import type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
 import { useSelectionGraph } from '../../../modules/characters/hooks/useSelectionGraph';
 import { BackgroundCarousel } from './BackgroundCarousel';
-import { RuleHelp } from '../progression/RuleHelp';
-import { SkillSelectField } from '../progression/SkillSelectField';
+import { RuleHelp } from '../shared/RuleHelp';
+import { SkillSelectField } from '../progression';
 
 type SkillSlot = SagaDriveSkillKey | '';
 

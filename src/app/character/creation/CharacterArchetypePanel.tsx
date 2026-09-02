@@ -11,7 +11,7 @@ import {
 import type { AbilityDto, CharacterAttributesDto } from '../../../modules/characters/types/character.types';
 import { ArchetypeCarousel, type CarouselScrollPhase } from './ArchetypeCarousel';
 import { ArchetypeSkillChoice } from './ArchetypeSkillChoice';
-import { RuleHelp } from '../progression/RuleHelp';
+import { RuleHelp } from '../shared/RuleHelp';
 
 interface CharacterArchetypePanelProps {
   selectedArchetype?: SagaDriveArchetypeKey;
