@@ -15,26 +15,26 @@ Character Presets MVP: users can save validated character sheet snapshots as ver
 - [x] Every „Charakter erstellen“ / „Neuer Charakter“ entry opens a dialog with two large cards: „Eigenen Charakter erstellen“ and „Preset wählen“
 - [x] „Eigenen Charakter erstellen“ opens CharacterEditor empty (no preset bootstrap)
 - [x] With 0 own presets, Preset card shows clickable empty-state copy about Einstellungen → Preset
-- [ ] With own presets, Preset path lists user presets plus stub section „SagaDrive-Presets bald“; picking a Level version opens a **new** editor character hydrated from that snapshot (portrait + sheet), name prefilled from preset display name (editable)
+- [x] With own presets, Preset path lists user presets plus stub section „SagaDrive-Presets bald“; picking a Level version opens a **new** editor character hydrated from that snapshot (portrait + sheet), name prefilled from preset display name (editable)
 - [x] Editor top-level tab „Einstellungen“ replaces former „Statistik“; subtabs Statistik | Preset
-- [ ] First „Als Preset speichern“ creates preset `{CharacterName} Preset` with one version = current character level (snapshot copy)
-- [ ] Later „Version freigeben“ appends a version for current level if that level is not already present
-- [ ] Auto-Freigabe (character Preset setting): after successful save, when level **increased** vs last persisted level and validation was green, appends version; dropdown-only level change does not release
-- [ ] Rename changes display name only; versions remain labeled „Level N“; Duplicate → „{name} (Kopie)“ with all versions; Delete removes preset
-- [ ] Deleted source character leaves preset intact with optional „Quellcharakter gelöscht“ note
+- [x] First „Als Preset speichern“ creates preset `{CharacterName} Preset` with one version = current character level (snapshot copy)
+- [x] Later „Version freigeben“ appends a version for current level if that level is not already present
+- [x] Auto-Freigabe (character Preset setting): after successful save, when level **increased** vs last persisted level and validation was green, appends version; dropdown-only level change does not release
+- [x] Rename changes display name only; versions remain labeled „Level N“; Duplicate → „{name} (Kopie)“ with all versions; Delete removes preset
+- [x] Deleted source character leaves preset intact with optional „Quellcharakter gelöscht“ note
 
 ## Edge Cases
 - [x] Unsaved character: Preset subtab guides to Speichern first; no crash
-- [ ] Release blocked when editor validation would fail (same messages as Speichern)
-- [ ] Release blocked if a version for that level already exists (no overwrite)
-- [ ] Non–SagaDrive-Core ruleset: preset actions unavailable / fail closed
+- [x] Release blocked when editor validation would fail (same messages as Speichern)
+- [x] Release blocked if a version for that level already exists (no overwrite)
+- [x] Non–SagaDrive-Core ruleset: preset actions unavailable / fail closed
 - [x] Marketplace controls disabled „Coming soon“; `published` stays false
 - [x] Owner isolation: users only read/write own presets (RLS)
 
 ## Regression
-- [ ] Spezies / Parameter / Look / Inventar flows unchanged
+- [x] Spezies / Parameter / Look / Inventar flows unchanged
 - [x] Statistik arcs panel still reachable under Einstellungen → Statistik
-- [ ] Character create/update save still persists sheet fields
+- [x] Character create/update save still persists sheet fields
 - [x] character-editor-regression-check and related test-gate scripts pass (tab rename updated)
 
 ## Assumptions
@@ -70,7 +70,7 @@ AGENTS.md has no formal F-xx/B-xx Secure-by-Default table; apply practical owner
 - Known limitations: no Bibliothek load-by-id for existing characters (pre-existing); system/marketplace stubs only; migration must be applied to backend.
 
 ## Composition Gate
-- HEAD_SHA: cea1e6dbfa52dac93538b2dd59e71064dd303bc3 (implementation uncommitted on `feat/character-presets`)
+- HEAD_SHA: b7458019865d20a7e94c6f016ac5abed5a7bb093 (product; QA stamp may follow)
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-character-presets.md`
 - Skip reason: n/a

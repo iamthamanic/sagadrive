@@ -1,6 +1,7 @@
 # Composition Gate — character-presets
 
-- HEAD_SHA: cea1e6dbfa52dac93538b2dd59e71064dd303bc3 (branch `feat/character-presets`, uncommitted implementation)
+- HEAD_SHA: b7458019865d20a7e94c6f016ac5abed5a7bb093 (product; QA stamp commit follows)
+- PRODUCT_SHA: b7458019865d20a7e94c6f016ac5abed5a7bb093
 - BASE_SHA: cea1e6dbfa52dac93538b2dd59e71064dd303bc3 (`origin/main`)
 - Date: 2026-09-02
 - Verdict: CLEAR
@@ -35,3 +36,6 @@ n/a
 ## Notes
 - System/SagaDrive presets and Marketplace are UI/model stubs only (`origin: system` unused in list; `published: false`).
 - Migration `012_character_presets.sql` must be applied on the target Supabase before live writes succeed.
+- Re-verified 2026-09-02: hop chain CLEAR for product `b745801`. 
+- Gate tip after stamp: 9b088c4e6e80ec0cdee10ce7b1b1bf8ed22ed7a7
+- Tip may include `.qa` stamp-only commits; no producer/consumer change after product SHA.
