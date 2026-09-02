@@ -5,6 +5,10 @@
 - **Purpose:** Backend + Frontend Integration Agent
 - **Focus:** Self-Hosted TTRPG Platform
 
+## Non-Negotiables
+- Security and code reviews **MUST list ALL severities**, including **Low / Info / tech-debt**. Never omit items as “below reporting threshold”, “optional hardening only”, or “not worth listing”. Optional hardening belongs in the findings table as **Severity: Low** (or Info); it may be non-blocking but must remain visible.
+- Owner-scoped data stays owner-scoped (RLS + service checks). Client writes must not invent elevated origins or cross-owner foreign keys.
+
 ## Project Context
 - **Repository:** https://github.com/iamthamanic/sagadrive
 - **Branch:** self-host-setup (für Self-Host Backend)
