@@ -3,9 +3,34 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const EVIDENCE_DIR = '.qa/evidence/sagadrive-character-editor-core';
+const V2_EVIDENCE_DIR = '.qa/evidence/skill-progression-v2-character-editor-ux';
+
+async function completeSpeciesBasics(page: Page) {
+  await page.getByRole('tab', { name: /^Spezies$/i }).click();
+  await page.getByRole('combobox', { name: /Geschlecht wählen/i }).click();
+  await page.getByRole('option', { name: /Weiblich/i }).click();
+  await page.getByRole('button', { name: /Geschärfter Sinn, 1 Punkt/i }).click();
+  await page.getByRole('combobox', { name: 'Geschärfter Sinn: Sinn' }).click();
+  await page.getByRole('option', { name: /Hören/i }).click();
+  await page.getByRole('button', { name: /Enge Resistenz, 1 Punkt/i }).click();
+  await page.getByRole('combobox', { name: 'Enge Resistenz: Gefahrenart' }).click();
+  await page.getByRole('option', { name: /Gift \/ Toxine/i }).click();
+  await page.getByRole('button', { name: /Geringer Ruhebedarf, 1 Punkt/i }).click();
+  await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
+}
+
+async function allocateSevenFreeSkillPoints(page: Page) {
+  for (const skill of ['Athletik', 'Akrobatik', 'Heimlichkeit', 'Ermitteln', 'Wissen', 'Überzeugen', 'Täuschen']) {
+    await page.getByRole('button', { name: `${skill} freien Punkt hinzufügen` }).click();
+  }
+  await expect(page.getByText(/^7 \/ 7$/).first()).toBeVisible();
+}
 
 async function ensureLoggedIn(page: Page) {
   await page.goto('/');
+  await page.evaluate(() => {
+    sessionStorage.removeItem('sagadrive:character-edit-id');
+  });
   const loginTab = page.getByRole('tab', { name: 'Login' });
   if (await loginTab.count()) {
     await page.getByPlaceholder('admin oder deine@email.de').fill('admin');
@@ -18,16 +43,22 @@ async function ensureLoggedIn(page: Page) {
 test.beforeAll(() => {
   fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
   fs.mkdirSync('.qa/evidence/attribute-bonus-pool', { recursive: true });
+  fs.mkdirSync('.qa/evidence/skill-progression-v2-character-editor-ux', { recursive: true });
 });
 
 test('character editor exposes the SagaDrive Core creation flow', async ({ page }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(420_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await ensureLoggedIn(page);
-  await page.getByRole('button', { name: 'Charakter erstellen' }).first().click();
+  const createViaEmptyState = page.getByRole('button', { name: 'Charakter erstellen' });
+  if (await createViaEmptyState.count()) {
+    await createViaEmptyState.first().click();
+  } else {
+    await page.getByRole('heading', { name: 'Neuer Charakter' }).first().click();
+  }
   await expect(page.getByRole('heading', { name: 'Charakter erstellen' })).toBeVisible();
   await page.getByRole('button', { name: /Eigenen Charakter erstellen/i }).click();
-  await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText('SagaDrive Core').first()).toBeVisible();
   await expect(page.getByRole('combobox', { name: /Regelset/i }).first()).toBeVisible();
 
@@ -139,6 +170,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByRole('tab', { name: /^Archetype$/i }).click();
   await page.getByRole('radio', { name: /Kämpfer/i }).click();
+  await page.locator('[data-archetype-skill-grid] button').filter({ hasText: 'Nahkampf' }).first().click();
   await expect(page.getByText(/Archetyp-Punkt \(1 von 10\)/i).first()).toBeVisible();
   await expect(page.getByText(/Kampfroutine/i).first()).toBeVisible();
   await expect(page.getByText(/Parameter → Kompetenzen/i).first()).toBeVisible();
@@ -167,11 +199,12 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.screenshot({ path: path.join('.qa/evidence/attribute-bonus-pool', '01-attribute-budget-level-1.png'), fullPage: true });
 
   const backgroundPanel = page.locator('[data-background-panel]');
+  const allocator = backgroundPanel.locator('[data-background-points-allocator]');
   const healingFramework = page.getByRole('radio', { name: /Heilung & Fürsorge/i });
   await healingFramework.click();
   await expect(healingFramework).toHaveAttribute('aria-checked', 'true', { timeout: 10_000 });
-  await expect(backgroundPanel.getByText('Training · 2 wählen').first()).toBeVisible();
-  await expect(backgroundPanel.getByText(/^0 \/ 2$/).first()).toBeVisible();
+  await expect(allocator.getByText('2 Hintergrund-Fertigkeitspunkte').first()).toBeVisible();
+  await expect(allocator.getByText(/^0 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(backgroundPanel.getByText('Empfohlen')).toHaveCount(0);
 
   const medicineNode = backgroundPanel.locator('[data-background-skill-node="medicine"]');
@@ -182,26 +215,26 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(insightNode).toHaveCount(1);
   await expect(survivalNode).toHaveCount(1);
   await expect(awarenessNode).toHaveCount(1);
+  await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'pool');
 
-  await medicineNode.locator('button').click();
-  await expect(backgroundPanel.getByText(/^1 \/ 2$/).first()).toBeVisible();
-  await insightNode.locator('button').click();
-  await expect(backgroundPanel.getByText(/^2 \/ 2$/).first()).toBeVisible();
-  await expect(backgroundPanel.getByRole('button', { name: 'Auswahl ändern' })).toBeVisible();
+  await allocator.getByRole('button', { name: 'Medizin Hintergrundpunkt hinzufügen' }).click();
+  await expect(allocator.getByText(/^1 \/ 2 verteilt$/).first()).toBeVisible();
+  await allocator.getByRole('button', { name: 'Menschenkenntnis Hintergrundpunkt hinzufügen' }).click();
+  await expect(allocator.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(medicineNode).toHaveCount(1);
   await expect(insightNode).toHaveCount(1);
   await expect(survivalNode).toHaveCount(0);
   await expect(awarenessNode).toHaveCount(0);
-  await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'selected');
+  await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'collapsed');
+  await page.screenshot({ path: '.qa/evidence/skill-progression-v2-character-editor-ux/02-background-plus-two.png', fullPage: true });
 
-  await backgroundPanel.getByRole('button', { name: 'Auswahl ändern' }).click();
+  await allocator.getByRole('button', { name: 'Menschenkenntnis Hintergrundpunkt entfernen' }).click();
+  await expect(allocator.getByText(/^1 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'pool');
   await expect(survivalNode).toHaveCount(1);
   await expect(awarenessNode).toHaveCount(1);
-  await insightNode.locator('button').click();
-  await expect(backgroundPanel.getByText(/^1 \/ 2$/).first()).toBeVisible();
-  await awarenessNode.locator('button').click();
-  await expect(backgroundPanel.getByRole('button', { name: 'Auswahl ändern' })).toBeVisible();
+  await allocator.getByRole('button', { name: 'Aufmerksamkeit Hintergrundpunkt hinzufügen' }).click();
+  await expect(allocator.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(medicineNode).toHaveCount(1);
   await expect(awarenessNode).toHaveCount(1);
   await expect(insightNode).toHaveCount(0);
@@ -215,7 +248,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText(/Hintergrund ist regelkonform vollständig/i)).toBeVisible();
   await expect(page.getByText('Fertigkeiten & Quellen').first()).toBeVisible();
   await expect(page.getByText('Freie Punkte').first()).toBeVisible();
-  await expect(page.getByText('Gesamt').first()).toBeVisible();
+  await expect(page.getByText(/^Hintergrund$/).first()).toBeVisible();
+  await expect(page.getByText(/^Archetyp$/).first()).toBeVisible();
+  await expect(page.getByText(/^Gesamt$/)).toHaveCount(0);
+  await page.screenshot({ path: '.qa/evidence/skill-progression-v2-character-editor-ux/01-three-start-sources.png', fullPage: true });
   await expect(page.getByTestId('character-lore-project-context')).toBeVisible();
   await expect(page.getByTestId('character-bg-generate')).toBeVisible();
   await expect(page.getByRole('heading', { name: /^Notizen$/i })).toBeVisible();
@@ -225,12 +261,43 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByText('Medizin', { exact: true }).last().click();
   await expect(page.getByText(/Standardattribut: Verstand/i).last()).toBeVisible();
-  await expect(page.getByText(/Standardbeziehung – keine Voraussetzung/i)).toBeVisible();
+  await expect(page.getByText(/^Herkunft$/).last()).toBeVisible();
+  await expect(page.getByText(/Globaler EB/i).last()).toBeVisible();
+  await expect(page.getByText(/anwendbarer Erfahrungsbonus/i).last()).toBeVisible();
+  await page.screenshot({ path: '.qa/evidence/skill-progression-v2-character-editor-ux/03-skill-formula-applied-eb.png', fullPage: true });
 
-  await page.getByRole('tab', { name: /Inventar/i }).click();
-  await expect(page.getByText(/^Last 0 \/ 13$/).first()).toBeVisible();
-  await expect(page.getByText(/Keine festen Slots/i).first()).toBeVisible();
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '07-inventory-load.png'), fullPage: true });
+  await page.getByLabel('Stufe').click();
+  await page.getByRole('option', { name: '17', exact: true }).click();
+  await page.getByText('Medizin', { exact: true }).last().click();
+  await expect(page.getByText(/Durch Rang 1 anwendbar/i).last()).toBeVisible();
+  await expect(page.getByText(/\+2 anwendbarer Erfahrungsbonus/i)).toBeVisible();
+  await page.getByRole('button', { name: /Athletik Athletik erklären Standard: STÄ 0 Untrainiert/i }).click();
+  await expect(page.getByText(/Durch Rang 0 anwendbar/i).last()).toBeVisible();
+  await expect(page.getByText(/\+0 anwendbarer Erfahrungsbonus/i)).toBeVisible();
+
+  await page.getByLabel('Stufe').click();
+  await page.getByRole('option', { name: '1', exact: true }).click();
+  await completeSpeciesBasics(page);
+  await page.getByRole('tab', { name: /^Parameter$/i }).click();
+  await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
+  await allocateSevenFreeSkillPoints(page);
+
+  const roundtripName = `E2E SkillV2 ${Date.now()}`;
+  await page.getByRole('tab', { name: /^Spezies$/i }).click();
+  await page.getByPlaceholder('Charaktername').first().fill(roundtripName);
+
+  await page.getByLabel('Stufe').click();
+  await page.getByRole('option', { name: '3', exact: true }).click();
+  await page.getByRole('tab', { name: /^Parameter$/i }).click();
+  await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
+  const progressionSlots = page.getByTestId('skill-progression-slots');
+  await expect(progressionSlots).toBeVisible();
+  await progressionSlots.getByRole('combobox').first().click();
+  await page.getByRole('option', { name: 'Bestehenden Skill +1' }).click();
+  await progressionSlots.getByRole('combobox').nth(1).click();
+  await page.getByRole('option', { name: /Medizin \(Rang 1\)/ }).click();
+  await expect(progressionSlots.getByText(/Medizin: 1 → 2/)).toBeVisible();
+  await page.screenshot({ path: path.join(V2_EVIDENCE_DIR, '04-progression-slot.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /Einstellungen/i }).click();
   await page.getByRole('tab', { name: /^Statistik$/i }).click();
@@ -238,14 +305,77 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tab', { name: /^Preset$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /Notizen/i })).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '13-statistics-tab.png'), fullPage: true });
+  await page.getByRole('tab', { name: /^Parameter$/i }).click();
+  await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
+  await expect(page.getByText(/Hintergrund ist regelkonform vollständig/i)).toBeVisible();
+  await expect(page.getByTestId('skill-progression-slots')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Speichern/i }).first()).toBeEnabled();
+
+  // Live POST + Bibliothek roundtrip needs a reachable Supabase stack (local .env).
+  // GitHub Actions has no DB — skipping avoids a 7m waitForResponse hang. Opt in with E2E_LIVE_CHARACTER_SAVE=1.
+  const requireLiveSave = process.env.E2E_LIVE_CHARACTER_SAVE === '1' || !process.env.CI;
+  if (requireLiveSave) {
+    const saveResponsePromise = page.waitForResponse(
+      (response) => response.url().includes('/rest/v1/characters') && response.request().method() === 'POST',
+      { timeout: 30_000 },
+    );
+    await page.getByRole('button', { name: /Speichern/i }).first().click();
+    const saveResponse = await saveResponsePromise;
+    if (!saveResponse.ok()) {
+      throw new Error(`Character save failed: ${saveResponse.status()} ${await saveResponse.text()}`);
+    }
+    const savedBody = await saveResponse.json() as {
+      sagadrive_profile?: {
+        skillProvenanceStatus?: string;
+        background?: { backgroundSkillPoints?: Record<string, number>; specialization?: { name?: string } };
+        skillAdvances?: Array<{ level: number; skill: string }>;
+      };
+    };
+    expect(savedBody.sagadrive_profile?.skillProvenanceStatus).toBe('complete');
+    expect(savedBody.sagadrive_profile?.background?.backgroundSkillPoints).toBeTruthy();
+    expect(savedBody.sagadrive_profile?.background?.specialization?.name).toBe('Notfallmedizin');
+    await expect(page.locator('[data-sonner-toast]').filter({ hasText: /gespeichert/i }).first()).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole('button', { name: 'Bibliothek' }).first().click();
+    await expect(page.getByRole('heading', { name: /Meine Bibliothek/i })).toBeVisible();
+    await page.getByPlaceholder('Suche in deiner Bibliothek...').first().fill(roundtripName);
+    const savedCard = page.locator('div').filter({ hasText: roundtripName }).filter({ has: page.getByRole('button', { name: 'Bearbeiten' }) }).first();
+    await expect(savedCard).toBeVisible({ timeout: 15_000 });
+    await savedCard.getByRole('button', { name: 'Bearbeiten' }).click();
+    await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible();
+    await expect(page.getByPlaceholder('Charaktername').first()).toHaveValue(roundtripName, { timeout: 15_000 });
+    await page.getByRole('tab', { name: /^Parameter$/i }).click();
+    await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
+    await expect(page.getByText(/Hintergrund ist regelkonform vollständig/i)).toBeVisible();
+    await expect(page.getByLabel('Spezialisierung Fachgebiet')).toHaveValue('Notfallmedizin');
+    await expect(page.getByText(/^7 \/ 7$/).first()).toBeVisible();
+    await expect(page.getByText('2 / 2').first()).toBeVisible();
+    await expect(page.getByTestId('skill-progression-slots')).toBeVisible();
+    await expect(page.getByText(/Medizin: 1 → 2/)).toBeVisible();
+  } else {
+    test.info().annotations.push({
+      type: 'note',
+      description: 'Skipped live character POST/Bibliothek roundtrip (CI without Supabase). Covered by local E2E + repository assert.',
+    });
+  }
+
+  await page.getByRole('tab', { name: /Inventar/i }).click();
+  await expect(page.getByText(/^Last 0 \/ 13$/).first()).toBeVisible();
+  await expect(page.getByText(/Keine festen Slots/i).first()).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '07-inventory-load.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /Spezies/i }).click();
-  await page.getByPlaceholder('Charaktername').first().fill('Validierungsprobe');
+  await page.getByPlaceholder('Charaktername').first().fill('');
   await page.getByRole('button', { name: /Speichern/i }).first().click();
-  await expect(page.locator('[data-sonner-toast]').filter({ hasText: /Speziesmerkmale|Hintergrund|Fertigkeitspunkte|Attribute|Namen|gelesen|Vervollständige/i }).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('[data-sonner-toast]').filter({ hasText: /Namen|Bitte gib/i }).first()).toBeVisible({ timeout: 10_000 });
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '11-edge-invalid-build.png'), fullPage: true });
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('tab', { name: /^Spezies$/i }).click();
+  const removeResistance = page.getByRole('button', { name: /Enge Resistenz abwählen|Enge Resistenz entfernen/i });
+  if (await removeResistance.count()) {
+    await removeResistance.first().click();
+  }
   await page.getByRole('button', { name: /Enge Resistenz, 1 Punkt/i }).click();
   await expect(page.getByRole('combobox', { name: 'Enge Resistenz: Gefahrenart' })).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-species-mobile-repeatable.png'), fullPage: true });

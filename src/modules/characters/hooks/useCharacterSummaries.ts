@@ -29,7 +29,7 @@ export function useCharacterSummaries(options: UseCharacterSummariesOptions = {}
     try {
       await characterService.deleteCharacter(id);
       entityCache.invalidate(ENTITY_CACHE_KEYS.characterSummaries);
-      await refresh();
+      await refresh({ force: true });
       return true;
     } catch (err) {
       console.error('Error deleting character:', err);

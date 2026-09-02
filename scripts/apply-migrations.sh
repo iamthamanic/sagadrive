@@ -22,6 +22,13 @@ migrations=(
   005_character_ruleset_metadata.sql
   006_character_portrait_storage.sql
   007_sagadrive_character_profile.sql
+  008_world_profiles.sql
+  009_character_adventure_arcs.sql
+  010_characters_v3_columns.sql
+  011_seed_local_admin.sql
+  012_character_presets.sql
+  013_character_presets_rls_hardening.sql
+  014_character_abilities_emotion_profiles.sql
 )
 
 only="${1:-}"

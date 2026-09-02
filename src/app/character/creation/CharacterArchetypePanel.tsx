@@ -2,13 +2,14 @@
  * CharacterArchetypePanel — Archetyp-Auswahl per Karussell mit genau einem Archetyp-Startpunkt.
  * Die globale Fertigkeitsverteilung lebt unter Parameter > Kompetenzen.
  */
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   sagaDriveArchetypeOptions,
   type SagaDriveArchetypeKey,
   type SagaDriveSkillKey,
 } from '../../../modules/rulesets/characterCreation';
-import type { AbilityDto, CharacterAttributesDto } from '../../../modules/characters/types/character.types';
+import type { CharacterAttributesDto } from '../../../modules/characters/types/character.types';
+import type { SagaDriveBackgroundSkillPoints } from '../../../modules/rulesets/skillProgression';
 import { ArchetypeCarousel, type CarouselScrollPhase } from './ArchetypeCarousel';
 import { ArchetypeSkillChoice } from './ArchetypeSkillChoice';
 import { RuleHelp } from '../shared/RuleHelp';
@@ -18,9 +19,9 @@ interface CharacterArchetypePanelProps {
   onArchetypeChange: (value: SagaDriveArchetypeKey) => void;
   archetypeTrainingSkill?: SagaDriveSkillKey;
   onArchetypeTrainingSkillChange: (skill: SagaDriveSkillKey) => void;
-  coreAbility?: AbilityDto;
+  coreAbility?: { name: string };
   freeRanks: Record<SagaDriveSkillKey, number>;
-  backgroundTrainedSkills: readonly SagaDriveSkillKey[];
+  backgroundSkillPoints: SagaDriveBackgroundSkillPoints;
   attributes: CharacterAttributesDto;
   experienceBonus?: number;
 }
@@ -31,7 +32,7 @@ export function CharacterArchetypePanel({
   archetypeTrainingSkill,
   onArchetypeTrainingSkillChange,
   freeRanks,
-  backgroundTrainedSkills,
+  backgroundSkillPoints,
   attributes,
   experienceBonus = 1,
 }: CharacterArchetypePanelProps) {
@@ -71,7 +72,7 @@ export function CharacterArchetypePanel({
             skills={selectedOption.skills}
             selectedSkill={archetypeTrainingSkill}
             onSelect={onArchetypeTrainingSkillChange}
-            backgroundTrainedSkills={backgroundTrainedSkills}
+            backgroundSkillPoints={backgroundSkillPoints}
             freeRanks={freeRanks}
             attributes={attributes}
             experienceBonus={experienceBonus}

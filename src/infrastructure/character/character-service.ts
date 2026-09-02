@@ -4,7 +4,12 @@
  */
 import type { CreateCharacterDto, UpdateCharacterDto } from '../../domains/character/contracts/character.commands';
 import type { CharacterSummaryVm, CharacterVm } from '../../domains/character/contracts/character.views';
+import { ENTITY_CACHE_KEYS, entityCache } from '../../lib/entityCache';
 import { supabaseCharacterRepository } from './supabase-character.repository';
+
+function invalidateCharacterListCaches(): void {
+  entityCache.invalidate(ENTITY_CACHE_KEYS.characterSummaries);
+}
 
 class CharacterService {
   getUserCharacterSummaries(): Promise<CharacterSummaryVm[]> {
@@ -19,16 +24,21 @@ class CharacterService {
     return supabaseCharacterRepository.getCharacterById(id);
   }
 
-  createCharacter(payload: CreateCharacterDto): Promise<CharacterVm> {
-    return supabaseCharacterRepository.createCharacter(payload);
+  async createCharacter(payload: CreateCharacterDto): Promise<CharacterVm> {
+    const created = await supabaseCharacterRepository.createCharacter(payload);
+    invalidateCharacterListCaches();
+    return created;
   }
 
-  updateCharacter(id: string, payload: UpdateCharacterDto): Promise<CharacterVm> {
-    return supabaseCharacterRepository.updateCharacter(id, payload);
+  async updateCharacter(id: string, payload: UpdateCharacterDto): Promise<CharacterVm> {
+    const updated = await supabaseCharacterRepository.updateCharacter(id, payload);
+    invalidateCharacterListCaches();
+    return updated;
   }
 
-  deleteCharacter(id: string): Promise<void> {
-    return supabaseCharacterRepository.deleteCharacter(id);
+  async deleteCharacter(id: string): Promise<void> {
+    await supabaseCharacterRepository.deleteCharacter(id);
+    invalidateCharacterListCaches();
   }
 
   searchCharacters(query: string): Promise<CharacterVm[]> {

@@ -11,6 +11,7 @@ import {
   type SagaDriveAttributeKey,
   type SagaDriveSkillKey,
 } from '../../../modules/rulesets/characterCreation';
+import type { SagaDriveBackgroundSkillPoints } from '../../../modules/rulesets/skillProgression';
 import { RuleHelp } from '../shared/RuleHelp';
 import type { CarouselScrollPhase } from './ArchetypeCarousel';
 
@@ -18,7 +19,7 @@ interface ArchetypeSkillChoiceProps {
   skills: readonly SagaDriveSkillKey[];
   selectedSkill?: SagaDriveSkillKey;
   onSelect: (skill: SagaDriveSkillKey) => void;
-  backgroundTrainedSkills: readonly SagaDriveSkillKey[];
+  backgroundSkillPoints: SagaDriveBackgroundSkillPoints;
   freeRanks: Record<SagaDriveSkillKey, number>;
   attributes: Record<SagaDriveAttributeKey, number>;
   experienceBonus?: number;
@@ -36,10 +37,10 @@ function getCompetencyLabel(rank: number): string {
 
 function getProjectedRank(
   skillKey: SagaDriveSkillKey,
-  backgroundTrainedSkills: readonly SagaDriveSkillKey[],
+  backgroundSkillPoints: SagaDriveBackgroundSkillPoints,
   freeRanks: Record<SagaDriveSkillKey, number>,
 ): number {
-  return freeRanks[skillKey] + (backgroundTrainedSkills.includes(skillKey) ? 1 : 0) + 1;
+  return freeRanks[skillKey] + (backgroundSkillPoints[skillKey] ?? 0) + 1;
 }
 
 function getDerivedStatHints(skillKey: SagaDriveSkillKey): string[] {
@@ -294,7 +295,7 @@ export function ArchetypeSkillChoice({
   skills,
   selectedSkill,
   onSelect,
-  backgroundTrainedSkills,
+  backgroundSkillPoints,
   freeRanks,
   attributes,
   experienceBonus = 1,
@@ -318,9 +319,10 @@ export function ArchetypeSkillChoice({
           const skill = getSagaDriveSkill(skillKey);
           const attribute = getSagaDriveAttribute(skill.attribute);
           const selected = selectedSkill === skillKey;
-          const projectedRank = getProjectedRank(skillKey, backgroundTrainedSkills, freeRanks);
+          const projectedRank = getProjectedRank(skillKey, backgroundSkillPoints, freeRanks);
           const disabled = !selected && projectedRank > SAGA_DRIVE_START_SKILL_CAP;
-          const hasBackground = backgroundTrainedSkills.includes(skillKey);
+          const backgroundValue = backgroundSkillPoints[skillKey] ?? 0;
+          const hasBackground = backgroundValue > 0;
           const freeRank = freeRanks[skillKey];
           const probeModifier = attributes[skill.attribute] + projectedRank + (projectedRank > 0 ? experienceBonus : 0);
           const derivedHints = getDerivedStatHints(skillKey);
@@ -359,7 +361,7 @@ export function ArchetypeSkillChoice({
 
               <div className="mt-3 flex flex-wrap gap-1.5">
                 <Badge variant="outline">Archetyp +1</Badge>
-                {hasBackground && <Badge variant="outline">Hintergrund +1</Badge>}
+                {hasBackground && <Badge variant="outline">Hintergrund +{backgroundValue}</Badge>}
                 {freeRank > 0 && <Badge variant="secondary">Frei +{freeRank}</Badge>}
               </div>
 

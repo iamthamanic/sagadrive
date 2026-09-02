@@ -6,6 +6,7 @@ import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../modul
 import { characterService } from '../../../modules/characters/services/character.service';
 import type {
   AbilityDto,
+  CharacterAppearanceDto,
   CharacterAttributesDto,
   CharacterGenderReading,
   CharacterLoreContext,
@@ -36,9 +37,9 @@ import {
   CharacterTraitEditor,
   RuleHelp,
   getInventoryLoad,
-  getSagaDriveFinalSkillRanks,
+  resolveSagaDriveSkillRanks,
 } from '../progression';
-import { takeCharacterEditorBootstrap } from '../../../modules/characters/characterEditorBootstrap';
+import { takeCharacterEditorBootstrap, clearCharacterEditorBootstrap } from '../../../modules/characters/characterEditorBootstrap';
 import { assertValidSnapshot, characterPresetService } from '../../../modules/characters/services/characterPreset.service';
 import { normalizeSafeUrl } from '../../../modules/characters/avatar';
 import type { CharacterPresetReleaseMode, CharacterPresetSnapshot } from '../../../modules/characters/types/characterPreset.types';
@@ -63,8 +64,6 @@ import {
 import {
   SAGA_DRIVE_SPECIES_TRAIT_BUDGET,
   SAGA_DRIVE_START_FREE_SKILL_POINTS,
-  SAGA_DRIVE_START_MIN_TRAINED_SKILLS,
-  SAGA_DRIVE_START_SKILL_CAP,
   characterRulesetOptions,
   createEmptySagaDriveSkillRanks,
   getCharacterCreationOptionLabel,
@@ -86,6 +85,22 @@ import {
   type SagaDriveEssenceKey,
   type SagaDriveSkillKey,
 } from '../../../domains/rules/sagadrive/character-creation';
+import {
+  SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS,
+  backgroundSkillPointsToTrainedSkills,
+  getSagaDriveExperienceBonus,
+  getSagaDriveSkillCap,
+  isValidBackgroundSkillPoints,
+  isValidSagaDriveSkillAdvances,
+  isValidStartSkillBuild,
+  normalizeFreeSkillRanks,
+  resolveSagaDriveSkillBuildState,
+  sumBackgroundSkillPointsUsed,
+  type SagaDriveBackgroundSkillPoints,
+  type SagaDriveSkillAdvanceDto,
+  type SagaDriveSkillProvenanceStatus,
+  type SagaDriveSpecializationRecordDto,
+} from '../../../modules/rulesets/skillProgression';
 import { getSagaDriveSpeciesTraitOptionCatalog } from '../../../domains/rules/sagadrive/species-trait-options';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -105,7 +120,6 @@ type SettingsSubTab = 'statistics' | 'preset';
 type ValidationProblem = { tab: EditorTab; message: string; valuesSubTab?: ValuesSubTab };
 type SkillSlot = SagaDriveSkillKey | '';
 type BackgroundSkillPool = [SkillSlot, SkillSlot, SkillSlot, SkillSlot];
-type BackgroundTraining = [SkillSlot, SkillSlot];
 const INITIAL_ATTRIBUTES: CharacterAttributesDto = { strength: 4, dexterity: 3, endurance: 3, mind: 2, perception: 2, charisma: 1 };
 
 const trackActivity = (description: string) => {
@@ -131,10 +145,14 @@ function padBackgroundSkills(skills: readonly SagaDriveSkillKey[], size: 4): Bac
   return slots as BackgroundSkillPool;
 }
 
-function padBackgroundTraining(skills: readonly SagaDriveSkillKey[]): BackgroundTraining {
-  const slots: SkillSlot[] = [...skills.slice(0, 2)];
-  while (slots.length < 2) slots.push('');
-  return slots as BackgroundTraining;
+function syncBackgroundSpecialization(
+  specializations: readonly SagaDriveSpecializationRecordDto[],
+  skill: SkillSlot,
+  name: string,
+): SagaDriveSpecializationRecordDto[] {
+  const withoutBackground = specializations.filter((entry) => entry.source !== 'background');
+  if (!isSagaDriveSkillKey(skill) || !name.trim()) return withoutBackground;
+  return [...withoutBackground, { skill, name: name.trim(), source: 'background', acquiredAtLevel: 1 }];
 }
 
 function parseStartAttribute(value: string): 0 | 1 | 2 | 3 | 4 {
@@ -264,7 +282,10 @@ export function CharacterEditor() {
   const [backgroundTemplateId, setBackgroundTemplateId] = useState<string | null | undefined>(undefined);
   const [backgroundName, setBackgroundName] = useState('');
   const [backgroundSkillPool, setBackgroundSkillPool] = useState<BackgroundSkillPool>(['', '', '', '']);
-  const [backgroundTraining, setBackgroundTraining] = useState<BackgroundTraining>(['', '']);
+  const [backgroundSkillPoints, setBackgroundSkillPoints] = useState<SagaDriveBackgroundSkillPoints>({});
+  const [skillAdvances, setSkillAdvances] = useState<SagaDriveSkillAdvanceDto[]>([]);
+  const [specializations, setSpecializations] = useState<SagaDriveSpecializationRecordDto[]>([]);
+  const [skillProvenanceStatus, setSkillProvenanceStatus] = useState<SagaDriveSkillProvenanceStatus | undefined>();
   const [specializationSkill, setSpecializationSkill] = useState<SkillSlot>('');
   const [specializationName, setSpecializationName] = useState('');
   const [milieuAccess, setMilieuAccess] = useState('');
@@ -296,12 +317,20 @@ export function CharacterEditor() {
   const baseSpeciesLabel = getCharacterCreationOptionLabel(sagaDriveRaceOptions, characterRace);
   const speciesDisplayName = characterRace === 'alien' && speciesProfileName.trim() ? speciesProfileName.trim() : baseSpeciesLabel;
   const selectedBackgroundPool = useMemo(() => uniqueSkills(backgroundSkillPool), [backgroundSkillPool]);
-  const selectedBackgroundTraining = useMemo(() => uniqueSkills(backgroundTraining), [backgroundTraining]);
+  const backgroundPointsUsed = useMemo(() => sumBackgroundSkillPointsUsed(backgroundSkillPoints), [backgroundSkillPoints]);
   const attributes = useMemo(
     () => applySagaDriveAttributeAdvances(baseAttributes, attributeAdvances, characterLevel),
     [attributeAdvances, baseAttributes, characterLevel],
   );
-  const finalSkillRanks = useMemo(() => getSagaDriveFinalSkillRanks(freeSkillRanks, selectedBackgroundTraining, archetypeTrainingSkill), [archetypeTrainingSkill, freeSkillRanks, selectedBackgroundTraining]);
+  const skillBuild = useMemo(() => ({
+    freeSkillRanks,
+    backgroundSkillPoints,
+    archetypeTrainingSkill,
+    skillAdvances,
+    specializations,
+    provenanceStatus: skillProvenanceStatus ?? 'complete' as const,
+  }), [archetypeTrainingSkill, backgroundSkillPoints, freeSkillRanks, skillAdvances, skillProvenanceStatus, specializations]);
+  const finalSkillRanks = useMemo(() => resolveSagaDriveSkillRanks(skillBuild, characterLevel), [characterLevel, skillBuild]);
 
   const abilities = useMemo<AbilityDto[]>(() => {
     if (!archetype) return [];
@@ -309,8 +338,8 @@ export function CharacterEditor() {
   }, [archetype]);
 
   const freeSkillPointsUsed = useMemo(() => sagaDriveSkillDefinitions.reduce((sum, skill) => sum + freeSkillRanks[skill.key], 0), [freeSkillRanks]);
-  const trainedSkillCount = useMemo(() => sagaDriveSkillDefinitions.filter((skill) => finalSkillRanks[skill.key] > 0).length, [finalSkillRanks]);
-  const skillOverflow = useMemo(() => sagaDriveSkillDefinitions.some((skill) => finalSkillRanks[skill.key] > SAGA_DRIVE_START_SKILL_CAP), [finalSkillRanks]);
+  const skillCap = getSagaDriveSkillCap(characterLevel);
+  const skillOverflow = useMemo(() => sagaDriveSkillDefinitions.some((skill) => finalSkillRanks[skill.key] > skillCap), [finalSkillRanks, skillCap]);
   const attributeAdvanceLevels = getSagaDriveAttributeAdvanceLevels(characterLevel);
   const attributeAdvanceBudget = getSagaDriveAttributeAdvanceBudget(characterLevel);
   const attributeAdvancesUsed = attributeAdvanceLevels.filter((advanceLevel) => Boolean(attributeAdvances[advanceLevel])).length;
@@ -326,29 +355,38 @@ export function CharacterEditor() {
   const carryCapacity = 5 + 2 * attributes.strength;
   const overloaded = inventoryLoad > carryCapacity;
   const movement = overloaded ? 6 : 9;
-  const experienceBonus = 1;
+  const experienceBonus = getSagaDriveExperienceBonus(characterLevel);
   const health = 12 + 2 * attributes.endurance + 2 * experienceBonus;
   const defense = 10 + attributes.dexterity + experienceBonus + Math.max(finalSkillRanks.melee, finalSkillRanks.acrobatics);
   const recovery = attributes.endurance + experienceBonus;
   const derivedStatCards = useMemo(
-    () => buildSagaDriveDerivedStatCards({ attributes, finalSkillRanks, experienceBonus, overloaded }),
-    [attributes, experienceBonus, finalSkillRanks, overloaded],
+    () => buildSagaDriveDerivedStatCards({ attributes, finalSkillRanks, experienceBonus, level: characterLevel, overloaded }),
+    [attributes, characterLevel, experienceBonus, finalSkillRanks, overloaded],
   );
 
   const backgroundComplete = backgroundTemplateId !== undefined
     && Boolean(backgroundName.trim())
     && selectedBackgroundPool.length === 4
-    && selectedBackgroundTraining.length === 2
-    && selectedBackgroundTraining.every((skill) => selectedBackgroundPool.includes(skill))
+    && isValidBackgroundSkillPoints(backgroundSkillPoints, selectedBackgroundPool)
     && isSagaDriveSkillKey(specializationSkill)
-    && selectedBackgroundTraining.includes(specializationSkill)
+    && (backgroundSkillPoints[specializationSkill] ?? 0) > 0
     && Boolean(specializationName.trim())
     && Boolean(milieuAccess.trim())
     && Boolean(contact.trim())
     && Boolean(complication.trim())
     && Boolean(communication.trim());
   const genderReadingComplete = Boolean(genderReading);
-  const skillsComplete = Boolean(archetypeTrainingSkill) && freeSkillPointsUsed === SAGA_DRIVE_START_FREE_SKILL_POINTS && trainedSkillCount >= SAGA_DRIVE_START_MIN_TRAINED_SKILLS && !skillOverflow;
+  const startSkillBuild = useMemo(() => ({
+    freeSkillRanks,
+    backgroundSkillPoints,
+    archetypeTrainingSkill,
+  }), [archetypeTrainingSkill, backgroundSkillPoints, freeSkillRanks]);
+  const skillsComplete = Boolean(archetypeTrainingSkill)
+    && freeSkillPointsUsed === SAGA_DRIVE_START_FREE_SKILL_POINTS
+    && backgroundPointsUsed === SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS
+    && isValidStartSkillBuild(startSkillBuild, selectedBackgroundPool, characterArchetype)
+    && isValidSagaDriveSkillAdvances(skillAdvances, startSkillBuild, characterLevel)
+    && !skillOverflow;
 
   const collectValidationProblems = (): ValidationProblem[] => {
     const problems: ValidationProblem[] = [];
@@ -361,7 +399,7 @@ export function CharacterEditor() {
     if (!backgroundComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige deinen mechanischen Hintergrund unter Kompetenzen.' });
     if (!attributeDistributionValid) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: `Verteile genau ${SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte (+0 bis +4) und alle für Level ${characterLevel} verfügbaren Attributsteigerungen, ohne einen Endwert über +${SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} zu erzeugen.` });
     if (!characterArchetype) problems.push({ tab: 'values', valuesSubTab: 'archetype', message: 'Bitte wähle einen Archetyp.' });
-    if (!skillsComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige die 10 Start-Fertigkeitspunkte und trainiere mindestens sechs Fertigkeiten.' });
+    if (!skillsComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige die drei Startquellen (7 frei, 2 Hintergrund, 1 Archetyp) und alle Fertigkeitsentwicklungen bis zu deinem Level.' });
     if (!essenceProfile) problems.push({ tab: 'values', valuesSubTab: 'essenz', message: 'Bitte wähle eine primäre Essenz.' });
     return problems;
   };
@@ -381,9 +419,10 @@ export function CharacterEditor() {
       background: {
         name: backgroundName.trim(),
         skillPool: selectedBackgroundPool,
-        trainedSkills: selectedBackgroundTraining,
+        trainedSkills: backgroundSkillPointsToTrainedSkills(backgroundSkillPoints),
+        backgroundSkillPoints,
         specialization: isSagaDriveSkillKey(specializationSkill)
-          ? { skill: specializationSkill, name: specializationName.trim() }
+          ? { skill: specializationSkill, name: specializationName.trim(), source: 'background', acquiredAtLevel: 1 }
           : undefined,
         milieuAccess: milieuAccess.trim(),
         contact: contact.trim(),
@@ -391,6 +430,10 @@ export function CharacterEditor() {
         communication: communication.trim(),
       },
       archetypeTrainingSkill,
+      freeSkillRanks,
+      skillAdvances: skillAdvances.length > 0 ? skillAdvances : undefined,
+      specializations: specializations.length > 0 ? specializations : undefined,
+      skillProvenanceStatus: 'complete',
       baseAttributes,
       attributeAdvances,
       presetReleaseMode,
@@ -432,28 +475,38 @@ export function CharacterEditor() {
     };
   };
 
-  useEffect(() => {
-    if (bootstrapAppliedRef.current) return;
-    bootstrapAppliedRef.current = true;
-    const bootstrap = takeCharacterEditorBootstrap();
-    if (!bootstrap || bootstrap.kind !== 'preset-snapshot') return;
-    const { snapshot } = bootstrap;
-    try {
-      assertValidSnapshot(snapshot);
-    } catch (error) {
-      console.error('Preset bootstrap rejected:', error instanceof Error ? error.message : error);
-      toast.error(error instanceof Error ? error.message : 'Preset konnte nicht geladen werden.');
-      return;
-    }
-    const profile = snapshot.sagadrive_profile;
-    const appearance = snapshot.appearance;
-    const resolved = resolveSagaDriveAttributeBuildState(snapshot.attributes, profile);
+  const hydrateEditorFromPersistedCharacter = (payload: {
+    savedCharacterId: string | null;
+    persistedLevel: number | null;
+    name: string;
+    description: string;
+    rulesetKey: string;
+    level: number;
+    race: string;
+    attributes: CharacterAttributesDto;
+    skills: Record<SagaDriveSkillKey, number>;
+    profile: SagaDriveProfileDto;
+    appearance: CharacterAppearanceDto;
+    freeSkillRanks?: Partial<Record<SagaDriveSkillKey, number>>;
+    inventory?: ItemDto[];
+    backgroundStory?: string;
+    notes?: string;
+    personalityTraits?: string[];
+    ideals?: string[];
+    bonds?: string[];
+    flaws?: string[];
+    portraitUrl?: string;
+    successMessage: string;
+  }) => {
+    const { profile, appearance } = payload;
+    const resolved = resolveSagaDriveAttributeBuildState(payload.attributes, profile);
+    const hydratedFreeSkillRanks = normalizeFreeSkillRanks(payload.freeSkillRanks ?? profile.freeSkillRanks);
 
-    setCharacterName(bootstrap.characterName || snapshot.name);
-    setDescription(snapshot.description ?? '');
-    setRuleset(snapshot.ruleset_key === 'dnd-5.5e' ? 'dnd-5.5e' : 'sagadrive-core');
-    setCharacterLevel(snapshot.level);
-    setCharacterRace(snapshot.race);
+    setCharacterName(payload.name);
+    setDescription(payload.description);
+    setRuleset(payload.rulesetKey === 'dnd-5.5e' ? 'dnd-5.5e' : 'sagadrive-core');
+    setCharacterLevel(payload.level);
+    setCharacterRace(payload.race);
     setCharacterArchetype(profile.archetype && isSagaDriveArchetypeKey(profile.archetype) ? profile.archetype : undefined);
     setEssenceProfile(profile.essence && isSagaDriveEssenceKey(profile.essence) ? profile.essence : undefined);
     setGenderReading(appearance.gender_reading);
@@ -462,26 +515,42 @@ export function CharacterEditor() {
     setSpeciesBodyDescription(profile.speciesProfile?.bodyDescription ?? '');
     setBaseAttributes(resolved.baseAttributes);
     setAttributeAdvances(resolved.attributeAdvances);
-    setFreeSkillRanks(snapshot.freeSkillRanks ?? createEmptySagaDriveSkillRanks());
+    setFreeSkillRanks(hydratedFreeSkillRanks);
     setArchetypeTrainingSkill(profile.archetypeTrainingSkill && isSagaDriveSkillKey(profile.archetypeTrainingSkill) ? profile.archetypeTrainingSkill : undefined);
     setBackgroundTemplateId(profile.backgroundTemplateId === undefined ? undefined : profile.backgroundTemplateId);
     setBackgroundName(profile.background?.name ?? '');
     setBackgroundSkillPool(padBackgroundSkills(profile.background?.skillPool ?? [], 4));
-    setBackgroundTraining(padBackgroundTraining(profile.background?.trainedSkills ?? []));
-    setSpecializationSkill(profile.background?.specialization?.skill && isSagaDriveSkillKey(profile.background.specialization.skill) ? profile.background.specialization.skill : '');
-    setSpecializationName(profile.background?.specialization?.name ?? '');
+    const resolvedSkills = resolveSagaDriveSkillBuildState(payload.skills, {
+      freeSkillRanks: hydratedFreeSkillRanks,
+      backgroundSkillPoints: profile.background?.backgroundSkillPoints,
+      trainedSkills: profile.background?.trainedSkills,
+      skillPool: profile.background?.skillPool,
+      archetypeTrainingSkill: profile.archetypeTrainingSkill && isSagaDriveSkillKey(profile.archetypeTrainingSkill) ? profile.archetypeTrainingSkill : undefined,
+      skillAdvances: profile.skillAdvances,
+      specializations: profile.specializations,
+      backgroundSpecialization: profile.background?.specialization && isSagaDriveSkillKey(profile.background.specialization.skill)
+        ? profile.background.specialization
+        : undefined,
+    }, payload.level);
+    setBackgroundSkillPoints(resolvedSkills.backgroundSkillPoints);
+    setSkillAdvances(resolvedSkills.skillAdvances ?? []);
+    setSpecializations(resolvedSkills.specializations ?? []);
+    setSkillProvenanceStatus(resolvedSkills.provenanceStatus);
+    const backgroundSpec = resolvedSkills.specializations?.find((entry) => entry.source === 'background');
+    setSpecializationSkill(backgroundSpec?.skill ?? (profile.background?.specialization?.skill && isSagaDriveSkillKey(profile.background.specialization.skill) ? profile.background.specialization.skill : ''));
+    setSpecializationName(backgroundSpec?.name ?? profile.background?.specialization?.name ?? '');
     setMilieuAccess(profile.background?.milieuAccess ?? '');
     setContact(profile.background?.contact ?? '');
     setComplication(profile.background?.complication ?? '');
     setCommunication(profile.background?.communication ?? '');
-    setInventory(snapshot.inventory ?? []);
-    setBackgroundStory(snapshot.background_story ?? '');
-    setPersonalityTraits(snapshot.personality_traits ?? []);
-    setIdeals(snapshot.ideals ?? []);
-    setBonds(snapshot.bonds ?? []);
-    setFlaws(snapshot.flaws ?? []);
-    setNotes(snapshot.notes ?? '');
-    setPortraitUrl(snapshot.portrait_url ? (normalizeSafeUrl(snapshot.portrait_url) ?? '') : '');
+    setInventory(payload.inventory ?? []);
+    setBackgroundStory(payload.backgroundStory ?? '');
+    setPersonalityTraits(payload.personalityTraits ?? []);
+    setIdeals(payload.ideals ?? []);
+    setBonds(payload.bonds ?? []);
+    setFlaws(payload.flaws ?? []);
+    setNotes(payload.notes ?? '');
+    setPortraitUrl(payload.portraitUrl ? (normalizeSafeUrl(payload.portraitUrl) ?? '') : '');
     setPresetReleaseMode(profile.presetReleaseMode === 'auto' ? 'auto' : 'manual');
     setBodySize([appearance.body_size ?? 50]);
     setHeight([appearance.height ?? 50]);
@@ -492,9 +561,95 @@ export function CharacterEditor() {
     setSkinTone(appearance.skin_tone || appearance.avatar?.colors.skin || '#c58c6a');
     setClothing(appearance.clothing || appearance.avatar?.traits.clothing || 'casual');
     setAccessory(appearance.avatar?.traits.accessory ?? 'none');
-    setSavedCharacterId(null);
-    setPersistedLevel(null);
-    toast.success('Preset geladen — neuer Charakter im Editor.');
+    setSavedCharacterId(payload.savedCharacterId);
+    setPersistedLevel(payload.persistedLevel);
+    clearCharacterEditorBootstrap();
+    toast.success(payload.successMessage);
+  };
+
+  useEffect(() => {
+    if (bootstrapAppliedRef.current) return;
+
+    const bootstrap = takeCharacterEditorBootstrap();
+    const storedEditId = typeof sessionStorage !== 'undefined'
+      ? sessionStorage.getItem('sagadrive:character-edit-id')
+      : null;
+    if (storedEditId) sessionStorage.removeItem('sagadrive:character-edit-id');
+    const editCharacterId = bootstrap?.kind === 'character-edit'
+      ? bootstrap.characterId
+      : storedEditId;
+
+    if (bootstrap?.kind === 'preset-snapshot') {
+      bootstrapAppliedRef.current = true;
+      const { snapshot } = bootstrap;
+      try {
+        assertValidSnapshot(snapshot);
+      } catch (error) {
+        console.error('Preset bootstrap rejected:', error instanceof Error ? error.message : error);
+        toast.error(error instanceof Error ? error.message : 'Preset konnte nicht geladen werden.');
+        return;
+      }
+      hydrateEditorFromPersistedCharacter({
+        savedCharacterId: null,
+        persistedLevel: null,
+        name: bootstrap.characterName || snapshot.name,
+        description: snapshot.description ?? '',
+        rulesetKey: snapshot.ruleset_key,
+        level: snapshot.level,
+        race: snapshot.race,
+        attributes: snapshot.attributes,
+        skills: snapshot.skills,
+        profile: snapshot.sagadrive_profile,
+        appearance: snapshot.appearance,
+        freeSkillRanks: snapshot.freeSkillRanks,
+        inventory: snapshot.inventory,
+        backgroundStory: snapshot.background_story,
+        notes: snapshot.notes,
+        personalityTraits: snapshot.personality_traits,
+        ideals: snapshot.ideals,
+        bonds: snapshot.bonds,
+        flaws: snapshot.flaws,
+        portraitUrl: snapshot.portrait_url,
+        successMessage: 'Preset geladen — neuer Charakter im Editor.',
+      });
+      return;
+    }
+
+    if (!editCharacterId) return;
+    bootstrapAppliedRef.current = true;
+
+    void (async () => {
+      try {
+        const character = await characterService.getCharacterById(editCharacterId);
+        hydrateEditorFromPersistedCharacter({
+          savedCharacterId: character.id,
+          persistedLevel: character.level,
+          name: character.name,
+          description: character.description,
+          rulesetKey: character.rulesetKey,
+          level: character.level,
+          race: character.race,
+          attributes: character.attributes,
+          skills: character.skills,
+          profile: character.sagaDriveProfile,
+          appearance: character.appearance,
+          freeSkillRanks: character.sagaDriveProfile.freeSkillRanks,
+          inventory: character.inventory,
+          backgroundStory: character.backgroundStory,
+          notes: character.notes,
+          personalityTraits: character.personalityTraits,
+          ideals: character.ideals,
+          bonds: character.bonds,
+          flaws: character.flaws,
+          portraitUrl: character.portraitUrl,
+          successMessage: `Charakter „${character.name}“ geladen.`,
+        });
+      } catch (error) {
+        console.error('Character edit bootstrap failed:', error);
+        clearCharacterEditorBootstrap();
+        toast.error(error instanceof Error ? error.message : 'Charakter konnte nicht geladen werden.');
+      }
+    })();
   }, []);
 
   const loreContext = useMemo<CharacterLoreContext>(() => ({
@@ -525,9 +680,10 @@ export function CharacterEditor() {
   const resetBackgroundMechanics = () => {
     setBackgroundName('');
     setBackgroundSkillPool(['', '', '', '']);
-    setBackgroundTraining(['', '']);
+    setBackgroundSkillPoints({});
     setSpecializationSkill('');
     setSpecializationName('');
+    setSpecializations((current) => current.filter((entry) => entry.source !== 'background'));
   };
 
   const handleRulesetChange = (value: string) => {
@@ -537,6 +693,9 @@ export function CharacterEditor() {
     setEssenceProfile(undefined);
     setArchetypeTrainingSkill(undefined);
     setFreeSkillRanks(createEmptySagaDriveSkillRanks());
+    setSkillAdvances([]);
+    setSpecializations([]);
+    setSkillProvenanceStatus(undefined);
     setBackgroundTemplateId(undefined);
     resetBackgroundMechanics();
     setMilieuAccess('');
@@ -561,6 +720,12 @@ export function CharacterEditor() {
 
   const handleEssenceChange = (value: string) => { if (isSagaDriveEssenceKey(value)) setEssenceProfile(value); };
 
+  const applyBackgroundSpecialization = (skill: SkillSlot, name: string) => {
+    setSpecializationSkill(skill);
+    setSpecializationName(name);
+    setSpecializations((current) => syncBackgroundSpecialization(current, skill, name));
+  };
+
   const handleBackgroundTemplateSelect = (templateId: string | null) => {
     setBackgroundTemplateId(templateId);
     setSelectedSkill(undefined);
@@ -576,9 +741,19 @@ export function CharacterEditor() {
     }
     setBackgroundName(template.name);
     setBackgroundSkillPool([template.skillPool[0], template.skillPool[1], template.skillPool[2], template.skillPool[3]]);
-    setBackgroundTraining(['', '']);
+    setBackgroundSkillPoints({});
     setSpecializationSkill('');
     setSpecializationName('');
+    setSpecializations((current) => current.filter((entry) => entry.source !== 'background'));
+  };
+
+  const handleBackgroundSkillPointsChange = (points: SagaDriveBackgroundSkillPoints) => {
+    setBackgroundSkillPoints(points);
+    if (isSagaDriveSkillKey(specializationSkill) && (points[specializationSkill] ?? 0) <= 0) {
+      setSpecializationSkill('');
+      setSpecializationName('');
+      setSpecializations((current) => current.filter((entry) => entry.source !== 'background'));
+    }
   };
 
   const updateBackgroundPool = (index: number, value: string) => {
@@ -587,25 +762,20 @@ export function CharacterEditor() {
     const next: BackgroundSkillPool = [backgroundSkillPool[0], backgroundSkillPool[1], backgroundSkillPool[2], backgroundSkillPool[3]];
     next[index] = value;
     setBackgroundSkillPool(next);
-    if (previous && previous !== value && !next.includes(previous)) {
-      const kept = backgroundTraining.filter((skill): skill is SagaDriveSkillKey => isSagaDriveSkillKey(skill) && skill !== previous);
-      setBackgroundTraining([kept[0] ?? '', kept[1] ?? '']);
-      if (specializationSkill === previous) { setSpecializationSkill(''); setSpecializationName(''); }
+    if (previous && previous !== value) {
+      setBackgroundSkillPoints((current) => {
+        const nextPoints = { ...current };
+        if (nextPoints[previous]) delete nextPoints[previous];
+        if (!next.includes(previous)) {
+          if (specializationSkill === previous) {
+            setSpecializationSkill('');
+            setSpecializationName('');
+            setSpecializations((specs) => specs.filter((entry) => entry.source !== 'background'));
+          }
+        }
+        return nextPoints;
+      });
     }
-  };
-
-  const toggleBackgroundTraining = (skill: SagaDriveSkillKey) => {
-    if (!selectedBackgroundPool.includes(skill)) return;
-    const current = selectedBackgroundTraining;
-    if (current.includes(skill)) {
-      const kept = current.filter((entry) => entry !== skill);
-      setBackgroundTraining([kept[0] ?? '', kept[1] ?? '']);
-      if (specializationSkill === skill) { setSpecializationSkill(''); setSpecializationName(''); }
-      return;
-    }
-    if (current.length >= 2) return;
-    const next = [...current, skill];
-    setBackgroundTraining([next[0] ?? '', next[1] ?? '']);
   };
 
   const setAttribute = (attribute: SagaDriveAttributeKey, value: string) => setBaseAttributes((current) => ({ ...current, [attribute]: parseStartAttribute(value) }));
@@ -699,7 +869,11 @@ export function CharacterEditor() {
       toast.error(firstProblem.message);
       return;
     }
-    if (!characterArchetype || !essenceProfile || !archetypeTrainingSkill || !isSagaDriveSkillKey(specializationSkill) || !genderReading || !speciesTraitsComplete) return;
+    if (!characterArchetype || !essenceProfile || !archetypeTrainingSkill || !isSagaDriveSkillKey(specializationSkill) || !genderReading || !speciesTraitsComplete) {
+      setValidationAttempted(true);
+      toast.error('Bitte vervollständige Archetyp, Essenz, Spezies, Hintergrund und Fertigkeiten vor dem Speichern.');
+      return;
+    }
 
     const sagaDriveProfile: SagaDriveProfileDto = {
       archetype: characterArchetype,
@@ -712,8 +886,22 @@ export function CharacterEditor() {
       })),
       speciesProfile: characterRace === 'alien' ? { name: speciesProfileName.trim(), bodyDescription: speciesBodyDescription.trim() } : undefined,
       backgroundTemplateId: backgroundTemplateId ?? null,
-      background: { name: backgroundName.trim(), skillPool: selectedBackgroundPool, trainedSkills: selectedBackgroundTraining, specialization: { skill: specializationSkill, name: specializationName.trim() }, milieuAccess: milieuAccess.trim(), contact: contact.trim(), complication: complication.trim(), communication: communication.trim() },
+      background: {
+        name: backgroundName.trim(),
+        skillPool: selectedBackgroundPool,
+        trainedSkills: backgroundSkillPointsToTrainedSkills(backgroundSkillPoints),
+        backgroundSkillPoints,
+        specialization: { skill: specializationSkill, name: specializationName.trim(), source: 'background', acquiredAtLevel: 1 },
+        milieuAccess: milieuAccess.trim(),
+        contact: contact.trim(),
+        complication: complication.trim(),
+        communication: communication.trim(),
+      },
       archetypeTrainingSkill,
+      freeSkillRanks,
+      skillAdvances: skillAdvances.length > 0 ? skillAdvances : undefined,
+      specializations,
+      skillProvenanceStatus: 'complete',
       baseAttributes,
       attributeAdvances,
       presetReleaseMode,
@@ -774,7 +962,7 @@ export function CharacterEditor() {
   const handleValuesSubTabChange = (value: string) => { if (isValuesSubTab(value)) { setActiveValuesSubTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
   const handleSettingsSubTabChange = (value: string) => { if (isSettingsSubTab(value)) setActiveSettingsSubTab(value); };
   const previewSubtitle = [essence?.label, archetype?.label, speciesDisplayName].filter(Boolean).join(' · ');
-  const totalStartSkillPoints = freeSkillPointsUsed + selectedBackgroundTraining.length + (archetypeTrainingSkill ? 1 : 0);
+  const totalStartSkillPoints = freeSkillPointsUsed + backgroundPointsUsed + (archetypeTrainingSkill ? 1 : 0);
 
   return (
     <div className="h-full w-full overflow-y-auto">
@@ -994,7 +1182,8 @@ export function CharacterEditor() {
                         backgroundTemplateId={backgroundTemplateId}
                         backgroundName={backgroundName}
                         skillPool={backgroundSkillPool}
-                        training={backgroundTraining}
+                        backgroundSkillPoints={backgroundSkillPoints}
+                        onBackgroundSkillPointsChange={handleBackgroundSkillPointsChange}
                         specializationSkill={specializationSkill}
                         specializationName={specializationName}
                         milieuAccess={milieuAccess}
@@ -1006,9 +1195,18 @@ export function CharacterEditor() {
                         onTemplateSelect={handleBackgroundTemplateSelect}
                         onBackgroundNameChange={setBackgroundName}
                         onPoolSkillChange={updateBackgroundPool}
-                        onTrainingToggle={toggleBackgroundTraining}
-                        onSpecializationSkillChange={(skill) => { setSpecializationSkill(skill); if (!skill) setSpecializationName(''); }}
-                        onSpecializationNameChange={setSpecializationName}
+                        onSpecializationSkillChange={(skill) => {
+                          if (!skill) {
+                            applyBackgroundSpecialization('', '');
+                            return;
+                          }
+                          const keepName = isSagaDriveSkillKey(specializationSkill) && specializationSkill === skill ? specializationName : '';
+                          applyBackgroundSpecialization(skill, keepName);
+                        }}
+                        onSpecializationNameChange={(name) => {
+                          applyBackgroundSpecialization(specializationSkill, name);
+                        }}
+                        onSpecializationApply={(skill, name) => applyBackgroundSpecialization(skill, name)}
                         onMilieuAccessChange={setMilieuAccess}
                         onContactChange={setContact}
                         onComplicationChange={setComplication}
@@ -1020,17 +1218,22 @@ export function CharacterEditor() {
                       <section className="space-y-4">
                         <div>
                           <h3 className="font-semibold">Fertigkeiten & Quellen</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">Deine 10 Startpunkte kommen aus 2 Hintergrund + 1 Primärarchetyp + 7 freien Punkten. Wähle einen Skill, um Standardattribut und Quellen zu sehen.</p>
+                          <p className="mt-1 text-sm text-muted-foreground">Deine 10 Startpunkte kommen aus 7 frei + 2 Hintergrund (stackbar) + 1 Archetyp. Wähle einen Skill für Herkunft, EB und die volle d20-Formel.</p>
                         </div>
                         {!characterArchetype ? <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">Der Archetyp-Punkt ist noch offen. Wähle unter <strong>Archetype</strong> zuerst eine Rolle und eine typische Fertigkeit.</div> : null}
                         <CharacterSkillsPanel
+                          characterLevel={characterLevel}
+                          attributes={attributes}
                           freeRanks={freeSkillRanks}
                           onFreeRanksChange={setFreeSkillRanks}
                           backgroundPoolSkills={selectedBackgroundPool}
-                          backgroundTrainedSkills={selectedBackgroundTraining}
+                          backgroundSkillPoints={backgroundSkillPoints}
                           archetypeTrainingSkill={archetypeTrainingSkill}
-                          specializationSkill={isSagaDriveSkillKey(specializationSkill) ? specializationSkill : undefined}
-                          specializationName={specializationName}
+                          skillAdvances={skillAdvances}
+                          onSkillAdvancesChange={setSkillAdvances}
+                          specializations={specializations}
+                          onSpecializationsChange={setSpecializations}
+                          skillProvenanceStatus={skillProvenanceStatus}
                           selectedSkill={selectedSkill}
                           onSelectedSkillChange={setSelectedSkill}
                         />
@@ -1054,7 +1257,7 @@ export function CharacterEditor() {
                         archetypeTrainingSkill={archetypeTrainingSkill}
                         onArchetypeTrainingSkillChange={setArchetypeTrainingSkill}
                         freeRanks={freeSkillRanks}
-                        backgroundTrainedSkills={selectedBackgroundTraining}
+                        backgroundSkillPoints={backgroundSkillPoints}
                         attributes={attributes}
                         experienceBonus={experienceBonus}
                       />

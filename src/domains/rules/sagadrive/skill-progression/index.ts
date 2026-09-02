@@ -67,6 +67,10 @@ function sumBackgroundSkillPoints(points: SagaDriveBackgroundSkillPoints): numbe
   return Object.values(points).reduce<number>((sum, value) => sum + (value ?? 0), 0);
 }
 
+export function sumBackgroundSkillPointsUsed(points: SagaDriveBackgroundSkillPoints): number {
+  return sumBackgroundSkillPoints(points);
+}
+
 function sumFreeSkillRanks(freeSkillRanks: SagaDriveSkillRankMap): number {
   return sagaDriveSkillDefinitions.reduce((sum, skill) => sum + freeSkillRanks[skill.key], 0);
 }
