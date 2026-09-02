@@ -45,7 +45,7 @@ requireMatch(editor, /acquiredAtLevel:\s*1/, 'species creation traits remain lev
 requireMatch(editor, /speciesProfile:\s*characterRace === 'alien'/, 'Alien species profile persistence');
 requireMatch(editor, /GenderReadingSelect/, 'gender reading field in CharacterEditor');
 requireMatch(editor, /backgroundTemplateId:\s*backgroundTemplateId \?\? null/, 'background template origin persistence');
-requireMatch(editor, /SAGA_DRIVE_START_ATTRIBUTE_ARRAY/, 'SagaDrive start attribute distribution validation');
+requireMatch(editor, /isValidSagaDriveAttributeBuild/, 'SagaDrive attribute bonus build validation');
 requireMatch(editor, /sagadrive_profile:\s*sagaDriveProfile/, 'SagaDrive profile save payload');
 requireMatch(editor, /notes:\s*notes\.trim\(\)/, 'persistent notes save payload');
 rejectMatch(editor, /starter-fireball|Feuerball/, 'free starter fireball remains in CharacterEditor');
@@ -123,6 +123,12 @@ requireMatch(inventoryPanel, /capacity = 5 \+ 2 \* strength/, 'SagaDrive carryin
 requireMatch(inventoryPanel, /Über Traglast: Bewegung −3 m/, 'overload consequences');
 rejectMatch(inventoryPanel, /capacity = 30|Freier Inventarplatz|Jeder Gegenstand belegt einen Inventarplatz/, 'legacy fixed-slot inventory remains');
 
+requireMatch(characterTypes, /baseAttributes\?:\s*CharacterAttributesDto/, 'SagaDrive baseAttributes profile persistence');
+requireMatch(characterTypes, /attributeAdvances\?:\s*SagaDriveAttributeAdvancesDto/, 'SagaDrive attributeAdvances profile persistence');
+requireMatch(characterService, /normalizeOptionalBaseAttributes/, 'baseAttributes normalization on profile read');
+requireMatch(characterService, /normalizeSagaDriveAttributeAdvances/, 'attributeAdvances normalization on profile read');
+requireMatch(characterService, /assertValidSagaDriveAttributePersistence/, 'server-side SagaDrive attribute build validation');
+requireMatch(characterService, /isValidSagaDriveAttributeBuild/, 'server validates attribute build with Core helper');
 requireMatch(characterService, /sagadrive_profile:/, 'SagaDrive profile persistence');
 requireMatch(characterService, /normalizeBackgroundTemplateId/, 'background template backward compatibility');
 requireMatch(characterService, /normalizeSpeciesTraitInstances/, 'canonical species trait instance normalization');

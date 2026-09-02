@@ -2,7 +2,6 @@
  * BackgroundCarousel — Swipebare Hintergrund-Framework-Auswahl (Frameworks + Custom), analog zum Archetyp-Karussell.
  * Location: src/modules/characters/components/BackgroundCarousel.tsx
  */
-import { useEffect, useRef, useState } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -34,14 +33,14 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  type CarouselApi,
 } from '../../../components/ui/carousel';
 import {
   getSagaDriveSkill,
   type SagaDriveSkillKey,
 } from '../../rulesets/characterCreation';
 import type { SagaDriveBackgroundTemplate } from '../../rulesets/backgroundTemplates';
-import type { CarouselScrollPhase } from './ArchetypeCarousel';
+import type { CarouselScrollPhase } from '../hooks/carousel.types';
+import { useCarouselScrollSync } from '../hooks/useCarouselScrollSync';
 import { RuleHelp } from './RuleHelp';
 
 export type BackgroundCarouselSelection = string | null;
@@ -101,84 +100,29 @@ export function BackgroundCarousel({
   labelledBy = 'background-competency-heading',
   onScrollPhaseChange,
 }: BackgroundCarouselProps) {
-  const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-  const skipSelectRef = useRef(false);
   const options = buildOptions(templates);
 
-  useEffect(() => {
-    if (!api) return;
-    const syncIndex = () => setCurrent(api.selectedScrollSnap());
-    syncIndex();
-    api.on('select', syncIndex);
-    api.on('reInit', syncIndex);
-    return () => {
-      api.off('select', syncIndex);
-      api.off('reInit', syncIndex);
-    };
-  }, [api]);
-
-  useEffect(() => {
-    if (!api || !onScrollPhaseChange) return;
-    let quietTimer: ReturnType<typeof setTimeout> | undefined;
-    const onScrolling = () => {
-      if (quietTimer) clearTimeout(quietTimer);
-      onScrollPhaseChange('scrolling');
-    };
-    const onScrollActivity = () => {
-      if (quietTimer) clearTimeout(quietTimer);
-      quietTimer = setTimeout(() => onScrollPhaseChange('settled'), 120);
-    };
-    api.on('select', onScrolling);
-    api.on('scroll', onScrollActivity);
-    return () => {
-      api.off('select', onScrolling);
-      api.off('scroll', onScrollActivity);
-      if (quietTimer) clearTimeout(quietTimer);
-    };
-  }, [api, onScrollPhaseChange]);
-
-  // Wie Archetyp: zentrierte Option wird beim Mount übernommen, damit Connector
-  // und Skill-Nodes sofort greifen. Embla schluckt oft den reinen Center-Click.
-  useEffect(() => {
-    if (!api || selectedId !== undefined) return;
-    const option = options[api.selectedScrollSnap()];
-    if (option) onSelect(option.id);
-  }, [api, onSelect, options, selectedId]);
-
-  useEffect(() => {
-    if (!api || selectedId === undefined) return;
-    const index = options.findIndex((option) => optionMatches(option, selectedId));
-    if (index < 0 || index === api.selectedScrollSnap()) return;
-    skipSelectRef.current = true;
-    api.scrollTo(index);
-  }, [api, options, selectedId]);
-
-  useEffect(() => {
-    if (!api) return;
-    const handleSelect = () => {
-      if (skipSelectRef.current) {
-        skipSelectRef.current = false;
-        return;
-      }
-      const option = options[api.selectedScrollSnap()];
-      if (!option) return;
-      if (selectedId === undefined || option.id !== selectedId) onSelect(option.id);
-    };
-    api.on('select', handleSelect);
-    return () => {
-      api.off('select', handleSelect);
-    };
-  }, [api, onSelect, options, selectedId]);
-
-  const handleCardClick = (index: number) => {
-    if (index === current) {
-      const option = options[index];
-      if (option && (selectedId === undefined || option.id !== selectedId)) onSelect(option.id);
-      return;
-    }
-    api?.scrollTo(index);
-  };
+  const {
+    setApi,
+    current,
+    handleCardClick,
+    scrollPrev,
+    scrollNext,
+  } = useCarouselScrollSync({
+    optionsLength: options.length,
+    getSelectedIndex: () => options.findIndex((option) => optionMatches(option, selectedId)),
+    getValueAtIndex: (index) => {
+      if (index < 0 || index >= options.length) return undefined;
+      return options[index].id;
+    },
+    isSelectionUnset: () => selectedId === undefined,
+    shouldSyncScrollToSelection: () => selectedId !== undefined,
+    selectionSyncKey: selectedId,
+    shouldEmitSelect: (_index, value) => selectedId === undefined || value !== selectedId,
+    onSelect,
+    onScrollPhaseChange,
+    selectOnCenterClick: true,
+  });
 
   return (
     <div className="relative px-0" role="radiogroup" aria-labelledby={labelledBy}>
@@ -230,8 +174,8 @@ export function BackgroundCarousel({
                     onClick={() => handleCardClick(index)}
                     onKeyDown={(event) => {
                       if (!isCenter) return;
-                      if (event.key === 'ArrowLeft') { event.preventDefault(); api?.scrollPrev(); }
-                      if (event.key === 'ArrowRight') { event.preventDefault(); api?.scrollNext(); }
+                      if (event.key === 'ArrowLeft') { event.preventDefault(); scrollPrev(); }
+                      if (event.key === 'ArrowRight') { event.preventDefault(); scrollNext(); }
                     }}
                   >
                     <div className="relative flex aspect-[8/5] items-center justify-center overflow-hidden bg-gradient-to-br from-primary/15 via-muted/50 to-accent/10">
@@ -285,10 +229,10 @@ export function BackgroundCarousel({
 
       {options.length > 1 ? (
         <div className="background-carousel-nav-buttons">
-          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button left-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:left-2 md:h-11 md:w-11" onClick={() => api?.scrollPrev()} aria-label="Vorheriges Hintergrund Framework">
+          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button left-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:left-2 md:h-11 md:w-11" onClick={scrollPrev} aria-label="Vorheriges Hintergrund Framework">
             <ChevronLeft className="size-5" />
           </Button>
-          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button right-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:right-2 md:h-11 md:w-11" onClick={() => api?.scrollNext()} aria-label="Nächstes Hintergrund Framework">
+          <Button type="button" variant="outline" size="icon" className="background-carousel-nav-button right-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:right-2 md:h-11 md:w-11" onClick={scrollNext} aria-label="Nächstes Hintergrund Framework">
             <ChevronRight className="size-5" />
           </Button>
         </div>

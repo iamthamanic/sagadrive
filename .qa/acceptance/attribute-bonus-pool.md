@@ -33,7 +33,7 @@ Roadmap: nicht vorhanden — aus aktuellem Character-Editor-Designgespräch abge
 ## Regression
 - [ ] Hintergrund-Training, Archetyp-Punkt, freie Fertigkeitspunkte und Spezialisierung funktionieren unverändert.
 - [ ] Bestehende Attribut-Connectoren zu abgeleiteten Werten funktionieren weiterhin.
-- [ ] Speicherung und Laden vorhandener SagaDrive-Charaktere bleibt möglich.
+- [x] Speicherung und Laden vorhandener SagaDrive-Charaktere bleibt möglich.
 - [ ] Mobile Darstellung bleibt bedienbar und zeigt Budget, Bonuswert und Hilfetext ohne abgeschnittene Controls.
 
 ## Assumptions
@@ -50,7 +50,15 @@ Roadmap: nicht vorhanden — aus aktuellem Character-Editor-Designgespräch abge
 | 3 | `03-attribute-level-8-growth.png` |
 | 4 | `04-attribute-level-16-growth.png` |
 
+## Composition Gate
+- Proof: `.qa/runs/composition-gate-attribute-bonus-pool.md`
+- Proof code SHA: WORKTREE on tip `b18a1061d34632d0869843788d156a38081b3601`
+- Base SHA: `dea1502ddef740ace9646a48a98838fbebcd131f`
+- Verdict: **CLEAR** — `baseAttributes` + `attributeAdvances` in `sagadrive_profile`; Load via `resolveSagaDriveAttributeBuildState`; Final in `attributes`; tooltip/E2E aligned.
+
 ## Implementation Notes
-- Files touched: pending
-- Unit tests: pending
-- Known limitations: pending
+- Files touched: `attributeProgression.ts` (resolve/normalize), `character.types.ts` (DTO), `character.service.ts` (normalize + server validate), `CharacterEditor.tsx` (persist + rehydrate + tooltip), e2e + regression scripts, QA proofs.
+- Persistence: no SQL migration — `sagadrive_profile` JSONB already flexible. Final totals stay on `characters.attributes`; sources live in profile.
+- Backward compat: missing `baseAttributes` → treat final attributes as base, advances empty.
+- Unit tests: `scripts/attribute-bonus-regression-check.mjs`, `scripts/character-editor-regression-check.mjs`.
+- Speichern/Laden: Save writes sources; post-save rehydrate proves round-trip through normalize; `getCharacterById` returns reconstructed profile fields for future edit loads.

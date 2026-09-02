@@ -2,7 +2,6 @@
  * ArchetypeCarousel — Swipebare Archetyp-Auswahl mit Icon und Kernfähigkeit, analog zum Spezies-Karussell.
  * Location: src/modules/characters/components/ArchetypeCarousel.tsx
  */
-import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { sagaDriveArchetypeOptions, type SagaDriveArchetypeKey } from '../../rulesets/characterCreation';
 import { ArchetypeIcon } from './ArchetypeIcon';
@@ -14,15 +13,16 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  type CarouselApi,
 } from '../../../components/ui/carousel';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../../../components/ui/collapsible';
+import type { CarouselScrollPhase } from '../hooks/carousel.types';
+import { useCarouselScrollSync } from '../hooks/useCarouselScrollSync';
 
-export type CarouselScrollPhase = 'scrolling' | 'settled';
+export type { CarouselScrollPhase } from '../hooks/carousel.types';
 
 interface ArchetypeCarouselProps {
   selectedArchetype?: SagaDriveArchetypeKey;
@@ -32,83 +32,26 @@ interface ArchetypeCarouselProps {
 }
 
 export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'archetype-label', onScrollPhaseChange }: ArchetypeCarouselProps) {
-  const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-  const skipSelectRef = useRef(false);
   const options = sagaDriveArchetypeOptions;
 
-  useEffect(() => {
-    if (!api) return;
-    const syncIndex = () => setCurrent(api.selectedScrollSnap());
-    syncIndex();
-    api.on('select', syncIndex);
-    api.on('reInit', syncIndex);
-    return () => {
-      api.off('select', syncIndex);
-      api.off('reInit', syncIndex);
-    };
-  }, [api]);
-
-  // Embla feuert 'select' beim Scroll-Start und 'settle' nach Slide-Ende —
-  // abgeleitete UI (Connector-Fade) koppelt sich an diese Phasen.
-  useEffect(() => {
-    if (!api || !onScrollPhaseChange) return;
-    // Bewegungs-Debounce: 'scroll' feuert kontinuierlich waehrend der Bewegung.
-    // 'settled' geht erst raus, wenn 120ms lang kein scroll-Event mehr kam —
-    // also exakt, wenn das Karussell wirklich steht (inkl. Ease-out-Schwanz),
-    // nicht schon bei ~86% wie beim reinen Timer-Raten.
-    let quietTimer: ReturnType<typeof setTimeout> | undefined;
-    const onScrolling = () => {
-      if (quietTimer) clearTimeout(quietTimer);
-      onScrollPhaseChange('scrolling');
-    };
-    const onScrollActivity = () => {
-      if (quietTimer) clearTimeout(quietTimer);
-      quietTimer = setTimeout(() => onScrollPhaseChange('settled'), 120);
-    };
-    api.on('select', onScrolling);
-    api.on('scroll', onScrollActivity);
-    return () => {
-      api.off('select', onScrolling);
-      api.off('scroll', onScrollActivity);
-      if (quietTimer) clearTimeout(quietTimer);
-    };
-  }, [api, onScrollPhaseChange]);
-
-  useEffect(() => {
-    if (!api || selectedArchetype) return;
-    const option = options[api.selectedScrollSnap()];
-    if (option) onSelect(option.value);
-  }, [api, onSelect, options, selectedArchetype]);
-
-  useEffect(() => {
-    if (!api) return;
-    const index = options.findIndex((option) => option.value === selectedArchetype);
-    if (index < 0 || index === api.selectedScrollSnap()) return;
-    skipSelectRef.current = true;
-    api.scrollTo(index);
-  }, [api, options, selectedArchetype]);
-
-  useEffect(() => {
-    if (!api) return;
-    const handleSelect = () => {
-      if (skipSelectRef.current) {
-        skipSelectRef.current = false;
-        return;
-      }
-      const option = options[api.selectedScrollSnap()];
-      if (option && option.value !== selectedArchetype) onSelect(option.value);
-    };
-    api.on('select', handleSelect);
-    return () => {
-      api.off('select', handleSelect);
-    };
-  }, [api, onSelect, options, selectedArchetype]);
-
-  const handleCardClick = (index: number) => {
-    if (index === current) return;
-    api?.scrollTo(index);
-  };
+  const {
+    setApi,
+    current,
+    handleCardClick,
+    scrollPrev,
+    scrollNext,
+  } = useCarouselScrollSync({
+    optionsLength: options.length,
+    getSelectedIndex: () => options.findIndex((option) => option.value === selectedArchetype),
+    getValueAtIndex: (index) => options[index]?.value,
+    isSelectionUnset: () => !selectedArchetype,
+    shouldSyncScrollToSelection: () => true,
+    selectionSyncKey: selectedArchetype,
+    shouldEmitSelect: (_index, value) => value !== selectedArchetype,
+    onSelect,
+    onScrollPhaseChange,
+    selectOnCenterClick: false,
+  });
 
   return (
     <div className="relative px-0" role="radiogroup" aria-labelledby={labelledBy}>
@@ -150,8 +93,8 @@ export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'a
                       onClick={() => handleCardClick(index)}
                       onKeyDown={(event) => {
                         if (!isCenter) return;
-                        if (event.key === 'ArrowLeft') { event.preventDefault(); api?.scrollPrev(); }
-                        if (event.key === 'ArrowRight') { event.preventDefault(); api?.scrollNext(); }
+                        if (event.key === 'ArrowLeft') { event.preventDefault(); scrollPrev(); }
+                        if (event.key === 'ArrowRight') { event.preventDefault(); scrollNext(); }
                       }}
                     >
                       <div className="relative flex aspect-[8/7] items-center justify-center overflow-hidden bg-gradient-to-br from-primary/15 via-muted/50 to-accent/10">
@@ -213,10 +156,10 @@ export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'a
 
       {options.length > 1 && (
         <div className="archetype-carousel-nav-buttons">
-          <Button type="button" variant="outline" size="icon" className="archetype-carousel-nav-button left-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:left-2 md:h-11 md:w-11" onClick={() => api?.scrollPrev()} aria-label="Vorheriger Archetyp">
+          <Button type="button" variant="outline" size="icon" className="archetype-carousel-nav-button left-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:left-2 md:h-11 md:w-11" onClick={scrollPrev} aria-label="Vorheriger Archetyp">
             <ChevronLeft className="size-5" />
           </Button>
-          <Button type="button" variant="outline" size="icon" className="archetype-carousel-nav-button right-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:right-2 md:h-11 md:w-11" onClick={() => api?.scrollNext()} aria-label="Nächster Archetyp">
+          <Button type="button" variant="outline" size="icon" className="archetype-carousel-nav-button right-0 top-[28%] h-10 w-10 rounded-full border-2 bg-background/95 shadow-xl backdrop-blur-sm md:right-2 md:h-11 md:w-11" onClick={scrollNext} aria-label="Nächster Archetyp">
             <ChevronRight className="size-5" />
           </Button>
         </div>

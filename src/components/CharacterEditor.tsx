@@ -13,6 +13,7 @@ import type {
   SagaDriveProfileDto,
   SagaDriveSpeciesTraitInstanceDto,
 } from '../modules/characters';
+import { AttributeD20Icon } from './AttributeD20Icon';
 import { DerivedStatCard } from './DerivedStatCard';
 import { AttributeDerivedConnector } from './AttributeDerivedConnector';
 import { CharacterAssistantButton } from './assistant/CharacterAssistantButton';
@@ -33,20 +34,23 @@ import { CharacterTraitEditor } from '../modules/characters/components/Character
 import { buildSagaDriveDerivedStatCards } from '../modules/characters/utils/derivedStats';
 import { getSagaDriveBackgroundTemplate } from '../modules/rulesets/backgroundTemplates';
 import {
+  SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS,
   SAGA_DRIVE_ATTRIBUTE_BONUS_CAP,
   SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET,
+  SAGA_DRIVE_START_ATTRIBUTE_BONUS_CAP,
   applySagaDriveAttributeAdvances,
   canAssignSagaDriveAttributeAdvance,
   getSagaDriveAttributeAdvanceBudget,
   getSagaDriveAttributeAdvanceLevels,
+  getSagaDriveAttributeBonusLevelGuide,
   getSagaDriveBaseAttributePointsUsed,
   isValidSagaDriveAttributeBuild,
+  resolveSagaDriveAttributeBuildState,
   type SagaDriveAttributeAdvanceLevel,
   type SagaDriveAttributeAdvances,
 } from '../modules/rulesets/attributeProgression';
 import {
   SAGA_DRIVE_SPECIES_TRAIT_BUDGET,
-  SAGA_DRIVE_START_ATTRIBUTE_ARRAY,
   SAGA_DRIVE_START_FREE_SKILL_POINTS,
   SAGA_DRIVE_START_MIN_TRAINED_SKILLS,
   SAGA_DRIVE_START_SKILL_CAP,
@@ -515,7 +519,7 @@ export function CharacterEditor() {
     if (characterRace === 'alien' && !speciesProfileName.trim()) problems.push({ tab: 'info', message: 'Gib deinem Alien-Speziesprofil einen Namen.' });
     if (!speciesTraitInstancesValid) problems.push({ tab: 'info', message: 'Vervollständige alle Speziesmerkmale und verwende jede Unteroption höchstens einmal.' });
     if (!backgroundComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige deinen mechanischen Hintergrund unter Kompetenzen.' });
-    if (!attributeDistributionValid) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: `Verteile genau ${SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte (+0 bis +4) und alle für Stufe ${characterLevel} verfügbaren Attributsteigerungen, ohne einen Endwert über +${SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} zu erzeugen.` });
+    if (!attributeDistributionValid) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: `Verteile genau ${SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte (+0 bis +4) und alle für Level ${characterLevel} verfügbaren Attributsteigerungen, ohne einen Endwert über +${SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} zu erzeugen.` });
     if (!characterArchetype) problems.push({ tab: 'values', valuesSubTab: 'archetype', message: 'Bitte wähle einen Archetyp.' });
     if (!skillsComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige die 10 Start-Fertigkeitspunkte und trainiere mindestens sechs Fertigkeiten.' });
     if (!essenceProfile) problems.push({ tab: 'values', valuesSubTab: 'essenz', message: 'Bitte wähle eine primäre Essenz.' });
@@ -542,6 +546,8 @@ export function CharacterEditor() {
       backgroundTemplateId: backgroundTemplateId ?? null,
       background: { name: backgroundName.trim(), skillPool: selectedBackgroundPool, trainedSkills: selectedBackgroundTraining, specialization: { skill: specializationSkill, name: specializationName.trim() }, milieuAccess: milieuAccess.trim(), contact: contact.trim(), complication: complication.trim(), communication: communication.trim() },
       archetypeTrainingSkill,
+      baseAttributes,
+      attributeAdvances,
       drive: 3,
       momentum: 0,
     };
@@ -556,6 +562,10 @@ export function CharacterEditor() {
         attributes, skills: finalSkillRanks, sagadrive_profile: sagaDriveProfile, abilities, inventory, portrait_url: portraitUrl || undefined,
       });
       setSavedCharacterId(savedCharacter.id);
+      // Round-trip through service normalize so editor state matches persisted base vs advances.
+      const resolved = resolveSagaDriveAttributeBuildState(savedCharacter.attributes, savedCharacter.sagaDriveProfile);
+      setBaseAttributes(resolved.baseAttributes);
+      setAttributeAdvances(resolved.attributeAdvances);
       trackActivity(`Character Editor: Charakter "${characterName}" gespeichert (ID: ${savedCharacter.id})`);
       toast.success('Charakter erfolgreich gespeichert');
     } catch (error) {
@@ -653,7 +663,33 @@ export function CharacterEditor() {
                     <TabsContent value="competencies" className="mt-4 space-y-7">
                       <section className="space-y-4" data-attr-connector-section>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div><h3 className="font-semibold">Grundattribute · d20 + Attributbonus</h3><p className="mt-1 text-sm text-muted-foreground">Verteile auf Stufe 1 genau 15 Basis-Bonuspunkte. Ein Grundbonus darf zwischen +0 und +4 liegen; +0 bedeutet keinen positiven Bonus, nicht Handlungsunfähigkeit. Bei einem reinen Attributscheck würfelst du d20 + Attributbonus. Die Basisverteilung wird beim Levelaufstieg nicht neu verteilt.</p><p className="mt-1 text-xs text-muted-foreground">Empfohlene ausgewogene Verteilung: {SAGA_DRIVE_START_ATTRIBUTE_ARRAY.map((value) => `+${value}`).join(' · ')}</p></div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="font-semibold">Grundattribute · d20 + Attributbonus</h3>
+                              <RuleHelp label="Attributbonus" contentClassName="max-h-[min(24rem,70vh)] max-w-[min(22rem,90vw)] overflow-y-auto">
+                                <div className="space-y-2 text-xs leading-relaxed">
+                                  <p>
+                                    Für jedes Grundattribut werden Bonuspunkte verteilt. Diese werden bei Attributschecks dem D20 Wurf dazu gerechnet. Auf Level 1 kannst du insgesamt {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Punkte verteilen. Je Attribut kann ein Bonus auf Level 1 maximal +{SAGA_DRIVE_START_ATTRIBUTE_BONUS_CAP} geben. Die Basisverteilung wird beim Levelaufstieg nicht neu verteilt. Auf Level {SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS[0]} wird das Cap auf +{SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} angehoben und du kannst einen weiteren Bonuspunkt auf ein Attribut deiner Wahl verteilen. Auf Level {SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS[1]} erhältst du einen weiteren Bonuspunkt welchen du wieder auf ein Grundattribut deiner Wahl verteilen kannst.
+                                  </p>
+                                  <p>
+                                    +0 bedeutet keinen positiven Bonus, nicht Handlungsunfähigkeit. Das bedeutet bei einem Check für dieses Attribut wird nur ein D20 gewürfelt und kein Bonus dazu gerechnet. Boni welche durch andere Mechaniken ausgelöst werden, sind davon nicht betroffen.
+                                  </p>
+                                  <p className="font-medium">Bonus-Obergrenzen nach Level:</p>
+                                  <ul className="list-disc space-y-0.5 pl-4">
+                                    {getSagaDriveAttributeBonusLevelGuide().map(({ levelLabel, maxBonus, description }) => (
+                                      <li key={levelLabel}>
+                                        Level {levelLabel}: Bonus max. +{maxBonus} ({description})
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  <p>
+                                    Wird ein Charakter auf einem höheren Level mit Bonuspunktveränderung erstellt gelten die entsprechenden Bonuspunkte-Regeln. Beispiel Charakter wird auf Level {SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS[0]} erstellt -&gt; Grundattribute können jeweils einen Bonus +{SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} bekommen. Es bleiben {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte (+0 bis +{SAGA_DRIVE_START_ATTRIBUTE_BONUS_CAP}) plus {getSagaDriveAttributeAdvanceBudget(SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS[0])} separater Entwicklungsslot — nicht {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET + getSagaDriveAttributeAdvanceBudget(SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS[0])} frei verteilbare Punkte.
+                                  </p>
+                                </div>
+                              </RuleHelp>
+                            </div>
+                            <p className="mt-1 text-sm text-muted-foreground">Verteile {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Bonuspunkte auf Level 1. Diese werden immer als Bonus dem D20 Wurf dazugerechnet. Für weitere Infos klick auf das Fragezeichen.</p>
+                          </div>
                           <div className="flex flex-wrap gap-2"><Badge variant={attributePointsUsed === SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET ? 'default' : 'destructive'}>{attributePointsUsed} / {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte</Badge>{attributeAdvanceBudget > 0 ? <Badge variant={attributeAdvancesUsed === attributeAdvanceBudget ? 'default' : 'destructive'}>{attributeAdvancesUsed} / {attributeAdvanceBudget} Entwicklung</Badge> : null}</div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -683,15 +719,14 @@ export function CharacterEditor() {
                                 <p className="text-sm font-semibold leading-tight">{attribute.label}</p>
                                 <span className="inline-flex items-center rounded-full border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{attribute.shortLabel}</span>
                               </div>
-                              <div className="text-2xl font-semibold">+{attributes[attribute.key]}</div>
-                              <p className="text-[11px] text-muted-foreground">Reiner Check: d20 +{attributes[attribute.key]}</p>
-                              <Select value={String(baseAttributes[attribute.key])} onValueChange={(value) => { setAttribute(attribute.key, value); setConnectedAttribute(attribute.key); }}><SelectTrigger className="w-full min-h-11 min-w-[4.75rem] justify-center gap-1.5 px-3" aria-label={`${attribute.label} Grundbonus`} onClick={(event) => { event.stopPropagation(); setConnectedAttribute(attribute.key); }} onPointerDown={(event) => event.stopPropagation()}><SelectValue /></SelectTrigger><SelectContent>{[0, 1, 2, 3, 4].map((value) => {
+                              <AttributeD20Icon className="my-0.5" />
+                              <Select value={String(baseAttributes[attribute.key])} onValueChange={(value) => { setAttribute(attribute.key, value); setConnectedAttribute(attribute.key); }}><SelectTrigger className="w-full min-h-11 min-w-[4.75rem] justify-center gap-1 px-2 text-xs font-medium *:data-[slot=select-value]:line-clamp-none [&_svg:not([class*='size-'])]:size-3.5" aria-label={`${attribute.label} Grundbonus`} onClick={(event) => { event.stopPropagation(); setConnectedAttribute(attribute.key); }} onPointerDown={(event) => event.stopPropagation()}><SelectValue>+{baseAttributes[attribute.key]} Bonus</SelectValue></SelectTrigger><SelectContent>{[0, 1, 2, 3, 4].map((value) => {
                                   const advanceCount = attributeAdvanceLevels.filter((advanceLevel) => attributeAdvances[advanceLevel] === attribute.key).length;
                                   const finalValue = value + advanceCount;
                                   const extraHint = getAttributeOptionExtraDerivedHint(attribute.key, finalValue, attributes, finalSkillRanks.athletics, finalSkillRanks.acrobatics);
                                   return (
-                                    <SelectItem key={value} value={String(value)} textValue={`+${value}`} disabled={finalValue > SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} className={extraHint ? 'pr-10' : undefined}>
-                                      <SelectItemText>+{value}</SelectItemText>
+                                    <SelectItem key={value} value={String(value)} textValue={`+${value} Bonus`} disabled={finalValue > SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} className={extraHint ? 'pr-10' : undefined}>
+                                      <SelectItemText>+{value} Bonus</SelectItemText>
                                       {extraHint ? (
                                         <Tooltip>
                                           <TooltipTrigger asChild>
@@ -713,17 +748,16 @@ export function CharacterEditor() {
                                     </SelectItem>
                                   );
                                 })}</SelectContent></Select>
-                              <div className="flex min-h-5 flex-wrap justify-center gap-1 text-[10px] text-muted-foreground"><span>Basis +{baseAttributes[attribute.key]}</span>{attributeAdvanceLevels.filter((advanceLevel) => attributeAdvances[advanceLevel] === attribute.key).map((advanceLevel) => <span key={advanceLevel}>· Stufe {advanceLevel} +1</span>)}</div>
                             </div>
                             );
                           })}
                         </div>
                         {attributeAdvanceLevels.length > 0 ? (
                           <div className="rounded-lg border border-border bg-muted/10 p-4">
-                            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between"><div><h4 className="font-medium">Permanente Attributentwicklung</h4><p className="text-sm text-muted-foreground">Auf Stufe 8 und 16 kommt jeweils genau +1 neu hinzu. Diese Punkte erhöhen deine bestehende Basis; sie erlauben keine kostenlose Neuverteilung. Reguläres Maximum: +5.</p></div><Badge variant="outline">+{attributeAdvanceBudget} durch Stufen</Badge></div>
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between"><div><h4 className="font-medium">Permanente Attributentwicklung</h4><p className="text-sm text-muted-foreground">Ab Level 8 und 16 kannst du jeweils ein Attribut dauerhaft weiterentwickeln. Die Wahl erhöht deine bestehende Basis; sie erlaubt keine kostenlose Neuverteilung. Reguläres Maximum: +5.</p></div><Badge variant="outline">{attributeAdvanceBudget} Entwicklung durch Level</Badge></div>
                             <div className="mt-3 grid gap-3 sm:grid-cols-2">
                               {attributeAdvanceLevels.map((advanceLevel) => (
-                                <div key={advanceLevel} className="space-y-1.5"><Label>Stufe {advanceLevel} · +1</Label><Select value={attributeAdvances[advanceLevel]} onValueChange={(value) => { if (sagaDriveAttributeDefinitions.some((entry) => entry.key === value)) setAttributeAdvance(advanceLevel, value as SagaDriveAttributeKey); }}><SelectTrigger className="min-h-11"><SelectValue placeholder="Attribut wählen" /></SelectTrigger><SelectContent>{sagaDriveAttributeDefinitions.map((entry) => <SelectItem key={entry.key} value={entry.key} disabled={!canAssignSagaDriveAttributeAdvance(baseAttributes, attributeAdvances, characterLevel, advanceLevel, entry.key)}>{entry.label} · aktuell +{attributes[entry.key]}</SelectItem>)}</SelectContent></Select></div>
+                                <div key={advanceLevel} className="space-y-1.5"><Label>Permanente Entwicklung (Level {advanceLevel})</Label><Select value={attributeAdvances[advanceLevel]} onValueChange={(value) => { if (sagaDriveAttributeDefinitions.some((entry) => entry.key === value)) setAttributeAdvance(advanceLevel, value as SagaDriveAttributeKey); }}><SelectTrigger className="min-h-11"><SelectValue placeholder="Attribut wählen" /></SelectTrigger><SelectContent>{sagaDriveAttributeDefinitions.map((entry) => <SelectItem key={entry.key} value={entry.key} disabled={!canAssignSagaDriveAttributeAdvance(baseAttributes, attributeAdvances, characterLevel, advanceLevel, entry.key)}>{entry.label} · aktuell +{attributes[entry.key]}</SelectItem>)}</SelectContent></Select></div>
                               ))}
                             </div>
                             {!attributeDistributionValid && attributePointsUsed === SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET ? <p className="mt-3 text-xs text-destructive">Vergib alle verfügbaren Entwicklungspunkte und achte darauf, dass kein Endwert +5 überschreitet.</p> : null}

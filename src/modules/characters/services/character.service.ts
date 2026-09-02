@@ -12,6 +12,12 @@ import {
   type SagaDriveSkillKey,
 } from '../../rulesets/characterCreation';
 import {
+  applySagaDriveAttributeAdvances,
+  isValidSagaDriveAttributeBuild,
+  normalizeSagaDriveAttributeAdvances,
+  type SagaDriveAttributeAdvances,
+} from '../../rulesets/attributeProgression';
+import {
   getSagaDriveSpeciesTraitOptionCatalog,
   normalizeSagaDriveSpeciesTraitOptionKey,
 } from '../../rulesets/speciesTraitOptions';
@@ -24,6 +30,7 @@ import type {
   CharacterSummaryVm,
   CreateCharacterDto,
   ItemDto,
+  SagaDriveAttributeAdvancesDto,
   SagaDriveBackgroundDto,
   SagaDriveProfileDto,
   SagaDriveSpeciesProfileDto,
@@ -178,8 +185,48 @@ function normalizeSpeciesProfile(value: unknown): SagaDriveSpeciesProfileDto | u
   };
 }
 
+/** Persist only complete six-key base distributions; incomplete payloads drop to legacy fallback. */
+function normalizeOptionalBaseAttributes(value: unknown): CharacterAttributesDto | undefined {
+  if (!isRecord(value)) return undefined;
+  const keys = ['strength', 'dexterity', 'endurance', 'mind', 'perception', 'charisma'] as const;
+  const result = {} as CharacterAttributesDto;
+  for (const key of keys) {
+    const raw = value[key];
+    if (typeof raw !== 'number' || !Number.isFinite(raw)) return undefined;
+    result[key] = Math.round(raw);
+  }
+  return result;
+}
+
+function attributesEqual(left: CharacterAttributesDto, right: CharacterAttributesDto): boolean {
+  return left.strength === right.strength
+    && left.dexterity === right.dexterity
+    && left.endurance === right.endurance
+    && left.mind === right.mind
+    && left.perception === right.perception
+    && left.charisma === right.charisma;
+}
+
+function assertValidSagaDriveAttributePersistence(
+  attributes: CharacterAttributesDto,
+  profile: SagaDriveProfileDto,
+  level: number,
+): void {
+  if (!profile.baseAttributes) return;
+  const advances = (profile.attributeAdvances ?? {}) as SagaDriveAttributeAdvances;
+  if (!isValidSagaDriveAttributeBuild(profile.baseAttributes, advances, level)) {
+    throw new Error('Invalid SagaDrive attribute build: base distribution or permanent advances violate Core rules.');
+  }
+  const expected = applySagaDriveAttributeAdvances(profile.baseAttributes, advances, level);
+  if (!attributesEqual(attributes, expected)) {
+    throw new Error('Invalid SagaDrive attribute build: final attributes must match baseAttributes plus advances.');
+  }
+}
+
 function normalizeSagaDriveProfile(value?: Partial<SagaDriveProfileDto> | null): SagaDriveProfileDto {
   if (!value) return createDefaultSagaDriveProfile();
+  const baseAttributes = normalizeOptionalBaseAttributes(value.baseAttributes);
+  const attributeAdvances = normalizeSagaDriveAttributeAdvances(value.attributeAdvances) as SagaDriveAttributeAdvancesDto;
   return {
     archetype: value.archetype && isSagaDriveArchetypeKey(value.archetype) ? value.archetype : undefined,
     essence: value.essence && isSagaDriveEssenceKey(value.essence) ? value.essence : undefined,
@@ -188,6 +235,7 @@ function normalizeSagaDriveProfile(value?: Partial<SagaDriveProfileDto> | null):
     backgroundTemplateId: normalizeBackgroundTemplateId(value.backgroundTemplateId),
     background: normalizeSagaDriveBackground(value.background),
     archetypeTrainingSkill: value.archetypeTrainingSkill && isSagaDriveSkillKey(value.archetypeTrainingSkill) ? value.archetypeTrainingSkill : undefined,
+    ...(baseAttributes ? { baseAttributes, attributeAdvances } : Object.keys(attributeAdvances).length > 0 ? { attributeAdvances } : {}),
     drive: typeof value.drive === 'number' ? clampInteger(value.drive, 0, 5) : 3,
     momentum: typeof value.momentum === 'number' ? clampInteger(value.momentum, 0, 3) : 0,
   };
@@ -281,6 +329,10 @@ class CharacterService {
   async createCharacter(payload: CreateCharacterDto): Promise<CharacterVm> {
     const userId = await getAuthenticatedUserId();
     const rulesetKey = payload.ruleset_key ?? 'sagadrive-core';
+    const attributes = normalizeAttributes(payload.attributes);
+    const level = payload.level || 1;
+    const sagadriveProfile = rulesetKey === 'sagadrive-core' ? normalizeSagaDriveProfile(payload.sagadrive_profile) : null;
+    if (sagadriveProfile) assertValidSagaDriveAttributePersistence(attributes, sagadriveProfile, level);
     const characterData: Partial<CharacterDto> = {
       owner_user_id: userId,
       character_type: 'pc',
@@ -290,7 +342,7 @@ class CharacterService {
       race: payload.race,
       ruleset_key: rulesetKey,
       dnd_background: rulesetKey === 'dnd-5.5e' ? payload.dnd_background ?? null : null,
-      level: payload.level || 1,
+      level,
       background_story: payload.background_story,
       notes: payload.notes?.trim() || null,
       personality_traits: payload.personality_traits,
@@ -298,9 +350,9 @@ class CharacterService {
       bonds: payload.bonds,
       flaws: payload.flaws,
       appearance: normalizeCharacterAppearance(payload.appearance),
-      attributes: normalizeAttributes(payload.attributes),
+      attributes,
       skills: normalizeSkills(payload.skills),
-      sagadrive_profile: rulesetKey === 'sagadrive-core' ? normalizeSagaDriveProfile(payload.sagadrive_profile) : null,
+      sagadrive_profile: sagadriveProfile,
       abilities: payload.abilities ?? [],
       inventory: normalizeInventory(payload.inventory),
       emotion_profiles: [],
@@ -314,13 +366,21 @@ class CharacterService {
   async updateCharacter(id: string, payload: UpdateCharacterDto): Promise<CharacterVm> {
     const userId = await getAuthenticatedUserId();
     const rulesetPatch = payload.ruleset_key ? { ruleset_key: payload.ruleset_key, dnd_background: payload.ruleset_key === 'dnd-5.5e' ? payload.dnd_background ?? null : null } : {};
+    const attributes = payload.attributes ? normalizeAttributes(payload.attributes) : undefined;
+    const sagadriveProfile = payload.sagadrive_profile ? normalizeSagaDriveProfile(payload.sagadrive_profile) : undefined;
+    if (attributes && sagadriveProfile) {
+      const level = typeof payload.level === 'number'
+        ? payload.level
+        : (await this.getCharacterById(id)).level;
+      assertValidSagaDriveAttributePersistence(attributes, sagadriveProfile, level);
+    }
     const updatePayload = {
       ...payload,
       ...rulesetPatch,
       ...(payload.appearance ? { appearance: normalizeCharacterAppearance(payload.appearance) } : {}),
-      ...(payload.attributes ? { attributes: normalizeAttributes(payload.attributes) } : {}),
+      ...(attributes ? { attributes } : {}),
       ...(payload.skills ? { skills: normalizeSkills(payload.skills) } : {}),
-      ...(payload.sagadrive_profile ? { sagadrive_profile: normalizeSagaDriveProfile(payload.sagadrive_profile) } : {}),
+      ...(sagadriveProfile ? { sagadrive_profile: sagadriveProfile } : {}),
       ...(payload.inventory ? { inventory: normalizeInventory(payload.inventory) } : {}),
       ...(typeof payload.notes === 'string' ? { notes: payload.notes.trim() || null } : {}),
       updated_at: new Date().toISOString(),
