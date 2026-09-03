@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ComponentType, type MouseEvent } from 'react';
-import { Camera, CircleHelp, Dna, Eye, Save, Upload, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
+import { Camera, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { AvatarCanvas } from '../../../modules/characters/avatar/AvatarCanvas';
 import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../modules/characters/avatar';
@@ -28,8 +28,6 @@ import {
   SpeciesCarousel,
   SpeciesTraitsPanel,
 } from '../creation';
-import { ArchetypeIcon } from '../creation/ArchetypeIcon';
-import { EssenceIcon } from '../creation/EssenceIcon';
 import {
   CharacterInventoryPanel,
   CharacterNotesSection,
@@ -120,14 +118,6 @@ type ValuesSubTab = 'attributes' | 'background' | 'details' | 'archetype' | 'ess
 type SettingsSubTab = 'statistics' | 'preset';
 type ValidationProblem = { tab: EditorTab; message: string; valuesSubTab?: ValuesSubTab };
 type SkillSlot = SagaDriveSkillKey | '';
-type PreviewIdentityPillIcon = ComponentType<{ className?: string }>;
-type PreviewIdentityPill = {
-  key: 'species' | 'essence' | 'archetype';
-  label: string;
-  value: string;
-  icon: PreviewIdentityPillIcon;
-  className: string;
-};
 type BackgroundSkillPool = [SkillSlot, SkillSlot, SkillSlot, SkillSlot];
 const INITIAL_ATTRIBUTES: CharacterAttributesDto = { strength: 4, dexterity: 3, endurance: 3, mind: 2, perception: 2, charisma: 1 };
 
@@ -962,34 +952,7 @@ export function CharacterEditor() {
   const handleTabChange = (value: string) => { if (isEditorTab(value)) { setActiveTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
   const handleValuesSubTabChange = (value: string) => { if (isValuesSubTab(value)) { setActiveValuesSubTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
   const handleSettingsSubTabChange = (value: string) => { if (isSettingsSubTab(value)) setActiveSettingsSubTab(value); };
-  const previewIdentityPills: PreviewIdentityPill[] = [];
-  if (speciesDisplayName) {
-    previewIdentityPills.push({
-      key: 'species',
-      label: 'Spezies',
-      value: speciesDisplayName,
-      icon: Dna,
-      className: 'border-sky-500/30 bg-sky-500/10 text-sky-100',
-    });
-  }
-  if (essence?.label && essenceProfile) {
-    previewIdentityPills.push({
-      key: 'essence',
-      label: 'Essenz',
-      value: essence.label,
-      icon: ({ className = 'h-3.5 w-3.5' }) => <EssenceIcon essenceKey={essenceProfile} className={className} />,
-      className: 'border-violet-500/30 bg-violet-500/10 text-violet-100',
-    });
-  }
-  if (archetype?.label && characterArchetype) {
-    previewIdentityPills.push({
-      key: 'archetype',
-      label: 'Archetype',
-      value: archetype.label,
-      icon: ({ className = 'h-3.5 w-3.5' }) => <ArchetypeIcon archetypeKey={characterArchetype} className={className} />,
-      className: 'border-amber-500/30 bg-amber-500/10 text-amber-100',
-    });
-  }
+  const previewIdentitySummary = [speciesDisplayName, essence?.label, archetype?.label].filter(Boolean).join(' · ');
   const totalStartSkillPoints = freeSkillPointsUsed + backgroundPointsUsed + (archetypeTrainingSkill ? 1 : 0);
 
   return (
@@ -1029,20 +992,8 @@ export function CharacterEditor() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="aspect-[4/5] overflow-hidden rounded-lg border border-border bg-[#0B1220] shadow-inner"><AvatarCanvas avatar={currentAvatar} canvasRef={avatarCanvasRef} /></div>
-              {previewIdentityPills.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {previewIdentityPills.map(({ key, label, value, icon: Icon, className }) => (
-                    <Badge
-                      key={key}
-                      variant="outline"
-                      className={`flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ${className}`}
-                    >
-                      <Icon className="h-3.5 w-3.5 shrink-0" />
-                      <span className="text-white/75">{label}:</span>
-                      <span className="truncate text-white">{value}</span>
-                    </Badge>
-                  ))}
-                </div>
+              {previewIdentitySummary ? (
+                <p className="text-sm text-muted-foreground">{previewIdentitySummary}</p>
               ) : (
                 <p className="text-sm text-muted-foreground">Wähle Archetyp und Essenz</p>
               )}
@@ -1141,6 +1092,22 @@ export function CharacterEditor() {
                             <p className="mt-1 text-sm text-muted-foreground">Verteile {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Bonuspunkte auf Level 1. Diese werden immer als Bonus dem D20 Wurf dazugerechnet. Für weitere Infos klick auf das Fragezeichen.</p>
                           </div>
                           <div className="flex flex-wrap gap-2"><Badge variant={attributePointsUsed === SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET ? 'default' : 'destructive'}>{attributePointsUsed} / {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Bonuspunkte</Badge>{attributeAdvanceBudget > 0 ? <Badge variant={attributeAdvancesUsed === attributeAdvanceBudget ? 'default' : 'destructive'}>{attributeAdvancesUsed} / {attributeAdvanceBudget} Entwicklung</Badge> : null}</div>
+                        </div>
+                        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+                          <div className="rounded-lg border border-border bg-muted/10 p-4">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Attributscheck</p>
+                            <p className="mt-1 text-base font-semibold">1W20 + Attributbonus</p>
+                            <p className="mt-2 text-sm text-muted-foreground">Ein Bonus von +0 bedeutet: nur der W20 zaehlt. Situative Boni und Mali kommen erst im eigentlichen Check dazu.</p>
+                          </div>
+                          <div className="rounded-lg border border-border bg-muted/10 p-4">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Startverteilung</p>
+                            <p className="mt-1 text-sm font-medium">Level 1: {SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Bonuspunkte gesamt, maximal +{SAGA_DRIVE_START_ATTRIBUTE_BONUS_CAP} pro Attribut.</p>
+                            {attributeAdvanceBudget > 0 ? (
+                              <p className="mt-2 text-sm text-muted-foreground">Auf Level {attributeAdvanceLevels.join(' und ')} kommt {attributeAdvanceBudget === 1 ? 'ein separater Entwicklungsslot' : `${attributeAdvanceBudget} separate Entwicklungsslots`} dazu. Diese Slots erhoehen bestehende Werte und sind keine freie Neuverteilung.</p>
+                            ) : (
+                              <p className="mt-2 text-sm text-muted-foreground">Spaeter kommen auf Level {SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS.join(' und ')} separate Entwicklungsslots dazu. Diese erhoehen bestehende Werte und sind keine freie Neuverteilung.</p>
+                            )}
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                           {sagaDriveAttributeDefinitions.map((attribute) => {
