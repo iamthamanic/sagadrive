@@ -11,6 +11,7 @@ export {
   sumBackgroundSkillPointsUsed,
 } from './BackgroundSkillPointsAllocator';
 export { CharacterEssencePanel } from './CharacterEssencePanel';
+export { EssenceCarousel } from './EssenceCarousel';
 export { GenderReadingSelect } from './GenderReadingSelect';
 export { SelectedSpeciesChip } from './SelectedSpeciesChip';
 export { SpeciesCarousel } from './SpeciesCarousel';
