@@ -1,6 +1,6 @@
 # Composition Gate Proof — Background skill points in pool nodes
 
-- HEAD_SHA: PENDING
+- HEAD_SHA: bbb9ab52b54ad3c3952f6bf81fbf426fcde01600
 - BASE_SHA: f5195acef1eda9a9ea08f07c7816900fb6b92ca9
 - Date: 2026-09-03
 - Verdict: SKIPPED
