@@ -168,6 +168,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-03** — Attribute-Tab: Fertigkeiten-Karussell über Grundattribute; sticky „Proben verstehen“-Aside entfernt, Formel kompakt unter den Skill-Nodes (`feat/background-skill-points-in-nodes`, #103)
 - **2026-09-03** — Hintergrund-Skill-Nodes: Attribut-Hilfe als CircleHelp (Check-Terminologie); Status-Zusammenfassungsbox entfernt (`feat/background-skill-points-in-nodes`, #103)
 - **2026-09-03** — Hintergrund: alle 4 Pool-Skills bleiben nach Punkten sichtbar; „Spezialisieren“ im Skill-Node inkl. Vorschlags-Dropdown (bis 5) (`feat/background-skill-points-in-nodes`, #103)
 - **2026-09-03** — Hintergrundpunkte in den Pool-Skill-Boxen: −/+ und Klick wie Archetyp-Nodes, zentrierte Karten, Erklärung im Section-Intro, Budget-Badge oben (`feat/background-skill-points-in-nodes`, #103)
@@ -177,7 +178,6 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-09-03** — Skill Progression v2 is the only supported SagaDrive character skill model: complete V2 provenance is mandatory, archetype + archetype start point are required, incomplete data fails closed (no `legacy-unresolved`, no `trainedSkills` source of truth). Migration 014 unchanged (`fix/skill-progression-v2-remove-legacy`)
 - **2026-09-02** — Skill Progression v2 Post-Merge Hardening: Partial Updates validieren immer den kombinierten SagaDrive-State, ein Level-Slot = genau eine Entscheidung (chronologisch), Spezialisierungs-Draft + Cascade-Prune im Editor, situationsgebundener +2 getrennt ausgewiesen, Bootstrap aus `src/modules/**` in den App-Slice (`fix/skill-progression-v2-post-merge-hardening`)
 - **2026-09-02** — `.cursor/` AgentShield baseline: rules, permissions/hooks, empty MCP (`chore/cursor-agentshield`)
-- **2026-09-02** — Skill Progression v2 Character Editor UX: 7/2/1 Startquellen, stackbare Hintergrundpunkte, Formelpanel (global/applied EB), Level-3–19-Slots; Migration `014` (`abilities`/`emotion_profiles`); Bibliothek lädt Charaktere zum Bearbeiten (`feat/skill-progression-v2-character-editor-ux`, #91)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 

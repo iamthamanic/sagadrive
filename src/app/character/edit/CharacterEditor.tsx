@@ -1036,6 +1036,28 @@ export function CharacterEditor() {
                     </TabsList>
 
                     <TabsContent value="attributes" className="mt-4 space-y-7">
+                      <section className="space-y-4">
+                        <h3 className="font-semibold">Attribute</h3>
+                        {!characterArchetype ? <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">Der Archetyp-Punkt ist noch offen. Wähle unter <strong>Archetype</strong> zuerst eine Rolle und eine typische Fertigkeit.</div> : null}
+                        <CharacterSkillsPanel
+                          characterLevel={characterLevel}
+                          attributes={attributes}
+                          freeRanks={freeSkillRanks}
+                          onFreeRanksChange={setFreeSkillRanks}
+                          backgroundPoolSkills={selectedBackgroundPool}
+                          backgroundSkillPoints={backgroundSkillPoints}
+                          archetypeTrainingSkill={archetypeTrainingSkill}
+                          skillAdvances={skillAdvances}
+                          onSkillAdvancesChange={setSkillAdvances}
+                          specializations={specializations}
+                          onSpecializationsChange={setSpecializations}
+                          selectedSkill={selectedSkill}
+                          onSelectedSkillChange={setSelectedSkill}
+                        />
+                      </section>
+
+                      <Separator />
+
                       <section className="space-y-4" data-attr-connector-section>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
@@ -1167,28 +1189,6 @@ export function CharacterEditor() {
                             </div>
                           ) : null}
                         </div>
-                      </section>
-
-                      <Separator />
-
-                      <section className="space-y-4">
-                        <h3 className="font-semibold">Attribute</h3>
-                        {!characterArchetype ? <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">Der Archetyp-Punkt ist noch offen. Wähle unter <strong>Archetype</strong> zuerst eine Rolle und eine typische Fertigkeit.</div> : null}
-                        <CharacterSkillsPanel
-                          characterLevel={characterLevel}
-                          attributes={attributes}
-                          freeRanks={freeSkillRanks}
-                          onFreeRanksChange={setFreeSkillRanks}
-                          backgroundPoolSkills={selectedBackgroundPool}
-                          backgroundSkillPoints={backgroundSkillPoints}
-                          archetypeTrainingSkill={archetypeTrainingSkill}
-                          skillAdvances={skillAdvances}
-                          onSkillAdvancesChange={setSkillAdvances}
-                          specializations={specializations}
-                          onSpecializationsChange={setSpecializations}
-                          selectedSkill={selectedSkill}
-                          onSelectedSkillChange={setSelectedSkill}
-                        />
                       </section>
                     </TabsContent>
 

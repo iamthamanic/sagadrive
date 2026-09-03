@@ -289,6 +289,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByRole('tab', { name: /^Attribute$/i }).click();
   await expect(page.getByRole('heading', { name: /^Attribute$/i })).toBeVisible();
+  await expect(page.getByText('Proben verstehen')).toHaveCount(0);
   await expect(page.getByText('Freie Punkte')).toHaveCount(0);
   await expect(page.getByText(/Vergib genau 7 freie Fertigkeitspunkte/i)).toHaveCount(0);
   await expect(page.getByText(/Start gesamt 10 Punkte/i)).toHaveCount(0);

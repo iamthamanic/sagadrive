@@ -149,17 +149,23 @@ requireMatch(characterCreation, /exceptional-body[\s\S]*available:\s*false/, 'ex
 requireMatch(characterCreation, /sagaDriveSpeciesTraitKeysByRace/, 'species-specific trait allowlists');
 requireMatch(characterCreation, /key:\s*'athletics'.*label:\s*'Athletik'/s, 'SagaDrive skill definitions');
 requireMatch(skillsPanel, /SkillCheckFormulaPanel/, 'full skill check formula panel');
+requireMatch(skillsPanel, /data-skill-check-formula/, 'formula block under skill nodes (not sticky aside)');
 requireMatch(skillsPanel, /SkillProgressionSlotsPanel/, 'level 3-19 progression slots panel');
 requireMatch(skillsPanel, /AttributeSkillsCarousel/, 'attribute group carousel in skills panel');
 requireMatch(skillsPanel, /AttributeSkillConnector|data-attribute-skill-grid/, 'attribute skill connector graph');
 rejectMatch(skillsPanel, /Start gesamt 10 Punkte|Vergib genau .* freie Fertigkeitspunkte/, 'removed start-points summary / error banner UI');
 rejectMatch(skillsPanel, /Mindestens.*Fertigkeiten.*Wert 1 oder höher/s, 'legacy minimum-six trained skills rule');
-requireMatch(skillsPanel, /Standardbeziehung – keine Voraussetzung|globalen und anwendbaren Erfahrungsbonus/s, 'skill relationship or formula semantics');
+rejectMatch(skillsPanel, /Proben verstehen|xl:grid-cols-\[minmax\(0,1fr\)_18rem\]|xl:sticky xl:top-4/, 'removed sticky Proben verstehen aside / two-column grid');
 requireMatch(attributeSkillNode, /Hintergrund-Pool/, 'background pool source distinction');
 requireMatch(attributeSkillNode, /Standardattribut|CircleHelp/, 'attribute hint polish on skill nodes');
 requireMatch(attributeSkillsCarousel, /useCarouselScrollSync/, 'attribute carousel scroll sync hook');
 rejectMatch(skillsPanel, /legacyFinalRanks|provenanceLegacy|legacy-unresolved|Legacy-Charakter/, 'skills panel still has skill-progression legacy UI');
 requireMatch(editor, /<h3 className="font-semibold">Attribute<\/h3>/, 'Attribute section heading under Parameter Attribute tab');
+requireMatch(
+  editor,
+  /<h3 className="font-semibold">Attribute<\/h3>[\s\S]*data-attr-connector-section[\s\S]*Grundattribute/,
+  'skills carousel section above Grundattribute on Attribute tab',
+);
 rejectMatch(editor, /Fertigkeiten & Quellen/, 'legacy Fertigkeiten & Quellen skills section heading remains');
 rejectMatch(editor, /Deine 10 Startpunkte kommen aus/, 'removed skills start-points intro copy');
 const slotsPanel = read('src/app/character/progression/SkillProgressionSlotsPanel.tsx');
