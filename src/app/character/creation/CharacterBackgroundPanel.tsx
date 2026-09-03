@@ -37,7 +37,7 @@ import {
   sumBackgroundSkillPointsUsed,
 } from './BackgroundSkillPointsAllocator';
 import { RuleHelp } from '../shared/RuleHelp';
-import { SkillSelectField } from '../progression';
+import { SkillIcon, SkillSelectField } from '../progression';
 
 type SkillSlot = SagaDriveSkillKey | '';
 
@@ -156,6 +156,7 @@ function BackgroundSkillNode({
         } ${canIncrease ? 'cursor-pointer' : 'cursor-default'}`}
       >
         <div className="flex items-center justify-center gap-2">
+          <SkillIcon skillKey={skillKey} className="h-5 w-5 shrink-0 text-muted-foreground" />
           <div className="min-w-0">
             <p className="font-medium">{skill.label}</p>
             <p className="mt-1 text-xs text-muted-foreground">Standard: {attribute.shortLabel}</p>
@@ -232,11 +233,19 @@ function BackgroundSkillNode({
                 className="mt-2 min-h-11 w-full"
                 aria-label={`${skill.label} Spezialisierungsvorschlag`}
               >
-                <SelectValue placeholder="Vorschlag wählen …" />
+                {selectValue ? (
+                  <span className="flex min-w-0 items-center gap-2">
+                    <SkillIcon skillKey={skillKey} className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{selectValue}</span>
+                  </span>
+                ) : (
+                  <SelectValue placeholder="Vorschlag wählen …" />
+                )}
               </SelectTrigger>
               <SelectContent>
                 {specializationOptions.map((name) => (
                   <SelectItem key={name} value={name}>
+                    <SkillIcon skillKey={skillKey} className="h-4 w-4 shrink-0" />
                     {name}
                   </SelectItem>
                 ))}

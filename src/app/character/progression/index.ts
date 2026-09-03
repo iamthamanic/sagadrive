@@ -11,4 +11,5 @@ export { CharacterSkillsPanel, createEmptySagaDriveSkillRanks, resolveSagaDriveS
 export { SkillCheckFormulaPanel } from './SkillCheckFormulaPanel';
 export { SkillProgressionSlotsPanel } from './SkillProgressionSlotsPanel';
 export { CharacterTraitEditor } from './CharacterTraitEditor';
+export { SkillIcon } from './SkillIcon';
 export { SkillSelectField } from './SkillSelectField';
