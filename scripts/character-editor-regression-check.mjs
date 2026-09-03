@@ -88,7 +88,8 @@ requireMatch(backgroundPanel, /getBackgroundSpecializationSuggestionNames/, 'spe
 rejectMatch(backgroundPanel, /skillGraphViewMode === 'collapsed'|backgroundPointsComplete \? 'collapsed'/, 'collapsed occupied-only skill graph');
 rejectMatch(backgroundPanel, /Training · 2 wählen/, 'legacy two-toggle background training copy');
 rejectMatch(backgroundPanel, /Auswahl ändern/, 'legacy background training edit action');
-requireMatch(backgroundPanel, /Standard:/, 'standard attribute relationship inside template flow');
+requireMatch(backgroundPanel, /BackgroundSkillAttributeHint|Standardattribut/, 'standard attribute relationship inside template flow');
+requireMatch(backgroundPanel, /SpecializationSelectOptionHelp|SelectItemText/, 'specialization suggestion tooltips in select options');
 requireMatch(backgroundPanel, /BackgroundSkillConnector|data-background-skill-grid/, 'background skill connector graph');
 requireMatch(backgroundTemplates, /validateSagaDriveBackgroundTemplateCatalog/, 'background template catalog validation');
 requireMatch(backgroundTemplates, /getBackgroundSpecializationSuggestionNames/, 'background specialization suggestion helper export');

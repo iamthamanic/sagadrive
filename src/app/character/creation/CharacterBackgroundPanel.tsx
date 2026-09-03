@@ -4,7 +4,7 @@
  * Location: src/app/character/creation/CharacterBackgroundPanel.tsx
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, Minus, Plus } from 'lucide-react';
+import { Check, CircleHelp, Minus, Plus } from 'lucide-react';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -13,9 +13,11 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectItemText,
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
 import {
   getBackgroundSpecializationSuggestionNames,
   getSagaDriveBackgroundTemplate,
@@ -39,6 +41,71 @@ import {
 } from './BackgroundSkillPointsAllocator';
 import { RuleHelp } from '../shared/RuleHelp';
 import { SkillIcon, SkillSelectField } from '../progression';
+
+/**
+ * BackgroundSkillAttributeHint — Compact attribute short-label chip with Tooltip.
+ * Explains that this is the default probe-roll attribute (not “background/pool standard”).
+ * Location: CharacterBackgroundPanel.tsx
+ */
+function BackgroundSkillAttributeHint({
+  attributeLabel,
+  attributeShortLabel,
+}: {
+  attributeLabel: string;
+  attributeShortLabel: string;
+}) {
+  return (
+    <Tooltip pinOnClick={false}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Standardattribut ${attributeShortLabel} erklären`}
+          className="mt-1 inline-flex items-center rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          {attributeShortLabel}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" sideOffset={6} className="max-w-[280px] px-3 py-2 text-left text-xs leading-relaxed">
+        <p className="font-medium text-primary-foreground">{attributeLabel} ({attributeShortLabel})</p>
+        <p className="mt-1">
+          Beim Probe-Wurf wird normalerweise dieses Attribut mitgerechnet — nicht „Hintergrund-Standard“ oder
+          „Pool-Standard“. Dieselbe Info findest du auch in der normalen Skill-Liste.
+        </p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+/**
+ * SpecializationSelectOptionHelp — CircleHelp + shadcn Tooltip portal inside a Radix SelectItem.
+ * Native `title` is unreliable on Select options; wrapping SelectTrigger in Tooltip breaks open/E2E.
+ * Pattern matches CharacterEditor attribute-option help. Location: CharacterBackgroundPanel.tsx
+ */
+function SpecializationSelectOptionHelp({ label, description }: { label: string; description: string }) {
+  return (
+    <Tooltip pinOnClick={false}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={`${label} erklären`}
+          className="pointer-events-auto ml-auto inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-primary hover:bg-primary/10"
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+        >
+          <CircleHelp className="pointer-events-none size-3.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="right" sideOffset={8} className="max-w-[280px] px-3 py-2 text-left text-xs leading-relaxed">
+        {description}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 type SkillSlot = SagaDriveSkillKey | '';
 
@@ -128,23 +195,6 @@ function BackgroundSkillNode({
     if (canIncrease) onAdjust(skillKey, 1);
   };
 
-  const selectTrigger = (
-    <SelectTrigger
-      id={`specialization-select-${skillKey}`}
-      className="mt-2 min-h-11 w-full"
-      aria-label={`${skill.label} Spezialisierungsvorschlag`}
-    >
-      {selectValue ? (
-        <span className="flex min-w-0 items-center gap-2">
-          <SkillIcon skillKey={skillKey} className="h-4 w-4 shrink-0" />
-          <span className="truncate">{selectValue}</span>
-        </span>
-      ) : (
-        <SelectValue placeholder="Vorschlag wählen …" />
-      )}
-    </SelectTrigger>
-  );
-
   return (
     <div className="min-w-0" data-background-skill-node={skillKey}>
       <div
@@ -178,7 +228,10 @@ function BackgroundSkillNode({
           <SkillIcon skillKey={skillKey} className="h-7 w-7 shrink-0 text-muted-foreground" />
           <div className="min-w-0">
             <p className="font-medium">{skill.label}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Standard: {attribute.shortLabel}</p>
+            <BackgroundSkillAttributeHint
+              attributeLabel={attribute.label}
+              attributeShortLabel={attribute.shortLabel}
+            />
           </div>
         </div>
         <div className="mt-3 flex items-center justify-center gap-1.5">
@@ -235,7 +288,25 @@ function BackgroundSkillNode({
         <div className="relative mx-auto mt-0 max-w-[14rem] space-y-2 pt-5 text-left" data-specialization-branch={skillKey}>
           <span className="absolute left-1/2 top-0 h-5 -translate-x-1/2 border-l border-primary/60" aria-hidden="true" />
           <div className="rounded-lg border border-primary/40 bg-primary/5 px-3 py-3">
-            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Spezialisierung</p>
+            <div className="flex items-center gap-1">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Spezialisierung</p>
+              {selectedDescription ? (
+                <Tooltip pinOnClick={false}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={`${selectValue} erklären`}
+                      className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-primary hover:bg-primary/10"
+                    >
+                      <CircleHelp className="size-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={6} className="max-w-[280px] px-3 py-2 text-left text-xs leading-relaxed">
+                    {selectedDescription}
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
+            </div>
             <Label htmlFor={`specialization-select-${skillKey}`} className="sr-only">
               Vorschlag für {skill.label}
             </Label>
@@ -244,14 +315,46 @@ function BackgroundSkillNode({
               onValueChange={(value) => onSpecializationApply(skillKey, value)}
             >
               {/* Do not wrap SelectTrigger in Tooltip — Radix tooltip+select nesting blocks pointer/open in E2E. */}
-              {selectTrigger}
+              <SelectTrigger
+                id={`specialization-select-${skillKey}`}
+                className="mt-2 min-h-11 w-full"
+                aria-label={`${skill.label} Spezialisierungsvorschlag`}
+              >
+                {selectValue ? (
+                  <span className="flex min-w-0 items-center gap-2">
+                    <SkillIcon skillKey={skillKey} className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{selectValue}</span>
+                  </span>
+                ) : (
+                  <SelectValue placeholder="Vorschlag wählen …" />
+                )}
+              </SelectTrigger>
               <SelectContent>
                 {specializationOptions.map((name) => {
                   const description = getSagaDriveSpecializationDescription(name);
                   return (
-                    <SelectItem key={name} value={name} title={description}>
-                      <SkillIcon skillKey={skillKey} className="h-4 w-4 shrink-0" />
-                      {name}
+                    <SelectItem
+                      key={name}
+                      value={name}
+                      textValue={name}
+                      className={description ? 'items-start py-2.5 pr-10' : undefined}
+                    >
+                      <SelectItemText>
+                        <span className="flex min-w-0 items-start gap-2">
+                          <SkillIcon skillKey={skillKey} className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span className="min-w-0 text-left">
+                            <span className="block leading-tight">{name}</span>
+                            {description ? (
+                              <span className="mt-0.5 block text-xs font-normal leading-snug text-muted-foreground whitespace-normal">
+                                {description}
+                              </span>
+                            ) : null}
+                          </span>
+                        </span>
+                      </SelectItemText>
+                      {description ? (
+                        <SpecializationSelectOptionHelp label={name} description={description} />
+                      ) : null}
                     </SelectItem>
                   );
                 })}
@@ -680,7 +783,7 @@ export function CharacterBackgroundPanel({
                 </div>
 
                 {!backgroundPointsComplete ? (
-                  <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
+                  <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-center text-sm text-muted-foreground">
                     Verteile zuerst alle 2 Hintergrundpunkte. Danach wird die Spezialisierung freigeschaltet.
                   </div>
                 ) : null}
