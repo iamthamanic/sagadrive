@@ -168,6 +168,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-03** — Hintergrundpunkte in den Pool-Skill-Boxen: −/+ und Klick wie Archetyp-Nodes, zentrierte Karten, Erklärung im Section-Intro, Budget-Badge oben (`feat/background-skill-points-in-nodes`, #103)
 - **2026-09-03** — Hintergrund-Skill-Nodes: Inhalt (Titel, Pool-Badge, −/+) horizontal und vertikal zentriert (`feat/background-skill-points-in-nodes`)
 - **2026-09-03** — Preset skill provenance is single-source: `sagadrive_profile.freeSkillRanks` only (no parallel top-level snapshot field) (`fix/skill-progression-v2-remove-legacy`)
 - **2026-09-03** — Character presets no longer enforce a minimum of 6 trained skills; legal V2 stacked start builds (fewer distinct skills) can be saved as presets (`fix/skill-progression-v2-remove-legacy`)
