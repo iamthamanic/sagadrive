@@ -50,7 +50,7 @@ Close two V2 consistency gaps on PR #102 without re-architecting: presets must u
 
 ## Composition Gate
 
-- HEAD_SHA: pending
-- Verdict: pending
+- HEAD_SHA: fd9b4e91fb360b7cde74d2d2a062090e5fbefc72
+- Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-skill-progression-v2-remove-legacy.md`
 - Skip reason: n/a
