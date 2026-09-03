@@ -142,7 +142,6 @@ function snapshotFor(build, extra = {}) {
       clothing: '',
     },
     attributes: extra.attributes ?? ATTRS,
-    freeSkillRanks: rules.normalizeFreeSkillRanks(build.freeSkillRanks),
     skills,
     sagadrive_profile: {
       ...profile,
@@ -321,8 +320,12 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
     () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, skills, profileFor(build), 1),
     'stacked four-skill V2 passes character persistence',
   );
+  const snapshot = snapshotFor(build);
+  check(!Object.prototype.hasOwnProperty.call(snapshot, 'freeSkillRanks'), 'generated preset snapshot has no top-level freeSkillRanks');
+  const freeSum = Object.values(snapshot.sagadrive_profile.freeSkillRanks ?? {}).reduce((sum, value) => sum + value, 0);
+  check(freeSum === 7, `profile freeSkillRanks sum is 7 (got ${freeSum})`);
   expectPass(
-    () => preset.assertValidSnapshot(snapshotFor(build)),
+    () => preset.assertValidSnapshot(snapshot),
     'stacked four-skill V2 passes preset snapshot validation',
   );
 }
@@ -340,6 +343,28 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   expectThrow(
     () => preset.assertValidSnapshot(snapshotFor(missingTraining)),
     'preset rejects missing archetypeTrainingSkill',
+  );
+}
+
+// Top-level freeSkillRanks cannot rescue missing/invalid profile.freeSkillRanks.
+{
+  const build = fourSkillStackedBuild();
+  const legalFree = rules.normalizeFreeSkillRanks(build.freeSkillRanks);
+  const missingProfileFree = snapshotFor(build);
+  delete missingProfileFree.sagadrive_profile.freeSkillRanks;
+  missingProfileFree.freeSkillRanks = legalFree;
+  expectThrow(
+    () => preset.assertValidSnapshot(missingProfileFree),
+    'preset rejects missing profile.freeSkillRanks even with top-level freeSkillRanks',
+  );
+
+  const sum6Build = fourSkillStackedBuild();
+  sum6Build.freeSkillRanks = { athletics: 3, medicine: 2, insight: 1 };
+  const invalidProfileFree = snapshotFor(sum6Build);
+  invalidProfileFree.freeSkillRanks = legalFree;
+  expectThrow(
+    () => preset.assertValidSnapshot(invalidProfileFree),
+    'preset rejects profile.freeSkillRanks sum 6 even with top-level legal freeSkillRanks',
   );
 }
 

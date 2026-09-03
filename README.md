@@ -168,6 +168,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-03** — Preset skill provenance is single-source: `sagadrive_profile.freeSkillRanks` only (no parallel top-level snapshot field) (`fix/skill-progression-v2-remove-legacy`)
 - **2026-09-03** — Character presets no longer enforce a minimum of 6 trained skills; legal V2 stacked start builds (fewer distinct skills) can be saved as presets (`fix/skill-progression-v2-remove-legacy`)
 - **2026-09-03** — Skill Progression v2 is the only supported SagaDrive character skill model: complete V2 provenance is mandatory, archetype + archetype start point are required, incomplete data fails closed (no `legacy-unresolved`, no `trainedSkills` source of truth). Migration 014 unchanged (`fix/skill-progression-v2-remove-legacy`)
 - **2026-09-02** — Skill Progression v2 Post-Merge Hardening: Partial Updates validieren immer den kombinierten SagaDrive-State, ein Level-Slot = genau eine Entscheidung (chronologisch), Spezialisierungs-Draft + Cascade-Prune im Editor, situationsgebundener +2 getrennt ausgewiesen, Bootstrap aus `src/modules/**` in den App-Slice (`fix/skill-progression-v2-post-merge-hardening`)

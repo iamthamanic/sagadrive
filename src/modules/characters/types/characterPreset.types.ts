@@ -1,6 +1,9 @@
 /**
  * characterPreset.types — Versioned character sheet presets (SagaDrive Core MVP).
  * Location: src/modules/characters/types/characterPreset.types.ts
+ *
+ * Skill provenance lives only on sagadrive_profile (freeSkillRanks, backgroundSkillPoints,
+ * archetypeTrainingSkill, skillAdvances, specializations) — no parallel top-level freeSkillRanks.
  */
 import type { CharacterRulesetKey, SagaDriveSkillKey } from '../../rulesets/characterCreation';
 import type {
@@ -31,8 +34,6 @@ export interface CharacterPresetSnapshot {
   flaws?: string[];
   appearance: CharacterAppearanceDto;
   attributes: CharacterAttributesDto;
-  /** Free skill ranks in the editor (before background/archetype bonuses). */
-  freeSkillRanks: Record<SagaDriveSkillKey, number>;
   skills: Record<SagaDriveSkillKey, number>;
   sagadrive_profile: SagaDriveProfileDto;
   abilities: AbilityDto[];

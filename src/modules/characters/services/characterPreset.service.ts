@@ -9,7 +9,6 @@ import { normalizeCharacterAppearance, normalizeSafeUrl } from '../avatar';
 import { assertValidSagaDriveCharacterPersistence } from '../../../domains/character';
 import {
   SAGA_DRIVE_SPECIES_TRAIT_BUDGET,
-  SAGA_DRIVE_START_SKILL_CAP,
   createEmptySagaDriveSkillRanks,
   getSagaDriveSpeciesTraitCost,
   isCharacterRulesetKey,
@@ -41,18 +40,6 @@ function isPresetOrigin(value: unknown): value is CharacterPresetOrigin {
 
 function isGenderReading(value: unknown): value is CharacterGenderReading {
   return value === 'masculine-read' || value === 'feminine-read' || value === 'diverse';
-}
-
-function normalizeFreeSkillRanks(value: unknown): Record<SagaDriveSkillKey, number> {
-  const result = createEmptySagaDriveSkillRanks();
-  if (!isRecord(value)) return result;
-  for (const skill of sagaDriveSkillDefinitions) {
-    const rank = value[skill.key];
-    if (typeof rank === 'number' && Number.isFinite(rank)) {
-      result[skill.key] = Math.max(0, Math.min(SAGA_DRIVE_START_SKILL_CAP, Math.round(rank)));
-    }
-  }
-  return result;
 }
 
 function normalizeSkills(value: unknown): Record<SagaDriveSkillKey, number> {
@@ -151,7 +138,6 @@ function normalizeSnapshot(value: unknown): CharacterPresetSnapshot | null {
       perception: typeof (value.attributes as CharacterAttributesDto | undefined)?.perception === 'number' ? (value.attributes as CharacterAttributesDto).perception : 0,
       charisma: typeof (value.attributes as CharacterAttributesDto | undefined)?.charisma === 'number' ? (value.attributes as CharacterAttributesDto).charisma : 0,
     },
-    freeSkillRanks: normalizeFreeSkillRanks(value.freeSkillRanks),
     skills: normalizeSkills(value.skills),
     sagadrive_profile: profile,
     abilities: Array.isArray(value.abilities) ? value.abilities as CharacterPresetSnapshot['abilities'] : [],

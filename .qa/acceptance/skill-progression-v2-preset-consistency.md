@@ -4,7 +4,7 @@
 
 ## Intent
 
-Close two V2 consistency gaps on PR #102 without re-architecting: presets must use the same central character persistence rules (no leftover min-6 trained-skills rule), and background specializations must be acquired at level 1. Roadmap: Skill Progression v2 follow-up on `fix/skill-progression-v2-remove-legacy`.
+Close V2 consistency gaps on PR #102 without re-architecting: presets must use the same central character persistence rules (no leftover min-6 trained-skills rule), background specializations must be acquired at level 1, and preset skill provenance must have exactly one source of truth (`sagadrive_profile`). Roadmap: Skill Progression v2 follow-up on `fix/skill-progression-v2-remove-legacy`.
 
 ## Preconditions
 
@@ -17,6 +17,7 @@ Close two V2 consistency gaps on PR #102 without re-architecting: presets must u
 - [ ] A legal V2 level-1 build with fewer than 6 distinct trained skills (Athletics 3, Medicine 3, Insight 3, Melee 1) passes character persistence and preset snapshot validation.
 - [ ] Preset snapshot validation calls central `assertValidSagaDriveCharacterPersistence` instead of re-checking skill progression with old rules.
 - [ ] Background specialization with `acquiredAtLevel === 1` persists.
+- [ ] Preset skill provenance has exactly one source: `sagadrive_profile` (`freeSkillRanks`, `backgroundSkillPoints`, `archetypeTrainingSkill`, `skillAdvances`, `specializations`). No parallel `snapshot.freeSkillRanks`.
 
 ## Edge Cases
 
@@ -24,17 +25,20 @@ Close two V2 consistency gaps on PR #102 without re-architecting: presets must u
 - [ ] Missing `archetypeTrainingSkill` on a preset snapshot → FAIL.
 - [ ] Background spec `acquiredAtLevel` 3 or 19 → persistence FAIL.
 - [ ] Sanitizer discards a background spec with `acquiredAtLevel !== 1` and does not rewrite it to 1.
+- [ ] Missing or invalid `profile.freeSkillRanks` cannot be rescued by a top-level `snapshot.freeSkillRanks` → preset FAIL.
 
 ## Regression
 
 - [ ] #102 V2-only contract unchanged (no `legacy-unresolved`, no `skillProvenanceStatus`, no `trainedSkills` source of truth).
 - [ ] Partial-update merge-then-validate guard intact.
 - [ ] Architecture boundary check still forbids new domain implementation in `src/modules/**` beyond the existing preset service.
+- [ ] Hydration and validation cannot disagree on freeSkillRanks (single profile source).
 
 ## Assumptions
 
 - `SAGA_DRIVE_START_MIN_TRAINED_SKILLS` has no remaining V2 consumer and is deleted from the catalog.
 - Preset-specific checks (schema, ruleset, name, appearance, essence, background text, species budget) stay in the preset service.
+- `SagaDriveProfileDto.freeSkillRanks` and domain helpers (`normalizeFreeSkillRanks`, etc.) remain; only parallel snapshot storage is removed.
 
 ## Screenshots
 
@@ -44,8 +48,8 @@ Close two V2 consistency gaps on PR #102 without re-architecting: presets must u
 
 ## Implementation Notes
 
-- Files touched: `src/modules/characters/services/characterPreset.service.ts` (removed min-6 / duplicated skill rules; calls `assertValidSagaDriveCharacterPersistence`), `src/domains/rules/sagadrive/skill-progression/index.ts` (background spec `acquiredAtLevel === 1`; sanitizer discards other levels), `src/domains/rules/sagadrive/character-creation/index.ts` (deleted `SAGA_DRIVE_START_MIN_TRAINED_SKILLS`).
-- Tests: `scripts/skill-progression-domain-check.mjs` (four-skill stacked V2 persistence + preset pass; preset rejects tampered finals / missing archetype training; background spec 1 pass / 3 and 19 fail; sanitizer discards invalid background specs), `scripts/skill-progression-regression-check.mjs` and `scripts/character-presets-regression-check.mjs` static contracts.
+- Files touched: `src/modules/characters/types/characterPreset.types.ts` (removed top-level `freeSkillRanks`), `src/modules/characters/services/characterPreset.service.ts` (no top-level freeSkillRanks read; central persistence), `src/app/character/edit/CharacterEditor.tsx` (snapshot + hydrate from profile only), `src/domains/rules/sagadrive/skill-progression/index.ts` (background spec `acquiredAtLevel === 1`; sanitizer discards other levels), `src/domains/rules/sagadrive/character-creation/index.ts` (deleted `SAGA_DRIVE_START_MIN_TRAINED_SKILLS`).
+- Tests: `scripts/skill-progression-domain-check.mjs` (four-skill stacked V2 persistence + preset pass; no top-level freeSkillRanks; top-level cannot rescue missing/invalid profile ranks; preset rejects tampered finals / missing archetype training; background spec 1 pass / 3 and 19 fail; sanitizer discards invalid background specs), `scripts/skill-progression-regression-check.mjs` and `scripts/character-presets-regression-check.mjs` static contracts.
 - Migration 014 unchanged. No balance change, no UI redesign, no legacy fallback.
 
 ## Composition Gate

@@ -465,7 +465,6 @@ export function CharacterEditor() {
         avatar: currentAvatar,
       },
       attributes,
-      freeSkillRanks,
       skills: finalSkillRanks,
       sagadrive_profile: sagaDriveProfile,
       abilities,
@@ -486,7 +485,6 @@ export function CharacterEditor() {
     skills: Record<SagaDriveSkillKey, number>;
     profile: SagaDriveProfileDto;
     appearance: CharacterAppearanceDto;
-    freeSkillRanks?: Partial<Record<SagaDriveSkillKey, number>>;
     inventory?: ItemDto[];
     backgroundStory?: string;
     notes?: string;
@@ -499,7 +497,7 @@ export function CharacterEditor() {
   }) => {
     const { profile, appearance } = payload;
     const resolved = resolveSagaDriveAttributeBuildState(payload.attributes, profile);
-    const hydratedFreeSkillRanks = normalizeFreeSkillRanks(payload.freeSkillRanks ?? profile.freeSkillRanks);
+    const hydratedFreeSkillRanks = normalizeFreeSkillRanks(profile.freeSkillRanks);
 
     setCharacterName(payload.name);
     setDescription(payload.description);
@@ -598,7 +596,6 @@ export function CharacterEditor() {
         skills: snapshot.skills,
         profile: snapshot.sagadrive_profile,
         appearance: snapshot.appearance,
-        freeSkillRanks: snapshot.freeSkillRanks,
         inventory: snapshot.inventory,
         backgroundStory: snapshot.background_story,
         notes: snapshot.notes,
@@ -630,7 +627,6 @@ export function CharacterEditor() {
           skills: character.skills,
           profile: character.sagaDriveProfile,
           appearance: character.appearance,
-          freeSkillRanks: character.sagaDriveProfile.freeSkillRanks,
           inventory: character.inventory,
           backgroundStory: character.backgroundStory,
           notes: character.notes,

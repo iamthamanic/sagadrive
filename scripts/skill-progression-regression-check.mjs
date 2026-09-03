@@ -79,8 +79,11 @@ forbidMatch(creation, /SAGA_DRIVE_START_MIN_TRAINED_SKILLS/, 'catalog still expo
 forbidMatch(domainCheck, /SAGA_DRIVE_START_MIN_TRAINED_SKILLS/, 'domain check still references leftover min-6 constant');
 requireMatch(domainCheck, /fourSkillStackedBuild/, 'legal V2 with fewer than 6 trained skills is covered');
 requireMatch(domainCheck, /stacked four-skill V2 passes preset snapshot validation/, 'preset accepts legal four-skill V2');
+requireMatch(domainCheck, /generated preset snapshot has no top-level freeSkillRanks/, 'preset snapshot omits parallel freeSkillRanks');
+requireMatch(domainCheck, /preset rejects missing profile\.freeSkillRanks even with top-level freeSkillRanks/, 'top-level freeSkillRanks cannot rescue missing profile ranks');
 requireMatch(domainCheck, /preset rejects manipulated final skills/, 'preset rejects tampered finals');
 requireMatch(domainCheck, /background spec at level 19 fails persistence/, 'background spec level 19 is fail-closed');
 requireMatch(domainCheck, /sanitizer does not keep background spec acquiredAtLevel 19 as valid V2 state/, 'sanitizer discards invalid background spec');
+forbidMatch(presetService, /value\.freeSkillRanks/, 'preset normalizeSnapshot still reads top-level freeSkillRanks');
 
 console.log('Skill progression regression check passed.');
