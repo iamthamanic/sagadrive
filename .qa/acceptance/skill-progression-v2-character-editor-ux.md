@@ -55,7 +55,7 @@ Issue #91: Wire Character Editor to #90 domain contracts — three start sources
 ## Implementation Notes
 
 - **Acceptance:** `.qa/acceptance/skill-progression-v2-character-editor-ux.md`
-- **Background:** `CharacterBackgroundPanel` + `BackgroundSkillPointsAllocator` — 2 stackable framework points; graph collapses to occupied nodes after allocation.
+- **Background:** `CharacterBackgroundPanel` — 2 stackable framework points via −/+ on each `BackgroundSkillNode`; budget badge above the grid; graph collapses to occupied nodes after allocation.
 - **Skills:** `CharacterSkillsPanel` — 7/2/1 counters, `SkillCheckFormulaPanel` (provenance, global/applied EB, d20 formula), `SkillProgressionSlotsPanel` (levels 3–19).
 - **Editor state/save:** `backgroundSkillPoints`, `skillAdvances`, `specializations`, `skillProvenanceStatus: 'complete'`; ranks via `resolveSagaDriveSkillRanks`; legacy bootstrap via `resolveSagaDriveSkillBuildState`.
 - **Removed:** min-6 trained skills gate; legacy 2-toggle background training UX.

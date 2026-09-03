@@ -1,10 +1,10 @@
 /**
  * CharacterBackgroundPanel — Hintergrund-Auswahl per Karussell mit Bracket-Connector
- * zu den Pool-Skill-Nodes (2-aus-4-Training + Spezialisierungs-Branch).
- * Location: src/modules/characters/components/CharacterBackgroundPanel.tsx
+ * zu den Pool-Skill-Nodes (stackbare 2 Hintergrundpunkte + Spezialisierungs-Branch).
+ * Location: src/app/character/creation/CharacterBackgroundPanel.tsx
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Minus, Plus } from 'lucide-react';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -24,7 +24,7 @@ import type { SagaDriveBackgroundSkillPoints } from '../../../modules/rulesets/s
 import { SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS } from '../../../modules/rulesets/skillProgression';
 import { BackgroundCarousel } from './BackgroundCarousel';
 import {
-  BackgroundSkillPointsAllocator,
+  adjustBackgroundSkillPoints,
   backgroundSkillsWithPoints,
   sumBackgroundSkillPointsUsed,
 } from './BackgroundSkillPointsAllocator';
@@ -76,20 +76,27 @@ function SuggestionButtons({ values, onSelect }: { values: readonly string[] | u
 interface BackgroundSkillNodeProps {
   skillKey: SagaDriveSkillKey;
   pointValue: 0 | 1 | 2;
+  pointsUsed: number;
   specializationName?: string;
   onHoverChange: (skill: SagaDriveSkillKey | null) => void;
+  onAdjust: (skill: SagaDriveSkillKey, delta: 1 | -1) => void;
 }
 
 function BackgroundSkillNode({
   skillKey,
   pointValue,
+  pointsUsed,
   specializationName,
   onHoverChange,
+  onAdjust,
 }: BackgroundSkillNodeProps) {
   const skill = getSagaDriveSkill(skillKey);
   const attribute = getSagaDriveAttribute(skill.attribute);
   const hasSpecialization = Boolean(pointValue > 0 && specializationName?.trim());
   const selected = pointValue > 0;
+  const canDecrease = pointValue > 0;
+  const canIncrease =
+    pointsUsed < SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS && pointValue < 2;
 
   return (
     <div className="min-w-0" data-background-skill-node={skillKey}>
@@ -109,8 +116,35 @@ function BackgroundSkillNode({
           </div>
           {selected ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> : null}
         </div>
-        <div className="mt-3 flex min-h-6 flex-wrap gap-1.5">
+        <div className="mt-3 flex min-h-6 flex-wrap items-center justify-between gap-2">
           {pointValue > 0 ? <Badge variant="outline">Hintergrund +{pointValue}</Badge> : <Badge variant="outline">Pool</Badge>}
+          <div className="flex items-center gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="size-10"
+              disabled={!canDecrease}
+              onClick={() => onAdjust(skillKey, -1)}
+              aria-label={`${skill.label} Hintergrundpunkt verringern`}
+            >
+              <Minus className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <span className="w-6 text-center text-lg font-semibold tabular-nums" aria-hidden="true">
+              {pointValue}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="size-10"
+              disabled={!canIncrease}
+              onClick={() => onAdjust(skillKey, 1)}
+              aria-label={`${skill.label} Hintergrundpunkt erhöhen`}
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -402,6 +436,12 @@ export function CharacterBackgroundPanel({
     setScrollPhase(phase);
   }, []);
   const handleStandstill = useCallback(() => setScrollPhase('settled'), []);
+  const handleBackgroundPointAdjust = useCallback(
+    (skill: SagaDriveSkillKey, delta: 1 | -1) => {
+      onBackgroundSkillPointsChange(adjustBackgroundSkillPoints(backgroundSkillPoints, skill, delta));
+    },
+    [backgroundSkillPoints, onBackgroundSkillPointsChange],
+  );
 
   return (
     <section className="space-y-5" aria-labelledby="background-competency-heading" data-background-panel>
@@ -474,6 +514,19 @@ export function CharacterBackgroundPanel({
               />
 
               <div
+                className="flex flex-wrap items-center justify-between gap-2 px-0.5"
+                data-background-points-budget
+              >
+                <div>
+                  <p className="font-medium">2 Hintergrund-Fertigkeitspunkte</p>
+                  <p className="text-sm text-muted-foreground">Direkt an den Pool-Skills verteilen. +2 auf einen Skill oder +1/+1.</p>
+                </div>
+                <Badge variant={backgroundPointsComplete ? 'default' : 'outline'}>
+                  {backgroundPointsUsed} / {SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS} verteilt
+                </Badge>
+              </div>
+
+              <div
                 className={`grid gap-3 sm:grid-cols-2 ${visibleSkillNodes.length > 2 ? 'xl:grid-cols-4' : 'mx-auto w-full max-w-2xl'}`}
                 data-background-skill-grid
                 data-training-view={skillGraphViewMode}
@@ -483,17 +536,13 @@ export function CharacterBackgroundPanel({
                     key={skillKey}
                     skillKey={skillKey}
                     pointValue={(backgroundSkillPoints[skillKey] ?? 0) as 0 | 1 | 2}
+                    pointsUsed={backgroundPointsUsed}
                     specializationName={backgroundPointsComplete && specializationSkill === skillKey ? specializationName : undefined}
                     onHoverChange={(skill) => setActiveSkill(skill)}
+                    onAdjust={handleBackgroundPointAdjust}
                   />
                 ))}
               </div>
-
-              <BackgroundSkillPointsAllocator
-                poolSkills={poolSkills}
-                points={backgroundSkillPoints}
-                onChange={onBackgroundSkillPointsChange}
-              />
 
               {backgroundPointsComplete ? (
                 <div className="space-y-3 rounded-lg border border-border bg-card p-4">

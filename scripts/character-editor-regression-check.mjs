@@ -74,8 +74,14 @@ requireMatch(editor, /resolveSagaDriveSkillRanksSafe/, 'non-throwing skill rank 
 requireMatch(editor, /isValidStartSkillBuild\(startSkillBuild, selectedBackgroundPool, characterArchetype\)/, 'editor start-build validation includes archetype');
 requireMatch(editor, /isValidSagaDriveSkillDevelopment/, 'chronological one-decision-per-slot validation in editor completion');
 requireMatch(editor, /getSagaDriveExperienceBonus\(characterLevel\)/, 'level-scaled global experience bonus');
-requireMatch(backgroundAllocator, /2 Hintergrund-Fertigkeitspunkte/, 'two stackable background points copy');
-requireMatch(backgroundPanel, /BackgroundSkillPointsAllocator/, 'stackable background point allocator in panel');
+requireMatch(backgroundAllocator, /adjustBackgroundSkillPoints/, 'background point adjust helper');
+requireMatch(backgroundAllocator, /SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS/, 'two-point background budget constant');
+requireMatch(backgroundPanel, /2 Hintergrund-Fertigkeitspunkte/, 'two stackable background points copy');
+requireMatch(backgroundPanel, /adjustBackgroundSkillPoints/, 'in-node background point distribution');
+requireMatch(backgroundPanel, /Hintergrundpunkt erhöhen/, 'in-node background point increase control');
+requireMatch(backgroundPanel, /Hintergrundpunkt verringern/, 'in-node background point decrease control');
+requireMatch(backgroundPanel, /data-background-points-budget/, 'background points budget badge');
+rejectMatch(backgroundPanel, /data-background-points-allocator/, 'legacy separate background points allocator list');
 requireMatch(backgroundPanel, /visibleSkillNodes/, 'collapsed occupied-node background graph');
 rejectMatch(backgroundPanel, /Training · 2 wählen/, 'legacy two-toggle background training copy');
 rejectMatch(backgroundPanel, /Auswahl ändern/, 'legacy background training edit action');

@@ -83,7 +83,9 @@ requireMatch(carousel, /'Freier Hintergrund'/, 'free background terminology in c
 requireMatch(carousel, /option\.template\.examples\.join/, 'cross-setting examples shown in carousel');
 requireMatch(carousel, /data-background-framework-icon/, 'framework icon test hook');
 requireMatch(carousel, /:\s*PencilLine\s*;/, 'custom background PencilLine icon');
-requireMatch(panel, /BackgroundSkillPointsAllocator/, 'stackable background point allocator');
+requireMatch(panel, /adjustBackgroundSkillPoints/, 'stackable background point adjust helper');
+requireMatch(panel, /Hintergrundpunkt erhöhen/, 'in-node background point increase control');
+requireMatch(panel, /data-background-points-budget/, 'background points budget badge');
 requireMatch(panel, /data-training-view=/, 'collapsed versus pool training view');
 requireMatch(panel, /visibleSkillNodes/, 'dynamic occupied-versus-four node rendering');
 

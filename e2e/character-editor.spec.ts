@@ -199,12 +199,12 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.screenshot({ path: path.join('.qa/evidence/attribute-bonus-pool', '01-attribute-budget-level-1.png'), fullPage: true });
 
   const backgroundPanel = page.locator('[data-background-panel]');
-  const allocator = backgroundPanel.locator('[data-background-points-allocator]');
+  const pointsBudget = backgroundPanel.locator('[data-background-points-budget]');
   const healingFramework = page.getByRole('radio', { name: /Heilung & Fürsorge/i });
   await healingFramework.click();
   await expect(healingFramework).toHaveAttribute('aria-checked', 'true', { timeout: 10_000 });
-  await expect(allocator.getByText('2 Hintergrund-Fertigkeitspunkte').first()).toBeVisible();
-  await expect(allocator.getByText(/^0 \/ 2 verteilt$/).first()).toBeVisible();
+  await expect(pointsBudget.getByText('2 Hintergrund-Fertigkeitspunkte').first()).toBeVisible();
+  await expect(pointsBudget.getByText(/^0 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(backgroundPanel.getByText('Empfohlen')).toHaveCount(0);
 
   const medicineNode = backgroundPanel.locator('[data-background-skill-node="medicine"]');
@@ -217,10 +217,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(awarenessNode).toHaveCount(1);
   await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'pool');
 
-  await allocator.getByRole('button', { name: 'Medizin Hintergrundpunkt hinzufügen' }).click();
-  await expect(allocator.getByText(/^1 \/ 2 verteilt$/).first()).toBeVisible();
-  await allocator.getByRole('button', { name: 'Menschenkenntnis Hintergrundpunkt hinzufügen' }).click();
-  await expect(allocator.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
+  await medicineNode.getByRole('button', { name: 'Medizin Hintergrundpunkt erhöhen' }).click();
+  await expect(pointsBudget.getByText(/^1 \/ 2 verteilt$/).first()).toBeVisible();
+  await insightNode.getByRole('button', { name: 'Menschenkenntnis Hintergrundpunkt erhöhen' }).click();
+  await expect(pointsBudget.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(medicineNode).toHaveCount(1);
   await expect(insightNode).toHaveCount(1);
   await expect(survivalNode).toHaveCount(0);
@@ -228,13 +228,13 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'collapsed');
   await page.screenshot({ path: '.qa/evidence/skill-progression-v2-character-editor-ux/02-background-plus-two.png', fullPage: true });
 
-  await allocator.getByRole('button', { name: 'Menschenkenntnis Hintergrundpunkt entfernen' }).click();
-  await expect(allocator.getByText(/^1 \/ 2 verteilt$/).first()).toBeVisible();
+  await insightNode.getByRole('button', { name: 'Menschenkenntnis Hintergrundpunkt verringern' }).click();
+  await expect(pointsBudget.getByText(/^1 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'pool');
   await expect(survivalNode).toHaveCount(1);
   await expect(awarenessNode).toHaveCount(1);
-  await allocator.getByRole('button', { name: 'Aufmerksamkeit Hintergrundpunkt hinzufügen' }).click();
-  await expect(allocator.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
+  await awarenessNode.getByRole('button', { name: 'Aufmerksamkeit Hintergrundpunkt erhöhen' }).click();
+  await expect(pointsBudget.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(medicineNode).toHaveCount(1);
   await expect(awarenessNode).toHaveCount(1);
   await expect(insightNode).toHaveCount(0);
