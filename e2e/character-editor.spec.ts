@@ -242,7 +242,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(survivalNode).toHaveCount(1);
 
   await medicineNode.getByRole('button', { name: 'Spezialisieren' }).click();
-  await medicineNode.getByLabel('Medizin Spezialisierungsvorschlag').click();
+  await medicineNode.getByRole('combobox', { name: 'Medizin Spezialisierungsvorschlag' }).click();
   await page.getByRole('option', { name: 'Notfallmedizin', exact: true }).click();
   await page.getByLabel('Milieuzugang').fill('Notaufnahmen');
   await page.getByLabel('Kontakt').fill('Dr. Sera Malk');

@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
 import {
   getBackgroundSpecializationSuggestionNames,
   getSagaDriveBackgroundTemplate,
@@ -152,7 +151,6 @@ function BackgroundSkillNode({
         role="button"
         tabIndex={0}
         aria-pressed={selected}
-        aria-disabled={!canIncrease}
         aria-label={
           canIncrease
             ? `${skill.label} Hintergrundpunkt hinzufügen`
@@ -245,16 +243,8 @@ function BackgroundSkillNode({
               value={selectValue || undefined}
               onValueChange={(value) => onSpecializationApply(skillKey, value)}
             >
-              {selectedDescription ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>{selectTrigger}</TooltipTrigger>
-                  <TooltipContent side="top" sideOffset={6} className="max-w-[280px] px-3 py-2 text-left text-xs leading-relaxed">
-                    {selectedDescription}
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                selectTrigger
-              )}
+              {/* Do not wrap SelectTrigger in Tooltip — Radix tooltip+select nesting blocks pointer/open in E2E. */}
+              {selectTrigger}
               <SelectContent>
                 {specializationOptions.map((name) => {
                   const description = getSagaDriveSpecializationDescription(name);
@@ -267,6 +257,9 @@ function BackgroundSkillNode({
                 })}
               </SelectContent>
             </Select>
+            {selectedDescription ? (
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{selectedDescription}</p>
+            ) : null}
             <Input
               className="mt-2 min-h-11"
               value={specializationName}
