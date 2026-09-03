@@ -360,6 +360,7 @@ export function isValidSagaDriveSkillDevelopment(
   const backgroundSpecs = specializations.filter((entry) => entry.source === 'background');
   if (backgroundSpecs.length > 1) return false;
   for (const spec of backgroundSpecs) {
+    if (spec.acquiredAtLevel !== 1) return false;
     const count = specCounts.get(spec.skill) ?? 0;
     // Must be bound to a skill actually trained by the background, not just a high final rank.
     if ((build.backgroundSkillPoints[spec.skill] ?? 0) <= 0) return false;
@@ -410,6 +411,7 @@ export function sanitizeSagaDriveSkillDevelopment(
   const keptSpecializations: SagaDriveSpecializationRecordDto[] = [];
   for (const spec of specializations.filter((entry) => entry.source === 'background')) {
     if (keptSpecializations.length >= 1) break;
+    if (spec.acquiredAtLevel !== 1) continue;
     const count = specCounts.get(spec.skill) ?? 0;
     if ((build.backgroundSkillPoints[spec.skill] ?? 0) <= 0) continue;
     if (!isValidSpecializationForSkillRank(workingRanks[spec.skill], count)) continue;

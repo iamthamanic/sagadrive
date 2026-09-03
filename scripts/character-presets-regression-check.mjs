@@ -51,6 +51,7 @@ requireMatch(types, /freeSkillRanks/, 'free skill ranks in snapshot');
 requireMatch(types, /published: boolean/, 'published flag on preset vm/dto');
 
 requireMatch(service, /export function assertValidSnapshot/, 'exported snapshot validation');
+requireMatch(service, /assertValidSagaDriveCharacterPersistence/, 'preset snapshots delegate skill/attribute rules to character persistence');
 requireMatch(service, /normalizeSafeUrl/, 'portrait_url sanitized via normalizeSafeUrl');
 requireMatch(service, /Skipping invalid preset version on read/, 're-validate snapshots on read');
 requireMatch(service, /createPresetFromCharacter/, 'create preset from character');
@@ -59,6 +60,9 @@ requireMatch(service, /Für Level .* existiert bereits/, 'reject duplicate level
 requireMatch(service, /maybeAutoReleaseVersion/, 'auto release helper');
 requireMatch(service, /\(Kopie\)/, 'duplicate name suffix');
 requireMatch(service, /sourceCharacterMissing/, 'deleted source character note support');
+rejectMatch(service, /SAGA_DRIVE_START_MIN_TRAINED_SKILLS/, 'preset service leftover min-trained-skills constant');
+rejectMatch(service, /trainedCount/, 'preset service leftover trainedCount min-6 rule');
+rejectMatch(service, /mindestens 6/, 'preset service leftover minimum 6 trained skills copy');
 
 requireMatch(characterTypes, /presetReleaseMode\?:/, 'release mode on sagadrive profile');
 requireMatch(characterNormalize, /presetReleaseMode/, 'release mode normalized in character service');

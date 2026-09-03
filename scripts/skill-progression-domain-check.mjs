@@ -23,10 +23,19 @@ const entries = {
 for (const [name, entry] of Object.entries(entries)) {
   execFileSync(esbuild, [join(root, entry), '--bundle', '--format=esm', `--outfile=${join(outdir, `${name}.mjs`)}`], { stdio: 'inherit' });
 }
+execFileSync(esbuild, [
+  join(root, 'src/modules/characters/services/characterPreset.service.ts'),
+  '--bundle',
+  '--format=esm',
+  `--outfile=${join(outdir, 'preset.mjs')}`,
+  '--define:import.meta.env.VITE_SUPABASE_URL=undefined',
+  '--define:import.meta.env.VITE_SUPABASE_ANON_KEY=undefined',
+], { stdio: 'inherit' });
 
 const rules = await import(pathToFileURL(join(outdir, 'rules.mjs')).href);
 const persistence = await import(pathToFileURL(join(outdir, 'persistence.mjs')).href);
 const normalize = await import(pathToFileURL(join(outdir, 'normalize.mjs')).href);
+const preset = await import(pathToFileURL(join(outdir, 'preset.mjs')).href);
 
 let failures = 0;
 function check(condition, message) {
@@ -71,6 +80,16 @@ function validBuild() {
   };
 }
 
+function fourSkillStackedBuild() {
+  return {
+    freeSkillRanks: { athletics: 3, medicine: 2, insight: 2 },
+    backgroundSkillPoints: { medicine: 1, insight: 1 },
+    archetypeTrainingSkill: 'melee',
+    skillAdvances: [],
+    specializations: [{ skill: 'medicine', name: 'Notfallmedizin', source: 'background', acquiredAtLevel: 1 }],
+  };
+}
+
 function profileFor(build, extra = {}) {
   return {
     archetype: ARCHETYPE,
@@ -98,6 +117,48 @@ function profileFor(build, extra = {}) {
 
 function finalSkillsFor(build, level) {
   return rules.resolveSagaDriveSkillRanks(build, level);
+}
+
+function snapshotFor(build, extra = {}) {
+  const level = extra.level ?? 1;
+  const skills = extra.skills ?? finalSkillsFor(build, level);
+  const profile = extra.profile ?? profileFor(build);
+  return {
+    schemaVersion: 1,
+    name: 'V2 Stacked',
+    description: '',
+    class: 'fighter',
+    race: 'human',
+    ruleset_key: 'sagadrive-core',
+    level,
+    appearance: {
+      gender_reading: 'diverse',
+      body_size: 1,
+      height: 170,
+      face_features: '',
+      hair_style: '',
+      hair_color: '#000',
+      skin_tone: '#fff',
+      clothing: '',
+    },
+    attributes: extra.attributes ?? ATTRS,
+    freeSkillRanks: rules.normalizeFreeSkillRanks(build.freeSkillRanks),
+    skills,
+    sagadrive_profile: {
+      ...profile,
+      essence: profile.essence ?? 'physical',
+      baseAttributes: profile.baseAttributes ?? ATTRS,
+      speciesTraitInstances: profile.speciesTraitInstances?.length
+        ? profile.speciesTraitInstances
+        : [
+          { trait: 'enduring-organism', source: 'species-creation', acquiredAtLevel: 1 },
+          { trait: 'low-rest-need', source: 'species-creation', acquiredAtLevel: 1 },
+          { trait: 'environment-adaptation', source: 'species-creation', acquiredAtLevel: 1 },
+        ],
+    },
+    abilities: [],
+    inventory: [],
+  };
 }
 
 const ATTRS = { strength: 4, dexterity: 3, endurance: 3, mind: 2, perception: 2, charisma: 1 };
@@ -249,6 +310,39 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   );
 }
 
+// Legal V2 with stacked sources and only four distinct trained skills — persistence + preset.
+{
+  const build = fourSkillStackedBuild();
+  const skills = finalSkillsFor(build, 1);
+  check(skills.athletics === 3 && skills.medicine === 3 && skills.insight === 3 && skills.melee === 1, 'stacked four-skill finals');
+  const trained = Object.values(skills).filter((rank) => rank > 0).length;
+  check(trained === 4, `stacked V2 has four trained skills (got ${trained})`);
+  expectPass(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, skills, profileFor(build), 1),
+    'stacked four-skill V2 passes character persistence',
+  );
+  expectPass(
+    () => preset.assertValidSnapshot(snapshotFor(build)),
+    'stacked four-skill V2 passes preset snapshot validation',
+  );
+}
+
+// Preset uses central V2 rules: manipulated finals and missing archetype training fail.
+{
+  const build = fourSkillStackedBuild();
+  const tampered = snapshotFor(build, { skills: { ...finalSkillsFor(build, 1), athletics: 5 } });
+  expectThrow(
+    () => preset.assertValidSnapshot(tampered),
+    'preset rejects manipulated final skills',
+  );
+  const missingTraining = fourSkillStackedBuild();
+  delete missingTraining.archetypeTrainingSkill;
+  expectThrow(
+    () => preset.assertValidSnapshot(snapshotFor(missingTraining)),
+    'preset rejects missing archetypeTrainingSkill',
+  );
+}
+
 // (8) Applied EB at level 17 (#89 table).
 {
   const table = new Map([[0, 0], [1, 2], [2, 3], [3, 4], [4, 5], [5, 5]]);
@@ -333,6 +427,32 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   expectThrow(
     () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profileFor({ ...build, specializations: unbound }), 1),
     'persistence rejects unbound background spec',
+  );
+}
+
+// Background specialization must be acquired at level 1.
+{
+  const atLevel1 = validBuild();
+  check(rules.isValidSagaDriveSkillDevelopment(atLevel1, [], atLevel1.specializations, 1), 'background spec at level 1 accepted');
+  expectPass(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(atLevel1, 1), profileFor(atLevel1), 1),
+    'background spec at level 1 passes persistence',
+  );
+
+  const atLevel3 = validBuild();
+  atLevel3.specializations = [{ skill: 'medicine', name: 'Notfallmedizin', source: 'background', acquiredAtLevel: 3 }];
+  check(!rules.isValidSagaDriveSkillDevelopment(atLevel3, [], atLevel3.specializations, 1), 'background spec at level 3 rejected');
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(atLevel3, 1), profileFor(atLevel3), 1),
+    'background spec at level 3 fails persistence',
+  );
+
+  const atLevel19 = validBuild();
+  atLevel19.specializations = [{ skill: 'medicine', name: 'Notfallmedizin', source: 'background', acquiredAtLevel: 19 }];
+  check(!rules.isValidSagaDriveSkillDevelopment(atLevel19, [], atLevel19.specializations, 1), 'background spec at level 19 rejected');
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(atLevel19, 1), profileFor(atLevel19), 1),
+    'background spec at level 19 fails persistence',
   );
 }
 
@@ -502,6 +622,34 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   // Safe resolve never throws on the broken chain.
   const ranks = rules.resolveSagaDriveSkillRanksSafe({ ...build, skillAdvances: withoutL3 }, 7);
   check(ranks.stealth === 0 && ranks.melee === 3, 'safe resolve prunes instead of throwing');
+}
+
+// Sanitizer: invalid background spec levels are discarded, not rewritten to 1.
+{
+  const build = validBuild();
+  const kept = rules.sanitizeSagaDriveSkillDevelopment(build, [], build.specializations, 1);
+  check(
+    kept.specializations.some((entry) => entry.source === 'background' && entry.acquiredAtLevel === 1),
+    'sanitizer keeps valid background spec at level 1',
+  );
+
+  const at19 = [{ skill: 'medicine', name: 'Notfallmedizin', source: 'background', acquiredAtLevel: 19 }];
+  const discarded19 = rules.sanitizeSagaDriveSkillDevelopment(build, [], at19, 1);
+  check(
+    !discarded19.specializations.some((entry) => entry.source === 'background'),
+    'sanitizer does not keep background spec acquiredAtLevel 19 as valid V2 state',
+  );
+  check(
+    !discarded19.specializations.some((entry) => entry.source === 'background' && entry.acquiredAtLevel === 1),
+    'sanitizer does not rewrite acquiredAtLevel 19 to 1',
+  );
+
+  const at3 = [{ skill: 'medicine', name: 'Notfallmedizin', source: 'background', acquiredAtLevel: 3 }];
+  const discarded3 = rules.sanitizeSagaDriveSkillDevelopment(build, [], at3, 1);
+  check(
+    !discarded3.specializations.some((entry) => entry.source === 'background'),
+    'sanitizer does not keep background spec acquiredAtLevel 3 as valid V2 state',
+  );
 }
 
 if (failures > 0) {

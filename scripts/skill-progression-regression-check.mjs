@@ -27,10 +27,13 @@ function forbidMatch(content, pattern, label) {
 }
 
 const rules = read('src/domains/rules/sagadrive/skill-progression/index.ts');
+const creation = read('src/domains/rules/sagadrive/character-creation/index.ts');
 const assertPersistence = read('src/domains/character/use-cases/assert-character-persistence.ts');
 const normalize = read('src/domains/character/use-cases/normalize-character.ts');
 const derived = read('src/domains/rules/sagadrive/derived-stats/compute-derived-stats.ts');
 const repository = read('src/infrastructure/character/supabase-character.repository.ts');
+const presetService = read('src/modules/characters/services/characterPreset.service.ts');
+const domainCheck = read('scripts/skill-progression-domain-check.mjs');
 
 requireMatch(rules, /SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS = 2/, 'two background skill points');
 requireMatch(rules, /SAGA_DRIVE_SKILL_ADVANCE_LEVELS = \[3, 5, 7, 9, 11, 13, 15, 17, 19\]/, 'skill advance levels');
@@ -51,6 +54,8 @@ requireMatch(rules, /SAGA_DRIVE_SPECIALIZATION_BONUS = 2/, 'situational speciali
 requireMatch(rules, /export function isValidSagaDriveSkillDevelopment/, 'chronological one-decision-per-slot validation');
 requireMatch(rules, /for \(const unlockedLevel of getSagaDriveSkillAdvanceLevels\(normalizedLevel\)\)/, 'every unlocked development slot must hold one decision');
 requireMatch(rules, /export function sanitizeSagaDriveSkillDevelopment/, 'deterministic dependent-slot prune');
+requireMatch(rules, /if \(spec\.acquiredAtLevel !== 1\) return false/, 'background spec must be acquired at level 1');
+requireMatch(rules, /if \(spec\.acquiredAtLevel !== 1\) continue/, 'sanitizer drops background spec not acquired at level 1');
 requireMatch(rules, /export function resolveSagaDriveSkillRanksSafe/, 'non-throwing editor rank resolution');
 requireMatch(rules, /skillPool\.length !== 4/, 'background framework pool of exactly four');
 forbidMatch(rules, /if \(build\.provenanceStatus !== 'complete'\)/, 'legacy provenance persistence bypass');
@@ -66,5 +71,16 @@ forbidMatch(normalize, /value\?\.trainedSkills/, 'normalization still restores t
 requireMatch(derived, /getSagaDriveAppliedExperienceBonus/, 'initiative uses applied EB');
 requireMatch(repository, /assertValidSagaDriveCharacterPersistence/, 'repository enforces skill persistence');
 requireMatch(repository, /touchesSagaDriveState/, 'partial updates validate the effective combined state');
+requireMatch(presetService, /assertValidSagaDriveCharacterPersistence/, 'preset snapshots use central character persistence');
+forbidMatch(presetService, /SAGA_DRIVE_START_MIN_TRAINED_SKILLS/, 'preset service still imports min-trained-skills constant');
+forbidMatch(presetService, /trainedCount/, 'preset service still counts distinct trained skills');
+forbidMatch(presetService, /mindestens 6/, 'preset service still enforces minimum 6 trained skills');
+forbidMatch(creation, /SAGA_DRIVE_START_MIN_TRAINED_SKILLS/, 'catalog still exports leftover min-6 trained-skills constant');
+forbidMatch(domainCheck, /SAGA_DRIVE_START_MIN_TRAINED_SKILLS/, 'domain check still references leftover min-6 constant');
+requireMatch(domainCheck, /fourSkillStackedBuild/, 'legal V2 with fewer than 6 trained skills is covered');
+requireMatch(domainCheck, /stacked four-skill V2 passes preset snapshot validation/, 'preset accepts legal four-skill V2');
+requireMatch(domainCheck, /preset rejects manipulated final skills/, 'preset rejects tampered finals');
+requireMatch(domainCheck, /background spec at level 19 fails persistence/, 'background spec level 19 is fail-closed');
+requireMatch(domainCheck, /sanitizer does not keep background spec acquiredAtLevel 19 as valid V2 state/, 'sanitizer discards invalid background spec');
 
 console.log('Skill progression regression check passed.');

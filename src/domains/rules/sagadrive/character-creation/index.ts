@@ -109,7 +109,6 @@ export interface SagaDriveSpeciesTraitDefinition {
 export const SAGA_DRIVE_START_ATTRIBUTE_ARRAY = [4, 3, 3, 2, 2, 1] as const;
 export const SAGA_DRIVE_START_FREE_SKILL_POINTS = 7;
 export const SAGA_DRIVE_START_TOTAL_SKILL_POINTS = 10;
-export const SAGA_DRIVE_START_MIN_TRAINED_SKILLS = 6;
 export const SAGA_DRIVE_START_SKILL_CAP = 3;
 export const SAGA_DRIVE_EXPERIENCE_BONUS_LEVEL_1 = 1;
 export const SAGA_DRIVE_SPECIES_TRAIT_BUDGET = 3;
