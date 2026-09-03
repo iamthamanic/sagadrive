@@ -49,7 +49,7 @@ async function allocateSevenFreeSkillPoints(page: Page) {
     await selectAttributeGroup(page, attributeLabel);
     await page.getByRole('button', { name: `${skill} freien Punkt hinzufügen` }).click();
   }
-  await expect(page.getByText(/7 \/ 7 freie Punkte/i).first()).toBeVisible();
+  await expect(page.getByText(/7 \/ 7 Punkte/i).first()).toBeVisible();
 }
 
 async function ensureLoggedIn(page: Page) {

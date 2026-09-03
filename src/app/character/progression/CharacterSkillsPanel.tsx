@@ -134,7 +134,7 @@ export function CharacterSkillsPanel({
             </p>
           </div>
           <Badge variant={freeUsed >= SAGA_DRIVE_START_FREE_SKILL_POINTS ? 'default' : 'outline'}>
-            {freeUsed} / {SAGA_DRIVE_START_FREE_SKILL_POINTS} freie Punkte
+            {freeUsed} / {SAGA_DRIVE_START_FREE_SKILL_POINTS} Punkte
           </Badge>
         </div>
 
