@@ -41,7 +41,7 @@ requireMatch(editor, /CharacterBackgroundPanel/, 'template-first background pane
 requireMatch(editor, /CharacterStatisticsPanel/, 'statistics panel inside CharacterEditor');
 requireMatch(editor, /CharacterPresetPanel/, 'preset panel inside CharacterEditor settings');
 requireMatch(editor, /savedCharacterId/, 'saved character id retained for statistics');
-requireMatch(editor, /TabsTrigger value="attributes"[\s\S]*TabsTrigger value="background"[\s\S]*TabsTrigger value="details"[\s\S]*TabsTrigger value="archetype"[\s\S]*TabsTrigger value="essenz"/, 'Parameter sub-tabs Attribute, Hintergrund, Details, Archetyp and Essenz');
+requireMatch(editor, /TabsTrigger value="archetype"[\s\S]*TabsTrigger value="essenz"[\s\S]*TabsTrigger value="attributes"[\s\S]*TabsTrigger value="background"[\s\S]*TabsTrigger value="details"/, 'Parameter sub-tabs Attribute, Hintergrund, Details, Archetyp and Essenz');
 requireMatch(editor, /TabsTrigger value="statistics"[\s\S]*TabsTrigger value="preset"/, 'Einstellungen sub-tabs Statistik and Preset');
 rejectMatch(editor, /TabsTrigger value="competencies"/, 'legacy Kompetenzen Parameter sub-tab remains');
 rejectMatch(editor, /TabsTrigger value="attribute"/, 'legacy Attribute-only Parameter sub-tab remains');
