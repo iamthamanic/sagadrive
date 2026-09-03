@@ -98,16 +98,38 @@ function BackgroundSkillNode({
   const canIncrease =
     pointsUsed < SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS && pointValue < 2;
 
+  const handleCardActivate = () => {
+    if (canIncrease) onAdjust(skillKey, 1);
+  };
+
   return (
     <div className="min-w-0" data-background-skill-node={skillKey}>
       <div
-        role="group"
-        aria-label={`${skill.label} Hintergrundpunkte`}
+        role="button"
+        tabIndex={0}
+        aria-pressed={selected}
+        aria-disabled={!canIncrease}
+        aria-label={
+          canIncrease
+            ? `${skill.label} Hintergrundpunkt hinzufügen`
+            : `${skill.label} Hintergrundpunkte: ${pointValue}`
+        }
         onMouseEnter={() => onHoverChange(skillKey)}
         onMouseLeave={() => onHoverChange(null)}
         onFocus={() => onHoverChange(skillKey)}
         onBlur={() => onHoverChange(null)}
-        className={`flex min-h-28 w-full flex-col items-center justify-center rounded-lg border p-3 text-center transition-colors ${selected ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
+        onClick={handleCardActivate}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleCardActivate();
+          }
+        }}
+        className={`flex min-h-28 w-full flex-col items-center justify-center rounded-lg border p-3 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          selected
+            ? 'border-primary bg-primary/5'
+            : 'border-border bg-card hover:border-primary/60'
+        } ${canIncrease ? 'cursor-pointer' : 'cursor-default'}`}
       >
         <div className="flex items-center justify-center gap-2">
           <div className="min-w-0">
@@ -125,7 +147,10 @@ function BackgroundSkillNode({
               size="icon"
               className="size-10"
               disabled={!canDecrease}
-              onClick={() => onAdjust(skillKey, -1)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onAdjust(skillKey, -1);
+              }}
               aria-label={`${skill.label} Hintergrundpunkt verringern`}
             >
               <Minus className="h-4 w-4" aria-hidden="true" />
@@ -139,7 +164,10 @@ function BackgroundSkillNode({
               size="icon"
               className="size-10"
               disabled={!canIncrease}
-              onClick={() => onAdjust(skillKey, 1)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onAdjust(skillKey, 1);
+              }}
               aria-label={`${skill.label} Hintergrundpunkt erhöhen`}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
