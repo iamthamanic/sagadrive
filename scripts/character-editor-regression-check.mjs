@@ -82,12 +82,16 @@ requireMatch(backgroundPanel, /Hintergrundpunkt erhöhen/, 'in-node background p
 requireMatch(backgroundPanel, /Hintergrundpunkt verringern/, 'in-node background point decrease control');
 requireMatch(backgroundPanel, /data-background-points-budget/, 'background points budget badge');
 rejectMatch(backgroundPanel, /data-background-points-allocator/, 'legacy separate background points allocator list');
-requireMatch(backgroundPanel, /visibleSkillNodes/, 'collapsed occupied-node background graph');
+requireMatch(backgroundPanel, /visibleSkillNodes/, 'four pool-node background graph');
+requireMatch(backgroundPanel, /Spezialisieren/, 'in-node specialize button');
+requireMatch(backgroundPanel, /getBackgroundSpecializationSuggestionNames/, 'specialization suggestion names helper');
+rejectMatch(backgroundPanel, /skillGraphViewMode === 'collapsed'|backgroundPointsComplete \? 'collapsed'/, 'collapsed occupied-only skill graph');
 rejectMatch(backgroundPanel, /Training · 2 wählen/, 'legacy two-toggle background training copy');
 rejectMatch(backgroundPanel, /Auswahl ändern/, 'legacy background training edit action');
 requireMatch(backgroundPanel, /Standard:/, 'standard attribute relationship inside template flow');
 requireMatch(backgroundPanel, /BackgroundSkillConnector|data-background-skill-grid/, 'background skill connector graph');
 requireMatch(backgroundTemplates, /validateSagaDriveBackgroundTemplateCatalog/, 'background template catalog validation');
+requireMatch(backgroundTemplates, /getBackgroundSpecializationSuggestionNames/, 'background specialization suggestion helper export');
 requireMatch(backgroundPanel, /BackgroundCarousel/, 'background template carousel');
 requireMatch(backgroundCarousel, /Eigener Hintergrund/, 'first-class custom background mode');
 requireMatch(backgroundCarousel, /BACKGROUND_FRAMEWORK_ICON_BY_ID/, 'framework-specific background icons');

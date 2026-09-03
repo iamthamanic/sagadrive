@@ -10,6 +10,14 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../components/ui/select';
+import {
+  getBackgroundSpecializationSuggestionNames,
   getSagaDriveBackgroundTemplate,
   getSagaDriveBackgroundTemplatesForWorldProfile,
 } from '../../../modules/rulesets/backgroundTemplates';
@@ -77,26 +85,42 @@ interface BackgroundSkillNodeProps {
   skillKey: SagaDriveSkillKey;
   pointValue: 0 | 1 | 2;
   pointsUsed: number;
-  specializationName?: string;
+  backgroundPointsComplete: boolean;
+  isSpecializationTarget: boolean;
+  specializationName: string;
+  specializationOptions: readonly string[];
   onHoverChange: (skill: SagaDriveSkillKey | null) => void;
   onAdjust: (skill: SagaDriveSkillKey, delta: 1 | -1) => void;
+  onSpecialize: (skill: SagaDriveSkillKey) => void;
+  onSpecializationNameChange: (value: string) => void;
+  onSpecializationApply: (skill: SagaDriveSkillKey, name: string) => void;
 }
 
 function BackgroundSkillNode({
   skillKey,
   pointValue,
   pointsUsed,
+  backgroundPointsComplete,
+  isSpecializationTarget,
   specializationName,
+  specializationOptions,
   onHoverChange,
   onAdjust,
+  onSpecialize,
+  onSpecializationNameChange,
+  onSpecializationApply,
 }: BackgroundSkillNodeProps) {
   const skill = getSagaDriveSkill(skillKey);
   const attribute = getSagaDriveAttribute(skill.attribute);
-  const hasSpecialization = Boolean(pointValue > 0 && specializationName?.trim());
+  const hasSpecialization = Boolean(pointValue > 0 && specializationName.trim() && isSpecializationTarget);
   const selected = pointValue > 0;
   const canDecrease = pointValue > 0;
   const canIncrease =
     pointsUsed < SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS && pointValue < 2;
+  const showSpecializeControl = backgroundPointsComplete && pointValue > 0;
+  const selectValue = specializationOptions.includes(specializationName.trim())
+    ? specializationName.trim()
+    : '';
 
   const handleCardActivate = () => {
     if (canIncrease) onAdjust(skillKey, 1);
@@ -176,13 +200,56 @@ function BackgroundSkillNode({
         </div>
       </div>
 
-      {hasSpecialization ? (
-        <div className="relative mx-auto mt-0 max-w-[12rem] pt-5 text-center">
+      {showSpecializeControl ? (
+        <div className="mt-2 flex justify-center">
+          <Button
+            type="button"
+            size="sm"
+            variant={isSpecializationTarget ? 'default' : 'outline'}
+            className="min-h-11 px-3"
+            data-specialize-skill={skillKey}
+            onClick={() => onSpecialize(skillKey)}
+          >
+            Spezialisieren
+          </Button>
+        </div>
+      ) : null}
+
+      {isSpecializationTarget && showSpecializeControl ? (
+        <div className="relative mx-auto mt-0 max-w-[14rem] space-y-2 pt-5 text-left" data-specialization-branch={skillKey}>
           <span className="absolute left-1/2 top-0 h-5 -translate-x-1/2 border-l border-primary/60" aria-hidden="true" />
-          <div className="rounded-lg border border-primary/40 bg-primary/5 px-3 py-2">
+          <div className="rounded-lg border border-primary/40 bg-primary/5 px-3 py-3">
             <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Spezialisierung</p>
-            <p className="mt-0.5 text-sm font-medium">{specializationName}</p>
-            <Badge className="mt-1.5">+2 auf passende Checks</Badge>
+            <Label htmlFor={`specialization-select-${skillKey}`} className="sr-only">
+              Vorschlag für {skill.label}
+            </Label>
+            <Select
+              value={selectValue || undefined}
+              onValueChange={(value) => onSpecializationApply(skillKey, value)}
+            >
+              <SelectTrigger
+                id={`specialization-select-${skillKey}`}
+                className="mt-2 min-h-11 w-full"
+                aria-label={`${skill.label} Spezialisierungsvorschlag`}
+              >
+                <SelectValue placeholder="Vorschlag wählen …" />
+              </SelectTrigger>
+              <SelectContent>
+                {specializationOptions.map((name) => (
+                  <SelectItem key={name} value={name}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              className="mt-2 min-h-11"
+              value={specializationName}
+              onChange={(event) => onSpecializationNameChange(event.target.value)}
+              placeholder="Oder eigenes Fachgebiet"
+              aria-label={`${skill.label} Spezialisierung Fachgebiet`}
+            />
+            {hasSpecialization ? <Badge className="mt-2">+2 auf passende Checks</Badge> : null}
           </div>
         </div>
       ) : null}
@@ -191,8 +258,8 @@ function BackgroundSkillNode({
 }
 
 /**
- * Bracket-Connector vom zentrierten Hintergrund-Karussell zu den aktuell sichtbaren Skill-Nodes.
- * Vor Abschluss sind das vier Pool-Skills, danach nur die beiden gewählten Trainings.
+ * Bracket-Connector vom zentrierten Hintergrund-Karussell zu allen Pool-Skill-Nodes.
+ * Vier Pool-Skills bleiben nach Punktverteilung sichtbar; belegte Skills werden hervorgehoben.
  */
 interface BackgroundSkillConnectorProps {
   skills: readonly SagaDriveSkillKey[];
@@ -453,12 +520,12 @@ export function CharacterBackgroundPanel({
   const customMode = backgroundTemplateId === null;
   const hasChoice = backgroundTemplateId !== undefined;
   const showSkillGraph = hasChoice && poolSkills.length === 4;
-  const visibleSkillNodes = backgroundPointsComplete ? occupiedBackgroundSkills : poolSkills;
-  const skillGraphViewMode = backgroundPointsComplete ? 'collapsed' : 'pool';
+  // Keep all four pool skills visible after allocating points so players can reallocate.
+  const visibleSkillNodes = poolSkills;
+  const skillGraphViewMode = 'pool';
 
   const [scrollPhase, setScrollPhase] = useState<CarouselScrollPhase>('settled');
   const [activeSkill, setActiveSkill] = useState<SagaDriveSkillKey | null>(null);
-  const specializationSuggestions = selectedTemplate?.specializationSuggestions.filter((entry) => occupiedBackgroundSkills.includes(entry.skillId)) ?? [];
 
   const handleScrollPhaseChange = useCallback((phase: CarouselScrollPhase) => {
     setScrollPhase(phase);
@@ -469,6 +536,23 @@ export function CharacterBackgroundPanel({
       onBackgroundSkillPointsChange(adjustBackgroundSkillPoints(backgroundSkillPoints, skill, delta));
     },
     [backgroundSkillPoints, onBackgroundSkillPointsChange],
+  );
+  const handleSpecialize = useCallback(
+    (skill: SagaDriveSkillKey) => {
+      onSpecializationSkillChange(skill);
+    },
+    [onSpecializationSkillChange],
+  );
+  const handleSpecializationApply = useCallback(
+    (skill: SagaDriveSkillKey, name: string) => {
+      if (onSpecializationApply) {
+        onSpecializationApply(skill, name);
+        return;
+      }
+      onSpecializationSkillChange(skill);
+      onSpecializationNameChange(name);
+    },
+    [onSpecializationApply, onSpecializationNameChange, onSpecializationSkillChange],
   );
 
   return (
@@ -483,7 +567,7 @@ export function CharacterBackgroundPanel({
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Wähle eine Vergangenheit im Karussell. Verteile danach 2 Hintergrund-Fertigkeitspunkte direkt an den Pool-Skills
-            (+2 auf einen Skill oder +1/+1) und lege eine Spezialisierung fest. Nach Abschluss zeigt der Graph nur noch belegte Skills.
+            (+2 auf einen Skill oder +1/+1) und lege eine Spezialisierung fest. Alle vier Pool-Skills bleiben sichtbar, damit du Punkte umverteilen kannst.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -554,7 +638,7 @@ export function CharacterBackgroundPanel({
               {/* Centered pool block on large screens; mobile stays full-width stacked. */}
               <div className="mx-auto w-full max-w-5xl space-y-2">
                 <div
-                  className={`mx-auto grid w-full gap-3 sm:grid-cols-2 ${visibleSkillNodes.length > 2 ? 'xl:grid-cols-4' : 'max-w-2xl'}`}
+                  className="mx-auto grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-4"
                   data-background-skill-grid
                   data-training-view={skillGraphViewMode}
                 >
@@ -564,9 +648,15 @@ export function CharacterBackgroundPanel({
                       skillKey={skillKey}
                       pointValue={(backgroundSkillPoints[skillKey] ?? 0) as 0 | 1 | 2}
                       pointsUsed={backgroundPointsUsed}
-                      specializationName={backgroundPointsComplete && specializationSkill === skillKey ? specializationName : undefined}
+                      backgroundPointsComplete={backgroundPointsComplete}
+                      isSpecializationTarget={specializationSkill === skillKey}
+                      specializationName={specializationSkill === skillKey ? specializationName : ''}
+                      specializationOptions={getBackgroundSpecializationSuggestionNames(selectedTemplate, skillKey)}
                       onHoverChange={(skill) => setActiveSkill(skill)}
                       onAdjust={handleBackgroundPointAdjust}
+                      onSpecialize={handleSpecialize}
+                      onSpecializationNameChange={onSpecializationNameChange}
+                      onSpecializationApply={handleSpecializationApply}
                     />
                   ))}
                 </div>
@@ -578,35 +668,17 @@ export function CharacterBackgroundPanel({
                         <p className="font-medium">Spezialisierung</p>
                         <RuleHelp label="Spezialisierung">Eine passende Spezialisierung gibt +2 auf anwendbare Checks. Die erste Spezialisierung benötigt Fertigkeitswert 1.</RuleHelp>
                       </div>
-                      <p className="text-sm text-muted-foreground">Wähle ein Fachgebiet auf einem deiner Hintergrund-Skills. Nach der Wahl erscheint es direkt als untergeordneter Branch am Skill.</p>
+                      <p className="text-sm text-muted-foreground">
+                        Nutze „Spezialisieren“ an einem Skill mit Punkten oder wähle die Fertigkeit hier. Vorschläge erscheinen im Dropdown am Skill-Node.
+                      </p>
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <SkillSelectField
-                        value={specializationSkill}
-                        onValueChange={(value) => onSpecializationSkillChange(isSagaDriveSkillKey(value) ? value : '')}
-                        skillOptions={occupiedBackgroundSkills}
-                        placeholder="Hintergrund-Fertigkeit wählen"
-                        ariaLabel="Spezialisierung Fertigkeit wählen"
-                      />
-                      <Input value={specializationName} onChange={(event) => onSpecializationNameChange(event.target.value)} placeholder="Fachgebiet, z. B. Notfallmedizin" aria-label="Spezialisierung Fachgebiet" />
-                    </div>
-                    {specializationSuggestions.length > 0 ? (
-                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                        <span>Vorschläge:</span>
-                        {specializationSuggestions.map((entry) => (
-                          <Button key={`${entry.skillId}-${entry.name}`} type="button" size="sm" variant="outline" className="min-h-11 px-2 text-xs" onClick={() => {
-                            if (onSpecializationApply) {
-                              onSpecializationApply(entry.skillId, entry.name);
-                            } else {
-                              onSpecializationSkillChange(entry.skillId);
-                              onSpecializationNameChange(entry.name);
-                            }
-                          }}>
-                            {getSagaDriveSkill(entry.skillId).label}: {entry.name}
-                          </Button>
-                        ))}
-                      </div>
-                    ) : null}
+                    <SkillSelectField
+                      value={specializationSkill}
+                      onValueChange={(value) => onSpecializationSkillChange(isSagaDriveSkillKey(value) ? value : '')}
+                      skillOptions={occupiedBackgroundSkills}
+                      placeholder="Hintergrund-Fertigkeit wählen"
+                      ariaLabel="Spezialisierung Fertigkeit wählen"
+                    />
                   </div>
                 ) : (
                   <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">

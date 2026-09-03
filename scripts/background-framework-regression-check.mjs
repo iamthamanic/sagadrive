@@ -86,8 +86,12 @@ requireMatch(carousel, /:\s*PencilLine\s*;/, 'custom background PencilLine icon'
 requireMatch(panel, /adjustBackgroundSkillPoints/, 'stackable background point adjust helper');
 requireMatch(panel, /Hintergrundpunkt erhöhen/, 'in-node background point increase control');
 requireMatch(panel, /data-background-points-budget/, 'background points budget badge');
-requireMatch(panel, /data-training-view=/, 'collapsed versus pool training view');
-requireMatch(panel, /visibleSkillNodes/, 'dynamic occupied-versus-four node rendering');
+requireMatch(panel, /data-training-view=/, 'pool training view hook');
+requireMatch(panel, /visibleSkillNodes/, 'four pool skill nodes remain visible');
+requireMatch(panel, /Spezialisieren/, 'in-node specialize control');
+requireMatch(panel, /getBackgroundSpecializationSuggestionNames/, 'specialization suggestion dropdown source');
+requireMatch(source, /specializationSuggestions must contain at least five entries/, 'five specialization suggestions per framework');
+requireMatch(source, /getBackgroundSpecializationSuggestionNames/, 'shared specialization suggestion helper');
 
 rejectMatch(panel, /Auswahl ändern/, 'legacy two-toggle edit action remains');
 
