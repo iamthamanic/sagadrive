@@ -52,7 +52,7 @@ Kanonisches Epic: **#18**
 | #26 | Drive & Momentum | Ressourcenfluss, Rerolls, Teamressource, deaktivierte Varianten | nach #19 |
 | #27 | Nichtkampf | Recherche, soziale Konflikte, Gemeinschaftsprojekte, Gefahren, Kontakte, Ruf | nach #19 |
 | #28 | 18 Fertigkeiten | Skill-Abgrenzungen, Fachhandlungen, Spezialisierungen, alternative Attribute | nach #19 |
-| #29 | Reisen, Chases, Fahrzeuge | Reise-Fail-Forward, Distanzleiste, Steuern, Maßstab, Struktur | nach #19 und #22 |
+| #29 | Reisen, Chases, Fahrzeuge | Reise-Fail-Forward, Distanzleiste, Fortbewegungsmittel, Maßstab, Struktur | nach #19 und #22 |
 | #30 | Weltprofile & Module | Fantasy/Gegenwart/Sci-Fi, Modulpriorität, deaktivierte Regeln, Ersatzregeln | nach #20, #25 und #26 |
 | #31 | Analoger End-to-End-Playtest | komplette Sitzungen ohne App/Rule Engine | Abschluss nach den übrigen relevanten Validierungen |
 | #32 | Ausrüstung & Ressourcen | Werkzeuge, Waffenmerkmale, Traglast, abstrakte Ressourcen | nach #19 |
