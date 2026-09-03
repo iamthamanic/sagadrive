@@ -23,10 +23,19 @@ const entries = {
 for (const [name, entry] of Object.entries(entries)) {
   execFileSync(esbuild, [join(root, entry), '--bundle', '--format=esm', `--outfile=${join(outdir, `${name}.mjs`)}`], { stdio: 'inherit' });
 }
+execFileSync(esbuild, [
+  join(root, 'src/modules/characters/services/characterPreset.service.ts'),
+  '--bundle',
+  '--format=esm',
+  `--outfile=${join(outdir, 'preset.mjs')}`,
+  '--define:import.meta.env.VITE_SUPABASE_URL=undefined',
+  '--define:import.meta.env.VITE_SUPABASE_ANON_KEY=undefined',
+], { stdio: 'inherit' });
 
 const rules = await import(pathToFileURL(join(outdir, 'rules.mjs')).href);
 const persistence = await import(pathToFileURL(join(outdir, 'persistence.mjs')).href);
 const normalize = await import(pathToFileURL(join(outdir, 'normalize.mjs')).href);
+const preset = await import(pathToFileURL(join(outdir, 'preset.mjs')).href);
 
 let failures = 0;
 function check(condition, message) {
@@ -71,6 +80,16 @@ function validBuild() {
   };
 }
 
+function fourSkillStackedBuild() {
+  return {
+    freeSkillRanks: { athletics: 3, medicine: 2, insight: 2 },
+    backgroundSkillPoints: { medicine: 1, insight: 1 },
+    archetypeTrainingSkill: 'melee',
+    skillAdvances: [],
+    specializations: [{ skill: 'medicine', name: 'Notfallmedizin', source: 'background', acquiredAtLevel: 1 }],
+  };
+}
+
 function profileFor(build, extra = {}) {
   return {
     archetype: ARCHETYPE,
@@ -100,6 +119,47 @@ function finalSkillsFor(build, level) {
   return rules.resolveSagaDriveSkillRanks(build, level);
 }
 
+function snapshotFor(build, extra = {}) {
+  const level = extra.level ?? 1;
+  const skills = extra.skills ?? finalSkillsFor(build, level);
+  const profile = extra.profile ?? profileFor(build);
+  return {
+    schemaVersion: 1,
+    name: 'V2 Stacked',
+    description: '',
+    class: 'fighter',
+    race: 'human',
+    ruleset_key: 'sagadrive-core',
+    level,
+    appearance: {
+      gender_reading: 'diverse',
+      body_size: 1,
+      height: 170,
+      face_features: '',
+      hair_style: '',
+      hair_color: '#000',
+      skin_tone: '#fff',
+      clothing: '',
+    },
+    attributes: extra.attributes ?? ATTRS,
+    skills,
+    sagadrive_profile: {
+      ...profile,
+      essence: profile.essence ?? 'physical',
+      baseAttributes: profile.baseAttributes ?? ATTRS,
+      speciesTraitInstances: profile.speciesTraitInstances?.length
+        ? profile.speciesTraitInstances
+        : [
+          { trait: 'enduring-organism', source: 'species-creation', acquiredAtLevel: 1 },
+          { trait: 'low-rest-need', source: 'species-creation', acquiredAtLevel: 1 },
+          { trait: 'environment-adaptation', source: 'species-creation', acquiredAtLevel: 1 },
+        ],
+    },
+    abilities: [],
+    inventory: [],
+  };
+}
+
 const ATTRS = { strength: 4, dexterity: 3, endurance: 3, mind: 2, perception: 2, charisma: 1 };
 
 // §5.2 specialization bonus constant (no magic number in UI).
@@ -127,7 +187,7 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   const build = validBuild();
   check(!rules.isValidStartSkillBuild(build, ['medicine'], ARCHETYPE), 'pool of one skill rejected');
   check(!rules.isValidStartSkillBuild(build, ['medicine', 'medicine', 'insight', 'awareness'], ARCHETYPE), 'duplicated pool rejected');
-  check(!rules.isValidStartSkillBuild(build, ['medicine', 'insight', 'awareness'], ARCHETYPE), 'pool of three rejected');
+  check(!rules.isValidStartSkillBuild(build, ['medicine', 'insight', 'awareness', 'persuasion', 'stealth'], ARCHETYPE), 'pool of five rejected');
   expectThrow(
     () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profileFor(build, {
       background: { ...profileFor(build).background, skillPool: ['medicine'] },
@@ -136,14 +196,86 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   );
 }
 
-// (5) Complete provenance without the archetype point → FAIL.
+// (2) Archetype key missing → FAIL.
+{
+  const build = validBuild();
+  const profile = profileFor(build);
+  delete profile.archetype;
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profile, 1),
+    'missing archetype key fails',
+  );
+  check(!rules.isValidStartSkillBuild(build, SKILL_POOL, undefined), 'start build without archetype key rejected');
+}
+
+// (3) Archetype present, archetypeTrainingSkill missing → FAIL.
 {
   const build = validBuild();
   delete build.archetypeTrainingSkill;
   const skills = finalSkillsFor(build, 1);
   expectThrow(
     () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, skills, profileFor(build), 1),
-    'missing archetype point with complete provenance fails',
+    'missing archetype training skill fails',
+  );
+}
+
+// (4) archetypeTrainingSkill not belonging to archetype → FAIL.
+{
+  const build = validBuild();
+  build.archetypeTrainingSkill = 'medicine';
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profileFor(build), 1),
+    'archetype training skill outside archetype list fails',
+  );
+}
+
+// (5) Only 7 free + 2 background (no archetype point) → FAIL.
+{
+  const build = validBuild();
+  delete build.archetypeTrainingSkill;
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profileFor(build), 1),
+    'only 7 free + 2 background fails',
+  );
+}
+
+// (6) Only 7 free + 1 archetype → FAIL.
+{
+  const build = validBuild();
+  build.backgroundSkillPoints = {};
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profileFor(build), 1),
+    'only 7 free + 1 archetype fails',
+  );
+}
+
+// (7) Only 2 background + 1 archetype → FAIL.
+{
+  const build = validBuild();
+  build.freeSkillRanks = rules.normalizeFreeSkillRanks({});
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profileFor(build), 1),
+    'only 2 background + 1 archetype fails',
+  );
+}
+
+// (8) freeSkillRanks sum 5 → FAIL.
+{
+  const build = validBuild();
+  build.freeSkillRanks = { athletics: 2, melee: 2, insight: 1 };
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profileFor(build), 1),
+    'free skill ranks summing to 5 fail',
+  );
+}
+
+// (9) backgroundSkillPoints only 1 point → FAIL.
+{
+  const build = validBuild();
+  build.backgroundSkillPoints = { medicine: 1 };
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profileFor(build), 1),
+    'background skill points summing to 1 fail',
   );
 }
 
@@ -174,6 +306,65 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   expectPass(
     () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, skills, profileFor(build), 1),
     'four trained start skills pass',
+  );
+}
+
+// Legal V2 with stacked sources and only four distinct trained skills — persistence + preset.
+{
+  const build = fourSkillStackedBuild();
+  const skills = finalSkillsFor(build, 1);
+  check(skills.athletics === 3 && skills.medicine === 3 && skills.insight === 3 && skills.melee === 1, 'stacked four-skill finals');
+  const trained = Object.values(skills).filter((rank) => rank > 0).length;
+  check(trained === 4, `stacked V2 has four trained skills (got ${trained})`);
+  expectPass(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, skills, profileFor(build), 1),
+    'stacked four-skill V2 passes character persistence',
+  );
+  const snapshot = snapshotFor(build);
+  check(!Object.prototype.hasOwnProperty.call(snapshot, 'freeSkillRanks'), 'generated preset snapshot has no top-level freeSkillRanks');
+  const freeSum = Object.values(snapshot.sagadrive_profile.freeSkillRanks ?? {}).reduce((sum, value) => sum + value, 0);
+  check(freeSum === 7, `profile freeSkillRanks sum is 7 (got ${freeSum})`);
+  expectPass(
+    () => preset.assertValidSnapshot(snapshot),
+    'stacked four-skill V2 passes preset snapshot validation',
+  );
+}
+
+// Preset uses central V2 rules: manipulated finals and missing archetype training fail.
+{
+  const build = fourSkillStackedBuild();
+  const tampered = snapshotFor(build, { skills: { ...finalSkillsFor(build, 1), athletics: 5 } });
+  expectThrow(
+    () => preset.assertValidSnapshot(tampered),
+    'preset rejects manipulated final skills',
+  );
+  const missingTraining = fourSkillStackedBuild();
+  delete missingTraining.archetypeTrainingSkill;
+  expectThrow(
+    () => preset.assertValidSnapshot(snapshotFor(missingTraining)),
+    'preset rejects missing archetypeTrainingSkill',
+  );
+}
+
+// Top-level freeSkillRanks cannot rescue missing/invalid profile.freeSkillRanks.
+{
+  const build = fourSkillStackedBuild();
+  const legalFree = rules.normalizeFreeSkillRanks(build.freeSkillRanks);
+  const missingProfileFree = snapshotFor(build);
+  delete missingProfileFree.sagadrive_profile.freeSkillRanks;
+  missingProfileFree.freeSkillRanks = legalFree;
+  expectThrow(
+    () => preset.assertValidSnapshot(missingProfileFree),
+    'preset rejects missing profile.freeSkillRanks even with top-level freeSkillRanks',
+  );
+
+  const sum6Build = fourSkillStackedBuild();
+  sum6Build.freeSkillRanks = { athletics: 3, medicine: 2, insight: 1 };
+  const invalidProfileFree = snapshotFor(sum6Build);
+  invalidProfileFree.freeSkillRanks = legalFree;
+  expectThrow(
+    () => preset.assertValidSnapshot(invalidProfileFree),
+    'preset rejects profile.freeSkillRanks sum 6 even with top-level legal freeSkillRanks',
   );
 }
 
@@ -241,6 +432,18 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   ), 'L3/L5 rank-ups, L7 valid spec passes');
 }
 
+// (11) Background spec missing → FAIL.
+{
+  const build = validBuild();
+  build.specializations = [];
+  const profile = profileFor(build);
+  profile.background.specialization = undefined;
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profile, 1),
+    'missing background specialization fails',
+  );
+}
+
 // (12) Background specialization must bind to a background-trained skill.
 {
   const build = validBuild();
@@ -252,89 +455,56 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   );
 }
 
-// (13) Legacy trainedSkills [a,b] → exactly +1/+1.
+// Background specialization must be acquired at level 1.
 {
-  const points = rules.normalizeLegacyBackgroundSkillPoints(['medicine', 'insight'], SKILL_POOL);
-  check(points.medicine === 1 && points.insight === 1 && Object.keys(points).length === 2, 'legacy trainedSkills map to +1/+1');
-}
+  const atLevel1 = validBuild();
+  check(rules.isValidSagaDriveSkillDevelopment(atLevel1, [], atLevel1.specializations, 1), 'background spec at level 1 accepted');
+  expectPass(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(atLevel1, 1), profileFor(atLevel1), 1),
+    'background spec at level 1 passes persistence',
+  );
 
-// (14) True legacy data (final ranks + real legacy trainedSkills, no v2 provenance) stays readable.
-{
-  const legacyProfile = profileFor({ backgroundSkillPoints: {}, specializations: [] });
-  delete legacyProfile.freeSkillRanks;
-  delete legacyProfile.skillAdvances;
-  delete legacyProfile.specializations;
-  delete legacyProfile.archetypeTrainingSkill;
-  legacyProfile.background.backgroundSkillPoints = undefined;
-  legacyProfile.background.trainedSkills = ['medicine', 'insight'];
-  legacyProfile.background.specialization = undefined;
-  const legacySkills = rules.normalizeFreeSkillRanks({ medicine: 4, melee: 3 });
-  expectPass(
-    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, legacySkills, legacyProfile, 7),
-    'legacy character without provenance stays readable and keeps final ranks',
+  const atLevel3 = validBuild();
+  atLevel3.specializations = [{ skill: 'medicine', name: 'Notfallmedizin', source: 'background', acquiredAtLevel: 3 }];
+  check(!rules.isValidSagaDriveSkillDevelopment(atLevel3, [], atLevel3.specializations, 1), 'background spec at level 3 rejected');
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(atLevel3, 1), profileFor(atLevel3), 1),
+    'background spec at level 3 fails persistence',
   );
-}
 
-// (14b) Legacy trainedSkills [a,b] must not be re-derived as v2 provenance inside the guard:
-// the compat-synthesized background points are compatibility only, the persistence gate
-// follows the provenance status derived from the RAW profile data.
-{
-  const legacyProfile = profileFor({ backgroundSkillPoints: {}, specializations: [] });
-  delete legacyProfile.freeSkillRanks;
-  delete legacyProfile.skillAdvances;
-  delete legacyProfile.specializations;
-  delete legacyProfile.archetypeTrainingSkill;
-  legacyProfile.background.backgroundSkillPoints = undefined;
-  legacyProfile.background.trainedSkills = ['medicine', 'insight'];
-  legacyProfile.background.specialization = undefined;
-  const legacySkills = rules.normalizeFreeSkillRanks({ medicine: 4, insight: 2 });
-  expectPass(
-    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, legacySkills, legacyProfile, 7),
-    'legacy trainedSkills profile without v2 provenance passes persistence assert',
-  );
-  // Final ranks and legacy trainedSkills survive the read-path normalization unchanged.
-  const normalizedProfile = normalize.normalizeSagaDriveProfile(legacyProfile);
-  const normalizedSkills = normalize.normalizeSkills(legacySkills);
-  check(normalizedSkills.medicine === 4 && normalizedSkills.insight === 2, 'legacy final ranks preserved through character normalization');
-  check(
-    normalizedProfile.background.trainedSkills.length === 2
-      && normalizedProfile.background.trainedSkills.includes('medicine')
-      && normalizedProfile.background.trainedSkills.includes('insight'),
-    'legacy trainedSkills preserved through character normalization',
-  );
-  expectPass(
-    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, normalizedSkills, normalizedProfile, 7),
-    'normalized legacy profile still passes persistence assert',
-  );
-  // A client-supplied 'complete' string without provenance data has no authority either.
-  expectPass(
-    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, legacySkills, { ...legacyProfile, skillProvenanceStatus: 'complete' }, 7),
-    'client complete + no provenance data stays legacy-readable',
+  const atLevel19 = validBuild();
+  atLevel19.specializations = [{ skill: 'medicine', name: 'Notfallmedizin', source: 'background', acquiredAtLevel: 19 }];
+  check(!rules.isValidSagaDriveSkillDevelopment(atLevel19, [], atLevel19.specializations, 1), 'background spec at level 19 rejected');
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(atLevel19, 1), profileFor(atLevel19), 1),
+    'background spec at level 19 fails persistence',
   );
 }
 
-// (15) Client-supplied 'legacy-unresolved' must not bypass validation.
+// (13) Level 3 without slot → FAIL.
 {
   const build = validBuild();
-  const tampered = { ...finalSkillsFor(build, 1), medicine: 5 };
+  check(!rules.isValidSagaDriveSkillDevelopment(build, [], build.specializations, 3), 'level 3 without slot rejected');
   expectThrow(
-    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, tampered, profileFor(build, { skillProvenanceStatus: 'legacy-unresolved' }), 1),
-    'legacy-unresolved + full provenance + inconsistent finals fails',
-  );
-  expectPass(
-    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profileFor(build, { skillProvenanceStatus: 'legacy-unresolved' }), 1),
-    'legacy-unresolved + consistent provenance still validates (and passes)',
-  );
-  // Inconsistent provenance + legacy-unresolved → FAIL.
-  const broken = validBuild();
-  broken.freeSkillRanks = { athletics: 2, melee: 2, insight: 1, awareness: 1 }; // sums to 6
-  expectThrow(
-    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(validBuild(), 1), profileFor(broken, { skillProvenanceStatus: 'legacy-unresolved' }), 1),
-    'inconsistent provenance + legacy-unresolved fails',
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), profileFor(build), 3),
+    'level 3 without development slot fails',
   );
 }
 
-// (16) Partial update `skills`: effective combined state is validated → inconsistent FAIL.
+// (15) L3 + L5 complete → PASS.
+{
+  const build = validBuild();
+  build.skillAdvances = [
+    { level: 3, kind: 'rank-up', skill: 'melee' },
+    { level: 5, kind: 'rank-up', skill: 'insight' },
+  ];
+  expectPass(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 5), profileFor(build), 5),
+    'L3 + L5 complete passes',
+  );
+}
+
+// (19) Partial update `skills`: effective combined state is validated → inconsistent FAIL.
 {
   const build = validBuild();
   const storedSkills = finalSkillsFor(build, 1);
@@ -377,7 +547,7 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   );
 }
 
-// (19) Tampered final skill values → FAIL.
+// (18) Tampered final skill values → FAIL.
 {
   const build = validBuild();
   const skills = { ...finalSkillsFor(build, 1), awareness: 0 };
@@ -387,7 +557,56 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   );
 }
 
-// (20) Valid save/load roundtrip at level 7 with advances + development spec → PASS.
+// (22) Completely missing skill provenance → FAIL.
+{
+  const empty = profileFor({ backgroundSkillPoints: {}, specializations: [] });
+  delete empty.freeSkillRanks;
+  delete empty.skillAdvances;
+  delete empty.specializations;
+  delete empty.archetypeTrainingSkill;
+  empty.background.backgroundSkillPoints = undefined;
+  empty.background.trainedSkills = [];
+  empty.background.specialization = undefined;
+  const emptySkills = rules.normalizeFreeSkillRanks({});
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, emptySkills, empty, 1),
+    'completely missing skill provenance fails',
+  );
+}
+
+// (23) Only trainedSkills without V2 provenance → FAIL.
+{
+  const trainedOnly = profileFor({ backgroundSkillPoints: {}, specializations: [] });
+  delete trainedOnly.freeSkillRanks;
+  delete trainedOnly.skillAdvances;
+  delete trainedOnly.specializations;
+  delete trainedOnly.archetypeTrainingSkill;
+  trainedOnly.background.backgroundSkillPoints = undefined;
+  trainedOnly.background.trainedSkills = ['medicine', 'insight'];
+  trainedOnly.background.specialization = undefined;
+  const storedFinals = rules.normalizeFreeSkillRanks({ medicine: 4, insight: 2 });
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, storedFinals, trainedOnly, 7),
+    'trainedSkills without V2 provenance fails',
+  );
+  const normalized = normalize.normalizeSagaDriveProfile(trainedOnly);
+  check(normalized.background.trainedSkills.length === 0, 'normalization does not restore trainedSkills without backgroundSkillPoints');
+  check(!('skillProvenanceStatus' in normalized), 'normalization does not emit skillProvenanceStatus');
+}
+
+// (24) Partial V2 provenance → FAIL.
+{
+  const build = validBuild();
+  const partial = profileFor(build);
+  delete partial.archetypeTrainingSkill;
+  partial.background.backgroundSkillPoints = undefined;
+  expectThrow(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, finalSkillsFor(build, 1), partial, 1),
+    'partial V2 provenance fails',
+  );
+}
+
+// (25) Valid save/load roundtrip at level 7 with advances + development spec → PASS.
 {
   const build = validBuild();
   build.skillAdvances = [{ level: 3, kind: 'rank-up', skill: 'medicine' }, { level: 5, kind: 'rank-up', skill: 'melee' }];
@@ -396,9 +615,20 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
     { skill: 'medicine', name: 'Chirurgie', source: 'skill-development', acquiredAtLevel: 7 },
   ];
   const skills = finalSkillsFor(build, 7);
+  const profile = profileFor(build);
   expectPass(
-    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, skills, profileFor(build), 7),
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, skills, profile, 7),
     'valid level-7 roundtrip passes',
+  );
+  const reloaded = normalize.normalizeSagaDriveProfile(profile);
+  expectPass(
+    () => persistence.assertValidSagaDriveCharacterPersistence(ATTRS, normalize.normalizeSkills(skills), reloaded, 7),
+    'normalized complete V2 profile still passes',
+  );
+  check(!('skillProvenanceStatus' in reloaded), 'roundtrip does not persist skillProvenanceStatus');
+  check(
+    reloaded.background.trainedSkills.length === 2 && reloaded.background.trainedSkills.every((skill) => skill === 'medicine'),
+    'trainedSkills is derived from backgroundSkillPoints (+2 medicine)',
   );
 }
 
@@ -417,6 +647,34 @@ check(rules.isValidBackgroundSkillPoints({ medicine: 1, insight: 1 }, SKILL_POOL
   // Safe resolve never throws on the broken chain.
   const ranks = rules.resolveSagaDriveSkillRanksSafe({ ...build, skillAdvances: withoutL3 }, 7);
   check(ranks.stealth === 0 && ranks.melee === 3, 'safe resolve prunes instead of throwing');
+}
+
+// Sanitizer: invalid background spec levels are discarded, not rewritten to 1.
+{
+  const build = validBuild();
+  const kept = rules.sanitizeSagaDriveSkillDevelopment(build, [], build.specializations, 1);
+  check(
+    kept.specializations.some((entry) => entry.source === 'background' && entry.acquiredAtLevel === 1),
+    'sanitizer keeps valid background spec at level 1',
+  );
+
+  const at19 = [{ skill: 'medicine', name: 'Notfallmedizin', source: 'background', acquiredAtLevel: 19 }];
+  const discarded19 = rules.sanitizeSagaDriveSkillDevelopment(build, [], at19, 1);
+  check(
+    !discarded19.specializations.some((entry) => entry.source === 'background'),
+    'sanitizer does not keep background spec acquiredAtLevel 19 as valid V2 state',
+  );
+  check(
+    !discarded19.specializations.some((entry) => entry.source === 'background' && entry.acquiredAtLevel === 1),
+    'sanitizer does not rewrite acquiredAtLevel 19 to 1',
+  );
+
+  const at3 = [{ skill: 'medicine', name: 'Notfallmedizin', source: 'background', acquiredAtLevel: 3 }];
+  const discarded3 = rules.sanitizeSagaDriveSkillDevelopment(build, [], at3, 1);
+  check(
+    !discarded3.specializations.some((entry) => entry.source === 'background'),
+    'sanitizer does not keep background spec acquiredAtLevel 3 as valid V2 state',
+  );
 }
 
 if (failures > 0) {

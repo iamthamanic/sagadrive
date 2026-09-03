@@ -41,8 +41,6 @@ export interface SagaDriveSpecializationRecordDto {
   acquiredAtLevel: number;
 }
 
-export type SagaDriveSkillProvenanceStatus = 'complete' | 'legacy-unresolved';
-
 export interface SagaDriveStartSkillBuild {
   freeSkillRanks: SagaDriveSkillRankMap;
   backgroundSkillPoints: SagaDriveBackgroundSkillPoints;
@@ -52,11 +50,6 @@ export interface SagaDriveStartSkillBuild {
 export interface SagaDrivePersistedSkillBuild extends SagaDriveStartSkillBuild {
   skillAdvances?: SagaDriveSkillAdvanceDto[];
   specializations?: SagaDriveSpecializationRecordDto[];
-  provenanceStatus?: SagaDriveSkillProvenanceStatus;
-}
-
-export interface SagaDriveResolvedSkillBuild extends SagaDrivePersistedSkillBuild {
-  provenanceStatus: SagaDriveSkillProvenanceStatus;
 }
 
 const SPECIALIZATION_MIN_RANK: readonly number[] = [1, 3, 5];
@@ -120,21 +113,7 @@ export function isSagaDriveSkillAdvanceLevel(value: number): value is SagaDriveS
   return (SAGA_DRIVE_SKILL_ADVANCE_LEVELS as readonly number[]).includes(value);
 }
 
-/** Legacy `trainedSkills: [a,b]` → exactly `{ a:1, b:1 }`; never stack into +2. */
-export function normalizeLegacyBackgroundSkillPoints(
-  trainedSkills: readonly SagaDriveSkillKey[],
-  skillPool: readonly SagaDriveSkillKey[],
-): SagaDriveBackgroundSkillPoints {
-  const pool = new Set(skillPool);
-  const result: SagaDriveBackgroundSkillPoints = {};
-  for (const skill of trainedSkills) {
-    if (!isSagaDriveSkillKey(skill) || !pool.has(skill)) continue;
-    result[skill] = 1;
-  }
-  return result;
-}
-
-/** Expand point map to legacy trainedSkills array (one entry per point). */
+/** Derived display array from backgroundSkillPoints (one entry per point). Never a source of truth. */
 export function backgroundSkillPointsToTrainedSkills(points: SagaDriveBackgroundSkillPoints): SagaDriveSkillKey[] {
   const result: SagaDriveSkillKey[] = [];
   for (const skill of sagaDriveSkillDefinitions) {
@@ -232,11 +211,10 @@ export function isValidStartSkillBuild(
   if (!isValidBackgroundSkillPoints(build.backgroundSkillPoints, skillPool)) return false;
   if (sumFreeSkillRanks(build.freeSkillRanks) !== SAGA_DRIVE_START_FREE_SKILL_POINTS) return false;
 
-  const archetype = archetypeKey ? getSagaDriveArchetype(archetypeKey) : undefined;
-  if (archetype) {
-    // A complete start build must spend the one archetype skill point on an archetype skill.
-    if (!build.archetypeTrainingSkill || !archetype.skills.includes(build.archetypeTrainingSkill)) return false;
-  }
+  if (!archetypeKey) return false;
+  const archetype = getSagaDriveArchetype(archetypeKey);
+  if (!archetype) return false;
+  if (!build.archetypeTrainingSkill || !archetype.skills.includes(build.archetypeTrainingSkill)) return false;
 
   const ranks = resolveSagaDriveStartSkillRanks(build);
   return sagaDriveSkillDefinitions.every((skill) => ranks[skill.key] <= SAGA_DRIVE_START_SKILL_CAP);
@@ -251,23 +229,6 @@ export function resolveSagaDriveStartSkillRanks(build: SagaDriveStartSkillBuild)
     result[skill.key] = free + background + archetype;
   }
   return result;
-}
-
-/** UI compatibility: legacy trainedSkills array + free + archetype. */
-export function getSagaDriveFinalSkillRanks(
-  freeRanks: SagaDriveSkillRankMap,
-  backgroundTrainedSkills: readonly SagaDriveSkillKey[],
-  archetypeTrainingSkill?: SagaDriveSkillKey,
-  skillPool: readonly SagaDriveSkillKey[] = [],
-): SagaDriveSkillRankMap {
-  const backgroundSkillPoints = skillPool.length > 0
-    ? normalizeLegacyBackgroundSkillPoints(backgroundTrainedSkills, skillPool)
-    : normalizeLegacyBackgroundSkillPoints(backgroundTrainedSkills, backgroundTrainedSkills);
-  return resolveSagaDriveStartSkillRanks({
-    freeSkillRanks: freeRanks,
-    backgroundSkillPoints,
-    archetypeTrainingSkill,
-  });
 }
 
 function applySkillAdvances(
@@ -399,6 +360,7 @@ export function isValidSagaDriveSkillDevelopment(
   const backgroundSpecs = specializations.filter((entry) => entry.source === 'background');
   if (backgroundSpecs.length > 1) return false;
   for (const spec of backgroundSpecs) {
+    if (spec.acquiredAtLevel !== 1) return false;
     const count = specCounts.get(spec.skill) ?? 0;
     // Must be bound to a skill actually trained by the background, not just a high final rank.
     if ((build.backgroundSkillPoints[spec.skill] ?? 0) <= 0) return false;
@@ -449,6 +411,7 @@ export function sanitizeSagaDriveSkillDevelopment(
   const keptSpecializations: SagaDriveSpecializationRecordDto[] = [];
   for (const spec of specializations.filter((entry) => entry.source === 'background')) {
     if (keptSpecializations.length >= 1) break;
+    if (spec.acquiredAtLevel !== 1) continue;
     const count = specCounts.get(spec.skill) ?? 0;
     if ((build.backgroundSkillPoints[spec.skill] ?? 0) <= 0) continue;
     if (!isValidSpecializationForSkillRank(workingRanks[spec.skill], count)) continue;
@@ -508,48 +471,21 @@ export function isValidSagaDriveSpecializations(
   return true;
 }
 
-/**
- * Data-derived provenance check. A client-supplied status string has no authority here:
- * completeness follows only from reconstructible provenance data actually present.
- */
-export function hasCompleteSkillProvenance(profile: {
-  freeSkillRanks?: Partial<Record<SagaDriveSkillKey, number>>;
-  background?: { backgroundSkillPoints?: SagaDriveBackgroundSkillPoints };
-  skillAdvances?: SagaDriveSkillAdvanceDto[];
-  skillProvenanceStatus?: SagaDriveSkillProvenanceStatus;
-}): boolean {
-  if (profile.freeSkillRanks && sumFreeSkillRanks(normalizeFreeSkillRanks(profile.freeSkillRanks)) === SAGA_DRIVE_START_FREE_SKILL_POINTS) {
-    return true;
-  }
-  if (profile.background?.backgroundSkillPoints && sumBackgroundSkillPoints(profile.background.backgroundSkillPoints) > 0) {
-    return true;
-  }
-  if (profile.skillAdvances && profile.skillAdvances.length > 0) return true;
-  return false;
-}
-
-/** Reconstruct editor/persistence state from profile + final skills (attribute-progression pattern). */
+/** Structure stored V2 skill fields for editor/persistence. Does not invent missing provenance. */
 export function resolveSagaDriveSkillBuildState(
-  finalSkills: SagaDriveSkillRankMap,
   input: {
     freeSkillRanks?: unknown;
     backgroundSkillPoints?: unknown;
-    trainedSkills?: readonly SagaDriveSkillKey[];
     skillPool?: readonly SagaDriveSkillKey[];
     archetypeTrainingSkill?: SagaDriveSkillKey;
     skillAdvances?: unknown;
     specializations?: unknown;
     backgroundSpecialization?: { skill: SagaDriveSkillKey; name: string };
   },
-  level: number,
-): SagaDriveResolvedSkillBuild {
+): SagaDrivePersistedSkillBuild {
   const skillPool = input.skillPool ?? [];
   const freeSkillRanks = normalizeFreeSkillRanks(input.freeSkillRanks);
-  let backgroundSkillPoints = normalizeBackgroundSkillPoints(input.backgroundSkillPoints, skillPool);
-  if (sumBackgroundSkillPoints(backgroundSkillPoints) === 0 && input.trainedSkills?.length) {
-    backgroundSkillPoints = normalizeLegacyBackgroundSkillPoints(input.trainedSkills, skillPool);
-  }
-
+  const backgroundSkillPoints = normalizeBackgroundSkillPoints(input.backgroundSkillPoints, skillPool);
   const skillAdvances = normalizeSkillAdvances(input.skillAdvances);
   let specializations = normalizeSpecializationRecords(input.specializations);
   if (specializations.length === 0 && input.backgroundSpecialization?.name) {
@@ -561,21 +497,13 @@ export function resolveSagaDriveSkillBuildState(
     }];
   }
 
-  const build: SagaDrivePersistedSkillBuild = {
+  return {
     freeSkillRanks,
     backgroundSkillPoints,
     archetypeTrainingSkill: input.archetypeTrainingSkill,
     skillAdvances,
     specializations,
   };
-
-  const provenanceStatus: SagaDriveSkillProvenanceStatus = hasCompleteSkillProvenance({
-    freeSkillRanks: input.freeSkillRanks,
-    background: { backgroundSkillPoints: input.backgroundSkillPoints as SagaDriveBackgroundSkillPoints | undefined },
-    skillAdvances,
-  }) ? 'complete' : 'legacy-unresolved';
-
-  return { ...build, provenanceStatus };
 }
 
 export function skillRankMapsEqual(left: SagaDriveSkillRankMap, right: SagaDriveSkillRankMap): boolean {
@@ -584,22 +512,11 @@ export function skillRankMapsEqual(left: SagaDriveSkillRankMap, right: SagaDrive
 
 export function assertSagaDriveSkillPersistence(
   finalSkills: SagaDriveSkillRankMap,
-  build: SagaDriveResolvedSkillBuild,
+  build: SagaDrivePersistedSkillBuild,
   level: number,
   skillPool: readonly SagaDriveSkillKey[],
   archetypeKey?: SagaDriveArchetypeKey,
 ): void {
-  // Gate on the provenance status derived from the RAW persisted profile data by
-  // resolveSagaDriveSkillBuildState. Re-deriving completeness here would run on the
-  // compat-enriched build: background points synthesized from legacy trainedSkills
-  // would look like fresh v2 provenance and a true legacy character would wrongly
-  // fail validation. A client-supplied status string never reaches this guard;
-  // true legacy data (no reconstructible provenance) stays readable and keeps its
-  // stored final ranks.
-  if (build.provenanceStatus !== 'complete') {
-    return;
-  }
-
   if (!isValidBackgroundSkillPoints(build.backgroundSkillPoints, skillPool)) {
     throw new Error('Invalid SagaDrive skill build: background skill points must sum to 2 within the framework pool.');
   }

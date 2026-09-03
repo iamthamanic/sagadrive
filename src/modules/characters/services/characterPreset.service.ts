@@ -6,22 +6,13 @@ import { supabase } from '../../../lib/supabase';
 import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
 import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../../lib/networkTimeout';
 import { normalizeCharacterAppearance, normalizeSafeUrl } from '../avatar';
-import {
-  applySagaDriveAttributeAdvances,
-  isValidSagaDriveAttributeBuild,
-  type SagaDriveAttributeAdvances,
-} from '../../rulesets/attributeProgression';
+import { assertValidSagaDriveCharacterPersistence } from '../../../domains/character';
 import {
   SAGA_DRIVE_SPECIES_TRAIT_BUDGET,
-  SAGA_DRIVE_START_FREE_SKILL_POINTS,
-  SAGA_DRIVE_START_MIN_TRAINED_SKILLS,
-  SAGA_DRIVE_START_SKILL_CAP,
   createEmptySagaDriveSkillRanks,
   getSagaDriveSpeciesTraitCost,
   isCharacterRulesetKey,
-  isSagaDriveArchetypeKey,
   isSagaDriveEssenceKey,
-  isSagaDriveSkillKey,
   sagaDriveSkillDefinitions,
   type CharacterRulesetKey,
   type SagaDriveSkillKey,
@@ -49,27 +40,6 @@ function isPresetOrigin(value: unknown): value is CharacterPresetOrigin {
 
 function isGenderReading(value: unknown): value is CharacterGenderReading {
   return value === 'masculine-read' || value === 'feminine-read' || value === 'diverse';
-}
-
-function attributesEqual(left: CharacterAttributesDto, right: CharacterAttributesDto): boolean {
-  return left.strength === right.strength
-    && left.dexterity === right.dexterity
-    && left.endurance === right.endurance
-    && left.mind === right.mind
-    && left.perception === right.perception
-    && left.charisma === right.charisma;
-}
-
-function normalizeFreeSkillRanks(value: unknown): Record<SagaDriveSkillKey, number> {
-  const result = createEmptySagaDriveSkillRanks();
-  if (!isRecord(value)) return result;
-  for (const skill of sagaDriveSkillDefinitions) {
-    const rank = value[skill.key];
-    if (typeof rank === 'number' && Number.isFinite(rank)) {
-      result[skill.key] = Math.max(0, Math.min(SAGA_DRIVE_START_SKILL_CAP, Math.round(rank)));
-    }
-  }
-  return result;
 }
 
 function normalizeSkills(value: unknown): Record<SagaDriveSkillKey, number> {
@@ -104,27 +74,16 @@ export function assertValidSnapshot(snapshot: CharacterPresetSnapshot): void {
   }
 
   const profile = snapshot.sagadrive_profile;
-  if (!profile || !isSagaDriveArchetypeKey(profile.archetype)) {
-    throw new Error('Preset-Snapshot braucht einen Archetyp.');
+  if (!profile) {
+    throw new Error('Preset-Snapshot braucht ein SagaDrive-Profil.');
   }
   if (!isSagaDriveEssenceKey(profile.essence)) {
     throw new Error('Preset-Snapshot braucht eine Essenz.');
   }
-  if (!profile.archetypeTrainingSkill || !isSagaDriveSkillKey(profile.archetypeTrainingSkill)) {
-    throw new Error('Preset-Snapshot braucht die Archetyp-Fertigkeit.');
-  }
 
   const bg = profile.background;
-  const pool = Array.isArray(bg?.skillPool) ? bg.skillPool.filter(isSagaDriveSkillKey) : [];
-  const trained = Array.isArray(bg?.trainedSkills) ? bg.trainedSkills.filter(isSagaDriveSkillKey) : [];
-  if (!bg?.name?.trim() || pool.length !== 4 || trained.length !== 2) {
-    throw new Error('Preset-Snapshot: Hintergrund unvollständig (Name, 4er-Pool, 2 Training).');
-  }
-  if (!trained.every((skill) => pool.includes(skill))) {
-    throw new Error('Preset-Snapshot: Hintergrund-Training muss im Skill-Pool liegen.');
-  }
-  if (!bg.specialization?.name?.trim() || !isSagaDriveSkillKey(bg.specialization.skill) || !trained.includes(bg.specialization.skill)) {
-    throw new Error('Preset-Snapshot: Spezialisierung unvollständig.');
+  if (!bg?.name?.trim()) {
+    throw new Error('Preset-Snapshot: Hintergrund braucht einen Namen.');
   }
   if (![bg.milieuAccess, bg.contact, bg.complication, bg.communication].every((field) => typeof field === 'string' && field.trim())) {
     throw new Error('Preset-Snapshot: Hintergrund-Felder (Milieu/Kontakt/Komplikation/Kommunikation) unvollständig.');
@@ -137,32 +96,11 @@ export function assertValidSnapshot(snapshot: CharacterPresetSnapshot): void {
   if (snapshot.race === 'alien' && !profile.speciesProfile?.name?.trim()) {
     throw new Error('Preset-Snapshot: Alien-Speziesprofil braucht einen Namen.');
   }
-
-  const freeRanks = normalizeFreeSkillRanks(snapshot.freeSkillRanks);
-  const freeUsed = sagaDriveSkillDefinitions.reduce((sum, skill) => sum + freeRanks[skill.key], 0);
-  if (freeUsed !== SAGA_DRIVE_START_FREE_SKILL_POINTS) {
-    throw new Error(`Preset-Snapshot: genau ${SAGA_DRIVE_START_FREE_SKILL_POINTS} freie Fertigkeitspunkte nötig.`);
-  }
-  const skills = normalizeSkills(snapshot.skills);
-  const trainedCount = sagaDriveSkillDefinitions.filter((skill) => skills[skill.key] > 0).length;
-  if (trainedCount < SAGA_DRIVE_START_MIN_TRAINED_SKILLS) {
-    throw new Error(`Preset-Snapshot: mindestens ${SAGA_DRIVE_START_MIN_TRAINED_SKILLS} trainierte Fertigkeiten nötig.`);
-  }
-  if (sagaDriveSkillDefinitions.some((skill) => skills[skill.key] > SAGA_DRIVE_START_SKILL_CAP)) {
-    throw new Error(`Preset-Snapshot: Fertigkeitsrang über Cap ${SAGA_DRIVE_START_SKILL_CAP}.`);
-  }
-
   if (!profile.baseAttributes) {
     throw new Error('Preset-Snapshot: baseAttributes fehlen.');
   }
-  const advances = (profile.attributeAdvances ?? {}) as SagaDriveAttributeAdvances;
-  if (!isValidSagaDriveAttributeBuild(profile.baseAttributes, advances, level)) {
-    throw new Error('Preset-Snapshot: Attributverteilung ungültig.');
-  }
-  const expected = applySagaDriveAttributeAdvances(profile.baseAttributes, advances, level);
-  if (!attributesEqual(snapshot.attributes, expected)) {
-    throw new Error('Preset-Snapshot: finale Attribute passen nicht zu Basis + Steigerungen.');
-  }
+
+  assertValidSagaDriveCharacterPersistence(snapshot.attributes, snapshot.skills, profile, level);
 }
 
 function withSafePortraitUrl(snapshot: CharacterPresetSnapshot): CharacterPresetSnapshot {
@@ -200,7 +138,6 @@ function normalizeSnapshot(value: unknown): CharacterPresetSnapshot | null {
       perception: typeof (value.attributes as CharacterAttributesDto | undefined)?.perception === 'number' ? (value.attributes as CharacterAttributesDto).perception : 0,
       charisma: typeof (value.attributes as CharacterAttributesDto | undefined)?.charisma === 'number' ? (value.attributes as CharacterAttributesDto).charisma : 0,
     },
-    freeSkillRanks: normalizeFreeSkillRanks(value.freeSkillRanks),
     skills: normalizeSkills(value.skills),
     sagadrive_profile: profile,
     abilities: Array.isArray(value.abilities) ? value.abilities as CharacterPresetSnapshot['abilities'] : [],

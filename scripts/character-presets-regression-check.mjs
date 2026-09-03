@@ -47,10 +47,12 @@ requireMatch(migrationHardening, /origin is immutable/, 'origin immutable on upd
 
 requireMatch(types, /interface CharacterPresetSnapshot/, 'preset snapshot type');
 requireMatch(types, /schemaVersion: 1/, 'snapshot schema version');
-requireMatch(types, /freeSkillRanks/, 'free skill ranks in snapshot');
+rejectMatch(types, /freeSkillRanks:\s*Record<SagaDriveSkillKey,\s*number>/, 'parallel top-level freeSkillRanks on CharacterPresetSnapshot');
+requireMatch(types, /sagadrive_profile: SagaDriveProfileDto/, 'skill provenance via sagadrive_profile only');
 requireMatch(types, /published: boolean/, 'published flag on preset vm/dto');
 
 requireMatch(service, /export function assertValidSnapshot/, 'exported snapshot validation');
+requireMatch(service, /assertValidSagaDriveCharacterPersistence/, 'preset snapshots delegate skill/attribute rules to character persistence');
 requireMatch(service, /normalizeSafeUrl/, 'portrait_url sanitized via normalizeSafeUrl');
 requireMatch(service, /Skipping invalid preset version on read/, 're-validate snapshots on read');
 requireMatch(service, /createPresetFromCharacter/, 'create preset from character');
@@ -59,6 +61,10 @@ requireMatch(service, /Für Level .* existiert bereits/, 'reject duplicate level
 requireMatch(service, /maybeAutoReleaseVersion/, 'auto release helper');
 requireMatch(service, /\(Kopie\)/, 'duplicate name suffix');
 requireMatch(service, /sourceCharacterMissing/, 'deleted source character note support');
+rejectMatch(service, /value\.freeSkillRanks/, 'preset service still reads top-level value.freeSkillRanks');
+rejectMatch(service, /SAGA_DRIVE_START_MIN_TRAINED_SKILLS/, 'preset service leftover min-trained-skills constant');
+rejectMatch(service, /trainedCount/, 'preset service leftover trainedCount min-6 rule');
+rejectMatch(service, /mindestens 6/, 'preset service leftover minimum 6 trained skills copy');
 
 requireMatch(characterTypes, /presetReleaseMode\?:/, 'release mode on sagadrive profile');
 requireMatch(characterNormalize, /presetReleaseMode/, 'release mode normalized in character service');
@@ -84,6 +90,11 @@ requireMatch(editor, /takeCharacterEditorBootstrap/, 'bootstrap consume');
 requireMatch(editor, /assertValidSnapshot/, 'assert before editor hydrate');
 requireMatch(editor, /normalizeSafeUrl/, 'portrait bootstrap URL sanitize');
 requireMatch(editor, /updateCharacter\(savedCharacterId/, 'update existing character on save');
+requireMatch(editor, /normalizeFreeSkillRanks\(profile\.freeSkillRanks\)/, 'hydrate free ranks from profile only');
+rejectMatch(editor, /snapshot\.freeSkillRanks/, 'preset hydration still reads snapshot.freeSkillRanks');
+rejectMatch(editor, /payload\.freeSkillRanks/, 'hydrateEditor still has freeSkillRanks override');
+rejectMatch(editor, /freeSkillRanks\?:\s*Partial/, 'hydrateEditor payload still declares freeSkillRanks override');
+rejectMatch(editor, /freeSkillRanks,\s*\n\s*skills: finalSkillRanks/, 'preset snapshot builder still writes top-level freeSkillRanks');
 
 requireMatch(library, /CreateCharacterEntryDialog/, 'library create dialog');
 requireMatch(dashboard, /CreateCharacterEntryDialog/, 'dashboard create dialog');

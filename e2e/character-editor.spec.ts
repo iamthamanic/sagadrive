@@ -374,6 +374,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
   await expect(page.getByText(/Hintergrund ist regelkonform vollständig/i)).toBeVisible();
   await expect(page.getByTestId('skill-progression-slots')).toBeVisible();
+  await expect(page.getByText(/Legacy-Charakter|vollständige Herkunft nicht rekonstruierbar/i)).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Speichern/i }).first()).toBeEnabled();
 
   // Live POST + Bibliothek roundtrip needs a reachable Supabase stack (local .env).
@@ -391,14 +392,22 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
     }
     const savedBody = await saveResponse.json() as {
       sagadrive_profile?: {
+        archetype?: string;
+        archetypeTrainingSkill?: string;
+        freeSkillRanks?: Record<string, number>;
         skillProvenanceStatus?: string;
         background?: { backgroundSkillPoints?: Record<string, number>; specialization?: { name?: string } };
         skillAdvances?: Array<{ level: number; kind: string; skill: string }>;
         specializations?: Array<{ skill: string; name: string; source: string; acquiredAtLevel: number }>;
       };
     };
-    expect(savedBody.sagadrive_profile?.skillProvenanceStatus).toBe('complete');
-    expect(savedBody.sagadrive_profile?.background?.backgroundSkillPoints).toBeTruthy();
+    expect(savedBody.sagadrive_profile?.skillProvenanceStatus).toBeUndefined();
+    expect(savedBody.sagadrive_profile?.archetype).toBe('fighter');
+    expect(savedBody.sagadrive_profile?.archetypeTrainingSkill).toBe('melee');
+    const freeSum = Object.values(savedBody.sagadrive_profile?.freeSkillRanks ?? {}).reduce((sum, value) => sum + value, 0);
+    expect(freeSum).toBe(7);
+    const backgroundSum = Object.values(savedBody.sagadrive_profile?.background?.backgroundSkillPoints ?? {}).reduce((sum, value) => sum + value, 0);
+    expect(backgroundSum).toBe(2);
     expect(savedBody.sagadrive_profile?.background?.specialization?.name).toBe('Notfallmedizin');
     expect(savedBody.sagadrive_profile?.skillAdvances).toEqual(
       expect.arrayContaining([
@@ -427,6 +436,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
     await expect(page.getByLabel('Spezialisierung Fachgebiet')).toHaveValue('Notfallmedizin');
     await expect(page.getByText(/^7 \/ 7$/).first()).toBeVisible();
     await expect(page.getByText('2 / 2').first()).toBeVisible();
+    await expect(page.getByText('1 / 1').first()).toBeVisible();
+    await expect(page.getByText(/Legacy-Charakter|vollständige Herkunft nicht rekonstruierbar/i)).toHaveCount(0);
     await expect(page.getByTestId('skill-progression-slots')).toBeVisible();
     await expect(page.getByText(/Medizin: 1 → 2/)).toBeVisible();
     await expect(page.getByText(/Fingerfertigkeit: 0 → 1/)).toBeVisible();

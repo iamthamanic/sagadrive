@@ -92,14 +92,12 @@ import {
   isValidBackgroundSkillPoints,
   isValidSagaDriveSkillDevelopment,
   isValidStartSkillBuild,
-  hasCompleteSkillProvenance,
   normalizeFreeSkillRanks,
   resolveSagaDriveSkillBuildState,
   resolveSagaDriveSkillRanksSafe,
   sumBackgroundSkillPointsUsed,
   type SagaDriveBackgroundSkillPoints,
   type SagaDriveSkillAdvanceDto,
-  type SagaDriveSkillProvenanceStatus,
   type SagaDriveSpecializationRecordDto,
 } from '../../../modules/rulesets/skillProgression';
 import { getSagaDriveSpeciesTraitOptionCatalog } from '../../../domains/rules/sagadrive/species-trait-options';
@@ -286,10 +284,6 @@ export function CharacterEditor() {
   const [backgroundSkillPoints, setBackgroundSkillPoints] = useState<SagaDriveBackgroundSkillPoints>({});
   const [skillAdvances, setSkillAdvances] = useState<SagaDriveSkillAdvanceDto[]>([]);
   const [specializations, setSpecializations] = useState<SagaDriveSpecializationRecordDto[]>([]);
-  const [skillProvenanceStatus, setSkillProvenanceStatus] = useState<SagaDriveSkillProvenanceStatus | undefined>();
-  // Stored final ranks of a legacy character (pre Skill Progression v2) without reconstructible
-  // provenance. Displayed as-is; never used to invent provenance. Cleared on reset/ruleset change.
-  const [legacyFinalSkills, setLegacyFinalSkills] = useState<Record<SagaDriveSkillKey, number> | null>(null);
   const [specializationSkill, setSpecializationSkill] = useState<SkillSlot>('');
   const [specializationName, setSpecializationName] = useState('');
   const [milieuAccess, setMilieuAccess] = useState('');
@@ -332,18 +326,10 @@ export function CharacterEditor() {
     archetypeTrainingSkill,
     skillAdvances,
     specializations,
-    provenanceStatus: skillProvenanceStatus ?? 'complete' as const,
-  }), [archetypeTrainingSkill, backgroundSkillPoints, freeSkillRanks, skillAdvances, skillProvenanceStatus, specializations]);
-  // Legacy stays legacy only while no complete provenance has been (re)entered.
-  const provenanceLegacy = skillProvenanceStatus === 'legacy-unresolved'
-    && legacyFinalSkills !== null
-    && !hasCompleteSkillProvenance({ freeSkillRanks, background: { backgroundSkillPoints }, skillAdvances });
-  // Safe resolve prunes invalid dependent development decisions instead of throwing,
-  // so removing an earlier slot can never crash the editor render. Legacy characters
-  // keep their stored final ranks visible instead of dropping to zero.
+  }), [archetypeTrainingSkill, backgroundSkillPoints, freeSkillRanks, skillAdvances, specializations]);
   const finalSkillRanks = useMemo(
-    () => (provenanceLegacy && legacyFinalSkills ? legacyFinalSkills : resolveSagaDriveSkillRanksSafe(skillBuild, characterLevel)),
-    [characterLevel, legacyFinalSkills, provenanceLegacy, skillBuild],
+    () => resolveSagaDriveSkillRanksSafe(skillBuild, characterLevel),
+    [characterLevel, skillBuild],
   );
 
   const abilities = useMemo<AbilityDto[]>(() => {
@@ -395,18 +381,12 @@ export function CharacterEditor() {
     backgroundSkillPoints,
     archetypeTrainingSkill,
   }), [archetypeTrainingSkill, backgroundSkillPoints, freeSkillRanks]);
-  const skillsComplete = provenanceLegacy || (Boolean(archetypeTrainingSkill)
+  const skillsComplete = Boolean(archetypeTrainingSkill)
     && freeSkillPointsUsed === SAGA_DRIVE_START_FREE_SKILL_POINTS
     && backgroundPointsUsed === SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS
     && isValidStartSkillBuild(startSkillBuild, selectedBackgroundPool, characterArchetype)
     && isValidSagaDriveSkillDevelopment(startSkillBuild, skillAdvances, specializations, characterLevel)
-    && !skillOverflow);
-  // Persisted provenance status is derived from the actual data, never a bare client claim.
-  const effectiveSkillProvenanceStatus: SagaDriveSkillProvenanceStatus = hasCompleteSkillProvenance({
-    freeSkillRanks,
-    background: { backgroundSkillPoints },
-    skillAdvances,
-  }) ? 'complete' : 'legacy-unresolved';
+    && !skillOverflow;
 
   const collectValidationProblems = (): ValidationProblem[] => {
     const problems: ValidationProblem[] = [];
@@ -453,7 +433,6 @@ export function CharacterEditor() {
       freeSkillRanks,
       skillAdvances: skillAdvances.length > 0 ? skillAdvances : undefined,
       specializations: specializations.length > 0 ? specializations : undefined,
-      skillProvenanceStatus: effectiveSkillProvenanceStatus,
       baseAttributes,
       attributeAdvances,
       presetReleaseMode,
@@ -486,7 +465,6 @@ export function CharacterEditor() {
         avatar: currentAvatar,
       },
       attributes,
-      freeSkillRanks,
       skills: finalSkillRanks,
       sagadrive_profile: sagaDriveProfile,
       abilities,
@@ -507,7 +485,6 @@ export function CharacterEditor() {
     skills: Record<SagaDriveSkillKey, number>;
     profile: SagaDriveProfileDto;
     appearance: CharacterAppearanceDto;
-    freeSkillRanks?: Partial<Record<SagaDriveSkillKey, number>>;
     inventory?: ItemDto[];
     backgroundStory?: string;
     notes?: string;
@@ -520,7 +497,7 @@ export function CharacterEditor() {
   }) => {
     const { profile, appearance } = payload;
     const resolved = resolveSagaDriveAttributeBuildState(payload.attributes, profile);
-    const hydratedFreeSkillRanks = normalizeFreeSkillRanks(payload.freeSkillRanks ?? profile.freeSkillRanks);
+    const hydratedFreeSkillRanks = normalizeFreeSkillRanks(profile.freeSkillRanks);
 
     setCharacterName(payload.name);
     setDescription(payload.description);
@@ -540,10 +517,9 @@ export function CharacterEditor() {
     setBackgroundTemplateId(profile.backgroundTemplateId === undefined ? undefined : profile.backgroundTemplateId);
     setBackgroundName(profile.background?.name ?? '');
     setBackgroundSkillPool(padBackgroundSkills(profile.background?.skillPool ?? [], 4));
-    const resolvedSkills = resolveSagaDriveSkillBuildState(payload.skills, {
+    const resolvedSkills = resolveSagaDriveSkillBuildState({
       freeSkillRanks: hydratedFreeSkillRanks,
       backgroundSkillPoints: profile.background?.backgroundSkillPoints,
-      trainedSkills: profile.background?.trainedSkills,
       skillPool: profile.background?.skillPool,
       archetypeTrainingSkill: profile.archetypeTrainingSkill && isSagaDriveSkillKey(profile.archetypeTrainingSkill) ? profile.archetypeTrainingSkill : undefined,
       skillAdvances: profile.skillAdvances,
@@ -551,13 +527,10 @@ export function CharacterEditor() {
       backgroundSpecialization: profile.background?.specialization && isSagaDriveSkillKey(profile.background.specialization.skill)
         ? profile.background.specialization
         : undefined,
-    }, payload.level);
+    });
     setBackgroundSkillPoints(resolvedSkills.backgroundSkillPoints);
     setSkillAdvances(resolvedSkills.skillAdvances ?? []);
     setSpecializations(resolvedSkills.specializations ?? []);
-    setSkillProvenanceStatus(resolvedSkills.provenanceStatus);
-    // Legacy characters keep their stored final ranks; no provenance is invented.
-    setLegacyFinalSkills(resolvedSkills.provenanceStatus === 'legacy-unresolved' ? payload.skills : null);
     const backgroundSpec = resolvedSkills.specializations?.find((entry) => entry.source === 'background');
     setSpecializationSkill(backgroundSpec?.skill ?? (profile.background?.specialization?.skill && isSagaDriveSkillKey(profile.background.specialization.skill) ? profile.background.specialization.skill : ''));
     setSpecializationName(backgroundSpec?.name ?? profile.background?.specialization?.name ?? '');
@@ -623,7 +596,6 @@ export function CharacterEditor() {
         skills: snapshot.skills,
         profile: snapshot.sagadrive_profile,
         appearance: snapshot.appearance,
-        freeSkillRanks: snapshot.freeSkillRanks,
         inventory: snapshot.inventory,
         backgroundStory: snapshot.background_story,
         notes: snapshot.notes,
@@ -655,7 +627,6 @@ export function CharacterEditor() {
           skills: character.skills,
           profile: character.sagaDriveProfile,
           appearance: character.appearance,
-          freeSkillRanks: character.sagaDriveProfile.freeSkillRanks,
           inventory: character.inventory,
           backgroundStory: character.backgroundStory,
           notes: character.notes,
@@ -717,8 +688,6 @@ export function CharacterEditor() {
     setFreeSkillRanks(createEmptySagaDriveSkillRanks());
     setSkillAdvances([]);
     setSpecializations([]);
-    setSkillProvenanceStatus(undefined);
-    setLegacyFinalSkills(null);
     setBackgroundTemplateId(undefined);
     resetBackgroundMechanics();
     setMilieuAccess('');
@@ -924,7 +893,6 @@ export function CharacterEditor() {
       freeSkillRanks,
       skillAdvances: skillAdvances.length > 0 ? skillAdvances : undefined,
       specializations,
-      skillProvenanceStatus: effectiveSkillProvenanceStatus,
       baseAttributes,
       attributeAdvances,
       presetReleaseMode,
@@ -1256,8 +1224,6 @@ export function CharacterEditor() {
                           onSkillAdvancesChange={setSkillAdvances}
                           specializations={specializations}
                           onSpecializationsChange={setSpecializations}
-                          skillProvenanceStatus={skillProvenanceStatus}
-                          legacyFinalRanks={legacyFinalSkills}
                           selectedSkill={selectedSkill}
                           onSelectedSkillChange={setSelectedSkill}
                         />
