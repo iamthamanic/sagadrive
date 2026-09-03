@@ -1,6 +1,6 @@
 /**
  * IdentityPreviewPills — Compact Essenz / Archetype badges for the sticky preview card.
- * Spezies is intentionally omitted here; the name-row chip remains in CharacterEditor.
+ * Spezies is intentionally omitted from this card.
  * Location: src/components/IdentityPreviewPills.tsx
  */
 import type { SagaDriveArchetypeKey, SagaDriveEssenceKey } from '../modules/rulesets/characterCreation';

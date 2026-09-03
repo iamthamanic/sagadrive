@@ -34,7 +34,12 @@ async function selectAttributeGroup(page: Page, attributeLabel: string) {
   const radio = carousel.getByRole('radio', { name: attributeLabel, exact: true });
   for (let attempt = 0; attempt < 10; attempt += 1) {
     if ((await radio.getAttribute('aria-checked')) === 'true') return;
-    await radio.click();
+    try {
+      await radio.click({ timeout: 3_000 });
+    } catch {
+      await page.getByRole('button', { name: 'Nächstes Attribut' }).click();
+      continue;
+    }
     await expect(radio).toHaveAttribute('aria-checked', 'true', { timeout: 2_000 }).catch(() => undefined);
     if ((await radio.getAttribute('aria-checked')) === 'true') return;
     await page.getByRole('button', { name: 'Nächstes Attribut' }).click();
@@ -164,7 +169,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Erweitertes Schwimmen').first()).toBeVisible();
   await expect(page.getByText('Noch nicht verfügbar').first()).toBeVisible();
   await page.getByLabel(/Name deiner Spezies/i).fill('Schneggl');
-  await expect(page.getByLabel(/Spezies: Schneggl/i)).toBeVisible();
+  await expect(page.getByLabel(/Name deiner Spezies/i)).toHaveValue('Schneggl');
+  await expect(page.getByLabel('Spezies: Schneggl')).toHaveCount(0);
 
   await page.getByRole('button', { name: /Erweiterte Sicht, 2 Punkte/i }).click();
   const sightSelect = page.getByRole('combobox', { name: 'Erweiterte Sicht: Sichtform' });
@@ -211,10 +217,16 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText(/Essenz-Manifestation/i).first()).toBeVisible();
   await expect(page.getByText(/mentaler Kämpfer|vollständig regelkonform/i).first()).toBeVisible();
   await expect(page.getByText(/Feuerball/i)).toHaveCount(0);
+  await expect(page.getByLabel(/^Essenz:/)).toBeVisible();
+  await expect(page.getByLabel(/^Archetype:/)).toBeVisible();
+  await expect(page.getByLabel('Spezies: Mensch')).toHaveCount(0);
+  await expect(page.getByLabel('Spezies: Schneggl')).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '05-abilities-core-ability.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /^Attribute$/i }).click();
   await expect(page.getByText('Grundattribute').first()).toBeVisible();
+  await expect(page.getByText('Attributscheck').first()).toBeVisible();
+  await expect(page.getByText('Startverteilung').first()).toBeVisible();
   await expect(page.getByText(/15 \/ 15 Bonuspunkte/i).first()).toBeVisible();
   await expect(page.getByText(/\+4 Bonus|\+3 Bonus|\+2 Bonus|\+1 Bonus/i).first()).toBeVisible();
   await expect(page.getByText('Ausdauer').first()).toBeVisible();
@@ -273,7 +285,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await medicineNode.getByRole('button', { name: 'Spezialisieren' }).click();
   await medicineNode.getByRole('combobox', { name: 'Medizin Spezialisierungsvorschlag' }).click();
-  await page.getByRole('option', { name: 'Notfallmedizin', exact: true }).click();
+  await page.getByRole('option', { name: /Notfallmedizin/ }).click();
   await page.getByLabel('Milieuzugang').fill('Notaufnahmen');
   await page.getByLabel('Kontakt').fill('Dr. Sera Malk');
   await page.getByLabel('Komplikation').fill('Alte Schulden');
@@ -298,10 +310,20 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await selectAttributeGroup(page, 'Verstand');
   await page.locator('[data-attribute-skill-node="medicine"]').click();
+  const formulaSection = page.locator('[data-skill-check-formula="true"]');
+  const formulaToggle = formulaSection.getByRole('button', { name: /Formeldetails fuer Medizin/i });
+  await expect(formulaSection).toBeVisible();
+  await expect(formulaToggle).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByText(/Standardattribut: Verstand/i).last()).toBeVisible();
   await expect(page.getByText(/^Herkunft$/).last()).toBeVisible();
   await expect(page.getByText(/Globaler EB/i).last()).toBeVisible();
   await expect(page.getByText(/anwendbarer Erfahrungsbonus/i).last()).toBeVisible();
+  await formulaToggle.click();
+  await expect(formulaToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(formulaSection.getByText(/Standardattribut: Verstand/i)).toHaveCount(0);
+  await formulaToggle.click();
+  await expect(formulaToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByText(/Standardattribut: Verstand/i).last()).toBeVisible();
   await page.screenshot({ path: '.qa/evidence/skill-progression-v2-character-editor-ux/03-skill-formula-applied-eb.png', fullPage: true });
 
   await page.getByLabel('Stufe').click();

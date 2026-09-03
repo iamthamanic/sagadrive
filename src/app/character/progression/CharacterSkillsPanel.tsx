@@ -4,6 +4,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { Badge } from '../../../components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
 import {
   SAGA_DRIVE_START_FREE_SKILL_POINTS,
   createEmptySagaDriveSkillRanks,
@@ -82,11 +83,20 @@ export function CharacterSkillsPanel({
   const [activeAttribute, setActiveAttribute] = useState<SagaDriveAttributeKey>(() => attributeForSkill(selectedSkill));
   const [scrollPhase, setScrollPhase] = useState<CarouselScrollPhase>('settled');
   const [hoveredSkill, setHoveredSkill] = useState<SagaDriveSkillKey | null>(null);
+  const [isFormulaOpen, setIsFormulaOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedSkill) return;
     const next = attributeForSkill(selectedSkill);
     setActiveAttribute((current) => (current === next ? current : next));
+  }, [selectedSkill]);
+
+  useEffect(() => {
+    if (!selectedSkill) {
+      setIsFormulaOpen(false);
+      return;
+    }
+    setIsFormulaOpen(true);
   }, [selectedSkill]);
 
   const handleScrollPhaseChange = useCallback((phase: CarouselScrollPhase) => {
@@ -208,24 +218,45 @@ export function CharacterSkillsPanel({
         )}
 
         {selected && selectedSkill ? (
-          <div className="rounded-lg border border-border bg-card p-4" data-skill-check-formula>
-            <SkillCheckFormulaPanel
-              skillKey={selectedSkill}
-              characterLevel={characterLevel}
-              attributes={attributes}
-              finalRank={finalRanks[selectedSkill]}
-              freeRank={freeRanks[selectedSkill]}
-              backgroundPoints={backgroundSkillPoints}
-              archetypePoint={archetypeTrainingSkill === selectedSkill}
-              specializationName={
-                backgroundSpec?.skill === selectedSkill
-                  ? backgroundSpec.name
-                  : specializations.find(
-                      (entry) => entry.skill === selectedSkill && entry.source === 'skill-development',
-                    )?.name
-              }
-            />
-          </div>
+          <Accordion
+            type="single"
+            collapsible
+            value={isFormulaOpen ? 'skill-check-formula' : undefined}
+            onValueChange={(value) => setIsFormulaOpen(value === 'skill-check-formula')}
+            data-skill-check-formula="true"
+          >
+            <AccordionItem value="skill-check-formula" className="overflow-hidden rounded-lg border border-border bg-card">
+              <AccordionTrigger
+                className="px-4 py-3 hover:no-underline"
+                aria-label={`Formeldetails fuer ${selected.label} ${isFormulaOpen ? 'einklappen' : 'ausklappen'}`}
+              >
+                <div className="min-w-0 text-left">
+                  <p className="text-sm font-semibold">Fertigkeitsprobe: {selected.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Rang {finalRanks[selectedSkill]} einsehen und Formeldetails {isFormulaOpen ? 'einklappen' : 'ausklappen'}
+                  </p>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <SkillCheckFormulaPanel
+                  skillKey={selectedSkill}
+                  characterLevel={characterLevel}
+                  attributes={attributes}
+                  finalRank={finalRanks[selectedSkill]}
+                  freeRank={freeRanks[selectedSkill]}
+                  backgroundPoints={backgroundSkillPoints}
+                  archetypePoint={archetypeTrainingSkill === selectedSkill}
+                  specializationName={
+                    backgroundSpec?.skill === selectedSkill
+                      ? backgroundSpec.name
+                      : specializations.find(
+                          (entry) => entry.skill === selectedSkill && entry.source === 'skill-development',
+                        )?.name
+                  }
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         ) : null}
       </div>
     </div>

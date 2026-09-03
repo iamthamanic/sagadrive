@@ -25,7 +25,6 @@ import {
   CharacterBackgroundPanel,
   CharacterEssencePanel,
   GenderReadingSelect,
-  SelectedSpeciesChip,
   SpeciesCarousel,
   SpeciesTraitsPanel,
 } from '../creation';
@@ -981,7 +980,6 @@ export function CharacterEditor() {
                   <Label htmlFor="name">Name</Label>
                   <div className="flex items-center gap-2">
                     <Input id="name" className="min-w-0 flex-1" placeholder="Charaktername" value={characterName} onChange={(event) => setCharacterName(event.target.value)} />
-                    {characterRace.trim() ? <SelectedSpeciesChip species={characterRace} label={characterRace === 'alien' ? speciesProfileName : undefined} /> : null}
                   </div>
                 </div>
                 <div className="flex gap-2">
