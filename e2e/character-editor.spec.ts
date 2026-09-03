@@ -248,7 +248,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByLabel('Kontakt').fill('Dr. Sera Malk');
   await page.getByLabel('Komplikation').fill('Alte Schulden');
   await page.getByLabel('Zusätzliche Kommunikationsform').fill('Gebärdensprache');
-  await expect(page.getByText(/Hintergrund ist regelkonform vollständig/i)).toBeVisible();
+  await expect(page.getByText(/^Hintergrund vollständig$/i)).toBeVisible();
   await expect(page.getByText('Fertigkeiten & Quellen').first()).toBeVisible();
   await expect(page.getByText('Freie Punkte').first()).toBeVisible();
   await expect(page.getByText(/^Hintergrund$/).first()).toBeVisible();
@@ -375,7 +375,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '13-statistics-tab.png'), fullPage: true });
   await page.getByRole('tab', { name: /^Parameter$/i }).click();
   await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
-  await expect(page.getByText(/Hintergrund ist regelkonform vollständig/i)).toBeVisible();
+  await expect(page.getByText(/^Hintergrund vollständig$/i)).toBeVisible();
   await expect(page.getByTestId('skill-progression-slots')).toBeVisible();
   await expect(page.getByText(/Legacy-Charakter|vollständige Herkunft nicht rekonstruierbar/i)).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Speichern/i }).first()).toBeEnabled();
@@ -435,7 +435,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
     await expect(page.getByPlaceholder('Charaktername').first()).toHaveValue(roundtripName, { timeout: 15_000 });
     await page.getByRole('tab', { name: /^Parameter$/i }).click();
     await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
-    await expect(page.getByText(/Hintergrund ist regelkonform vollständig/i)).toBeVisible();
+    await expect(page.getByText(/^Hintergrund vollständig$/i)).toBeVisible();
     await expect(page.getByLabel('Spezialisierung Fachgebiet')).toHaveValue('Notfallmedizin');
     await expect(page.getByText(/^7 \/ 7$/).first()).toBeVisible();
     await expect(page.getByText('2 / 2').first()).toBeVisible();

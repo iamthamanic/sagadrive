@@ -1181,7 +1181,6 @@ export function CharacterEditor() {
                         contact={contact}
                         complication={complication}
                         communication={communication}
-                        validationAttempted={validationAttempted}
                         complete={backgroundComplete}
                         onTemplateSelect={handleBackgroundTemplateSelect}
                         onBackgroundNameChange={setBackgroundName}

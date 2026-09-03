@@ -43,9 +43,9 @@ import { RuleHelp } from '../shared/RuleHelp';
 import { SkillIcon, SkillSelectField } from '../progression';
 
 /**
- * BackgroundSkillAttributeHint — Compact attribute short-label chip with Tooltip.
- * Explains that this is the default probe-roll attribute (not “background/pool standard”).
- * Location: CharacterBackgroundPanel.tsx
+ * BackgroundSkillAttributeHint — Plain short-label + CircleHelp tooltip (same pattern as
+ * SpecializationSelectOptionHelp / CharacterEditor). Explains the default Check attribute
+ * (not background/pool points). Location: CharacterBackgroundPanel.tsx
  */
 function BackgroundSkillAttributeHint({
   attributeLabel,
@@ -55,26 +55,31 @@ function BackgroundSkillAttributeHint({
   attributeShortLabel: string;
 }) {
   return (
-    <Tooltip pinOnClick={false}>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label={`Standardattribut ${attributeShortLabel} erklären`}
-          className="mt-1 inline-flex items-center rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
-          onClick={(event) => event.stopPropagation()}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          {attributeShortLabel}
-        </button>
-      </TooltipTrigger>
-      <TooltipContent side="top" sideOffset={6} className="max-w-[280px] px-3 py-2 text-left text-xs leading-relaxed">
-        <p className="font-medium text-primary-foreground">{attributeLabel} ({attributeShortLabel})</p>
-        <p className="mt-1">
-          Beim Probe-Wurf wird normalerweise dieses Attribut mitgerechnet — nicht „Hintergrund-Standard“ oder
-          „Pool-Standard“. Dieselbe Info findest du auch in der normalen Skill-Liste.
-        </p>
-      </TooltipContent>
-    </Tooltip>
+    <span className="mt-1 inline-flex items-center justify-center gap-1">
+      <span
+        className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+        aria-hidden="true"
+      >
+        {attributeShortLabel}
+      </span>
+      <Tooltip pinOnClick={false}>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            aria-label={`Standardattribut ${attributeLabel} erklären`}
+            className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-primary hover:bg-primary/10"
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <CircleHelp className="pointer-events-none size-3.5" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" sideOffset={6} className="max-w-[280px] px-3 py-2 text-left text-xs leading-relaxed">
+          Beim Check wird das Attribut {attributeLabel} verwendet — das standardmäßig verknüpfte Attribut
+          für diesen Fertigkeits-Check, nicht Hintergrund- oder Pool-Punkte.
+        </TooltipContent>
+      </Tooltip>
+    </span>
   );
 }
 
@@ -122,7 +127,6 @@ interface CharacterBackgroundPanelProps {
   contact: string;
   complication: string;
   communication: string;
-  validationAttempted: boolean;
   complete: boolean;
   onTemplateSelect: (templateId: string | null) => void;
   onBackgroundNameChange: (value: string) => void;
@@ -618,7 +622,6 @@ export function CharacterBackgroundPanel({
   contact,
   complication,
   communication,
-  validationAttempted,
   complete,
   onTemplateSelect,
   onBackgroundNameChange,
@@ -813,13 +816,6 @@ export function CharacterBackgroundPanel({
           </div>
         </div>
       ) : null}
-
-      <div className={`rounded-lg border px-4 py-3 text-sm ${complete ? 'border-primary/30 bg-primary/5' : validationAttempted ? 'border-destructive/40 bg-destructive/5 text-destructive' : 'border-border bg-muted/10'}`}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-medium">{complete ? 'Hintergrund ist regelkonform vollständig.' : 'Noch offen: Template/Name, 4 Pool-Skills, 2 Hintergrundpunkte, 1 Spezialisierung sowie Milieu, Kontakt, Komplikation und Kommunikationsform.'}</p>
-          <span className="text-xs">{poolSkills.length}/4 Pool · {backgroundPointsUsed}/2 Punkte · {specializationSkill && specializationName.trim() ? '1/1 Spezialisierung' : '0/1 Spezialisierung'}</span>
-        </div>
-      </div>
     </section>
   );
 }
