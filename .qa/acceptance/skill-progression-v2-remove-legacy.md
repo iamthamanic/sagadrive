@@ -66,8 +66,3 @@ Roadmap: Skill Progression v2 post-#101 — fail-closed only.
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-skill-progression-v2-remove-legacy.md`
 - Skip reason: n/a
-
-- HEAD_SHA: pending
-- Verdict: pending
-- Proof: `.qa/runs/composition-gate-skill-progression-v2-remove-legacy.md`
-- Skip reason: n/a
