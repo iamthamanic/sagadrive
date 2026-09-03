@@ -17,6 +17,7 @@ import type {
 import { AttributeD20Icon } from '../../../components/AttributeD20Icon';
 import { DerivedStatCard } from '../../../components/DerivedStatCard';
 import { AttributeDerivedConnector } from '../../../components/AttributeDerivedConnector';
+import { IdentityPreviewPills } from '../../../components/IdentityPreviewPills';
 import { CharacterAssistantButton } from '../../../components/assistant/CharacterAssistantButton';
 import {
   CharacterArchetypePanel,
@@ -952,7 +953,7 @@ export function CharacterEditor() {
   const handleTabChange = (value: string) => { if (isEditorTab(value)) { setActiveTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
   const handleValuesSubTabChange = (value: string) => { if (isValuesSubTab(value)) { setActiveValuesSubTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
   const handleSettingsSubTabChange = (value: string) => { if (isSettingsSubTab(value)) setActiveSettingsSubTab(value); };
-  const previewIdentitySummary = [speciesDisplayName, essence?.label, archetype?.label].filter(Boolean).join(' · ');
+  const showIdentityPills = Boolean(essence?.label || archetype?.label);
   const totalStartSkillPoints = freeSkillPointsUsed + backgroundPointsUsed + (archetypeTrainingSkill ? 1 : 0);
 
   return (
@@ -992,8 +993,13 @@ export function CharacterEditor() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="aspect-[4/5] overflow-hidden rounded-lg border border-border bg-[#0B1220] shadow-inner"><AvatarCanvas avatar={currentAvatar} canvasRef={avatarCanvasRef} /></div>
-              {previewIdentitySummary ? (
-                <p className="text-sm text-muted-foreground">{previewIdentitySummary}</p>
+              {showIdentityPills ? (
+                <IdentityPreviewPills
+                  essenceKey={essenceProfile}
+                  essenceLabel={essence?.label}
+                  archetypeKey={characterArchetype}
+                  archetypeLabel={archetype?.label}
+                />
               ) : (
                 <p className="text-sm text-muted-foreground">Wähle Archetyp und Essenz</p>
               )}
