@@ -505,20 +505,6 @@ export function CharacterBackgroundPanel({
 
           {showSkillGraph ? (
             <div className="space-y-2 -mt-2">
-              {/* Heading sits above the connector brackets so the copy leads into the graph. */}
-              <div
-                className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-2 px-0.5"
-                data-background-points-budget
-              >
-                <div>
-                  <p className="font-medium">2 Hintergrund-Fertigkeitspunkte</p>
-                  <p className="text-sm text-muted-foreground">Direkt an den Pool-Skills verteilen. +2 auf einen Skill oder +1/+1.</p>
-                </div>
-                <Badge variant={backgroundPointsComplete ? 'default' : 'outline'}>
-                  {backgroundPointsUsed} / {SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS} verteilt
-                </Badge>
-              </div>
-
               <BackgroundSkillConnector
                 skills={visibleSkillNodes}
                 trainedSkills={occupiedBackgroundSkills}
@@ -545,6 +531,20 @@ export function CharacterBackgroundPanel({
                       onAdjust={handleBackgroundPointAdjust}
                     />
                   ))}
+                </div>
+
+                {/* Budget copy sits under the skill boxes so the graph leads with the nodes. */}
+                <div
+                  className="flex flex-wrap items-center justify-between gap-2 px-0.5"
+                  data-background-points-budget
+                >
+                  <div>
+                    <p className="font-medium">2 Hintergrund-Fertigkeitspunkte</p>
+                    <p className="text-sm text-muted-foreground">Direkt an den Pool-Skills verteilen. +2 auf einen Skill oder +1/+1.</p>
+                  </div>
+                  <Badge variant={backgroundPointsComplete ? 'default' : 'outline'}>
+                    {backgroundPointsUsed} / {SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS} verteilt
+                  </Badge>
                 </div>
 
                 {backgroundPointsComplete ? (
