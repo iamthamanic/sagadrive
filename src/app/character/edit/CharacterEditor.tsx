@@ -1014,7 +1014,7 @@ export function CharacterEditor() {
               <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-5">
                   <TabsTrigger value="info" className="px-1 py-2 text-xs md:px-2 md:text-sm">Spezies</TabsTrigger>
-                  <TabsTrigger value="values" className="px-1 py-2 text-xs md:px-2 md:text-sm">Parameter</TabsTrigger>
+                  <TabsTrigger value="values" className="px-1 py-2 text-xs md:px-2 md:text-sm">Charakter</TabsTrigger>
                   <TabsTrigger value="appearance" className="px-1 py-2 text-xs md:px-2 md:text-sm">Look</TabsTrigger>
                   <TabsTrigger value="inventory" className="px-1 py-2 text-xs md:px-2 md:text-sm">Inventar</TabsTrigger>
                   <TabsTrigger value="settings" className="px-1 py-2 text-xs md:px-2 md:text-sm">Einstellungen</TabsTrigger>

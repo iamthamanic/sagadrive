@@ -88,7 +88,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('SagaDrive Core').first()).toBeVisible();
   await expect(page.getByRole('combobox', { name: /Regelset/i }).first()).toBeVisible();
 
-  for (const tab of ['Spezies', 'Parameter', 'Look', 'Inventar', 'Einstellungen']) {
+  for (const tab of ['Spezies', 'Charakter', 'Look', 'Inventar', 'Einstellungen']) {
     await expect(page.getByRole('tab', { name: new RegExp(`^${tab}$`, 'i') })).toBeVisible();
   }
   await expect(page.locator('[role="tablist"]').first().getByRole('tab', { name: /^Hintergrund$/i })).toHaveCount(0);
@@ -187,7 +187,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Flugfähig')).toHaveCount(0);
   await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
 
-  await page.getByRole('tab', { name: /^Parameter$/i }).click();
+  await page.getByRole('tab', { name: /^Charakter$/i }).click();
   await expect(page.getByRole('tab', { name: /^Attribute$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Hintergrund$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Details$/i })).toBeVisible();
@@ -318,7 +318,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.getByLabel('Stufe').click();
   await page.getByRole('option', { name: '1', exact: true }).click();
   await completeSpeciesBasics(page);
-  await page.getByRole('tab', { name: /^Parameter$/i }).click();
+  await page.getByRole('tab', { name: /^Charakter$/i }).click();
   await page.getByRole('tab', { name: /^Attribute$/i }).click();
   await allocateSevenFreeSkillPoints(page);
 
@@ -328,7 +328,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByLabel('Stufe').click();
   await page.getByRole('option', { name: '3', exact: true }).click();
-  await page.getByRole('tab', { name: /^Parameter$/i }).click();
+  await page.getByRole('tab', { name: /^Charakter$/i }).click();
   await page.getByRole('tab', { name: /^Attribute$/i }).click();
   const progressionSlots = page.getByTestId('skill-progression-slots');
   await expect(progressionSlots).toBeVisible();
@@ -411,7 +411,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tab', { name: /^Preset$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /Notizen/i })).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '13-statistics-tab.png'), fullPage: true });
-  await page.getByRole('tab', { name: /^Parameter$/i }).click();
+  await page.getByRole('tab', { name: /^Charakter$/i }).click();
   await page.getByRole('tab', { name: /^Hintergrund$/i }).click();
   await expect(page.getByText(/^Hintergrund vollständig$/i)).toBeVisible();
   await page.getByRole('tab', { name: /^Attribute$/i }).click();
@@ -472,7 +472,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
     await savedCard.getByRole('button', { name: 'Bearbeiten' }).click();
     await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible();
     await expect(page.getByPlaceholder('Charaktername').first()).toHaveValue(roundtripName, { timeout: 15_000 });
-    await page.getByRole('tab', { name: /^Parameter$/i }).click();
+    await page.getByRole('tab', { name: /^Charakter$/i }).click();
     await page.getByRole('tab', { name: /^Hintergrund$/i }).click();
     await expect(page.getByText(/^Hintergrund vollständig$/i)).toBeVisible();
     await expect(page.getByLabel('Spezialisierung Fachgebiet')).toHaveValue('Notfallmedizin');
@@ -511,7 +511,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('combobox', { name: 'Enge Resistenz: Gefahrenart' })).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-species-mobile-repeatable.png'), fullPage: true });
 
-  await page.getByRole('tab', { name: /^Parameter$/i }).click();
+  await page.getByRole('tab', { name: /^Charakter$/i }).click();
   await page.getByRole('tab', { name: /^Hintergrund$/i }).click();
   await expect(page.getByRole('radio', { name: /Heilung & Fürsorge/i })).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '12-mobile-competencies.png'), fullPage: true });
