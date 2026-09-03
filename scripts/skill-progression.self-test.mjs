@@ -31,14 +31,6 @@ function skillCap(level) {
   return 5;
 }
 
-function legacyPoints(trained) {
-  const result = {};
-  for (const skill of trained) {
-    result[skill] = 1;
-  }
-  return result;
-}
-
 function startRanks({ free, background, archetype }) {
   const keys = ['medicine', 'insight', 'persuasion', 'awareness'];
   const ranks = Object.fromEntries(keys.map((key) => [key, 0]));
@@ -64,11 +56,6 @@ assert(appliedEb(5, 17) === 5, 'rank 5 applied EB cap');
 assert(skillCap(1) === 3, 'start cap');
 assert(skillCap(5) === 4, 'mid cap');
 assert(skillCap(17) === 5, 'high cap');
-
-// Legacy migration exact +1/+1
-const legacy = legacyPoints(['medicine', 'insight']);
-assert(legacy.medicine === 1 && legacy.insight === 1, 'legacy +1/+1');
-assert(legacy.medicine !== 2, 'legacy never +2');
 
 // Start sources: medicine +2 background, +1 archetype → 3
 const levelOne = startRanks({

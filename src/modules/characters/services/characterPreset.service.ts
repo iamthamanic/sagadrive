@@ -26,6 +26,7 @@ import {
   type CharacterRulesetKey,
   type SagaDriveSkillKey,
 } from '../../rulesets/characterCreation';
+import { isValidBackgroundSkillPoints } from '../../rulesets/skillProgression';
 import type { CharacterAttributesDto, CharacterGenderReading, SagaDriveProfileDto } from '../types/character.types';
 import type {
   CharacterPresetDto,
@@ -116,14 +117,13 @@ export function assertValidSnapshot(snapshot: CharacterPresetSnapshot): void {
 
   const bg = profile.background;
   const pool = Array.isArray(bg?.skillPool) ? bg.skillPool.filter(isSagaDriveSkillKey) : [];
-  const trained = Array.isArray(bg?.trainedSkills) ? bg.trainedSkills.filter(isSagaDriveSkillKey) : [];
-  if (!bg?.name?.trim() || pool.length !== 4 || trained.length !== 2) {
-    throw new Error('Preset-Snapshot: Hintergrund unvollständig (Name, 4er-Pool, 2 Training).');
+  if (!bg?.name?.trim() || pool.length !== 4) {
+    throw new Error('Preset-Snapshot: Hintergrund unvollständig (Name, 4er-Pool).');
   }
-  if (!trained.every((skill) => pool.includes(skill))) {
-    throw new Error('Preset-Snapshot: Hintergrund-Training muss im Skill-Pool liegen.');
+  if (!isValidBackgroundSkillPoints(bg.backgroundSkillPoints ?? {}, pool)) {
+    throw new Error('Preset-Snapshot: genau 2 Hintergrund-Fertigkeitspunkte im Pool nötig.');
   }
-  if (!bg.specialization?.name?.trim() || !isSagaDriveSkillKey(bg.specialization.skill) || !trained.includes(bg.specialization.skill)) {
+  if (!bg.specialization?.name?.trim() || !isSagaDriveSkillKey(bg.specialization.skill) || (bg.backgroundSkillPoints?.[bg.specialization.skill] ?? 0) <= 0) {
     throw new Error('Preset-Snapshot: Spezialisierung unvollständig.');
   }
   if (![bg.milieuAccess, bg.contact, bg.complication, bg.communication].every((field) => typeof field === 'string' && field.trim())) {

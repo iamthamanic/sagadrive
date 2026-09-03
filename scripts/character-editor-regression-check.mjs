@@ -67,11 +67,11 @@ requireMatch(backgroundTemplates, /skillPool:\s*\['medicine', 'insight', 'surviv
 rejectMatch(backgroundTemplates, /recommendedTraining/, 'legacy background training recommendation or compatibility field remains');
 rejectMatch(editor, /recommendedTraining/, 'CharacterEditor still reads legacy background training recommendations');
 requireMatch(editor, /setBackgroundSkillPoints\(\{\}\)/, 'neutral background skill points initialization in CharacterEditor');
-requireMatch(editor, /skillProvenanceStatus:\s*effectiveSkillProvenanceStatus/, 'data-derived skill provenance status on save');
-requireMatch(editor, /hasCompleteSkillProvenance/, 'provenance completeness derived from data in CharacterEditor');
+rejectMatch(editor, /skillProvenanceStatus/, 'CharacterEditor still writes or hydrates skillProvenanceStatus');
+rejectMatch(editor, /hasCompleteSkillProvenance/, 'CharacterEditor still uses OR-of-partials provenance helper');
+rejectMatch(editor, /legacyFinalSkills|legacy-unresolved|provenanceLegacy/, 'CharacterEditor still has skill-progression legacy state');
 requireMatch(editor, /resolveSagaDriveSkillRanksSafe/, 'non-throwing skill rank resolution in CharacterEditor');
-requireMatch(editor, /legacyFinalSkills/, 'legacy characters keep stored final skill ranks visible');
-requireMatch(editor, /setLegacyFinalSkills\(resolvedSkills\.provenanceStatus === 'legacy-unresolved' \? payload\.skills : null\)/, 'legacy final ranks hydrated without invented provenance');
+requireMatch(editor, /isValidStartSkillBuild\(startSkillBuild, selectedBackgroundPool, characterArchetype\)/, 'editor start-build validation includes archetype');
 requireMatch(editor, /isValidSagaDriveSkillDevelopment/, 'chronological one-decision-per-slot validation in editor completion');
 requireMatch(editor, /getSagaDriveExperienceBonus\(characterLevel\)/, 'level-scaled global experience bonus');
 requireMatch(backgroundAllocator, /2 Hintergrund-Fertigkeitspunkte/, 'two stackable background points copy');
@@ -140,7 +140,7 @@ requireMatch(skillsPanel, /SkillProgressionSlotsPanel/, 'level 3-19 progression 
 rejectMatch(skillsPanel, /Mindestens.*Fertigkeiten.*Wert 1 oder höher/s, 'legacy minimum-six trained skills rule');
 requireMatch(skillsPanel, /Standardbeziehung – keine Voraussetzung|globalen und anwendbaren Erfahrungsbonus/s, 'skill relationship or formula semantics');
 requireMatch(skillsPanel, /Hintergrund-Pool/, 'background pool source distinction');
-requireMatch(skillsPanel, /legacyFinalRanks/, 'legacy final ranks displayed in skills panel');
+rejectMatch(skillsPanel, /legacyFinalRanks|provenanceLegacy|legacy-unresolved|Legacy-Charakter/, 'skills panel still has skill-progression legacy UI');
 const slotsPanel = read('src/app/character/progression/SkillProgressionSlotsPanel.tsx');
 requireMatch(slotsPanel, /draftsByLevel/, 'local per-level draft state for incomplete slot decisions');
 requireMatch(slotsPanel, /sanitizeSagaDriveSkillDevelopment/, 'domain-driven dependent slot pruning');
@@ -153,6 +153,7 @@ requireMatch(slotsPanel, /aria-label=\{`Level \$\{level\} Spezialisierungsname`\
 const formulaPanel = read('src/app/character/progression/SkillCheckFormulaPanel.tsx');
 requireMatch(formulaPanel, /SAGA_DRIVE_SPECIALIZATION_BONUS/, 'specialization bonus from domain rules, not a UI magic number');
 requireMatch(formulaPanel, /specialization-situational-bonus/, 'situational specialization bonus shown separately');
+rejectMatch(formulaPanel, /provenanceLegacy|Legacy —/, 'formula panel still has legacy provenance copy');
 rejectMatch(formulaPanel, /checkTotal = attributeValue \+ finalRank \+ appliedEb \+/, 'normal check must not include specialization bonus');
 requireMatch(abilitiesPanel, /Regelgebundene Fähigkeiten/, 'rule-bound abilities panel');
 rejectMatch(abilitiesPanel, /Fähigkeit hinzufügen|setDialogOpen/, 'free-form ability creation remains');

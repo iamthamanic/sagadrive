@@ -85,9 +85,7 @@ function normalizeSagaDriveBackground(value?: Partial<SagaDriveBackgroundDto>): 
   const hasExplicitBackgroundPoints = Object.keys(explicitBackgroundSkillPoints).length > 0;
   const trainedSkills = hasExplicitBackgroundPoints
     ? backgroundSkillPointsToTrainedSkills(explicitBackgroundSkillPoints)
-    : Array.isArray(value?.trainedSkills)
-      ? value.trainedSkills.filter((skill) => isSagaDriveSkillKey(skill) && skillPool.includes(skill)).slice(0, 2)
-      : [];
+    : [];
   const specialization = value?.specialization && isSagaDriveSkillKey(value.specialization.skill) && typeof value.specialization.name === 'string'
     ? {
         skill: value.specialization.skill,
@@ -225,9 +223,6 @@ export function normalizeSagaDriveProfile(value?: Partial<SagaDriveProfileDto> |
   const skillAdvances = normalizeSkillAdvances(value.skillAdvances);
   const specializations = normalizeSpecializationRecords(value.specializations);
   const hasFreeSkillRanks = sagaDriveSkillDefinitions.some((skill) => (freeSkillRanks[skill.key] ?? 0) > 0);
-  const skillProvenanceStatus = value.skillProvenanceStatus === 'complete' || value.skillProvenanceStatus === 'legacy-unresolved'
-    ? value.skillProvenanceStatus
-    : undefined;
   return {
     archetype: value.archetype && isSagaDriveArchetypeKey(value.archetype) ? value.archetype : undefined,
     essence: value.essence && isSagaDriveEssenceKey(value.essence) ? value.essence : undefined,
@@ -239,7 +234,6 @@ export function normalizeSagaDriveProfile(value?: Partial<SagaDriveProfileDto> |
     ...(hasFreeSkillRanks ? { freeSkillRanks } : {}),
     ...(skillAdvances.length > 0 ? { skillAdvances } : {}),
     ...(specializations.length > 0 ? { specializations } : {}),
-    ...(skillProvenanceStatus ? { skillProvenanceStatus } : {}),
     ...(baseAttributes ? { baseAttributes, attributeAdvances } : Object.keys(attributeAdvances).length > 0 ? { attributeAdvances } : {}),
     ...(presetReleaseMode ? { presetReleaseMode } : {}),
     drive: typeof value.drive === 'number' ? clampInteger(value.drive, 0, 5) : 3,

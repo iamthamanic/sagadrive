@@ -12,7 +12,6 @@ import type {
 import type {
   SagaDriveBackgroundSkillPoints,
   SagaDriveSkillAdvanceDto,
-  SagaDriveSkillProvenanceStatus,
   SagaDriveSpecializationRecordDto,
   SagaDriveSpecializationSource,
 } from '../../rules/sagadrive/skill-progression';
@@ -31,6 +30,7 @@ export interface SagaDriveSpecializationDto {
 export interface SagaDriveBackgroundDto {
   name: string;
   skillPool: SagaDriveSkillKey[];
+  /** Derived from backgroundSkillPoints for UI compatibility — not a skill-progression source of truth. */
   trainedSkills: SagaDriveSkillKey[];
   backgroundSkillPoints?: SagaDriveBackgroundSkillPoints;
   specialization?: SagaDriveSpecializationDto;
@@ -72,7 +72,6 @@ export interface SagaDriveProfileDto {
   freeSkillRanks?: Partial<Record<SagaDriveSkillKey, number>>;
   skillAdvances?: SagaDriveSkillAdvanceDto[];
   specializations?: SagaDriveSpecializationRecordDto[];
-  skillProvenanceStatus?: SagaDriveSkillProvenanceStatus;
   baseAttributes?: CharacterAttributesDto;
   attributeAdvances?: SagaDriveAttributeAdvancesDto;
   presetReleaseMode?: SagaDrivePresetReleaseMode;

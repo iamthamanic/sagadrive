@@ -25,7 +25,6 @@ interface SkillCheckFormulaPanelProps {
   backgroundPoints: SagaDriveBackgroundSkillPoints;
   archetypePoint: boolean;
   specializationName?: string;
-  provenanceLegacy?: boolean;
 }
 
 function rankLabel(rank: number): string {
@@ -46,7 +45,6 @@ export function SkillCheckFormulaPanel({
   backgroundPoints,
   archetypePoint,
   specializationName,
-  provenanceLegacy = false,
 }: SkillCheckFormulaPanelProps) {
   const skill = getSagaDriveSkill(skillKey);
   const attribute = getSagaDriveAttribute(skill.attribute);
@@ -73,16 +71,12 @@ export function SkillCheckFormulaPanel({
 
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Herkunft</p>
-        {provenanceLegacy ? (
-          <p className="text-muted-foreground">Legacy — vollständige Herkunft nicht rekonstruierbar. Finaler Rang bleibt erhalten.</p>
-        ) : (
-          <div className="space-y-1">
-            <div className="flex justify-between gap-3"><span className="text-muted-foreground">Hintergrund</span><strong>{backgroundValue > 0 ? `+${backgroundValue}` : '—'}</strong></div>
-            <div className="flex justify-between gap-3"><span className="text-muted-foreground">Archetyp</span><strong>{archetypePoint ? '+1' : '—'}</strong></div>
-            <div className="flex justify-between gap-3"><span className="text-muted-foreground">Frei</span><strong>{freeRank > 0 ? `+${freeRank}` : '—'}</strong></div>
-            <div className="border-t border-border pt-2 flex justify-between gap-3"><span className="text-muted-foreground">Fertigkeitsrang</span><strong>{finalRank}</strong></div>
-          </div>
-        )}
+        <div className="space-y-1">
+          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Hintergrund</span><strong>{backgroundValue > 0 ? `+${backgroundValue}` : '—'}</strong></div>
+          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Archetyp</span><strong>{archetypePoint ? '+1' : '—'}</strong></div>
+          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Frei</span><strong>{freeRank > 0 ? `+${freeRank}` : '—'}</strong></div>
+          <div className="border-t border-border pt-2 flex justify-between gap-3"><span className="text-muted-foreground">Fertigkeitsrang</span><strong>{finalRank}</strong></div>
+        </div>
       </div>
 
       <div className="space-y-2">

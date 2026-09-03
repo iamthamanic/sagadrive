@@ -45,19 +45,16 @@ export function assertValidSagaDriveSkillPersistence(
   profile: SagaDriveProfileDto,
   level: number,
 ): void {
-  const resolved = resolveSagaDriveSkillBuildState(skills, {
+  const resolved = resolveSagaDriveSkillBuildState({
     freeSkillRanks: profile.freeSkillRanks,
     backgroundSkillPoints: profile.background.backgroundSkillPoints,
-    trainedSkills: profile.background.trainedSkills,
     skillPool: profile.background.skillPool,
     archetypeTrainingSkill: profile.archetypeTrainingSkill,
     skillAdvances: profile.skillAdvances,
     specializations: profile.specializations,
     backgroundSpecialization: profile.background.specialization,
-  }, level);
+  });
 
-  // resolved.provenanceStatus is derived from the actual data; the client-supplied
-  // profile.skillProvenanceStatus is intentionally not consulted (no validation bypass).
   assertSagaDriveSkillPersistence(
     skills,
     resolved,
