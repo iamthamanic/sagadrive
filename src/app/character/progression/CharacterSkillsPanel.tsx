@@ -1,5 +1,5 @@
 /**
- * CharacterSkillsPanel — Three start sources (7/2/1), formula panel, and level slots (#91).
+ * CharacterSkillsPanel — Skill list by attribute, formula panel, and level slots (#91).
  * Location: src/app/character/progression/CharacterSkillsPanel.tsx
  */
 import { Minus, Plus } from 'lucide-react';
@@ -16,11 +16,8 @@ import {
 } from '../../../modules/rulesets/characterCreation';
 import type { CharacterAttributesDto } from '../../../modules/characters/types/character.types';
 import {
-  SAGA_DRIVE_START_ARCHETYPE_SKILL_POINTS,
-  SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS,
   getSagaDriveSkillCap,
   resolveSagaDriveSkillRanksSafe,
-  sumBackgroundSkillPointsUsed,
   type SagaDriveBackgroundSkillPoints,
   type SagaDriveSkillAdvanceDto,
   type SagaDriveSpecializationRecordDto,
@@ -56,10 +53,6 @@ function rankLabel(rank: number): string {
   return 'Weltklasse';
 }
 
-function sumBackgroundPoints(points: SagaDriveBackgroundSkillPoints): number {
-  return sumBackgroundSkillPointsUsed(points);
-}
-
 export function CharacterSkillsPanel({
   characterLevel,
   attributes,
@@ -76,7 +69,6 @@ export function CharacterSkillsPanel({
   onSelectedSkillChange,
 }: CharacterSkillsPanelProps) {
   const freeUsed = sagaDriveSkillDefinitions.reduce((sum, skill) => sum + freeRanks[skill.key], 0);
-  const backgroundUsed = sumBackgroundPoints(backgroundSkillPoints);
   const startBuild: SagaDriveStartSkillBuild = {
     freeSkillRanks: freeRanks,
     backgroundSkillPoints,
@@ -87,7 +79,6 @@ export function CharacterSkillsPanel({
     characterLevel,
   );
   const skillCap = getSagaDriveSkillCap(characterLevel);
-  const hasOverflow = sagaDriveSkillDefinitions.some((skill) => finalRanks[skill.key] > skillCap);
   const selected = selectedSkill ? getSagaDriveSkill(selectedSkill) : undefined;
   const backgroundSpec = specializations.find((entry) => entry.source === 'background');
 
@@ -101,22 +92,6 @@ export function CharacterSkillsPanel({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Freie Punkte</p><p className="mt-1 text-lg font-semibold">{freeUsed} / {SAGA_DRIVE_START_FREE_SKILL_POINTS}</p></div>
-        <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Hintergrund</p><p className="mt-1 text-lg font-semibold">{backgroundUsed} / {SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS}</p></div>
-        <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Archetyp</p><p className="mt-1 text-lg font-semibold">{archetypeTrainingSkill ? SAGA_DRIVE_START_ARCHETYPE_SKILL_POINTS : 0} / {SAGA_DRIVE_START_ARCHETYPE_SKILL_POINTS}</p></div>
-        <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Level-Cap</p><p className="mt-1 text-lg font-semibold">{skillCap}</p><p className="text-[11px] text-muted-foreground">Start gesamt 10 Punkte</p></div>
-      </div>
-
-      {(freeUsed !== SAGA_DRIVE_START_FREE_SKILL_POINTS || backgroundUsed !== SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS || !archetypeTrainingSkill || hasOverflow) && (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm">
-          {freeUsed !== SAGA_DRIVE_START_FREE_SKILL_POINTS && <p>Vergib genau {SAGA_DRIVE_START_FREE_SKILL_POINTS} freie Fertigkeitspunkte.</p>}
-          {backgroundUsed !== SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS && <p>Verteile genau {SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS} Hintergrundpunkte im Hintergrund-Panel.</p>}
-          {!archetypeTrainingSkill && <p>Wähle unter Archetype eine typische Fertigkeit (+1).</p>}
-          {hasOverflow && <p>Auf Stufe {characterLevel} darf keine Fertigkeit höher als {skillCap} sein.</p>}
-        </div>
-      )}
-
       <SkillProgressionSlotsPanel
         characterLevel={characterLevel}
         startBuild={startBuild}

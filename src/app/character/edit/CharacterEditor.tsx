@@ -114,7 +114,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui
 
 type ActivityTrackingWindow = Window & { trackActivity?: (description: string) => void };
 type EditorTab = 'info' | 'values' | 'appearance' | 'inventory' | 'settings';
-type ValuesSubTab = 'competencies' | 'archetype' | 'essenz';
+type ValuesSubTab = 'attributes' | 'background' | 'details' | 'archetype' | 'essenz';
 type SettingsSubTab = 'statistics' | 'preset';
 type ValidationProblem = { tab: EditorTab; message: string; valuesSubTab?: ValuesSubTab };
 type SkillSlot = SagaDriveSkillKey | '';
@@ -131,7 +131,7 @@ function isEditorTab(value: string): value is EditorTab {
 }
 
 function isValuesSubTab(value: string): value is ValuesSubTab {
-  return value === 'competencies' || value === 'archetype' || value === 'essenz';
+  return value === 'attributes' || value === 'background' || value === 'details' || value === 'archetype' || value === 'essenz';
 }
 
 function isSettingsSubTab(value: string): value is SettingsSubTab {
@@ -245,7 +245,7 @@ function retainSpeciesTraitInstancesForRace(
 
 export function CharacterEditor() {
   const [activeTab, setActiveTab] = useState<EditorTab>('info');
-  const [activeValuesSubTab, setActiveValuesSubTab] = useState<ValuesSubTab>('competencies');
+  const [activeValuesSubTab, setActiveValuesSubTab] = useState<ValuesSubTab>('attributes');
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<SettingsSubTab>('statistics');
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [savedCharacterId, setSavedCharacterId] = useState<string | null>(null);
@@ -396,10 +396,10 @@ export function CharacterEditor() {
     if (speciesTraitCost !== SAGA_DRIVE_SPECIES_TRAIT_BUDGET) problems.push({ tab: 'info', message: `Wähle Speziesmerkmale im Wert von genau ${SAGA_DRIVE_SPECIES_TRAIT_BUDGET} Punkten.` });
     if (characterRace === 'alien' && !speciesProfileName.trim()) problems.push({ tab: 'info', message: 'Gib deinem Alien-Speziesprofil einen Namen.' });
     if (!speciesTraitInstancesValid) problems.push({ tab: 'info', message: 'Vervollständige alle Speziesmerkmale und verwende jede Unteroption höchstens einmal.' });
-    if (!backgroundComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige deinen mechanischen Hintergrund unter Kompetenzen.' });
-    if (!attributeDistributionValid) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: `Verteile genau ${SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte (+0 bis +4) und alle für Level ${characterLevel} verfügbaren Attributsteigerungen, ohne einen Endwert über +${SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} zu erzeugen.` });
+    if (!backgroundComplete) problems.push({ tab: 'values', valuesSubTab: 'background', message: 'Vervollständige deinen mechanischen Hintergrund unter Hintergrund.' });
+    if (!attributeDistributionValid) problems.push({ tab: 'values', valuesSubTab: 'attributes', message: `Verteile genau ${SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET} Basis-Bonuspunkte (+0 bis +4) und alle für Level ${characterLevel} verfügbaren Attributsteigerungen, ohne einen Endwert über +${SAGA_DRIVE_ATTRIBUTE_BONUS_CAP} zu erzeugen.` });
     if (!characterArchetype) problems.push({ tab: 'values', valuesSubTab: 'archetype', message: 'Bitte wähle einen Archetyp.' });
-    if (!skillsComplete) problems.push({ tab: 'values', valuesSubTab: 'competencies', message: 'Vervollständige die drei Startquellen (7 frei, 2 Hintergrund, 1 Archetyp) und alle Fertigkeitsentwicklungen bis zu deinem Level. Pro Entwicklungsstufe ist genau eine Entscheidung erlaubt; Spezialisierungen brauchen ihren Mindestrang (1/3/5) bereits zum Erwerbszeitpunkt.' });
+    if (!skillsComplete) problems.push({ tab: 'values', valuesSubTab: 'attributes', message: 'Vervollständige die drei Startquellen (7 frei, 2 Hintergrund, 1 Archetyp) und alle Fertigkeitsentwicklungen bis zu deinem Level. Pro Entwicklungsstufe ist genau eine Entscheidung erlaubt; Spezialisierungen brauchen ihren Mindestrang (1/3/5) bereits zum Erwerbszeitpunkt.' });
     if (!essenceProfile) problems.push({ tab: 'values', valuesSubTab: 'essenz', message: 'Bitte wähle eine primäre Essenz.' });
     return problems;
   };
@@ -776,7 +776,7 @@ export function CharacterEditor() {
     setAttributeAdvances((current) => ({ ...current, [advanceLevel]: attribute }));
   };
 
-  // --- Attribute -> abgeleitete Werte (Bracket-Tree im Kompetenzen-Tab) ---
+  // --- Attribute -> abgeleitete Werte (Bracket-Tree im Attribute-Tab) ---
   const [connectedAttribute, setConnectedAttribute] = useState<SagaDriveAttributeKey | null>(null);
   const [hoveredAttribute, setHoveredAttribute] = useState<SagaDriveAttributeKey | null>(null);
   const activeAttribute = hoveredAttribute ?? connectedAttribute;
@@ -1027,13 +1027,15 @@ export function CharacterEditor() {
 
                 <TabsContent value="values" className="space-y-6">
                   <Tabs value={activeValuesSubTab} onValueChange={handleValuesSubTabChange}>
-                    <TabsList className="grid h-auto w-full grid-cols-3 gap-1">
-                      <TabsTrigger value="competencies" className="px-3 py-2 text-xs md:text-sm">Kompetenzen</TabsTrigger>
-                      <TabsTrigger value="archetype" className="px-3 py-2 text-xs md:text-sm">Archetype</TabsTrigger>
-                      <TabsTrigger value="essenz" className="px-3 py-2 text-xs md:text-sm">Essenz</TabsTrigger>
+                    <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-5">
+                      <TabsTrigger value="attributes" className="px-2 py-2 text-xs md:px-3 md:text-sm">Attribute</TabsTrigger>
+                      <TabsTrigger value="background" className="px-2 py-2 text-xs md:px-3 md:text-sm">Hintergrund</TabsTrigger>
+                      <TabsTrigger value="details" className="px-2 py-2 text-xs md:px-3 md:text-sm">Details</TabsTrigger>
+                      <TabsTrigger value="archetype" className="px-2 py-2 text-xs md:px-3 md:text-sm">Archetype</TabsTrigger>
+                      <TabsTrigger value="essenz" className="px-2 py-2 text-xs md:px-3 md:text-sm">Essenz</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="competencies" className="mt-4 space-y-7">
+                    <TabsContent value="attributes" className="mt-4 space-y-7">
                       <section className="space-y-4" data-attr-connector-section>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
@@ -1169,6 +1171,28 @@ export function CharacterEditor() {
 
                       <Separator />
 
+                      <section className="space-y-4">
+                        <h3 className="font-semibold">Attribute</h3>
+                        {!characterArchetype ? <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">Der Archetyp-Punkt ist noch offen. Wähle unter <strong>Archetype</strong> zuerst eine Rolle und eine typische Fertigkeit.</div> : null}
+                        <CharacterSkillsPanel
+                          characterLevel={characterLevel}
+                          attributes={attributes}
+                          freeRanks={freeSkillRanks}
+                          onFreeRanksChange={setFreeSkillRanks}
+                          backgroundPoolSkills={selectedBackgroundPool}
+                          backgroundSkillPoints={backgroundSkillPoints}
+                          archetypeTrainingSkill={archetypeTrainingSkill}
+                          skillAdvances={skillAdvances}
+                          onSkillAdvancesChange={setSkillAdvances}
+                          specializations={specializations}
+                          onSpecializationsChange={setSpecializations}
+                          selectedSkill={selectedSkill}
+                          onSelectedSkillChange={setSelectedSkill}
+                        />
+                      </section>
+                    </TabsContent>
+
+                    <TabsContent value="background" className="mt-4 space-y-7">
                       <CharacterBackgroundPanel
                         backgroundTemplateId={backgroundTemplateId}
                         backgroundName={backgroundName}
@@ -1206,37 +1230,14 @@ export function CharacterEditor() {
                       <Separator />
 
                       <section className="space-y-4">
-                        <div>
-                          <h3 className="font-semibold">Fertigkeiten & Quellen</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">Deine 10 Startpunkte kommen aus 7 frei + 2 Hintergrund (stackbar) + 1 Archetyp. Wähle einen Skill für Herkunft, EB und die volle d20-Formel.</p>
-                        </div>
-                        {!characterArchetype ? <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">Der Archetyp-Punkt ist noch offen. Wähle unter <strong>Archetype</strong> zuerst eine Rolle und eine typische Fertigkeit.</div> : null}
-                        <CharacterSkillsPanel
-                          characterLevel={characterLevel}
-                          attributes={attributes}
-                          freeRanks={freeSkillRanks}
-                          onFreeRanksChange={setFreeSkillRanks}
-                          backgroundPoolSkills={selectedBackgroundPool}
-                          backgroundSkillPoints={backgroundSkillPoints}
-                          archetypeTrainingSkill={archetypeTrainingSkill}
-                          skillAdvances={skillAdvances}
-                          onSkillAdvancesChange={setSkillAdvances}
-                          specializations={specializations}
-                          onSpecializationsChange={setSpecializations}
-                          selectedSkill={selectedSkill}
-                          onSelectedSkillChange={setSelectedSkill}
-                        />
-                      </section>
-
-                      <Separator />
-
-                      <section className="space-y-4">
                         <div><h3 className="font-semibold">Hintergrundgeschichte</h3><p className="text-sm text-muted-foreground">Optionaler Lore-Teil. Er verändert weder Attributwerte noch die mechanischen Hintergrund-Punkte.</p></div>
                         <CharacterBackgroundComposer value={backgroundStory} context={loreContext} onChange={setBackgroundStory} />
                       </section>
-                      <Separator />
-                      <CharacterNotesSection value={notes} onChange={setNotes} />
+                    </TabsContent>
+
+                    <TabsContent value="details" className="mt-4 space-y-7">
                       <details className="rounded-lg border border-border bg-muted/10 p-4"><summary className="cursor-pointer font-medium">Weitere Charakterdetails · optional</summary><div className="mt-5 space-y-5"><CharacterTraitEditor id="personality" label="Persönlichkeitsmerkmale" category="personality" values={personalityTraits} context={loreContext} onChange={setPersonalityTraits} /><CharacterTraitEditor id="ideals" label="Ideale" category="ideals" values={ideals} context={loreContext} onChange={setIdeals} /><CharacterTraitEditor id="bonds" label="Bindungen" category="bonds" values={bonds} context={loreContext} onChange={setBonds} /><CharacterTraitEditor id="flaws" label="Schwächen" category="flaws" values={flaws} context={loreContext} onChange={setFlaws} /></div></details>
+                      <CharacterNotesSection value={notes} onChange={setNotes} />
                     </TabsContent>
 
                     <TabsContent value="archetype" className="mt-4">

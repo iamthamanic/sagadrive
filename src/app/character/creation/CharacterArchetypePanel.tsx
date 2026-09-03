@@ -1,6 +1,6 @@
 /**
  * CharacterArchetypePanel — Archetyp-Auswahl per Karussell mit genau einem Archetyp-Startpunkt.
- * Die globale Fertigkeitsverteilung lebt unter Parameter > Kompetenzen.
+ * Die globale Fertigkeitsverteilung lebt unter Parameter > Attribute.
  */
 import { useCallback, useState } from 'react';
 import {
@@ -81,7 +81,7 @@ export function CharacterArchetypePanel({
           />
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm">
             <p className="font-medium">Der Archetyp liefert genau 1 deiner 10 Start-Fertigkeitspunkte.</p>
-            <p className="mt-1 text-muted-foreground">Die beiden Hintergrund-Punkte, sieben freien Punkte und die vollständige Quellenübersicht bearbeitest du unter <strong>Parameter → Kompetenzen</strong>.</p>
+            <p className="mt-1 text-muted-foreground">Die beiden Hintergrund-Punkte, sieben freien Punkte und die vollständige Quellenübersicht bearbeitest du unter <strong>Parameter → Attribute</strong>.</p>
           </div>
         </>
       ) : (
