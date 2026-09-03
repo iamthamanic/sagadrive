@@ -107,16 +107,16 @@ function BackgroundSkillNode({
         onMouseLeave={() => onHoverChange(null)}
         onFocus={() => onHoverChange(skillKey)}
         onBlur={() => onHoverChange(null)}
-        className={`min-h-28 w-full rounded-lg border p-3 text-left transition-colors ${selected ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
+        className={`flex min-h-28 w-full flex-col items-center justify-center rounded-lg border p-3 text-center transition-colors ${selected ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
       >
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center justify-center gap-2">
           <div className="min-w-0">
             <p className="font-medium">{skill.label}</p>
             <p className="mt-1 text-xs text-muted-foreground">Standard: {attribute.shortLabel}</p>
           </div>
-          {selected ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> : null}
+          {selected ? <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> : null}
         </div>
-        <div className="mt-3 flex min-h-6 flex-wrap items-center justify-between gap-2">
+        <div className="mt-3 flex min-h-6 flex-wrap items-center justify-center gap-2">
           {pointValue > 0 ? <Badge variant="outline">Hintergrund +{pointValue}</Badge> : <Badge variant="outline">Pool</Badge>}
           <div className="flex items-center gap-1.5">
             <Button

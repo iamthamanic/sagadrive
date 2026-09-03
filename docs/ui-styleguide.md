@@ -193,7 +193,7 @@ const { setApi, current, handleCardClick, scrollPrev, scrollNext } = useCarousel
 
 ### Node-Specs
 
-- `min-h-28`, `rounded-lg border p-3`
+- `flex min-h-28 flex-col items-center justify-center rounded-lg border p-3 text-center`
 - Selected: `border-primary bg-primary/5` + Check-Icon
 - Badges: `Pool` / `Hintergrund +1`
 - Spezialisierung-Branch: vertikale Linie `border-l border-primary/60`, Badge `+2 auf passende Checks`
