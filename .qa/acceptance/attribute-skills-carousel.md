@@ -49,6 +49,6 @@ Im Character Editor (Parameter → Attribute) werden die Attribut-Gruppen nicht 
 
 ## Composition Gate
 - HEAD_SHA: ed948812936623074858beba9b87ef7356a0d4fe
-- Verdict: pending
-- Proof: n/a
-- Skip reason: UI-only expected
+- Verdict: SKIPPED
+- Proof: `.qa/runs/composition-gate-attribute-skills-carousel.md`
+- Skip reason: UI-only React composition; no producer→consumer persistence/API hops
