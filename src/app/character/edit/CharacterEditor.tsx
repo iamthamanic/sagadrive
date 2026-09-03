@@ -1062,7 +1062,7 @@ export function CharacterEditor() {
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <h3 className="font-semibold">Grundattribute · d20 + Attributbonus</h3>
+                              <h3 className="font-semibold">Grundattribute · D20 + Bonus</h3>
                               <RuleHelp label="Attributbonus" contentClassName="max-h-[min(24rem,70vh)] max-w-[min(22rem,90vw)] overflow-y-auto">
                                 <div className="space-y-2 text-xs leading-relaxed">
                                   <p>
