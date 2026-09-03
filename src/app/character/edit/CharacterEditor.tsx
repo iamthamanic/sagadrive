@@ -1028,11 +1028,11 @@ export function CharacterEditor() {
                 <TabsContent value="values" className="space-y-6">
                   <Tabs value={activeValuesSubTab} onValueChange={handleValuesSubTabChange}>
                     <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-5">
+                      <TabsTrigger value="archetype" className="px-2 py-2 text-xs md:px-3 md:text-sm">Archetype</TabsTrigger>
+                      <TabsTrigger value="essenz" className="px-2 py-2 text-xs md:px-3 md:text-sm">Essenz</TabsTrigger>
                       <TabsTrigger value="attributes" className="px-2 py-2 text-xs md:px-3 md:text-sm">Attribute</TabsTrigger>
                       <TabsTrigger value="background" className="px-2 py-2 text-xs md:px-3 md:text-sm">Hintergrund</TabsTrigger>
                       <TabsTrigger value="details" className="px-2 py-2 text-xs md:px-3 md:text-sm">Details</TabsTrigger>
-                      <TabsTrigger value="archetype" className="px-2 py-2 text-xs md:px-3 md:text-sm">Archetype</TabsTrigger>
-                      <TabsTrigger value="essenz" className="px-2 py-2 text-xs md:px-3 md:text-sm">Essenz</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="attributes" className="mt-4 space-y-7">
