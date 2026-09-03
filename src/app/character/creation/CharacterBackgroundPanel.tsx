@@ -155,7 +155,7 @@ function BackgroundSkillNode({
             >
               <Minus className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <span className="w-6 text-center text-lg font-semibold tabular-nums" aria-hidden="true">
+            <span className="w-6 text-center text-lg font-semibold tabular-nums" aria-live="polite">
               {pointValue}
             </span>
             <Button

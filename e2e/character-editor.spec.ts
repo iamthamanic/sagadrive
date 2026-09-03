@@ -203,7 +203,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   const healingFramework = page.getByRole('radio', { name: /Heilung & Fürsorge/i });
   await healingFramework.click();
   await expect(healingFramework).toHaveAttribute('aria-checked', 'true', { timeout: 10_000 });
-  await expect(pointsBudget.getByText('2 Hintergrund-Fertigkeitspunkte').first()).toBeVisible();
+  // Intro copy carries the 2-point budget explanation; badge shows X / 2 verteilt only.
+  await expect(backgroundPanel.getByText(/2 Hintergrund-Fertigkeitspunkte/).first()).toBeVisible();
   await expect(pointsBudget.getByText(/^0 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(backgroundPanel.getByText('Empfohlen')).toHaveCount(0);
 
@@ -223,9 +224,9 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(pointsBudget.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(medicineNode).toHaveCount(1);
   await expect(insightNode).toHaveCount(1);
-  await expect(survivalNode).toHaveCount(0);
-  await expect(awarenessNode).toHaveCount(0);
-  await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'collapsed');
+  await expect(survivalNode).toHaveCount(1);
+  await expect(awarenessNode).toHaveCount(1);
+  await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'pool');
   await page.screenshot({ path: '.qa/evidence/skill-progression-v2-character-editor-ux/02-background-plus-two.png', fullPage: true });
 
   await insightNode.getByRole('button', { name: 'Menschenkenntnis Hintergrundpunkt verringern' }).click();
@@ -237,10 +238,12 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(pointsBudget.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(medicineNode).toHaveCount(1);
   await expect(awarenessNode).toHaveCount(1);
-  await expect(insightNode).toHaveCount(0);
-  await expect(survivalNode).toHaveCount(0);
+  await expect(insightNode).toHaveCount(1);
+  await expect(survivalNode).toHaveCount(1);
 
-  await page.getByRole('button', { name: /Medizin: Notfallmedizin/i }).click();
+  await medicineNode.getByRole('button', { name: 'Spezialisieren' }).click();
+  await medicineNode.getByLabel('Medizin Spezialisierungsvorschlag').click();
+  await page.getByRole('option', { name: 'Notfallmedizin', exact: true }).click();
   await page.getByLabel('Milieuzugang').fill('Notaufnahmen');
   await page.getByLabel('Kontakt').fill('Dr. Sera Malk');
   await page.getByLabel('Komplikation').fill('Alte Schulden');
