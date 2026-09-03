@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
-import { Camera, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ComponentType, type MouseEvent } from 'react';
+import { Camera, CircleHelp, Dna, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { AvatarCanvas } from '../../../modules/characters/avatar/AvatarCanvas';
 import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../modules/characters/avatar';
@@ -28,6 +28,8 @@ import {
   SpeciesCarousel,
   SpeciesTraitsPanel,
 } from '../creation';
+import { ArchetypeIcon } from '../creation/ArchetypeIcon';
+import { EssenceIcon } from '../creation/EssenceIcon';
 import {
   CharacterInventoryPanel,
   CharacterNotesSection,
@@ -118,6 +120,14 @@ type ValuesSubTab = 'attributes' | 'background' | 'details' | 'archetype' | 'ess
 type SettingsSubTab = 'statistics' | 'preset';
 type ValidationProblem = { tab: EditorTab; message: string; valuesSubTab?: ValuesSubTab };
 type SkillSlot = SagaDriveSkillKey | '';
+type PreviewIdentityPillIcon = ComponentType<{ className?: string }>;
+type PreviewIdentityPill = {
+  key: 'species' | 'essence' | 'archetype';
+  label: string;
+  value: string;
+  icon: PreviewIdentityPillIcon;
+  className: string;
+};
 type BackgroundSkillPool = [SkillSlot, SkillSlot, SkillSlot, SkillSlot];
 const INITIAL_ATTRIBUTES: CharacterAttributesDto = { strength: 4, dexterity: 3, endurance: 3, mind: 2, perception: 2, charisma: 1 };
 
@@ -952,7 +962,34 @@ export function CharacterEditor() {
   const handleTabChange = (value: string) => { if (isEditorTab(value)) { setActiveTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
   const handleValuesSubTabChange = (value: string) => { if (isValuesSubTab(value)) { setActiveValuesSubTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
   const handleSettingsSubTabChange = (value: string) => { if (isSettingsSubTab(value)) setActiveSettingsSubTab(value); };
-  const previewSubtitle = [essence?.label, archetype?.label, speciesDisplayName].filter(Boolean).join(' · ');
+  const previewIdentityPills: PreviewIdentityPill[] = [];
+  if (speciesDisplayName) {
+    previewIdentityPills.push({
+      key: 'species',
+      label: 'Spezies',
+      value: speciesDisplayName,
+      icon: Dna,
+      className: 'border-sky-500/30 bg-sky-500/10 text-sky-100',
+    });
+  }
+  if (essence?.label && essenceProfile) {
+    previewIdentityPills.push({
+      key: 'essence',
+      label: 'Essenz',
+      value: essence.label,
+      icon: ({ className = 'h-3.5 w-3.5' }) => <EssenceIcon essenceKey={essenceProfile} className={className} />,
+      className: 'border-violet-500/30 bg-violet-500/10 text-violet-100',
+    });
+  }
+  if (archetype?.label && characterArchetype) {
+    previewIdentityPills.push({
+      key: 'archetype',
+      label: 'Archetype',
+      value: archetype.label,
+      icon: ({ className = 'h-3.5 w-3.5' }) => <ArchetypeIcon archetypeKey={characterArchetype} className={className} />,
+      className: 'border-amber-500/30 bg-amber-500/10 text-amber-100',
+    });
+  }
   const totalStartSkillPoints = freeSkillPointsUsed + backgroundPointsUsed + (archetypeTrainingSkill ? 1 : 0);
 
   return (
@@ -992,7 +1029,23 @@ export function CharacterEditor() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="aspect-[4/5] overflow-hidden rounded-lg border border-border bg-[#0B1220] shadow-inner"><AvatarCanvas avatar={currentAvatar} canvasRef={avatarCanvasRef} /></div>
-              <p className="text-sm text-muted-foreground">{previewSubtitle || 'Wähle Archetyp und Essenz'}</p>
+              {previewIdentityPills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {previewIdentityPills.map(({ key, label, value, icon: Icon, className }) => (
+                    <Badge
+                      key={key}
+                      variant="outline"
+                      className={`flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ${className}`}
+                    >
+                      <Icon className="h-3.5 w-3.5 shrink-0" />
+                      <span className="text-white/75">{label}:</span>
+                      <span className="truncate text-white">{value}</span>
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Wähle Archetyp und Essenz</p>
+              )}
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Gesundheit</p><p className="mt-1 text-lg font-semibold">{health}</p></div>
                 <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-xs text-muted-foreground">Verteidigung</p><p className="mt-1 text-lg font-semibold">{defense}</p></div>
