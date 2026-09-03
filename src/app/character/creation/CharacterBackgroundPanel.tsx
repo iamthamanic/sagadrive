@@ -481,9 +481,19 @@ export function CharacterBackgroundPanel({
               Dein Hintergrund definiert vier Framework-Fertigkeiten. Du verteilst 2 stackbare Hintergrundpunkte (+2 auf einen Skill oder +1/+1). Attribute werden dadurch nicht erhöht.
             </RuleHelp>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">Wähle eine Vergangenheit im Karussell, verteile 2 Hintergrundpunkte auf die vier Pool-Fertigkeiten und lege danach eine Spezialisierung fest. Nach Abschluss zeigt der Graph nur noch belegte Skills.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Wähle eine Vergangenheit im Karussell. Verteile danach 2 Hintergrund-Fertigkeitspunkte direkt an den Pool-Skills
+            (+2 auf einen Skill oder +1/+1) und lege eine Spezialisierung fest. Nach Abschluss zeigt der Graph nur noch belegte Skills.
+          </p>
         </div>
-        <Badge variant={complete ? 'default' : 'outline'}>{complete ? 'Hintergrund vollständig' : 'Hintergrund offen'}</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          {showSkillGraph ? (
+            <Badge variant={backgroundPointsComplete ? 'default' : 'outline'} data-background-points-budget>
+              {backgroundPointsUsed} / {SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS} verteilt
+            </Badge>
+          ) : null}
+          <Badge variant={complete ? 'default' : 'outline'}>{complete ? 'Hintergrund vollständig' : 'Hintergrund offen'}</Badge>
+        </div>
       </div>
 
       <BackgroundCarousel
@@ -559,20 +569,6 @@ export function CharacterBackgroundPanel({
                       onAdjust={handleBackgroundPointAdjust}
                     />
                   ))}
-                </div>
-
-                {/* Budget copy sits under the skill boxes so the graph leads with the nodes. */}
-                <div
-                  className="flex flex-wrap items-center justify-between gap-2 px-0.5"
-                  data-background-points-budget
-                >
-                  <div>
-                    <p className="font-medium">2 Hintergrund-Fertigkeitspunkte</p>
-                    <p className="text-sm text-muted-foreground">Direkt an den Pool-Skills verteilen. +2 auf einen Skill oder +1/+1.</p>
-                  </div>
-                  <Badge variant={backgroundPointsComplete ? 'default' : 'outline'}>
-                    {backgroundPointsUsed} / {SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS} verteilt
-                  </Badge>
                 </div>
 
                 {backgroundPointsComplete ? (
