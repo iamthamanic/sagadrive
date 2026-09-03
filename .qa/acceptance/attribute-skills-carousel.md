@@ -48,7 +48,7 @@ Im Character Editor (Parameter → Attribute) werden die Attribut-Gruppen nicht 
 - Composition Gate: SKIPPED expected (UI-only).
 
 ## Composition Gate
-- HEAD_SHA: pending
+- HEAD_SHA: ed948812936623074858beba9b87ef7356a0d4fe
 - Verdict: pending
 - Proof: n/a
 - Skip reason: UI-only expected
