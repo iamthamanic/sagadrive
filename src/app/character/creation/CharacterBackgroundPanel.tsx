@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
 import {
   getBackgroundSpecializationSuggestionNames,
   getSagaDriveBackgroundTemplate,
@@ -24,6 +25,7 @@ import {
 import {
   getSagaDriveAttribute,
   getSagaDriveSkill,
+  getSagaDriveSpecializationDescription,
   isSagaDriveSkillKey,
   type SagaDriveSkillKey,
 } from '../../../modules/rulesets/characterCreation';
@@ -121,10 +123,28 @@ function BackgroundSkillNode({
   const selectValue = specializationOptions.includes(specializationName.trim())
     ? specializationName.trim()
     : '';
+  const selectedDescription = selectValue ? getSagaDriveSpecializationDescription(selectValue) : undefined;
 
   const handleCardActivate = () => {
     if (canIncrease) onAdjust(skillKey, 1);
   };
+
+  const selectTrigger = (
+    <SelectTrigger
+      id={`specialization-select-${skillKey}`}
+      className="mt-2 min-h-11 w-full"
+      aria-label={`${skill.label} Spezialisierungsvorschlag`}
+    >
+      {selectValue ? (
+        <span className="flex min-w-0 items-center gap-2">
+          <SkillIcon skillKey={skillKey} className="h-4 w-4 shrink-0" />
+          <span className="truncate">{selectValue}</span>
+        </span>
+      ) : (
+        <SelectValue placeholder="Vorschlag wählen …" />
+      )}
+    </SelectTrigger>
+  );
 
   return (
     <div className="min-w-0" data-background-skill-node={skillKey}>
@@ -149,55 +169,52 @@ function BackgroundSkillNode({
             handleCardActivate();
           }
         }}
-        className={`flex min-h-28 w-full flex-col items-center justify-center rounded-lg border p-3 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+        className={`relative flex min-h-28 w-full flex-col items-center justify-center rounded-lg border p-3 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
           selected
             ? 'border-primary bg-primary/5'
             : 'border-border bg-card hover:border-primary/60'
         } ${canIncrease ? 'cursor-pointer' : 'cursor-default'}`}
       >
-        <div className="flex items-center justify-center gap-2">
-          <SkillIcon skillKey={skillKey} className="h-5 w-5 shrink-0 text-muted-foreground" />
+        {selected ? <Check className="absolute right-2 top-2 h-4 w-4 text-primary" aria-hidden="true" /> : null}
+        <div className="flex flex-col items-center gap-1.5">
+          <SkillIcon skillKey={skillKey} className="h-7 w-7 shrink-0 text-muted-foreground" />
           <div className="min-w-0">
             <p className="font-medium">{skill.label}</p>
             <p className="mt-1 text-xs text-muted-foreground">Standard: {attribute.shortLabel}</p>
           </div>
-          {selected ? <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> : null}
         </div>
-        <div className="mt-3 flex min-h-6 flex-wrap items-center justify-center gap-2">
-          {pointValue > 0 ? <Badge variant="outline">Hintergrund +{pointValue}</Badge> : <Badge variant="outline">Pool</Badge>}
-          <div className="flex items-center gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="size-10"
-              disabled={!canDecrease}
-              onClick={(event) => {
-                event.stopPropagation();
-                onAdjust(skillKey, -1);
-              }}
-              aria-label={`${skill.label} Hintergrundpunkt verringern`}
-            >
-              <Minus className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <span className="w-6 text-center text-lg font-semibold tabular-nums" aria-live="polite">
-              {pointValue}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="size-10"
-              disabled={!canIncrease}
-              onClick={(event) => {
-                event.stopPropagation();
-                onAdjust(skillKey, 1);
-              }}
-              aria-label={`${skill.label} Hintergrundpunkt erhöhen`}
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </div>
+        <div className="mt-3 flex items-center justify-center gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="size-10"
+            disabled={!canDecrease}
+            onClick={(event) => {
+              event.stopPropagation();
+              onAdjust(skillKey, -1);
+            }}
+            aria-label={`${skill.label} Hintergrundpunkt verringern`}
+          >
+            <Minus className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <span className="w-6 text-center text-lg font-semibold tabular-nums" aria-live="polite">
+            {pointValue}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="size-10"
+            disabled={!canIncrease}
+            onClick={(event) => {
+              event.stopPropagation();
+              onAdjust(skillKey, 1);
+            }}
+            aria-label={`${skill.label} Hintergrundpunkt erhöhen`}
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+          </Button>
         </div>
       </div>
 
@@ -228,27 +245,26 @@ function BackgroundSkillNode({
               value={selectValue || undefined}
               onValueChange={(value) => onSpecializationApply(skillKey, value)}
             >
-              <SelectTrigger
-                id={`specialization-select-${skillKey}`}
-                className="mt-2 min-h-11 w-full"
-                aria-label={`${skill.label} Spezialisierungsvorschlag`}
-              >
-                {selectValue ? (
-                  <span className="flex min-w-0 items-center gap-2">
-                    <SkillIcon skillKey={skillKey} className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{selectValue}</span>
-                  </span>
-                ) : (
-                  <SelectValue placeholder="Vorschlag wählen …" />
-                )}
-              </SelectTrigger>
+              {selectedDescription ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>{selectTrigger}</TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={6} className="max-w-[280px] px-3 py-2 text-left text-xs leading-relaxed">
+                    {selectedDescription}
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                selectTrigger
+              )}
               <SelectContent>
-                {specializationOptions.map((name) => (
-                  <SelectItem key={name} value={name}>
-                    <SkillIcon skillKey={skillKey} className="h-4 w-4 shrink-0" />
-                    {name}
-                  </SelectItem>
-                ))}
+                {specializationOptions.map((name) => {
+                  const description = getSagaDriveSpecializationDescription(name);
+                  return (
+                    <SelectItem key={name} value={name} title={description}>
+                      <SkillIcon skillKey={skillKey} className="h-4 w-4 shrink-0" />
+                      {name}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             <Input
@@ -670,30 +686,11 @@ export function CharacterBackgroundPanel({
                   ))}
                 </div>
 
-                {backgroundPointsComplete ? (
-                  <div className="space-y-3 rounded-lg border border-border bg-card p-4">
-                    <div>
-                      <div className="flex items-center gap-1">
-                        <p className="font-medium">Spezialisierung</p>
-                        <RuleHelp label="Spezialisierung">Eine passende Spezialisierung gibt +2 auf anwendbare Checks. Die erste Spezialisierung benötigt Fertigkeitswert 1.</RuleHelp>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Nutze „Spezialisieren“ an einem Skill mit Punkten oder wähle die Fertigkeit hier. Vorschläge erscheinen im Dropdown am Skill-Node.
-                      </p>
-                    </div>
-                    <SkillSelectField
-                      value={specializationSkill}
-                      onValueChange={(value) => onSpecializationSkillChange(isSagaDriveSkillKey(value) ? value : '')}
-                      skillOptions={occupiedBackgroundSkills}
-                      placeholder="Hintergrund-Fertigkeit wählen"
-                      ariaLabel="Spezialisierung Fertigkeit wählen"
-                    />
-                  </div>
-                ) : (
+                {!backgroundPointsComplete ? (
                   <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
                     Verteile zuerst alle 2 Hintergrundpunkte. Danach wird die Spezialisierung freigeschaltet.
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           ) : (

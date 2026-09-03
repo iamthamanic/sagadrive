@@ -187,7 +187,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
   await expect(page.getByText('Grundattribute').first()).toBeVisible();
-  await expect(page.getByText(/15 \/ 15 Basis-Bonuspunkte/i).first()).toBeVisible();
+  await expect(page.getByText(/15 \/ 15 Bonuspunkte/i).first()).toBeVisible();
   await expect(page.getByText(/\+4 Bonus|\+3 Bonus|\+2 Bonus|\+1 Bonus/i).first()).toBeVisible();
   await expect(page.getByText('Ausdauer').first()).toBeVisible();
   await expect(page.getByText('Verstand').first()).toBeVisible();

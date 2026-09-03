@@ -47,7 +47,7 @@ import { AttributeD20Icon } from '@/components/AttributeD20Icon';
 
 **Budget-Badges (oben rechts):**
 
-- `{used} / 15 Basis-Bonuspunkte`
+- `{used} / 15 Bonuspunkte`
 - `{used} / {budget} Entwicklung` (ab Level 8/16)
 
 **Deutsche Labels:**
