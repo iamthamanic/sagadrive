@@ -62,6 +62,11 @@ Roadmap: Skill Progression v2 post-#101 — fail-closed only.
 
 ## Composition Gate
 
+- HEAD_SHA: a22cee5c6c182fc9d9259cdef16ea79a321712e8
+- Verdict: CLEAR
+- Proof: `.qa/runs/composition-gate-skill-progression-v2-remove-legacy.md`
+- Skip reason: n/a
+
 - HEAD_SHA: pending
 - Verdict: pending
 - Proof: `.qa/runs/composition-gate-skill-progression-v2-remove-legacy.md`
