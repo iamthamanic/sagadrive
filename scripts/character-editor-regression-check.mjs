@@ -23,6 +23,8 @@ const characterCreation = read('src/domains/rules/sagadrive/character-creation/i
 const inventoryPanel = read('src/app/character/progression/CharacterInventoryPanel.tsx');
 const abilitiesPanel = read('src/app/character/progression/CharacterAbilitiesPanel.tsx');
 const skillsPanel = read('src/app/character/progression/CharacterSkillsPanel.tsx');
+const attributeSkillNode = read('src/app/character/progression/AttributeSkillNode.tsx');
+const attributeSkillsCarousel = read('src/app/character/progression/AttributeSkillsCarousel.tsx');
 const loreService = read('src/modules/characters/lore/service.ts');
 const rulesetMigration = read('supabase/migrations/005_character_ruleset_metadata.sql');
 const portraitStorageMigration = read('supabase/migrations/006_character_portrait_storage.sql');
@@ -148,10 +150,14 @@ requireMatch(characterCreation, /sagaDriveSpeciesTraitKeysByRace/, 'species-spec
 requireMatch(characterCreation, /key:\s*'athletics'.*label:\s*'Athletik'/s, 'SagaDrive skill definitions');
 requireMatch(skillsPanel, /SkillCheckFormulaPanel/, 'full skill check formula panel');
 requireMatch(skillsPanel, /SkillProgressionSlotsPanel/, 'level 3-19 progression slots panel');
-rejectMatch(skillsPanel, /Freie Punkte|Start gesamt 10 Punkte|Vergib genau .* freie Fertigkeitspunkte/, 'removed start-points summary / error banner UI');
+requireMatch(skillsPanel, /AttributeSkillsCarousel/, 'attribute group carousel in skills panel');
+requireMatch(skillsPanel, /AttributeSkillConnector|data-attribute-skill-grid/, 'attribute skill connector graph');
+rejectMatch(skillsPanel, /Start gesamt 10 Punkte|Vergib genau .* freie Fertigkeitspunkte/, 'removed start-points summary / error banner UI');
 rejectMatch(skillsPanel, /Mindestens.*Fertigkeiten.*Wert 1 oder höher/s, 'legacy minimum-six trained skills rule');
 requireMatch(skillsPanel, /Standardbeziehung – keine Voraussetzung|globalen und anwendbaren Erfahrungsbonus/s, 'skill relationship or formula semantics');
-requireMatch(skillsPanel, /Hintergrund-Pool/, 'background pool source distinction');
+requireMatch(attributeSkillNode, /Hintergrund-Pool/, 'background pool source distinction');
+requireMatch(attributeSkillNode, /Standardattribut|CircleHelp/, 'attribute hint polish on skill nodes');
+requireMatch(attributeSkillsCarousel, /useCarouselScrollSync/, 'attribute carousel scroll sync hook');
 rejectMatch(skillsPanel, /legacyFinalRanks|provenanceLegacy|legacy-unresolved|Legacy-Charakter/, 'skills panel still has skill-progression legacy UI');
 requireMatch(editor, /<h3 className="font-semibold">Attribute<\/h3>/, 'Attribute section heading under Parameter Attribute tab');
 rejectMatch(editor, /Fertigkeiten & Quellen/, 'legacy Fertigkeiten & Quellen skills section heading remains');

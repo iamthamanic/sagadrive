@@ -1,17 +1,16 @@
 /**
- * CharacterSkillsPanel — Skill list by attribute, formula panel, and level slots (#91).
+ * CharacterSkillsPanel — Attribute carousel, connected skill nodes, formula panel, and level slots (#91).
  * Location: src/app/character/progression/CharacterSkillsPanel.tsx
  */
-import { Minus, Plus } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
 import {
   SAGA_DRIVE_START_FREE_SKILL_POINTS,
   createEmptySagaDriveSkillRanks,
-  getSagaDriveAttribute,
   getSagaDriveSkill,
   sagaDriveAttributeDefinitions,
   sagaDriveSkillDefinitions,
+  type SagaDriveAttributeKey,
   type SagaDriveSkillKey,
 } from '../../../modules/rulesets/characterCreation';
 import type { CharacterAttributesDto } from '../../../modules/characters/types/character.types';
@@ -23,10 +22,12 @@ import {
   type SagaDriveSpecializationRecordDto,
   type SagaDriveStartSkillBuild,
 } from '../../../modules/rulesets/skillProgression';
+import type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
+import { AttributeSkillConnector } from './AttributeSkillConnector';
+import { AttributeSkillNode } from './AttributeSkillNode';
+import { AttributeSkillsCarousel } from './AttributeSkillsCarousel';
 import { SkillCheckFormulaPanel } from './SkillCheckFormulaPanel';
 import { SkillProgressionSlotsPanel } from './SkillProgressionSlotsPanel';
-import { SkillRuleHelpContent } from './skillRuleHelp';
-import { RuleHelp } from './RuleHelp';
 
 interface CharacterSkillsPanelProps {
   characterLevel: number;
@@ -44,13 +45,9 @@ interface CharacterSkillsPanelProps {
   onSelectedSkillChange?: (skill: SagaDriveSkillKey) => void;
 }
 
-function rankLabel(rank: number): string {
-  if (rank <= 0) return 'Untrainiert';
-  if (rank === 1) return 'Trainiert';
-  if (rank === 2) return 'Geübt';
-  if (rank === 3) return 'Fachkundig';
-  if (rank === 4) return 'Meisterlich';
-  return 'Weltklasse';
+function attributeForSkill(skill: SagaDriveSkillKey | undefined): SagaDriveAttributeKey {
+  if (!skill) return sagaDriveAttributeDefinitions[0]?.key ?? 'strength';
+  return getSagaDriveSkill(skill).attribute;
 }
 
 export function CharacterSkillsPanel({
@@ -82,6 +79,24 @@ export function CharacterSkillsPanel({
   const selected = selectedSkill ? getSagaDriveSkill(selectedSkill) : undefined;
   const backgroundSpec = specializations.find((entry) => entry.source === 'background');
 
+  const [activeAttribute, setActiveAttribute] = useState<SagaDriveAttributeKey>(() => attributeForSkill(selectedSkill));
+  const [scrollPhase, setScrollPhase] = useState<CarouselScrollPhase>('settled');
+  const [hoveredSkill, setHoveredSkill] = useState<SagaDriveSkillKey | null>(null);
+
+  useEffect(() => {
+    if (!selectedSkill) return;
+    const next = attributeForSkill(selectedSkill);
+    setActiveAttribute((current) => (current === next ? current : next));
+  }, [selectedSkill]);
+
+  const handleScrollPhaseChange = useCallback((phase: CarouselScrollPhase) => {
+    setScrollPhase(phase);
+  }, []);
+
+  const handleStandstill = useCallback(() => {
+    setScrollPhase('settled');
+  }, []);
+
   const changeFreeRank = (skill: SagaDriveSkillKey, delta: -1 | 1) => {
     const currentFree = freeRanks[skill];
     const currentFinal = finalRanks[skill];
@@ -90,8 +105,15 @@ export function CharacterSkillsPanel({
     onFreeRanksChange({ ...freeRanks, [skill]: currentFree + delta });
   };
 
+  const attributeSkills = sagaDriveSkillDefinitions.filter((skill) => skill.attribute === activeAttribute);
+  const rankedSkills = attributeSkills
+    .filter((skill) => finalRanks[skill.key] > 0)
+    .map((skill) => skill.key);
+  const activeAttributeDef = sagaDriveAttributeDefinitions.find((entry) => entry.key === activeAttribute);
+  const connectorActiveSkill = hoveredSkill ?? (selectedSkill && attributeForSkill(selectedSkill) === activeAttribute ? selectedSkill : null);
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-attribute-skills-panel>
       <SkillProgressionSlotsPanel
         characterLevel={characterLevel}
         startBuild={startBuild}
@@ -102,61 +124,89 @@ export function CharacterSkillsPanel({
       />
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
-        <div className="space-y-4">
-          {sagaDriveAttributeDefinitions.map((attribute) => {
-            const attributeSkills = sagaDriveSkillDefinitions.filter((skill) => skill.attribute === attribute.key);
-            if (attributeSkills.length === 0) {
-              return (
-                <section key={attribute.key} className="rounded-lg border border-dashed border-border bg-muted/10 p-4">
-                  <div className="flex items-center gap-2"><h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{attribute.label}</h3><RuleHelp label={attribute.label}>{attribute.description}</RuleHelp></div>
-                  <p className="mt-2 text-sm text-muted-foreground">Ausdauer besitzt bewusst keinen Standard-Skill-Cluster. Reines körperliches Aushalten wird direkt über Ausdauer abgewickelt.</p>
-                </section>
-              );
-            }
-            const clusterActive = selected ? selected.attribute === attribute.key : false;
-            return (
-              <section key={attribute.key} className={`rounded-lg border p-4 transition-colors ${clusterActive ? 'border-primary/50 bg-primary/5' : 'border-border bg-muted/5'}`}>
-                <div className="flex items-center gap-2"><h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{attribute.label}</h3><RuleHelp label={attribute.label}>{attribute.description}</RuleHelp></div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+            <div>
+              <h3 id="attribute-skills-heading" className="text-sm font-semibold">
+                Fertigkeiten nach Attribut
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Wähle ein Attribut im Karussell. Darunter liegen die verbundenen Fertigkeiten.
+              </p>
+            </div>
+            <Badge variant={freeUsed >= SAGA_DRIVE_START_FREE_SKILL_POINTS ? 'default' : 'outline'}>
+              {freeUsed} / {SAGA_DRIVE_START_FREE_SKILL_POINTS} freie Punkte
+            </Badge>
+          </div>
+
+          <AttributeSkillsCarousel
+            selectedAttribute={activeAttribute}
+            onSelect={setActiveAttribute}
+            labelledBy="attribute-skills-heading"
+            onScrollPhaseChange={handleScrollPhaseChange}
+          />
+
+          {attributeSkills.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-6 text-center text-sm text-muted-foreground">
+              {activeAttributeDef
+                ? `${activeAttributeDef.label} besitzt bewusst keinen Standard-Skill-Cluster. Reines körperliches Aushalten wird direkt über Ausdauer abgewickelt.`
+                : 'Für dieses Attribut gibt es keine Standard-Fertigkeiten.'}
+            </div>
+          ) : (
+            <div className="space-y-2 -mt-2">
+              <AttributeSkillConnector
+                skills={attributeSkills.map((skill) => skill.key)}
+                rankedSkills={rankedSkills}
+                activeSkill={connectorActiveSkill}
+                scrollPhase={scrollPhase}
+                onStandstill={handleStandstill}
+              />
+
+              <div className="mx-auto w-full max-w-5xl space-y-2">
+                <div
+                  className={`mx-auto grid w-full gap-3 ${
+                    attributeSkills.length <= 2
+                      ? 'sm:grid-cols-2 max-w-2xl'
+                      : attributeSkills.length === 3
+                        ? 'sm:grid-cols-2 lg:grid-cols-3 max-w-3xl'
+                        : 'sm:grid-cols-2 xl:grid-cols-4'
+                  }`}
+                  data-attribute-skill-grid
+                >
                   {attributeSkills.map((skill) => {
                     const freeRank = freeRanks[skill.key];
                     const finalRank = finalRanks[skill.key];
                     const backgroundValue = backgroundSkillPoints[skill.key] ?? 0;
-                    const devSpecs = specializations.filter((entry) => entry.skill === skill.key && entry.source === 'skill-development');
-                    const isBackgroundSpecialized = backgroundSpec?.skill === skill.key && Boolean(backgroundSpec.name.trim());
-                    const focused = selectedSkill === skill.key;
-                    const inBackgroundPool = backgroundPoolSkills.includes(skill.key);
-                    const archetypeTrained = archetypeTrainingSkill === skill.key;
+                    const devSpecs = specializations.filter(
+                      (entry) => entry.skill === skill.key && entry.source === 'skill-development',
+                    );
+                    const isBackgroundSpecialized =
+                      backgroundSpec?.skill === skill.key && Boolean(backgroundSpec.name.trim());
+
                     return (
-                      <div key={skill.key} className={`rounded-lg border bg-card p-3 transition-colors ${focused ? 'border-primary ring-1 ring-primary/30' : inBackgroundPool ? 'border-primary/30' : 'border-border'}`}>
-                        <button type="button" className="w-full text-left focus-visible:outline-none" onClick={() => onSelectedSkillChange?.(skill.key)} onFocus={() => onSelectedSkillChange?.(skill.key)}>
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1"><p className="font-medium">{skill.label}</p><RuleHelp label={skill.label}><SkillRuleHelpContent skillKey={skill.key} /></RuleHelp></div>
-                              <p className="text-xs text-muted-foreground">Standard: {getSagaDriveAttribute(skill.attribute).shortLabel}</p>
-                            </div>
-                            <div className="text-right"><p className="text-lg font-semibold">{finalRank}</p><p className="text-[11px] text-muted-foreground">{rankLabel(finalRank)}</p></div>
-                          </div>
-                        </button>
-                        <div className="mt-2 flex min-h-6 flex-wrap gap-1.5">
-                          {inBackgroundPool && <Badge variant="outline">Hintergrund-Pool</Badge>}
-                          {backgroundValue > 0 && <Badge variant="outline">Hintergrund +{backgroundValue}</Badge>}
-                          {archetypeTrained && <Badge variant="outline">Archetyp +1</Badge>}
-                          {freeRank > 0 && <Badge variant="secondary">Frei +{freeRank}</Badge>}
-                          {isBackgroundSpecialized && <Badge>{backgroundSpec?.name} +2</Badge>}
-                          {devSpecs.map((entry) => <Badge key={`${entry.acquiredAtLevel}-${entry.name}`} variant="secondary">{entry.name}</Badge>)}
-                        </div>
-                        <div className="mt-3 flex items-center justify-end gap-2">
-                          <Button type="button" variant="outline" size="icon" className="size-10" onClick={() => changeFreeRank(skill.key, -1)} disabled={freeRank <= 0} aria-label={`${skill.label} freien Punkt entfernen`}><Minus className="h-4 w-4" /></Button>
-                          <Button type="button" variant="outline" size="icon" className="size-10" onClick={() => changeFreeRank(skill.key, 1)} disabled={freeUsed >= SAGA_DRIVE_START_FREE_SKILL_POINTS || finalRank >= skillCap} aria-label={`${skill.label} freien Punkt hinzufügen`}><Plus className="h-4 w-4" /></Button>
-                        </div>
-                      </div>
+                      <AttributeSkillNode
+                        key={skill.key}
+                        skillKey={skill.key}
+                        freeRank={freeRank}
+                        finalRank={finalRank}
+                        backgroundValue={backgroundValue}
+                        inBackgroundPool={backgroundPoolSkills.includes(skill.key)}
+                        archetypeTrained={archetypeTrainingSkill === skill.key}
+                        backgroundSpecializationName={isBackgroundSpecialized ? backgroundSpec?.name : undefined}
+                        developmentSpecializationNames={devSpecs.map((entry) => entry.name)}
+                        focused={selectedSkill === skill.key}
+                        canDecreaseFree={freeRank > 0}
+                        canIncreaseFree={freeUsed < SAGA_DRIVE_START_FREE_SKILL_POINTS && finalRank < skillCap}
+                        onSelect={() => onSelectedSkillChange?.(skill.key)}
+                        onHoverChange={setHoveredSkill}
+                        onChangeFreeRank={(delta) => changeFreeRank(skill.key, delta)}
+                      />
                     );
                   })}
                 </div>
-              </section>
-            );
-          })}
+              </div>
+            </div>
+          )}
         </div>
 
         <aside className="h-fit rounded-lg border border-border bg-card p-4 xl:sticky xl:top-4">
@@ -170,12 +220,20 @@ export function CharacterSkillsPanel({
               backgroundPoints={backgroundSkillPoints}
               archetypePoint={archetypeTrainingSkill === selectedSkill}
               specializationName={
-                backgroundSpec?.skill === selectedSkill ? backgroundSpec.name
-                  : specializations.find((entry) => entry.skill === selectedSkill && entry.source === 'skill-development')?.name
+                backgroundSpec?.skill === selectedSkill
+                  ? backgroundSpec.name
+                  : specializations.find(
+                      (entry) => entry.skill === selectedSkill && entry.source === 'skill-development',
+                    )?.name
               }
             />
           ) : (
-            <div><p className="font-medium">Beziehungen verstehen</p><p className="mt-1 text-sm text-muted-foreground">Wähle eine Fertigkeit. SagaDrive zeigt Herkunft, globalen und anwendbaren Erfahrungsbonus sowie die volle d20-Formel.</p></div>
+            <div>
+              <p className="font-medium">Proben verstehen</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Wähle eine Fertigkeit. SagaDrive zeigt Herkunft, globalen und anwendbaren Erfahrungsbonus sowie die volle d20-Formel.
+              </p>
+            </div>
           )}
         </aside>
       </div>

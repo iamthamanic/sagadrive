@@ -19,11 +19,37 @@ async function completeSpeciesBasics(page: Page) {
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
 }
 
+const FREE_SKILL_ATTRIBUTE: Readonly<Record<string, string>> = {
+  Athletik: 'Stärke',
+  Akrobatik: 'Geschicklichkeit',
+  Heimlichkeit: 'Geschicklichkeit',
+  Ermitteln: 'Verstand',
+  Wissen: 'Verstand',
+  Überzeugen: 'Charisma',
+  Täuschen: 'Charisma',
+};
+
+async function selectAttributeGroup(page: Page, attributeLabel: string) {
+  const carousel = page.locator('[data-attribute-skills-carousel]');
+  const radio = carousel.getByRole('radio', { name: attributeLabel, exact: true });
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    if ((await radio.getAttribute('aria-checked')) === 'true') return;
+    await radio.click();
+    await expect(radio).toHaveAttribute('aria-checked', 'true', { timeout: 2_000 }).catch(() => undefined);
+    if ((await radio.getAttribute('aria-checked')) === 'true') return;
+    await page.getByRole('button', { name: 'Nächstes Attribut' }).click();
+  }
+  await expect(radio).toHaveAttribute('aria-checked', 'true');
+}
+
 async function allocateSevenFreeSkillPoints(page: Page) {
   for (const skill of ['Athletik', 'Akrobatik', 'Heimlichkeit', 'Ermitteln', 'Wissen', 'Überzeugen', 'Täuschen']) {
+    const attributeLabel = FREE_SKILL_ATTRIBUTE[skill];
+    if (!attributeLabel) throw new Error(`Missing attribute mapping for ${skill}`);
+    await selectAttributeGroup(page, attributeLabel);
     await page.getByRole('button', { name: `${skill} freien Punkt hinzufügen` }).click();
   }
-  await expect(page.getByText(/^7 \/ 7$/).first()).toBeVisible();
+  await expect(page.getByText(/7 \/ 7 freie Punkte/i).first()).toBeVisible();
 }
 
 async function ensureLoggedIn(page: Page) {
@@ -269,7 +295,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.screenshot({ path: '.qa/evidence/skill-progression-v2-character-editor-ux/01-three-start-sources.png', fullPage: true });
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-skills-budget-specialization.png'), fullPage: true });
 
-  await page.getByText('Medizin', { exact: true }).last().click();
+  await selectAttributeGroup(page, 'Verstand');
+  await page.locator('[data-attribute-skill-node="medicine"]').click();
   await expect(page.getByText(/Standardattribut: Verstand/i).last()).toBeVisible();
   await expect(page.getByText(/^Herkunft$/).last()).toBeVisible();
   await expect(page.getByText(/Globaler EB/i).last()).toBeVisible();
@@ -278,10 +305,12 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByLabel('Stufe').click();
   await page.getByRole('option', { name: '17', exact: true }).click();
-  await page.getByText('Medizin', { exact: true }).last().click();
+  await selectAttributeGroup(page, 'Verstand');
+  await page.locator('[data-attribute-skill-node="medicine"]').click();
   await expect(page.getByText(/Durch Rang 1 anwendbar/i).last()).toBeVisible();
   await expect(page.getByText(/\+2 anwendbarer Erfahrungsbonus/i)).toBeVisible();
-  await page.getByRole('button', { name: /Athletik Athletik erklären Standard: STÄ 0 Untrainiert/i }).click();
+  await selectAttributeGroup(page, 'Stärke');
+  await page.locator('[data-attribute-skill-node="athletics"]').click();
   await expect(page.getByText(/Durch Rang 0 anwendbar/i).last()).toBeVisible();
   await expect(page.getByText(/\+0 anwendbarer Erfahrungsbonus/i)).toBeVisible();
 
@@ -363,7 +392,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.screenshot({ path: path.join(V2_EVIDENCE_DIR, '08-progression-specialization-skill-change.png'), fullPage: true });
 
   // (29/30) Normal check has NO automatic specialization bonus; situational bonus shown separately.
-  await page.getByText('Medizin', { exact: true }).last().click();
+  await selectAttributeGroup(page, 'Verstand');
+  await page.locator('[data-attribute-skill-node="medicine"]').click();
   const normalCheckFormula = page.getByText(/Normaler Medizin-Check/i).locator('..');
   await expect(normalCheckFormula).toBeVisible();
   await expect(normalCheckFormula.getByText(/Spezialisierung/)).toHaveCount(0);
