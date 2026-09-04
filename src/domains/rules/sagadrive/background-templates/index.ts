@@ -43,6 +43,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'performance', name: 'Musik' },
       { skillId: 'performance', name: 'Rede' },
       { skillId: 'persuasion', name: 'Verkauf' },
+      { skillId: 'performance', name: 'Schauspiel' },
+      { skillId: 'persuasion', name: 'Verhandeln' },
     ],
     milieuSuggestions: ['Bühnen & Veranstaltungsorte', 'Medienkreise', 'Öffentliche Treffpunkte'],
     contactSuggestions: ['Produzentin oder Mäzen', 'Kollegin aus der Szene', 'Veranstalter oder Agent'],
@@ -60,6 +62,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'athletics', name: 'Sprinten' },
       { skillId: 'athletics', name: 'Kraftakt' },
       { skillId: 'acrobatics', name: 'Balance' },
+      { skillId: 'athletics', name: 'Klettern' },
+      { skillId: 'acrobatics', name: 'Parkour' },
     ],
     milieuSuggestions: ['Trainingsstätten', 'Arenen & Wettbewerbe', 'Vereine oder Teams'],
     contactSuggestions: ['Trainerin', 'Ehemaliger Teamkamerad', 'Rivalin mit Respekt'],
@@ -78,6 +82,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'survival', name: 'Navigation' },
       { skillId: 'survival', name: 'Spuren' },
       { skillId: 'awareness', name: 'Wachsamkeit' },
+      { skillId: 'survival', name: 'Wildnis' },
+      { skillId: 'awareness', name: 'Hinterhalte' },
     ],
     milieuSuggestions: ['Wildnis & Randgebiete', 'Ländliche Siedlungen', 'Abgelegene Routen oder Kolonien'],
     contactSuggestions: ['Fährtenleserin', 'Nachbar oder Familienmitglied', 'Routenführerin'],
@@ -95,6 +101,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'knowledge', name: 'Naturwissenschaften' },
       { skillId: 'investigation', name: 'Archive' },
       { skillId: 'persuasion', name: 'Vermittlung' },
+      { skillId: 'knowledge', name: 'Geschichte' },
+      { skillId: 'investigation', name: 'Tatorte' },
     ],
     milieuSuggestions: ['Akademien & Schulen', 'Archive & Bibliotheken', 'Forschungsstätten'],
     contactSuggestions: ['Mentorin', 'Fachkollege', 'Archivarin oder Laborleitung'],
@@ -113,6 +121,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'technology', name: 'Mechanik' },
       { skillId: 'technology', name: 'Sicherheitssysteme' },
       { skillId: 'sleight', name: 'Feinmechanik' },
+      { skillId: 'technology', name: 'Elektronik' },
+      { skillId: 'investigation', name: 'Tatorte' },
     ],
     milieuSuggestions: ['Werkstätten', 'Bau- oder Produktionsstätten', 'Wartungszugänge'],
     contactSuggestions: ['Meisterin oder Ausbilder', 'Zulieferer', 'Ehemalige Kollegin'],
@@ -131,6 +141,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'medicine', name: 'Notfallmedizin' },
       { skillId: 'medicine', name: 'Diagnose' },
       { skillId: 'insight', name: 'Stressreaktionen' },
+      { skillId: 'medicine', name: 'Chirurgie' },
+      { skillId: 'insight', name: 'Lügen erkennen' },
     ],
     milieuSuggestions: ['Heilstätten & Kliniken', 'Rettungs- oder Hilfsdienste', 'Orte informeller Versorgung'],
     contactSuggestions: ['Erfahrene Heilerin oder Chirurgin', 'Sanitäter oder Pflegerin', 'Versorger mit guten Verbindungen'],
@@ -149,6 +161,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'athletics', name: 'Kraftakt' },
       { skillId: 'ranged', name: 'Schusswaffen' },
       { skillId: 'intimidation', name: 'Autorität' },
+      { skillId: 'athletics', name: 'Klettern' },
+      { skillId: 'melee', name: 'Unbewaffnet' },
     ],
     milieuSuggestions: ['Kasernen & Wachposten', 'Veteranen- oder Dienstnetzwerke', 'Sicherheitsbereiche'],
     contactSuggestions: ['Ehemaliger Kamerad', 'Quartiermeisterin', 'Vorgesetzter oder Veteran'],
@@ -167,6 +181,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'driving', name: 'Bodenfahrzeuge' },
       { skillId: 'deception', name: 'Falsche Identität' },
       { skillId: 'stealth', name: 'Urbane Tarnung' },
+      { skillId: 'driving', name: 'Motorräder' },
+      { skillId: 'deception', name: 'Lügen' },
     ],
     milieuSuggestions: ['Schwarzmärkte', 'Informelle Handelsplätze', 'Kontrollierte Übergänge'],
     contactSuggestions: ['Vermittlerin', 'Bestochener Kontrolleur', 'Kontakt ohne viele Fragen'],
@@ -185,6 +201,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'investigation', name: 'Tatorte' },
       { skillId: 'investigation', name: 'Forensik' },
       { skillId: 'insight', name: 'Lügen erkennen' },
+      { skillId: 'investigation', name: 'Archive' },
+      { skillId: 'awareness', name: 'Hinterhalte' },
     ],
     milieuSuggestions: ['Behörden & Archive', 'Informationsnetzwerke', 'Orte systematischer Recherche'],
     contactSuggestions: ['Archivarin', 'Informant', 'Ehemalige Partnerin'],
@@ -202,6 +220,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'persuasion', name: 'Verhandeln' },
       { skillId: 'persuasion', name: 'Verkauf' },
       { skillId: 'insight', name: 'Verhandlungspartner' },
+      { skillId: 'persuasion', name: 'Diplomatie' },
+      { skillId: 'insight', name: 'Lügen erkennen' },
     ],
     milieuSuggestions: ['Märkte & Handelsplätze', 'Geschäftsnetzwerke', 'Liefer- und Vermittlungsketten'],
     contactSuggestions: ['Stammkundin', 'Lieferant', 'Vermittlerin mit Reichweite'],
@@ -219,6 +239,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'persuasion', name: 'Diplomatie' },
       { skillId: 'persuasion', name: 'Führung' },
       { skillId: 'knowledge', name: 'Kulturen' },
+      { skillId: 'persuasion', name: 'Verhandeln' },
+      { skillId: 'knowledge', name: 'Geschichte' },
     ],
     milieuSuggestions: ['Höfe & Führungskreise', 'Exklusive Institutionen', 'Wirtschaftliche oder politische Elite'],
     contactSuggestions: ['Familienmitglied mit Einfluss', 'Ehemalige Hauslehrerin', 'Vertrauter aus gehobenen Kreisen'],
@@ -236,6 +258,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'knowledge', name: 'Okkultes' },
       { skillId: 'knowledge', name: 'Kulturen' },
       { skillId: 'insight', name: 'Motivation' },
+      { skillId: 'knowledge', name: 'Geschichte' },
+      { skillId: 'insight', name: 'Lügen erkennen' },
     ],
     milieuSuggestions: ['Tempel, Klöster oder Ordenshäuser', 'Spirituelle Gemeinschaften', 'Philosophische oder ideologische Schulen'],
     contactSuggestions: ['Mentorin', 'Ordensgeschwister', 'Gemeindemitglied mit Vertrauen'],
@@ -253,6 +277,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'driving', name: 'Raumfahrzeuge' },
       { skillId: 'driving', name: 'Reittiere' },
       { skillId: 'survival', name: 'Navigation' },
+      { skillId: 'driving', name: 'Bodenfahrzeuge' },
+      { skillId: 'survival', name: 'Spuren' },
     ],
     milieuSuggestions: ['Häfen, Stationen & Umschlagplätze', 'Fernrouten', 'Fahr- oder Reisedienste'],
     contactSuggestions: ['Navigatorin', 'Fahrzeugmechaniker', 'Stammkunde oder Auftraggeberin'],
@@ -270,6 +296,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'investigation', name: 'Archive' },
       { skillId: 'technology', name: 'Computer' },
       { skillId: 'persuasion', name: 'Vermittlung' },
+      { skillId: 'knowledge', name: 'Geschichte' },
+      { skillId: 'investigation', name: 'Tatorte' },
     ],
     milieuSuggestions: ['Verwaltungen', 'Büros & Kanzleien', 'Logistik- oder Leitstellen'],
     contactSuggestions: ['Langjährige Kollegin', 'Vorgesetzter', 'Sachbearbeiterin mit Überblick'],
@@ -287,6 +315,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'insight', name: 'Motivation' },
       { skillId: 'persuasion', name: 'Vermittlung' },
       { skillId: 'sleight', name: 'Feinmechanik' },
+      { skillId: 'insight', name: 'Lügen erkennen' },
+      { skillId: 'persuasion', name: 'Verhandeln' },
     ],
     milieuSuggestions: ['Gasthäuser, Hotels & Gastronomie', 'Versorgungsbetriebe', 'Servicebereiche von Schiffen oder Stationen'],
     contactSuggestions: ['Stammgast', 'Lieferantin', 'Kollege aus dem Schichtbetrieb'],
@@ -304,6 +334,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'insight', name: 'Gruppendynamik' },
       { skillId: 'persuasion', name: 'Vermittlung' },
       { skillId: 'survival', name: 'Urbane Survival-Situationen' },
+      { skillId: 'insight', name: 'Lügen erkennen' },
+      { skillId: 'persuasion', name: 'Verhandeln' },
     ],
     milieuSuggestions: ['Familie & Haushalt', 'Nachbarschaft oder Dorf', 'Enge Gemeinschaft oder Kolonie'],
     contactSuggestions: ['Geschwister oder Cousine', 'Nachbar mit langer Geschichte', 'Vertrauensperson der Gemeinschaft'],
@@ -321,6 +353,8 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
       { skillId: 'knowledge', name: 'Recht' },
       { skillId: 'persuasion', name: 'Verhandeln' },
       { skillId: 'investigation', name: 'Befragungsanalyse' },
+      { skillId: 'knowledge', name: 'Geschichte' },
+      { skillId: 'investigation', name: 'Tatorte' },
     ],
     milieuSuggestions: ['Gerichte & Behörden', 'Politische Gremien', 'Institutionelle Entscheidungsräume'],
     contactSuggestions: ['Ehemalige Kollegin', 'Sachverständiger', 'Politische oder juristische Mentorin'],
@@ -342,6 +376,9 @@ export function validateSagaDriveBackgroundTemplate(template: SagaDriveBackgroun
   for (const skill of template.skillPool) {
     if (!knownSkills.has(skill)) errors.push(`unknown pool skill: ${skill}`);
   }
+  if (template.specializationSuggestions.length < 5) {
+    errors.push('specializationSuggestions must contain at least five entries');
+  }
   for (const suggestion of template.specializationSuggestions) {
     if (!pool.has(suggestion.skillId)) errors.push(`specialization skill is outside pool: ${suggestion.skillId}`);
     if (!getSagaDriveSkill(suggestion.skillId).specializations.includes(suggestion.name)) {
@@ -350,6 +387,27 @@ export function validateSagaDriveBackgroundTemplate(template: SagaDriveBackgroun
   }
 
   return errors;
+}
+
+/**
+ * Up to `limit` specialization name options for a trained background skill:
+ * curated template suggestions first, then padded from the skill catalog.
+ */
+export function getBackgroundSpecializationSuggestionNames(
+  template: SagaDriveBackgroundTemplate | undefined,
+  skillId: SagaDriveSkillKey,
+  limit = 5,
+): string[] {
+  const curated =
+    template?.specializationSuggestions.filter((entry) => entry.skillId === skillId).map((entry) => entry.name) ?? [];
+  const catalog = getSagaDriveSkill(skillId).specializations;
+  const merged: string[] = [];
+  for (const name of [...curated, ...catalog]) {
+    if (merged.includes(name)) continue;
+    merged.push(name);
+    if (merged.length >= limit) break;
+  }
+  return merged;
 }
 
 export function validateSagaDriveBackgroundTemplateCatalog(

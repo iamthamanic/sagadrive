@@ -19,11 +19,42 @@ async function completeSpeciesBasics(page: Page) {
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
 }
 
+const FREE_SKILL_ATTRIBUTE: Readonly<Record<string, string>> = {
+  Athletik: 'Stärke',
+  Akrobatik: 'Geschicklichkeit',
+  Heimlichkeit: 'Geschicklichkeit',
+  Ermitteln: 'Verstand',
+  Wissen: 'Verstand',
+  Überzeugen: 'Charisma',
+  Täuschen: 'Charisma',
+};
+
+async function selectAttributeGroup(page: Page, attributeLabel: string) {
+  const carousel = page.locator('[data-attribute-skills-carousel]');
+  const radio = carousel.getByRole('radio', { name: attributeLabel, exact: true });
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    if ((await radio.getAttribute('aria-checked')) === 'true') return;
+    try {
+      await radio.click({ timeout: 3_000 });
+    } catch {
+      await page.getByRole('button', { name: 'Nächstes Attribut' }).click();
+      continue;
+    }
+    await expect(radio).toHaveAttribute('aria-checked', 'true', { timeout: 2_000 }).catch(() => undefined);
+    if ((await radio.getAttribute('aria-checked')) === 'true') return;
+    await page.getByRole('button', { name: 'Nächstes Attribut' }).click();
+  }
+  await expect(radio).toHaveAttribute('aria-checked', 'true');
+}
+
 async function allocateSevenFreeSkillPoints(page: Page) {
   for (const skill of ['Athletik', 'Akrobatik', 'Heimlichkeit', 'Ermitteln', 'Wissen', 'Überzeugen', 'Täuschen']) {
+    const attributeLabel = FREE_SKILL_ATTRIBUTE[skill];
+    if (!attributeLabel) throw new Error(`Missing attribute mapping for ${skill}`);
+    await selectAttributeGroup(page, attributeLabel);
     await page.getByRole('button', { name: `${skill} freien Punkt hinzufügen` }).click();
   }
-  await expect(page.getByText(/^7 \/ 7$/).first()).toBeVisible();
+  await expect(page.getByText(/7 \/ 7 Punkte/i).first()).toBeVisible();
 }
 
 async function ensureLoggedIn(page: Page) {
@@ -62,10 +93,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('SagaDrive Core').first()).toBeVisible();
   await expect(page.getByRole('combobox', { name: /Regelset/i }).first()).toBeVisible();
 
-  for (const tab of ['Spezies', 'Parameter', 'Look', 'Inventar', 'Einstellungen']) {
+  for (const tab of ['Spezies', 'Charakter', 'Look', 'Inventar', 'Einstellungen']) {
     await expect(page.getByRole('tab', { name: new RegExp(`^${tab}$`, 'i') })).toBeVisible();
   }
-  await expect(page.getByRole('tab', { name: /^Hintergrund$/i })).toHaveCount(0);
+  await expect(page.locator('[role="tablist"]').first().getByRole('tab', { name: /^Hintergrund$/i })).toHaveCount(0);
 
   await page.getByRole('tab', { name: /^Spezies$/i }).click();
   await expect(page.getByText('Spezies', { exact: true }).first()).toBeVisible();
@@ -138,7 +169,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Erweitertes Schwimmen').first()).toBeVisible();
   await expect(page.getByText('Noch nicht verfügbar').first()).toBeVisible();
   await page.getByLabel(/Name deiner Spezies/i).fill('Schneggl');
-  await expect(page.getByLabel(/Spezies: Schneggl/i)).toBeVisible();
+  await expect(page.getByLabel(/Name deiner Spezies/i)).toHaveValue('Schneggl');
+  await expect(page.getByLabel('Spezies: Schneggl')).toHaveCount(0);
 
   await page.getByRole('button', { name: /Erweiterte Sicht, 2 Punkte/i }).click();
   const sightSelect = page.getByRole('combobox', { name: 'Erweiterte Sicht: Sichtform' });
@@ -161,19 +193,21 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText('Flugfähig')).toHaveCount(0);
   await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
 
-  await page.getByRole('tab', { name: /^Parameter$/i }).click();
-  await expect(page.getByRole('tab', { name: /^Kompetenzen$/i })).toBeVisible();
+  await page.getByRole('tab', { name: /^Charakter$/i }).click();
+  await expect(page.getByRole('tab', { name: /^Archetype$/i })).toHaveAttribute('data-state', 'active');
+  await expect(page.getByRole('tab', { name: /^Attribute$/i })).toBeVisible();
+  await expect(page.getByRole('tab', { name: /^Hintergrund$/i })).toBeVisible();
+  await expect(page.getByRole('tab', { name: /^Details$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Archetype$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Essenz$/i })).toBeVisible();
-  await expect(page.getByRole('tab', { name: /^Attribute$/i })).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: /^Kompetenzen$/i })).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '01-info-core-tabs.png'), fullPage: true });
 
-  await page.getByRole('tab', { name: /^Archetype$/i }).click();
   await page.getByRole('radio', { name: /Kämpfer/i }).click();
   await page.locator('[data-archetype-skill-grid] button').filter({ hasText: 'Nahkampf' }).first().click();
   await expect(page.getByText(/Archetyp-Punkt \(1 von 10\)/i).first()).toBeVisible();
   await expect(page.getByText(/Kampfroutine/i).first()).toBeVisible();
-  await expect(page.getByText(/Parameter → Kompetenzen/i).first()).toBeVisible();
+  await expect(page.getByText(/Charakter → Attribute/i).first()).toBeVisible();
   await expect(page.getByText('Freie Fertigkeitspunkte')).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '02-info-archetype-essence.png'), fullPage: true });
 
@@ -183,28 +217,38 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText(/Essenz-Manifestation/i).first()).toBeVisible();
   await expect(page.getByText(/mentaler Kämpfer|vollständig regelkonform/i).first()).toBeVisible();
   await expect(page.getByText(/Feuerball/i)).toHaveCount(0);
+  await expect(page.getByLabel(/^Essenz:/)).toBeVisible();
+  await expect(page.getByLabel(/^Archetype:/)).toBeVisible();
+  await expect(page.getByLabel('Spezies: Mensch')).toHaveCount(0);
+  await expect(page.getByLabel('Spezies: Schneggl')).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '05-abilities-core-ability.png'), fullPage: true });
 
-  await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
-  await expect(page.getByText('Grundattribute').first()).toBeVisible();
-  await expect(page.getByText(/15 \/ 15 Basis-Bonuspunkte/i).first()).toBeVisible();
-  await expect(page.getByText(/\+4 Bonus|\+3 Bonus|\+2 Bonus|\+1 Bonus/i).first()).toBeVisible();
-  await expect(page.getByText('Ausdauer').first()).toBeVisible();
-  await expect(page.getByText('Verstand').first()).toBeVisible();
-  await expect(page.getByText('Wahrnehmung').first()).toBeVisible();
+  await page.getByRole('tab', { name: /^Attribute$/i }).click();
+  const attributeSection = page.locator('[data-attr-connector-section]');
+  await expect(attributeSection.getByRole('heading', { name: /Attributsbonus/i })).toBeVisible();
+  await expect(attributeSection.getByText('Attributscheck').first()).toBeVisible();
+  await expect(attributeSection.getByText('Startverteilung').first()).toBeVisible();
+  await expect(attributeSection.getByText(/15 \/ 15 Bonuspunkte/i).first()).toBeVisible();
+  await expect(attributeSection.getByText(/\+4 Bonus|\+3 Bonus|\+2 Bonus|\+1 Bonus/i).first()).toBeVisible();
+  await expect(attributeSection.getByText('Ausdauer').first()).toBeVisible();
+  await expect(attributeSection.getByText('Verstand').first()).toBeVisible();
+  await expect(attributeSection.getByText('Wahrnehmung').first()).toBeVisible();
+  await page.screenshot({ path: path.join('.qa/evidence/attribute-bonus-pool', '01-attribute-budget-level-1.png'), fullPage: true });
+
+  await page.getByRole('tab', { name: /^Hintergrund$/i }).click();
   await expect(page.getByText('Bühne & Öffentlichkeit').first()).toBeVisible();
   await expect(page.getByText('Natur & Wildnis').first()).toBeAttached();
   await expect(page.getByText('Hintergrund Framework').first()).toBeVisible();
   await expect(page.getByRole('radio', { name: /Eigener Hintergrund/i })).toBeAttached();
-  await page.screenshot({ path: path.join('.qa/evidence/attribute-bonus-pool', '01-attribute-budget-level-1.png'), fullPage: true });
 
   const backgroundPanel = page.locator('[data-background-panel]');
-  const allocator = backgroundPanel.locator('[data-background-points-allocator]');
+  const pointsBudget = backgroundPanel.locator('[data-background-points-budget]');
   const healingFramework = page.getByRole('radio', { name: /Heilung & Fürsorge/i });
   await healingFramework.click();
   await expect(healingFramework).toHaveAttribute('aria-checked', 'true', { timeout: 10_000 });
-  await expect(allocator.getByText('2 Hintergrund-Fertigkeitspunkte').first()).toBeVisible();
-  await expect(allocator.getByText(/^0 \/ 2 verteilt$/).first()).toBeVisible();
+  // Intro copy carries the 2-point budget explanation; badge shows X / 2 verteilt only.
+  await expect(backgroundPanel.getByText(/2 Hintergrund-Fertigkeitspunkte/).first()).toBeVisible();
+  await expect(pointsBudget.getByText(/^0 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(backgroundPanel.getByText('Empfohlen')).toHaveCount(0);
 
   const medicineNode = backgroundPanel.locator('[data-background-skill-node="medicine"]');
@@ -217,69 +261,88 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(awarenessNode).toHaveCount(1);
   await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'pool');
 
-  await allocator.getByRole('button', { name: 'Medizin Hintergrundpunkt hinzufügen' }).click();
-  await expect(allocator.getByText(/^1 \/ 2 verteilt$/).first()).toBeVisible();
-  await allocator.getByRole('button', { name: 'Menschenkenntnis Hintergrundpunkt hinzufügen' }).click();
-  await expect(allocator.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
+  await medicineNode.getByRole('button', { name: 'Medizin Hintergrundpunkt erhöhen' }).click();
+  await expect(pointsBudget.getByText(/^1 \/ 2 verteilt$/).first()).toBeVisible();
+  await insightNode.getByRole('button', { name: 'Menschenkenntnis Hintergrundpunkt erhöhen' }).click();
+  await expect(pointsBudget.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(medicineNode).toHaveCount(1);
   await expect(insightNode).toHaveCount(1);
-  await expect(survivalNode).toHaveCount(0);
-  await expect(awarenessNode).toHaveCount(0);
-  await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'collapsed');
+  await expect(survivalNode).toHaveCount(1);
+  await expect(awarenessNode).toHaveCount(1);
+  await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'pool');
   await page.screenshot({ path: '.qa/evidence/skill-progression-v2-character-editor-ux/02-background-plus-two.png', fullPage: true });
 
-  await allocator.getByRole('button', { name: 'Menschenkenntnis Hintergrundpunkt entfernen' }).click();
-  await expect(allocator.getByText(/^1 \/ 2 verteilt$/).first()).toBeVisible();
+  await insightNode.getByRole('button', { name: 'Menschenkenntnis Hintergrundpunkt verringern' }).click();
+  await expect(pointsBudget.getByText(/^1 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(backgroundPanel.locator('[data-background-skill-grid]')).toHaveAttribute('data-training-view', 'pool');
   await expect(survivalNode).toHaveCount(1);
   await expect(awarenessNode).toHaveCount(1);
-  await allocator.getByRole('button', { name: 'Aufmerksamkeit Hintergrundpunkt hinzufügen' }).click();
-  await expect(allocator.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
+  await awarenessNode.getByRole('button', { name: 'Aufmerksamkeit Hintergrundpunkt erhöhen' }).click();
+  await expect(pointsBudget.getByText(/^2 \/ 2 verteilt$/).first()).toBeVisible();
   await expect(medicineNode).toHaveCount(1);
   await expect(awarenessNode).toHaveCount(1);
-  await expect(insightNode).toHaveCount(0);
-  await expect(survivalNode).toHaveCount(0);
+  await expect(insightNode).toHaveCount(1);
+  await expect(survivalNode).toHaveCount(1);
 
-  await page.getByRole('button', { name: /Medizin: Notfallmedizin/i }).click();
+  await medicineNode.getByRole('button', { name: 'Spezialisieren' }).click();
+  await medicineNode.getByRole('combobox', { name: 'Medizin Spezialisierungsvorschlag' }).click();
+  await page.getByRole('option', { name: /Notfallmedizin/ }).click();
   await page.getByLabel('Milieuzugang').fill('Notaufnahmen');
   await page.getByLabel('Kontakt').fill('Dr. Sera Malk');
   await page.getByLabel('Komplikation').fill('Alte Schulden');
   await page.getByLabel('Zusätzliche Kommunikationsform').fill('Gebärdensprache');
-  await expect(page.getByText(/Hintergrund ist regelkonform vollständig/i)).toBeVisible();
-  await expect(page.getByText('Fertigkeiten & Quellen').first()).toBeVisible();
-  await expect(page.getByText('Freie Punkte').first()).toBeVisible();
-  await expect(page.getByText(/^Hintergrund$/).first()).toBeVisible();
-  await expect(page.getByText(/^Archetyp$/).first()).toBeVisible();
-  await expect(page.getByText(/^Gesamt$/)).toHaveCount(0);
-  await page.screenshot({ path: '.qa/evidence/skill-progression-v2-character-editor-ux/01-three-start-sources.png', fullPage: true });
+  await expect(page.getByText(/^Hintergrund vollständig$/i)).toBeVisible();
   await expect(page.getByTestId('character-lore-project-context')).toBeVisible();
   await expect(page.getByTestId('character-bg-generate')).toBeVisible();
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '06-background-core-fields.png'), fullPage: true });
+
+  await page.getByRole('tab', { name: /^Details$/i }).click();
   await expect(page.getByRole('heading', { name: /^Notizen$/i })).toBeVisible();
   await expect(page.locator('#notes')).toBeVisible();
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '06-background-core-fields.png'), fullPage: true });
+
+  await page.getByRole('tab', { name: /^Attribute$/i }).click();
+  await expect(page.getByRole('heading', { name: /^Attribute$/i })).toBeVisible();
+  await expect(page.getByText('Proben verstehen')).toHaveCount(0);
+  await expect(page.getByText('Freie Punkte')).toHaveCount(0);
+  await expect(page.getByText(/Vergib genau 7 freie Fertigkeitspunkte/i)).toHaveCount(0);
+  await expect(page.getByText(/Start gesamt 10 Punkte/i)).toHaveCount(0);
+  await page.screenshot({ path: '.qa/evidence/skill-progression-v2-character-editor-ux/01-three-start-sources.png', fullPage: true });
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-skills-budget-specialization.png'), fullPage: true });
 
-  await page.getByText('Medizin', { exact: true }).last().click();
+  await selectAttributeGroup(page, 'Verstand');
+  await page.locator('[data-attribute-skill-node="medicine"]').click();
+  const formulaSection = page.locator('[data-skill-check-formula="true"]');
+  const formulaToggle = formulaSection.getByRole('button', { name: /Formeldetails fuer Medizin/i });
+  await expect(formulaSection).toBeVisible();
+  await expect(formulaToggle).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByText(/Standardattribut: Verstand/i).last()).toBeVisible();
   await expect(page.getByText(/^Herkunft$/).last()).toBeVisible();
   await expect(page.getByText(/Globaler EB/i).last()).toBeVisible();
   await expect(page.getByText(/anwendbarer Erfahrungsbonus/i).last()).toBeVisible();
+  await formulaToggle.click();
+  await expect(formulaToggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(formulaSection.getByText(/Standardattribut: Verstand/i)).toHaveCount(0);
+  await formulaToggle.click();
+  await expect(formulaToggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByText(/Standardattribut: Verstand/i).last()).toBeVisible();
   await page.screenshot({ path: '.qa/evidence/skill-progression-v2-character-editor-ux/03-skill-formula-applied-eb.png', fullPage: true });
 
   await page.getByLabel('Stufe').click();
   await page.getByRole('option', { name: '17', exact: true }).click();
-  await page.getByText('Medizin', { exact: true }).last().click();
+  await selectAttributeGroup(page, 'Verstand');
+  await page.locator('[data-attribute-skill-node="medicine"]').click();
   await expect(page.getByText(/Durch Rang 1 anwendbar/i).last()).toBeVisible();
   await expect(page.getByText(/\+2 anwendbarer Erfahrungsbonus/i)).toBeVisible();
-  await page.getByRole('button', { name: /Athletik Athletik erklären Standard: STÄ 0 Untrainiert/i }).click();
+  await selectAttributeGroup(page, 'Stärke');
+  await page.locator('[data-attribute-skill-node="athletics"]').click();
   await expect(page.getByText(/Durch Rang 0 anwendbar/i).last()).toBeVisible();
   await expect(page.getByText(/\+0 anwendbarer Erfahrungsbonus/i)).toBeVisible();
 
   await page.getByLabel('Stufe').click();
   await page.getByRole('option', { name: '1', exact: true }).click();
   await completeSpeciesBasics(page);
-  await page.getByRole('tab', { name: /^Parameter$/i }).click();
-  await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
+  await page.getByRole('tab', { name: /^Charakter$/i }).click();
+  await page.getByRole('tab', { name: /^Attribute$/i }).click();
   await allocateSevenFreeSkillPoints(page);
 
   const roundtripName = `E2E SkillV2 ${Date.now()}`;
@@ -288,8 +351,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByLabel('Stufe').click();
   await page.getByRole('option', { name: '3', exact: true }).click();
-  await page.getByRole('tab', { name: /^Parameter$/i }).click();
-  await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
+  await page.getByRole('tab', { name: /^Charakter$/i }).click();
+  await page.getByRole('tab', { name: /^Attribute$/i }).click();
   const progressionSlots = page.getByTestId('skill-progression-slots');
   await expect(progressionSlots).toBeVisible();
   await progressionSlots.getByRole('combobox').first().click();
@@ -353,7 +416,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.screenshot({ path: path.join(V2_EVIDENCE_DIR, '08-progression-specialization-skill-change.png'), fullPage: true });
 
   // (29/30) Normal check has NO automatic specialization bonus; situational bonus shown separately.
-  await page.getByText('Medizin', { exact: true }).last().click();
+  await selectAttributeGroup(page, 'Verstand');
+  await page.locator('[data-attribute-skill-node="medicine"]').click();
   const normalCheckFormula = page.getByText(/Normaler Medizin-Check/i).locator('..');
   await expect(normalCheckFormula).toBeVisible();
   await expect(normalCheckFormula.getByText(/Spezialisierung/)).toHaveCount(0);
@@ -370,9 +434,10 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tab', { name: /^Preset$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /Notizen/i })).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '13-statistics-tab.png'), fullPage: true });
-  await page.getByRole('tab', { name: /^Parameter$/i }).click();
-  await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
-  await expect(page.getByText(/Hintergrund ist regelkonform vollständig/i)).toBeVisible();
+  await page.getByRole('tab', { name: /^Charakter$/i }).click();
+  await page.getByRole('tab', { name: /^Hintergrund$/i }).click();
+  await expect(page.getByText(/^Hintergrund vollständig$/i)).toBeVisible();
+  await page.getByRole('tab', { name: /^Attribute$/i }).click();
   await expect(page.getByTestId('skill-progression-slots')).toBeVisible();
   await expect(page.getByText(/Legacy-Charakter|vollständige Herkunft nicht rekonstruierbar/i)).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Speichern/i }).first()).toBeEnabled();
@@ -430,13 +495,11 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
     await savedCard.getByRole('button', { name: 'Bearbeiten' }).click();
     await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible();
     await expect(page.getByPlaceholder('Charaktername').first()).toHaveValue(roundtripName, { timeout: 15_000 });
-    await page.getByRole('tab', { name: /^Parameter$/i }).click();
-    await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
-    await expect(page.getByText(/Hintergrund ist regelkonform vollständig/i)).toBeVisible();
+    await page.getByRole('tab', { name: /^Charakter$/i }).click();
+    await page.getByRole('tab', { name: /^Hintergrund$/i }).click();
+    await expect(page.getByText(/^Hintergrund vollständig$/i)).toBeVisible();
     await expect(page.getByLabel('Spezialisierung Fachgebiet')).toHaveValue('Notfallmedizin');
-    await expect(page.getByText(/^7 \/ 7$/).first()).toBeVisible();
-    await expect(page.getByText('2 / 2').first()).toBeVisible();
-    await expect(page.getByText('1 / 1').first()).toBeVisible();
+    await page.getByRole('tab', { name: /^Attribute$/i }).click();
     await expect(page.getByText(/Legacy-Charakter|vollständige Herkunft nicht rekonstruierbar/i)).toHaveCount(0);
     await expect(page.getByTestId('skill-progression-slots')).toBeVisible();
     await expect(page.getByText(/Medizin: 1 → 2/)).toBeVisible();
@@ -471,8 +534,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('combobox', { name: 'Enge Resistenz: Gefahrenart' })).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '04-species-mobile-repeatable.png'), fullPage: true });
 
-  await page.getByRole('tab', { name: /^Parameter$/i }).click();
-  await page.getByRole('tab', { name: /^Kompetenzen$/i }).click();
+  await page.getByRole('tab', { name: /^Charakter$/i }).click();
+  await page.getByRole('tab', { name: /^Hintergrund$/i }).click();
   await expect(page.getByRole('radio', { name: /Heilung & Fürsorge/i })).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '12-mobile-competencies.png'), fullPage: true });
 });

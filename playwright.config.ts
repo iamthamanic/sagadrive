@@ -11,6 +11,8 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   use: {
+    actionTimeout: 15_000,
+    navigationTimeout: 30_000,
     baseURL: devUrl,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',

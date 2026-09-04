@@ -75,6 +75,8 @@ export interface SagaDriveCoreAbilityDefinition {
 export interface SagaDriveArchetypeOption extends CharacterCreationOption {
   value: SagaDriveArchetypeKey;
   summary: string;
+  /** What this archetype is and what choosing it changes at character creation. */
+  description: string;
   skills: readonly SagaDriveSkillKey[];
   coreAbility: SagaDriveCoreAbilityDefinition;
 }
@@ -130,22 +132,27 @@ export const sagaDriveAttributeDefinitions: readonly SagaDriveAttributeDefinitio
 export const sagaDriveArchetypeOptions: readonly SagaDriveArchetypeOption[] = [
   {
     value: 'fighter', label: 'Kämpfer', summary: 'Konflikt · Schutz · Druck', skills: ['athletics', 'melee', 'ranged', 'intimidation'],
+    description: 'Du bist die Figur für direkten Konflikt: Gegner binden, Verbündete schützen und Druck aufbauen. Die Wahl gibt dir die Kernfähigkeit „Kampfroutine“ und legt den Pool aus Athletik, Nahkampf, Fernkampf und Einschüchtern fest — daraus wählst du genau einen Archetyp-Startpunkt (+1). Attribute, Spezies und Essenz bleiben unabhängig; der Archetyp ist keine Klasse mit eigenen Stufen.',
     coreAbility: { name: 'Kampfroutine', rank: 'I', actionType: 'Passiv', description: 'Du nutzt einen gelungenen Angriff oder ein Manöver sofort taktisch weiter.', effect: 'Einmal pro Zug nach einem erfolgreichen Angriff oder Kampfmanöver: +2 Schaden oder 1,5 m Bewegung ohne Gelegenheitsangriff.' },
   },
   {
     value: 'thinker', label: 'Denker', summary: 'Analyse · Planung · Systeme', skills: ['investigation', 'knowledge', 'technology', 'awareness'],
+    description: 'Du liest Situationen, Systeme und Informationen, bevor andere handeln. Die Wahl gibt dir die Kernfähigkeit „Analyse“ und den Skill-Pool Ermitteln, Wissen, Technik und Aufmerksamkeit — daraus kommt dein einer Archetyp-Startpunkt (+1). Der Denker ersetzt keine Attribute und bestimmt nicht, woher besondere Kräfte stammen (das ist die Essenz).',
     coreAbility: { name: 'Analyse', rank: 'I', actionType: 'Hauptaktion', description: 'Du zerlegst ein Problem in verwertbare mechanische Informationen für die Gruppe.', effect: 'Ermitteln gegen Zielwert/Widerstand. Erfolg: eine mechanische Eigenschaft aufdecken und Vorteil für den nächsten passenden Check eines Verbündeten. Kritisch: zusätzlich +1 Momentum, höchstens einmal pro Runde.' },
   },
   {
     value: 'healer', label: 'Heiler', summary: 'Versorgung · Stabilisierung · Fürsorge', skills: ['medicine', 'insight', 'knowledge', 'survival'],
+    description: 'Du hältst Leute und Situationen stabil: versorgen, beruhigen, wieder einsatzfähig machen. Die Wahl gibt dir „Feldversorgung“ und den Pool Medizin, Menschenkenntnis, Wissen und Überleben für deinen einen Archetyp-Startpunkt (+1). Heilung und Fürsorge sind keine Attributsboni und keine Essenz — sie kommen aus Kernfähigkeit und Fertigkeiten.',
     coreAbility: { name: 'Feldversorgung', rank: 'I', actionType: 'Hauptaktion', description: 'Du behandelst Verletzungen auch unter unmittelbarem Zeitdruck.', effect: 'Mit medizinischem Set: Medizin ZW 15. Erfolg heilt Erholung, kritischer Erfolg 2 × Erholung. Dasselbe Ziel höchstens einmal pro Szene.' },
   },
   {
     value: 'rebel', label: 'Rebell', summary: 'Infiltration · Beweglichkeit · Improvisation', skills: ['acrobatics', 'sleight', 'stealth', 'deception'],
+    description: 'Du kommst durch, wo Regeln, Wachen oder Werkzeug fehlen: schleichen, tricksen, improvisieren. Die Wahl gibt dir „Improvisation“ und den Pool Akrobatik, Fingerfertigkeit, Heimlichkeit und Täuschen für genau einen Archetyp-Startpunkt (+1). Der Rebell ändert keine Grundattribute und ist kein Machtkanal — dafür ist die Essenz zuständig.',
     coreAbility: { name: 'Improvisation', rank: 'I', actionType: 'Passiv', description: 'Du kommst mit schlechtem Werkzeug und ungünstigen Umständen besser zurecht.', effect: 'Einmal pro Zug eine Nachteilsquelle ignorieren, wenn sie ausschließlich aus improvisierter Ausrüstung, ungünstiger körperlicher Position oder unvollständigem Werkzeug stammt.' },
   },
   {
     value: 'diplomat', label: 'Diplomat', summary: 'Einfluss · Führung · Koordination', skills: ['persuasion', 'insight', 'performance', 'intimidation'],
+    description: 'Du bewegst Leute und Gruppen: überzeugen, führen, koordinieren. Die Wahl gibt dir „Koordination“ und den Pool Überzeugen, Menschenkenntnis, Auftreten und Einschüchtern für deinen einen Archetyp-Startpunkt (+1). Soziale Wirkung läuft über Fertigkeiten und Kernfähigkeit — nicht über Attributsboni oder die Essenz als Kraftquelle.',
     coreAbility: { name: 'Koordination', rank: 'I', actionType: 'Passiv', description: 'Du koordinierst Verbündete auch auf Distanz, solange sinnvolle Kommunikation möglich ist.', effect: 'Helfen funktioniert auf sinnvoller Kommunikationsreichweite. Führt die unterstützte Handlung zu einem kritischen Erfolg, entsteht +1 Momentum, höchstens einmal pro Runde.' },
   },
 ];
@@ -192,6 +199,109 @@ export const sagaDriveSkillDefinitions: readonly SagaDriveSkillDefinition[] = [
   { key: 'intimidation', label: 'Einschüchtern', attribute: 'charisma', summary: 'Drohung, Dominanz und glaubwürdig vermittelte Gefahr.', excludes: 'Kann niemanden zu offensichtlich selbstzerstörerischem Verhalten zwingen.', specializations: ['Verhör', 'Drohung', 'Körperliche Präsenz', 'Autorität', 'Psychologischer Druck'] },
   { key: 'performance', label: 'Auftreten', attribute: 'charisma', summary: 'Musik, Schauspiel, Rede, Tanz, Unterhaltung und öffentliche Inszenierung.', specializations: ['Musik', 'Schauspiel', 'Rede', 'Tanz', 'Comedy'] },
 ];
+
+/** Short German blurbs for catalog specialization names (persisted value stays the name string). */
+export const sagaDriveSpecializationDescriptions: Readonly<Record<string, string>> = {
+  Klettern: 'Seile, Wände und schwierige Aufstiege sicher bewältigen.',
+  Schwimmen: 'Sich im Wasser fortbewegen und gegen Strömung behaupten.',
+  Tauchen: 'Unter Wasser agieren, atmen und Orientierung behalten.',
+  Springen: 'Weite oder Höhe mit kontrollierter Landung überwinden.',
+  Sprinten: 'Kurze Distanzen mit voller Geschwindigkeit zurücklegen.',
+  Kraftakt: 'Schwere Lasten heben, schieben oder mit roher Kraft bewegen.',
+  Rettung: 'Personen aus Gefahr ziehen oder physisch bergen.',
+  Balance: 'Auf schmalen, wackligen oder glatten Flächen die Haltung halten.',
+  Parkour: 'Hindernisse fließend überwinden und urban springend fortbewegen.',
+  Fallen: 'Stürze abfangen und kontrolliert landen.',
+  Entkommen: 'Sich aus Fesseln, Griffen oder engen Lagen befreien.',
+  Luftakrobatik: 'In der Luft oder an Seilen/Trapezen präzise Bewegungen ausführen.',
+  Taschendiebstahl: 'Kleine Gegenstände unbemerkt entwenden.',
+  Schlösser: 'Mechanische Schlösser öffnen oder manipulieren.',
+  Tricks: 'Fingerfertige Ablenkungen und kleine Kunststücke.',
+  Feinmechanik: 'Kleine Bauteile präzise justieren, reparieren oder setzen.',
+  Verbergen: 'Kleine Objekte am Körper oder in der Nähe verstecken.',
+  Schleichen: 'Leise und unbemerkt an Orte gelangen.',
+  Verstecken: 'Deckung und Schatten nutzen, um unsichtbar zu bleiben.',
+  Beschattung: 'Personen unauffällig folgen und beobachten.',
+  Infiltration: 'Geschützte Bereiche unerkannt betreten.',
+  'Urbane Tarnung': 'In Menschenmengen und Stadtlärm untertauchen.',
+  Unbewaffnet: 'Kämpfen mit Fäusten, Griffen und Körpertechnik.',
+  Klingen: 'Schwerter, Messer und ähnliche Klingenwaffen führen.',
+  Stangenwaffen: 'Speere, Stäbe und reichweitenstarke Nahkampfwaffen nutzen.',
+  Greifen: 'Gegner festhalten, werfen oder in den Clinch nehmen.',
+  Entwaffnen: 'Waffen aus der Hand des Gegners bringen.',
+  Bögen: 'Pfeil und Bogen präzise einsetzen.',
+  Schusswaffen: 'Feuerwaffen und vergleichbare Distanzwaffen bedienen.',
+  Wurfwaffen: 'Messer, Speere oder andere Wurfgeschosse treffen.',
+  Energiewaffen: 'Energiebasierte Distanzwaffen sicher und gezielt einsetzen.',
+  Hinterhalte: 'Versteckte Angriffe und Lauerstellungen früh erkennen.',
+  Geräusche: 'Relevante Laute heraushören und deuten.',
+  'Visuelle Suche': 'Details, Spuren und Anomalien mit dem Auge finden.',
+  Wachsamkeit: 'Dauerhaft aufmerksam bleiben und Veränderungen bemerken.',
+  Überwachung: 'Personen oder Orte systematisch im Blick behalten.',
+  'Lügen erkennen': 'Unstimmigkeiten in Aussage, Ton und Körpersprache spüren.',
+  Verhandlungspartner: 'Absichten und Spielraum des Gegenübers einschätzen.',
+  Gruppendynamik: 'Rollen, Spannungen und Stimmungen in Gruppen lesen.',
+  Motivation: 'Was jemanden antreibt oder zurückhält, erkennen.',
+  Stressreaktionen: 'Druck, Angst und Überforderung bei anderen wahrnehmen.',
+  Navigation: 'Routen finden, Position bestimmen und Orientierung halten.',
+  Spuren: 'Fährten lesen und Bewegungen in Gelände oder Stadt rekonstruieren.',
+  Wildnis: 'In der Natur Nahrung, Schutz und sichere Lager finden.',
+  'Urbane Survival-Situationen': 'In der Stadt mit knappen Mitteln zurechtkommen.',
+  Wetter: 'Wetterlagen einschätzen und sich darauf einstellen.',
+  Tatorte: 'Orte systematisch absuchen und Spuren sichern.',
+  Archive: 'Akten, Register und Dokumentensammlungen auswerten.',
+  'Digitale Recherche': 'Datenbanken, Netze und digitale Spuren auswerten.',
+  Forensik: 'Materielle Beweise wissenschaftlich deuten.',
+  Befragungsanalyse: 'Aussagen vergleichen und Widersprüche herausarbeiten.',
+  Geschichte: 'Vergangene Ereignisse, Epochen und Zusammenhänge kennen.',
+  Recht: 'Gesetze, Verfahren und Rechtsfolgen einordnen.',
+  Naturwissenschaften: 'Naturgesetze und wissenschaftliche Zusammenhänge anwenden.',
+  Okkultes: 'Mythen, Rituale und okkulte Traditionen kennen.',
+  Kulturen: 'Bräuche, Etikette und kulturelle Codes verschiedener Gruppen kennen.',
+  Elektronik: 'Schaltungen, Geräte und Signalwege analysieren oder reparieren.',
+  Mechanik: 'Maschinen, Getriebe und mechanische Systeme verstehen.',
+  Computer: 'Systeme bedienen, konfigurieren oder digital umgehen.',
+  Fahrzeuge: 'Fahrzeugtechnik warten, diagnostizieren oder improvisieren.',
+  Robotik: 'Automaten und robotische Systeme einrichten oder umgehen.',
+  Sicherheitssysteme: 'Schlösser, Alarme und Zugangskontrollen analysieren oder umgehen.',
+  Notfallmedizin: 'Akute Verletzungen und Schockzustände stabilisieren.',
+  Chirurgie: 'Operative Eingriffe unter kontrollierten Bedingungen durchführen.',
+  Diagnose: 'Ursachen von Krankheit oder Verletzung eingrenzen.',
+  Toxikologie: 'Gifte, Drogen und Gegenmittel einschätzen.',
+  Psychiatrie: 'Psychische Krisen und Belastungen erkennen und begleiten.',
+  Bodenfahrzeuge: 'Autos, Transporter und Landfahrzeuge unter Druck steuern.',
+  Motorräder: 'Zweiräder schnell und kontrolliert bewegen.',
+  Fluggeräte: 'Flugzeuge, Drohnen oder Gleiter sicher führen.',
+  Wasserfahrzeuge: 'Boote und Schiffe unter schwierigen Bedingungen steuern.',
+  Raumfahrzeuge: 'Raumschiffe und Orbitfahrzeuge manövrieren.',
+  Reittiere: 'Tiere reiten, führen und unter Stress kontrollieren.',
+  Verhandeln: 'Interessen ausgleichen und tragfähige Absprachen erzielen.',
+  Diplomatie: 'Formelle Gespräche und heikle Beziehungen vermitteln.',
+  Führung: 'Gruppen klar anleiten und Entscheidungen durchsetzen.',
+  Verkauf: 'Angebote überzeugend darstellen und Abschlüsse erzielen.',
+  Vermittlung: 'Zwischen Parteien schlichten und Kompromisse finden.',
+  Lügen: 'Glaubhafte Unwahrheiten und Ausreden vorbringen.',
+  Verkleidung: 'Aussehen und Auftreten überzeugend verändern.',
+  Ablenkung: 'Aufmerksamkeit gezielt umleiten.',
+  'Falsche Identität': 'Eine erfundene Rolle langfristig glaubhaft spielen.',
+  Betrug: 'Komplexe Täuschungen und Schwindelmanöver planen.',
+  Verhör: 'Druck in Befragungen aufbauen und Informationen erzwingen.',
+  Drohung: 'Glaubwürdige Konsequenzen ankündigen, um Verhalten zu steuern.',
+  'Körperliche Präsenz': 'Allein durch Haltung und Ausstrahlung einschüchtern.',
+  Autorität: 'Offizielle oder soziale Machtposition wirksam einsetzen.',
+  'Psychologischer Druck': 'Angst, Schuld oder Unsicherheit gezielt verstärken.',
+  Musik: 'Instrument oder Gesang gezielt einsetzen.',
+  Schauspiel: 'Rollen, Emotionen und Szenen glaubhaft darstellen.',
+  Rede: 'Vor Publikum sprechen und Wirkung erzeugen.',
+  Tanz: 'Körperliche Performance rhythmisch und ausdrucksstark gestalten.',
+  Comedy: 'Humor und Timing nutzen, um Publikum zu gewinnen.',
+};
+
+export function getSagaDriveSpecializationDescription(name: string): string | undefined {
+  const trimmed = name.trim();
+  if (!trimmed) return undefined;
+  return sagaDriveSpecializationDescriptions[trimmed];
+}
 
 export const sagaDriveSpeciesTraitDefinitions: readonly SagaDriveSpeciesTraitDefinition[] = [
   { key: 'sharpened-sense', label: 'Geschärfter Sinn', cost: 1, description: 'Wähle einen Sinn. Du erhältst Vorteil auf Wahrnehmungschecks, bei denen dieser Sinn entscheidend ist.', detailLabel: 'Geschärfter Sinn', detailPlaceholder: 'z. B. Gehör, Geruch, Tastsinn', detailRequired: true },

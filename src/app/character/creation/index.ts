@@ -5,8 +5,13 @@
 export { CharacterArchetypePanel } from './CharacterArchetypePanel';
 export { CharacterBackgroundComposer } from './CharacterBackgroundComposer';
 export { CharacterBackgroundPanel } from './CharacterBackgroundPanel';
-export { BackgroundSkillPointsAllocator } from './BackgroundSkillPointsAllocator';
+export {
+  adjustBackgroundSkillPoints,
+  backgroundSkillsWithPoints,
+  sumBackgroundSkillPointsUsed,
+} from './BackgroundSkillPointsAllocator';
 export { CharacterEssencePanel } from './CharacterEssencePanel';
+export { EssenceCarousel } from './EssenceCarousel';
 export { GenderReadingSelect } from './GenderReadingSelect';
 export { SelectedSpeciesChip } from './SelectedSpeciesChip';
 export { SpeciesCarousel } from './SpeciesCarousel';

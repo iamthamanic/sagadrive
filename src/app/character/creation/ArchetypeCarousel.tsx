@@ -110,13 +110,21 @@ export function ArchetypeCarousel({ selectedArchetype, onSelect, labelledBy = 'a
                         <div className="flex items-center gap-1">
                           <CardTitle className="text-sm md:text-base">{option.label}</CardTitle>
                           <span className="inline-flex" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
-                            <RuleHelp label={option.label}>
-                              Der Archetyp beschreibt, was dein Charakter besonders gut tut. Er bestimmt die Kernfähigkeit und typische Fertigkeiten.
+                            <RuleHelp label={option.label} contentClassName="max-h-[min(24rem,70vh)] max-w-[min(22rem,90vw)] overflow-y-auto">
+                              <div className="space-y-2 text-xs leading-relaxed">
+                                <p>{option.description}</p>
+                                <p className="font-medium">Kernfähigkeit: {ability.name}</p>
+                                <p className="text-muted-foreground">{ability.description}</p>
+                              </div>
                             </RuleHelp>
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground">{option.summary}</p>
-                        {!isCenter && <p className="text-xs">Kernfähigkeit: {ability.name}</p>}
+                        {isCenter ? (
+                          <p className="text-xs leading-relaxed text-muted-foreground line-clamp-4">{option.description}</p>
+                        ) : (
+                          <p className="text-xs">Kernfähigkeit: {ability.name}</p>
+                        )}
                         {isCenter && (
                           <div
                             className="space-y-1.5"

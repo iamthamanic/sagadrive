@@ -35,7 +35,7 @@ import { AttributeD20Icon } from '@/components/AttributeD20Icon';
 
 ## 2. Attribut-Bonus-Karten (Grid)
 
-**Datei:** `src/components/CharacterEditor.tsx` (Abschnitt „Grundattribute · d20 + Attributbonus“)
+**Datei:** `src/components/CharacterEditor.tsx` (Abschnitt „Attributsbonus (=D20 + Bonus)“)
 
 **Layout:**
 
@@ -47,12 +47,12 @@ import { AttributeD20Icon } from '@/components/AttributeD20Icon';
 
 **Budget-Badges (oben rechts):**
 
-- `{used} / 15 Basis-Bonuspunkte`
+- `{used} / 15 Bonuspunkte`
 - `{used} / {budget} Entwicklung` (ab Level 8/16)
 
 **Deutsche Labels:**
 
-- „Grundattribute · d20 + Attributbonus“
+- „Attributsbonus (=D20 + Bonus)“
 - „Permanente Attributentwicklung“
 - „Permanente Entwicklung (Level 8|16)“ — Select-Label, kein `+1`
 - Attributbonus-RuleHelp: Bonuspunkte-Verteilung (ohne „+0 bis +4“ im Opening), Level-8/16-Entwicklung, +0-Erklärung, Bonus-Obergrenzen-Liste, Hinweis zu Charakteren mit Bonuspunktveränderung (Beispiel Level 8: Cap +5, 16 statt 15 Punkte)
@@ -193,7 +193,7 @@ const { setApi, current, handleCardClick, scrollPrev, scrollNext } = useCarousel
 
 ### Node-Specs
 
-- `min-h-28`, `rounded-lg border p-3`
+- `flex min-h-28 flex-col items-center justify-center rounded-lg border p-3 text-center`
 - Selected: `border-primary bg-primary/5` + Check-Icon
 - Badges: `Pool` / `Hintergrund +1`
 - Spezialisierung-Branch: vertikale Linie `border-l border-primary/60`, Badge `+2 auf passende Checks`

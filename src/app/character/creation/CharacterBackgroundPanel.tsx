@@ -1,21 +1,32 @@
 /**
  * CharacterBackgroundPanel — Hintergrund-Auswahl per Karussell mit Bracket-Connector
- * zu den Pool-Skill-Nodes (2-aus-4-Training + Spezialisierungs-Branch).
- * Location: src/modules/characters/components/CharacterBackgroundPanel.tsx
+ * zu den Pool-Skill-Nodes (stackbare 2 Hintergrundpunkte + Spezialisierungs-Branch).
+ * Location: src/app/character/creation/CharacterBackgroundPanel.tsx
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, CircleHelp, Minus, Plus } from 'lucide-react';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectItemText,
+  SelectTrigger,
+  SelectValue,
+} from '../../../components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
+import {
+  getBackgroundSpecializationSuggestionNames,
   getSagaDriveBackgroundTemplate,
   getSagaDriveBackgroundTemplatesForWorldProfile,
 } from '../../../modules/rulesets/backgroundTemplates';
 import {
   getSagaDriveAttribute,
   getSagaDriveSkill,
+  getSagaDriveSpecializationDescription,
   isSagaDriveSkillKey,
   type SagaDriveSkillKey,
 } from '../../../modules/rulesets/characterCreation';
@@ -24,12 +35,82 @@ import type { SagaDriveBackgroundSkillPoints } from '../../../modules/rulesets/s
 import { SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS } from '../../../modules/rulesets/skillProgression';
 import { BackgroundCarousel } from './BackgroundCarousel';
 import {
-  BackgroundSkillPointsAllocator,
+  adjustBackgroundSkillPoints,
   backgroundSkillsWithPoints,
   sumBackgroundSkillPointsUsed,
 } from './BackgroundSkillPointsAllocator';
 import { RuleHelp } from '../shared/RuleHelp';
-import { SkillSelectField } from '../progression';
+import { SkillIcon, SkillSelectField } from '../progression';
+
+/**
+ * BackgroundSkillAttributeHint — Plain short-label + CircleHelp tooltip (same pattern as
+ * SpecializationSelectOptionHelp / CharacterEditor). Explains the default Check attribute
+ * (not background/pool points). Location: CharacterBackgroundPanel.tsx
+ */
+function BackgroundSkillAttributeHint({
+  attributeLabel,
+  attributeShortLabel,
+}: {
+  attributeLabel: string;
+  attributeShortLabel: string;
+}) {
+  return (
+    <span className="mt-1 inline-flex items-center justify-center gap-1">
+      <span
+        className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+        aria-hidden="true"
+      >
+        {attributeShortLabel}
+      </span>
+      <Tooltip pinOnClick={false}>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            aria-label={`Standardattribut ${attributeLabel} erklären`}
+            className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-primary hover:bg-primary/10"
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <CircleHelp className="pointer-events-none size-3.5" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" sideOffset={6} className="max-w-[280px] px-3 py-2 text-left text-xs leading-relaxed">
+          Beim Check wird das Attribut {attributeLabel} verwendet — das standardmäßig verknüpfte Attribut
+          für diesen Fertigkeits-Check, nicht Hintergrund- oder Pool-Punkte.
+        </TooltipContent>
+      </Tooltip>
+    </span>
+  );
+}
+
+/**
+ * SpecializationSelectOptionHelp — CircleHelp + shadcn Tooltip portal inside a Radix SelectItem.
+ * Native `title` is unreliable on Select options; wrapping SelectTrigger in Tooltip breaks open/E2E.
+ * Pattern matches CharacterEditor attribute-option help. Location: CharacterBackgroundPanel.tsx
+ */
+function SpecializationSelectOptionHelp({ label, description }: { label: string; description: string }) {
+  return (
+    <Tooltip pinOnClick={false}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={`${label} erklären`}
+          className="pointer-events-auto ml-auto inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-primary hover:bg-primary/10"
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+        >
+          <CircleHelp className="pointer-events-none size-3.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="right" sideOffset={8} className="max-w-[280px] px-3 py-2 text-left text-xs leading-relaxed">
+        {description}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 type SkillSlot = SagaDriveSkillKey | '';
 
@@ -46,7 +127,6 @@ interface CharacterBackgroundPanelProps {
   contact: string;
   complication: string;
   communication: string;
-  validationAttempted: boolean;
   complete: boolean;
   onTemplateSelect: (templateId: string | null) => void;
   onBackgroundNameChange: (value: string) => void;
@@ -76,51 +156,225 @@ function SuggestionButtons({ values, onSelect }: { values: readonly string[] | u
 interface BackgroundSkillNodeProps {
   skillKey: SagaDriveSkillKey;
   pointValue: 0 | 1 | 2;
-  specializationName?: string;
+  pointsUsed: number;
+  backgroundPointsComplete: boolean;
+  isSpecializationTarget: boolean;
+  specializationName: string;
+  specializationOptions: readonly string[];
   onHoverChange: (skill: SagaDriveSkillKey | null) => void;
+  onAdjust: (skill: SagaDriveSkillKey, delta: 1 | -1) => void;
+  onSpecialize: (skill: SagaDriveSkillKey) => void;
+  onSpecializationNameChange: (value: string) => void;
+  onSpecializationApply: (skill: SagaDriveSkillKey, name: string) => void;
 }
 
 function BackgroundSkillNode({
   skillKey,
   pointValue,
+  pointsUsed,
+  backgroundPointsComplete,
+  isSpecializationTarget,
   specializationName,
+  specializationOptions,
   onHoverChange,
+  onAdjust,
+  onSpecialize,
+  onSpecializationNameChange,
+  onSpecializationApply,
 }: BackgroundSkillNodeProps) {
   const skill = getSagaDriveSkill(skillKey);
   const attribute = getSagaDriveAttribute(skill.attribute);
-  const hasSpecialization = Boolean(pointValue > 0 && specializationName?.trim());
+  const hasSpecialization = Boolean(pointValue > 0 && specializationName.trim() && isSpecializationTarget);
   const selected = pointValue > 0;
+  const canDecrease = pointValue > 0;
+  const canIncrease =
+    pointsUsed < SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS && pointValue < 2;
+  const showSpecializeControl = backgroundPointsComplete && pointValue > 0;
+  const selectValue = specializationOptions.includes(specializationName.trim())
+    ? specializationName.trim()
+    : '';
+  const selectedDescription = selectValue ? getSagaDriveSpecializationDescription(selectValue) : undefined;
+
+  const handleCardActivate = () => {
+    if (canIncrease) onAdjust(skillKey, 1);
+  };
 
   return (
     <div className="min-w-0" data-background-skill-node={skillKey}>
       <div
-        role="group"
-        aria-label={`${skill.label} Hintergrundpunkte`}
+        role="button"
+        tabIndex={0}
+        aria-pressed={selected}
+        aria-label={
+          canIncrease
+            ? `${skill.label} Hintergrundpunkt hinzufügen`
+            : `${skill.label} Hintergrundpunkte: ${pointValue}`
+        }
         onMouseEnter={() => onHoverChange(skillKey)}
         onMouseLeave={() => onHoverChange(null)}
         onFocus={() => onHoverChange(skillKey)}
         onBlur={() => onHoverChange(null)}
-        className={`min-h-28 w-full rounded-lg border p-3 text-left transition-colors ${selected ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
+        onClick={handleCardActivate}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleCardActivate();
+          }
+        }}
+        className={`relative flex min-h-28 w-full flex-col items-center justify-center rounded-lg border p-3 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          selected
+            ? 'border-primary bg-primary/5'
+            : 'border-border bg-card hover:border-primary/60'
+        } ${canIncrease ? 'cursor-pointer' : 'cursor-default'}`}
       >
-        <div className="flex items-start justify-between gap-2">
+        {selected ? <Check className="absolute right-2 top-2 h-4 w-4 text-primary" aria-hidden="true" /> : null}
+        <div className="flex flex-col items-center gap-1.5">
+          <SkillIcon skillKey={skillKey} className="h-7 w-7 shrink-0 text-muted-foreground" />
           <div className="min-w-0">
             <p className="font-medium">{skill.label}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Standard: {attribute.shortLabel}</p>
+            <BackgroundSkillAttributeHint
+              attributeLabel={attribute.label}
+              attributeShortLabel={attribute.shortLabel}
+            />
           </div>
-          {selected ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> : null}
         </div>
-        <div className="mt-3 flex min-h-6 flex-wrap gap-1.5">
-          {pointValue > 0 ? <Badge variant="outline">Hintergrund +{pointValue}</Badge> : <Badge variant="outline">Pool</Badge>}
+        <div className="mt-3 flex items-center justify-center gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="size-10"
+            disabled={!canDecrease}
+            onClick={(event) => {
+              event.stopPropagation();
+              onAdjust(skillKey, -1);
+            }}
+            aria-label={`${skill.label} Hintergrundpunkt verringern`}
+          >
+            <Minus className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <span className="w-6 text-center text-lg font-semibold tabular-nums" aria-live="polite">
+            {pointValue}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="size-10"
+            disabled={!canIncrease}
+            onClick={(event) => {
+              event.stopPropagation();
+              onAdjust(skillKey, 1);
+            }}
+            aria-label={`${skill.label} Hintergrundpunkt erhöhen`}
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+          </Button>
         </div>
       </div>
 
-      {hasSpecialization ? (
-        <div className="relative mx-auto mt-0 max-w-[12rem] pt-5 text-center">
+      {showSpecializeControl ? (
+        <div className="mt-2 flex justify-center">
+          <Button
+            type="button"
+            size="sm"
+            variant={isSpecializationTarget ? 'default' : 'outline'}
+            className="min-h-11 px-3"
+            data-specialize-skill={skillKey}
+            onClick={() => onSpecialize(skillKey)}
+          >
+            Spezialisieren
+          </Button>
+        </div>
+      ) : null}
+
+      {isSpecializationTarget && showSpecializeControl ? (
+        <div className="relative mx-auto mt-0 max-w-[14rem] space-y-2 pt-5 text-left" data-specialization-branch={skillKey}>
           <span className="absolute left-1/2 top-0 h-5 -translate-x-1/2 border-l border-primary/60" aria-hidden="true" />
-          <div className="rounded-lg border border-primary/40 bg-primary/5 px-3 py-2">
-            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Spezialisierung</p>
-            <p className="mt-0.5 text-sm font-medium">{specializationName}</p>
-            <Badge className="mt-1.5">+2 auf passende Checks</Badge>
+          <div className="rounded-lg border border-primary/40 bg-primary/5 px-3 py-3">
+            <div className="flex items-center gap-1">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Spezialisierung</p>
+              {selectedDescription ? (
+                <Tooltip pinOnClick={false}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={`${selectValue} erklären`}
+                      className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-primary hover:bg-primary/10"
+                    >
+                      <CircleHelp className="size-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={6} className="max-w-[280px] px-3 py-2 text-left text-xs leading-relaxed">
+                    {selectedDescription}
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
+            </div>
+            <Label htmlFor={`specialization-select-${skillKey}`} className="sr-only">
+              Vorschlag für {skill.label}
+            </Label>
+            <Select
+              value={selectValue || undefined}
+              onValueChange={(value) => onSpecializationApply(skillKey, value)}
+            >
+              {/* Do not wrap SelectTrigger in Tooltip — Radix tooltip+select nesting blocks pointer/open in E2E. */}
+              <SelectTrigger
+                id={`specialization-select-${skillKey}`}
+                className="mt-2 min-h-11 w-full"
+                aria-label={`${skill.label} Spezialisierungsvorschlag`}
+              >
+                {selectValue ? (
+                  <span className="flex min-w-0 items-center gap-2">
+                    <SkillIcon skillKey={skillKey} className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{selectValue}</span>
+                  </span>
+                ) : (
+                  <SelectValue placeholder="Vorschlag wählen …" />
+                )}
+              </SelectTrigger>
+              <SelectContent>
+                {specializationOptions.map((name) => {
+                  const description = getSagaDriveSpecializationDescription(name);
+                  return (
+                    <SelectItem
+                      key={name}
+                      value={name}
+                      textValue={name}
+                      className={description ? 'items-start py-2.5 pr-10' : undefined}
+                    >
+                      <SelectItemText>
+                        <span className="flex min-w-0 items-start gap-2">
+                          <SkillIcon skillKey={skillKey} className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span className="min-w-0 text-left">
+                            <span className="block leading-tight">{name}</span>
+                            {description ? (
+                              <span className="mt-0.5 block text-xs font-normal leading-snug text-muted-foreground whitespace-normal">
+                                {description}
+                              </span>
+                            ) : null}
+                          </span>
+                        </span>
+                      </SelectItemText>
+                      {description ? (
+                        <SpecializationSelectOptionHelp label={name} description={description} />
+                      ) : null}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            {selectedDescription ? (
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{selectedDescription}</p>
+            ) : null}
+            <Input
+              className="mt-2 min-h-11"
+              value={specializationName}
+              onChange={(event) => onSpecializationNameChange(event.target.value)}
+              placeholder="Oder eigenes Fachgebiet"
+              aria-label={`${skill.label} Spezialisierung Fachgebiet`}
+            />
+            {hasSpecialization ? <Badge className="mt-2">+2 auf passende Checks</Badge> : null}
           </div>
         </div>
       ) : null}
@@ -129,8 +383,8 @@ function BackgroundSkillNode({
 }
 
 /**
- * Bracket-Connector vom zentrierten Hintergrund-Karussell zu den aktuell sichtbaren Skill-Nodes.
- * Vor Abschluss sind das vier Pool-Skills, danach nur die beiden gewählten Trainings.
+ * Bracket-Connector vom zentrierten Hintergrund-Karussell zu allen Pool-Skill-Nodes.
+ * Vier Pool-Skills bleiben nach Punktverteilung sichtbar; belegte Skills werden hervorgehoben.
  */
 interface BackgroundSkillConnectorProps {
   skills: readonly SagaDriveSkillKey[];
@@ -368,7 +622,6 @@ export function CharacterBackgroundPanel({
   contact,
   complication,
   communication,
-  validationAttempted,
   complete,
   onTemplateSelect,
   onBackgroundNameChange,
@@ -391,17 +644,40 @@ export function CharacterBackgroundPanel({
   const customMode = backgroundTemplateId === null;
   const hasChoice = backgroundTemplateId !== undefined;
   const showSkillGraph = hasChoice && poolSkills.length === 4;
-  const visibleSkillNodes = backgroundPointsComplete ? occupiedBackgroundSkills : poolSkills;
-  const skillGraphViewMode = backgroundPointsComplete ? 'collapsed' : 'pool';
+  // Keep all four pool skills visible after allocating points so players can reallocate.
+  const visibleSkillNodes = poolSkills;
+  const skillGraphViewMode = 'pool';
 
   const [scrollPhase, setScrollPhase] = useState<CarouselScrollPhase>('settled');
   const [activeSkill, setActiveSkill] = useState<SagaDriveSkillKey | null>(null);
-  const specializationSuggestions = selectedTemplate?.specializationSuggestions.filter((entry) => occupiedBackgroundSkills.includes(entry.skillId)) ?? [];
 
   const handleScrollPhaseChange = useCallback((phase: CarouselScrollPhase) => {
     setScrollPhase(phase);
   }, []);
   const handleStandstill = useCallback(() => setScrollPhase('settled'), []);
+  const handleBackgroundPointAdjust = useCallback(
+    (skill: SagaDriveSkillKey, delta: 1 | -1) => {
+      onBackgroundSkillPointsChange(adjustBackgroundSkillPoints(backgroundSkillPoints, skill, delta));
+    },
+    [backgroundSkillPoints, onBackgroundSkillPointsChange],
+  );
+  const handleSpecialize = useCallback(
+    (skill: SagaDriveSkillKey) => {
+      onSpecializationSkillChange(skill);
+    },
+    [onSpecializationSkillChange],
+  );
+  const handleSpecializationApply = useCallback(
+    (skill: SagaDriveSkillKey, name: string) => {
+      if (onSpecializationApply) {
+        onSpecializationApply(skill, name);
+        return;
+      }
+      onSpecializationSkillChange(skill);
+      onSpecializationNameChange(name);
+    },
+    [onSpecializationApply, onSpecializationNameChange, onSpecializationSkillChange],
+  );
 
   return (
     <section className="space-y-5" aria-labelledby="background-competency-heading" data-background-panel>
@@ -413,9 +689,19 @@ export function CharacterBackgroundPanel({
               Dein Hintergrund definiert vier Framework-Fertigkeiten. Du verteilst 2 stackbare Hintergrundpunkte (+2 auf einen Skill oder +1/+1). Attribute werden dadurch nicht erhöht.
             </RuleHelp>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">Wähle eine Vergangenheit im Karussell, verteile 2 Hintergrundpunkte auf die vier Pool-Fertigkeiten und lege danach eine Spezialisierung fest. Nach Abschluss zeigt der Graph nur noch belegte Skills.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Wähle eine Vergangenheit im Karussell. Verteile danach 2 Hintergrund-Fertigkeitspunkte direkt an den Pool-Skills
+            (+2 auf einen Skill oder +1/+1) und lege eine Spezialisierung fest. Alle vier Pool-Skills bleiben sichtbar, damit du Punkte umverteilen kannst.
+          </p>
         </div>
-        <Badge variant={complete ? 'default' : 'outline'}>{complete ? 'Hintergrund vollständig' : 'Hintergrund offen'}</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          {showSkillGraph ? (
+            <Badge variant={backgroundPointsComplete ? 'default' : 'outline'} data-background-points-budget>
+              {backgroundPointsUsed} / {SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS} verteilt
+            </Badge>
+          ) : null}
+          <Badge variant={complete ? 'default' : 'outline'}>{complete ? 'Hintergrund vollständig' : 'Hintergrund offen'}</Badge>
+        </div>
       </div>
 
       <BackgroundCarousel
@@ -473,70 +759,38 @@ export function CharacterBackgroundPanel({
                 onStandstill={handleStandstill}
               />
 
-              <div
-                className={`grid gap-3 sm:grid-cols-2 ${visibleSkillNodes.length > 2 ? 'xl:grid-cols-4' : 'mx-auto w-full max-w-2xl'}`}
-                data-background-skill-grid
-                data-training-view={skillGraphViewMode}
-              >
-                {visibleSkillNodes.map((skillKey) => (
-                  <BackgroundSkillNode
-                    key={skillKey}
-                    skillKey={skillKey}
-                    pointValue={(backgroundSkillPoints[skillKey] ?? 0) as 0 | 1 | 2}
-                    specializationName={backgroundPointsComplete && specializationSkill === skillKey ? specializationName : undefined}
-                    onHoverChange={(skill) => setActiveSkill(skill)}
-                  />
-                ))}
-              </div>
-
-              <BackgroundSkillPointsAllocator
-                poolSkills={poolSkills}
-                points={backgroundSkillPoints}
-                onChange={onBackgroundSkillPointsChange}
-              />
-
-              {backgroundPointsComplete ? (
-                <div className="space-y-3 rounded-lg border border-border bg-card p-4">
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <p className="font-medium">Spezialisierung</p>
-                      <RuleHelp label="Spezialisierung">Eine passende Spezialisierung gibt +2 auf anwendbare Checks. Die erste Spezialisierung benötigt Fertigkeitswert 1.</RuleHelp>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Wähle ein Fachgebiet auf einem deiner Hintergrund-Skills. Nach der Wahl erscheint es direkt als untergeordneter Branch am Skill.</p>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <SkillSelectField
-                      value={specializationSkill}
-                      onValueChange={(value) => onSpecializationSkillChange(isSagaDriveSkillKey(value) ? value : '')}
-                      skillOptions={occupiedBackgroundSkills}
-                      placeholder="Hintergrund-Fertigkeit wählen"
-                      ariaLabel="Spezialisierung Fertigkeit wählen"
+              {/* Centered pool block on large screens; mobile stays full-width stacked. */}
+              <div className="mx-auto w-full max-w-5xl space-y-2">
+                <div
+                  className="mx-auto grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-4"
+                  data-background-skill-grid
+                  data-training-view={skillGraphViewMode}
+                >
+                  {visibleSkillNodes.map((skillKey) => (
+                    <BackgroundSkillNode
+                      key={skillKey}
+                      skillKey={skillKey}
+                      pointValue={(backgroundSkillPoints[skillKey] ?? 0) as 0 | 1 | 2}
+                      pointsUsed={backgroundPointsUsed}
+                      backgroundPointsComplete={backgroundPointsComplete}
+                      isSpecializationTarget={specializationSkill === skillKey}
+                      specializationName={specializationSkill === skillKey ? specializationName : ''}
+                      specializationOptions={getBackgroundSpecializationSuggestionNames(selectedTemplate, skillKey)}
+                      onHoverChange={(skill) => setActiveSkill(skill)}
+                      onAdjust={handleBackgroundPointAdjust}
+                      onSpecialize={handleSpecialize}
+                      onSpecializationNameChange={onSpecializationNameChange}
+                      onSpecializationApply={handleSpecializationApply}
                     />
-                    <Input value={specializationName} onChange={(event) => onSpecializationNameChange(event.target.value)} placeholder="Fachgebiet, z. B. Notfallmedizin" aria-label="Spezialisierung Fachgebiet" />
+                  ))}
+                </div>
+
+                {!backgroundPointsComplete ? (
+                  <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-center text-sm text-muted-foreground">
+                    Verteile zuerst alle 2 Hintergrundpunkte. Danach wird die Spezialisierung freigeschaltet.
                   </div>
-                  {specializationSuggestions.length > 0 ? (
-                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                      <span>Vorschläge:</span>
-                      {specializationSuggestions.map((entry) => (
-                        <Button key={`${entry.skillId}-${entry.name}`} type="button" size="sm" variant="outline" className="min-h-11 px-2 text-xs" onClick={() => {
-                          if (onSpecializationApply) {
-                            onSpecializationApply(entry.skillId, entry.name);
-                          } else {
-                            onSpecializationSkillChange(entry.skillId);
-                            onSpecializationNameChange(entry.name);
-                          }
-                        }}>
-                          {getSagaDriveSkill(entry.skillId).label}: {entry.name}
-                        </Button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-3 text-sm text-muted-foreground">
-                  Verteile zuerst alle 2 Hintergrundpunkte. Danach wird die Spezialisierung freigeschaltet.
-                </div>
-              )}
+                ) : null}
+              </div>
             </div>
           ) : (
             <div className="rounded-lg border border-dashed border-border bg-muted/10 px-4 py-4 text-sm text-muted-foreground">
@@ -562,13 +816,6 @@ export function CharacterBackgroundPanel({
           </div>
         </div>
       ) : null}
-
-      <div className={`rounded-lg border px-4 py-3 text-sm ${complete ? 'border-primary/30 bg-primary/5' : validationAttempted ? 'border-destructive/40 bg-destructive/5 text-destructive' : 'border-border bg-muted/10'}`}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-medium">{complete ? 'Hintergrund ist regelkonform vollständig.' : 'Noch offen: Template/Name, 4 Pool-Skills, 2 Hintergrundpunkte, 1 Spezialisierung sowie Milieu, Kontakt, Komplikation und Kommunikationsform.'}</p>
-          <span className="text-xs">{poolSkills.length}/4 Pool · {backgroundPointsUsed}/2 Punkte · {specializationSkill && specializationName.trim() ? '1/1 Spezialisierung' : '0/1 Spezialisierung'}</span>
-        </div>
-      </div>
     </section>
   );
 }

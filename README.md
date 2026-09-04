@@ -168,22 +168,16 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
-- **2026-09-03** — Preset skill provenance is single-source: `sagadrive_profile.freeSkillRanks` only (no parallel top-level snapshot field) (`fix/skill-progression-v2-remove-legacy`)
-- **2026-09-03** — Character presets no longer enforce a minimum of 6 trained skills; legal V2 stacked start builds (fewer distinct skills) can be saved as presets (`fix/skill-progression-v2-remove-legacy`)
-- **2026-09-03** — Skill Progression v2 is the only supported SagaDrive character skill model: complete V2 provenance is mandatory, archetype + archetype start point are required, incomplete data fails closed (no `legacy-unresolved`, no `trainedSkills` source of truth). Migration 014 unchanged (`fix/skill-progression-v2-remove-legacy`)
-- **2026-09-02** — Skill Progression v2 Post-Merge Hardening: Partial Updates validieren immer den kombinierten SagaDrive-State, ein Level-Slot = genau eine Entscheidung (chronologisch), Spezialisierungs-Draft + Cascade-Prune im Editor, situationsgebundener +2 getrennt ausgewiesen, Bootstrap aus `src/modules/**` in den App-Slice (`fix/skill-progression-v2-post-merge-hardening`)
-- **2026-09-02** — `.cursor/` AgentShield baseline: rules, permissions/hooks, empty MCP (`chore/cursor-agentshield`)
-- **2026-09-02** — Skill Progression v2 Character Editor UX: 7/2/1 Startquellen, stackbare Hintergrundpunkte, Formelpanel (global/applied EB), Level-3–19-Slots; Migration `014` (`abilities`/`emotion_profiles`); Bibliothek lädt Charaktere zum Bearbeiten (`feat/skill-progression-v2-character-editor-ux`, #91)
-- **2026-09-02** — Character Presets hardening: migration `013` (source ownership + origin=user RLS), snapshot re-validate on read/bootstrap, `normalizeSafeUrl` for portrait URLs (`feat/character-presets`)
-- **2026-09-02** — Character Presets MVP: Create-Chooser (eigen/preset), versionierte Presets unter Einstellungen → Preset, Migration `012_character_presets` (`feat/character-presets`)
-- **2026-09-01** — Startup- & Bibliothek-Performance: Route-Lazy-Loading (Three.js/VRM aus Initial-Chunk), schnellerer Auth-Fail-open, DevTrack nur in Dev, farbiges Favicon, Summary-DTOs + Batch-Queries für Bibliothek/Dashboard, Tab-lazy Fetch + 30s Cache (`feat/startup-library-performance`)
-- **2026-08-31** — Hintergrund: Template-Karussell inkl. Custom-Slide, Bracket-Connector zu Pool-Skill-Nodes, Training/Spezialisierung am Node (`feat/background-skill-nodes`)
-- **2026-08-31** — Kompetenzen: Attributkarten verbinden per Bracket-Linien die abhängigen abgeleiteten Werte; Filter + ausgegraute Restwerte, Wert-Flash, Manöverwiderstand-Hinweise im Dropdown (`feat/attribute-derived-connector`)
-- **2026-08-28** — Avatar-Asset-Katalog: commit-gepinnte CC0-Provenienz, explizite neutrale Fallbacks und lizenzgeprüftes Ork-VRM (`issue/3-avatar-race-asset-catalog`, siehe `docs/avatar assets.md`)
-- **2026-08-27** — Bibliothek-Tab Welten (owner-scoped Weltprofile, Modul Speziesentwicklung); Character Editor: Notizen unter Hintergrund, Tab Statistik mit Abenteuer-Bögen (`feat/world-profiles-and-statistics`, siehe `docs/world profiles.md`)
-- **2026-08-27** — Speziesmerkmale: speziesgebundene Allowlists, exakt 3/3 Punkte, Merkmalsdetails direkt an den Cards, Alien-Profil-Builder, `Erweitertes Klettern`/`Erweitertes Schwimmen`; Talente-Subtab entfernt (`feat/species-traits-by-species`)
-- **2026-08-27** — Character Editor Chrome: Tab „Spezies“, Name/Geschlecht/Stufe in Preview, Regelset neben Vorschau, Archetyp-Kernfähigkeit einklappbar, flachere Archetyp-Karten (`feat/alien-species-sketch`)
-- **2026-08-27** — Spezies-Karussell: Wappen pro Spezies (Shimmer/Puls bei Auswahl), Colorway-Header, überarbeitete Skizzen und Skalierung Zwerg/Halbling (`feat/character-editor-ui-polish`)
+- **2026-09-04** — Charakter-Tab startet auf Archetype; fertige Untertabs mit Checkbox-Icon; Archetyp-Beschreibungen (Rolle + mechanische Auswirkungen); Attributsbonus-Überschrift; „Frei +N“-Pills an Skill-Nodes entfernt (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Sticky preview: Essenz- and Archetype-Pills (icons, no Spezies pill) (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Attribute-Tab: Fertigkeiten-Karussell über Attributsbonus; Formel unter Skill-Nodes; Tab-Split Charakter/Hintergrund/Details (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Hintergrund-Skill-Nodes: CircleHelp (Check-Terminologie); Status-Box entfernt; Spezialisieren im Node (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Hintergrundpunkte in den Pool-Skill-Boxen: −/+ und Klick, zentrierte Karten, Budget-Badge (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Essenz-Auswahl als Karussell (wie Archetyp/Spezies) (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Preset skill provenance is single-source: `sagadrive_profile.freeSkillRanks` only (`fix/skill-progression-v2-remove-legacy`)
+- **2026-09-03** — Character presets no longer enforce a minimum of 6 trained skills (`fix/skill-progression-v2-remove-legacy`)
+- **2026-09-03** — Skill Progression v2 only: complete V2 provenance mandatory, fail-closed (Migration 014 unchanged) (`fix/skill-progression-v2-remove-legacy`)
+- **2026-09-02** — Skill Progression v2 Post-Merge Hardening: combined-state validation, level slot = one decision, spec draft + cascade prune (`fix/skill-progression-v2-post-merge-hardening`)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 
