@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
-import { Camera, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
+import { Camera, CheckCircle2, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { AvatarCanvas } from '../../../modules/characters/avatar/AvatarCanvas';
 import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../modules/characters/avatar';
@@ -245,7 +245,7 @@ function retainSpeciesTraitInstancesForRace(
 
 export function CharacterEditor() {
   const [activeTab, setActiveTab] = useState<EditorTab>('info');
-  const [activeValuesSubTab, setActiveValuesSubTab] = useState<ValuesSubTab>('attributes');
+  const [activeValuesSubTab, setActiveValuesSubTab] = useState<ValuesSubTab>('archetype');
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<SettingsSubTab>('statistics');
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [savedCharacterId, setSavedCharacterId] = useState<string | null>(null);
@@ -387,6 +387,21 @@ export function CharacterEditor() {
     && isValidStartSkillBuild(startSkillBuild, selectedBackgroundPool, characterArchetype)
     && isValidSagaDriveSkillDevelopment(startSkillBuild, skillAdvances, specializations, characterLevel)
     && !skillOverflow;
+  const archetypeComplete = Boolean(characterArchetype && archetypeTrainingSkill);
+  const essenzComplete = Boolean(essenceProfile);
+  const attributesComplete = attributeDistributionValid && skillsComplete;
+  const detailsComplete = Boolean(notes.trim())
+    || personalityTraits.length > 0
+    || ideals.length > 0
+    || bonds.length > 0
+    || flaws.length > 0;
+  const valuesSubTabComplete: Record<ValuesSubTab, boolean> = {
+    archetype: archetypeComplete,
+    essenz: essenzComplete,
+    attributes: attributesComplete,
+    background: backgroundComplete,
+    details: detailsComplete,
+  };
 
   const collectValidationProblems = (): ValidationProblem[] => {
     const problems: ValidationProblem[] = [];
@@ -949,7 +964,13 @@ export function CharacterEditor() {
   };
 
   const handleRemoveImage = (event: MouseEvent) => { event.stopPropagation(); setPortraitUrl(''); if (fileInputRef.current) fileInputRef.current.value = ''; };
-  const handleTabChange = (value: string) => { if (isEditorTab(value)) { setActiveTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
+  const handleTabChange = (value: string) => {
+    if (!isEditorTab(value)) return;
+    setActiveTab(value);
+    if (value === 'values') setActiveValuesSubTab('archetype');
+    setConnectedAttribute(null);
+    setHoveredAttribute(null);
+  };
   const handleValuesSubTabChange = (value: string) => { if (isValuesSubTab(value)) { setActiveValuesSubTab(value); setConnectedAttribute(null); setHoveredAttribute(null); } };
   const handleSettingsSubTabChange = (value: string) => { if (isSettingsSubTab(value)) setActiveSettingsSubTab(value); };
   const showIdentityPills = Boolean(essence?.label || archetype?.label);
@@ -1036,11 +1057,36 @@ export function CharacterEditor() {
                 <TabsContent value="values" className="space-y-6">
                   <Tabs value={activeValuesSubTab} onValueChange={handleValuesSubTabChange}>
                     <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-5">
-                      <TabsTrigger value="archetype" className="px-2 py-2 text-xs md:px-3 md:text-sm">Archetype</TabsTrigger>
-                      <TabsTrigger value="essenz" className="px-2 py-2 text-xs md:px-3 md:text-sm">Essenz</TabsTrigger>
-                      <TabsTrigger value="attributes" className="px-2 py-2 text-xs md:px-3 md:text-sm">Attribute</TabsTrigger>
-                      <TabsTrigger value="background" className="px-2 py-2 text-xs md:px-3 md:text-sm">Hintergrund</TabsTrigger>
-                      <TabsTrigger value="details" className="px-2 py-2 text-xs md:px-3 md:text-sm">Details</TabsTrigger>
+                      <TabsTrigger value="archetype" className="px-2 py-2 text-xs md:px-3 md:text-sm">
+                        <span className="inline-flex items-center gap-1.5">
+                          Archetype
+                          {valuesSubTabComplete.archetype ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                        </span>
+                      </TabsTrigger>
+                      <TabsTrigger value="essenz" className="px-2 py-2 text-xs md:px-3 md:text-sm">
+                        <span className="inline-flex items-center gap-1.5">
+                          Essenz
+                          {valuesSubTabComplete.essenz ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                        </span>
+                      </TabsTrigger>
+                      <TabsTrigger value="attributes" className="px-2 py-2 text-xs md:px-3 md:text-sm">
+                        <span className="inline-flex items-center gap-1.5">
+                          Attribute
+                          {valuesSubTabComplete.attributes ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                        </span>
+                      </TabsTrigger>
+                      <TabsTrigger value="background" className="px-2 py-2 text-xs md:px-3 md:text-sm">
+                        <span className="inline-flex items-center gap-1.5">
+                          Hintergrund
+                          {valuesSubTabComplete.background ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                        </span>
+                      </TabsTrigger>
+                      <TabsTrigger value="details" className="px-2 py-2 text-xs md:px-3 md:text-sm">
+                        <span className="inline-flex items-center gap-1.5">
+                          Details
+                          {valuesSubTabComplete.details ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                        </span>
+                      </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="attributes" className="mt-4 space-y-7">
@@ -1070,7 +1116,7 @@ export function CharacterEditor() {
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <h3 className="font-semibold">Grundattribute · D20 + Bonus</h3>
+                              <h3 className="font-semibold">Attributsbonus (=D20 + Bonus)</h3>
                               <RuleHelp label="Attributbonus" contentClassName="max-h-[min(24rem,70vh)] max-w-[min(22rem,90vw)] overflow-y-auto">
                                 <div className="space-y-2 text-xs leading-relaxed">
                                   <p>

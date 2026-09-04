@@ -35,7 +35,7 @@ import { AttributeD20Icon } from '@/components/AttributeD20Icon';
 
 ## 2. Attribut-Bonus-Karten (Grid)
 
-**Datei:** `src/components/CharacterEditor.tsx` (Abschnitt „Grundattribute · D20 + Bonus“)
+**Datei:** `src/components/CharacterEditor.tsx` (Abschnitt „Attributsbonus (=D20 + Bonus)“)
 
 **Layout:**
 
@@ -52,7 +52,7 @@ import { AttributeD20Icon } from '@/components/AttributeD20Icon';
 
 **Deutsche Labels:**
 
-- „Grundattribute · D20 + Bonus“
+- „Attributsbonus (=D20 + Bonus)“
 - „Permanente Attributentwicklung“
 - „Permanente Entwicklung (Level 8|16)“ — Select-Label, kein `+1`
 - Attributbonus-RuleHelp: Bonuspunkte-Verteilung (ohne „+0 bis +4“ im Opening), Level-8/16-Entwicklung, +0-Erklärung, Bonus-Obergrenzen-Liste, Hinweis zu Charakteren mit Bonuspunktveränderung (Beispiel Level 8: Cap +5, 16 statt 15 Punkte)

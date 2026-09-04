@@ -163,8 +163,8 @@ rejectMatch(skillsPanel, /legacyFinalRanks|provenanceLegacy|legacy-unresolved|Le
 requireMatch(editor, /<h3 className="font-semibold">Attribute<\/h3>/, 'Attribute section heading under Parameter Attribute tab');
 requireMatch(
   editor,
-  /<h3 className="font-semibold">Attribute<\/h3>[\s\S]*data-attr-connector-section[\s\S]*Grundattribute/,
-  'skills carousel section above Grundattribute on Attribute tab',
+  /<h3 className="font-semibold">Attribute<\/h3>[\s\S]*data-attr-connector-section[\s\S]*Attributsbonus/,
+  'skills carousel section above Attributsbonus on Attribute tab',
 );
 rejectMatch(editor, /Fertigkeiten & Quellen/, 'legacy Fertigkeiten & Quellen skills section heading remains');
 rejectMatch(editor, /Deine 10 Startpunkte kommen aus/, 'removed skills start-points intro copy');

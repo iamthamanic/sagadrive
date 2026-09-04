@@ -21,7 +21,7 @@ requireMatch(rules, /getSagaDriveAttributeBonusLevelGuide/, 'grouped attribute b
 requireMatch(rules, /Basisverteilung/, 'base distribution note in grouped level guide');
 requireMatch(rules, /1 zusätzlicher Bonuspunkt darf auf ein Grundattribut verteilt werden/, 'advancement note in grouped level guide');
 
-requireMatch(editor, /Grundattribute · D20 \+ Bonus/, 'direct d20 plus bonus formula explanation');
+requireMatch(editor, /Attributsbonus \(=D20 \+ Bonus\)/, 'direct d20 plus bonus formula explanation');
 requireMatch(editor, /RuleHelp label="Attributbonus"/, 'attribute bonus info tooltip trigger');
 requireMatch(editor, /getSagaDriveAttributeBonusLevelGuide\(\)/, 'grouped bonus cap list in tooltip');
 requireMatch(editor, /\[0, 1, 2, 3, 4\]\.map/, 'level-one +0 through +4 selector');

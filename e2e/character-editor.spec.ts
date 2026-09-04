@@ -194,6 +194,7 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByText(/^0 \/ 3$/).first()).toBeVisible();
 
   await page.getByRole('tab', { name: /^Charakter$/i }).click();
+  await expect(page.getByRole('tab', { name: /^Archetype$/i })).toHaveAttribute('data-state', 'active');
   await expect(page.getByRole('tab', { name: /^Attribute$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Hintergrund$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Details$/i })).toBeVisible();
@@ -202,12 +203,11 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await expect(page.getByRole('tab', { name: /^Kompetenzen$/i })).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '01-info-core-tabs.png'), fullPage: true });
 
-  await page.getByRole('tab', { name: /^Archetype$/i }).click();
   await page.getByRole('radio', { name: /Kämpfer/i }).click();
   await page.locator('[data-archetype-skill-grid] button').filter({ hasText: 'Nahkampf' }).first().click();
   await expect(page.getByText(/Archetyp-Punkt \(1 von 10\)/i).first()).toBeVisible();
   await expect(page.getByText(/Kampfroutine/i).first()).toBeVisible();
-  await expect(page.getByText(/Parameter → Attribute/i).first()).toBeVisible();
+  await expect(page.getByText(/Charakter → Attribute/i).first()).toBeVisible();
   await expect(page.getByText('Freie Fertigkeitspunkte')).toHaveCount(0);
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '02-info-archetype-essence.png'), fullPage: true });
 

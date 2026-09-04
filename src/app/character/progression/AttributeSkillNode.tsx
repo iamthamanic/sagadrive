@@ -25,7 +25,6 @@ function rankLabel(rank: number): string {
 
 interface AttributeSkillNodeProps {
   skillKey: SagaDriveSkillKey;
-  freeRank: number;
   finalRank: number;
   backgroundValue: number;
   inBackgroundPool: boolean;
@@ -42,7 +41,6 @@ interface AttributeSkillNodeProps {
 
 export function AttributeSkillNode({
   skillKey,
-  freeRank,
   finalRank,
   backgroundValue,
   inBackgroundPool,
@@ -127,7 +125,6 @@ export function AttributeSkillNode({
           {inBackgroundPool ? <Badge variant="outline">Hintergrund-Pool</Badge> : null}
           {backgroundValue > 0 ? <Badge variant="outline">Hintergrund +{backgroundValue}</Badge> : null}
           {archetypeTrained ? <Badge variant="outline">Archetyp +1</Badge> : null}
-          {freeRank > 0 ? <Badge variant="secondary">Frei +{freeRank}</Badge> : null}
           {backgroundSpecializationName ? <Badge>{backgroundSpecializationName} +2</Badge> : null}
           {developmentSpecializationNames.map((name) => (
             <Badge key={name} variant="secondary">{name}</Badge>

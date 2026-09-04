@@ -196,7 +196,6 @@ export function CharacterSkillsPanel({
                     <AttributeSkillNode
                       key={skill.key}
                       skillKey={skill.key}
-                      freeRank={freeRank}
                       finalRank={finalRank}
                       backgroundValue={backgroundValue}
                       inBackgroundPool={backgroundPoolSkills.includes(skill.key)}
