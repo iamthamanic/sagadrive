@@ -168,16 +168,16 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
-- **2026-09-03** — Sticky preview: Essenz- and Archetype-Pills restored (icons, no Spezies pill) (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Attribute-Tab: Fertigkeiten-Karussell über Grundattribute; sticky „Proben verstehen“-Aside entfernt, Formel kompakt unter den Skill-Nodes (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Hintergrund-Skill-Nodes: Attribut-Hilfe als CircleHelp (Check-Terminologie); Status-Zusammenfassungsbox entfernt (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Hintergrund: alle 4 Pool-Skills bleiben nach Punkten sichtbar; „Spezialisieren“ im Skill-Node inkl. Vorschlags-Dropdown (bis 5) (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Hintergrundpunkte in den Pool-Skill-Boxen: −/+ und Klick wie Archetyp-Nodes, zentrierte Karten, Erklärung im Section-Intro, Budget-Badge oben (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Hintergrund-Skill-Nodes: Inhalt (Titel, Pool-Badge, −/+) horizontal und vertikal zentriert (`feat/background-skill-points-in-nodes`)
-- **2026-09-03** — Preset skill provenance is single-source: `sagadrive_profile.freeSkillRanks` only (no parallel top-level snapshot field) (`fix/skill-progression-v2-remove-legacy`)
-- **2026-09-03** — Character presets no longer enforce a minimum of 6 trained skills; legal V2 stacked start builds (fewer distinct skills) can be saved as presets (`fix/skill-progression-v2-remove-legacy`)
-- **2026-09-03** — Skill Progression v2 is the only supported SagaDrive character skill model: complete V2 provenance is mandatory, archetype + archetype start point are required, incomplete data fails closed (no `legacy-unresolved`, no `trainedSkills` source of truth). Migration 014 unchanged (`fix/skill-progression-v2-remove-legacy`)
-- **2026-09-02** — Skill Progression v2 Post-Merge Hardening: Partial Updates validieren immer den kombinierten SagaDrive-State, ein Level-Slot = genau eine Entscheidung (chronologisch), Spezialisierungs-Draft + Cascade-Prune im Editor, situationsgebundener +2 getrennt ausgewiesen, Bootstrap aus `src/modules/**` in den App-Slice (`fix/skill-progression-v2-post-merge-hardening`)
+- **2026-09-04** — Charakter-Tab startet auf Archetype; fertige Untertabs mit Checkbox-Icon; Archetyp-Beschreibungen (Rolle + mechanische Auswirkungen); Attributsbonus-Überschrift; „Frei +N“-Pills an Skill-Nodes entfernt (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Sticky preview: Essenz- and Archetype-Pills (icons, no Spezies pill) (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Attribute-Tab: Fertigkeiten-Karussell über Attributsbonus; Formel unter Skill-Nodes; Tab-Split Charakter/Hintergrund/Details (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Hintergrund-Skill-Nodes: CircleHelp (Check-Terminologie); Status-Box entfernt; Spezialisieren im Node (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Hintergrundpunkte in den Pool-Skill-Boxen: −/+ und Klick, zentrierte Karten, Budget-Badge (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Essenz-Auswahl als Karussell (wie Archetyp/Spezies) (`feat/background-skill-points-in-nodes`, #103)
+- **2026-09-03** — Preset skill provenance is single-source: `sagadrive_profile.freeSkillRanks` only (`fix/skill-progression-v2-remove-legacy`)
+- **2026-09-03** — Character presets no longer enforce a minimum of 6 trained skills (`fix/skill-progression-v2-remove-legacy`)
+- **2026-09-03** — Skill Progression v2 only: complete V2 provenance mandatory, fail-closed (Migration 014 unchanged) (`fix/skill-progression-v2-remove-legacy`)
+- **2026-09-02** — Skill Progression v2 Post-Merge Hardening: combined-state validation, level slot = one decision, spec draft + cascade prune (`fix/skill-progression-v2-post-merge-hardening`)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 
