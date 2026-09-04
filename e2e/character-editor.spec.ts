@@ -224,14 +224,15 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '05-abilities-core-ability.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /^Attribute$/i }).click();
-  await expect(page.getByText('Grundattribute').first()).toBeVisible();
-  await expect(page.getByText('Attributscheck').first()).toBeVisible();
-  await expect(page.getByText('Startverteilung').first()).toBeVisible();
-  await expect(page.getByText(/15 \/ 15 Bonuspunkte/i).first()).toBeVisible();
-  await expect(page.getByText(/\+4 Bonus|\+3 Bonus|\+2 Bonus|\+1 Bonus/i).first()).toBeVisible();
-  await expect(page.getByText('Ausdauer').first()).toBeVisible();
-  await expect(page.getByText('Verstand').first()).toBeVisible();
-  await expect(page.getByText('Wahrnehmung').first()).toBeVisible();
+  const attributeSection = page.locator('[data-attr-connector-section]');
+  await expect(attributeSection.getByRole('heading', { name: /Attributsbonus/i })).toBeVisible();
+  await expect(attributeSection.getByText('Attributscheck').first()).toBeVisible();
+  await expect(attributeSection.getByText('Startverteilung').first()).toBeVisible();
+  await expect(attributeSection.getByText(/15 \/ 15 Bonuspunkte/i).first()).toBeVisible();
+  await expect(attributeSection.getByText(/\+4 Bonus|\+3 Bonus|\+2 Bonus|\+1 Bonus/i).first()).toBeVisible();
+  await expect(attributeSection.getByText('Ausdauer').first()).toBeVisible();
+  await expect(attributeSection.getByText('Verstand').first()).toBeVisible();
+  await expect(attributeSection.getByText('Wahrnehmung').first()).toBeVisible();
   await page.screenshot({ path: path.join('.qa/evidence/attribute-bonus-pool', '01-attribute-budget-level-1.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /^Hintergrund$/i }).click();
