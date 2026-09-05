@@ -256,6 +256,18 @@ section('4 · Core-Katalog ist universell und unveränderlich');
 
   const frozen = inv.listCoreItemDefinitions();
   check(Object.isFrozen(frozen), 'Core-Liste ist eingefroren');
+  check(Object.isFrozen(frozen[0]), 'Core-Einträge sind tief eingefroren');
+  check(
+    !frozen[0].equipSlots || Object.isFrozen(frozen[0].equipSlots),
+    'verschachtelte Core-Felder sind eingefroren',
+  );
+  const before = frozen[0].name;
+  try {
+    frozen[0].name = 'Manipuliert';
+  } catch {
+    // strict mode throws; either way the value must not change
+  }
+  equal(frozen[0].name, before, 'Core-Definitionen lassen sich nicht zur Laufzeit umbenennen');
 
   // The runtime repository cannot write Core: the table excludes the scope and
   // the id prefix constraint makes a core: row structurally unreachable.
@@ -590,6 +602,16 @@ section('9 · Persistenz- und Sicherheitsvertrag');
   requireMatch(repository, /raceWithTimeoutReject/, 'Abfrage mit Zeitüberschreitung');
   requireMatch(repository, /resolveEffectiveWorldProfileId/, 'Auflösung des wirksamen Weltprofils');
   requireMatch(repository, /coreCatalogRecords\(\)/, 'Core kommt aus dem Repository-Quelltext');
+  requireMatch(
+    repository,
+    /from\('project_members'\)/,
+    'Abenteuer-Auflösung über aktive Mitgliedschaften',
+  );
+  requireMatch(
+    repository,
+    /\.eq\('status', 'active'\)/,
+    'nur aktive Mitgliedschaften zählen für das Abenteuer-Weltprofil',
+  );
 
   const service = read('src/infrastructure/inventory/item-catalog-service.ts');
   requireMatch(service, /selectCatalogDefinitions/, 'Facade filtert über die Domänen-Policy');
