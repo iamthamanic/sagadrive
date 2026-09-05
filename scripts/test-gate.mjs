@@ -135,6 +135,14 @@ function checkInventoryV2Domain() {
   });
 }
 
+function checkInventoryCatalog() {
+  console.log('Inventory v2 catalog contract (#107): checking world-profile resolution, scope isolation, archive semantics, and RLS...');
+  execFileSync(process.execPath, ['scripts/inventory-catalog-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -313,6 +321,7 @@ checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();
 checkInventoryV2Domain();
+checkInventoryCatalog();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();

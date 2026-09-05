@@ -91,6 +91,23 @@ class WorldProfileService {
 
   async deleteWorldProfile(ownerUserId: string, id: string): Promise<void> {
     if (!ownerUserId) throw new Error('User not authenticated');
+
+    // World item definitions reference this profile with ON DELETE RESTRICT so
+    // owned instances never become permanently unresolvable. Refuse early with
+    // a German message instead of surfacing the Postgres FK error.
+    const { count, error: catalogError } = await supabase
+      .from('inventory_item_definitions')
+      .select('id', { count: 'exact', head: true })
+      .eq('world_profile_id', id);
+    if (catalogError) {
+      throw new Error(`Welt konnte nicht gelöscht werden: ${catalogError.message}`);
+    }
+    if ((count ?? 0) > 0) {
+      throw new Error(
+        'Welt kann nicht gelöscht werden, solange Gegenstand-Definitionen darauf verweisen. Archivieren Sie die Definitionen zuerst — Löschen würde bestehende Inventare unauflösbar machen.',
+      );
+    }
+
     const { error } = await supabase
       .from(this.tableName)
       .delete()
