@@ -35,8 +35,8 @@ No new persistence surfaces — uses existing authenticated character `inventory
 write path (#109). No client-owned catalog writes beyond #110 Personal path.
 
 ## Composition Gate
-- Verdict: pending
-- Proof: `.qa/runs/composition-gate-inventory-equipment-ux.md`
+- Verdict: **CLEAR**
+- Proof: `.qa/runs/composition-gate-inventory-equipment-ux.md` (HEAD `f8b1fe2`)
 
 ## Implementation Notes
 - UI under `src/app/character/inventory/`: `InventoryEquipmentPanel`, `InventoryQuickSlotsBar`,
