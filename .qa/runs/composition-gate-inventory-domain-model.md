@@ -1,6 +1,6 @@
 # Composition Gate — inventory-domain-model
 
-- HEAD_SHA: 800f7cd08cf7b0d10b3d342f4b69e6ea893a161c
+- HEAD_SHA: 09db07555d72daf4b9c130627d807ab778e29d28
 - BASE_SHA: 78e3c52236fc173f865f3a88ebf5035cf5ebe41f
 - Date: 2026-09-05
 - Verdict: CLEAR
