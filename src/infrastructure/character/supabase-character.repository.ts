@@ -17,7 +17,10 @@ import {
   normalizeTextBlocks,
 } from '../../domains/character/use-cases/normalize-character';
 import type { CharacterDto } from './character.persistence';
-import { readCharacterInventory } from '../inventory/inventory-persistence';
+import {
+  assertWritableInventoryV2,
+  readCharacterInventory,
+} from '../inventory/inventory-persistence';
 
 const CHARACTER_PORTRAIT_BUCKET = 'character-portraits';
 const CHARACTER_PORTRAIT_MAX_BYTES = 5 * 1024 * 1024;
@@ -114,6 +117,9 @@ export class SupabaseCharacterRepository {
     const sagadriveProfile = rulesetKey === 'sagadrive-core' ? normalizeSagaDriveProfile(payload.sagadrive_profile) : null;
     const skills = normalizeSkills(payload.skills);
     if (sagadriveProfile) assertValidSagaDriveCharacterPersistence(attributes, skills, sagadriveProfile, level);
+    const inventoryV2 = payload.inventory_v2
+      ? await assertWritableInventoryV2(payload.inventory_v2, null)
+      : undefined;
     const characterData: Partial<CharacterDto> = {
       owner_user_id: userId,
       character_type: 'pc',
@@ -136,6 +142,9 @@ export class SupabaseCharacterRepository {
       sagadrive_profile: sagadriveProfile,
       abilities: payload.abilities ?? [],
       inventory: normalizeInventory(payload.inventory),
+      ...(inventoryV2
+        ? { inventory_v2: inventoryV2, inventory_schema_version: 2 as const }
+        : { inventory_schema_version: 1 as const }),
       emotion_profiles: [],
       portrait_url: payload.portrait_url || undefined,
     };
@@ -173,16 +182,28 @@ export class SupabaseCharacterRepository {
         );
       }
     }
+    const {
+      inventory_v2: inventoryV2Patch,
+      inventory: inventoryPatch,
+      // Callers must not flip the marker without a validated inventory_v2 write.
+      inventory_schema_version: _ignoredSchemaVersion,
+      ...safePayload
+    } = payload as UpdateCharacterDto & { inventory_schema_version?: 1 | 2 };
+
+    const inventoryV2 = inventoryV2Patch
+      ? await assertWritableInventoryV2(inventoryV2Patch, id)
+      : undefined;
+
     const updatePayload = {
-      ...payload,
+      ...safePayload,
       ...rulesetPatch,
       ...(payload.appearance ? { appearance: normalizeCharacterAppearance(payload.appearance) } : {}),
       ...(attributes ? { attributes } : {}),
       ...(payload.skills ? { skills: normalizeSkills(payload.skills) } : {}),
       ...(sagadriveProfile ? { sagadrive_profile: sagadriveProfile } : {}),
-      ...(payload.inventory ? { inventory: normalizeInventory(payload.inventory) } : {}),
-      ...(payload.inventory_v2
-        ? { inventory_v2: payload.inventory_v2, inventory_schema_version: 2 as const }
+      ...(inventoryPatch ? { inventory: normalizeInventory(inventoryPatch) } : {}),
+      ...(inventoryV2
+        ? { inventory_v2: inventoryV2, inventory_schema_version: 2 as const }
         : {}),
       ...(typeof payload.notes === 'string' ? { notes: payload.notes.trim() || null } : {}),
       updated_at: new Date().toISOString(),

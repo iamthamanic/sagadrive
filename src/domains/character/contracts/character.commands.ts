@@ -34,7 +34,6 @@ export interface CreateCharacterDto {
   abilities?: AbilityDto[];
   inventory?: ItemDto[];
   inventory_v2?: InventoryState;
-  inventory_schema_version?: 1 | 2;
   portrait_url?: string;
 }
 
@@ -58,7 +57,7 @@ export interface UpdateCharacterDto {
   sagadrive_profile?: SagaDriveProfileDto;
   abilities?: AbilityDto[];
   inventory?: ItemDto[];
+  /** Writing inventory_v2 always sets schema version 2; the marker is not caller-controlled. */
   inventory_v2?: InventoryState;
-  inventory_schema_version?: 1 | 2;
   portrait_url?: string;
 }

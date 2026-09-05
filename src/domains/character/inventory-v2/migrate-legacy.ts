@@ -13,6 +13,7 @@ import { listCoreItemDefinitions } from './core-catalog';
 import {
   BASE_SLOT_COUNT,
   INVENTORY_V2_SCHEMA_VERSION,
+  QUICK_SLOT_COUNT,
   type InventoryItemType,
   type InventoryState,
   type ItemDefinition,
@@ -290,13 +291,25 @@ function normalizeName(value: unknown): string {
 export function isInventoryV2State(value: unknown): value is InventoryState {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const candidate = value as Partial<InventoryState>;
-  return (
-    candidate.schemaVersion === INVENTORY_V2_SCHEMA_VERSION
-    && typeof candidate.instances === 'object'
-    && candidate.instances !== null
-    && Array.isArray(candidate.baseSlots)
-    && candidate.baseSlots.length === BASE_SLOT_COUNT
-    && Array.isArray(candidate.quickSlots)
-    && Array.isArray(candidate.legacyOverflow)
-  );
+  if (candidate.schemaVersion !== INVENTORY_V2_SCHEMA_VERSION) return false;
+  if (!candidate.instances || typeof candidate.instances !== 'object' || Array.isArray(candidate.instances)) {
+    return false;
+  }
+  if (!candidate.containers || typeof candidate.containers !== 'object' || Array.isArray(candidate.containers)) {
+    return false;
+  }
+  if (!candidate.equipment || typeof candidate.equipment !== 'object' || Array.isArray(candidate.equipment)) {
+    return false;
+  }
+  if (!Array.isArray(candidate.baseSlots) || candidate.baseSlots.length !== BASE_SLOT_COUNT) return false;
+  if (!Array.isArray(candidate.quickSlots) || candidate.quickSlots.length !== QUICK_SLOT_COUNT) return false;
+  if (!Array.isArray(candidate.legacyOverflow)) return false;
+
+  for (const [instanceId, instance] of Object.entries(candidate.instances)) {
+    if (!instance || typeof instance !== 'object') return false;
+    if (typeof instance.instanceId !== 'string' || instance.instanceId !== instanceId) return false;
+    if (typeof instance.definitionId !== 'string' || !instance.definitionId) return false;
+    if (!Number.isInteger(instance.quantity) || instance.quantity < 1) return false;
+  }
+  return true;
 }

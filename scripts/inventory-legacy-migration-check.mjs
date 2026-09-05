@@ -205,6 +205,52 @@ section('6 · Persistenzvertrag (Migration 016)');
   requireMatch(migration, /CHECK \(inventory_schema_version IN \(1, 2\)\)/, 'nur Version 1 oder 2');
 }
 
+section('7 · Strikte isInventoryV2State + Persistenz-Härtung');
+{
+  const empty = inv.migrateLegacyInventory([]);
+  const partialContainers = {
+    ...empty.state,
+    containers: undefined,
+  };
+  check(!inv.isInventoryV2State(partialContainers), 'fehlende containers → kein v2');
+  const shortQuick = {
+    ...empty.state,
+    quickSlots: [null],
+  };
+  check(!inv.isInventoryV2State(shortQuick), 'falsche quickSlots-Länge → kein v2');
+  const badInstance = {
+    ...empty.state,
+    instances: {
+      'inst-1': { instanceId: 'other', definitionId: 'core.misc.coin', quantity: 1 },
+    },
+  };
+  check(!inv.isInventoryV2State(badInstance), 'instanceId ≠ Map-Key → kein v2');
+
+  const persistence = readFileSync(
+    new URL('../src/infrastructure/inventory/inventory-persistence.ts', import.meta.url),
+    'utf8',
+  );
+  requireMatch(persistence, /eq\('inventory_schema_version',\s*1\)/, 'Optimistic Lock auf Version 1');
+  requireMatch(persistence, /migrationDefinitionId|personal:mig-/, 'deterministische Personal-Ids');
+  requireMatch(persistence, /assertWritableInventoryV2/, 'Katalog-Sichtbarkeit vor Write');
+
+  const commands = readFileSync(
+    new URL('../src/domains/character/contracts/character.commands.ts', import.meta.url),
+    'utf8',
+  );
+  check(
+    !/inventory_schema_version\??:/.test(commands),
+    'DTO erlaubt kein client-seitiges inventory_schema_version',
+  );
+
+  const repository = readFileSync(
+    new URL('../src/infrastructure/character/supabase-character.repository.ts', import.meta.url),
+    'utf8',
+  );
+  requireMatch(repository, /assertWritableInventoryV2/, 'Create/Update validieren inventory_v2');
+  requireMatch(repository, /inventory_schema_version: _ignoredSchemaVersion/, 'Schema-Marker aus Patch gestrippt');
+}
+
 if (failures > 0) {
   console.error(`\nInventory legacy migration check failed with ${failures} failure(s).`);
   process.exit(1);

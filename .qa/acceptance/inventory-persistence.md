@@ -37,13 +37,22 @@ destructively deleted.
 
 ## Composition Gate
 - Verdict: **CLEAR**
-- Proof: `.qa/runs/composition-gate-inventory-persistence.md`
+- Proof: `.qa/runs/composition-gate-inventory-persistence.md` (HEAD `1106e59`)
 
 ## Implementation Notes
 | File | Purpose |
 |------|---------|
-| `migrate-legacy.ts` | Pure lossless migration |
+| `migrate-legacy.ts` | Pure lossless migration + strict `isInventoryV2State` |
 | `016_character_inventory_v2.sql` | Columns |
-| `inventory-persistence.ts` | Read + persist-migrated |
+| `inventory-persistence.ts` | Read + persist-migrated (deterministic Personal ids, optimistic lock, catalog gate) |
 | `character-service.ts` | `migrateCharacterInventoryToV2` |
+| `supabase-character.repository.ts` | create/update honor validated `inventory_v2`; strip client schema marker |
+| `character.commands.ts` | No client-writable `inventory_schema_version` |
 | `scripts/inventory-legacy-migration-check.mjs` | Required tests |
+
+### Hardening follow-up (`fix/109-inventory-persistence-hardening`)
+- P1: `isInventoryV2State` requires containers/equipment/quickSlots + nested instance shape.
+- P2: `assertWritableInventoryV2` checks owner-visible catalog before writes.
+- P2: schema version derived only from validated `inventory_v2` writes.
+- P2: createCharacter persists validated `inventory_v2`.
+- P2: migration Personal ids `personal:mig-<hash>`; update requires `inventory_schema_version = 1`.
