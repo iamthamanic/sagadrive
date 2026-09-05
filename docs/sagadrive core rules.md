@@ -1393,6 +1393,25 @@ Der Core-Katalog liefert **35 setting-neutrale mechanische Archetypen** (Waffen,
 - Werkzeuge und Verbrauchsgüter verleihen **keine** stillschweigenden Zahlenboni; konkrete Effekte kommen aus Fertigkeit, Fähigkeit oder Weltprofil.
 - Container belegen einen Basisslot; Inhalt zählt zur Last; Container-in-Container ist in V1 verboten.
 - Quelle: `src/domains/character/inventory-v2/core-catalog.ts` (Inventory v2).
+- Produktvertrag (13 Regeln): `docs/inventory-v2.md`.
+
+### 10.0.1 Inventory v2 — Slot-, Stapel-, Last- und Katalogregeln (V1/Core-Playtest)
+
+Verbindlicher V1-/Core-Playtest-Vertrag für Inventory v2 (Epic #105 / #114). Ersetzt ältere Formulierungen, die „keine festen Slots“ nahelegten. Ausführliche Fassung auch in `docs/inventory-v2.md`.
+
+1. **20 Basis-Inventarplätze** sind der V1/Core-Playtestwert.
+2. **1 Stapel = 1 Platz.** `stackLimit` steuert die Menge pro Stapel, nicht die Platzanzahl.
+3. **Stärke ändert nur die Traglast:** `Traglast = 5 + 2 × Stärke`. Stärke vergibt **keine zusätzlichen Inventarplätze**.
+4. **Ausgerüstete Gegenstände** belegen Ausrüstungsslots, **keine** Basis-Inventarplätze.
+5. **Ausrüstungsslots:** Kopf, Körper, 2× Accessoire, Haupt-/Nebenhand, Spezial.
+6. **Zweihändig** belegt Haupt- und Nebenhand gleichzeitig (eine Instanz, zwei Handreferenzen).
+7. **Vier Schnellzugriffe (Quickslots)** sind Referenzen auf vorhandene Instanzen — kein Extra-Speicher.
+8. **Container:** Der Container selbst belegt **einen Basisplatz**; Inhalt nutzt die Container-Kapazität und trägt weiter zur Last bei. **Keine verschachtelten Container** in V1.
+9. **Definitionsscopes:** Core · World (effektives Weltprofil) · Personal (Eigen). Der effektive Katalog folgt der effektiven Welt des Charakters.
+10. Der **Charakter-Editor** vergibt/entfernt besessene Inventarinstanzen; er ist **kein Shop** und verbraucht **nicht** den abstrakten Ressourcenwert 0–5 (§10.3).
+11. **„Aus Inventar entfernen“** entfernt Besitz vom Charakter und erzeugt **kein** Boden-Loot / World-Drop.
+12. Der **volle Core-Katalog** (#108) mit **35 Definitionen** ist der universelle V1-Katalog (siehe §10.0).
+13. **Legacy-Migration / Overflow** aus alten `ItemDto[]`-Daten ist **Kompatibilitätsverhalten**, keine normale Core-Erschaffungsregel.
 
 ### 10.1 Waffenmerkmale
 

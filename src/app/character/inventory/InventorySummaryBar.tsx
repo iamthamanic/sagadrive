@@ -39,7 +39,10 @@ export function InventorySummaryBar({
               Last {totalLoad} / {capacity}
             </p>
             <RuleHelp label="Traglast">
-              Traglast = 5 + 2 × Stärke. Gegenstände besitzen normalerweise 0 bis 3 Lastpunkte.
+              Inventory v2: genau 20 Basisplätze; 1 Stapel = 1 Platz. Traglast = 5 + 2 × Stärke
+              (Lastpunkte) — Stärke vergibt keine zusätzlichen Plätze. Ausgerüstete Gegenstände
+              liegen in Ausrüstungsslots, nicht in den Basisplätzen. Gegenstände besitzen
+              normalerweise 0 bis 3 Lastpunkte.
             </RuleHelp>
           </div>
         </div>
