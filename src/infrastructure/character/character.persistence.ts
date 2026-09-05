@@ -52,6 +52,9 @@ export interface CharacterDto {
   flaws?: string[];
   abilities: AbilityDto[];
   inventory: ItemDto[];
+  /** Present when inventory_schema_version === 2; authoritative Inventory v2 state. */
+  inventory_v2?: unknown | null;
+  inventory_schema_version?: 1 | 2;
   emotion_profiles: EmotionProfileDto[];
   is_marketplace_item?: boolean;
   downloads_count?: number;

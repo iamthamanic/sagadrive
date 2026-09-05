@@ -151,6 +151,14 @@ function checkInventoryCoreCatalog() {
   });
 }
 
+function checkInventoryLegacyMigration() {
+  console.log('Inventory v2 legacy migration contract (#109): checking lossless ItemDto[] → v2 migration...');
+  execFileSync(process.execPath, ['scripts/inventory-legacy-migration-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -331,6 +339,7 @@ checkCharacterPresetsRegressions();
 checkInventoryV2Domain();
 checkInventoryCatalog();
 checkInventoryCoreCatalog();
+checkInventoryLegacyMigration();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();
