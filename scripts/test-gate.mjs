@@ -231,6 +231,14 @@ function checkWorldProfilesValidation() {
   });
 }
 
+function checkAllCoreSkillsValidation() {
+  console.log('All core skills validation (#28): deterministic §5 skill catalog & boundaries...');
+  execFileSync(process.execPath, ['scripts/validate-all-core-skills.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkDriveMomentumValidation() {
   console.log('Drive/momentum validation (#26): deterministic §2.10–2.12/§16.3 audit...');
   execFileSync(process.execPath, ['scripts/validate-drive-momentum.mjs'], {
@@ -396,6 +404,7 @@ checkCharacterCreationValidation();
 checkPowersEssencesValidation();
 checkDriveMomentumValidation();
 checkWorldProfilesValidation();
+checkAllCoreSkillsValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
