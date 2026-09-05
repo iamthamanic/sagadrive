@@ -11,6 +11,8 @@ import path from 'node:path';
 const EVIDENCE_DIR = '.qa/evidence/inventory-v2-integration';
 
 async function ensureLoggedIn(page: Page) {
+  // Dashboard nav is desktop-chrome; authenticate wide, then callers may resize.
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.evaluate(() => {
     sessionStorage.removeItem('sagadrive:character-edit-id');
@@ -93,9 +95,9 @@ test('Inventory v2: mobile 390×844 segmented path without horizontal overflow (
   page,
 }) => {
   test.setTimeout(180_000);
-  await page.setViewportSize({ width: 390, height: 844 });
   await ensureLoggedIn(page);
   await openNewCharacterInventory(page);
+  await page.setViewportSize({ width: 390, height: 844 });
 
   await expect(page.locator('[data-inventory-mobile-view-switch]')).toBeVisible();
   const overflowX = await page.evaluate(() => {
