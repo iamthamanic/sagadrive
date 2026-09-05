@@ -159,6 +159,14 @@ function checkInventoryLegacyMigration() {
   });
 }
 
+function checkInventoryDesktopUi() {
+  console.log('Inventory v2 desktop UI contract (#110): checking grid, catalog wiring, and CharacterEditor inventory_v2...');
+  execFileSync(process.execPath, ['scripts/inventory-desktop-ui-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -340,6 +348,7 @@ checkInventoryV2Domain();
 checkInventoryCatalog();
 checkInventoryCoreCatalog();
 checkInventoryLegacyMigration();
+checkInventoryDesktopUi();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();

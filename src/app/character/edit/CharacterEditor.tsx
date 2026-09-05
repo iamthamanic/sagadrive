@@ -29,15 +29,21 @@ import {
   SpeciesTraitsPanel,
 } from '../creation';
 import {
-  CharacterInventoryPanel,
+  CharacterInventoryV2Panel,
   CharacterNotesSection,
   CharacterPresetPanel,
   CharacterSkillsPanel,
   CharacterStatisticsPanel,
   CharacterTraitEditor,
   RuleHelp,
-  getInventoryLoad,
+  type InventoryLoadInfo,
 } from '../progression';
+import {
+  createEmptyInventory,
+  migrateLegacyInventory,
+  type InventoryState,
+} from '../../../domains/character/inventory-v2';
+import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
 import { takeCharacterEditorBootstrap, clearCharacterEditorBootstrap } from '../shared/characterEditorBootstrap';
 import { assertValidSnapshot, characterPresetService } from '../../../modules/characters/services/characterPreset.service';
 import { normalizeSafeUrl } from '../../../modules/characters/avatar';
@@ -292,6 +298,12 @@ export function CharacterEditor() {
   const [communication, setCommunication] = useState('');
   const [selectedSkill, setSelectedSkill] = useState<SagaDriveSkillKey | undefined>();
   const [inventory, setInventory] = useState<ItemDto[]>([]);
+  const [inventoryV2, setInventoryV2] = useState<InventoryState>(() => createEmptyInventory());
+  const [inventoryLoadInfo, setInventoryLoadInfo] = useState<InventoryLoadInfo>({
+    totalLoad: 0,
+    occupied: 0,
+  });
+  const [editorUserId, setEditorUserId] = useState('');
   const [backgroundStory, setBackgroundStory] = useState('');
   const [personalityTraits, setPersonalityTraits] = useState<string[]>([]);
   const [ideals, setIdeals] = useState<string[]>([]);
@@ -351,7 +363,7 @@ export function CharacterEditor() {
   const speciesTraitsComplete = speciesTraitCost === SAGA_DRIVE_SPECIES_TRAIT_BUDGET
     && speciesTraitInstancesValid
     && (characterRace !== 'alien' || Boolean(speciesProfileName.trim()));
-  const inventoryLoad = getInventoryLoad(inventory);
+  const inventoryLoad = inventoryLoadInfo.totalLoad;
   const carryCapacity = 5 + 2 * attributes.strength;
   const overloaded = inventoryLoad > carryCapacity;
   const movement = overloaded ? 6 : 9;
@@ -501,6 +513,8 @@ export function CharacterEditor() {
     profile: SagaDriveProfileDto;
     appearance: CharacterAppearanceDto;
     inventory?: ItemDto[];
+    inventoryV2?: InventoryState;
+    inventorySchemaVersion?: 1 | 2;
     backgroundStory?: string;
     notes?: string;
     personalityTraits?: string[];
@@ -554,6 +568,13 @@ export function CharacterEditor() {
     setComplication(profile.background?.complication ?? '');
     setCommunication(profile.background?.communication ?? '');
     setInventory(payload.inventory ?? []);
+    if (payload.inventoryV2) {
+      setInventoryV2(payload.inventoryV2);
+    } else if (payload.inventory && payload.inventory.length > 0) {
+      setInventoryV2(migrateLegacyInventory(payload.inventory).state);
+    } else {
+      setInventoryV2(createEmptyInventory());
+    }
     setBackgroundStory(payload.backgroundStory ?? '');
     setPersonalityTraits(payload.personalityTraits ?? []);
     setIdeals(payload.ideals ?? []);
@@ -576,6 +597,14 @@ export function CharacterEditor() {
     clearCharacterEditorBootstrap();
     toast.success(payload.successMessage);
   };
+
+  useEffect(() => {
+    void getAuthenticatedUserId()
+      .then((id) => setEditorUserId(id))
+      .catch((error) => {
+        console.error('Character editor auth id failed:', error);
+      });
+  }, []);
 
   useEffect(() => {
     if (bootstrapAppliedRef.current) return;
@@ -630,6 +659,20 @@ export function CharacterEditor() {
     void (async () => {
       try {
         const character = await characterService.getCharacterById(editCharacterId);
+        let inventoryV2State = character.inventoryV2;
+        if (character.inventorySchemaVersion !== 2 && character.id) {
+          try {
+            inventoryV2State = await characterService.migrateCharacterInventoryToV2(character.id);
+          } catch (migrationError) {
+            console.error('Inventory v2 migration failed:', migrationError);
+            toast.error(
+              migrationError instanceof Error
+                ? migrationError.message
+                : 'Inventar-Migration fehlgeschlagen — Fallback auf geladenen Zustand.',
+            );
+            inventoryV2State = character.inventoryV2;
+          }
+        }
         hydrateEditorFromPersistedCharacter({
           savedCharacterId: character.id,
           persistedLevel: character.level,
@@ -643,6 +686,8 @@ export function CharacterEditor() {
           profile: character.sagaDriveProfile,
           appearance: character.appearance,
           inventory: character.inventory,
+          inventoryV2: inventoryV2State,
+          inventorySchemaVersion: character.inventorySchemaVersion,
           backgroundStory: character.backgroundStory,
           notes: character.notes,
           personalityTraits: character.personalityTraits,
@@ -919,7 +964,7 @@ export function CharacterEditor() {
       name: characterName.trim(), description: description.trim(), class: characterArchetype, race: characterRace, ruleset_key: ruleset, dnd_background: null as null, level: characterLevel,
       background_story: backgroundStory.trim() || undefined, notes: notes.trim(), personality_traits: personalityTraits.length > 0 ? personalityTraits : undefined, ideals: ideals.length > 0 ? ideals : undefined, bonds: bonds.length > 0 ? bonds : undefined, flaws: flaws.length > 0 ? flaws : undefined,
       appearance: { body_size: currentAvatar.body.size, height: currentAvatar.body.height, face_features: currentAvatar.traits.head ?? headStyle, hair_style: currentAvatar.traits.hair ?? hairStyle, hair_color: currentAvatar.colors.hair, skin_tone: currentAvatar.colors.skin, clothing: currentAvatar.traits.clothing ?? clothing, gender_reading: genderReading, avatar: currentAvatar },
-      attributes, skills: finalSkillRanks, sagadrive_profile: sagaDriveProfile, abilities, inventory, portrait_url: portraitUrl || undefined,
+      attributes, skills: finalSkillRanks, sagadrive_profile: sagaDriveProfile, abilities, inventory, inventory_v2: inventoryV2, portrait_url: portraitUrl || undefined,
     };
 
     setSaving(true);
@@ -1339,7 +1384,20 @@ export function CharacterEditor() {
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="hairColor">Haarfarbe</Label><div className="flex gap-2"><Input id="hairColor" type="color" value={/^#[0-9a-fA-F]{6}$/.test(hairColor) ? hairColor : '#000000'} onChange={(event) => setHairColor(event.target.value)} className="h-10 w-20" /><Input value={hairColor} onChange={(event) => setHairColor(event.target.value)} aria-label="Haarfarbe als Hexwert" /></div></div><div className="space-y-2"><Label htmlFor="skinTone">Hautfarbe</Label><div className="flex gap-2"><Input id="skinTone" type="color" value={/^#[0-9a-fA-F]{6}$/.test(skinTone) ? skinTone : '#F5E6D3'} onChange={(event) => setSkinTone(event.target.value)} className="h-10 w-20" /><Input value={skinTone} onChange={(event) => setSkinTone(event.target.value)} aria-label="Hautfarbe als Hexwert" /></div></div></div>
                 </TabsContent>
 
-                <TabsContent value="inventory"><CharacterInventoryPanel items={inventory} onChange={setInventory} strength={attributes.strength} /></TabsContent>
+                <TabsContent value="inventory">
+                  {editorUserId ? (
+                    <CharacterInventoryV2Panel
+                      state={inventoryV2}
+                      onChange={setInventoryV2}
+                      strength={attributes.strength}
+                      characterId={savedCharacterId}
+                      userId={editorUserId}
+                      onLoadInfoChange={setInventoryLoadInfo}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Inventar wird geladen…</p>
+                  )}
+                </TabsContent>
                 <TabsContent value="settings" className="space-y-4">
                   <Tabs value={activeSettingsSubTab} onValueChange={handleSettingsSubTabChange}>
                     <TabsList className="grid w-full grid-cols-2">

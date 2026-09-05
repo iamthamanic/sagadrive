@@ -3,6 +3,10 @@
  * Location: src/app/character/progression/index.ts
  */
 export { CharacterInventoryPanel, getInventoryLoad } from './CharacterInventoryPanel';
+export {
+  CharacterInventoryV2Panel,
+  type InventoryLoadInfo,
+} from '../inventory/CharacterInventoryV2Panel';
 export { CharacterNotesSection } from './CharacterNotesSection';
 export { CharacterStatisticsPanel } from './CharacterStatisticsPanel';
 export { CharacterPresetPanel } from './CharacterPresetPanel';
