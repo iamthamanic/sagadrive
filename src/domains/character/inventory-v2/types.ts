@@ -236,10 +236,21 @@ export interface InventoryValidationReport {
   findings: InventoryInvariantFinding[];
 }
 
-/** Normalization outcome: a valid state plus the repairs that were needed to get there. */
+/**
+ * Normalization outcome: a structurally valid state plus the repairs needed to
+ * get there.
+ *
+ * `repairs` lists only changes that were actually applied, so re-normalizing an
+ * already normalized state yields an empty list. Instances whose definition the
+ * catalog cannot resolve are kept (normalization is lossless) but reported in
+ * `unresolved` instead of `repairs` — the domain cannot invent a definition, so
+ * this is a catalog problem for the caller to surface, not a repairable one.
+ */
 export interface InventoryNormalizationResult {
   state: InventoryState;
   repairs: InventoryInvariantFinding[];
+  /** Instance ids kept in the state whose `definitionId` the catalog does not know. */
+  unresolved: string[];
 }
 
 /** An instance together with its resolved physical location. */

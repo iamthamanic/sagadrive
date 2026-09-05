@@ -291,6 +291,29 @@ section('3 · Teilen, Zusammenlegen & inkompatibler Instanzzustand');
   equal(stacksOf(added, 'core:ration'), [1, 1], 'stattdessen entsteht ein neuer Stapel');
   equal(added.instances[plainId], undefined, 'keine Fremdinstanz eingeschleppt');
 
+  // The stack key must be injective: a delimiter-joined `k=v` string would make
+  // these pairs compare equal and let a merge discard one of the two states.
+  const ambiguous = inv.createEmptyInventory();
+  const joinedId = place(ambiguous, 'core:ration', 0, { instanceId: 'joined', state: { a: 'x|b=y' } });
+  const twoKeyId = place(ambiguous, 'core:ration', 1, { instanceId: 'split', state: { a: 'x', b: 'y' } });
+  const numericId = place(ambiguous, 'core:ration', 2, { instanceId: 'numeric', state: { x: 1 } });
+  const textualId = place(ambiguous, 'core:ration', 3, { instanceId: 'textual', state: { x: '1' } });
+  expectError(
+    inv.mergeStacks(ambiguous, lookup, joinedId, twoKeyId),
+    'INCOMPATIBLE_STACK',
+    'Trennzeichen im Wert kollidiert nicht mit zwei Schlüsseln',
+  );
+  expectError(
+    inv.mergeStacks(ambiguous, lookup, numericId, textualId),
+    'INCOMPATIBLE_STACK',
+    'Zahl 1 und Text "1" gelten nicht als derselbe Stapel',
+  );
+  const sameState = inv.createEmptyInventory();
+  const leftId = place(sameState, 'core:ration', 0, { instanceId: 'left', state: { b: 'y', a: 'x' } });
+  const rightId = place(sameState, 'core:ration', 1, { instanceId: 'right', state: { a: 'x', b: 'y' } });
+  const orderMerged = expectOk(inv.mergeStacks(sameState, lookup, leftId, rightId), 'gleicher Zustand merged');
+  equal(orderMerged.instances[rightId].quantity, 2, 'Schlüsselreihenfolge ist für die Identität egal');
+
   const capped = expectOk(inv.addItems(inv.createEmptyInventory(), lookup, 'core:ration', 3), 'voller Stapel');
   const extra = expectOk(inv.addItems(capped, lookup, 'core:ration', 1), 'eine weitere Ration');
   expectError(
@@ -1012,6 +1035,88 @@ section('12 · Invariantenprüfung & Normalisierung');
     20,
     'fehlender Zustand ergibt ein leeres, gültiges Inventar',
   );
+
+  // Zwei Datensätze mit derselben eingebetteten instanceId dürfen sich nicht
+  // gegenseitig überschreiben — Normalisieren ist verlustfrei.
+  const collided = inv.normalizeInventory(
+    {
+      schemaVersion: 2,
+      instances: {
+        a: { instanceId: 'b', definitionId: 'core:rope', quantity: 1 },
+        b: { instanceId: 'b', definitionId: 'core:torch', quantity: 3 },
+      },
+      baseSlots: Array.from({ length: 20 }, (_, index) => (index === 0 ? 'a' : index === 1 ? 'b' : null)),
+      containers: {},
+      equipment: {},
+      quickSlots: [null, null, null, null],
+      legacyOverflow: [],
+    },
+    lookup,
+  );
+  equal(Object.keys(collided.state.instances).sort(), ['a', 'b'], 'beide Datensätze überleben die Kollision');
+  equal(collided.state.instances.a.definitionId, 'core:rope', 'Datensatz a behält seine Definition');
+  equal(collided.state.instances.b.quantity, 3, 'Datensatz b behält seine Menge');
+  equal(collided.state.baseSlots.slice(0, 2), ['a', 'b'], 'die Slot-Referenzen bleiben gültig');
+  equal(inv.validateInventory(collided.state, lookup).findings, [], 'Ergebnis ist invariantenkonform');
+
+  // Eine unauflösbare Definition kann die Domäne nicht reparieren: behalten,
+  // aber getrennt melden, damit erneutes Laden keine Reparatur vortäuscht.
+  const orphanState = inv.createEmptyInventory();
+  place(orphanState, 'core:rope', 0, { instanceId: 'orphan' });
+  orphanState.instances.orphan.definitionId = 'core:geloescht';
+  const orphan = inv.normalizeInventory(orphanState, lookup);
+  equal(orphan.unresolved, ['orphan'], 'unauflösbare Definition wird gemeldet');
+  equal(orphan.repairs, [], 'sie zählt nicht als angewandte Reparatur');
+  check(orphan.state.instances.orphan !== undefined, 'die Instanz bleibt erhalten');
+  equal(
+    inv.normalizeInventory(orphan.state, lookup).repairs,
+    [],
+    'erneutes Laden meldet weiterhin keine Reparatur',
+  );
+  check(
+    inv.validateInventory(orphan.state, lookup).findings.some((entry) => entry.code === 'UNKNOWN_DEFINITION'),
+    'die Prüfung meldet den fehlenden Katalogeintrag weiterhin',
+  );
+
+  // Ein Behälter ohne Kapazitätsliste ist für moveIntoContainer unbrauchbar und
+  // muss deshalb auch als ungültig gemeldet werden.
+  const mapless = inv.createEmptyInventory();
+  place(mapless, 'core:backpack', 0, { instanceId: 'no-map' });
+  delete mapless.containers['no-map'];
+  check(
+    inv.validateInventory(mapless, lookup).findings.some(
+      (entry) => entry.code === 'INVALID_CONTAINER_CAPACITY',
+    ),
+    'Behälter ohne Kapazitätsliste wird gemeldet',
+  );
+  const remapped = inv.normalizeInventory(mapless, lookup);
+  equal(remapped.state.containers['no-map'], [null, null, null, null], 'Normalisieren legt die Liste an');
+  equal(inv.validateInventory(remapped.state, lookup).findings, [], 'danach ist der Zustand gültig');
+
+  // Ein Zweihänder, dessen Definition einen Nicht-Hand-Slot deklariert, wird von
+  // equipItem und normalizeInventory abgelehnt — die Prüfung darf ihn nicht durchwinken.
+  define({
+    id: 'core:kopf-zweihaender',
+    name: 'Kopf-Zweihänder',
+    type: 'weapon',
+    load: 2,
+    cost: 3,
+    equipSlots: ['head'],
+    twoHanded: true,
+  });
+  const headTwoHanded = inv.createEmptyInventory();
+  const headId = place(headTwoHanded, 'core:kopf-zweihaender', 0, { instanceId: 'kopf' });
+  headTwoHanded.baseSlots[0] = null;
+  headTwoHanded.equipment.head = headId;
+  check(
+    inv.validateInventory(headTwoHanded, lookup).findings.some(
+      (entry) => entry.code === 'INVALID_TWO_HANDED_REFERENCE',
+    ),
+    'Zweihänder außerhalb der Hände wird gemeldet',
+  );
+  const headRepaired = inv.normalizeInventory(headTwoHanded, lookup);
+  equal(headRepaired.state.equipment.head, undefined, 'Normalisieren legt ihn ab');
+  equal(inv.validateInventory(headRepaired.state, lookup).findings, [], 'danach ist der Zustand gültig');
 
   // Normalisieren ist idempotent: ein bereits reparierter Zustand darf beim
   // nächsten Laden weder Reparaturen melden noch sich noch einmal verändern.

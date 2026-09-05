@@ -71,7 +71,11 @@ export function stackStateKey(instance: ItemInstance): string {
   if (!state) return '';
   const keys = Object.keys(state).sort();
   if (keys.length === 0) return '';
-  return keys.map((key) => `${key}=${String(state[key])}`).join('|');
+  // A sorted list of [key, value] pairs rather than a `k=v|k=v` string: the
+  // delimiter form is not injective for arbitrary values, so `{a: 'x|b=y'}` and
+  // `{a: 'x', b: 'y'}` — or `{x: 1}` and `{x: '1'}` — would compare as the same
+  // stack and let mergeStacks silently discard one of the two states.
+  return JSON.stringify(keys.map((key) => [key, state[key]]));
 }
 
 /** Same definition and identical stack-relevant state. */

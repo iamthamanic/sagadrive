@@ -37,6 +37,11 @@ issues (#107–#114) consume this public API and must not reimplement these rule
 - [x] Legacy grids longer than 20 keep the first 20 positions and put the remainder into visible `legacyOverflow` — no instance is deleted.
 - [x] A half-equipped two-handed item is normalized to both hand references; a conflicting one-hand occupant is displaced, not dropped.
 - [x] A container instance always means exactly one container: a catalog `stackLimit > 1` on a container is pinned to 1 by `effectiveStackLimit`, so a stack can never share one capacity map. An already-stacked container is split losslessly.
+- [x] Two persisted records carrying the same embedded `instanceId` both survive normalization — records are keyed by the map key, which is also what every reference uses.
+- [x] `stackStateKey` is injective: `{a: 'x|b=y'}` vs `{a: 'x', b: 'y'}` and `{x: 1}` vs `{x: '1'}` are distinct stacks, while key order is irrelevant.
+- [x] A container instance without a capacity map is reported (`INVALID_CONTAINER_CAPACITY`) instead of passing validation while `moveIntoContainer` rejects it; normalization creates the map.
+- [x] A `twoHanded` definition referenced from a non-hand slot is reported (`INVALID_TWO_HANDED_REFERENCE`) and unequipped by normalization.
+- [x] An instance whose definition the catalog cannot resolve is kept and reported in `unresolved`, not as a repair — so repeated loads never look like fresh corruption.
 - [x] `normalizeInventory` is idempotent and only reports repairs it actually made — re-normalizing a repaired state yields no repairs and an unchanged state, so a persistence layer that normalizes on load never flags a healthy save as corrupt.
 
 ## Regression

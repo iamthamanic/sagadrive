@@ -108,6 +108,12 @@ export function validateInventory(
     if (instance.quantity > stackLimit) {
       findings.push(finding('INVALID_QUANTITY', `${instanceId}: ${instance.quantity} > ${stackLimit}`));
     }
+    // Driven from the instances, not from `state.containers`: a container whose
+    // capacity map is missing entirely would otherwise pass validation while
+    // `moveIntoContainer` rejects it for having no positions.
+    if (definition.type === 'container' && !Array.isArray(state.containers[instanceId])) {
+      findings.push(finding('INVALID_CONTAINER_CAPACITY', `${instanceId}: keine Kapazitätsliste`));
+    }
   }
 
   // Reference integrity + exactly-one-location.
@@ -198,6 +204,22 @@ export function validateInventory(
     }
   }
 
+  // A two-handed item occupies both hands wherever it is declared. A definition
+  // listing a non-hand slot passes the equipSlots check above, so without this
+  // the validator would accept a shape that equipItem and normalizeInventory
+  // both reject.
+  for (const slot of EQUIPMENT_SLOTS) {
+    if ((HAND_SLOTS as readonly EquipmentSlot[]).includes(slot)) continue;
+    const reference = state.equipment[slot];
+    if (!reference) continue;
+    const instance = state.instances[reference];
+    const definition = instance ? lookup(instance.definitionId) : undefined;
+    if (!definition?.twoHanded) continue;
+    findings.push(
+      finding('INVALID_TWO_HANDED_REFERENCE', `${reference} in ${slot} statt in beiden Händen`),
+    );
+  }
+
   const overflowSeen = new Set<string>();
   for (const reference of state.legacyOverflow) {
     if (!state.instances[reference]) {
@@ -247,6 +269,7 @@ interface NormalizationContext {
   instances: Record<string, ItemInstance>;
   claimed: Set<string>;
   repairs: InventoryInvariantFinding[];
+  unresolved: string[];
   lookup: ItemDefinitionLookup;
 }
 
@@ -276,17 +299,22 @@ function sanitizeInstances(
       context.repairs.push(finding('DANGLING_REFERENCE', `instances[${key}] verworfen`));
       continue;
     }
-    const instanceId = typeof candidate.instanceId === 'string' && candidate.instanceId ? candidate.instanceId : key;
-    if (instanceId !== key) {
-      context.repairs.push(finding('DANGLING_REFERENCE', `instances[${key}].instanceId=${instanceId}`));
+    // Key by the record key, never by the embedded `instanceId`. Two records can
+    // carry the same embedded id, and writing both under it would drop one — the
+    // opposite of a lossless repair. The map key is unique by construction and is
+    // also what baseSlots/containers/equipment/quickSlots reference.
+    if (candidate.instanceId !== key) {
+      context.repairs.push(
+        finding('DANGLING_REFERENCE', `instances[${key}].instanceId=${String(candidate.instanceId)} → ${key}`),
+      );
     }
     let quantity = candidate.quantity;
     if (!isValidQuantity(quantity)) {
-      context.repairs.push(finding('INVALID_QUANTITY', `${instanceId}: ${String(quantity)} → 1`));
+      context.repairs.push(finding('INVALID_QUANTITY', `${key}: ${String(quantity)} → 1`));
       quantity = 1;
     }
-    context.instances[instanceId] = {
-      instanceId,
+    context.instances[key] = {
+      instanceId: key,
       definitionId: candidate.definitionId,
       quantity,
       ...(candidate.state && typeof candidate.state === 'object' ? { state: { ...candidate.state } } : {}),
@@ -299,7 +327,10 @@ function sanitizeInstances(
     const instance = context.instances[instanceId];
     const definition = context.lookup(instance.definitionId);
     if (!definition) {
-      context.repairs.push(finding('UNKNOWN_DEFINITION', `${instanceId}: ${instance.definitionId}`));
+      // Kept, not dropped — but reported separately: normalization cannot invent
+      // a definition, so listing this as a "repair" on every load would make an
+      // unchanged state look freshly repaired forever.
+      context.unresolved.push(instanceId);
       continue;
     }
     const stackLimit = effectiveStackLimit(definition);
@@ -545,19 +576,31 @@ function normalizeContainers(
  *   base grid becomes visible `legacyOverflow`;
  * - quantities above the stack limit are split into extra stacks;
  * - quick slots keep only base-grid or equipment references.
+ *
+ * Only repairs that were actually applied are reported, so normalization is
+ * idempotent: re-running it on its own output returns an empty `repairs` list
+ * and an unchanged state. Instances whose definition the catalog cannot resolve
+ * are the one thing normalization cannot fix — they are kept and listed in
+ * `unresolved`, and `validateInventory` keeps reporting them as
+ * `UNKNOWN_DEFINITION` until the catalog supplies the definition.
  */
 export function normalizeInventory(
   candidate: Partial<InventoryState> | undefined,
   lookup: ItemDefinitionLookup,
 ): InventoryNormalizationResult {
   if (!candidate || typeof candidate !== 'object') {
-    return { state: createEmptyInventory(), repairs: [finding('INVALID_SCHEMA_VERSION', 'kein Zustand')] };
+    return {
+      state: createEmptyInventory(),
+      repairs: [finding('INVALID_SCHEMA_VERSION', 'kein Zustand')],
+      unresolved: [],
+    };
   }
 
   const context: NormalizationContext = {
     instances: {},
     claimed: new Set<string>(),
     repairs: [],
+    unresolved: [],
     lookup,
   };
 
@@ -649,5 +692,5 @@ export function normalizeInventory(
     state.quickSlots[index] = reference;
   });
 
-  return { state, repairs: context.repairs };
+  return { state, repairs: context.repairs, unresolved: context.unresolved };
 }
