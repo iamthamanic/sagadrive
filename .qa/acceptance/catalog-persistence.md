@@ -36,7 +36,9 @@ query the table directly.
 - [x] A corrupt or out-of-contract payload degrades to "one missing item" (`parseItemDefinition` returns `null`) instead of failing the whole catalog read.
 - [x] A payload cannot override the identity columns — `id` and `scope` come from the columns, so a Personal row cannot present itself as a World entry.
 - [x] Non-contract values (unknown type/slots, load/cost/protection out of range, non-text traits, invalid stack limit) are dropped or clamped, and a container always ends up with at least one capacity position.
-- [x] PostgREST `.or()` interpolates ids into a raw filter string; both ids are asserted against a UUID pattern first.
+- [x] Deleting a world profile that still has item definitions is refused (`ON DELETE RESTRICT` + German error in `deleteWorldProfile`); cascade hard-delete is not a removal path.
+- [x] Binding `projects.world_profile_id` or `characters.world_profile_id` requires edit authority on that world profile, so a GM cannot point an adventure at another user's world and read its definitions.
+- [x] `updateDefinition` / `create*` validate the payload with `parseItemDefinition` **before** writing — a rejected draft never overwrites a previously valid definition.
 
 ## Regression
 - [x] `npm run test-gate` stays green, including the existing inventory-v2 domain, character-editor, presets, background, avatar and rules validations.
@@ -54,6 +56,9 @@ query the table directly.
 | Input validation at trust boundaries | `parseItemDefinition` validates every persisted payload; identity comes from columns; UUIDs are asserted before entering a PostgREST filter string. |
 | No hard delete | The table has no DELETE policy; archiving is the only removal path, so an owned `ItemInstance` always resolves its definition. |
 | Identity immutability | `id`, `scope`, `owner_user_id`, `world_profile_id` are immutable via `trg_inventory_item_definitions_no_retarget`. |
+| World binding is an authorization grant | `trg_projects_world_profile_binding` / `trg_characters_world_profile_binding` reject `world_profile_id` unless `current_user_can_edit_world_profile` — a GM cannot point an adventure at another user's world to read its definitions. |
+| No cascade hard-delete of definitions | `inventory_item_definitions.world_profile_id` is `ON DELETE RESTRICT` so deleting a world profile cannot bypass the missing DELETE policy and strand owned instances. |
+| Write-path payload validation | `assertWritablePayload` runs `parseItemDefinition` before INSERT/UPDATE so a bad draft cannot turn a previously valid definition into an unresolvable row. |
 | All severities reported | `@review-ticket` findings are listed below including Low/Info. |
 
 ## Assumptions

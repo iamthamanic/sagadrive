@@ -548,7 +548,43 @@ section('9 · Persistenz- und Sicherheitsvertrag');
   requireMatch(persistence, /parseItemDefinition/, 'Mapping nutzt die Domänen-Prüfung');
   requireMatch(persistence, /const \{ id: _id, scope: _scope, \.\.\.payload \}/, 'Payload ohne Identitätsspalten');
 
+  requireMatch(migration, /ON DELETE RESTRICT/, 'Weltprofil-FK verhindert Hard-Delete per Cascade');
+  rejectMatch(migration, /world_profile_id UUID REFERENCES public\.world_profiles\(id\) ON DELETE CASCADE/, 'kein CASCADE auf Welt-Definitionen');
+  requireMatch(
+    migration,
+    /CREATE OR REPLACE FUNCTION public\.enforce_world_profile_binding_ownership/,
+    'Bindungs-Trigger: nur editierbare Weltprofile',
+  );
+  requireMatch(
+    migration,
+    /trg_projects_world_profile_binding/,
+    'Abenteuer-Bindung an Weltprofil-Eigentum gekoppelt',
+  );
+  requireMatch(
+    migration,
+    /trg_characters_world_profile_binding/,
+    'Charakter-Bindung an Weltprofil-Eigentum gekoppelt',
+  );
+
+  const worldService = read('src/modules/worlds/services/worldProfile.service.ts');
+  requireMatch(
+    worldService,
+    /inventory_item_definitions/,
+    'Welt-Löschen prüft auf abhängige Definitionen',
+  );
+  requireMatch(
+    worldService,
+    /Archivieren Sie die Definitionen zuerst/,
+    'Welt-Löschen verweigert mit deutscher Fehlermeldung',
+  );
+
   const repository = read('src/infrastructure/inventory/supabase-item-catalog.repository.ts');
+  requireMatch(repository, /assertWritablePayload/, 'Schreiben validiert vor dem Persistieren');
+  requireMatch(
+    repository,
+    /Ungültige Definition — Speichern abgebrochen/,
+    'ungültiges Payload wird vor dem Schreiben abgewiesen',
+  );
   requireMatch(repository, /UUID_PATTERN/, 'UUID-Prüfung vor PostgREST-Filter');
   requireMatch(repository, /assertUuid\(/, 'Filterwerte werden geprüft');
   requireMatch(repository, /raceWithTimeoutReject/, 'Abfrage mit Zeitüberschreitung');

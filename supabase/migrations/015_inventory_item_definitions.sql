@@ -85,6 +85,44 @@ REVOKE ALL ON FUNCTION public.current_user_can_read_world_profile(UUID) FROM PUB
 GRANT EXECUTE ON FUNCTION public.current_user_can_edit_world_profile(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.current_user_can_read_world_profile(UUID) TO authenticated;
 
+-- Binding a project or character to a world profile is an authorization grant
+-- (the read helper below admits adventure GM + members). Without this check a
+-- GM could point projects.world_profile_id at any world and read another user's
+-- World definitions — the same "client-writable row becomes a grant" pattern
+-- migration 004 eliminated for project_members.
+CREATE OR REPLACE FUNCTION public.enforce_world_profile_binding_ownership()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NEW.world_profile_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+  IF TG_OP = 'UPDATE'
+     AND NEW.world_profile_id IS NOT DISTINCT FROM OLD.world_profile_id THEN
+    RETURN NEW;
+  END IF;
+  IF NOT public.current_user_can_edit_world_profile(NEW.world_profile_id) THEN
+    RAISE EXCEPTION 'world_profile_id may only reference a world profile you can edit';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_projects_world_profile_binding ON public.projects;
+CREATE TRIGGER trg_projects_world_profile_binding
+  BEFORE INSERT OR UPDATE OF world_profile_id ON public.projects
+  FOR EACH ROW
+  EXECUTE FUNCTION public.enforce_world_profile_binding_ownership();
+
+DROP TRIGGER IF EXISTS trg_characters_world_profile_binding ON public.characters;
+CREATE TRIGGER trg_characters_world_profile_binding
+  BEFORE INSERT OR UPDATE OF world_profile_id ON public.characters
+  FOR EACH ROW
+  EXECUTE FUNCTION public.enforce_world_profile_binding_ownership();
+
 -- ---------------------------------------------------------------------------
 -- 3. Catalog table
 -- ---------------------------------------------------------------------------
@@ -92,7 +130,11 @@ GRANT EXECUTE ON FUNCTION public.current_user_can_read_world_profile(UUID) TO au
 CREATE TABLE IF NOT EXISTS public.inventory_item_definitions (
   id TEXT PRIMARY KEY CHECK (char_length(btrim(id)) BETWEEN 3 AND 128),
   scope TEXT NOT NULL CHECK (scope IN ('world', 'personal')),
-  world_profile_id UUID REFERENCES public.world_profiles(id) ON DELETE CASCADE,
+  -- RESTRICT, not CASCADE: deleting a world_profiles row must not hard-delete
+  -- World definitions. Archiving is the only removal path so owned instances
+  -- always keep resolving; a cascade would bypass the missing DELETE policy
+  -- (FK cascades run as the table owner).
+  world_profile_id UUID REFERENCES public.world_profiles(id) ON DELETE RESTRICT,
   owner_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   payload JSONB NOT NULL,
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived')),

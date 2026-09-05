@@ -13,6 +13,7 @@ import { getAuthenticatedUserId } from '../../lib/authenticatedUser';
 import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../lib/networkTimeout';
 import {
   coreCatalogRecords,
+  parseItemDefinition,
   resolveEffectiveWorldProfileId,
 } from '../../domains/character/inventory-v2';
 import type {
@@ -149,7 +150,10 @@ export class SupabaseItemCatalogRepository {
    */
   async updateDefinition(definitionId: string, draft: ItemDefinitionDraft): Promise<CatalogDefinitionRecord> {
     const scope = scopeOfId(definitionId);
-    const payload = toDefinitionPayload({ ...draft, id: definitionId, scope });
+    // Validate before writing. Writing first and parsing afterwards would leave
+    // a previously valid definition permanently unreadable (mapDefinitionRow
+    // returns null) while the caller only sees a generic save error.
+    const payload = assertWritablePayload(definitionId, scope, draft);
 
     const { data, error } = await raceWithTimeoutReject(
       supabase
@@ -198,7 +202,7 @@ export class SupabaseItemCatalogRepository {
     worldProfileId: string | null,
   ): Promise<CatalogDefinitionRecord> {
     const id = `${scope}:${crypto.randomUUID()}`;
-    const payload = toDefinitionPayload({ ...draft, id, scope });
+    const payload = assertWritablePayload(id, scope, draft);
 
     const { data, error } = await raceWithTimeoutReject(
       supabase
@@ -237,6 +241,25 @@ function scopeOfId(definitionId: string): PersistedDefinitionScope {
   if (definitionId.startsWith('world:')) return 'world';
   if (definitionId.startsWith('personal:')) return 'personal';
   throw new Error(`Nicht persistierbare Definition: ${definitionId}`);
+}
+
+/**
+ * Build a payload the read path will accept, or refuse the write.
+ *
+ * Must run before the UPDATE/INSERT: a rejected payload that still lands in the
+ * column turns a previously valid definition into an unresolvable one for every
+ * owned instance that points at it.
+ */
+function assertWritablePayload(
+  definitionId: string,
+  scope: PersistedDefinitionScope,
+  draft: ItemDefinitionDraft,
+): Record<string, unknown> {
+  const payload = toDefinitionPayload({ ...draft, id: definitionId, scope });
+  if (!parseItemDefinition(definitionId, scope, payload)) {
+    throw new Error('Ungültige Definition — Speichern abgebrochen.');
+  }
+  return payload;
 }
 
 function requireRecord(dto: ItemDefinitionDto | null, message: string): CatalogDefinitionRecord {

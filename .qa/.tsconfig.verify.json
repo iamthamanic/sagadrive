@@ -1,0 +1,21 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": [
+      "vite/client",
+      "react",
+      "react-dom"
+    ]
+  },
+  "files": [
+    "../src/domains/character/inventory-v2/catalog.ts",
+    "../src/domains/character/inventory-v2/core-catalog.ts",
+    "../src/domains/character/inventory-v2/index.ts",
+    "../src/infrastructure/inventory/item-catalog-service.ts",
+    "../src/infrastructure/inventory/item-catalog.persistence.ts",
+    "../src/infrastructure/inventory/supabase-item-catalog.repository.ts"
+  ],
+  "include": []
+}
