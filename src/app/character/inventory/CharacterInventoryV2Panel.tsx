@@ -107,8 +107,33 @@ export function CharacterInventoryV2Panel({
   };
 
   useEffect(() => {
-    refreshCatalog();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- remount on identity change only
+    catalogRefreshKey.current += 1;
+    const refreshId = catalogRefreshKey.current;
+    if (!userId) {
+      setCatalogError('Benutzer nicht angemeldet — Katalog nicht verfügbar.');
+      return;
+    }
+    let cancelled = false;
+    setCatalogLoading(true);
+    setCatalogError('');
+    void loadCharacterItemCatalog(characterId, userId)
+      .then((next) => {
+        if (cancelled || refreshId !== catalogRefreshKey.current) return;
+        setCatalog(next);
+      })
+      .catch((error) => {
+        console.error('[inventory] catalog load failed', error);
+        if (cancelled || refreshId !== catalogRefreshKey.current) return;
+        setCatalogError(
+          error instanceof Error ? error.message : 'Katalog konnte nicht geladen werden.',
+        );
+      })
+      .finally(() => {
+        if (!cancelled && refreshId === catalogRefreshKey.current) setCatalogLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [characterId, userId]);
 
   useEffect(() => {

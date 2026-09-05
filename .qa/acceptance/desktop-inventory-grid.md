@@ -39,7 +39,7 @@ surfaces stay deferred to #111 (actions may call domain ops; destination UI is #
 - No client-supplied owner on Personal definitions.
 
 ## Composition Gate
-- Verdict: pending
+- Verdict: **CLEAR**
 - Proof: `.qa/runs/composition-gate-desktop-inventory-grid.md`
 
 ## Implementation Notes
