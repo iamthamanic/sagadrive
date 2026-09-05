@@ -454,14 +454,44 @@ section('5 · Behälter: Kapazität, Bewegungen & Nesting-Verbot');
     'Instanz liegt nicht in diesem Behälter',
   );
 
-  // An empty container may still be stacked; a filled one may not.
   const emptyPouches = inv.createEmptyInventory();
   place(emptyPouches, 'core:pouch', 0, { instanceId: 'pouch-a' });
   place(emptyPouches, 'core:pouch', 1, { instanceId: 'pouch-b' });
   expectError(
     inv.mergeStacks(emptyPouches, lookup, 'pouch-a', 'pouch-b'),
     'NOT_STACKABLE',
-    'Behälter sind nicht stapelbar (stackLimit 1)',
+    'Behälter sind nicht stapelbar',
+  );
+
+  // One instance must mean one container, even if a catalog author declares a
+  // stack limit above 1 (#108/#112) — otherwise a stack would share one capacity map.
+  define({ id: 'core:bad-crate', name: 'Fehlerhafte Kiste', type: 'container', load: 1, cost: 1, containerCapacity: 3, stackLimit: 5 });
+  equal(inv.effectiveStackLimit(CATALOG['core:bad-crate']), 1, 'Behälter werden auf Stapellimit 1 festgenagelt');
+  equal(inv.containerCapacityOf(CATALOG['core:bad-crate']), 3, 'Behälterkapazität bleibt erhalten');
+  const crates = expectOk(inv.addItems(inv.createEmptyInventory(), lookup, 'core:bad-crate', 3), '3 Kisten');
+  equal(stacksOf(crates, 'core:bad-crate'), [1, 1, 1], 'jede Kiste ist eine eigene Instanz');
+  equal(
+    Object.keys(crates.containers).length,
+    3,
+    'jede Kiste erhält ihre eigene Kapazitätsliste',
+  );
+  equal(inv.validateInventory(crates, lookup).findings, [], 'Behälter-Stapellimit ergibt gültigen Zustand');
+  // A healthy save must survive a normalize on load without reporting corruption,
+  // even though the catalog declares stackLimit 5 for this container.
+  equal(inv.normalizeInventory(crates, lookup).repairs, [], 'gültiger Bestand erzeugt keine Reparaturen');
+
+  const stackedCrate = inv.createEmptyInventory();
+  place(stackedCrate, 'core:bad-crate', 0, { quantity: 4, instanceId: 'crate' });
+  check(
+    inv.validateInventory(stackedCrate, lookup).findings.some((entry) => entry.code === 'INVALID_QUANTITY'),
+    'gestapelter Behälter wird als ungültige Menge gemeldet',
+  );
+  const repairedCrates = inv.normalizeInventory(stackedCrate, lookup);
+  equal(inv.validateInventory(repairedCrates.state, lookup).findings, [], 'Normalisierung repariert den Behälter-Stapel');
+  equal(
+    Object.values(repairedCrates.state.instances).reduce((sum, instance) => sum + instance.quantity, 0),
+    4,
+    'alle vier Kisten bleiben erhalten',
   );
 }
 
@@ -982,6 +1012,19 @@ section('12 · Invariantenprüfung & Normalisierung');
     20,
     'fehlender Zustand ergibt ein leeres, gültiges Inventar',
   );
+
+  // Normalisieren ist idempotent: ein bereits reparierter Zustand darf beim
+  // nächsten Laden weder Reparaturen melden noch sich noch einmal verändern.
+  for (const [label, repaired] of [
+    ['korrupter Zustand', normalized.state],
+    ['umkämpfte Hände', contestedHands.state],
+    ['Legacy-Overflow', legacy.state],
+  ]) {
+    const again = inv.normalizeInventory(repaired, lookup);
+    equal(again.repairs, [], `${label}: erneutes Normalisieren meldet keine Reparaturen`);
+    equal(again.state, repaired, `${label}: erneutes Normalisieren ändert nichts`);
+    equal(inv.validateInventory(repaired, lookup).findings, [], `${label}: erfüllt alle Invarianten`);
+  }
 }
 
 if (failures > 0) {

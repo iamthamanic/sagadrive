@@ -29,7 +29,13 @@ import {
   INVENTORY_V2_SCHEMA_VERSION,
   QUICK_SLOT_COUNT,
 } from './types';
-import { createEmptyInventory, findInstanceLocation, isEquipmentSlot } from './state';
+import {
+  containerCapacityOf,
+  createEmptyInventory,
+  effectiveStackLimit,
+  findInstanceLocation,
+  isEquipmentSlot,
+} from './state';
 
 function finding(code: InventoryInvariantCode, detail: string): InventoryInvariantFinding {
   return { code, detail };
@@ -38,13 +44,6 @@ function finding(code: InventoryInvariantCode, detail: string): InventoryInvaria
 /** Is the value a usable stack quantity? */
 function isValidQuantity(value: number): boolean {
   return Number.isInteger(value) && value >= 1;
-}
-
-/** Capacity positions a container definition provides (at least one). */
-function containerCapacityOf(definition: ItemDefinition): number {
-  const declared = definition.containerCapacity;
-  if (typeof declared !== 'number' || !Number.isInteger(declared) || declared < 1) return 1;
-  return declared;
 }
 
 // ---------------------------------------------------------------------------
@@ -105,10 +104,9 @@ export function validateInventory(
       findings.push(finding('INVALID_STACK_LIMIT', `${definition.id}: ${String(definition.stackLimit)}`));
       continue;
     }
-    if (instance.quantity > definition.stackLimit) {
-      findings.push(
-        finding('INVALID_QUANTITY', `${instanceId}: ${instance.quantity} > ${definition.stackLimit}`),
-      );
+    const stackLimit = effectiveStackLimit(definition);
+    if (instance.quantity > stackLimit) {
+      findings.push(finding('INVALID_QUANTITY', `${instanceId}: ${instance.quantity} > ${stackLimit}`));
     }
   }
 
@@ -304,10 +302,11 @@ function sanitizeInstances(
       context.repairs.push(finding('UNKNOWN_DEFINITION', `${instanceId}: ${instance.definitionId}`));
       continue;
     }
-    const stackLimit = Number.isInteger(definition.stackLimit) && definition.stackLimit >= 1
-      ? definition.stackLimit
-      : 1;
-    if (stackLimit !== definition.stackLimit) {
+    const stackLimit = effectiveStackLimit(definition);
+    // Only a malformed declaration is a repair. Pinning a container to 1 is a
+    // domain rule, so a valid `stackLimit > 1` on a container must stay silent —
+    // otherwise loading a healthy save would report corruption on every read.
+    if (!Number.isInteger(definition.stackLimit) || definition.stackLimit < 1) {
       context.repairs.push(finding('INVALID_STACK_LIMIT', `${definition.id} → ${stackLimit}`));
     }
     if (instance.quantity <= stackLimit) continue;

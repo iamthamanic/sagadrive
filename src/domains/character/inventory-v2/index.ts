@@ -45,9 +45,11 @@ export {
 export {
   calculateTotalLoad,
   cloneInventory,
+  containerCapacityOf,
   containerHasContents,
   createEmptyInventory,
   definitionOf,
+  effectiveStackLimit,
   equipmentSlotsOf,
   findInstanceLocation,
   freeBaseSlotIndices,

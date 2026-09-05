@@ -23,7 +23,9 @@ import {
   clearQuickSlotReferences,
   cloneInventory,
   containerHasContents,
+  containerCapacityOf,
   deleteInstance,
+  effectiveStackLimit,
   equipmentSlotsOf,
   findInstanceLocation,
   freeBaseSlotIndices,
@@ -56,7 +58,8 @@ function refuse(error: InventoryOperationError, reason: string): InventoryOperat
  * excluded — overflow is repair-only state.
  */
 function toppableStacks(state: InventoryState, definition: ItemDefinition): ItemInstance[] {
-  if (definition.stackLimit <= 1) return [];
+  const stackLimit = effectiveStackLimit(definition);
+  if (stackLimit <= 1) return [];
   const overflow = new Set(state.legacyOverflow);
   const references: (string | null)[] = [
     ...state.baseSlots,
@@ -73,7 +76,7 @@ function toppableStacks(state: InventoryState, definition: ItemDefinition): Item
     if (!instance) continue;
     if (instance.definitionId !== definition.id) continue;
     if (stackStateKey(instance) !== '') continue;
-    if (instance.quantity >= definition.stackLimit) continue;
+    if (instance.quantity >= stackLimit) continue;
     result.push(instance);
   }
   return result;
@@ -105,10 +108,11 @@ export function addItems(
   if (!Number.isInteger(definition.stackLimit) || definition.stackLimit < 1) {
     return refuse('INVALID_INPUT', `Ungültiges Stapellimit für ${definition.id}.`);
   }
+  const stackLimit = effectiveStackLimit(definition);
 
   const partials = toppableStacks(state, definition);
   const topUpCapacity = partials.reduce(
-    (sum, instance) => sum + (definition.stackLimit - instance.quantity),
+    (sum, instance) => sum + (stackLimit - instance.quantity),
     0,
   );
   const freeSlots = freeBaseSlotIndices(state);
@@ -119,7 +123,7 @@ export function addItems(
       'Legacy-Overflow ist nicht leer — neue Basis-Stapel sind blockiert.',
     );
   }
-  const totalCapacity = topUpCapacity + freeSlots.length * definition.stackLimit;
+  const totalCapacity = topUpCapacity + freeSlots.length * stackLimit;
   if (quantity > totalCapacity) {
     return refuse(
       'BASE_SLOTS_FULL',
@@ -133,7 +137,7 @@ export function addItems(
 
   for (const partial of partials) {
     if (remaining <= 0) break;
-    const take = Math.min(remaining, definition.stackLimit - partial.quantity);
+    const take = Math.min(remaining, stackLimit - partial.quantity);
     next.instances[partial.instanceId] = {
       ...next.instances[partial.instanceId],
       quantity: partial.quantity + take,
@@ -148,12 +152,12 @@ export function addItems(
       return refuse('BASE_SLOTS_FULL', 'Basis-Kapazität erschöpft — Aktion atomar blockiert.');
     }
     const instanceId = allocateInstanceId(next, reserved);
-    const take = Math.min(remaining, definition.stackLimit);
+    const take = Math.min(remaining, stackLimit);
     next.instances[instanceId] = { instanceId, definitionId: definition.id, quantity: take };
     next.baseSlots[slotIndex] = instanceId;
     if (definition.type === 'container') {
       next.containers[instanceId] = Array.from(
-        { length: Math.max(1, definition.containerCapacity ?? 1) },
+        { length: containerCapacityOf(definition) },
         () => null,
       );
     }
@@ -276,7 +280,7 @@ export function splitStack(
   if (!definition) {
     return refuse('UNKNOWN_DEFINITION', `Unbekannte Definition: ${source.definitionId}`);
   }
-  if (definition.stackLimit <= 1) {
+  if (effectiveStackLimit(definition) <= 1) {
     return refuse('NOT_STACKABLE', `${definition.name} ist nicht stapelbar.`);
   }
 
@@ -365,10 +369,11 @@ export function mergeStacks(
       'Definition oder Instanz-Zustand unterscheiden sich — kein Zusammenlegen.',
     );
   }
-  if (definition.stackLimit <= 1) {
+  const stackLimit = effectiveStackLimit(definition);
+  if (stackLimit <= 1) {
     return refuse('NOT_STACKABLE', `${definition.name} ist nicht stapelbar.`);
   }
-  const capacity = definition.stackLimit - target.quantity;
+  const capacity = stackLimit - target.quantity;
   if (source.quantity > capacity) {
     return refuse(
       'STACK_LIMIT_REACHED',

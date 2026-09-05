@@ -1,6 +1,7 @@
 # Composition Gate — inventory-domain-model
 
-- HEAD_SHA: WORKTREE (uncommitted; base 78e3c52236fc173f865f3a88ebf5035cf5ebe41f)
+- HEAD_SHA: 800f7cd08cf7b0d10b3d342f4b69e6ea893a161c
+- BASE_SHA: 78e3c52236fc173f865f3a88ebf5035cf5ebe41f
 - Date: 2026-09-05
 - Verdict: CLEAR
 
@@ -31,6 +32,8 @@ The producer is new and both consumers are new in this diff, but the load consum
 | `identity:` | blocker | operation → persisted state → reload → next operation | Instance ids came from a module-level counter (`inst-1`, `inst-2`) plus a `__resetInstanceIdCounterForTests` export. Correct within one process; after a reload the counter restarts and collides with persisted ids — invisible until #109 persistence. | done — `allocateInstanceId` allocates against the ids in the state; the test-only reset export is gone |
 | `divergent-copy:` | flag | operations vs validation | `operations.ts` defined its own `PhysicalLocation` type and location scan while `types.ts` exported a separate `InventoryLocationRef`, so the two hops could drift on what "one location" means. | done — one exported `InventoryLocation` type and one `findInstanceLocation` in `state.ts`, used by both |
 | `reinterpret:` | flag | add → stack family → merge | `addItems` matched top-up candidates on `definitionId` only, while `mergeStacks` required matching per-instance state. The same "compatible stack" fact had two readings, so adding could silently absorb units into an engraved/bound stack that merge would refuse. | done — both hops use `stackStateKey`; top-up only targets state-free stacks; asserted in test group 3 |
+| `cardinality:` | blocker | catalog definition → add → container capacity map | A container definition with `stackLimit > 1` (authorable in #108/#112) let `addItems` create **one** instance of quantity N while `containers[instanceId]` held a **single** capacity map — N containers sharing one set of positions. Reading `addItems` alone looks right; only following catalog → instance → capacity map shows the mismatch. | done — `effectiveStackLimit` pins containers to 1 and is used by every stack hop (`addItems`, `splitStack`, `mergeStacks`, top-up, validation, normalization); exported so #108–#112 cannot reimplement it; asserted in test group 5 |
+| `reinterpret:` | flag | validate → normalize → persistence load | `normalizeInventory` reported an `INVALID_STACK_LIMIT` repair whenever the effective limit differed from the declared one, so a **valid** container save produced repairs that `validateInventory` did not report as findings. A persistence layer (#109) treating a non-empty repair list as corruption would rewrite healthy saves on every read. | done — the repair fires only on a genuinely malformed declaration, matching `validateInventory`; normalize idempotence is asserted in test group 12 |
 | `note` | note | load sum → UI label | An unresolvable definition contributes 0 load. Kept (a pure sum cannot invent a load) but no longer implicit: documented on `calculateTotalLoad` and locked by a test asserting the same state is simultaneously reported invalid. | done |
 
 No worker, outbox, queue, cron, webhook or mail path exists in this diff, so P-06 does not apply. No dependencies, migrations or rule-value changes.

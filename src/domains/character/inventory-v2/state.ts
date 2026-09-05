@@ -95,6 +95,28 @@ export function allocateInstanceId(state: InventoryState, reserved: Set<string>)
   return candidate;
 }
 
+/**
+ * Stack limit actually enforced for a definition.
+ *
+ * A container carries its own capacity positions, so one instance must mean one
+ * container. A catalog author who sets `stackLimit > 1` on a container
+ * definition (#108/#112) would otherwise produce a single instance of quantity
+ * N sharing one capacity map — so containers are pinned to 1 here rather than
+ * trusting the definition.
+ */
+export function effectiveStackLimit(definition: ItemDefinition): number {
+  if (definition.type === 'container') return 1;
+  if (!Number.isInteger(definition.stackLimit) || definition.stackLimit < 1) return 1;
+  return definition.stackLimit;
+}
+
+/** Capacity positions a container definition provides (at least one). */
+export function containerCapacityOf(definition: ItemDefinition): number {
+  const declared = definition.containerCapacity;
+  if (typeof declared !== 'number' || !Number.isInteger(declared) || declared < 1) return 1;
+  return declared;
+}
+
 /** Is `index` a valid base-slot index (0 … BASE_SLOT_COUNT - 1)? */
 export function isBaseSlotIndex(index: unknown): index is number {
   return (

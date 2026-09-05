@@ -36,6 +36,8 @@ issues (#107–#114) consume this public API and must not reimplement these rule
 - [x] While `legacyOverflow` is non-empty, new base stacks (add, split-to-base) are blocked, but topping up an existing partial stack and recovering overflow stay allowed.
 - [x] Legacy grids longer than 20 keep the first 20 positions and put the remainder into visible `legacyOverflow` — no instance is deleted.
 - [x] A half-equipped two-handed item is normalized to both hand references; a conflicting one-hand occupant is displaced, not dropped.
+- [x] A container instance always means exactly one container: a catalog `stackLimit > 1` on a container is pinned to 1 by `effectiveStackLimit`, so a stack can never share one capacity map. An already-stacked container is split losslessly.
+- [x] `normalizeInventory` is idempotent and only reports repairs it actually made — re-normalizing a repaired state yields no repairs and an unchanged state, so a persistence layer that normalizes on load never flags a healthy save as corrupt.
 
 ## Regression
 - [x] `npm run test-gate` stays green, including the existing character-editor, background, avatar and rules validations.
@@ -54,6 +56,7 @@ issues (#107–#114) consume this public API and must not reimplement these rule
 - Instance ids are allocated from the existing state (`inv2-<n>`, collision-checked) rather than a module counter, so reloading persisted state can never reissue an id. #109 may supply its own ids; the contract only requires uniqueness.
 - `ItemDefinitionScope` ownership metadata is resolved by the catalog layer (#107/#112) and intentionally absent from `InventoryState`.
 - Normalization repairs half-equipped two-handed items by completing the grip (keeping the weapon equipped) rather than unequipping it.
+- Consumers must read stack limits and container capacity through `effectiveStackLimit` / `containerCapacityOf` instead of `definition.stackLimit` / `definition.containerCapacity`, so the container rule is not reimplemented per call site in #108/#110/#111/#112.
 
 ## Composition Gate
 - Verdict: **CLEAR**
