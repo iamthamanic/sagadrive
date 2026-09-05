@@ -232,8 +232,12 @@ section('4 · Core-Katalog ist universell und unveränderlich');
   const core = inv.listCoreItemDefinitions();
   check(core.length > 0, 'Core-Katalog enthält Definitionen');
   check(
-    core.every((definition) => definition.scope === 'core' && definition.id.startsWith('core:')),
-    'alle Core-Definitionen tragen Scope core und das Präfix core:',
+    core.every(
+      (definition) =>
+        definition.scope === 'core' &&
+        (definition.id.startsWith('core.') || definition.id.startsWith('core:')),
+    ),
+    'alle Core-Definitionen tragen Scope core und das Präfix core./core:',
   );
   check(
     new Set(core.map((definition) => definition.id)).size === core.length,

@@ -1385,6 +1385,15 @@ Verborgen ist kein globaler Zustand, sondern gilt immer relativ zu bestimmten Be
 
 ## 10. Ausrüstung und Inventar
 
+### 10.0 Core-Gegenstandskatalog (Inventory v2)
+
+Der Core-Katalog liefert **35 setting-neutrale mechanische Archetypen** (Waffen, Rüstung/Schild, Werkzeuge, Verbrauchsgüter, Container, Misc/Wearables). Sie sind versioniert, read-only und ohne Weltprofil spielbar.
+
+- Ids sind stabile Verträge (`core.weapon.*`, `core.armor.*`, …).
+- Werkzeuge und Verbrauchsgüter verleihen **keine** stillschweigenden Zahlenboni; konkrete Effekte kommen aus Fertigkeit, Fähigkeit oder Weltprofil.
+- Container belegen einen Basisslot; Inhalt zählt zur Last; Container-in-Container ist in V1 verboten.
+- Quelle: `src/domains/character/inventory-v2/core-catalog.ts` (Inventory v2).
+
 ### 10.1 Waffenmerkmale
 
 Universelle Merkmale:

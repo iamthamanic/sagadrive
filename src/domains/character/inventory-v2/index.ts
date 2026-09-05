@@ -99,7 +99,9 @@ export {
 } from './catalog';
 
 export {
+  CORE_CATALOG_SIZE,
   CORE_CATALOG_VERSION,
   coreCatalogRecords,
+  getCoreItemDefinition,
   listCoreItemDefinitions,
 } from './core-catalog';

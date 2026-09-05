@@ -65,7 +65,7 @@ query the table directly.
 ## Assumptions
 - "Adventure" in this issue means `public.projects` (the codebase's campaign entity); there is no separate adventures table.
 - `projects.world_id` (legacy V3, unconstrained UUID) and `public.worlds` are unrelated to `world_profiles` and are not touched.
-- Core content is seeded with 11 representative entries here; the full setting-neutral catalog is #108, which grows `core-catalog.ts` in place.
+- Core content is the complete 35-entry V1 catalog from #108 (`core-catalog.ts`); this ticket only resolves definitions.
 - Persistence of a character's own inventory state and the legacy `ItemDto[]` migration are #109; this ticket only resolves definitions.
 
 ## Composition Gate
