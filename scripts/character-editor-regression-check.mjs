@@ -21,6 +21,9 @@ const characterAssert = read('src/domains/character/use-cases/assert-character-p
 const characterRepository = read('src/infrastructure/character/supabase-character.repository.ts');
 const characterCreation = read('src/domains/rules/sagadrive/character-creation/index.ts');
 const inventoryPanel = read('src/app/character/progression/CharacterInventoryPanel.tsx');
+const inventorySummary = read('src/app/character/inventory/InventorySummaryBar.tsx');
+const inventoryLabels = read('src/app/character/inventory/inventory-ui-labels.ts');
+const inventoryV2Panel = read('src/app/character/inventory/CharacterInventoryV2Panel.tsx');
 const abilitiesPanel = read('src/app/character/progression/CharacterAbilitiesPanel.tsx');
 const skillsPanel = read('src/app/character/progression/CharacterSkillsPanel.tsx');
 const attributeSkillNode = read('src/app/character/progression/AttributeSkillNode.tsx');
@@ -184,9 +187,12 @@ rejectMatch(formulaPanel, /provenanceLegacy|Legacy —/, 'formula panel still ha
 rejectMatch(formulaPanel, /checkTotal = attributeValue \+ finalRank \+ appliedEb \+/, 'normal check must not include specialization bonus');
 requireMatch(abilitiesPanel, /Regelgebundene Fähigkeiten/, 'rule-bound abilities panel');
 rejectMatch(abilitiesPanel, /Fähigkeit hinzufügen|setDialogOpen/, 'free-form ability creation remains');
-requireMatch(inventoryPanel, /capacity = 5 \+ 2 \* strength/, 'SagaDrive carrying capacity formula');
-requireMatch(inventoryPanel, /Über Traglast: Bewegung −3 m/, 'overload consequences');
-rejectMatch(inventoryPanel, /capacity = 30|Freier Inventarplatz|Jeder Gegenstand belegt einen Inventarplatz/, 'legacy fixed-slot inventory remains');
+requireMatch(inventoryLabels, /5 \+ 2 \* strength/, 'SagaDrive carrying capacity formula');
+requireMatch(inventorySummary, /Über Traglast: Bewegung −3 m/, 'overload consequences');
+requireMatch(inventorySummary, /Inventar \{occupiedSlots\} \/ \{BASE_SLOT_COUNT\}/, '20-slot inventory summary');
+requireMatch(inventoryV2Panel, /CharacterInventoryV2Panel/, 'Inventory v2 panel mount');
+requireMatch(editor, /CharacterInventoryV2Panel/, 'editor uses Inventory v2 panel');
+rejectMatch(inventorySummary, /capacity = 30|Freier Inventarplatz|Jeder Gegenstand belegt einen Inventarplatz/, 'legacy fixed-slot inventory remains');
 
 requireMatch(characterTypes, /baseAttributes\?:\s*CharacterAttributesDto/, 'SagaDrive baseAttributes profile persistence');
 requireMatch(characterTypes, /attributeAdvances\?:\s*SagaDriveAttributeAdvancesDto/, 'SagaDrive attributeAdvances profile persistence');

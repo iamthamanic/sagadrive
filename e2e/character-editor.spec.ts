@@ -515,7 +515,8 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.getByRole('tab', { name: /Inventar/i }).click();
   await expect(page.getByText(/^Last 0 \/ 13$/).first()).toBeVisible();
-  await expect(page.getByText(/Keine festen Slots/i).first()).toBeVisible();
+  await expect(page.getByText(/Inventar 0 \/ 20/i).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Gegenstand hinzufügen/i }).first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '07-inventory-load.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /Spezies/i }).click();
