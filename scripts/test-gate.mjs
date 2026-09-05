@@ -175,6 +175,14 @@ function checkInventoryWorldCatalogUi() {
   });
 }
 
+function checkInventoryEquipmentUi() {
+  console.log('Inventory v2 equipment UI contract (#111): checking Ausrüstung, containers, and Schnellzugriff...');
+  execFileSync(process.execPath, ['scripts/inventory-equipment-ui-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -357,7 +365,11 @@ checkInventoryCatalog();
 checkInventoryCoreCatalog();
 checkInventoryLegacyMigration();
 checkInventoryDesktopUi();
+<<<<<<< HEAD
 checkInventoryWorldCatalogUi();
+=======
+checkInventoryEquipmentUi();
+>>>>>>> f8b1fe2 (feat(inventory): equipment panel, containers & quick-access UX (#111))
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();

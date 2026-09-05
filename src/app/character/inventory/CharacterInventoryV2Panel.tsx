@@ -1,8 +1,7 @@
 /**
- * CharacterInventoryV2Panel — orchestrates Inventory v2 desktop UI (#110).
- * Loads catalog via item-catalog-service, applies domain ops (add/move/merge/
- * sort/consume/remove/overflow) through onChange, and surfaces load info for
- * the character editor sidebar.
+ * CharacterInventoryV2Panel — orchestrates Inventory v2 desktop UI (#110/#111).
+ * Loads catalog via item-catalog-service, applies domain ops through onChange,
+ * and lays out base grid beside Ausrüstung + Schnellzugriff.
  * Location: src/app/character/inventory/CharacterInventoryV2Panel.tsx
  */
 import { useEffect, useRef, useState } from 'react';
@@ -27,7 +26,10 @@ import {
 } from '../../../infrastructure/inventory/item-catalog-service';
 import { InventoryBaseGrid } from './InventoryBaseGrid';
 import { InventoryCatalogDialog } from './InventoryCatalogDialog';
+import { InventoryContainerPanel } from './InventoryContainerPanel';
+import { InventoryEquipmentPanel } from './InventoryEquipmentPanel';
 import { InventoryOverflowSection } from './InventoryOverflowSection';
+import { InventoryQuickSlotsBar } from './InventoryQuickSlotsBar';
 import { InventorySummaryBar } from './InventorySummaryBar';
 
 export interface InventoryLoadInfo {
@@ -67,6 +69,8 @@ export function CharacterInventoryV2Panel({
   const [mode, setMode] = useState<InteractionMode>({ kind: 'idle' });
   const [splitAmount, setSplitAmount] = useState(1);
   const [highlightedSlots, setHighlightedSlots] = useState<ReadonlySet<number>>(new Set());
+  const [openContainerInstanceId, setOpenContainerInstanceId] = useState<string | null>(null);
+  const [pendingQuickAssignId, setPendingQuickAssignId] = useState<string | null>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const catalogRefreshKey = useRef(0);
 
@@ -215,8 +219,6 @@ export function CharacterInventoryV2Panel({
       setMode({ kind: 'idle' });
       return;
     }
-
-    // Idle click on occupied starts move selection when empty target expected later via menu.
   };
 
   const handleSort = () => {
@@ -322,29 +324,59 @@ export function CharacterInventoryV2Panel({
         </p>
       )}
 
-      <InventoryBaseGrid
-        state={state}
-        lookup={lookup}
-        strength={strength}
-        selectedSourceSlot={selectedSourceSlot}
-        moveMode={mode.kind === 'move' || mode.kind === 'split'}
-        highlightedSlots={highlightedSlots}
-        filterQuery={filterQuery}
-        onSelectSlot={handleSelectSlot}
-        onDropSlot={handleDropSlot}
-        onApplyResult={apply}
-        onRefuse={refuse}
-        onRequestMove={(slotIndex) => {
-          setMode({ kind: 'move', sourceSlot: slotIndex });
-          toast('Zielplatz wählen (klicken)');
-        }}
-        onRequestSplit={handleRequestSplit}
-      />
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+        <div className="min-w-0 flex-1 space-y-2">
+          <InventoryBaseGrid
+            state={state}
+            lookup={lookup}
+            strength={strength}
+            selectedSourceSlot={selectedSourceSlot}
+            moveMode={mode.kind === 'move' || mode.kind === 'split'}
+            highlightedSlots={highlightedSlots}
+            filterQuery={filterQuery}
+            onSelectSlot={handleSelectSlot}
+            onDropSlot={handleDropSlot}
+            onApplyResult={apply}
+            onRefuse={refuse}
+            onRequestMove={(slotIndex) => {
+              setMode({ kind: 'move', sourceSlot: slotIndex });
+              toast('Zielplatz wählen (klicken)');
+            }}
+            onRequestSplit={handleRequestSplit}
+            onOpenContainer={(containerInstanceId) => {
+              setOpenContainerInstanceId(containerInstanceId);
+            }}
+            onRequestQuickAssign={(instanceId) => {
+              setPendingQuickAssignId(instanceId);
+            }}
+          />
+          <p className="text-xs text-muted-foreground">
+            {BASE_SLOT_COUNT} feste Basisplätze. Drag & Drop oder Menü „Verschieben“. Filter ändert
+            nicht die gespeicherte Reihenfolge.
+          </p>
+        </div>
 
-      <p className="text-xs text-muted-foreground">
-        {BASE_SLOT_COUNT} feste Basisplätze. Drag & Drop oder Menü „Verschieben“. Filter ändert
-        nicht die gespeicherte Reihenfolge.
-      </p>
+        <aside className="w-full space-y-5 lg:w-72 lg:shrink-0">
+          <InventoryEquipmentPanel
+            state={state}
+            lookup={lookup}
+            strength={strength}
+            onApplyResult={apply}
+            onRefuse={refuse}
+            onRequestQuickAssign={(instanceId) => {
+              setPendingQuickAssignId(instanceId);
+            }}
+          />
+          <InventoryQuickSlotsBar
+            state={state}
+            lookup={lookup}
+            onApplyResult={apply}
+            onRefuse={refuse}
+            pendingAssignInstanceId={pendingQuickAssignId}
+            onPendingAssignHandled={() => setPendingQuickAssignId(null)}
+          />
+        </aside>
+      </div>
 
       <InventoryOverflowSection
         state={state}
@@ -363,6 +395,18 @@ export function CharacterInventoryV2Panel({
         onRefuse={refuse}
         onCatalogRefresh={refreshCatalog}
         onHighlightSlots={highlight}
+      />
+
+      <InventoryContainerPanel
+        open={openContainerInstanceId !== null}
+        onOpenChange={(open) => {
+          if (!open) setOpenContainerInstanceId(null);
+        }}
+        containerInstanceId={openContainerInstanceId}
+        state={state}
+        lookup={lookup}
+        onApplyResult={apply}
+        onRefuse={refuse}
       />
     </div>
   );

@@ -1,12 +1,11 @@
 /**
- * InventoryItemActions — per-stack action menu for Inventory v2 desktop (#110).
- * Verschieben, Teilen, Zusammenführen, Ausrüsten, Verbrauchen, Entfernen.
- * Impossible actions are hidden; remove uses AlertDialog with character-removal copy.
+ * InventoryItemActions — per-stack action menu for Inventory v2 desktop (#110/#111).
+ * Verschieben, Teilen, Zusammenführen, Ausrüsten (picker/conflict), Öffnen,
+ * In Behälter / Schnellzugriff, Verbrauchen, Entfernen. Domain ops only.
  * Location: src/app/character/inventory/InventoryItemActions.tsx
  */
 import { useState } from 'react';
 import { MoreHorizontal } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +18,14 @@ import {
 } from '../../../components/ui/alert-dialog';
 import { Button } from '../../../components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../../components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -30,9 +37,12 @@ import { Label } from '../../../components/ui/label';
 import {
   consumeItem,
   equipItem,
+  findInstanceLocation,
   freeBaseSlotIndices,
+  isContainerInstance,
   isSameStackFamily,
   mergeStacks,
+  moveIntoContainer,
   removeItem,
   splitStack,
   type EquipmentSlot,
@@ -40,6 +50,18 @@ import {
   type InventoryState,
   type ItemDefinitionLookup,
 } from '../../../domains/character/inventory-v2';
+import {
+  declaredEquipSlots,
+  emptyCompatibleEquipSlots,
+  freeSlotsForEquipDisplace,
+  itemDisplayName,
+  previewDisplacedOnEquip,
+} from './inventory-equip-preview';
+import {
+  EQUIP_DISPLACE_NO_ROOM,
+  EQUIPMENT_SLOT_LABELS,
+  formatStrengthRequirement,
+} from './inventory-ui-labels';
 
 export interface InventoryItemActionsProps {
   state: InventoryState;
@@ -51,7 +73,14 @@ export interface InventoryItemActionsProps {
   onRefuse: (reason: string) => void;
   onRequestMove: () => void;
   onRequestSplit: () => void;
+  onOpenContainer?: (containerInstanceId: string) => void;
+  onRequestQuickAssign?: (instanceId: string) => void;
 }
+
+type PendingEquip = {
+  slot: EquipmentSlot;
+  displacedNames: string[];
+};
 
 export function InventoryItemActions({
   state,
@@ -63,10 +92,16 @@ export function InventoryItemActions({
   onRefuse,
   onRequestMove,
   onRequestSplit,
+  onOpenContainer,
+  onRequestQuickAssign,
 }: InventoryItemActionsProps) {
   const [removeOpen, setRemoveOpen] = useState(false);
   const [removeAmount, setRemoveAmount] = useState(1);
   const [removeMode, setRemoveMode] = useState<'one' | 'custom' | 'all'>('all');
+  const [equipPickerOpen, setEquipPickerOpen] = useState(false);
+  const [equipChoices, setEquipChoices] = useState<EquipmentSlot[]>([]);
+  const [pendingEquip, setPendingEquip] = useState<PendingEquip | null>(null);
+  const [containerPickerOpen, setContainerPickerOpen] = useState(false);
 
   const instance = state.instances[instanceId];
   if (!instance) return null;
@@ -83,6 +118,20 @@ export function InventoryItemActions({
   const equipSlots = definition?.equipSlots ?? [];
   const canEquip = equipSlots.length > 0;
   const canConsume = definition?.type === 'consumable';
+  const canOpen = Boolean(definition?.containerCapacity && definition.containerCapacity > 0);
+  const strengthRequired = definition?.requirements?.minimumStrength;
+  const strengthBlocked =
+    strengthRequired !== undefined && strength < strengthRequired;
+
+  const validContainers = Object.keys(state.containers).filter((containerId) => {
+    if (!isContainerInstance(state, containerId, lookup)) return false;
+    const positions = state.containers[containerId];
+    if (!positions || !positions.some((ref) => ref === null)) return false;
+    const location = findInstanceLocation(state, containerId);
+    return location?.kind === 'base' || location?.kind === 'equipment';
+  });
+  const canMoveIntoContainer =
+    !isContainerInstance(state, instanceId, lookup) && validContainers.length > 0;
 
   const applyOrRefuse = (result: InventoryOperationResult) => {
     if (result.ok === false) {
@@ -92,18 +141,73 @@ export function InventoryItemActions({
     onApplyResult(result.state);
   };
 
-  const handleEquip = () => {
-    if (!definition || equipSlots.length === 0) return;
-    const preferred: EquipmentSlot = definition.twoHanded
-      ? 'mainHand'
-      : equipSlots[0];
-    const result = equipItem(state, lookup, instanceId, preferred, strength);
+  const applyEquipOrRefuse = (result: InventoryOperationResult) => {
     if (result.ok === false) {
+      if (result.error === 'REQUIREMENT_NOT_MET' && strengthRequired !== undefined) {
+        onRefuse(formatStrengthRequirement(strengthRequired, strength));
+        return;
+      }
+      if (result.error === 'BASE_SLOTS_FULL') {
+        onRefuse(EQUIP_DISPLACE_NO_ROOM);
+        return;
+      }
       onRefuse(result.reason);
       return;
     }
     onApplyResult(result.state);
-    toast.success(`${definition.name} ausgerüstet (Ausrüstungs-UI folgt in #111)`);
+  };
+
+  const runEquip = (slot: EquipmentSlot, confirmed: boolean) => {
+    if (!definition) return;
+    if (strengthBlocked && strengthRequired !== undefined) {
+      onRefuse(formatStrengthRequirement(strengthRequired, strength));
+      return;
+    }
+    const displaced = previewDisplacedOnEquip(state, lookup, instanceId, slot);
+    if (displaced.length > 0 && !confirmed) {
+      const free = freeSlotsForEquipDisplace(state, instanceId);
+      if (displaced.length > free) {
+        onRefuse(EQUIP_DISPLACE_NO_ROOM);
+        return;
+      }
+      setPendingEquip({
+        slot,
+        displacedNames: displaced.map((id) => itemDisplayName(state, lookup, id)),
+      });
+      return;
+    }
+    applyEquipOrRefuse(equipItem(state, lookup, instanceId, slot, strength));
+  };
+
+  const handleEquip = () => {
+    if (!definition || equipSlots.length === 0) return;
+    if (strengthBlocked && strengthRequired !== undefined) {
+      onRefuse(formatStrengthRequirement(strengthRequired, strength));
+      return;
+    }
+
+    const empty = emptyCompatibleEquipSlots(state, definition, instanceId);
+    if (empty.length === 1) {
+      runEquip(empty[0], false);
+      return;
+    }
+    if (empty.length > 1) {
+      setEquipChoices(empty);
+      setEquipPickerOpen(true);
+      return;
+    }
+
+    const declared = declaredEquipSlots(definition);
+    if (declared.length === 0) {
+      onRefuse(`${definition.name} ist nicht ausrüstbar.`);
+      return;
+    }
+    if (declared.length === 1) {
+      runEquip(declared[0], false);
+      return;
+    }
+    setEquipChoices(declared);
+    setEquipPickerOpen(true);
   };
 
   const handleConsume = () => {
@@ -125,8 +229,30 @@ export function InventoryItemActions({
     applyOrRefuse(mergeStacks(state, lookup, instanceId, target.instanceId));
   };
 
+  const handleMoveIntoContainer = (containerInstanceId: string) => {
+    const positions = state.containers[containerInstanceId];
+    const freeIndex = positions?.findIndex((ref) => ref === null) ?? -1;
+    if (freeIndex < 0) {
+      onRefuse('Behälter ist voll.');
+      return;
+    }
+    const result = moveIntoContainer(
+      state,
+      lookup,
+      instanceId,
+      containerInstanceId,
+      freeIndex,
+    );
+    setContainerPickerOpen(false);
+    if (result.ok === false) {
+      onRefuse(result.reason);
+      return;
+    }
+    onApplyResult(result.state);
+  };
+
   const openRemove = () => {
-    setRemoveMode(instance.quantity > 1 ? 'all' : 'all');
+    setRemoveMode('all');
     setRemoveAmount(1);
     setRemoveOpen(true);
   };
@@ -135,8 +261,9 @@ export function InventoryItemActions({
     let amount = instance.quantity;
     if (instance.quantity > 1) {
       if (removeMode === 'one') amount = 1;
-      else if (removeMode === 'custom') amount = Math.min(instance.quantity, Math.max(1, removeAmount));
-      else amount = instance.quantity;
+      else if (removeMode === 'custom') {
+        amount = Math.min(instance.quantity, Math.max(1, removeAmount));
+      } else amount = instance.quantity;
     }
 
     if (amount >= instance.quantity) {
@@ -180,60 +307,134 @@ export function InventoryItemActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
-          <DropdownMenuItem
-            onSelect={() => {
-              onRequestMove();
-            }}
-          >
-            Verschieben
-          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => onRequestMove()}>Verschieben</DropdownMenuItem>
           {canSplit && (
-            <DropdownMenuItem
-              onSelect={() => {
-                onRequestSplit();
-              }}
-            >
-              Stapel teilen
-            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onRequestSplit()}>Stapel teilen</DropdownMenuItem>
           )}
           {mergeTargetExists && (
-            <DropdownMenuItem
-              onSelect={() => {
-                handleQuickMerge();
-              }}
-            >
+            <DropdownMenuItem onSelect={() => handleQuickMerge()}>
               Mit gleichem Stapel zusammenführen
             </DropdownMenuItem>
           )}
           {canEquip && (
-            <DropdownMenuItem
-              onSelect={() => {
-                handleEquip();
-              }}
-            >
-              Ausrüsten
+            <DropdownMenuItem onSelect={() => handleEquip()}>Ausrüsten</DropdownMenuItem>
+          )}
+          {canOpen && onOpenContainer && (
+            <DropdownMenuItem onSelect={() => onOpenContainer(instanceId)}>Öffnen</DropdownMenuItem>
+          )}
+          {canMoveIntoContainer && (
+            <DropdownMenuItem onSelect={() => setContainerPickerOpen(true)}>
+              In Behälter verschieben
+            </DropdownMenuItem>
+          )}
+          {onRequestQuickAssign && (
+            <DropdownMenuItem onSelect={() => onRequestQuickAssign(instanceId)}>
+              Schnellzugriff zuweisen
             </DropdownMenuItem>
           )}
           {canConsume && (
-            <DropdownMenuItem
-              onSelect={() => {
-                handleConsume();
-              }}
-            >
-              Verbrauchen
-            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => handleConsume()}>Verbrauchen</DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"
-            onSelect={() => {
-              openRemove();
-            }}
+            onSelect={() => openRemove()}
           >
             Aus Inventar entfernen
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Dialog open={equipPickerOpen} onOpenChange={setEquipPickerOpen}>
+        <DialogContent onClick={(event) => event.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>Ausrüstungsplatz wählen</DialogTitle>
+            <DialogDescription>
+              {definition?.name ?? 'Gegenstand'} — Zielplatz auswählen.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 py-2">
+            {equipChoices.map((slot) => (
+              <Button
+                key={slot}
+                type="button"
+                variant="outline"
+                className="min-h-11 justify-start"
+                onClick={() => {
+                  setEquipPickerOpen(false);
+                  runEquip(slot, false);
+                }}
+              >
+                {EQUIPMENT_SLOT_LABELS[slot]}
+              </Button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setEquipPickerOpen(false)}>
+              Abbrechen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={pendingEquip !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingEquip(null);
+        }}
+      >
+        <AlertDialogContent onClick={(event) => event.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ausrüstung ersetzen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingEquip
+                ? `Folgende Gegenstände kehren ins Inventar zurück: ${pendingEquip.displacedNames.join(', ')}.`
+                : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!pendingEquip) return;
+                const slot = pendingEquip.slot;
+                setPendingEquip(null);
+                runEquip(slot, true);
+              }}
+            >
+              Ausrüsten
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={containerPickerOpen} onOpenChange={setContainerPickerOpen}>
+        <DialogContent onClick={(event) => event.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>In Behälter verschieben</DialogTitle>
+            <DialogDescription>Zielbehälter wählen.</DialogDescription>
+          </DialogHeader>
+          <ul className="max-h-64 space-y-2 overflow-y-auto py-2">
+            {validContainers.map((containerId) => (
+              <li key={containerId}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11 w-full justify-start"
+                  onClick={() => handleMoveIntoContainer(containerId)}
+                >
+                  {itemDisplayName(state, lookup, containerId)}
+                </Button>
+              </li>
+            ))}
+          </ul>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setContainerPickerOpen(false)}>
+              Abbrechen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={removeOpen} onOpenChange={setRemoveOpen}>
         <AlertDialogContent onClick={(event) => event.stopPropagation()}>
