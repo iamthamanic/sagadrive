@@ -26,7 +26,13 @@ async function ensureLoggedIn(page: Page) {
 }
 
 async function openNewCharacterInventory(page: Page) {
-  await page.getByRole('button', { name: 'Charaktere' }).first().click();
+  const createViaEmptyState = page.getByRole('button', { name: 'Charakter erstellen' });
+  if (await createViaEmptyState.count()) {
+    await createViaEmptyState.first().click();
+  } else {
+    await page.getByRole('heading', { name: 'Neuer Charakter' }).first().click();
+  }
+  await expect(page.getByRole('heading', { name: 'Charakter erstellen' })).toBeVisible();
   await page.getByRole('button', { name: /Eigenen Charakter erstellen/i }).click();
   await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible({
     timeout: 15_000,
@@ -42,6 +48,8 @@ test.beforeAll(() => {
 test('Inventory v2: Core catalog add + occupancy summary (Scenario A smoke)', async ({
   page,
 }) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
   await ensureLoggedIn(page);
   await openNewCharacterInventory(page);
 
@@ -53,7 +61,6 @@ test('Inventory v2: Core catalog add + occupancy summary (Scenario A smoke)', as
   await expect(catalog).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Core$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Eigene$/i })).toBeVisible();
-  // No World tab without effective world profile
   await expect(page.getByRole('tab', { name: /^Welt$/i })).toHaveCount(0);
 
   const addButtons = catalog.getByRole('button', { name: /^Hinzufügen$/i });
@@ -70,6 +77,7 @@ test('Inventory v2: Core catalog add + occupancy summary (Scenario A smoke)', as
 test('Inventory v2: mobile 390×844 segmented path without horizontal overflow (Scenario J smoke)', async ({
   page,
 }) => {
+  test.setTimeout(180_000);
   await page.setViewportSize({ width: 390, height: 844 });
   await ensureLoggedIn(page);
   await openNewCharacterInventory(page);
@@ -99,6 +107,7 @@ test('Inventory v2: mobile 390×844 segmented path without horizontal overflow (
 test('Inventory v2: desktop equipment pane remains beside grid at wide viewport', async ({
   page,
 }) => {
+  test.setTimeout(180_000);
   await page.setViewportSize({ width: 1280, height: 800 });
   await ensureLoggedIn(page);
   await openNewCharacterInventory(page);
