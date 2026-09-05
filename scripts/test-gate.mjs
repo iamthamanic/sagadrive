@@ -365,11 +365,8 @@ checkInventoryCatalog();
 checkInventoryCoreCatalog();
 checkInventoryLegacyMigration();
 checkInventoryDesktopUi();
-<<<<<<< HEAD
 checkInventoryWorldCatalogUi();
-=======
 checkInventoryEquipmentUi();
->>>>>>> f8b1fe2 (feat(inventory): equipment panel, containers & quick-access UX (#111))
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();
