@@ -1,7 +1,7 @@
 # Composition Gate — inventory-persistence
 
-- HEAD_SHA: PLACEHOLDER
-- BASE_SHA: 10b85ce
+- HEAD_SHA: 080d1e72c8e06f1ac0bbb806610a310f383f44af
+- BASE_SHA: 10b85ce5ab815ca3eec7914362e472b7f5582255
 - Date: 2026-09-05
 - Verdict: CLEAR
 
