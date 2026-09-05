@@ -112,7 +112,8 @@ test('Inventory v2: mobile 390×844 segmented path without horizontal overflow (
 
   await page.getByRole('tab', { name: /^Ausrüstung$/i }).click();
   await expect(page.locator('[data-inventory-mobile-panel="ausruestung"]')).toBeVisible();
-  await expect(page.getByText(/Kopf|Körper|Haupthand|Schnellzugriff/i).first()).toBeVisible();
+  await expect(page.locator('[data-inventory-equipment-panel]')).toBeVisible();
+  await expect(page.locator('[data-inventory-equipment-panel]')).toContainText('Kopf');
 
   await page.getByRole('tab', { name: /^Inventar$/i }).last().click();
   await expect(page.locator('[data-inventory-mobile-panel="inventar"]')).toBeVisible();
