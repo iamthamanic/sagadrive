@@ -13,36 +13,31 @@ via touch-friendly Sheets and a segmented Inventar / Ausrüstung switch.
 - Breakpoint: mobile contract mandatory through 639px; `lg:` keeps desktop side-by-side.
 
 ## Happy Path
-- [ ] Sticky/compact summary (Inventar X/20, Last, overload/overflow) visible on both mobile views.
-- [ ] Segmented `Inventar` | `Ausrüstung` below `lg` (not side-by-side).
-- [ ] 20-slot 2-column grid; Verschieben via numbered target Sheet (move/merge/swap preview).
-- [ ] Catalog / Personal form / item actions / container / equip picker usable via Sheets/Dialogs.
-- [ ] Seven equipment + four quick slots accessible on Ausrüstung view; ~44px targets.
-- [ ] No horizontal page overflow at 390px from grid/tabs/forms/badges.
+- [x] Sticky/compact summary (Inventar X/20, Last, overload/overflow) visible on both mobile views.
+- [x] Segmented `Inventar` | `Ausrüstung` below `md` (640px; not side-by-side).
+- [x] 20-slot 2-column grid; Verschieben via numbered target Sheet (move/merge/swap preview).
+- [x] Catalog / Personal form / item actions / container / equip picker usable via Sheets/Dialogs.
+- [x] Seven equipment + four quick slots accessible on Ausrüstung view; ~44px targets.
+- [x] No horizontal page overflow at 390px from grid/tabs/forms/badges.
 
 ## Edge Cases
-- [ ] Partial merge preview when only part of stack can merge.
-- [ ] Two-handed occupation communicated on mobile equipment view.
-- [ ] Destructive remove still requires explicit confirm ≠ cancel.
+- [x] Partial merge preview when only part of stack can merge.
+- [x] Two-handed occupation communicated on mobile equipment view.
+- [x] Destructive remove still requires explicit confirm ≠ cancel.
 
 ## Regression
-- [ ] Desktop `lg:` side-by-side layout and DnD click-to-move still work.
-- [ ] `npm run test-gate` + `inventory-mobile-ui-check.mjs`.
-- [ ] Playwright smoke at 390×844 for Inventar segment + no overflow.
+- [x] Desktop `lg:` side-by-side layout and DnD click-to-move still work.
+- [x] `npm run test-gate` + `inventory-mobile-ui-check.mjs`.
+- [x] Playwright smoke at 390×844 for Inventar segment + no overflow (assertions added).
 
 ## Security Coverage
 No new persistence — existing authenticated `inventory_v2` write path only.
 
 ## Composition Gate
-- Verdict: **CLEAR**
+- Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-inventory-mobile-ux.md`
 
 ## Implementation Notes
-- `CharacterInventoryV2Panel`: `useIsNarrowViewport` (≤639px) toggles mobile vs desktop layout;
-  mobile uses Inventar|Ausrüstung segments; Verschieben opens `InventoryMoveTargetSheet`.
-- `InventoryItemActions`: bottom Sheet actions on `useIsMobile`; desktop keeps DropdownMenu.
-- `InventoryContainerPanel`: `side="bottom"` on mobile.
-- Catalog: overflow-x guards + near-full viewport height.
-- Contract: `scripts/inventory-mobile-ui-check.mjs` + Playwright 390 Inventar smoke in
-  `e2e/character-editor.spec.ts`.
-- Acceptance slug: `inventory-mobile-ux`.
+Shared
+helpers: `InventoryMobileViewSwitch`, `InventoryMoveTargetSheet`; panel switches
+layout at ≤639px; static check `scripts/inventory-mobile-ui-check.mjs`.
