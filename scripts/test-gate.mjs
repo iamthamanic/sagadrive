@@ -143,6 +143,14 @@ function checkInventoryCatalog() {
   });
 }
 
+function checkInventoryCoreCatalog() {
+  console.log('Inventory v2 Core catalog contract (#108): checking 35 stable definitions, schema, and type coverage...');
+  execFileSync(process.execPath, ['scripts/inventory-core-catalog-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -322,6 +330,7 @@ checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();
 checkInventoryV2Domain();
 checkInventoryCatalog();
+checkInventoryCoreCatalog();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();
