@@ -29,6 +29,8 @@ migrations=(
   012_character_presets.sql
   013_character_presets_rls_hardening.sql
   014_character_abilities_emotion_profiles.sql
+  015_inventory_item_definitions.sql
+  016_character_inventory_v2.sql
 )
 
 only="${1:-}"
