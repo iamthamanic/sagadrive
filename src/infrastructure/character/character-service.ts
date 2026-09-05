@@ -4,7 +4,10 @@
  */
 import type { CreateCharacterDto, UpdateCharacterDto } from '../../domains/character/contracts/character.commands';
 import type { CharacterSummaryVm, CharacterVm } from '../../domains/character/contracts/character.views';
+import { migrateLegacyInventory } from '../../domains/character/inventory-v2';
+import type { InventoryState } from '../../domains/character/inventory-v2';
 import { ENTITY_CACHE_KEYS, entityCache } from '../../lib/entityCache';
+import { persistMigratedInventory } from '../inventory/inventory-persistence';
 import { supabaseCharacterRepository } from './supabase-character.repository';
 
 function invalidateCharacterListCaches(): void {
@@ -34,6 +37,22 @@ class CharacterService {
     const updated = await supabaseCharacterRepository.updateCharacter(id, payload);
     invalidateCharacterListCaches();
     return updated;
+  }
+
+  /**
+   * One-shot migration of a character's legacy ItemDto[] into Inventory v2.
+   * Creates Personal definitions first, then persists inventory_v2 and flips
+   * inventory_schema_version to 2. Idempotent when already on schema 2.
+   */
+  async migrateCharacterInventoryToV2(characterId: string): Promise<InventoryState> {
+    const character = await supabaseCharacterRepository.getCharacterById(characterId);
+    if (character.inventorySchemaVersion === 2) {
+      return character.inventoryV2;
+    }
+    const migration = migrateLegacyInventory(character.inventory);
+    const state = await persistMigratedInventory(characterId, migration);
+    invalidateCharacterListCaches();
+    return state;
   }
 
   async deleteCharacter(id: string): Promise<void> {

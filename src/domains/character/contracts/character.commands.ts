@@ -11,6 +11,7 @@ import type {
   SagaDriveSkillKey,
 } from '../domain/character.entity';
 import type { SagaDriveProfileDto } from '../domain/sagadrive-profile.entity';
+import type { InventoryState } from '../inventory-v2';
 
 export interface CreateCharacterDto {
   name: string;
@@ -32,6 +33,8 @@ export interface CreateCharacterDto {
   sagadrive_profile?: SagaDriveProfileDto;
   abilities?: AbilityDto[];
   inventory?: ItemDto[];
+  inventory_v2?: InventoryState;
+  inventory_schema_version?: 1 | 2;
   portrait_url?: string;
 }
 
@@ -55,5 +58,7 @@ export interface UpdateCharacterDto {
   sagadrive_profile?: SagaDriveProfileDto;
   abilities?: AbilityDto[];
   inventory?: ItemDto[];
+  inventory_v2?: InventoryState;
+  inventory_schema_version?: 1 | 2;
   portrait_url?: string;
 }

@@ -17,6 +17,7 @@ import {
   normalizeTextBlocks,
 } from '../../domains/character/use-cases/normalize-character';
 import type { CharacterDto } from './character.persistence';
+import { readCharacterInventory } from '../inventory/inventory-persistence';
 
 const CHARACTER_PORTRAIT_BUCKET = 'character-portraits';
 const CHARACTER_PORTRAIT_MAX_BYTES = 5 * 1024 * 1024;
@@ -32,6 +33,7 @@ export class SupabaseCharacterRepository {
 
   mapToViewModel(dto: CharacterDto): CharacterVm {
     const rulesetKey = dto.ruleset_key === 'dnd-5.5e' ? 'dnd-5.5e' : 'sagadrive-core';
+    const inventoryRead = readCharacterInventory(dto);
     return {
       id: dto.id,
       name: dto.name,
@@ -53,6 +55,8 @@ export class SupabaseCharacterRepository {
       sagaDriveProfile: normalizeSagaDriveProfile(dto.sagadrive_profile),
       abilities: dto.abilities || [],
       inventory: normalizeInventory(dto.inventory),
+      inventoryV2: inventoryRead.state,
+      inventorySchemaVersion: inventoryRead.authoritativeV2 ? 2 : 1,
       emotionProfiles: dto.emotion_profiles || [],
       portraitUrl: dto.portrait_url || undefined,
       createdAt: new Date(dto.created_at),
@@ -177,6 +181,9 @@ export class SupabaseCharacterRepository {
       ...(payload.skills ? { skills: normalizeSkills(payload.skills) } : {}),
       ...(sagadriveProfile ? { sagadrive_profile: sagadriveProfile } : {}),
       ...(payload.inventory ? { inventory: normalizeInventory(payload.inventory) } : {}),
+      ...(payload.inventory_v2
+        ? { inventory_v2: payload.inventory_v2, inventory_schema_version: 2 as const }
+        : {}),
       ...(typeof payload.notes === 'string' ? { notes: payload.notes.trim() || null } : {}),
       updated_at: new Date().toISOString(),
     };
