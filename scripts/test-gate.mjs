@@ -239,6 +239,14 @@ function checkAllCoreSkillsValidation() {
   });
 }
 
+function checkNoncombatProjectsSocialValidation() {
+  console.log('Noncombat/projects/social validation (#27): deterministic §2.8/§14 E1 scenarios...');
+  execFileSync(process.execPath, ['scripts/validate-noncombat-projects-social.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkDriveMomentumValidation() {
   console.log('Drive/momentum validation (#26): deterministic §2.10–2.12/§16.3 audit...');
   execFileSync(process.execPath, ['scripts/validate-drive-momentum.mjs'], {
@@ -405,6 +413,7 @@ checkPowersEssencesValidation();
 checkDriveMomentumValidation();
 checkWorldProfilesValidation();
 checkAllCoreSkillsValidation();
+checkNoncombatProjectsSocialValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 

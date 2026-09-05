@@ -469,7 +469,7 @@ Pflichtszenarien:
 - Rufwirkung,
 - Erkundung unter Zeitdruck.
 
-Zu validieren:
+Prüfen:
 
 - Fail Forward,
 - kein einzelner Wurf als Sackgasse,
@@ -478,6 +478,8 @@ Zu validieren:
 - soziale Haltung,
 - Fortschrittsziel 3/5,
 - Kontakte und Ruf ohne pauschale Boni.
+
+**E1-Status (2026-09-06, #27):** Umgesetzt. Deterministische Engine `scripts/validate-noncombat-projects-social.mjs` — 7/7 Pflichtszenarien, Projektgrößen klein/komplex/groß, Bounds Ziel3≤7 / Ziel5≤11 Würfe, Cap 3 Checks/Intervall, Haltung als Kategorieverschiebung (keine freien Zahlenboni), Kontakt/Ruf ohne Würfelbonus, Fail-Forward ohne Sackgassen, Mechanik-Unterscheidbarkeit Einzel/Gruppe/Projekt. 0 Findings. Report: `.qa/runs/validate-noncombat-projects-social-report.md`.
 
 ---
 
