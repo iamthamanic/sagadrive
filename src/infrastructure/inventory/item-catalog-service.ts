@@ -49,6 +49,19 @@ export async function loadCharacterItemCatalog(
   };
 }
 
+/**
+ * Load World-scoped catalog records for a single world profile (active + archived).
+ * Used by World-profile item authoring (#112); not a character Add catalog.
+ */
+export async function loadWorldProfileItemCatalog(
+  worldProfileId: string,
+): Promise<CatalogDefinitionRecord[]> {
+  const records = await supabaseItemCatalogRepository.listCatalogRecords(worldProfileId);
+  return records.filter(
+    (r) => r.definition.scope === 'world' && r.worldProfileId === worldProfileId,
+  );
+}
+
 export function createPersonalDefinition(draft: ItemDefinitionDraft): Promise<CatalogDefinitionRecord> {
   return supabaseItemCatalogRepository.createPersonalDefinition(draft);
 }

@@ -1,8 +1,9 @@
 /**
- * PersonalItemFormDialog — create/edit/archive Personal item definitions (#110).
- * Type-specific fields follow the issue contract (weapon/armor/shield/tool/
- * consumable/container/misc). Writes go through the catalog service only.
- * Location: src/app/character/inventory/PersonalItemFormDialog.tsx
+ * PersonalItemFormDialog — create/edit/archive Personal (#110) or World (#112)
+ * item definitions. Type-specific fields follow the shared authoring contract.
+ * Writes go through the catalog service only (`createPersonalDefinition` /
+ * `createWorldDefinition` / `updateDefinition` / `archiveDefinition` /
+ * `restoreDefinition`). Location: src/app/character/inventory/PersonalItemFormDialog.tsx
  */
 import { useEffect, useState } from 'react';
 import {
@@ -44,6 +45,8 @@ import type { ItemDefinitionDraft } from '../../../infrastructure/inventory/item
 import {
   archiveDefinition,
   createPersonalDefinition,
+  createWorldDefinition,
+  restoreDefinition,
   updateDefinition,
 } from '../../../infrastructure/inventory/item-catalog-service';
 import {
@@ -62,9 +65,17 @@ type WeaponHandling = 'oneHanded' | 'twoHanded';
 export interface PersonalItemFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** When set, dialog edits this Personal definition. */
+  /** When set, dialog edits this definition (Personal or World). */
   editing: ItemDefinition | null;
   onSaved: () => void;
+  /** Authoring scope; defaults to Personal (#110). */
+  mode?: 'personal' | 'world';
+  /** Required when mode is `world` and creating a new definition. */
+  worldProfileId?: string;
+  /** Prefill values when creating (e.g. Core clone → World). Ignored when editing. */
+  template?: ItemDefinition | null;
+  /** When true (World edit), show restore instead of archive. */
+  archived?: boolean;
 }
 
 function parseTraits(raw: string): string[] {
@@ -116,7 +127,7 @@ function emptyDraft(): {
   };
 }
 
-function draftFromDefinition(definition: ItemDefinition) {
+export function draftFromDefinition(definition: ItemDefinition) {
   const base = emptyDraft();
   base.name = definition.name;
   base.description = definition.description;
@@ -224,17 +235,28 @@ export function PersonalItemFormDialog({
   onOpenChange,
   editing,
   onSaved,
+  mode = 'personal',
+  worldProfileId,
+  template = null,
+  archived = false,
 }: PersonalItemFormDialogProps) {
   const [form, setForm] = useState(emptyDraft);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const isWorld = mode === 'world';
 
   useEffect(() => {
     if (!open) return;
     setError('');
-    setForm(editing ? draftFromDefinition(editing) : emptyDraft());
-  }, [open, editing]);
+    if (editing) {
+      setForm(draftFromDefinition(editing));
+    } else if (template) {
+      setForm(draftFromDefinition(template));
+    } else {
+      setForm(emptyDraft());
+    }
+  }, [open, editing, template]);
 
   const handleSave = async () => {
     const payload = buildDraftPayload(form);
@@ -247,13 +269,19 @@ export function PersonalItemFormDialog({
     try {
       if (editing) {
         await updateDefinition(editing.id, payload);
+      } else if (isWorld) {
+        if (!worldProfileId) {
+          setError('Weltprofil fehlt — speichere die Welt zuerst.');
+          return;
+        }
+        await createWorldDefinition(worldProfileId, payload);
       } else {
         await createPersonalDefinition(payload);
       }
       onSaved();
       onOpenChange(false);
     } catch (err) {
-      console.error('[inventory] personal definition save failed', err);
+      console.error('[inventory] definition save failed', err);
       setError(err instanceof Error ? err.message : 'Speichern fehlgeschlagen.');
     } finally {
       setSaving(false);
@@ -269,25 +297,52 @@ export function PersonalItemFormDialog({
       onSaved();
       onOpenChange(false);
     } catch (err) {
-      console.error('[inventory] personal definition archive failed', err);
+      console.error('[inventory] definition archive failed', err);
       setError(err instanceof Error ? err.message : 'Archivieren fehlgeschlagen.');
     } finally {
       setSaving(false);
     }
   };
 
+  const handleRestore = async () => {
+    if (!editing) return;
+    setSaving(true);
+    setError('');
+    try {
+      await restoreDefinition(editing.id);
+      onSaved();
+      onOpenChange(false);
+    } catch (err) {
+      console.error('[inventory] definition restore failed', err);
+      setError(err instanceof Error ? err.message : 'Wiederherstellen fehlgeschlagen.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const title = isWorld
+    ? editing
+      ? 'Welt-Gegenstand bearbeiten'
+      : 'Welt-Gegenstand erstellen'
+    : editing
+      ? 'Eigenen Gegenstand bearbeiten'
+      : 'Eigenen Gegenstand erstellen';
+
+  const description = isWorld
+    ? 'Welt-Gegenstände gelten für Charaktere mit diesem Weltprofil. Core-Definitionen bleiben unverändert.'
+    : 'Persönliche Definitionen gelten für deinen Account. Besessene Instanzen behalten die Definition auch nach dem Archivieren.';
+
+  const archiveDescription = isWorld
+    ? 'Dieser Gegenstand wird für neue Inventarzugänge ausgeblendet. Bereits vorhandene Exemplare in Charakterinventaren bleiben erhalten.'
+    : 'Bestehende besessene Gegenstände bleiben erhalten und auflösbar. Die Definition verschwindet aus dem Katalog „Gegenstand hinzufügen“.';
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {editing ? 'Eigenen Gegenstand bearbeiten' : 'Eigenen Gegenstand erstellen'}
-            </DialogTitle>
-            <DialogDescription>
-              Persönliche Definitionen gelten für deinen Account. Besessene Instanzen behalten die
-              Definition auch nach dem Archivieren.
-            </DialogDescription>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-2">
@@ -607,7 +662,16 @@ export function PersonalItemFormDialog({
           </div>
 
           <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
-            {editing ? (
+            {editing && archived && isWorld ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={saving}
+                onClick={() => void handleRestore()}
+              >
+                Wieder aktivieren
+              </Button>
+            ) : editing && !archived ? (
               <Button
                 type="button"
                 variant="destructive"
@@ -635,10 +699,7 @@ export function PersonalItemFormDialog({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Definition archivieren?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bestehende besessene Gegenstände bleiben erhalten und auflösbar. Die Definition
-              verschwindet aus dem Katalog „Gegenstand hinzufügen“.
-            </AlertDialogDescription>
+            <AlertDialogDescription>{archiveDescription}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>

@@ -190,6 +190,13 @@ export function InventoryCatalogDialog({
                 <p className="mt-1 text-sm text-muted-foreground">{definition.description}</p>
               )}
               <div className="mt-2 flex flex-wrap gap-1">
+                <Badge variant="outline">
+                  {definition.scope === 'core'
+                    ? 'Core'
+                    : definition.scope === 'world'
+                      ? 'Welt'
+                      : 'Eigen'}
+                </Badge>
                 <Badge variant="outline">{INVENTORY_TYPE_LABELS[definition.type]}</Badge>
                 <Badge variant="secondary">Last {definition.load}</Badge>
                 <Badge variant="outline">Kosten {definition.cost}</Badge>

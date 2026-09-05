@@ -167,6 +167,14 @@ function checkInventoryDesktopUi() {
   });
 }
 
+function checkInventoryWorldCatalogUi() {
+  console.log('Inventory v2 World catalog authoring UI (#112): checking World editor section, form mode, and scope badges...');
+  execFileSync(process.execPath, ['scripts/inventory-world-catalog-ui-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -349,6 +357,7 @@ checkInventoryCatalog();
 checkInventoryCoreCatalog();
 checkInventoryLegacyMigration();
 checkInventoryDesktopUi();
+checkInventoryWorldCatalogUi();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();

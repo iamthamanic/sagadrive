@@ -21,6 +21,7 @@ import {
   setWorldModuleSettingValue,
 } from '../worldModuleRegistry';
 import type { CreateWorldProfileDto, WorldModuleConfigMap, WorldProfileVm } from '../types/world.types';
+import { WorldItemCatalogSection } from './WorldItemCatalogSection';
 
 interface WorldProfileEditorDialogProps {
   open: boolean;
@@ -71,7 +72,7 @@ export function WorldProfileEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !isSaving && onOpenChange(nextOpen)}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{world ? 'Welt bearbeiten' : 'Neue Welt'}</DialogTitle>
           <DialogDescription>
@@ -167,6 +168,15 @@ export function WorldProfileEditorDialog({
               </Card>
             ))}
           </div>
+
+          {world?.id ? (
+            <WorldItemCatalogSection worldProfileId={world.id} />
+          ) : (
+            <p className="border-t border-border pt-5 text-sm text-muted-foreground">
+              Speichere die Welt zuerst, bevor du Ausrüstung & Gegenstände für dieses Weltprofil
+              anlegst.
+            </p>
+          )}
 
           {saveError && (
             <div className="rounded-lg border border-destructive bg-destructive/10 p-3">
