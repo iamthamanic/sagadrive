@@ -1,7 +1,8 @@
 /**
- * InventoryBaseGrid — exactly 20 base slots for Inventory v2 desktop (#110).
+ * InventoryBaseGrid — exactly 20 base slots for Inventory v2 desktop (#110/#111).
  * HTML5 drag-and-drop plus click-to-select move targets; occupied cells show
  * name, quantity, type and load badges. Domain merge/move is applied by parent.
+ * DnD exposes instanceId for equipment drop targets.
  * Location: src/app/character/inventory/InventoryBaseGrid.tsx
  */
 import type { DragEvent, KeyboardEvent } from 'react';
@@ -14,6 +15,8 @@ import {
 } from '../../../domains/character/inventory-v2';
 import { INVENTORY_TYPE_LABELS } from './inventory-ui-labels';
 import { InventoryItemActions } from './InventoryItemActions';
+
+export const INVENTORY_INSTANCE_DRAG_MIME = 'application/x-inventory-instance-id';
 
 export interface InventoryBaseGridProps {
   state: InventoryState;
@@ -29,6 +32,8 @@ export interface InventoryBaseGridProps {
   onRefuse: (reason: string) => void;
   onRequestMove: (slotIndex: number) => void;
   onRequestSplit: (slotIndex: number) => void;
+  onOpenContainer?: (containerInstanceId: string) => void;
+  onRequestQuickAssign?: (instanceId: string) => void;
 }
 
 function matchesFilter(
@@ -65,13 +70,17 @@ export function InventoryBaseGrid({
   onRefuse,
   onRequestMove,
   onRequestSplit,
+  onOpenContainer,
+  onRequestQuickAssign,
 }: InventoryBaseGridProps) {
   const handleDragStart = (event: DragEvent<HTMLDivElement>, slotIndex: number) => {
-    if (state.baseSlots[slotIndex] === null) {
+    const instanceId = state.baseSlots[slotIndex];
+    if (instanceId === null) {
       event.preventDefault();
       return;
     }
     event.dataTransfer.setData('text/plain', String(slotIndex));
+    event.dataTransfer.setData(INVENTORY_INSTANCE_DRAG_MIME, instanceId);
     event.dataTransfer.effectAllowed = 'move';
   };
 
@@ -161,6 +170,8 @@ export function InventoryBaseGrid({
                     onRefuse={onRefuse}
                     onRequestMove={() => onRequestMove(slotIndex)}
                     onRequestSplit={() => onRequestSplit(slotIndex)}
+                    onOpenContainer={onOpenContainer}
+                    onRequestQuickAssign={onRequestQuickAssign}
                   />
                 </div>
                 <p className="pr-8 text-sm font-medium leading-snug">

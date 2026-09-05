@@ -1,9 +1,12 @@
 /**
  * inventory-ui-labels — German labels and load-capacity helpers for Inventory v2
- * desktop UI (#110). Shared by summary bar, grid cells, catalog and personal form.
+ * desktop UI (#110/#111). Shared by summary bar, grid, equipment, catalog and forms.
  * Location: src/app/character/inventory/inventory-ui-labels.ts
  */
-import type { InventoryItemType } from '../../../domains/character/inventory-v2';
+import type {
+  EquipmentSlot,
+  InventoryItemType,
+} from '../../../domains/character/inventory-v2';
 
 /** German type labels matching issue #110 catalog / grid copy. */
 export const INVENTORY_TYPE_LABELS: Record<InventoryItemType, string> = {
@@ -15,6 +18,38 @@ export const INVENTORY_TYPE_LABELS: Record<InventoryItemType, string> = {
   container: 'Behälter',
   misc: 'Sonstiges',
 };
+
+
+/** Equipment slot labels for Ausrüstung panel (#111). */
+export const EQUIPMENT_SLOT_LABELS: Record<EquipmentSlot, string> = {
+  head: 'Kopf',
+  body: 'Körper',
+  accessory1: 'Accessoire 1',
+  accessory2: 'Accessoire 2',
+  mainHand: 'Haupthand',
+  offHand: 'Nebenhand',
+  special: 'Spezial',
+};
+
+/** Empty-slot category hints shown under equipment labels. */
+export const EQUIPMENT_SLOT_CATEGORY_HINTS: Record<EquipmentSlot, string> = {
+  head: 'Kopfbedeckung',
+  body: 'Rüstung',
+  accessory1: 'Accessoire',
+  accessory2: 'Accessoire',
+  mainHand: 'Waffe / Werkzeug',
+  offHand: 'Waffe / Schild',
+  special: 'Spezialgerät',
+};
+
+/** Exact UI copy when equip displacement needs more free base slots than available. */
+export const EQUIP_DISPLACE_NO_ROOM =
+  'Nicht genügend freie Inventarplätze, um die aktuelle Ausrüstung abzulegen.';
+
+/** Strength gate copy for blocked equip (menu + DnD). */
+export function formatStrengthRequirement(required: number, current: number): string {
+  return `Benötigt Stärke ${required} · Aktuell ${current}`;
+}
 
 /** Type filter options for the catalog (includes “Alle”). */
 export const INVENTORY_TYPE_FILTER_OPTIONS: ReadonlyArray<{
