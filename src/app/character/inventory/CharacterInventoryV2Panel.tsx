@@ -78,7 +78,10 @@ function coreOnlyCatalog(userId: string): CharacterItemCatalog {
 const NARROW_MAX_PX = 639;
 
 function useIsNarrowViewport(): boolean {
-  const [narrow, setNarrow] = useState(false);
+  const [narrow, setNarrow] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia(`(max-width: ${NARROW_MAX_PX}px)`).matches;
+  });
 
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${NARROW_MAX_PX}px)`);

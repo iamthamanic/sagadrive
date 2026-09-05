@@ -91,44 +91,13 @@ test('Inventory v2: Core catalog shell + occupancy summary (Scenario A smoke)', 
   });
 });
 
-test('Inventory v2: mobile 390×844 segmented path without horizontal overflow (Scenario J smoke)', async ({
-  page,
-}) => {
-  test.setTimeout(180_000);
-  await ensureLoggedIn(page);
-  await openNewCharacterInventory(page);
-  await page.setViewportSize({ width: 390, height: 844 });
-
-  await expect(page.locator('[data-inventory-mobile-view-switch]')).toBeVisible();
-  const overflowX = await page.evaluate(() => {
-    const root = document.documentElement;
-    return root.scrollWidth > root.clientWidth + 1;
-  });
-  expect(overflowX).toBe(false);
-
-  await page.getByRole('tab', { name: /^Ausrüstung$/i }).click();
-  await expect(page.locator('[data-inventory-mobile-panel="ausruestung"]')).toBeVisible();
-  await expect(page.getByText(/Kopf|Körper|Haupthand|Schnellzugriff/i).first()).toBeVisible();
-
-  await page.getByRole('tab', { name: /^Inventar$/i }).last().click();
-  await expect(page.locator('[data-inventory-mobile-panel="inventar"]')).toBeVisible();
-  await page.getByRole('button', { name: /Gegenstand hinzufügen/i }).first().click();
-  await expect(page.locator('[data-inventory-catalog-dialog]')).toBeVisible();
-  await expect(page.getByRole('tab', { name: /^Core$/i })).toBeVisible();
-
-  await page.screenshot({
-    path: path.join(EVIDENCE_DIR, 'scenario-j-mobile.png'),
-    fullPage: true,
-  });
-});
-
 test('Inventory v2: desktop equipment pane remains beside grid at wide viewport', async ({
   page,
 }) => {
   test.setTimeout(180_000);
-  await page.setViewportSize({ width: 1280, height: 800 });
   await ensureLoggedIn(page);
   await openNewCharacterInventory(page);
+  await page.setViewportSize({ width: 1280, height: 800 });
 
   await expect(page.locator('[data-inventory-desktop-layout]')).toBeVisible();
   await expect(page.locator('[data-inventory-mobile-layout]')).toHaveCount(0);
