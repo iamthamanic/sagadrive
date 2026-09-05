@@ -58,26 +58,56 @@ export class SupabaseItemCatalogRepository {
     if (!data) return null;
 
     const characterWorldProfileId = typeof data.world_profile_id === 'string' ? data.world_profile_id : null;
-    const projectId = typeof data.project_id === 'string' ? data.project_id : null;
+
+    // Adventure binding: characters.project_id is optional and often unset for
+    // players — join_project_by_code / set_my_project_character only write
+    // project_members.character_id. Active memberships are therefore the
+    // authoritative adventure context, with characters.project_id preferred
+    // when present (first in the candidate list).
+    const projectIds: string[] = [];
+    if (typeof data.project_id === 'string' && data.project_id) {
+      projectIds.push(data.project_id);
+    }
+
+    const { data: memberships, error: membershipError } = await raceWithTimeoutReject(
+      supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('character_id', characterId)
+        .eq('status', 'active'),
+      SUPABASE_QUERY_TIMEOUT_MS,
+      'Abenteuer-Mitgliedschaft konnte nicht aufgelöst werden (Zeitüberschreitung).',
+    );
+    if (membershipError) {
+      throw new Error(`Failed to resolve adventure memberships: ${membershipError.message}`);
+    }
+    for (const membership of memberships ?? []) {
+      const projectId = typeof membership.project_id === 'string' ? membership.project_id : null;
+      if (projectId && !projectIds.includes(projectId)) projectIds.push(projectId);
+    }
 
     let adventureWorldProfileId: string | null = null;
-    if (projectId) {
-      const { data: project, error: projectError } = await raceWithTimeoutReject(
+    if (projectIds.length > 0) {
+      const { data: projects, error: projectError } = await raceWithTimeoutReject(
         supabase
           .from(PROJECTS_TABLE)
-          .select('world_profile_id')
-          .eq('id', projectId)
-          .maybeSingle(),
+          .select('id, world_profile_id')
+          .in('id', projectIds),
         SUPABASE_QUERY_TIMEOUT_MS,
         'Abenteuer-Weltprofil konnte nicht aufgelöst werden (Zeitüberschreitung).',
       );
-      // A project the user may not read is not an error here — it simply
-      // contributes no binding, and the character binding takes over.
       if (projectError) {
         throw new Error(`Failed to resolve world profile for adventure: ${projectError.message}`);
       }
-      if (project && typeof project.world_profile_id === 'string') {
-        adventureWorldProfileId = project.world_profile_id;
+      const byId = new Map(
+        (projects ?? []).map((project) => [project.id as string, project.world_profile_id as string | null]),
+      );
+      for (const projectId of projectIds) {
+        const worldProfileId = byId.get(projectId);
+        if (typeof worldProfileId === 'string' && worldProfileId) {
+          adventureWorldProfileId = worldProfileId;
+          break;
+        }
       }
     }
 

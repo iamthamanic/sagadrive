@@ -38,7 +38,8 @@ query the table directly.
 - [x] Non-contract values (unknown type/slots, load/cost/protection out of range, non-text traits, invalid stack limit) are dropped or clamped, and a container always ends up with at least one capacity position.
 - [x] Deleting a world profile that still has item definitions is refused (`ON DELETE RESTRICT` + German error in `deleteWorldProfile`); cascade hard-delete is not a removal path.
 - [x] Binding `projects.world_profile_id` or `characters.world_profile_id` requires edit authority on that world profile, so a GM cannot point an adventure at another user's world and read its definitions.
-- [x] `updateDefinition` / `create*` validate the payload with `parseItemDefinition` **before** writing — a rejected draft never overwrites a previously valid definition.
+- [x] Adventure resolution prefers `characters.project_id` when set, otherwise active `project_members` rows for the character — the join/character-selection path does not sync `characters.project_id`.
+- [x] Core definitions are deep-frozen; mutating a returned entry cannot corrupt later catalog loads.
 
 ## Regression
 - [x] `npm run test-gate` stays green, including the existing inventory-v2 domain, character-editor, presets, background, avatar and rules validations.

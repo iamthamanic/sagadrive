@@ -18,7 +18,17 @@ import type { ItemDefinition } from './types';
 /** Bumped whenever Core entries are added or changed, for cache invalidation. */
 export const CORE_CATALOG_VERSION = 1;
 
-const CORE_DEFINITIONS: readonly ItemDefinition[] = Object.freeze([
+function deepFreeze<T>(value: T): T {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    for (const child of Object.values(value as object)) {
+      deepFreeze(child);
+    }
+    Object.freeze(value);
+  }
+  return value;
+}
+
+const CORE_DEFINITIONS: readonly ItemDefinition[] = deepFreeze([
   {
     id: 'core:shortsword',
     scope: 'core',
