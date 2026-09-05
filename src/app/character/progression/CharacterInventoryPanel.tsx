@@ -110,7 +110,7 @@ export function CharacterInventoryPanel({ items, onChange, strength }: Character
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div><p className="font-medium">Gegenstände ({items.length})</p><p className="text-xs text-muted-foreground">Keine festen Slots: Entscheidend sind Last, Ausrüstungseigenschaften und Menge.</p></div>
+        <div><p className="font-medium">Gegenstände ({items.length})</p><p className="text-xs text-muted-foreground">Legacy-Ansicht: Last und Eigenschaften. Inventory v2 nutzt 20 Basisplätze — siehe Charakter-Editor Inventar-Tab.</p></div>
         <Button size="sm" onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4" />Gegenstand hinzufügen</Button>
       </div>
 

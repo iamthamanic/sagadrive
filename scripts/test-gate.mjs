@@ -191,6 +191,14 @@ function checkInventoryMobileUi() {
   });
 }
 
+function checkInventoryE2eIntegration() {
+  console.log('Inventory v2 E2E integration (#114): child gates, architecture, docs sync, catalog size, inventory_v2 save...');
+  execFileSync(process.execPath, ['scripts/inventory-e2e-integration-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -376,6 +384,7 @@ checkInventoryDesktopUi();
 checkInventoryWorldCatalogUi();
 checkInventoryEquipmentUi();
 checkInventoryMobileUi();
+checkInventoryE2eIntegration();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();
