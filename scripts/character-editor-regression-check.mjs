@@ -20,7 +20,6 @@ const characterNormalize = read('src/domains/character/use-cases/normalize-chara
 const characterAssert = read('src/domains/character/use-cases/assert-character-persistence.ts');
 const characterRepository = read('src/infrastructure/character/supabase-character.repository.ts');
 const characterCreation = read('src/domains/rules/sagadrive/character-creation/index.ts');
-const inventoryPanel = read('src/app/character/progression/CharacterInventoryPanel.tsx');
 const inventorySummary = read('src/app/character/inventory/InventorySummaryBar.tsx');
 const inventoryLabels = read('src/app/character/inventory/inventory-ui-labels.ts');
 const inventoryV2Panel = read('src/app/character/inventory/CharacterInventoryV2Panel.tsx');
