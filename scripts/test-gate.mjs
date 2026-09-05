@@ -127,6 +127,14 @@ function checkCharacterPresetsRegressions() {
   });
 }
 
+function checkInventoryV2Domain() {
+  console.log('Inventory v2 domain contract (#106): checking slots, stacks, containers, equipment, and quick access...');
+  execFileSync(process.execPath, ['scripts/inventory-v2-domain-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -304,6 +312,7 @@ checkArchitectureBoundaries();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();
+checkInventoryV2Domain();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();

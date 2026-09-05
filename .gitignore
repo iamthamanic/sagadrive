@@ -37,6 +37,9 @@ playwright-report/
 .qa/test-results/
 test-results/
 
+# Agent runner session state (per-session bookkeeping, not project state)
+.qa/queue/
+
 # Docker
 .docker/
 docker-compose.override.yml
