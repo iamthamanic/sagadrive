@@ -1,7 +1,7 @@
 # Composition Gate — catalog-persistence
 
 - HEAD_SHA: 955596a0fd57264d7b7a5e5fc72c68d17739184e
-- BASE_SHA: 6fbed35ca2f0423815a888bcdaac9194822cbe86
+- BASE_SHA: 94debc4d60b6597a0b67ff982f6da676440c99c1
 - Date: 2026-09-05
 - Verdict: CLEAR
 
