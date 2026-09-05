@@ -1,7 +1,7 @@
 # Composition Gate — inventory-equipment-ux
 
-- HEAD_SHA: f8b1fe2342e999944d1363e3c40019335063895b
-- BASE_SHA: 4cbbe4c5b67befdc13c845a7a052ce7dc778e836
+- HEAD_SHA: 4362c45a97faaec966250f94b4ea639c0cc6b114
+- BASE_SHA: 38f680c36d6a2deeec07d5487beb2630d5531499
 - Date: 2026-09-05
 - Verdict: CLEAR
 
