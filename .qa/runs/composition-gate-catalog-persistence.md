@@ -1,7 +1,7 @@
 # Composition Gate — catalog-persistence
 
 - HEAD_SHA: 73f47e40d80f0498fc0ec2266a78513124f546cb
-- BASE_SHA: 6fbed35
+- BASE_SHA: 6fbed35ca2f0423815a888bcdaac9194822cbe86
 - Date: 2026-09-05
 - Verdict: CLEAR
 
@@ -11,16 +11,18 @@ A signed-in user opens a character's inventory: the catalog must show exactly th
 
 ## Hop chain
 
-Client (`loadCharacterItemCatalog(characterId, userId)`) → `supabase-item-catalog.repository` (`resolveEffectiveWorldProfileId` reads `characters.world_profile_id` + `projects.world_profile_id`; `listCatalogRecords` reads RLS-filtered rows) → `catalog.ts` (pure `resolveEffectiveWorldProfileId` applies precedence; `selectCatalogDefinitions` filters active+visible for Add; `createDefinitionLookup` keeps archived for owned instances) → consumers: the Add/Catalog surface (#110/#112) and the inventory renderer via `ItemDefinitionLookup` (#109/#110). RLS policies + SECURITY DEFINER helpers in migration 015 are the enforcement hop that runs before any row reaches the client.
+Client (`loadCharacterItemCatalog(characterId, userId)`) → `supabase-item-catalog.repository` (`resolveEffectiveWorldProfileId` reads `characters.world_profile_id` + `projects.world_profile_id`; `listCatalogRecords` reads RLS-filtered rows; writes go through `assertWritablePayload`) → `catalog.ts` (pure `resolveEffectiveWorldProfileId` applies precedence; `selectCatalogDefinitions` filters active+visible for Add; `createDefinitionLookup` keeps archived for owned instances) → consumers: the Add/Catalog surface (#110/#112) and the inventory renderer via `ItemDefinitionLookup` (#109/#110).
+
+Enforcement hops before any row reaches the client: migration 015 RLS + SECURITY DEFINER helpers; `enforce_world_profile_binding_ownership` on `projects`/`characters.world_profile_id`; `ON DELETE RESTRICT` on definition→world FK; `WorldProfileService.deleteWorldProfile` refuses early when definitions still reference the world.
 
 ## Simulations
 
 | Case | Intended | Composed | Result |
 |------|----------|----------|--------|
-| 1 event, N actors | User A in World A sees Core + World A + A's Personal; the same call for User B in World B sees a disjoint World/Personal set; an unbound character sees Core + Personal only | `resolveEffectiveWorldProfileId` yields the profile; `isDefinitionVisible` matches World on exact `worldProfileId` and Personal on exact `ownerUserId`; `selectCatalogDefinitions` drops non-matching scopes. RLS independently returns only rows the user may read, so a client that skips the domain filter still cannot see another world/user | pass (test groups 1–3, 7) |
-| invalid / missing | A corrupt payload, an unknown type, an out-of-range load/cost, a world/personal record without its profile/owner, or a payload trying to override identity never becomes a *different* valid catalog entry | `parseItemDefinition` returns `null` for unreadable rows (one missing item, not a failed catalog), clamps/drops out-of-contract values, and takes `id`/`scope` from columns not payload; `isDefinitionVisible` returns false for a world record with no profile and a personal record with no owner; blank/whitespace ids resolve to null, never to a default world (`silent-fallback` closed) | pass (test groups 1, 7, 8) |
-| 2 consumers / crash | The Add surface and the owned-instance renderer must never disagree about what exists, and archiving must not strand an owned item | Both consumers read the same `records` array; Add uses `selectCatalogDefinitions` (active only), renderer uses `createDefinitionLookup` (visible, archived included) — one source, two projections, so an archived item disappears from Add but still resolves for owned instances. There is no DELETE policy, and identity columns are immutable by trigger, so a rename/archive cannot orphan an `ItemInstance` | pass (test group 5) |
-| authorization | A player may read their adventure's World items but must never write another owner's World definition; binding `projects`/`characters.world_profile_id` must not become a grant to read another owner's World catalog | Read helper admits owner OR adventure GM OR active member; write helper admits owner only. Insert/update RLS bind World writes to the write helper; Personal owner comes from `getAuthenticatedUserId()`, never client input. Both helpers REVOKE from PUBLIC/anon and GRANT EXECUTE to authenticated. Binding triggers call `current_user_can_edit_world_profile` before INSERT/UPDATE OF world_profile_id. Definition FK is ON DELETE RESTRICT so world deletion cannot cascade-hard-delete definitions | pass (test groups 6, 9) |
+| N-actors | User A in World A sees Core + World A + A's Personal; the same call for User B in World B sees a disjoint World/Personal set; an unbound character sees Core + Personal only | `resolveEffectiveWorldProfileId` yields the profile; `isDefinitionVisible` matches World on exact `worldProfileId` and Personal on exact `ownerUserId`; `selectCatalogDefinitions` drops non-matching scopes. RLS independently returns only rows the user may read, so a client that skips the domain filter still cannot see another world/user | pass (test groups 1–3, 7) |
+| Invalid/missing | A corrupt payload, an unknown type, an out-of-range load/cost, a world/personal record without its profile/owner, or a payload trying to override identity never becomes a *different* valid catalog entry | `parseItemDefinition` returns `null` for unreadable rows (one missing item, not a failed catalog), clamps/drops out-of-contract values, and takes `id`/`scope` from columns not payload; `isDefinitionVisible` returns false for a world record with no profile and a personal record with no owner; blank/whitespace ids resolve to null, never to a default world (`silent-fallback` closed); writes refuse invalid drafts via `assertWritablePayload` before INSERT/UPDATE | pass (test groups 1, 7, 8) |
+| Two consumers / crash | The Add surface and the owned-instance renderer must never disagree about what exists, and archiving must not strand an owned item; world delete must not cascade-wipe definitions | Both consumers read the same `records` array; Add uses `selectCatalogDefinitions` (active only), renderer uses `createDefinitionLookup` (visible, archived included). There is no DELETE policy; FK is `ON DELETE RESTRICT`; `deleteWorldProfile` refuses while definitions remain; identity columns are immutable by trigger | pass (test group 5, 9) |
+| authorization | A player may read their adventure's World items but must never write another owner's World definition; binding `projects`/`characters.world_profile_id` must not become a grant to read another owner's World catalog | Read helper admits owner OR adventure GM OR active member; write helper admits owner only. Insert/update RLS bind World writes to the write helper; Personal owner comes from `getAuthenticatedUserId()`, never client input. Both helpers REVOKE from PUBLIC/anon and GRANT EXECUTE to authenticated. Binding triggers call `current_user_can_edit_world_profile` before INSERT/UPDATE OF world_profile_id | pass (test groups 6, 9) |
 
 ## Flags
 
@@ -40,4 +42,4 @@ No worker, outbox, queue, cron, webhook or mail path exists in this diff, so P-0
 
 ## Skip reason
 
-n/a — the diff has a real producer→consumer path (repository reads rows, catalog policy projects them, two consumers render), and a cross-hop enforcement path (RLS + helpers), so the gate was run rather than skipped.
+n/a — the diff has a real producer→consumer path (repository reads rows, catalog policy projects them, two consumers render), and a cross-hop enforcement path (RLS + helpers + binding triggers + world-delete guard), so the gate was run rather than skipped.
