@@ -82,3 +82,24 @@ export {
 } from './operations';
 
 export { normalizeInventory, validateInventory } from './validation';
+
+export type {
+  CatalogDefinitionRecord,
+  CatalogDefinitionStatus,
+  CatalogVisibilityContext,
+  WorldProfileBinding,
+} from './catalog';
+
+export {
+  createDefinitionLookup,
+  isDefinitionVisible,
+  parseItemDefinition,
+  resolveEffectiveWorldProfileId,
+  selectCatalogDefinitions,
+} from './catalog';
+
+export {
+  CORE_CATALOG_VERSION,
+  coreCatalogRecords,
+  listCoreItemDefinitions,
+} from './core-catalog';
