@@ -43,7 +43,7 @@
 
 ## Composition Gate
 
-- HEAD_SHA: `8234cbc082d7dd7d6c5d3f56982deb61254ab00d`
+- HEAD_SHA: `3c1b029` on branch `chore/27-validate-noncombat-projects-social` (feature tip; proof co-located)
 - Date: 2026-09-06
 - Verdict: **CLEAR**
 

@@ -1,6 +1,6 @@
 # Composition Gate Proof — validate-noncombat-projects-social (#27)
 
-- HEAD_SHA: `8234cbc082d7dd7d6c5d3f56982deb61254ab00d`
+- HEAD_SHA: `3c1b029` on branch `chore/27-validate-noncombat-projects-social`
 - BASE_SHA: `ebccbde` (main after #28)
 - Date: 2026-09-06
 
