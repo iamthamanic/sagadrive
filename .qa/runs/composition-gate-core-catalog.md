@@ -1,7 +1,7 @@
 # Composition Gate — core-catalog
 
-- HEAD_SHA: PLACEHOLDER
-- BASE_SHA: 26464c9
+- HEAD_SHA: 173c22d47204b991163ddd9f64d720c58c6a4e13
+- BASE_SHA: 26464c9bd366dd9f5f54dee851f38093daf1fdee
 - Date: 2026-09-05
 - Verdict: CLEAR
 
