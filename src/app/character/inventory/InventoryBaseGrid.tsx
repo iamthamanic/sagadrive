@@ -143,7 +143,7 @@ export function InventoryBaseGrid({
             data-slot-index={slotIndex}
             aria-label={ariaLabel}
             className={[
-              'relative flex min-h-11 min-h-[88px] flex-col rounded-lg border p-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'relative flex min-h-[88px] flex-col rounded-lg border p-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring',
               occupied
                 ? 'border-border bg-card hover:bg-accent/40'
                 : 'border-dashed border-border/70 bg-muted/15 text-muted-foreground',

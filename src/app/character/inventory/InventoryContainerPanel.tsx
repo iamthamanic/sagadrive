@@ -126,7 +126,7 @@ export function InventoryContainerPanel({
           side={isMobile ? 'bottom' : 'right'}
           className={
             isMobile
-              ? 'max-h-[90vh] w-full overflow-y-auto'
+              ? 'max-h-[90dvh] w-full overflow-y-auto'
               : 'w-full sm:max-w-md'
           }
           data-inventory-container-sheet
@@ -198,7 +198,7 @@ export function InventoryContainerPanel({
       </Sheet>
 
       <Dialog open={putPickerOpen} onOpenChange={setPutPickerOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90dvh] w-[calc(100%-1rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Gegenstand hineinlegen</DialogTitle>
             <DialogDescription>

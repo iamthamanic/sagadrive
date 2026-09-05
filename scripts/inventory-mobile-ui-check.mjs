@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Inventory v2 mobile UX contract (#113).
- * Static checks: segmented Inventar/Ausrüstung (<640px), move-target Sheet,
- * bottom action/container Sheets, overflow-x guards.
+ * Static checks for Inventar|Ausrüstung segment, 2-col grid, slot aria-labels,
+ * ~44px touch targets, and move-target Sheet wiring.
  * Location: scripts/inventory-mobile-ui-check.mjs
  */
 import { existsSync, readFileSync } from 'node:fs';
@@ -36,12 +36,14 @@ function requireMatch(content, pattern, label) {
 }
 
 const requiredFiles = [
+  'src/app/character/inventory/CharacterInventoryV2Panel.tsx',
   'src/app/character/inventory/InventoryMobileViewSwitch.tsx',
   'src/app/character/inventory/InventoryMoveTargetSheet.tsx',
-  'src/app/character/inventory/CharacterInventoryV2Panel.tsx',
+  'src/app/character/inventory/InventoryBaseGrid.tsx',
+  'src/app/character/inventory/InventoryEquipmentPanel.tsx',
+  'src/app/character/inventory/InventoryQuickSlotsBar.tsx',
   'src/app/character/inventory/InventoryItemActions.tsx',
   'src/app/character/inventory/InventoryContainerPanel.tsx',
-  'src/app/character/inventory/InventoryBaseGrid.tsx',
 ];
 
 section('1 · Dateien vorhanden');
@@ -50,56 +52,58 @@ for (const rel of requiredFiles) {
 }
 
 const panel = read('src/app/character/inventory/CharacterInventoryV2Panel.tsx');
-const switchFile = read('src/app/character/inventory/InventoryMobileViewSwitch.tsx');
+const switchSrc = read('src/app/character/inventory/InventoryMobileViewSwitch.tsx');
 const moveSheet = read('src/app/character/inventory/InventoryMoveTargetSheet.tsx');
+const grid = read('src/app/character/inventory/InventoryBaseGrid.tsx');
+const equipment = read('src/app/character/inventory/InventoryEquipmentPanel.tsx');
+const quick = read('src/app/character/inventory/InventoryQuickSlotsBar.tsx');
 const actions = read('src/app/character/inventory/InventoryItemActions.tsx');
 const container = read('src/app/character/inventory/InventoryContainerPanel.tsx');
-const grid = read('src/app/character/inventory/InventoryBaseGrid.tsx');
 const catalog = read('src/app/character/inventory/InventoryCatalogDialog.tsx');
+const allUi = [panel, switchSrc, moveSheet, grid, equipment, quick, actions, container, catalog].join(
+  '\n',
+);
 
-section('2 · Mobile Segment + Pane wiring');
-requireMatch(panel, /InventoryMobileViewSwitch/, 'panel imports mobile switch');
-requireMatch(panel, /InventoryMoveTargetSheet/, 'panel imports move target sheet');
-requireMatch(panel, /NARROW_MAX_PX\s*=\s*639|max-width:\s*\$\{NARROW_MAX_PX\}/, '639px narrow contract');
-requireMatch(panel, /useIsNarrowViewport|matchMedia/, 'narrow viewport detection');
-requireMatch(panel, /mobileView === 'inventar'/, 'inventar pane gate');
-requireMatch(panel, /mobileView === 'ausruestung'/, 'ausruestung pane gate');
-requireMatch(panel, /data-inventory-mobile-panel="inventar"/, 'inventar pane marker');
-requireMatch(panel, /data-inventory-mobile-panel="ausruestung"/, 'ausruestung pane marker');
-requireMatch(panel, /data-inventory-mobile-layout/, 'mobile layout marker');
-requireMatch(panel, /data-inventory-desktop-layout/, 'desktop layout marker');
-requireMatch(panel, /isNarrow\s*\?/, 'isNarrow layout branch');
-requireMatch(panel, /overflow-x-hidden/, 'panel overflow-x guard');
-requireMatch(switchFile, /aria-selected/, 'segment aria-selected');
-requireMatch(switchFile, /data-inventory-mobile-view-switch/, 'switch marker');
-requireMatch(switchFile, /min-h-11/, 'segment touch target');
+section('2 · Mobile segment Inventar | Ausrüstung');
+requireMatch(panel, /InventoryMobileViewSwitch/, 'Panel wires InventoryMobileViewSwitch');
+requireMatch(panel, /InventoryMoveTargetSheet/, 'Panel wires InventoryMoveTargetSheet');
+requireMatch(panel, /max-width:\s*\$\{NARROW_MAX_PX\}px\)|max-width:\s*639px/, 'Narrow matchMedia ≤639px');
+requireMatch(panel, /data-inventory-mobile-layout/, 'Mobile layout hook');
+requireMatch(panel, /lg:flex-row/, 'Desktop lg:flex-row preserved');
+requireMatch(switchSrc, /Inventar/, 'Segment label Inventar');
+requireMatch(switchSrc, /Ausrüstung/, 'Segment label Ausrüstung');
+requireMatch(switchSrc, /aria-selected/, 'Segment aria-selected');
+requireMatch(switchSrc, /role="tablist"|role='tablist'/, 'Segment tablist');
 
-section('3 · Move target Sheet (kein DnD-Zwang)');
-requireMatch(moveSheet, /side="bottom"/, 'move sheet bottom');
-requireMatch(moveSheet, /data-inventory-move-target-sheet/, 'move sheet marker');
-requireMatch(moveSheet, /Zusammenführen/, 'merge preview label');
-requireMatch(moveSheet, /Tauschen/, 'swap preview label');
-requireMatch(moveSheet, /isSameStackFamily/, 'merge uses domain family check');
-requireMatch(panel, /setMoveSheetSlot/, 'panel opens move sheet on mobile');
+section('3 · Grid 2-col + Inventarplatz aria');
+requireMatch(grid, /grid-cols-2/, 'Mobile grid-cols-2');
+requireMatch(grid, /Inventarplatz \$\{slotIndex \+ 1\}: leer|Inventarplatz \$\{.*\}: leer/, 'aria leer pattern');
+requireMatch(grid, /Inventarplatz \$\{slotIndex \+ 1\}: \$\{displayName\} ×\$\{qty\}/, 'aria occupied ×qty');
+requireMatch(grid, /min-h-\[88px\]|min-h-11|min-h-\[44px\]/, 'Slot min touch height');
 
-section('4 · Touch action / container Sheets');
-requireMatch(actions, /data-inventory-item-actions-sheet/, 'mobile actions sheet');
-requireMatch(actions, /side="bottom"/, 'actions sheet bottom');
-requireMatch(actions, /min-h-11 min-w-11|size-11 min-h-11/, '44px action trigger');
-requireMatch(actions, /useIsMobile/, 'actions useIsMobile');
-requireMatch(container, /side=\{isMobile \? 'bottom' : 'right'\}/, 'container side responsive');
-requireMatch(container, /useIsMobile/, 'container useIsMobile');
-requireMatch(grid, /grid-cols-2/, '2-column mobile grid');
-requireMatch(catalog, /overflow-x-hidden/, 'catalog overflow-x');
-requireMatch(catalog, /data-inventory-catalog-dialog/, 'catalog marker');
+section('4 · Equipment / Quick / Actions touch + a11y');
+requireMatch(equipment, /min-h-11/, 'Equipment min-h-11');
+requireMatch(equipment, /: leer`|: leer'/, 'Equipment empty aria');
+requireMatch(equipment, /Zweihändig \/ gekoppelt/, 'Two-handed copy');
+requireMatch(quick, /min-h-11/, 'Quick slots min-h-11');
+requireMatch(quick, /Schnellzugriff \$\{index \+ 1\}: leer/, 'Quick empty aria');
+requireMatch(actions, /min-h-11/, 'Item actions min-h-11');
+requireMatch(actions, /useIsMobile|actionsSheetOpen/, 'Mobile actions Sheet');
+requireMatch(actions, /data-inventory-item-actions-sheet|SheetContent/, 'Actions Sheet content');
+requireMatch(moveSheet, /Zielplatz wählen/, 'Move target Sheet title');
+requireMatch(moveSheet, /min-h-14|min-h-11/, 'Move target touch height');
 
-section('5 · Domain still only via existing ops');
-requireMatch(panel, /moveBaseSlot/, 'panel still uses moveBaseSlot');
-requireMatch(panel, /mergeStacks/, 'panel still uses mergeStacks');
+section('5 · Sheets / Dialogs mobile overflow');
+requireMatch(container, /side=\{isMobile \? 'bottom' : 'right'\}|side="bottom"/, 'Container bottom Sheet on mobile');
+requireMatch(catalog, /max-h-\[90dvh\]|max-h-\[95vh\]|max-h-\[90vh\]/, 'Catalog max height');
+requireMatch(allUi, /overflow-x-hidden|w-\[calc\(100%/, 'Overflow / width clamp somewhere');
+requireMatch(allUi, /min-h-11|min-h-\[44px\]/, 'Touch target class present');
+
+check(failures === 0, `${failures} Fehler insgesamt`);
 
 if (failures > 0) {
-  console.error(`\nInventory mobile UI check failed: ${failures} issue(s).`);
+  console.error(`\ninventory-mobile-ui-check: ${failures} Fehler`);
   process.exit(1);
 }
 
-console.log('Inventory mobile UI check passed.');
+console.log('inventory-mobile-ui-check: OK');

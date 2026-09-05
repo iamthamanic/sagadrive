@@ -1,6 +1,7 @@
 /**
- * InventorySummaryBar — sticky desktop summary for Inventory v2 (#110):
+ * InventorySummaryBar — sticky summary for Inventory v2 (#110/#113):
  * occupied slots, total load / capacity, overload badges, overflow warning.
+ * Remains visible on both mobile Inventar and Ausrüstung segments.
  * Location: src/app/character/inventory/InventorySummaryBar.tsx
  */
 import { Badge } from '../../../components/ui/badge';

@@ -184,7 +184,7 @@ function checkInventoryEquipmentUi() {
 }
 
 function checkInventoryMobileUi() {
-  console.log('Inventory v2 mobile UI contract (#113): checking segments, move Sheet, and touch actions...');
+  console.log('Inventory v2 mobile UX contract (#113): checking Inventar|Ausrüstung segment, grid, and touch targets...');
   execFileSync(process.execPath, ['scripts/inventory-mobile-ui-check.mjs'], {
     cwd: root,
     stdio: 'inherit',

@@ -527,22 +527,22 @@ test('character editor exposes the SagaDrive Core creation flow', async ({ page 
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('tab', { name: /Inventar/i }).click();
+  await expect(page.getByText(/Inventar 0 \/ 20/i).first()).toBeVisible();
   await expect(page.locator('[data-character-inventory-v2]')).toBeVisible();
   await expect(page.locator('[data-inventory-mobile-view-switch]')).toBeVisible();
-  await expect(page.getByRole('tab', { name: /^Inventar$/i }).last()).toBeVisible();
-  await expect(page.getByRole('tab', { name: /^Ausrüstung$/i })).toBeVisible();
-  const overflowX = await page.evaluate(() => {
-    const root = document.documentElement;
-    return root.scrollWidth > root.clientWidth + 1;
-  });
-  expect(overflowX).toBe(false);
-  await page.getByRole('tab', { name: /^Ausrüstung$/i }).click();
+  await expect(page.locator('[data-inventory-mobile-view="inventar"]')).toBeVisible();
+  await expect(page.locator('[data-inventory-mobile-view="ausruestung"]')).toBeVisible();
+  const noHorizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth <= window.innerWidth + 1,
+  );
+  expect(noHorizontalOverflow).toBe(true);
+  await page.locator('[data-inventory-mobile-view="ausruestung"]').click();
   await expect(page.locator('[data-inventory-mobile-panel="ausruestung"]')).toBeVisible();
   await expect(page.locator('[data-inventory-mobile-panel="inventar"]')).toHaveCount(0);
-  await page.getByRole('tab', { name: /^Inventar$/i }).last().click();
+  await page.locator('[data-inventory-mobile-view="inventar"]').click();
   await expect(page.locator('[data-inventory-mobile-panel="inventar"]')).toBeVisible();
   await expect(page.getByRole('button', { name: /Gegenstand hinzufügen/i }).first()).toBeVisible();
-  await page.screenshot({ path: path.join(EVIDENCE_DIR, '07b-inventory-mobile.png'), fullPage: true });
+  await page.screenshot({ path: path.join(EVIDENCE_DIR, '07b-inventory-mobile-390.png'), fullPage: true });
 
   await page.getByRole('tab', { name: /^Spezies$/i }).click();
   const removeResistance = page.getByRole('button', { name: /Enge Resistenz abwählen|Enge Resistenz entfernen/i });

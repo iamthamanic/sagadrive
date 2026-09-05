@@ -244,7 +244,7 @@ export function InventoryCatalogDialog({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="flex max-h-[95vh] w-[calc(100vw-1.5rem)] max-w-3xl flex-col overflow-x-hidden overflow-y-hidden sm:max-w-3xl"
+          className="flex max-h-[90dvh] w-[calc(100%-1rem)] max-w-3xl flex-col overflow-x-hidden overflow-y-auto sm:max-w-3xl"
           data-inventory-catalog-dialog
         >
           <DialogHeader>
