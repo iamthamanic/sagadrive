@@ -32,11 +32,12 @@ export interface CharacterItemCatalog {
  * effectively plays in plus the user's own Personal definitions.
  */
 export async function loadCharacterItemCatalog(
-  characterId: string,
+  characterId: string | null,
   userId: string,
 ): Promise<CharacterItemCatalog> {
-  const effectiveWorldProfileId =
-    await supabaseItemCatalogRepository.resolveEffectiveWorldProfileId(characterId);
+  const effectiveWorldProfileId = characterId
+    ? await supabaseItemCatalogRepository.resolveEffectiveWorldProfileId(characterId)
+    : null;
   const records = await supabaseItemCatalogRepository.listCatalogRecords(effectiveWorldProfileId);
   const context = { userId, effectiveWorldProfileId };
 
