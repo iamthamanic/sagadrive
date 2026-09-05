@@ -1,7 +1,8 @@
 /**
- * CharacterInventoryV2Panel — orchestrates Inventory v2 desktop UI (#110/#111).
- * Loads catalog via item-catalog-service, applies domain ops through onChange,
- * and lays out base grid beside Ausrüstung + Schnellzugriff.
+ * CharacterInventoryV2Panel — orchestrates Inventory v2 UI (#110/#111/#113).
+ * Loads catalog via item-catalog-service, applies domain ops through onChange.
+ * Desktop (md+): base grid beside Ausrüstung + Schnellzugriff (lg:flex-row).
+ * Mobile (<640px): segmented Inventar | Ausrüstung views; move via Sheet.
  * Location: src/app/character/inventory/CharacterInventoryV2Panel.tsx
  */
 import { useEffect, useRef, useState } from 'react';
@@ -28,6 +29,11 @@ import { InventoryBaseGrid } from './InventoryBaseGrid';
 import { InventoryCatalogDialog } from './InventoryCatalogDialog';
 import { InventoryContainerPanel } from './InventoryContainerPanel';
 import { InventoryEquipmentPanel } from './InventoryEquipmentPanel';
+import {
+  InventoryMobileViewSwitch,
+  type InventoryMobileView,
+} from './InventoryMobileViewSwitch';
+import { InventoryMoveTargetSheet } from './InventoryMoveTargetSheet';
 import { InventoryOverflowSection } from './InventoryOverflowSection';
 import { InventoryQuickSlotsBar } from './InventoryQuickSlotsBar';
 import { InventorySummaryBar } from './InventorySummaryBar';
@@ -53,6 +59,23 @@ type InteractionMode =
 
 const emptyLookup: ItemDefinitionLookup = () => undefined;
 
+/** Mobile inventory contract: segmented layout below 640px (Tailwind md). */
+const NARROW_MAX_PX = 639;
+
+function useIsNarrowViewport(): boolean {
+  const [narrow, setNarrow] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${NARROW_MAX_PX}px)`);
+    const sync = () => setNarrow(mql.matches);
+    sync();
+    mql.addEventListener('change', sync);
+    return () => mql.removeEventListener('change', sync);
+  }, []);
+
+  return narrow;
+}
+
 export function CharacterInventoryV2Panel({
   state,
   onChange,
@@ -71,8 +94,11 @@ export function CharacterInventoryV2Panel({
   const [highlightedSlots, setHighlightedSlots] = useState<ReadonlySet<number>>(new Set());
   const [openContainerInstanceId, setOpenContainerInstanceId] = useState<string | null>(null);
   const [pendingQuickAssignId, setPendingQuickAssignId] = useState<string | null>(null);
+  const [mobileView, setMobileView] = useState<InventoryMobileView>('inventar');
+  const [moveSheetSlot, setMoveSheetSlot] = useState<number | null>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const catalogRefreshKey = useRef(0);
+  const isNarrow = useIsNarrowViewport();
 
   const lookup = catalog?.lookup ?? emptyLookup;
   const occupied = state.baseSlots.filter((slot) => slot !== null).length;
@@ -244,11 +270,153 @@ export function CharacterInventoryV2Panel({
     toast('Leeren Zielplatz für den Teil-Stapel wählen');
   };
 
+  const handleRequestMove = (slotIndex: number) => {
+    if (isNarrow) {
+      setMoveSheetSlot(slotIndex);
+      setMode({ kind: 'idle' });
+      return;
+    }
+    setMode({ kind: 'move', sourceSlot: slotIndex });
+    toast('Zielplatz wählen (klicken)');
+  };
+
   const selectedSourceSlot =
     mode.kind === 'move' || mode.kind === 'split' ? mode.sourceSlot : null;
 
+  const toolbar = (
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          className="min-h-11"
+          onClick={() => setCatalogOpen(true)}
+          disabled={catalogLoading && !catalog}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Gegenstand hinzufügen
+        </Button>
+        <Button type="button" variant="outline" className="min-h-11" onClick={handleSort}>
+          <ArrowUpDown className="mr-2 h-4 w-4" />
+          Sortieren
+        </Button>
+      </div>
+      <div className="w-full min-w-0 space-y-2 sm:max-w-xs">
+        <Label htmlFor="inventory-grid-filter">Filter (nur Anzeige)</Label>
+        <Input
+          id="inventory-grid-filter"
+          value={filterQuery}
+          onChange={(event) => setFilterQuery(event.target.value)}
+          placeholder="Name / Typ filtern…"
+        />
+      </div>
+    </div>
+  );
+
+  const baseGridBlock = (
+    <div className="min-w-0 flex-1 space-y-2">
+      <InventoryBaseGrid
+        state={state}
+        lookup={lookup}
+        strength={strength}
+        selectedSourceSlot={selectedSourceSlot}
+        moveMode={mode.kind === 'move' || mode.kind === 'split'}
+        highlightedSlots={highlightedSlots}
+        filterQuery={filterQuery}
+        onSelectSlot={handleSelectSlot}
+        onDropSlot={handleDropSlot}
+        onApplyResult={apply}
+        onRefuse={refuse}
+        onRequestMove={handleRequestMove}
+        onRequestSplit={handleRequestSplit}
+        onOpenContainer={(containerInstanceId) => {
+          setOpenContainerInstanceId(containerInstanceId);
+        }}
+        onRequestQuickAssign={(instanceId) => {
+          setPendingQuickAssignId(instanceId);
+        }}
+      />
+      <p className="text-xs text-muted-foreground">
+        {BASE_SLOT_COUNT} feste Basisplätze.
+        {isNarrow
+          ? ' Menü „Verschieben“ öffnet die Zielplatz-Auswahl.'
+          : ' Drag & Drop oder Menü „Verschieben“. Filter ändert nicht die gespeicherte Reihenfolge.'}
+      </p>
+    </div>
+  );
+
+  const equipmentBlock = (
+    <aside className="w-full min-w-0 space-y-5 lg:w-72 lg:shrink-0">
+      <InventoryEquipmentPanel
+        state={state}
+        lookup={lookup}
+        strength={strength}
+        onApplyResult={apply}
+        onRefuse={refuse}
+        onRequestQuickAssign={(instanceId) => {
+          setPendingQuickAssignId(instanceId);
+        }}
+      />
+      <InventoryQuickSlotsBar
+        state={state}
+        lookup={lookup}
+        onApplyResult={apply}
+        onRefuse={refuse}
+        pendingAssignInstanceId={pendingQuickAssignId}
+        onPendingAssignHandled={() => setPendingQuickAssignId(null)}
+      />
+    </aside>
+  );
+
+  const modeBanner =
+    mode.kind !== 'idle' ? (
+      <div className="flex flex-wrap items-center gap-2 rounded-md border border-primary/40 bg-primary/5 px-3 py-2 text-sm">
+        <span>
+          {mode.kind === 'move'
+            ? `Verschieben: Quellplatz ${mode.sourceSlot + 1} — Zielplatz wählen`
+            : `Teilen: ${mode.amount} Einheit(en) von Platz ${mode.sourceSlot + 1} — leeren Zielplatz wählen`}
+        </span>
+        {mode.kind === 'split' && (
+          <Input
+            className="h-9 w-20"
+            type="number"
+            min={1}
+            aria-label="Teilmenge"
+            value={mode.amount}
+            onChange={(event) => {
+              const instanceId = state.baseSlots[mode.sourceSlot];
+              const qty = instanceId ? state.instances[instanceId]?.quantity ?? 2 : 2;
+              const nextAmount = Math.min(
+                qty - 1,
+                Math.max(1, Number.parseInt(event.target.value, 10) || 1),
+              );
+              setSplitAmount(nextAmount);
+              setMode({ ...mode, amount: nextAmount });
+            }}
+          />
+        )}
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="min-h-11"
+          onClick={() => setMode({ kind: 'idle' })}
+        >
+          Abbrechen
+        </Button>
+      </div>
+    ) : null;
+
+  const catalogErrorBanner = catalogError ? (
+    <p className="text-sm text-destructive">
+      {catalogError}{' '}
+      <button type="button" className="underline" onClick={refreshCatalog}>
+        Erneut laden
+      </button>
+    </p>
+  ) : null;
+
   return (
-    <div className="space-y-5" data-character-inventory-v2>
+    <div className="min-w-0 space-y-5 overflow-x-hidden" data-character-inventory-v2>
       <InventorySummaryBar
         occupiedSlots={occupied}
         totalLoad={totalLoad}
@@ -256,134 +424,48 @@ export function CharacterInventoryV2Panel({
         overflowCount={state.legacyOverflow.length}
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            className="min-h-11"
-            onClick={() => setCatalogOpen(true)}
-            disabled={catalogLoading && !catalog}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Gegenstand hinzufügen
-          </Button>
-          <Button type="button" variant="outline" className="min-h-11" onClick={handleSort}>
-            <ArrowUpDown className="mr-2 h-4 w-4" />
-            Sortieren
-          </Button>
-        </div>
-        <div className="w-full space-y-2 sm:max-w-xs">
-          <Label htmlFor="inventory-grid-filter">Filter (nur Anzeige)</Label>
-          <Input
-            id="inventory-grid-filter"
-            value={filterQuery}
-            onChange={(event) => setFilterQuery(event.target.value)}
-            placeholder="Name / Typ filtern…"
-          />
-        </div>
-      </div>
+      {isNarrow ? (
+        <div className="space-y-5" data-inventory-mobile-layout>
+          <InventoryMobileViewSwitch value={mobileView} onChange={setMobileView} />
 
-      {mode.kind !== 'idle' && (
-        <div className="flex flex-wrap items-center gap-2 rounded-md border border-primary/40 bg-primary/5 px-3 py-2 text-sm">
-          <span>
-            {mode.kind === 'move'
-              ? `Verschieben: Quellplatz ${mode.sourceSlot + 1} — Zielplatz wählen`
-              : `Teilen: ${mode.amount} Einheit(en) von Platz ${mode.sourceSlot + 1} — leeren Zielplatz wählen`}
-          </span>
-          {mode.kind === 'split' && (
-            <Input
-              className="h-9 w-20"
-              type="number"
-              min={1}
-              aria-label="Teilmenge"
-              value={mode.amount}
-              onChange={(event) => {
-                const instanceId = state.baseSlots[mode.sourceSlot];
-                const qty = instanceId ? state.instances[instanceId]?.quantity ?? 2 : 2;
-                const nextAmount = Math.min(
-                  qty - 1,
-                  Math.max(1, Number.parseInt(event.target.value, 10) || 1),
-                );
-                setSplitAmount(nextAmount);
-                setMode({ ...mode, amount: nextAmount });
-              }}
-            />
+          {mobileView === 'inventar' && (
+            <div className="min-w-0 space-y-5" data-inventory-mobile-panel="inventar">
+              {toolbar}
+              {modeBanner}
+              {catalogErrorBanner}
+              {baseGridBlock}
+              <InventoryOverflowSection
+                state={state}
+                lookup={lookup}
+                onApplyResult={apply}
+                onRefuse={refuse}
+              />
+            </div>
           )}
-          <Button type="button" size="sm" variant="ghost" onClick={() => setMode({ kind: 'idle' })}>
-            Abbrechen
-          </Button>
+
+          {mobileView === 'ausruestung' && (
+            <div className="min-w-0 space-y-5" data-inventory-mobile-panel="ausruestung">
+              {equipmentBlock}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-5" data-inventory-desktop-layout>
+          {toolbar}
+          {modeBanner}
+          {catalogErrorBanner}
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+            {baseGridBlock}
+            {equipmentBlock}
+          </div>
+          <InventoryOverflowSection
+            state={state}
+            lookup={lookup}
+            onApplyResult={apply}
+            onRefuse={refuse}
+          />
         </div>
       )}
-
-      {catalogError && (
-        <p className="text-sm text-destructive">
-          {catalogError}{' '}
-          <button type="button" className="underline" onClick={refreshCatalog}>
-            Erneut laden
-          </button>
-        </p>
-      )}
-
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
-        <div className="min-w-0 flex-1 space-y-2">
-          <InventoryBaseGrid
-            state={state}
-            lookup={lookup}
-            strength={strength}
-            selectedSourceSlot={selectedSourceSlot}
-            moveMode={mode.kind === 'move' || mode.kind === 'split'}
-            highlightedSlots={highlightedSlots}
-            filterQuery={filterQuery}
-            onSelectSlot={handleSelectSlot}
-            onDropSlot={handleDropSlot}
-            onApplyResult={apply}
-            onRefuse={refuse}
-            onRequestMove={(slotIndex) => {
-              setMode({ kind: 'move', sourceSlot: slotIndex });
-              toast('Zielplatz wählen (klicken)');
-            }}
-            onRequestSplit={handleRequestSplit}
-            onOpenContainer={(containerInstanceId) => {
-              setOpenContainerInstanceId(containerInstanceId);
-            }}
-            onRequestQuickAssign={(instanceId) => {
-              setPendingQuickAssignId(instanceId);
-            }}
-          />
-          <p className="text-xs text-muted-foreground">
-            {BASE_SLOT_COUNT} feste Basisplätze. Drag & Drop oder Menü „Verschieben“. Filter ändert
-            nicht die gespeicherte Reihenfolge.
-          </p>
-        </div>
-
-        <aside className="w-full space-y-5 lg:w-72 lg:shrink-0">
-          <InventoryEquipmentPanel
-            state={state}
-            lookup={lookup}
-            strength={strength}
-            onApplyResult={apply}
-            onRefuse={refuse}
-            onRequestQuickAssign={(instanceId) => {
-              setPendingQuickAssignId(instanceId);
-            }}
-          />
-          <InventoryQuickSlotsBar
-            state={state}
-            lookup={lookup}
-            onApplyResult={apply}
-            onRefuse={refuse}
-            pendingAssignInstanceId={pendingQuickAssignId}
-            onPendingAssignHandled={() => setPendingQuickAssignId(null)}
-          />
-        </aside>
-      </div>
-
-      <InventoryOverflowSection
-        state={state}
-        lookup={lookup}
-        onApplyResult={apply}
-        onRefuse={refuse}
-      />
 
       <InventoryCatalogDialog
         open={catalogOpen}
@@ -407,6 +489,21 @@ export function CharacterInventoryV2Panel({
         lookup={lookup}
         onApplyResult={apply}
         onRefuse={refuse}
+      />
+
+      <InventoryMoveTargetSheet
+        open={moveSheetSlot !== null}
+        onOpenChange={(open) => {
+          if (!open) setMoveSheetSlot(null);
+        }}
+        sourceSlot={moveSheetSlot}
+        state={state}
+        lookup={lookup}
+        onPickTarget={(targetSlot) => {
+          if (moveSheetSlot === null) return;
+          handleDropSlot(moveSheetSlot, targetSlot);
+          setMoveSheetSlot(null);
+        }}
       />
     </div>
   );

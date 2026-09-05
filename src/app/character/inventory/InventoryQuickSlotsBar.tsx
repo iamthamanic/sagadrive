@@ -174,8 +174,13 @@ export function InventoryQuickSlotsBar({
             <div
               key={index}
               data-quick-slot={index}
+              aria-label={
+                name
+                  ? `Schnellzugriff ${index + 1}: ${name}`
+                  : `Schnellzugriff ${index + 1}: leer`
+              }
               className={[
-                'relative flex min-h-11 flex-col items-center justify-center rounded-lg border p-1 text-center',
+                'relative flex min-h-11 min-w-11 flex-col items-center justify-center rounded-lg border p-1 text-center',
                 instanceId
                   ? 'border-border bg-card'
                   : 'border-dashed border-border/70 bg-muted/15 text-muted-foreground',
@@ -184,14 +189,16 @@ export function InventoryQuickSlotsBar({
               <span className="text-[10px] uppercase text-muted-foreground">{index + 1}</span>
               {name ? (
                 <>
-                  <p className="line-clamp-2 px-1 text-[11px] font-medium leading-tight">{name}</p>
+                  <p className="line-clamp-2 break-words px-1 text-[11px] font-medium leading-tight">
+                    {name}
+                  </p>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         type="button"
                         size="icon"
                         variant="ghost"
-                        className="absolute right-0 top-0 size-7"
+                        className="absolute right-0 top-0 size-11 min-h-11 min-w-11"
                         aria-label={`Schnellzugriff ${index + 1} Aktionen`}
                       >
                         <MoreHorizontal className="h-3.5 w-3.5" />
@@ -224,7 +231,7 @@ export function InventoryQuickSlotsBar({
           if (!open) setPickerInstanceId(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[90dvh] w-[calc(100%-1rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Schnellzugriff zuweisen</DialogTitle>
             <DialogDescription>Position 1–4 wählen.</DialogDescription>

@@ -1,7 +1,8 @@
 /**
- * InventoryItemActions — per-stack action menu for Inventory v2 desktop (#110/#111).
- * Verschieben, Teilen, Zusammenführen, Ausrüsten (picker/conflict), Öffnen,
- * In Behälter / Schnellzugriff, Verbrauchen, Entfernen. Domain ops only.
+ * InventoryItemActions — per-stack action menu for Inventory v2 (#110/#111/#113).
+ * Desktop: DropdownMenu. Mobile: bottom Sheet with ~44px action rows.
+ * Verschieben, Teilen, Zusammenführen, Ausrüsten, Öffnen, Behälter,
+ * Schnellzugriff, Verbrauchen, Entfernen. Domain ops only.
  * Location: src/app/character/inventory/InventoryItemActions.tsx
  */
 import { useState } from 'react';
@@ -34,6 +35,14 @@ import {
 } from '../../../components/ui/dropdown-menu';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '../../../components/ui/sheet';
+import { useIsMobile } from '../../../components/ui/use-mobile';
 import {
   consumeItem,
   equipItem,
@@ -102,6 +111,8 @@ export function InventoryItemActions({
   const [equipChoices, setEquipChoices] = useState<EquipmentSlot[]>([]);
   const [pendingEquip, setPendingEquip] = useState<PendingEquip | null>(null);
   const [containerPickerOpen, setContainerPickerOpen] = useState(false);
+  const [actionsSheetOpen, setActionsSheetOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const instance = state.instances[instanceId];
   if (!instance) return null;
@@ -291,59 +302,218 @@ export function InventoryItemActions({
     setRemoveOpen(false);
   };
 
+  const closeActionsSheet = () => setActionsSheetOpen(false);
+
+  const actionRows = (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        className="min-h-11 w-full justify-start"
+        onClick={() => {
+          closeActionsSheet();
+          onRequestMove();
+        }}
+      >
+        Verschieben
+      </Button>
+      {canSplit && (
+        <Button
+          type="button"
+          variant="outline"
+          className="min-h-11 w-full justify-start"
+          onClick={() => {
+            closeActionsSheet();
+            onRequestSplit();
+          }}
+        >
+          Stapel teilen
+        </Button>
+      )}
+      {mergeTargetExists && (
+        <Button
+          type="button"
+          variant="outline"
+          className="min-h-11 w-full justify-start"
+          onClick={() => {
+            closeActionsSheet();
+            handleQuickMerge();
+          }}
+        >
+          Mit gleichem Stapel zusammenführen
+        </Button>
+      )}
+      {canEquip && (
+        <Button
+          type="button"
+          variant="outline"
+          className="min-h-11 w-full justify-start"
+          onClick={() => {
+            closeActionsSheet();
+            handleEquip();
+          }}
+        >
+          Ausrüsten
+        </Button>
+      )}
+      {canOpen && onOpenContainer && (
+        <Button
+          type="button"
+          variant="outline"
+          className="min-h-11 w-full justify-start"
+          onClick={() => {
+            closeActionsSheet();
+            onOpenContainer(instanceId);
+          }}
+        >
+          Öffnen
+        </Button>
+      )}
+      {canMoveIntoContainer && (
+        <Button
+          type="button"
+          variant="outline"
+          className="min-h-11 w-full justify-start"
+          onClick={() => {
+            closeActionsSheet();
+            setContainerPickerOpen(true);
+          }}
+        >
+          In Behälter verschieben
+        </Button>
+      )}
+      {onRequestQuickAssign && (
+        <Button
+          type="button"
+          variant="outline"
+          className="min-h-11 w-full justify-start"
+          onClick={() => {
+            closeActionsSheet();
+            onRequestQuickAssign(instanceId);
+          }}
+        >
+          Schnellzugriff zuweisen
+        </Button>
+      )}
+      {canConsume && (
+        <Button
+          type="button"
+          variant="outline"
+          className="min-h-11 w-full justify-start"
+          onClick={() => {
+            closeActionsSheet();
+            handleConsume();
+          }}
+        >
+          Verbrauchen
+        </Button>
+      )}
+      <Button
+        type="button"
+        variant="destructive"
+        className="min-h-11 w-full justify-start"
+        onClick={() => {
+          closeActionsSheet();
+          openRemove();
+        }}
+      >
+        Aus Inventar entfernen
+      </Button>
+    </>
+  );
+
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      {isMobile ? (
+        <>
           <Button
             type="button"
             size="icon"
             variant="ghost"
-            className="size-8"
+            className="size-11 min-h-11 min-w-11"
             aria-label="Gegenstandsaktionen"
-            onClick={(event) => event.stopPropagation()}
+            data-inventory-item-actions-trigger
+            onClick={(event) => {
+              event.stopPropagation();
+              setActionsSheetOpen(true);
+            }}
           >
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreHorizontal className="h-5 w-5" />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
-          <DropdownMenuItem onSelect={() => onRequestMove()}>Verschieben</DropdownMenuItem>
-          {canSplit && (
-            <DropdownMenuItem onSelect={() => onRequestSplit()}>Stapel teilen</DropdownMenuItem>
-          )}
-          {mergeTargetExists && (
-            <DropdownMenuItem onSelect={() => handleQuickMerge()}>
-              Mit gleichem Stapel zusammenführen
+          <Sheet open={actionsSheetOpen} onOpenChange={setActionsSheetOpen}>
+            <SheetContent
+              side="bottom"
+              className="max-h-[85vh] overflow-y-auto"
+              data-inventory-item-actions-sheet
+              onClick={(event) => event.stopPropagation()}
+            >
+              <SheetHeader>
+                <SheetTitle>{definition?.name ?? 'Gegenstand'}</SheetTitle>
+                <SheetDescription>
+                  Platz {slotIndex + 1}
+                  {instance.quantity > 1 ? ` · Menge ${instance.quantity}` : ''}
+                </SheetDescription>
+              </SheetHeader>
+              <div className="flex flex-col gap-2 px-4 pb-6">{actionRows}</div>
+            </SheetContent>
+          </Sheet>
+        </>
+      ) : (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="size-8"
+              aria-label="Gegenstandsaktionen"
+              data-inventory-item-actions-trigger
+              onClick={(event) => event.stopPropagation()}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
+            <DropdownMenuItem onSelect={() => onRequestMove()}>Verschieben</DropdownMenuItem>
+            {canSplit && (
+              <DropdownMenuItem onSelect={() => onRequestSplit()}>Stapel teilen</DropdownMenuItem>
+            )}
+            {mergeTargetExists && (
+              <DropdownMenuItem onSelect={() => handleQuickMerge()}>
+                Mit gleichem Stapel zusammenführen
+              </DropdownMenuItem>
+            )}
+            {canEquip && (
+              <DropdownMenuItem onSelect={() => handleEquip()}>Ausrüsten</DropdownMenuItem>
+            )}
+            {canOpen && onOpenContainer && (
+              <DropdownMenuItem onSelect={() => onOpenContainer(instanceId)}>
+                Öffnen
+              </DropdownMenuItem>
+            )}
+            {canMoveIntoContainer && (
+              <DropdownMenuItem onSelect={() => setContainerPickerOpen(true)}>
+                In Behälter verschieben
+              </DropdownMenuItem>
+            )}
+            {onRequestQuickAssign && (
+              <DropdownMenuItem onSelect={() => onRequestQuickAssign(instanceId)}>
+                Schnellzugriff zuweisen
+              </DropdownMenuItem>
+            )}
+            {canConsume && (
+              <DropdownMenuItem onSelect={() => handleConsume()}>Verbrauchen</DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onSelect={() => openRemove()}
+            >
+              Aus Inventar entfernen
             </DropdownMenuItem>
-          )}
-          {canEquip && (
-            <DropdownMenuItem onSelect={() => handleEquip()}>Ausrüsten</DropdownMenuItem>
-          )}
-          {canOpen && onOpenContainer && (
-            <DropdownMenuItem onSelect={() => onOpenContainer(instanceId)}>Öffnen</DropdownMenuItem>
-          )}
-          {canMoveIntoContainer && (
-            <DropdownMenuItem onSelect={() => setContainerPickerOpen(true)}>
-              In Behälter verschieben
-            </DropdownMenuItem>
-          )}
-          {onRequestQuickAssign && (
-            <DropdownMenuItem onSelect={() => onRequestQuickAssign(instanceId)}>
-              Schnellzugriff zuweisen
-            </DropdownMenuItem>
-          )}
-          {canConsume && (
-            <DropdownMenuItem onSelect={() => handleConsume()}>Verbrauchen</DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onSelect={() => openRemove()}
-          >
-            Aus Inventar entfernen
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
 
       <Dialog open={equipPickerOpen} onOpenChange={setEquipPickerOpen}>
         <DialogContent onClick={(event) => event.stopPropagation()}>

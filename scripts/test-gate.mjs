@@ -183,6 +183,14 @@ function checkInventoryEquipmentUi() {
   });
 }
 
+function checkInventoryMobileUi() {
+  console.log('Inventory v2 mobile UX contract (#113): checking Inventar|Ausrüstung segment, grid, and touch targets...');
+  execFileSync(process.execPath, ['scripts/inventory-mobile-ui-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -367,6 +375,7 @@ checkInventoryLegacyMigration();
 checkInventoryDesktopUi();
 checkInventoryWorldCatalogUi();
 checkInventoryEquipmentUi();
+checkInventoryMobileUi();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarAssetCatalogRegressions();

@@ -233,8 +233,15 @@ export function InventoryEquipmentPanel({
                   setDragOverSlot((current) => (current === slot ? null : current));
                 }}
                 onDrop={(event) => handleDropOnSlot(event, slot)}
+                aria-label={
+                  isOffHandLinked
+                    ? `${EQUIPMENT_SLOT_LABELS[slot]}: Zweihändig / gekoppelt`
+                    : instance && definition
+                      ? `${EQUIPMENT_SLOT_LABELS[slot]}: ${definition.name}`
+                      : `${EQUIPMENT_SLOT_LABELS[slot]}: leer`
+                }
                 className={[
-                  'relative flex min-h-11 flex-col rounded-lg border p-2 transition-colors',
+                  'relative flex min-h-11 min-w-0 flex-col rounded-lg border p-2 transition-colors',
                   instance
                     ? 'border-border bg-card'
                     : 'border-dashed border-border/70 bg-muted/15 text-muted-foreground',
@@ -245,13 +252,13 @@ export function InventoryEquipmentPanel({
                   .join(' ')}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       {EQUIPMENT_SLOT_LABELS[slot]}
                     </p>
                     {instance && definition && !isOffHandLinked ? (
                       <>
-                        <p className="truncate text-sm font-medium leading-snug">{definition.name}</p>
+                        <p className="break-words text-sm font-medium leading-snug">{definition.name}</p>
                         <div className="mt-1 flex flex-wrap gap-1">
                           {definition.damage && (
                             <Badge className="text-[10px]">{definition.damage}</Badge>
@@ -284,7 +291,7 @@ export function InventoryEquipmentPanel({
                           type="button"
                           size="icon"
                           variant="ghost"
-                          className="size-8 shrink-0"
+                          className="size-11 min-h-11 min-w-11 shrink-0"
                           aria-label={`${EQUIPMENT_SLOT_LABELS[slot]} Aktionen`}
                         >
                           <MoreHorizontal className="h-4 w-4" />

@@ -1,7 +1,8 @@
 /**
- * InventoryContainerPanel — Sheet UX for container contents (#111).
+ * InventoryContainerPanel — Sheet UX for container contents (#111/#113).
  * Shows capacity, ordered contents, move-out to free base slots and move-in
  * from eligible base instances via domain moveIntoContainer / moveOutOfContainer.
+ * Mobile: bottom Sheet; desktop: right Sheet.
  * Location: src/app/character/inventory/InventoryContainerPanel.tsx
  */
 import { useState } from 'react';
@@ -21,6 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '../../../components/ui/sheet';
+import { useIsMobile } from '../../../components/ui/use-mobile';
 import {
   freeBaseSlotIndices,
   isContainerInstance,
@@ -51,6 +53,7 @@ export function InventoryContainerPanel({
   onRefuse,
 }: InventoryContainerPanelProps) {
   const [putPickerOpen, setPutPickerOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const container =
     containerInstanceId && state.instances[containerInstanceId]
@@ -119,7 +122,15 @@ export function InventoryContainerPanel({
   return (
     <>
       <Sheet open={open && Boolean(containerInstanceId)} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-md" data-inventory-container-sheet>
+        <SheetContent
+          side={isMobile ? 'bottom' : 'right'}
+          className={
+            isMobile
+              ? 'max-h-[90dvh] w-full overflow-y-auto'
+              : 'w-full sm:max-w-md'
+          }
+          data-inventory-container-sheet
+        >
           <SheetHeader>
             <SheetTitle>{containerName}</SheetTitle>
             <SheetDescription>
@@ -187,7 +198,7 @@ export function InventoryContainerPanel({
       </Sheet>
 
       <Dialog open={putPickerOpen} onOpenChange={setPutPickerOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90dvh] w-[calc(100%-1rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Gegenstand hineinlegen</DialogTitle>
             <DialogDescription>
