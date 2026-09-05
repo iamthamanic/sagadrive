@@ -243,7 +243,10 @@ export function InventoryCatalogDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex max-h-[90vh] max-w-3xl flex-col overflow-hidden sm:max-w-3xl">
+        <DialogContent
+          className="flex max-h-[95vh] w-[calc(100vw-1.5rem)] max-w-3xl flex-col overflow-x-hidden overflow-y-hidden sm:max-w-3xl"
+          data-inventory-catalog-dialog
+        >
           <DialogHeader>
             <DialogTitle>Gegenstand hinzufügen</DialogTitle>
             <DialogDescription>
@@ -251,7 +254,7 @@ export function InventoryCatalogDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col gap-3 overflow-hidden">
+          <div className="flex min-h-0 flex-col gap-3 overflow-x-hidden overflow-y-hidden">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="catalog-search">Suche</Label>
@@ -327,7 +330,7 @@ export function InventoryCatalogDialog({
       </Dialog>
 
       <Dialog open={Boolean(selected)} onOpenChange={(next) => !next && setSelected(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90dvh] w-[calc(100%-1rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{selected?.name ?? 'Hinzufügen'}</DialogTitle>
             <DialogDescription>

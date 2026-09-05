@@ -1,8 +1,8 @@
 /**
- * InventoryBaseGrid — exactly 20 base slots for Inventory v2 desktop (#110/#111).
- * HTML5 drag-and-drop plus click-to-select move targets; occupied cells show
- * name, quantity, type and load badges. Domain merge/move is applied by parent.
- * DnD exposes instanceId for equipment drop targets.
+ * InventoryBaseGrid — exactly 20 base slots for Inventory v2 (#110/#111/#113).
+ * Desktop: HTML5 drag-and-drop plus click-to-select move targets.
+ * Mobile: 2-column grid; move via parent Sheet. Occupied cells show name,
+ * quantity, type and load; action trigger is ~44px on narrow viewports.
  * Location: src/app/character/inventory/InventoryBaseGrid.tsx
  */
 import type { DragEvent, KeyboardEvent } from 'react';
@@ -108,7 +108,7 @@ export function InventoryBaseGrid({
 
   return (
     <div
-      className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-5"
+      className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-5"
       data-inventory-base-grid
       role="list"
       aria-label="Inventar-Basisplätze"
@@ -123,6 +123,11 @@ export function InventoryBaseGrid({
         const isHighlight = highlightedSlots?.has(slotIndex) ?? false;
         const unitLoad = definition?.load ?? 0;
         const stackLoad = instance ? unitLoad * instance.quantity : 0;
+        const displayName = definition?.name ?? instance?.definitionId ?? 'Unbekannt';
+        const qty = instance?.quantity ?? 0;
+        const ariaLabel = occupied
+          ? `Inventarplatz ${slotIndex + 1}: ${displayName} ×${qty}`
+          : `Inventarplatz ${slotIndex + 1}: leer`;
 
         return (
           <div
@@ -136,13 +141,9 @@ export function InventoryBaseGrid({
             onClick={() => onSelectSlot(slotIndex)}
             onKeyDown={(event) => handleKeyDown(event, slotIndex)}
             data-slot-index={slotIndex}
-            aria-label={
-              occupied
-                ? `Platz ${slotIndex + 1}: ${definition?.name ?? 'Unbekannt'}`
-                : `Platz ${slotIndex + 1}: leer`
-            }
+            aria-label={ariaLabel}
             className={[
-              'relative flex min-h-[88px] flex-col rounded-lg border p-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'relative flex min-h-11 min-h-[88px] flex-col rounded-lg border p-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring',
               occupied
                 ? 'border-border bg-card hover:bg-accent/40'
                 : 'border-dashed border-border/70 bg-muted/15 text-muted-foreground',
@@ -174,8 +175,8 @@ export function InventoryBaseGrid({
                     onRequestQuickAssign={onRequestQuickAssign}
                   />
                 </div>
-                <p className="pr-8 text-sm font-medium leading-snug">
-                  {definition?.name ?? instance.definitionId}
+                <p className="break-words pr-10 text-sm font-medium leading-snug">
+                  {displayName}
                 </p>
                 {instance.quantity > 1 && (
                   <p className="text-xs text-muted-foreground">×{instance.quantity}</p>
