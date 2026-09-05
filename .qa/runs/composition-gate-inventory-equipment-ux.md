@@ -1,9 +1,9 @@
 # Composition Gate — inventory-equipment-ux
 
-- HEAD_SHA: WORKTREE (stamp after commit)
-- BASE_SHA: origin/main (merge-base at gate time)
+- HEAD_SHA: f8b1fe2342e999944d1363e3c40019335063895b
+- BASE_SHA: 4cbbe4c5b67befdc13c845a7a052ce7dc778e836
 - Date: 2026-09-05
-- Verdict: CLEAR (pending SHA stamp)
+- Verdict: CLEAR
 
 ## Event
 
