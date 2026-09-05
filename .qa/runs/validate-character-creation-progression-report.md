@@ -50,7 +50,7 @@ Deterministische Prüfung von §17 (Erschaffung) und §13 (Progression). Kein RN
     Aufmerksamkeit += 1 → 1 (frei, Stufe 1)
     Wissen += 1 → 2 (frei, Stufe 1)
     Überleben += 1 → 1 (frei, Stufe 1)
-    Steuern += 1 → 1 (frei, Stufe 1)
+    Fortbewegungsmittel += 1 → 1 (frei, Stufe 1)
     Spezialisierung 1 in Technik: „Intrusion" (Wert 3)
     Kernfähigkeit Analyse (Novize, §11.3)
     Erste Essenzmanifestation: „Kaltstart" (Technologisch, Novize)
@@ -75,7 +75,7 @@ Deterministische Prüfung von §17 (Erschaffung) und §13 (Progression). Kein RN
     Aufmerksamkeit += 1 → 2 (Fertigkeitsentwicklung, Stufe 15)
   Stufe 16 [§3.7] Attribut Geschicklichkeit → 4
   Stufe 16 [§13.1] Sekundäre Essenz Mental inkl. Novize-Manifestation (verbraucht freie Wahl)
-    Steuern += 1 → 2 (Fertigkeitsentwicklung, Stufe 17)
+    Fortbewegungsmittel += 1 → 2 (Fertigkeitsentwicklung, Stufe 17)
   Stufe 17 [§4.1] Rang Legende: EB +5, Fertigkeitslimit 5
   Stufe 18 [§11.2] Fähigkeit „Datenhoheit" (Meister, Quelle: Archetyp Denker)
     Ermitteln += 1 → 4 (Fertigkeitsentwicklung, Stufe 19)
@@ -161,7 +161,7 @@ Deterministische Prüfung von §17 (Erschaffung) und §13 (Progression). Kein RN
     Überleben += 1 → 2 (Fertigkeitsentwicklung, Stufe 17)
   Stufe 17 [§4.1] Rang Legende: EB +5, Fertigkeitslimit 5
   Stufe 18 [§11.2] Fähigkeit „Titanenwurf" (Meister, Quelle: Archetyp Kämpfer)
-    Steuern += 1 → 1 (neue Fertigkeit, Stufe 19)
+    Fortbewegungsmittel += 1 → 1 (neue Fertigkeit, Stufe 19)
   Stufe 20 [§11.2] Fähigkeit „Eiserne Legion" (Legende, Quelle: Archetyp Kämpfer)
 
 ### B4 Spiegelbild: Spezies Halbling, Hintergrund Straße, Primärarchetyp Rebell, primäre Essenz Mental

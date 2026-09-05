@@ -534,7 +534,7 @@ Ein Weltprofil darf Core-Regeln niemals stillschweigend verändern.
 | 11 | Wissen | Verstand |
 | 12 | Technik | Verstand |
 | 13 | Medizin | Verstand |
-| 14 | Steuern | Geschicklichkeit |
+| 14 | Fortbewegungsmittel | Geschicklichkeit |
 | 15 | Überzeugen | Charisma |
 | 16 | Täuschen | Charisma |
 | 17 | Einschüchtern | Charisma |
@@ -965,11 +965,11 @@ Reparaturen rein technische Spezies oder Maschinen verwenden normalerweise Techn
 
 Geeignete Spezialisierungen: Notfallmedizin, Chirurgie, Diagnose, Toxikologie, Psychiatrie, bestimmte Spezies.
 
-#### 5.8.14 Steuern
+#### 5.8.14 Fortbewegungsmittel
 
 **Standardattribut:** Geschicklichkeit
 
-Steuern beschreibt die aktive Kontrolle von Fahrzeugen, Reittieren oder vergleichbaren Bewegungssystemen unter schwierigen Bedingungen.
+Fortbewegungsmittel beschreibt die aktive Kontrolle von Fahrzeugen, Reittieren oder vergleichbaren Bewegungssystemen unter schwierigen Bedingungen.
 
 Routinefahrt benötigt keinen Check. Navigation verwendet andere passende Fertigkeiten.
 
@@ -1466,7 +1466,7 @@ Fahrzeuge besitzen mindestens:
 - Maßstab,
 - Merkmale.
 
-Gefährliche Fahrmanöver verwenden Steuern.
+Gefährliche Fahrmanöver verwenden Fortbewegungsmittel.
 
 ---
 

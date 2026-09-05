@@ -270,7 +270,7 @@ export const sagaDriveBackgroundTemplates: readonly SagaDriveBackgroundTemplate[
     id: 'travel-transport',
     name: 'Reise & Transport',
     description: 'Du hast Menschen, Güter oder dich selbst regelmäßig über schwierige Strecken, Fahrzeuge oder Reiserouten bewegt.',
-    playstyle: 'Steuern · Navigation · Wachsamkeit · Technik',
+    playstyle: 'Fortbewegungsmittel · Navigation · Wachsamkeit · Technik',
     examples: ['Seefahrerin', 'Kurier', 'Kutscherin', 'Raumpilot'],
     skillPool: ['driving', 'survival', 'awareness', 'technology'],
     specializationSuggestions: [

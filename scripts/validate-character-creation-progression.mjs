@@ -76,7 +76,7 @@ const SPECIES_TRAITS = Object.freeze({
 const ALL_SKILLS = Object.freeze([
   'Athletik', 'Akrobatik', 'Fingerfertigkeit', 'Heimlichkeit', 'Nahkampf', 'Fernkampf',
   'Aufmerksamkeit', 'Menschenkenntnis', 'Überleben', 'Ermitteln', 'Wissen', 'Technik',
-  'Medizin', 'Steuern', 'Überzeugen', 'Täuschen', 'Einschüchtern', 'Auftreten',
+  'Medizin', 'Fortbewegungsmittel', 'Überzeugen', 'Täuschen', 'Einschüchtern', 'Auftreten',
 ]);
 
 /** §4.2 archetype skill lists. */
@@ -100,7 +100,7 @@ const BACKGROUND_SKILLS = Object.freeze({
   Kloster: ['Medizin', 'Menschenkenntnis', 'Wissen', 'Überleben'],
   Militär: ['Athletik', 'Nahkampf', 'Fernkampf', 'Überleben'],
   Straße: ['Heimlichkeit', 'Täuschen', 'Aufmerksamkeit', 'Überleben'],
-  Werkstatt: ['Technik', 'Athletik', 'Wissen', 'Steuern'],
+  Werkstatt: ['Technik', 'Athletik', 'Wissen', 'Fortbewegungsmittel'],
   Bühne: ['Auftreten', 'Überzeugen', 'Täuschen', 'Akrobatik'],
 });
 
@@ -403,7 +403,7 @@ function buildAllConcepts() {
     applySkills(char, {
       backgroundTrained: ['Technik', 'Ermitteln'],
       archetypeSkill: 'Wissen',
-      freeSkills: { Technik: 2, Ermitteln: 1, Aufmerksamkeit: 1, Wissen: 1, Überleben: 1, Steuern: 1 },
+      freeSkills: { Technik: 2, Ermitteln: 1, Aufmerksamkeit: 1, Wissen: 1, Überleben: 1, Fortbewegungsmittel: 1 },
     });
     applySpecialization(char, 'Technik', 'Intrusion');
     applyArchetypeFeature(char);
@@ -514,7 +514,7 @@ function planB1Nullpunkt() {
       11: { kind: 'specialization', skill: 'Wissen', name: 'Netzarchitekturen' },
       13: { kind: 'increase', skill: 'Technik' },
       15: { kind: 'increase', skill: 'Aufmerksamkeit' },
-      17: { kind: 'increase', skill: 'Steuern' },
+      17: { kind: 'increase', skill: 'Fortbewegungsmittel' },
       19: { kind: 'increase', skill: 'Ermitteln' },
     },
     freeFeatures: {
@@ -573,7 +573,7 @@ function planB3Rostfaust() {
       13: { kind: 'increase', skill: 'Einschüchtern' },
       15: { kind: 'specialization', skill: 'Einschüchtern', name: 'Kriegsdrohung' },
       17: { kind: 'increase', skill: 'Überleben' },
-      19: { kind: 'new', skill: 'Steuern' },
+      19: { kind: 'new', skill: 'Fortbewegungsmittel' },
     },
     freeFeatures: {
       2: { kind: 'feature', name: 'Wuchtschlag', rank: 'Novize', source: 'Archetyp Kämpfer' },
@@ -685,7 +685,7 @@ function runNegativePaths() {
     const char = newCharacter({ name: 'X8', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
     applyAttributes(char, [2, 3, 2, 4, 2, 2]);
-    applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 3, Wissen: 0, Aufmerksamkeit: 1, Überleben: 1, Steuern: 1, Akrobatik: 1 } });
+    applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 3, Wissen: 0, Aufmerksamkeit: 1, Überleben: 1, Fortbewegungsmittel: 1, Akrobatik: 1 } });
   }, '§5.3');
   reject('§5.4 freie Punkte ungleich 7', () => {
     const char = newCharacter({ name: 'X9', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
@@ -699,14 +699,14 @@ function runNegativePaths() {
     const char = newCharacter({ name: 'XA', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
     applyAttributes(char, [2, 3, 2, 4, 2, 2]);
-    applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 2, Ermitteln: 1, Aufmerksamkeit: 1, Wissen: 1, Überleben: 1, Steuern: 1 } });
+    applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 2, Ermitteln: 1, Aufmerksamkeit: 1, Wissen: 1, Überleben: 1, Fortbewegungsmittel: 1 } });
     applySpecialization(char, 'Akrobatik', 'Parkour');
   }, '§5.2');
   reject('§5.2 zweite Spezialisierung unter Wert 3', () => {
     const char = newCharacter({ name: 'XB', species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
     applyAttributes(char, [2, 3, 2, 4, 2, 2]);
-    applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 1, Ermitteln: 2, Wissen: 1, Aufmerksamkeit: 1, Überleben: 1, Steuern: 1 } });
+    applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 1, Ermitteln: 2, Wissen: 1, Aufmerksamkeit: 1, Überleben: 1, Fortbewegungsmittel: 1 } });
     applySpecialization(char, 'Technik', 'Intrusion');
     applySpecialization(char, 'Technik', 'Drohnen');
   }, '§5.2');
@@ -716,7 +716,7 @@ function runNegativePaths() {
     const char = newCharacter({ name, species: 'Mensch', background: 'Labor', archetype: 'Denker', essence: 'Mental' });
     applySpeciesTraits(char, ['Geschärfter Sinn', 'Umweltanpassung', 'Enge Resistenz']);
     applyAttributes(char, [2, 3, 2, 4, 2, 2]);
-    applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 2, Ermitteln: 1, Aufmerksamkeit: 1, Wissen: 1, Überleben: 1, Steuern: 1 } });
+    applySkills(char, { backgroundTrained: ['Technik', 'Ermitteln'], archetypeSkill: 'Wissen', freeSkills: { Technik: 2, Ermitteln: 1, Aufmerksamkeit: 1, Wissen: 1, Überleben: 1, Fortbewegungsmittel: 1 } });
     applyArchetypeFeature(char);
     return char;
   };
