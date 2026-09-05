@@ -1,6 +1,6 @@
 # Composition Gate — inventory-persistence (hardening)
 
-- HEAD_SHA: 0da928c177a7717a30bc839353e4905548ff11a4
+- HEAD_SHA: 1106e5987e18dafa57b7f0504ca761ab7bddfed2
 - BASE_SHA: 5327bab1e7d05f61ac829ba6322b131ce50229a2
 - Date: 2026-09-05
 - Verdict: CLEAR

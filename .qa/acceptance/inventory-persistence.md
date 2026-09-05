@@ -37,7 +37,7 @@ destructively deleted.
 
 ## Composition Gate
 - Verdict: **CLEAR**
-- Proof: `.qa/runs/composition-gate-inventory-persistence.md` (HEAD `0da928c`)
+- Proof: `.qa/runs/composition-gate-inventory-persistence.md` (HEAD `1106e59`)
 
 ## Implementation Notes
 | File | Purpose |
