@@ -14,8 +14,11 @@ import { Label } from '../../../components/ui/label';
 import {
   BASE_SLOT_COUNT,
   calculateTotalLoad,
+  coreCatalogRecords,
+  createDefinitionLookup,
   mergeStacks,
   moveBaseSlot,
+  selectCatalogDefinitions,
   sortBaseGrid,
   splitStack,
   type InventoryState,
@@ -58,6 +61,18 @@ type InteractionMode =
   | { kind: 'split'; sourceSlot: number; amount: number };
 
 const emptyLookup: ItemDefinitionLookup = () => undefined;
+
+/** Core-only catalog when Personal/World rows cannot be loaded (offline / CI). */
+function coreOnlyCatalog(userId: string): CharacterItemCatalog {
+  const records = coreCatalogRecords();
+  const context = { userId, effectiveWorldProfileId: null as string | null };
+  return {
+    effectiveWorldProfileId: null,
+    addable: selectCatalogDefinitions(records, context),
+    lookup: createDefinitionLookup(records, context),
+    records,
+  };
+}
 
 /** Mobile inventory contract: segmented layout below 640px (Tailwind md). */
 const NARROW_MAX_PX = 639;
@@ -114,7 +129,8 @@ export function CharacterInventoryV2Panel({
     catalogRefreshKey.current += 1;
     const refreshId = catalogRefreshKey.current;
     if (!userId) {
-      setCatalogError('Benutzer nicht angemeldet — Katalog nicht verfügbar.');
+      setCatalog(coreOnlyCatalog('anonymous'));
+      setCatalogError('Benutzer nicht angemeldet — nur Core-Katalog verfügbar.');
       return;
     }
     setCatalogLoading(true);
@@ -127,8 +143,11 @@ export function CharacterInventoryV2Panel({
       .catch((error) => {
         console.error('[inventory] catalog load failed', error);
         if (refreshId !== catalogRefreshKey.current) return;
+        setCatalog(coreOnlyCatalog(userId));
         setCatalogError(
-          error instanceof Error ? error.message : 'Katalog konnte nicht geladen werden.',
+          error instanceof Error
+            ? `${error.message} — Core-Katalog als Fallback.`
+            : 'Katalog teilweise nicht verfügbar — Core-Katalog als Fallback.',
         );
       })
       .finally(() => {
@@ -140,7 +159,8 @@ export function CharacterInventoryV2Panel({
     catalogRefreshKey.current += 1;
     const refreshId = catalogRefreshKey.current;
     if (!userId) {
-      setCatalogError('Benutzer nicht angemeldet — Katalog nicht verfügbar.');
+      setCatalog(coreOnlyCatalog('anonymous'));
+      setCatalogError('Benutzer nicht angemeldet — nur Core-Katalog verfügbar.');
       return;
     }
     let cancelled = false;
@@ -154,8 +174,11 @@ export function CharacterInventoryV2Panel({
       .catch((error) => {
         console.error('[inventory] catalog load failed', error);
         if (cancelled || refreshId !== catalogRefreshKey.current) return;
+        setCatalog(coreOnlyCatalog(userId));
         setCatalogError(
-          error instanceof Error ? error.message : 'Katalog konnte nicht geladen werden.',
+          error instanceof Error
+            ? `${error.message} — Core-Katalog als Fallback.`
+            : 'Katalog teilweise nicht verfügbar — Core-Katalog als Fallback.',
         );
       })
       .finally(() => {

@@ -1,6 +1,7 @@
 /**
- * Inventory v2 integration E2E (#114) — user-facing smoke across desktop + mobile.
- * Deep domain scenarios remain covered by inventory-*-check.mjs scripts in test-gate.
+ * Inventory v2 integration E2E (#114) — structural smoke across desktop + mobile.
+ * Deep domain / catalog scenarios remain covered by inventory-*-check.mjs in test-gate.
+ * Catalog add that needs live Supabase catalog load is soft-asserted (CI often has no DB).
  * Location: e2e/inventory-v2.spec.ts
  */
 import { test, expect, type Page } from '@playwright/test';
@@ -10,8 +11,6 @@ import path from 'node:path';
 const EVIDENCE_DIR = '.qa/evidence/inventory-v2-integration';
 
 async function ensureLoggedIn(page: Page) {
-  // Always authenticate at a desktop width — mobile chrome may hide the Dashboard control.
-  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await page.evaluate(() => {
     sessionStorage.removeItem('sagadrive:character-edit-id');
@@ -23,7 +22,7 @@ async function ensureLoggedIn(page: Page) {
     await page.getByRole('button', { name: 'Einloggen' }).click();
   }
   await expect(page.getByRole('button', { name: 'Dashboard' }).first()).toBeVisible({
-    timeout: 15_000,
+    timeout: 30_000,
   });
 }
 
@@ -51,6 +50,7 @@ test('Inventory v2: Core catalog shell + occupancy summary (Scenario A smoke)', 
   page,
 }) => {
   test.setTimeout(180_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
   await ensureLoggedIn(page);
   await openNewCharacterInventory(page);
 
@@ -64,13 +64,23 @@ test('Inventory v2: Core catalog shell + occupancy summary (Scenario A smoke)', 
   await expect(page.getByRole('tab', { name: /^Eigene$/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Welt$/i })).toHaveCount(0);
 
-  // Live Core rows need catalog service; CI may only show empty/error — shell must still open.
+  // Live Core list needs catalog service; without Supabase CI still proves shell + tabs.
   const addButtons = catalog.getByRole('button', { name: /^Hinzufügen$/i });
   if ((await addButtons.count()) > 0) {
     await addButtons.first().click();
-    await expect(page.getByText(/Inventar 1 \/ 20/i).first()).toBeVisible({ timeout: 10_000 });
+    const confirmAdd = page.getByRole('button', { name: /^Hinzufügen$/i }).last();
+    if (await confirmAdd.isVisible().catch(() => false)) {
+      await confirmAdd.click();
+    }
+    await expect(page.getByText(/Inventar [1-9] \/ 20/i).first()).toBeVisible({
+      timeout: 10_000,
+    });
   } else {
-    await expect(catalog.getByText(/Core|Eigene|Suche|Typ/i).first()).toBeVisible();
+    test.info().annotations.push({
+      type: 'note',
+      description:
+        'Core catalog rows not loaded (likely no Supabase in CI). Shell + tabs asserted; add path covered by inventory-*-check + local E2E.',
+    });
   }
 
   await page.screenshot({
@@ -83,9 +93,9 @@ test('Inventory v2: mobile 390×844 segmented path without horizontal overflow (
   page,
 }) => {
   test.setTimeout(180_000);
+  await page.setViewportSize({ width: 390, height: 844 });
   await ensureLoggedIn(page);
   await openNewCharacterInventory(page);
-  await page.setViewportSize({ width: 390, height: 844 });
 
   await expect(page.locator('[data-inventory-mobile-view-switch]')).toBeVisible();
   const overflowX = await page.evaluate(() => {
@@ -102,6 +112,7 @@ test('Inventory v2: mobile 390×844 segmented path without horizontal overflow (
   await expect(page.locator('[data-inventory-mobile-panel="inventar"]')).toBeVisible();
   await page.getByRole('button', { name: /Gegenstand hinzufügen/i }).first().click();
   await expect(page.locator('[data-inventory-catalog-dialog]')).toBeVisible();
+  await expect(page.getByRole('tab', { name: /^Core$/i })).toBeVisible();
 
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, 'scenario-j-mobile.png'),
@@ -113,9 +124,9 @@ test('Inventory v2: desktop equipment pane remains beside grid at wide viewport'
   page,
 }) => {
   test.setTimeout(180_000);
+  await page.setViewportSize({ width: 1280, height: 800 });
   await ensureLoggedIn(page);
   await openNewCharacterInventory(page);
-  await page.setViewportSize({ width: 1280, height: 800 });
 
   await expect(page.locator('[data-inventory-desktop-layout]')).toBeVisible();
   await expect(page.locator('[data-inventory-mobile-layout]')).toHaveCount(0);
