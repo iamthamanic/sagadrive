@@ -12,6 +12,7 @@ import type {
   SagaDriveSkillKey,
 } from '../domain/character.entity';
 import type { SagaDriveProfileDto } from '../domain/sagadrive-profile.entity';
+import type { InventoryState } from '../inventory-v2';
 
 export interface CharacterVm {
   id: string;
@@ -33,7 +34,11 @@ export interface CharacterVm {
   skills: Record<SagaDriveSkillKey, number>;
   sagaDriveProfile: SagaDriveProfileDto;
   abilities: AbilityDto[];
+  /** Legacy flat list — compatibility only once inventorySchemaVersion is 2. */
   inventory: ItemDto[];
+  /** Authoritative Inventory v2 state (migrated in memory when still on schema 1). */
+  inventoryV2: InventoryState;
+  inventorySchemaVersion: 1 | 2;
   emotionProfiles: EmotionProfileDto[];
   portraitUrl?: string;
   createdAt: Date;

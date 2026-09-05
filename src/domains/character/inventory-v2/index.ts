@@ -105,3 +105,11 @@ export {
   getCoreItemDefinition,
   listCoreItemDefinitions,
 } from './core-catalog';
+
+export type { MigratedPersonalDefinitionDraft, LegacyMigrationResult } from './migrate-legacy';
+
+export {
+  bindPendingDefinitions,
+  isInventoryV2State,
+  migrateLegacyInventory,
+} from './migrate-legacy';
