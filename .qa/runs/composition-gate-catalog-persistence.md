@@ -1,6 +1,6 @@
 # Composition Gate — catalog-persistence
 
-- HEAD_SHA: (updated on commit — binding-ownership trigger + RESTRICT + assertWritablePayload)
+- HEAD_SHA: 73f47e40d80f0498fc0ec2266a78513124f546cb
 - BASE_SHA: 6fbed35
 - Date: 2026-09-05
 - Verdict: CLEAR
