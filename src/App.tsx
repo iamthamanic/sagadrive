@@ -11,11 +11,8 @@ import { Dashboard } from './components/Dashboard';
 import { ViewLoadingFallback } from './components/ViewLoadingFallback';
 import { Toaster } from './components/ui/sonner';
 import { useAppLocation } from './app/shell/routing';
-import {
-  ItemCreatePlaceholder,
-  ItemDetailPlaceholder,
-  NotFoundPlaceholder,
-} from './app/items/ItemRoutePlaceholders';
+import { NotFoundPlaceholder } from './app/items/ItemRoutePlaceholders';
+import { ItemWorkbenchScreen } from './app/items/workbench';
 
 const CharacterEditor = lazy(() =>
   import('./components/CharacterEditor').then((module) => ({ default: module.CharacterEditor })),
@@ -122,12 +119,20 @@ function AppShell() {
           </LazyView>
         );
       case 'item-create':
-        return <ItemCreatePlaceholder onBack={() => handleNavigate('library')} />;
+        return (
+          <ItemWorkbenchScreen
+            route="create"
+            onBack={() => handleNavigate('library')}
+            onNavigateToItem={(id) => navigateToItem(id, { replace: true })}
+          />
+        );
       case 'item-detail':
         return (
-          <ItemDetailPlaceholder
-            itemId={itemId ?? ''}
+          <ItemWorkbenchScreen
+            route="detail"
+            itemId={itemId}
             onBack={() => handleNavigate('library')}
+            onNavigateToItem={(id) => navigateToItem(id, { replace: true })}
           />
         );
       case 'not-found':

@@ -32,7 +32,7 @@ function mustNotInclude(file, needles, label) {
 
 mustInclude(
   'src/App.tsx',
-  ['useAppLocation', 'ItemCreatePlaceholder', 'ItemDetailPlaceholder', 'NotFoundPlaceholder'],
+  ['useAppLocation', 'ItemWorkbenchScreen', 'NotFoundPlaceholder'],
   'App wiring',
 );
 mustNotInclude('src/App.tsx', ['useState<AppView>', 'setCurrentView'], 'no parallel currentView SoT');
