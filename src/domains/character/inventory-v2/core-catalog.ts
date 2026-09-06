@@ -13,6 +13,7 @@
  * Location: src/domains/character/inventory-v2/core-catalog.ts
  */
 
+import { normalizeItemDefinition } from '../../items/normalize';
 import type { CatalogDefinitionRecord } from './catalog';
 import type { ItemDefinition } from './types';
 
@@ -23,8 +24,8 @@ export const CORE_CATALOG_VERSION = 3;
 export const CORE_CATALOG_SIZE = 36;
 
 function deepFreeze<T>(value: T): T {
-  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
-    for (const child of Object.values(value as object)) {
+  if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {
+    for (const child of Object.values(value)) {
       deepFreeze(child);
     }
     Object.freeze(value);
@@ -32,7 +33,8 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
-const CORE_DEFINITIONS: readonly ItemDefinition[] = deepFreeze([
+/** Raw Core archetypes — taxonomy filled via normalizeItemDefinition before export. */
+const CORE_DEFINITIONS_RAW: readonly ItemDefinition[] = [
   // --- Weapons (8) ---
   {
     id: 'core.weapon.light-melee',
@@ -490,9 +492,17 @@ const CORE_DEFINITIONS: readonly ItemDefinition[] = deepFreeze([
     stackLimit: 1,
     equipSlots: ['feet'],
   },
-] satisfies ItemDefinition[]);
+] satisfies ItemDefinition[];
 
-/** All Core definitions, in declaration order. */
+/**
+ * Core catalog with taxonomy provenance applied once at module load.
+ * Every entry gets kindKey from type and origin=core-archetype via normalize.
+ */
+const CORE_DEFINITIONS: readonly ItemDefinition[] = deepFreeze(
+  CORE_DEFINITIONS_RAW.map((definition) => normalizeItemDefinition(definition)),
+);
+
+/** All Core definitions, in declaration order (always normalized). */
 export function listCoreItemDefinitions(): readonly ItemDefinition[] {
   return CORE_DEFINITIONS;
 }
@@ -504,5 +514,8 @@ export function getCoreItemDefinition(definitionId: string): ItemDefinition | un
 
 /** Core definitions as catalog records — always active, never owned. */
 export function coreCatalogRecords(): CatalogDefinitionRecord[] {
-  return CORE_DEFINITIONS.map((definition) => ({ definition, status: 'active' as const }));
+  return CORE_DEFINITIONS.map((definition) => ({
+    definition,
+    status: 'active',
+  }));
 }
