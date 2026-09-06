@@ -1387,7 +1387,7 @@ Verborgen ist kein globaler Zustand, sondern gilt immer relativ zu bestimmten Be
 
 ### 10.0 Core-Gegenstandskatalog (Inventory v2)
 
-Der Core-Katalog liefert **35 setting-neutrale mechanische Archetypen** (Waffen, Rüstung/Schild, Werkzeuge, Verbrauchsgüter, Container, Misc/Wearables). Sie sind versioniert, read-only und ohne Weltprofil spielbar.
+Der Core-Katalog liefert **36 setting-neutrale mechanische Archetypen** (Waffen, Rüstung/Schild, Werkzeuge, Verbrauchsgüter, Container, Misc/Wearables). Sie sind versioniert, read-only und ohne Weltprofil spielbar.
 
 - Ids sind stabile Verträge (`core.weapon.*`, `core.armor.*`, …).
 - Werkzeuge und Verbrauchsgüter verleihen **keine** stillschweigenden Zahlenboni; konkrete Effekte kommen aus Fertigkeit, Fähigkeit oder Weltprofil.
@@ -1403,14 +1403,14 @@ Verbindlicher V1-/Core-Playtest-Vertrag für Inventory v2 (Epic #105 / #114). Er
 2. **1 Stapel = 1 Platz.** `stackLimit` steuert die Menge pro Stapel, nicht die Platzanzahl.
 3. **Stärke ändert nur die Traglast:** `Traglast = 5 + 2 × Stärke`. Stärke vergibt **keine zusätzlichen Inventarplätze**.
 4. **Ausgerüstete Gegenstände** belegen Ausrüstungsslots, **keine** Basis-Inventarplätze.
-5. **Ausrüstungsslots:** Kopf, Körper, 2× Accessoire, Haupt-/Nebenhand, Spezial.
+5. **Ausrüstungsslots:** Kopf, Körper, 2× Accessoire, Haupt-/Nebenhand, Spezial, Füße.
 6. **Zweihändig** belegt Haupt- und Nebenhand gleichzeitig (eine Instanz, zwei Handreferenzen).
 7. **Vier Schnellzugriffe (Quickslots)** sind Referenzen auf vorhandene Instanzen — kein Extra-Speicher.
 8. **Container:** Der Container selbst belegt **einen Basisplatz**; Inhalt nutzt die Container-Kapazität und trägt weiter zur Last bei. **Keine verschachtelten Container** in V1.
 9. **Definitionsscopes:** Core · World (effektives Weltprofil) · Personal (Eigen). Der effektive Katalog folgt der effektiven Welt des Charakters.
 10. Der **Charakter-Editor** vergibt/entfernt besessene Inventarinstanzen; er ist **kein Shop** und verbraucht **nicht** den abstrakten Ressourcenwert 0–5 (§10.3).
 11. **„Aus Inventar entfernen“** entfernt Besitz vom Charakter und erzeugt **kein** Boden-Loot / World-Drop.
-12. Der **volle Core-Katalog** (#108) mit **35 Definitionen** ist der universelle V1-Katalog (siehe §10.0).
+12. Der **volle Core-Katalog** (#108) mit **36 Definitionen** ist der universelle V1-Katalog (siehe §10.0).
 13. **Legacy-Migration / Overflow** aus alten `ItemDto[]`-Daten ist **Kompatibilitätsverhalten**, keine normale Core-Erschaffungsregel.
 
 ### 10.1 Waffenmerkmale

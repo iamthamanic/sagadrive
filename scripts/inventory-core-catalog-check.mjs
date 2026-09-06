@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Inventory v2 Core catalog contract (#108) — exactly 35 setting-neutral
+ * Inventory v2 Core catalog contract — exactly 36 setting-neutral
  * definitions with stable IDs, schema validation against #106 bounds, type
  * coverage, and resolve-by-id through the catalog boundary.
  * Location: scripts/inventory-core-catalog-check.mjs
@@ -77,6 +77,7 @@ const EXPECTED = Object.freeze([
   { id: 'core.misc.communicator', name: 'Kommunikationsmittel', type: 'misc', load: 0, cost: 2, stackLimit: 1, equipSlots: ['accessory1', 'accessory2'] },
   { id: 'core.misc.headgear', name: 'Kopfbedeckung / Schutzhelm', type: 'misc', load: 1, cost: 1, stackLimit: 1, equipSlots: ['head'] },
   { id: 'core.misc.special-device', name: 'Spezialgerät', type: 'misc', load: 1, cost: 3, stackLimit: 1, equipSlots: ['special'] },
+  { id: 'core.misc.footwear', name: 'Schuhe / Fußschutz', type: 'misc', load: 1, cost: 1, stackLimit: 1, equipSlots: ['feet'] },
 ]);
 
 const outdir = join(root, 'node_modules', '.cache', 'inventory-core-catalog-check');
@@ -117,12 +118,12 @@ function pickComparable(definition) {
 }
 
 // 1. Snapshot / table
-section('1 · Snapshot der 35 stabilen Core-Ids');
+section('1 · Snapshot der 36 stabilen Core-Ids');
 {
   const core = inv.listCoreItemDefinitions();
   equal(core.length, inv.CORE_CATALOG_SIZE, 'genau CORE_CATALOG_SIZE Einträge');
-  equal(core.length, 35, 'genau 35 Definitionen');
-  equal(EXPECTED.length, 35, 'Erwartungstabelle hat 35 Zeilen');
+  equal(core.length, 36, 'genau 36 Definitionen');
+  equal(EXPECTED.length, 36, 'Erwartungstabelle hat 36 Zeilen');
   equal(
     core.map((definition) => pickComparable(definition)),
     EXPECTED,
@@ -209,7 +210,7 @@ section('3 · Typ-/Kategorie-Abdeckung');
     tool: 8,
     consumable: 5,
     container: 4,
-    misc: 6,
+    misc: 7,
   }, 'jede Kategorie hat die V1-Anzahl');
 }
 
@@ -231,7 +232,7 @@ section('5 · Auflösung über Kataloggrenze');
   equal(inv.getCoreItemDefinition('core.weapon.unknown'), undefined, 'unbekannte Id ergibt undefined');
 
   const records = inv.coreCatalogRecords();
-  equal(records.length, 35, 'coreCatalogRecords liefert 35 aktive Records');
+  equal(records.length, 36, 'coreCatalogRecords liefert 36 aktive Records');
   const lookup = inv.createDefinitionLookup(records, {
     userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
     effectiveWorldProfileId: null,
@@ -269,4 +270,4 @@ if (failures > 0) {
   process.exit(1);
 }
 
-console.log('Inventory core catalog check passed (35 definitions, #108).');
+console.log('Inventory core catalog check passed (36 definitions).');

@@ -137,7 +137,7 @@ test('Inventory v2: desktop equipment pane remains beside grid at wide viewport'
 
   await expect(page.locator('[data-inventory-desktop-layout]')).toBeVisible();
   await expect(page.locator('[data-inventory-mobile-layout]')).toHaveCount(0);
-  await expect(page.getByText(/Ausrüstung|Schnellzugriff/i).first()).toBeVisible();
+  await expect(page.getByText(/Ausrüstung/i).first()).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, 'desktop-equipment.png'),
     fullPage: true,

@@ -59,7 +59,7 @@ import {
   parseProtection,
 } from './inventory-ui-labels';
 
-type MiscEquipChoice = 'none' | 'head' | 'accessory' | 'special';
+type MiscEquipChoice = 'none' | 'head' | 'accessory' | 'special' | 'feet';
 type WeaponHandling = 'oneHanded' | 'twoHanded';
 
 export interface PersonalItemFormDialogProps {
@@ -154,6 +154,7 @@ export function draftFromDefinition(definition: ItemDefinition) {
   if (slots.includes('head')) base.miscEquip = 'head';
   else if (slots.includes('accessory1') || slots.includes('accessory2')) base.miscEquip = 'accessory';
   else if (slots.includes('special')) base.miscEquip = 'special';
+  else if (slots.includes('feet')) base.miscEquip = 'feet';
   return base;
 }
 
@@ -225,6 +226,7 @@ function buildDraftPayload(form: ReturnType<typeof emptyDraft>): ItemDefinitionD
     if (form.miscEquip === 'head') draft.equipSlots = ['head'];
     if (form.miscEquip === 'accessory') draft.equipSlots = ['accessory1', 'accessory2'];
     if (form.miscEquip === 'special') draft.equipSlots = ['special'];
+    if (form.miscEquip === 'feet') draft.equipSlots = ['feet'];
   }
 
   return draft;
@@ -653,6 +655,7 @@ export function PersonalItemFormDialog({
                     <SelectItem value="head">Kopf</SelectItem>
                     <SelectItem value="accessory">Accessoire</SelectItem>
                     <SelectItem value="special">Spezial</SelectItem>
+                    <SelectItem value="feet">Füße</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

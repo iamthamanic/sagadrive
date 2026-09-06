@@ -144,7 +144,7 @@ function checkInventoryCatalog() {
 }
 
 function checkInventoryCoreCatalog() {
-  console.log('Inventory v2 Core catalog contract (#108): checking 35 stable definitions, schema, and type coverage...');
+  console.log('Inventory v2 Core catalog contract: checking 36 stable definitions, schema, and type coverage...');
   execFileSync(process.execPath, ['scripts/inventory-core-catalog-check.mjs'], {
     cwd: root,
     stdio: 'inherit',
@@ -176,7 +176,7 @@ function checkInventoryWorldCatalogUi() {
 }
 
 function checkInventoryEquipmentUi() {
-  console.log('Inventory v2 equipment UI contract (#111): checking Ausrüstung, containers, and Schnellzugriff...');
+  console.log('Inventory v2 equipment UI contract (#111): checking Ausrüstung and containers...');
   execFileSync(process.execPath, ['scripts/inventory-equipment-ui-check.mjs'], {
     cwd: root,
     stdio: 'inherit',

@@ -182,6 +182,7 @@ const corePhrases = [
   [/keine zusätzlichen Inventarplätze/, '3 · Stärke adds no slots'],
   [/Ausrüstungsslots|Ausrüstungsplätze/, '4 · equipment slots wording'],
   [/Kopf.*Körper.*Accessoire|Kopf, Körper, 2× Accessoire/, '5 · equipment slot list'],
+  [/Füße/, '5 · feet equipment slot'],
   [/Haupt-\/?Nebenhand|Haupthand.*Nebenhand/, '5 · hand slots'],
   [/Zweihändig/, '6 · two-handed'],
   [/Vier Schnellzugriffe|Vier Quickslots/, '7 · four quickslots'],
@@ -193,7 +194,7 @@ const corePhrases = [
   [/kein Shop/, '10 · not a shop'],
   [/0–5|0-5/, '10 · does not spend 0–5 resource'],
   [/Boden-Loot|World-Drop/, '11 · removal ≠ world drop'],
-  [/35 Definitionen/, '12 · 35 Core definitions'],
+  [/36 Definitionen/, '12 · 36 Core definitions'],
   [/Legacy-Migration|Overflow/, '13 · legacy migration/overflow'],
   [/Kompatibilit/, '13 · compatibility not creation rule'],
 ];
@@ -218,16 +219,16 @@ requireMatch(
 
 if (inventoryDoc) {
   requireMatch(inventoryDoc, /20 Basis-Inventarplätze/, 'inventory-v2.md: 20 slots');
-  requireMatch(inventoryDoc, /35 Definitionen/, 'inventory-v2.md: 35 defs');
+  requireMatch(inventoryDoc, /36 Definitionen/, 'inventory-v2.md: 36 defs');
 }
 
-// ── D · CORE_CATALOG_SIZE / 35 ───────────────────────────────────────────────
-section('D · CORE_CATALOG_SIZE / 35');
+// ── D · CORE_CATALOG_SIZE / 36 ───────────────────────────────────────────────
+section('D · CORE_CATALOG_SIZE / 36');
 const coreCatalog = read('src/domains/character/inventory-v2/core-catalog.ts');
 const coreCatalogCheck = read('scripts/inventory-core-catalog-check.mjs');
-requireMatch(coreCatalog, /CORE_CATALOG_SIZE\s*=\s*35/, 'core-catalog.ts CORE_CATALOG_SIZE = 35');
+requireMatch(coreCatalog, /CORE_CATALOG_SIZE\s*=\s*36/, 'core-catalog.ts CORE_CATALOG_SIZE = 36');
 requireMatch(coreCatalogCheck, /CORE_CATALOG_SIZE/, 'core-catalog-check references CORE_CATALOG_SIZE');
-requireMatch(coreCatalogCheck, /\b35\b/, 'core-catalog-check references 35');
+requireMatch(coreCatalogCheck, /\b36\b/, 'core-catalog-check references 36');
 
 // ── E · CharacterEditor saves inventory_v2 ───────────────────────────────────
 section('E · CharacterEditor inventory_v2');
