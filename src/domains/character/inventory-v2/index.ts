@@ -97,11 +97,14 @@ export { normalizeInventory, validateInventory } from './validation';
 export type {
   CatalogDefinitionRecord,
   CatalogDefinitionStatus,
+  CatalogMutationContext,
   CatalogVisibilityContext,
   WorldProfileBinding,
 } from './catalog';
 
 export {
+  canCreateDefinition,
+  canMutateDefinition,
   createDefinitionLookup,
   isDefinitionVisible,
   parseItemDefinition,
