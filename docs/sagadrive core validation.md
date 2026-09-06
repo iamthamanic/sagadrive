@@ -512,6 +512,8 @@ Prüfen:
 - Struktur vs. Personenschaden,
 - Übergang von Reise zu Chase zu direktem Kampf.
 
+**E2-Status (2026-09-06, #29):** Umgesetzt. Deterministische Engine `scripts/validate-travel-chase-vehicles.mjs` — 6/6 Pflichtszenarien, Distanzleiste Start/0/5 mit kritischer Doppelverschiebung, identische Distanzlogik Fuß/Tier/Fahrzeug, Reise-Fail-Forward ohne Wiederholungswurf, Maßstab +1 Halbierung / ≥2 Sperre / Schwachstelle-Ausnahme, kein Skill-Cherry-Pick. 0 Findings. Report: `.qa/runs/validate-travel-chase-vehicles-report.md`.
+
 ---
 
 # Phase F – Universalität und Module

@@ -255,6 +255,14 @@ function checkConditionsResistancesValidation() {
   });
 }
 
+function checkTravelChaseVehiclesValidation() {
+  console.log('Travel/chase/vehicles validation (#29): deterministic §10.4/§14.2/§14.10 E2 scenarios...');
+  execFileSync(process.execPath, ['scripts/validate-travel-chase-vehicles.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkDriveMomentumValidation() {
   console.log('Drive/momentum validation (#26): deterministic §2.10–2.12/§16.3 audit...');
   execFileSync(process.execPath, ['scripts/validate-drive-momentum.mjs'], {
@@ -423,6 +431,7 @@ checkWorldProfilesValidation();
 checkAllCoreSkillsValidation();
 checkNoncombatProjectsSocialValidation();
 checkConditionsResistancesValidation();
+checkTravelChaseVehiclesValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
