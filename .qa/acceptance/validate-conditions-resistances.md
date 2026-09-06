@@ -66,7 +66,7 @@ Alle Core-Zustände und §6.5-Widerstände werden deterministisch einzeln und in
 
 ## Composition Gate
 
-- HEAD_SHA: `1b86120` on branch `chore/33-validate-conditions-resistances`
+- HEAD_SHA: `20555a5` on branch `chore/33-validate-conditions-resistances`
 - Date: 2026-09-06
 - Verdict: **CLEAR**
 - Proof: `.qa/runs/composition-gate-validate-conditions-resistances.md`

@@ -1,6 +1,6 @@
 # Composition Gate Proof — validate-conditions-resistances (#33)
 
-- HEAD_SHA: `1b86120` on branch `chore/33-validate-conditions-resistances`
+- HEAD_SHA: `20555a5` on branch `chore/33-validate-conditions-resistances`
 - BASE_SHA: `ce29104` (main after #27/#28)
 - Date: 2026-09-06
 
