@@ -1,6 +1,6 @@
 # Composition Gate — inventory-equipment-paper-doll-feet
 
-- HEAD_SHA: `c2c2b99b06813509399508f02cf4ee52a9f02ace`
+- HEAD_SHA: `002cbef` (feature `c2c2b99`; this commit only pins QA proof SHAs)
 - Date: 2026-09-06
 - Verdict: CLEAR
 
