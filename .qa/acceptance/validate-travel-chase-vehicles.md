@@ -64,7 +64,7 @@ Reisen, Verfolgungsjagden und Fahrzeug-/Maßstabsregeln werden deterministisch z
 
 ## Composition Gate
 
-- HEAD_SHA: pending-commit on branch `chore/29-validate-travel-chase-vehicles`
+- HEAD_SHA: `e213b94` on branch `chore/29-validate-travel-chase-vehicles`
 - Date: 2026-09-06
 - Verdict: **CLEAR**
 - Proof: `.qa/runs/composition-gate-validate-travel-chase-vehicles.md`

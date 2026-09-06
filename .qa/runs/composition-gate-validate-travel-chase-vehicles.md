@@ -1,6 +1,6 @@
 # Composition Gate Proof — validate-travel-chase-vehicles (#29)
 
-- HEAD_SHA: pending-commit on branch `chore/29-validate-travel-chase-vehicles`
+- HEAD_SHA: `e213b94` on branch `chore/29-validate-travel-chase-vehicles`
 - BASE_SHA: `6c0469c` (main after #33)
 - Date: 2026-09-06
 
