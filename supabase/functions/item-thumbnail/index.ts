@@ -215,6 +215,8 @@ async function uploadToStorage(
   bytes: Uint8Array,
   mime: ItemThumbnailMime,
 ): Promise<void> {
+  const payload = new Uint8Array(bytes.byteLength);
+  payload.set(bytes);
   const response = await fetch(`${config.url}/storage/v1/object/${BUCKET}/${path}`, {
     method: 'POST',
     headers: {
@@ -223,7 +225,7 @@ async function uploadToStorage(
       'Content-Type': mime,
       'x-upsert': 'false',
     },
-    body: new Blob([bytes], { type: mime }),
+    body: payload,
     signal: AbortSignal.timeout(30_000),
   });
   if (!response.ok) {
