@@ -429,6 +429,14 @@ function checkSagaDriveItemRulesKernel() {
   });
 }
 
+function checkItemDefinitionPersistence() {
+  console.log('ItemDefinition persistence lifecycle & security (#136): CRUD/fork/taxonomy roundtrip...');
+  execFileSync(process.execPath, ['scripts/item-definition-persistence-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -439,6 +447,7 @@ checkChangedDenoFunctions();
 checkArchitectureBoundaries();
 checkItemDomainTaxonomy();
 checkSagaDriveItemRulesKernel();
+checkItemDefinitionPersistence();
 checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();

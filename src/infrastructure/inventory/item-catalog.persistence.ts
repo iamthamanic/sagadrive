@@ -1,9 +1,10 @@
 /**
  * item-catalog.persistence — row shapes and mapping for Inventory v2 catalog
- * definitions (#107). The DTO mirrors `public.inventory_item_definitions`
+ * definitions (#107 / #136). The DTO mirrors `public.inventory_item_definitions`
  * from migration 015.
  * Location: src/infrastructure/inventory/item-catalog.persistence.ts
  */
+import { ITEM_DEFINITION_PAYLOAD_VERSION } from '../../domains/items';
 import { parseItemDefinition } from '../../domains/character/inventory-v2';
 import type {
   CatalogDefinitionRecord,
@@ -54,8 +55,12 @@ export function mapDefinitionRow(dto: ItemDefinitionDto): CatalogDefinitionRecor
  *
  * `id` and `scope` are stored as columns and re-applied on read, so keeping a
  * second copy inside the payload would let the two drift apart.
+ * Stamps `payloadVersion` for the taxonomy / asset-key contract (#136).
  */
 export function toDefinitionPayload(definition: ItemDefinition): Record<string, unknown> {
   const { id: _id, scope: _scope, ...payload } = definition;
-  return payload;
+  return {
+    ...payload,
+    payloadVersion: ITEM_DEFINITION_PAYLOAD_VERSION,
+  };
 }

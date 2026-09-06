@@ -1,5 +1,5 @@
 /**
- * Inventory v2 catalog policy (#107).
+ * Inventory v2 catalog policy (#107 / #136).
  *
  * Pure rules for which item definitions a character may see and how a
  * character's effective world profile is resolved. Persistence and
@@ -10,6 +10,26 @@
  * Location: src/domains/character/inventory-v2/catalog.ts
  */
 
+import {
+  isItemCapability,
+  isItemContext,
+  isItemKindKey,
+  isItemOrigin,
+  isItemRole,
+  isItemSettingTag,
+  isItemTechLevel,
+  normalizeItemDefinition,
+  validateItemDefinitionMetadata,
+} from '../../items';
+import type {
+  ItemCapability,
+  ItemContext,
+  ItemKindKey,
+  ItemOrigin,
+  ItemRole,
+  ItemSettingTag,
+  ItemTechLevel,
+} from '../../items';
 import { EQUIPMENT_SLOTS } from './types';
 import type {
   EquipmentSlot,
@@ -44,6 +64,16 @@ export interface CatalogDefinitionRecord {
 export interface CatalogVisibilityContext {
   userId: string;
   effectiveWorldProfileId: string | null;
+}
+
+/**
+ * Trusted mutation context — owner and editable worlds come from auth/RLS
+ * helpers, never from form fields (#136).
+ */
+export interface CatalogMutationContext {
+  userId: string;
+  /** World profiles the caller may edit. Empty ⇒ no World writes. */
+  editableWorldProfileIds: readonly string[];
 }
 
 /**
@@ -97,6 +127,53 @@ export function isDefinitionVisible(
 }
 
 /**
+ * Whether the caller may create/update/archive/restore this record (#136).
+ * Core/builtin are never mutable. Cross-owner and cross-world return false.
+ */
+export function canMutateDefinition(
+  record: CatalogDefinitionRecord,
+  context: CatalogMutationContext,
+): boolean {
+  switch (record.definition.scope) {
+    case 'core':
+      return false;
+    case 'personal': {
+      const ownerUserId = normalizeId(record.ownerUserId);
+      const userId = normalizeId(context.userId);
+      if (!ownerUserId || !userId) return false;
+      return ownerUserId === userId;
+    }
+    case 'world': {
+      const worldProfileId = normalizeId(record.worldProfileId);
+      if (!worldProfileId) return false;
+      return context.editableWorldProfileIds.some(
+        (id) => normalizeId(id) === worldProfileId,
+      );
+    }
+    default:
+      return false;
+  }
+}
+
+/** Whether the caller may create a new definition in the given scope. */
+export function canCreateDefinition(
+  scope: ItemDefinitionScope,
+  context: CatalogMutationContext,
+  worldProfileId?: string | null,
+): boolean {
+  if (scope === 'core') return false;
+  if (scope === 'personal') {
+    return normalizeId(context.userId) !== null;
+  }
+  if (scope === 'world') {
+    const wid = normalizeId(worldProfileId);
+    if (!wid) return false;
+    return context.editableWorldProfileIds.some((id) => normalizeId(id) === wid);
+  }
+  return false;
+}
+
+/**
  * Definitions offered by the Add/Catalog surfaces: visible AND active, in a
  * stable order (Core before World before Personal, then `de-DE` name, then id).
  */
@@ -138,6 +215,9 @@ const ITEM_TYPES: readonly InventoryItemType[] = [
  * screen. Identity (`id`, `scope`) comes from the trusted columns, never from
  * the payload — a payload claiming a different scope must not be able to
  * smuggle a Personal item into a World catalog.
+ *
+ * Taxonomy tags fail closed: unknown values reject the whole payload (#136).
+ * Absent taxonomy is fine (legacy); normalize fills kindKey/origin defaults.
  */
 export function parseItemDefinition(
   id: string,
@@ -193,6 +273,8 @@ export function parseItemDefinition(
     definition.requirements = { minimumStrength };
   }
 
+  if (!applyTaxonomyFields(definition, raw)) return null;
+
   // A container without positions is unusable by moveIntoContainer, so give it
   // the same single position the domain assumes rather than emitting a
   // definition the rest of the layer would reject.
@@ -200,7 +282,73 @@ export function parseItemDefinition(
     definition.containerCapacity = 1;
   }
 
-  return definition;
+  const metadata = validateItemDefinitionMetadata(definition);
+  if (!metadata.ok) return null;
+
+  return normalizeItemDefinition(definition);
+}
+
+/**
+ * Apply optional taxonomy / provenance from the payload. Returns false when a
+ * present field is malformed (fail-closed). Absent fields are left unset.
+ */
+function applyTaxonomyFields(
+  definition: ItemDefinition,
+  raw: Record<string, unknown>,
+): boolean {
+  if (raw.kindKey !== undefined) {
+    if (!isItemKindKey(raw.kindKey)) return false;
+    definition.kindKey = raw.kindKey as ItemKindKey;
+  }
+
+  if (raw.techLevel !== undefined) {
+    if (!isItemTechLevel(raw.techLevel)) return false;
+    definition.techLevel = raw.techLevel as ItemTechLevel;
+  }
+
+  if (raw.origin !== undefined) {
+    if (!isItemOrigin(raw.origin)) return false;
+    definition.origin = raw.origin as ItemOrigin;
+  }
+
+  if (raw.basedOnDefinitionId !== undefined) {
+    if (typeof raw.basedOnDefinitionId !== 'string' || raw.basedOnDefinitionId.length === 0) {
+      return false;
+    }
+    definition.basedOnDefinitionId = raw.basedOnDefinitionId;
+  }
+
+  const settingTags = readKnownStringList(raw.settingTags, isItemSettingTag);
+  if (settingTags === 'invalid') return false;
+  if (settingTags) definition.settingTags = settingTags as ItemSettingTag[];
+
+  const contexts = readKnownStringList(raw.contexts, isItemContext);
+  if (contexts === 'invalid') return false;
+  if (contexts) definition.contexts = contexts as ItemContext[];
+
+  const capabilities = readKnownStringList(raw.capabilities, isItemCapability);
+  if (capabilities === 'invalid') return false;
+  if (capabilities) definition.capabilities = capabilities as ItemCapability[];
+
+  const roles = readKnownStringList(raw.roles, isItemRole);
+  if (roles === 'invalid') return false;
+  if (roles) definition.roles = roles as ItemRole[];
+
+  return true;
+}
+
+function readKnownStringList(
+  value: unknown,
+  isKnown: (entry: unknown) => boolean,
+): string[] | null | 'invalid' {
+  if (value === undefined) return null;
+  if (!Array.isArray(value)) return 'invalid';
+  const out: string[] = [];
+  for (const entry of value) {
+    if (!isKnown(entry)) return 'invalid';
+    out.push(entry as string);
+  }
+  return out;
 }
 
 function isIntegerInRange(value: unknown, min: number, max: number): boolean {

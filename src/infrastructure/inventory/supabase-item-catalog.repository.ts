@@ -1,10 +1,11 @@
 /**
  * supabase-item-catalog.repository — Supabase adapter for Inventory v2 catalog
- * definitions and effective world-profile resolution (#107).
+ * definitions and effective world-profile resolution (#107 / #136).
  *
  * Every filter applied here is a duplicate of a row level security policy in
  * migration 015, never the only line of defence: RLS decides what the user may
- * read or write, these predicates only keep the payload small.
+ * read or write, these predicates only keep the payload small and fail closed
+ * on cross-owner / cross-world / Core mutations.
  *
  * Location: src/infrastructure/inventory/supabase-item-catalog.repository.ts
  */
@@ -12,12 +13,21 @@ import { supabase } from '../../lib/supabase';
 import { getAuthenticatedUserId } from '../../lib/authenticatedUser';
 import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../lib/networkTimeout';
 import {
+  buildForkedItemDefinitionDraft,
+  validateItemDefinitionMetadata,
+} from '../../domains/items';
+import type { ItemDefinitionWriteDraft } from '../../domains/items';
+import {
+  canCreateDefinition,
+  canMutateDefinition,
   coreCatalogRecords,
+  getCoreItemDefinition,
   parseItemDefinition,
   resolveEffectiveWorldProfileId,
 } from '../../domains/character/inventory-v2';
 import type {
   CatalogDefinitionRecord,
+  CatalogMutationContext,
   ItemDefinition,
 } from '../../domains/character/inventory-v2';
 import {
@@ -32,7 +42,12 @@ const CHARACTERS_TABLE = 'characters';
 const PROJECTS_TABLE = 'projects';
 
 /** Draft for creating or updating a definition; identity is assigned by the repository. */
-export interface ItemDefinitionDraft extends Omit<ItemDefinition, 'id' | 'scope'> {}
+export interface ItemDefinitionDraft extends ItemDefinitionWriteDraft {}
+
+/** Target for fork — Personal owner / World binding from trusted context only. */
+export type ForkDefinitionTarget =
+  | { scope: 'personal' }
+  | { scope: 'world'; worldProfileId: string };
 
 export class SupabaseItemCatalogRepository {
   /**
@@ -155,12 +170,17 @@ export class SupabaseItemCatalogRepository {
   /** Create a Personal definition owned by the authenticated user. */
   async createPersonalDefinition(draft: ItemDefinitionDraft): Promise<CatalogDefinitionRecord> {
     const userId = await getAuthenticatedUserId();
+    const context: CatalogMutationContext = { userId, editableWorldProfileIds: [] };
+    if (!canCreateDefinition('personal', context)) {
+      throw new Error('Persönliche Definition nicht erlaubt.');
+    }
     return this.insertDefinition('personal', draft, userId, null);
   }
 
   /**
    * Create a World definition. Authorization is the world profile's own edit
    * rule, enforced by RLS via `current_user_can_edit_world_profile`.
+   * `worldProfileId` comes from trusted caller context, never from the draft.
    */
   async createWorldDefinition(
     worldProfileId: string,
@@ -170,28 +190,57 @@ export class SupabaseItemCatalogRepository {
     if (!worldProfileId) {
       throw new Error('Eine Welt-Definition benötigt ein Weltprofil.');
     }
+    const context: CatalogMutationContext = {
+      userId,
+      editableWorldProfileIds: [worldProfileId],
+    };
+    if (!canCreateDefinition('world', context, worldProfileId)) {
+      throw new Error('Welt-Definition nicht erlaubt.');
+    }
     return this.insertDefinition('world', draft, userId, worldProfileId);
   }
 
   /**
    * Update a definition's payload. Id, scope and ownership are immutable — the
    * database triggers reject any attempt to change them, so a rename can never
-   * strand an owned instance.
+   * strand an owned instance. Cross-owner / Core writes fail closed.
    */
   async updateDefinition(definitionId: string, draft: ItemDefinitionDraft): Promise<CatalogDefinitionRecord> {
+    assertPersistedMutableId(definitionId);
+    const userId = await getAuthenticatedUserId();
+    const existing = await this.loadPersistedRecord(definitionId);
+    if (!existing) {
+      throw new Error('Definition konnte nicht gespeichert werden.');
+    }
+
+    if (existing.definition.scope === 'personal') {
+      if (!canMutateDefinition(existing, { userId, editableWorldProfileIds: [] })) {
+        throw new Error('Definition konnte nicht gespeichert werden.');
+      }
+    } else if (existing.definition.scope !== 'world' || !existing.worldProfileId) {
+      // World edit authority remains RLS (`current_user_can_edit_world_profile`).
+      throw new Error('Definition konnte nicht gespeichert werden.');
+    }
+
     const scope = scopeOfId(definitionId);
-    // Validate before writing. Writing first and parsing afterwards would leave
-    // a previously valid definition permanently unreadable (mapDefinitionRow
-    // returns null) while the caller only sees a generic save error.
     const payload = assertWritablePayload(definitionId, scope, draft);
 
+    let query = supabase
+      .from(DEFINITIONS_TABLE)
+      .update({ payload })
+      .eq('id', definitionId)
+      .eq('scope', scope);
+
+    // Defense in depth: Personal updates must match the session owner even if
+    // RLS were misconfigured. World writes bind the known world_profile_id.
+    if (scope === 'personal') {
+      query = query.eq('owner_user_id', userId);
+    } else {
+      query = query.eq('world_profile_id', assertUuid(existing.worldProfileId as string, 'Weltprofil'));
+    }
+
     const { data, error } = await raceWithTimeoutReject(
-      supabase
-        .from(DEFINITIONS_TABLE)
-        .update({ payload })
-        .eq('id', definitionId)
-        .select(ITEM_DEFINITION_COLUMNS)
-        .maybeSingle(),
+      query.select(ITEM_DEFINITION_COLUMNS).maybeSingle(),
       SUPABASE_QUERY_TIMEOUT_MS,
       'Definition konnte nicht gespeichert werden (Zeitüberschreitung).',
     );
@@ -209,13 +258,36 @@ export class SupabaseItemCatalogRepository {
     definitionId: string,
     status: 'active' | 'archived',
   ): Promise<CatalogDefinitionRecord> {
+    assertPersistedMutableId(definitionId);
+    const userId = await getAuthenticatedUserId();
+    const existing = await this.loadPersistedRecord(definitionId);
+    if (!existing) {
+      throw new Error('Definition konnte nicht geändert werden.');
+    }
+    if (existing.definition.scope === 'personal') {
+      if (!canMutateDefinition(existing, { userId, editableWorldProfileIds: [] })) {
+        throw new Error('Definition konnte nicht geändert werden.');
+      }
+    } else if (existing.definition.scope !== 'world' || !existing.worldProfileId) {
+      throw new Error('Definition konnte nicht geändert werden.');
+    }
+
+    const scope = scopeOfId(definitionId);
+
+    let query = supabase
+      .from(DEFINITIONS_TABLE)
+      .update({ status })
+      .eq('id', definitionId)
+      .eq('scope', scope);
+
+    if (scope === 'personal') {
+      query = query.eq('owner_user_id', userId);
+    } else {
+      query = query.eq('world_profile_id', assertUuid(existing.worldProfileId as string, 'Weltprofil'));
+    }
+
     const { data, error } = await raceWithTimeoutReject(
-      supabase
-        .from(DEFINITIONS_TABLE)
-        .update({ status })
-        .eq('id', definitionId)
-        .select(ITEM_DEFINITION_COLUMNS)
-        .maybeSingle(),
+      query.select(ITEM_DEFINITION_COLUMNS).maybeSingle(),
       SUPABASE_QUERY_TIMEOUT_MS,
       'Status konnte nicht geändert werden (Zeitüberschreitung).',
     );
@@ -223,6 +295,61 @@ export class SupabaseItemCatalogRepository {
       throw new Error(`Failed to change item definition status: ${error.message}`);
     }
     return requireRecord(data as ItemDefinitionDto | null, 'Definition konnte nicht geändert werden.');
+  }
+
+  /**
+   * Fork any readable source (Core/World/Personal) into a new Personal or World
+   * definition. Always allocates a new id; never overwrites the source.
+   */
+  async forkDefinition(
+    sourceDefinitionId: string,
+    target: ForkDefinitionTarget,
+  ): Promise<CatalogDefinitionRecord> {
+    // Ensure session before resolving source (RLS + owner derivation).
+    await getAuthenticatedUserId();
+    const source = await this.resolveForkSource(sourceDefinitionId);
+    if (!source) {
+      throw new Error('Quell-Definition wurde nicht gefunden.');
+    }
+
+    if (target.scope === 'personal') {
+      const draft = buildForkedItemDefinitionDraft(source, 'personal');
+      return this.createPersonalDefinition(draft);
+    }
+
+    const worldProfileId = target.worldProfileId;
+    if (!worldProfileId) {
+      throw new Error('Eine Welt-Definition benötigt ein Weltprofil.');
+    }
+    const draft = buildForkedItemDefinitionDraft(source, 'world');
+    return this.createWorldDefinition(worldProfileId, draft);
+  }
+
+  private async resolveForkSource(sourceDefinitionId: string): Promise<ItemDefinition | null> {
+    if (sourceDefinitionId.startsWith('core:')) {
+      return getCoreItemDefinition(sourceDefinitionId) ?? null;
+    }
+
+    const record = await this.loadPersistedRecord(sourceDefinitionId);
+    return record?.definition ?? null;
+  }
+
+  /** Load one persisted row; RLS decides visibility. Returns null when absent. */
+  private async loadPersistedRecord(definitionId: string): Promise<CatalogDefinitionRecord | null> {
+    const { data, error } = await raceWithTimeoutReject(
+      supabase
+        .from(DEFINITIONS_TABLE)
+        .select(ITEM_DEFINITION_COLUMNS)
+        .eq('id', definitionId)
+        .maybeSingle(),
+      SUPABASE_QUERY_TIMEOUT_MS,
+      'Definition konnte nicht geladen werden (Zeitüberschreitung).',
+    );
+    if (error) {
+      throw new Error(`Failed to load item definition: ${error.message}`);
+    }
+    if (!data) return null;
+    return mapDefinitionRow(data as ItemDefinitionDto);
   }
 
   private async insertDefinition(
@@ -273,6 +400,14 @@ function scopeOfId(definitionId: string): PersistedDefinitionScope {
   throw new Error(`Nicht persistierbare Definition: ${definitionId}`);
 }
 
+/** Core / builtin ids are never mutated through this repository. */
+function assertPersistedMutableId(definitionId: string): void {
+  if (definitionId.startsWith('core:')) {
+    throw new Error('Core-Definitionen sind schreibgeschützt.');
+  }
+  scopeOfId(definitionId);
+}
+
 /**
  * Build a payload the read path will accept, or refuse the write.
  *
@@ -285,7 +420,12 @@ function assertWritablePayload(
   scope: PersistedDefinitionScope,
   draft: ItemDefinitionDraft,
 ): Record<string, unknown> {
-  const payload = toDefinitionPayload({ ...draft, id: definitionId, scope });
+  const candidate: ItemDefinition = { ...draft, id: definitionId, scope };
+  const metadata = validateItemDefinitionMetadata(candidate);
+  if (!metadata.ok) {
+    throw new Error('Ungültige Definition — Speichern abgebrochen.');
+  }
+  const payload = toDefinitionPayload(candidate);
   if (!parseItemDefinition(definitionId, scope, payload)) {
     throw new Error('Ungültige Definition — Speichern abgebrochen.');
   }

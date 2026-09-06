@@ -1,7 +1,8 @@
 /**
  * item-catalog-service — application-facing facade for the Inventory v2 catalog
- * (#107). This is the boundary the character UI consumes; app slices must not
- * query `inventory_item_definitions` themselves.
+ * (#107 / #136). This is the boundary the character UI consumes; app slices must
+ * not query `inventory_item_definitions` themselves. Lifecycle ops adapt the
+ * `domains/items` write/fork API onto the existing catalog table.
  * Location: src/infrastructure/inventory/item-catalog-service.ts
  */
 import {
@@ -13,8 +14,13 @@ import type {
   ItemDefinition,
   ItemDefinitionLookup,
 } from '../../domains/character/inventory-v2';
-import { supabaseItemCatalogRepository } from './supabase-item-catalog.repository';
-import type { ItemDefinitionDraft } from './supabase-item-catalog.repository';
+import {
+  supabaseItemCatalogRepository,
+} from './supabase-item-catalog.repository';
+import type {
+  ForkDefinitionTarget,
+  ItemDefinitionDraft,
+} from './supabase-item-catalog.repository';
 
 /** Everything a character screen needs to render and extend its inventory. */
 export interface CharacterItemCatalog {
@@ -89,4 +95,15 @@ export function restoreDefinition(definitionId: string): Promise<CatalogDefiniti
   return supabaseItemCatalogRepository.setDefinitionStatus(definitionId, 'active');
 }
 
-export type { ItemDefinitionDraft };
+/**
+ * Fork Core/World/Personal into a new Personal or World definition.
+ * Always a new id with provenance; never overwrites the source.
+ */
+export function forkDefinition(
+  sourceDefinitionId: string,
+  target: ForkDefinitionTarget,
+): Promise<CatalogDefinitionRecord> {
+  return supabaseItemCatalogRepository.forkDefinition(sourceDefinitionId, target);
+}
+
+export type { ForkDefinitionTarget, ItemDefinitionDraft };

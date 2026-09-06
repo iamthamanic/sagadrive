@@ -1,5 +1,6 @@
 /**
- * items — public domain API for ItemDefinition + taxonomy/provenance (#134).
+ * items — public domain API for ItemDefinition + taxonomy/provenance (#134)
+ * and definition write/fork helpers (#136).
  * Inventory v2 re-exports ItemDefinition for compatibility; new consumers
  * should prefer this barrel.
  * Location: src/domains/items/index.ts
@@ -38,3 +39,9 @@ export { normalizeItemDefinition } from './normalize';
 
 export type { ItemDefinitionMetadataValidation } from './validate';
 export { validateItemDefinitionMetadata } from './validate';
+
+export { ITEM_DEFINITION_PAYLOAD_VERSION } from './payload';
+export type { ItemDefinitionPayloadVersion } from './payload';
+
+export type { ItemDefinitionWriteDraft } from './fork';
+export { buildForkedItemDefinitionDraft } from './fork';
