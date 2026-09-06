@@ -240,6 +240,8 @@ Beispiel für einen wichtigen Regressionstest:
 
 Der Character Editor wird damit gleichzeitig UX-Test und erster realer Contract-Test zwischen Regelwerk und digitalem Modell.
 
+**B1-Status (2026-09-06, #21):** Umgesetzt. Playwright `e2e/validate-character-editor-rules-ux.spec.ts` (LEGAL-1/2/3, I1–I8, Save/Reload, Gebunden) + strukturelles Gate `scripts/validate-character-editor-rules-ux.mjs` (Findings: 0). Report: `.qa/runs/validate-character-editor-rules-ux-report.md`.
+
 ---
 
 # Phase C – direkter Kampf
