@@ -1,127 +1,38 @@
 /**
  * inventory-v2 types — Inventory v2 domain contracts (issue #106).
- * Item definitions, item instances, the 20-slot base grid, containers,
- * equipment and quick access. Downstream issues (#107–#114) consume these
- * contracts and must not restate the rules they encode.
+ * Item instances, slots, and operation results live here. ItemDefinition is
+ * owned by `domains/items` (#134) and re-exported for compatibility.
+ * Primitives (scopes, slots, mechanics) live in `./primitives` to avoid a
+ * circular import with the items domain.
  * Location: src/domains/character/inventory-v2/types.ts
  *
  * Domain-pure: no React, no Supabase, no UI imports.
  */
 
-/**
- * Where a catalog definition comes from. Ownership (which world profile, which
- * user) is resolved by the catalog/persistence layer — never trusted from
- * character state.
- */
-export type ItemDefinitionScope = 'core' | 'world' | 'personal';
+import type { EquipmentSlot } from './primitives';
+import type { ItemDefinition } from '../../items/definition';
 
-/** Item type. Drives the deterministic base-grid sort; `container` marks container definitions. */
-export type InventoryItemType =
-  | 'weapon'
-  | 'armor'
-  | 'shield'
-  | 'tool'
-  | 'consumable'
-  | 'container'
-  | 'misc';
+export type {
+  EquipmentSlot,
+  InventoryItemType,
+  ItemCost,
+  ItemDefinitionScope,
+  ItemLoad,
+  ItemMechanics,
+  ItemRequirements,
+  MinimumStrength,
+} from './primitives';
 
-/** The eight named equipment positions (incl. feet / Schuhe). */
-export type EquipmentSlot =
-  | 'head'
-  | 'body'
-  | 'accessory1'
-  | 'accessory2'
-  | 'mainHand'
-  | 'offHand'
-  | 'special'
-  | 'feet';
+export {
+  BASE_SLOT_COUNT,
+  EQUIPMENT_SLOTS,
+  HAND_SLOTS,
+  INVENTORY_V2_SCHEMA_VERSION,
+  QUICK_SLOT_COUNT,
+  SORT_TYPE_ORDER,
+} from './primitives';
 
-/** Single source of truth for equipment-slot iteration order. */
-export const EQUIPMENT_SLOTS: readonly EquipmentSlot[] = [
-  'head',
-  'body',
-  'accessory1',
-  'accessory2',
-  'mainHand',
-  'offHand',
-  'special',
-  'feet',
-];
-
-/** The two hand references a two-handed item occupies. */
-export const HAND_SLOTS: readonly EquipmentSlot[] = ['mainHand', 'offHand'];
-
-/** Exactly 20 base positions. Strength never changes this count. */
-export const BASE_SLOT_COUNT = 20;
-
-/** Exactly 4 ordered quick-access references. */
-export const QUICK_SLOT_COUNT = 4;
-
-/** Schema marker for persisted inventory state (#109 migrates onto this version). */
-export const INVENTORY_V2_SCHEMA_VERSION = 1;
-
-/**
- * Deterministic base-grid sort order by type.
- * weapon → armor → shield → tool → consumable → container → misc
- */
-export const SORT_TYPE_ORDER: readonly InventoryItemType[] = [
-  'weapon',
-  'armor',
-  'shield',
-  'tool',
-  'consumable',
-  'container',
-  'misc',
-];
-
-/** Minimum-strength values used by the SagaDrive core rules (matches legacy `ItemDto.minimum_strength`). */
-export type MinimumStrength = 1 | 2 | 4;
-
-/** Load points per unit, per the core resource rule. */
-export type ItemLoad = 0 | 1 | 2 | 3;
-
-/** Abstract cost 0–5 per the core resource rule. Owning an item is not a purchase. */
-export type ItemCost = 0 | 1 | 2 | 3 | 4 | 5;
-
-/** Mechanical metadata carried over from the legacy `ItemDto` shape. */
-export interface ItemMechanics {
-  damage?: string;
-  damageType?: string;
-  protection?: 1 | 2 | 3;
-  traits?: string[];
-}
-
-/** Equip prerequisites. Unmet prerequisites block equipping, never ownership. */
-export interface ItemRequirements {
-  minimumStrength?: MinimumStrength;
-}
-
-/**
- * Catalog definition of an item — shared and scope-owned. Instances reference a
- * definition by id; the definition never changes per character.
- */
-export interface ItemDefinition extends ItemMechanics {
-  /** Stable catalog id, e.g. `core:shortsword`. */
-  id: string;
-  scope: ItemDefinitionScope;
-  name: string;
-  description: string;
-  type: InventoryItemType;
-  load: ItemLoad;
-  cost: ItemCost;
-  /** Maximum units per stack; `1` means non-stackable. */
-  stackLimit: number;
-  requirements?: ItemRequirements;
-  /** Equipment positions this definition may occupy. Absent/empty = not equippable. */
-  equipSlots?: EquipmentSlot[];
-  /** A two-handed item is one instance occupying both hand references. */
-  twoHanded?: boolean;
-  /** Capacity positions of a container definition; required when `type === 'container'`. */
-  containerCapacity?: number;
-  /** Future-facing visual metadata. No 3D behavior in this epic. */
-  iconKey?: string;
-  assetKey?: string;
-}
+export type { ItemDefinition } from '../../items/definition';
 
 /**
  * Per-instance state that can genuinely differ between two instances of the

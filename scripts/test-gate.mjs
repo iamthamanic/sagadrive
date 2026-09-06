@@ -413,6 +413,14 @@ function checkArchitectureBoundaries() {
   });
 }
 
+function checkItemDomainTaxonomy() {
+  console.log('Item domain taxonomy & provenance (#134): ItemDefinition owner, normalize/validate...');
+  execFileSync(process.execPath, ['scripts/item-domain-taxonomy-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -421,6 +429,7 @@ execFileSync('npm', ['run', 'checks'], {
 
 checkChangedDenoFunctions();
 checkArchitectureBoundaries();
+checkItemDomainTaxonomy();
 checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
