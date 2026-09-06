@@ -421,6 +421,14 @@ function checkItemDomainTaxonomy() {
   });
 }
 
+function checkSagaDriveItemRulesKernel() {
+  console.log('SagaDrive item rules kernel (#135): load/cost/protection/Traglast/tool contracts...');
+  execFileSync(process.execPath, ['scripts/sagadrive-item-rules-kernel-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -430,6 +438,7 @@ execFileSync('npm', ['run', 'checks'], {
 checkChangedDenoFunctions();
 checkArchitectureBoundaries();
 checkItemDomainTaxonomy();
+checkSagaDriveItemRulesKernel();
 checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
