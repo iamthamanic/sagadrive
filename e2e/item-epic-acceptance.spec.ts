@@ -53,7 +53,10 @@ async function openItemsTab(page: Page) {
   await page.getByRole('button', { name: 'Bibliothek' }).first().click();
   await expect(page.getByRole('heading', { name: 'Meine Bibliothek' })).toBeVisible();
   await page.getByRole('tab', { name: 'Items' }).click();
-  await expect(page.locator('[data-item-library-browser]')).toBeVisible({ timeout: 20_000 });
+  // Desktop + mobile layouts may both mount the browser host; assert the first.
+  await expect(page.locator('[data-item-library-browser]').first()).toBeVisible({
+    timeout: 20_000,
+  });
 }
 
 async function openNewCharacterInventory(page: Page) {
