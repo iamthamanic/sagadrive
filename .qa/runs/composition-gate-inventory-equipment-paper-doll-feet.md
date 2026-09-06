@@ -1,6 +1,6 @@
 # Composition Gate — inventory-equipment-paper-doll-feet
 
-- HEAD_SHA: WORKTREE (uncommitted; base HEAD `475c15e05cb935e1cc3e77ebbb6a49f67094ea0f`)
+- HEAD_SHA: `c2c2b99b06813509399508f02cf4ee52a9f02ace`
 - Date: 2026-09-06
 - Verdict: CLEAR
 

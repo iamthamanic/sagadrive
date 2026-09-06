@@ -1,7 +1,7 @@
 # Review Ticket — inventory-equipment-paper-doll-feet
 
-- BASE_SHA: `475c15e05cb935e1cc3e77ebbb6a49f67094ea0f` (main / branch tip)
-- HEAD_SHA: WORKTREE (pre-commit)
+- BASE_SHA: `475c15e05cb935e1cc3e77ebbb6a49f67094ea0f` (main)
+- HEAD_SHA: `c2c2b99b06813509399508f02cf4ee52a9f02ace`
 - Date: 2026-09-06
 - Verdict: **ACCEPT**
 
