@@ -247,6 +247,14 @@ function checkNoncombatProjectsSocialValidation() {
   });
 }
 
+function checkConditionsResistancesValidation() {
+  console.log('Conditions/resistances validation (#33): deterministic §9/§6.5 C3 scenarios...');
+  execFileSync(process.execPath, ['scripts/validate-conditions-resistances.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkDriveMomentumValidation() {
   console.log('Drive/momentum validation (#26): deterministic §2.10–2.12/§16.3 audit...');
   execFileSync(process.execPath, ['scripts/validate-drive-momentum.mjs'], {
@@ -414,6 +422,7 @@ checkDriveMomentumValidation();
 checkWorldProfilesValidation();
 checkAllCoreSkillsValidation();
 checkNoncombatProjectsSocialValidation();
+checkConditionsResistancesValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
