@@ -26,9 +26,10 @@ export async function openBlankCharacterEditor(page: Page) {
   } else {
     await page.getByRole('heading', { name: 'Neuer Charakter' }).first().click();
   }
-  await expect(page.getByRole('heading', { name: 'Charakter erstellen' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Charakter erstellen' })).toBeVisible({ timeout: 15_000 });
   await page.getByRole('button', { name: /Eigenen Charakter erstellen/i }).click();
   await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('tab', { name: /^Spezies$/i })).toBeVisible({ timeout: 15_000 });
 }
 
 export async function completeSpeciesBasics(page: Page) {

@@ -1,6 +1,6 @@
 # Composition Gate Proof — validate-character-editor-rules-ux (#21)
 
-- HEAD_SHA: `92b0a61` on branch `chore/21-validate-character-editor-rules-ux`
+- HEAD_SHA: pending (synced after commit)
 - BASE_SHA: `a9ebc92` (main after #29)
 - Date: 2026-09-06
 
@@ -40,4 +40,4 @@ n/a
 
 ## Gates (lokal)
 - `node scripts/validate-character-editor-rules-ux.mjs` → Findings: 0
-- Playwright: `npx playwright test e2e/validate-character-editor-rules-ux.spec.ts` (CI Browser E2E)
+- Playwright: `npx playwright test e2e/validate-character-editor-rules-ux.spec.ts` → 3/3 PASS

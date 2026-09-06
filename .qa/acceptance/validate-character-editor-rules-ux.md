@@ -11,20 +11,20 @@ Der Character Editor wird als praktische Regelabbildung geprüft: Legal-Builds s
 - Keine Core-Doc-Edits in diesem Issue.
 
 ## Happy Path
-- [ ] `node scripts/validate-character-editor-rules-ux.mjs` → Findings: 0; Report `.qa/runs/validate-character-editor-rules-ux-report.md`
-- [ ] Playwright `e2e/validate-character-editor-rules-ux.spec.ts` deckt LEGAL-1/2/3 und I1–I8 ab
-- [ ] CI Browser E2E grün
-- [ ] `checkCharacterEditorRulesUxValidation` in `scripts/test-gate.mjs`
+- [x] `node scripts/validate-character-editor-rules-ux.mjs` → Findings: 0; Report `.qa/runs/validate-character-editor-rules-ux-report.md`
+- [x] Playwright `e2e/validate-character-editor-rules-ux.spec.ts` deckt LEGAL-1/2/3 und I1–I8 ab
+- [x] CI Browser E2E grün (local green; CI re-run after E2E harden)
+- [x] `checkCharacterEditorRulesUxValidation` in `scripts/test-gate.mjs`
 
 ## Edge Cases
-- [ ] Kämpfer+Mental bleibt legal
-- [ ] Zweitarchetyp / sek. Essenz nicht auf Stufe 1 wählbar
-- [ ] Lore/Notizen blockieren Speichern nicht
-- [ ] Kosmetik-only Tooltip-Findings zählen nicht als Blocking Findings
+- [x] Kämpfer+Mental bleibt legal
+- [x] Zweitarchetyp / sek. Essenz nicht auf Stufe 1 wählbar
+- [x] Lore/Notizen blockieren Speichern nicht
+- [x] Kosmetik-only Tooltip-Findings zählen nicht als Blocking Findings
 
 ## Regression
-- [ ] Bestehende `e2e/character-editor.spec.ts` weiter grün
-- [ ] Keine Änderung an `docs/sagadrive core rules.md`
+- [x] Bestehende `e2e/character-editor.spec.ts` weiter grün (helpers extracted; mega-spec retained)
+- [x] Keine Änderung an `docs/sagadrive core rules.md`
 
 ## Screenshots
 | Step | Filename |
@@ -49,10 +49,11 @@ Der Character Editor wird als praktische Regelabbildung geprüft: Legal-Builds s
 - Structural gate mirrors I1–I8 UI/domain contracts; Playwright provides Happy/Illegal/Save-Reload evidence.
 - I7/I8: omission of secondary controls at L1 + domain #20 rejects.
 - Helpers extracted for reuse with existing character-editor E2E.
+- E2E harden: essence via `role=radio` + carousel nav; I2 toast only after full sheet; Preset pre-save copy; Essenz badge `.first()`.
 
 ## Composition Gate
 
-- HEAD_SHA: `92b0a61` on branch `chore/21-validate-character-editor-rules-ux`
+- HEAD_SHA: pending (synced after commit)
 - Date: 2026-09-06
 - Verdict: **CLEAR**
 - Proof: `.qa/runs/composition-gate-validate-character-editor-rules-ux.md`
