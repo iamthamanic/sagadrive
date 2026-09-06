@@ -8,6 +8,7 @@ import {
   type SagaDriveAttributeKey,
   type SagaDriveSkillKey,
 } from '../character-creation';
+import { carryCapacity as computeCarryCapacity } from '../items';
 import { getSagaDriveAppliedExperienceBonus } from '../skill-progression';
 import type {
   ComputeSagaDriveDerivedStatsInput,
@@ -24,7 +25,7 @@ function skillShortLabel(key: SagaDriveSkillKey): string {
 
 export function computeSagaDriveDerivedStats(input: ComputeSagaDriveDerivedStatsInput): DerivedStatComputation[] {
   const { attributes, finalSkillRanks, experienceBonus, level, overloaded } = input;
-  const carryCapacity = 5 + 2 * attributes.strength;
+  const carryCapacity = computeCarryCapacity(attributes.strength);
   const movement = overloaded ? 6 : 9;
 
   const meleeDefense = finalSkillRanks.melee;

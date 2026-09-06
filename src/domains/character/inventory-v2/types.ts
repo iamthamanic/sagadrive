@@ -19,6 +19,7 @@ export type {
   ItemDefinitionScope,
   ItemLoad,
   ItemMechanics,
+  ItemProtection,
   ItemRequirements,
   MinimumStrength,
 } from './primitives';

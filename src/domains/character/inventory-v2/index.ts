@@ -29,6 +29,7 @@ export type {
   ItemInstanceState,
   ItemLoad,
   ItemMechanics,
+  ItemProtection,
   ItemRequirements,
   MinimumStrength,
 } from './types';
@@ -41,6 +42,16 @@ export {
   QUICK_SLOT_COUNT,
   SORT_TYPE_ORDER,
 } from './types';
+
+/**
+ * Traglast ceiling — owned by rules/sagadrive/items; re-exported so Inventory
+ * consumers share one formula with derived-stats (load summing stays local).
+ */
+export {
+  carryCapacity,
+  exceedsDoubleCarryCapacity,
+  isOverloaded,
+} from '../../rules/sagadrive/items';
 
 export {
   calculateTotalLoad,

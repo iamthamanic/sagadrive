@@ -5,7 +5,20 @@
  * Location: src/domains/character/inventory-v2/primitives.ts
  *
  * Domain-pure: no React, no Supabase, no UI imports.
+ *
+ * ItemLoad / ItemCost / MinimumStrength / ItemProtection are owned by the
+ * SagaDrive items rules kernel (`domains/rules/sagadrive/items`) and re-exported
+ * here for Inventory v2 compatibility (#135).
  */
+
+import type {
+  ItemCost,
+  ItemLoad,
+  ItemProtection,
+  MinimumStrength,
+} from '../../rules/sagadrive/items';
+
+export type { ItemCost, ItemLoad, ItemProtection, MinimumStrength };
 
 /**
  * Where a catalog definition comes from. Ownership (which world profile, which
@@ -73,20 +86,11 @@ export const SORT_TYPE_ORDER: readonly InventoryItemType[] = [
   'misc',
 ];
 
-/** Minimum-strength values used by the SagaDrive core rules (matches legacy `ItemDto.minimum_strength`). */
-export type MinimumStrength = 1 | 2 | 4;
-
-/** Load points per unit, per the core resource rule. */
-export type ItemLoad = 0 | 1 | 2 | 3;
-
-/** Abstract cost 0–5 per the core resource rule. Owning an item is not a purchase. */
-export type ItemCost = 0 | 1 | 2 | 3 | 4 | 5;
-
 /** Mechanical metadata carried over from the legacy `ItemDto` shape. */
 export interface ItemMechanics {
   damage?: string;
   damageType?: string;
-  protection?: 1 | 2 | 3;
+  protection?: ItemProtection;
   traits?: string[];
 }
 
