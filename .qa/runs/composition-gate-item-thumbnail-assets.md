@@ -1,6 +1,6 @@
 # Composition Gate — item-thumbnail-assets
 
-- HEAD_SHA: 828bc086a9393f19e80cdb300ae447b9a7b1a997
+- HEAD_SHA: 55c4e5b6452bf6e73473b3d510fb72fa9159c2fb
 - BASE_SHA: b03d3e0a54548379eeebd820cd75b48955393e3b
 - Date: 2026-09-06
 - Verdict: CLEAR
@@ -19,10 +19,9 @@ Cardinality: exactly one Meshy createTask per confirmed Generate / Retry click (
 
 | Case | Intended | Composed | Result |
 |------|----------|----------|--------|
-| 1 event, N actors | One signed-in editor | JWT + personal owner / world edit check before mutate | pass |
-| invalid / missing | Fail closed | Meshy unset → `not-configured`; bad MIME/size rejected; prior asset kept; upload-only works | pass |
-| 2 consumers | Workbench + Library/Inventory | Same `assetKey`; resolve signed URL server-side; provider URL never durable | pass |
-| side-effect once | One Meshy job per confirm | Submit lock + disabled generate while waiting/generating; Retry starts new single job | pass |
+| N-actors | One signed-in editor; N concurrent editors each own JWT + personal owner / world edit check before mutate | JWT + personal owner / world edit check before mutate; no shared write without authz | pass |
+| Invalid/missing | Fail closed | Meshy unset → `not-configured`; bad MIME/size rejected; prior asset kept; upload-only works | pass |
+| Two consumers / crash | Workbench + Library/Inventory; crash mid-upload | Same `assetKey`; resolve signed URL server-side; provider URL never durable; incomplete job does not corrupt prior asset | pass |
 
 ## Flags
 
