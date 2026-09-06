@@ -223,7 +223,7 @@ async function uploadToStorage(
       'Content-Type': mime,
       'x-upsert': 'false',
     },
-    body: bytes,
+    body: new Blob([bytes], { type: mime }),
     signal: AbortSignal.timeout(30_000),
   });
   if (!response.ok) {
