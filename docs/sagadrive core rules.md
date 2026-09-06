@@ -819,6 +819,8 @@ Werkzeuge sind Ausrüstung:
 - fehlt ein unverzichtbares Werkzeug, ist die Handlung unmöglich,
 - hochwertige Werkzeuge haben nur ausdrücklich definierte Vorteile.
 
+Die **36 Core-Gegenstandsarchetypen** (§10.0) bleiben der mechanische Kern für Werkzeuge und Ausrüstung. Standard-Packs, Weltkatalog (`item-catalog`) und Personal-Items erweitern den Content, ohne neue Regelwirkung oder stillschweigende Zahlenboni zu erfinden — konkrete Effekte bleiben Fertigkeit, Fähigkeit oder ausdrückliches Weltprofil.
+
 Berechtigungen, Lizenzen, Dienstgrad oder sozialer Status, Kontakte und Sicherheitsfreigaben sind von fachlicher Kompetenz getrennt.
 
 ### 5.8 Vollständige Fertigkeitsbeschreibungen
@@ -1387,12 +1389,12 @@ Verborgen ist kein globaler Zustand, sondern gilt immer relativ zu bestimmten Be
 
 ### 10.0 Core-Gegenstandskatalog (Inventory v2)
 
-Der Core-Katalog liefert **36 setting-neutrale mechanische Archetypen** (Waffen, Rüstung/Schild, Werkzeuge, Verbrauchsgüter, Container, Misc/Wearables). Sie sind versioniert, read-only und ohne Weltprofil spielbar.
+Der Core-Katalog liefert **36 setting-neutrale mechanische Archetypen** (Waffen, Rüstung/Schild, Werkzeuge, Verbrauchsgüter, Container, Misc/Wearables). Sie sind versioniert, read-only und ohne Weltprofil spielbar. Diese 36 bleiben der **mechanische Core**; konkrete Standarditems, World- und Personal-Content erweitern den Katalog **ohne neue Regelwirkung** (keine stillschweigenden Zahlenboni, keine neuen Kernsysteme).
 
 - Ids sind stabile Verträge (`core.weapon.*`, `core.armor.*`, …).
 - Werkzeuge und Verbrauchsgüter verleihen **keine** stillschweigenden Zahlenboni; konkrete Effekte kommen aus Fertigkeit, Fähigkeit oder Weltprofil.
 - Container belegen einen Basisslot; Inhalt zählt zur Last; Container-in-Container ist in V1 verboten.
-- Quelle: `src/domains/character/inventory-v2/core-catalog.ts` (Inventory v2).
+- Quelle: `src/domains/character/inventory-v2/core-catalog.ts` (Inventory v2); erweiterte Definitionen und Taxonomie: `src/domains/items/**` — siehe `docs/items.md`.
 - Produktvertrag (13 Regeln): `docs/inventory-v2.md`.
 
 ### 10.0.1 Inventory v2 — Slot-, Stapel-, Last- und Katalogregeln (V1/Core-Playtest)
@@ -1407,10 +1409,10 @@ Verbindlicher V1-/Core-Playtest-Vertrag für Inventory v2 (Epic #105 / #114). Er
 6. **Zweihändig** belegt Haupt- und Nebenhand gleichzeitig (eine Instanz, zwei Handreferenzen).
 7. **Vier Schnellzugriffe (Quickslots)** sind Referenzen auf vorhandene Instanzen — kein Extra-Speicher.
 8. **Container:** Der Container selbst belegt **einen Basisplatz**; Inhalt nutzt die Container-Kapazität und trägt weiter zur Last bei. **Keine verschachtelten Container** in V1.
-9. **Definitionsscopes:** Core · World (effektives Weltprofil) · Personal (Eigen). Der effektive Katalog folgt der effektiven Welt des Charakters.
+9. **Definitionsscopes:** Core · Standard (Builtin-Packs) · World (effektives Weltprofil + `item-catalog`) · Personal (Eigen). Definitionen stammen aus Item-Domain / World Catalog; Instanzen bleiben Character-owned. Der effektive Add-Katalog folgt der effektiven Welt des Charakters.
 10. Der **Charakter-Editor** vergibt/entfernt besessene Inventarinstanzen; er ist **kein Shop** und verbraucht **nicht** den abstrakten Ressourcenwert 0–5 (§10.3).
 11. **„Aus Inventar entfernen“** entfernt Besitz vom Charakter und erzeugt **kein** Boden-Loot / World-Drop.
-12. Der **volle Core-Katalog** (#108) mit **36 Definitionen** ist der universelle V1-Katalog (siehe §10.0).
+12. Der **volle Core-Katalog** (#108) mit **36 Definitionen** ist der universelle V1-Katalog (siehe §10.0); Standard/World/Personal erweitern Content ohne neue Regelwirkung.
 13. **Legacy-Migration / Overflow** aus alten `ItemDto[]`-Daten ist **Kompatibilitätsverhalten**, keine normale Core-Erschaffungsregel.
 
 ### 10.1 Waffenmerkmale

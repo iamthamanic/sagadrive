@@ -493,6 +493,14 @@ function checkItemInventoryWorldCatalogWire() {
   });
 }
 
+function checkItemEpicAcceptance() {
+  console.log('Item Epic final acceptance (#144): child gates, docs sync, no VITE Meshy, e2e...');
+  execFileSync(process.execPath, ['scripts/item-epic-acceptance-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -511,6 +519,7 @@ checkItemThumbnailAssets();
 checkItemModel3dAssets();
 checkItemWorldCatalogModule();
 checkItemInventoryWorldCatalogWire();
+checkItemEpicAcceptance();
 checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
