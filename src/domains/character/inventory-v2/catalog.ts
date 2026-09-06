@@ -264,6 +264,7 @@ export function parseItemDefinition(
   if (typeof raw.damageType === 'string' && raw.damageType) definition.damageType = raw.damageType;
   if (typeof raw.iconKey === 'string' && raw.iconKey) definition.iconKey = raw.iconKey;
   if (typeof raw.assetKey === 'string' && raw.assetKey) definition.assetKey = raw.assetKey;
+  if (typeof raw.model3d === 'string' && raw.model3d) definition.model3d = raw.model3d;
   if (Array.isArray(raw.traits)) {
     const traits = raw.traits.filter((trait): trait is string => typeof trait === 'string' && trait.length > 0);
     if (traits.length > 0) definition.traits = traits;

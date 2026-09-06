@@ -26,6 +26,7 @@ export interface ItemWorkbenchEditorProps {
   onArchive: () => void;
   onRestore: () => void;
   onAssetKeyChange: (assetKey: string | undefined) => void;
+  onModel3dChange: (model3d: string | undefined) => void;
 }
 
 export function ItemWorkbenchEditor({
@@ -42,6 +43,7 @@ export function ItemWorkbenchEditor({
   onArchive,
   onRestore,
   onAssetKeyChange,
+  onModel3dChange,
 }: ItemWorkbenchEditorProps) {
   return (
     <div
@@ -53,6 +55,7 @@ export function ItemWorkbenchEditor({
         definition={definition}
         readOnly={readOnly}
         onAssetKeyChange={onAssetKeyChange}
+        onModel3dChange={onModel3dChange}
       />
 
       <div className="flex min-w-0 flex-col gap-8">

@@ -469,6 +469,14 @@ function checkItemThumbnailAssets() {
   });
 }
 
+function checkItemModel3dAssets() {
+  console.log('Item Epic 3D + Meshy Image-to-3D (#141): GLB upload/generate contract, secrets fail-closed...');
+  execFileSync(process.execPath, ['scripts/item-model3d-assets-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -484,6 +492,7 @@ checkItemStandardPacks();
 checkItemLibraryBrowser();
 checkItemWorkbench();
 checkItemThumbnailAssets();
+checkItemModel3dAssets();
 checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();

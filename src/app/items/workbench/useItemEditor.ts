@@ -208,6 +208,16 @@ export function useItemEditor({ route, itemId, onCreated, onBack }: UseItemEdito
     });
   };
 
+  const applyModel3d = (model3d: string | undefined) => {
+    setDefinition((previous) => {
+      if (!previous) return previous;
+      if (model3d) return { ...previous, model3d };
+      const next = { ...previous };
+      delete next.model3d;
+      return next;
+    });
+  };
+
   const handleSave = async () => {
     if (mode === 'readonly' || mode === 'landing') return;
     const payload = buildWorkbenchDraft(form);
@@ -215,9 +225,10 @@ export function useItemEditor({ route, itemId, onCreated, onBack }: UseItemEdito
       setSaveError(payload);
       return;
     }
-    // Preserve thumbnail/icon keys set outside the form (Edge upload/Meshy).
+    // Preserve thumbnail/icon/3d keys set outside the form (Edge upload/Meshy).
     if (definition?.assetKey) payload.assetKey = definition.assetKey;
     if (definition?.iconKey) payload.iconKey = definition.iconKey;
+    if (definition?.model3d) payload.model3d = definition.model3d;
     setSaving(true);
     setSaveError('');
     try {
@@ -388,6 +399,7 @@ export function useItemEditor({ route, itemId, onCreated, onBack }: UseItemEdito
     handleBack,
     reload,
     applyAssetKey,
+    applyModel3d,
   };
 }
 
