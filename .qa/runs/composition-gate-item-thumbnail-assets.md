@@ -1,6 +1,7 @@
 # Composition Gate — item-thumbnail-assets
 
-- HEAD_SHA: 1f70b0452bc0154637c0e379465f9f11cd974695
+- HEAD_SHA: 828bc086a9393f19e80cdb300ae447b9a7b1a997
+- BASE_SHA: b03d3e0a54548379eeebd820cd75b48955393e3b
 - Date: 2026-09-06
 - Verdict: CLEAR
 
