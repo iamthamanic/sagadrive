@@ -20,7 +20,7 @@ export const INVENTORY_TYPE_LABELS: Record<InventoryItemType, string> = {
 };
 
 
-/** Equipment slot labels for Ausrüstung panel (#111). */
+/** Equipment slot labels for Ausrüstung panel (#111 + feet paper-doll). */
 export const EQUIPMENT_SLOT_LABELS: Record<EquipmentSlot, string> = {
   head: 'Kopf',
   body: 'Körper',
@@ -29,17 +29,37 @@ export const EQUIPMENT_SLOT_LABELS: Record<EquipmentSlot, string> = {
   mainHand: 'Haupthand',
   offHand: 'Nebenhand',
   special: 'Spezial',
+  feet: 'Füße',
 };
 
 /** Empty-slot category hints shown under equipment labels. */
 export const EQUIPMENT_SLOT_CATEGORY_HINTS: Record<EquipmentSlot, string> = {
   head: 'Kopfbedeckung',
   body: 'Rüstung',
-  accessory1: 'Accessoire',
-  accessory2: 'Accessoire',
+  accessory1: 'Handgelenk · Armband',
+  accessory2: 'Handgelenk · Ring',
   mainHand: 'Waffe / Werkzeug',
   offHand: 'Waffe / Schild',
-  special: 'Spezialgerät',
+  special: 'Gerät / Fokus / Modul',
+  feet: 'Schuhe / Fußschutz',
+};
+
+/**
+ * Tooltip copy: which item kinds belong in each equipment slot (examples).
+ * Shown next to the square-tile label via CircleHelp.
+ */
+export const EQUIPMENT_SLOT_HELP: Record<EquipmentSlot, string> = {
+  head: 'Kopfbedeckung und Helme: Helm, Hut, Haube, Stirnband, Maske, Visier oder ähnlicher Kopfschutz.',
+  body: 'Körperrüstung und Kleidung mit Schutzfunktion: Panzer, Weste, Mantel, Robe, Harnisch.',
+  accessory1:
+    'Schmuck und Kleingerät am Handgelenk oder als Accessoire: Armband, Reif, Amulett, Kommunikationsmittel.',
+  accessory2:
+    'Zweites Accessoire: Ring, Armband, Anhänger, kleines Kommunikations- oder Magiegerät.',
+  mainHand: 'Was die Haupthand führt: einhändige Waffe, Werkzeug, Stab oder Fokus.',
+  offHand: 'Nebenhand: Schild, Parierwaffe, zweite Waffe, Laterne oder ähnliches.',
+  special:
+    'Ein Spezialgerät oder Fokus (kein Helm/Rüstung/Waffe): Scanner, Cyberdeck, Ritualfokus, Artefakt, Modul.',
+  feet: 'Fußbekleidung und Fußschutz: Schuhe, Stiefel, Sandalen, Panzerstiefel.',
 };
 
 /** Exact UI copy when equip displacement needs more free base slots than available. */

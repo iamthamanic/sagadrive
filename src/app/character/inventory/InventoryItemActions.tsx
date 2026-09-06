@@ -2,7 +2,7 @@
  * InventoryItemActions — per-stack action menu for Inventory v2 (#110/#111/#113).
  * Desktop: DropdownMenu. Mobile: bottom Sheet with ~44px action rows.
  * Verschieben, Teilen, Zusammenführen, Ausrüsten, Öffnen, Behälter,
- * Schnellzugriff, Verbrauchen, Entfernen. Domain ops only.
+ * Verbrauchen, Entfernen. Domain ops only.
  * Location: src/app/character/inventory/InventoryItemActions.tsx
  */
 import { useState } from 'react';
@@ -83,7 +83,6 @@ export interface InventoryItemActionsProps {
   onRequestMove: () => void;
   onRequestSplit: () => void;
   onOpenContainer?: (containerInstanceId: string) => void;
-  onRequestQuickAssign?: (instanceId: string) => void;
 }
 
 type PendingEquip = {
@@ -102,7 +101,6 @@ export function InventoryItemActions({
   onRequestMove,
   onRequestSplit,
   onOpenContainer,
-  onRequestQuickAssign,
 }: InventoryItemActionsProps) {
   const [removeOpen, setRemoveOpen] = useState(false);
   const [removeAmount, setRemoveAmount] = useState(1);
@@ -382,19 +380,6 @@ export function InventoryItemActions({
           In Behälter verschieben
         </Button>
       )}
-      {onRequestQuickAssign && (
-        <Button
-          type="button"
-          variant="outline"
-          className="min-h-11 w-full justify-start"
-          onClick={() => {
-            closeActionsSheet();
-            onRequestQuickAssign(instanceId);
-          }}
-        >
-          Schnellzugriff zuweisen
-        </Button>
-      )}
       {canConsume && (
         <Button
           type="button"
@@ -494,11 +479,6 @@ export function InventoryItemActions({
             {canMoveIntoContainer && (
               <DropdownMenuItem onSelect={() => setContainerPickerOpen(true)}>
                 In Behälter verschieben
-              </DropdownMenuItem>
-            )}
-            {onRequestQuickAssign && (
-              <DropdownMenuItem onSelect={() => onRequestQuickAssign(instanceId)}>
-                Schnellzugriff zuweisen
               </DropdownMenuItem>
             )}
             {canConsume && (

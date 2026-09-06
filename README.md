@@ -70,7 +70,7 @@ Die UI behandelt SagaDrive Core nicht als umbenannte D&D-Maske. Sie verwendet di
 
 Spezies und ihre angeborenen Merkmale werden gemeinsam im Spezies-Tab konfiguriert. Jede Core-Spezies besitzt eine feste Merkmals-Allowlist und muss genau `3 / 3` Speziespunkte ausgeben. Konfigurierbare Merkmale verlangen ihre Details direkt an der Merkmalskarte. `Alien` dient als freier Spezies-Builder mit verpflichtendem Profilnamen und optionaler Körperbeschreibung; `Außergewöhnlicher Körperbau` bleibt bis zur Definition verbindlicher Varianten sichtbar, aber nicht auswählbar.
 
-Regelbegriffe und abgeleitete Werte besitzen kontextuelle Hilfen. Im Kompetenzen-Subtab verbinden Attributkarten per Bracket-Linien die davon abhängigen abgeleiteten Werte (Filter, ausgegraute Restwerte, Wert-Flash). Attribute, Fertigkeitsbudgets, Verteidigung, Gesundheit, Widerstände, Erholung und Traglast werden aus den Core-Regeln abgeleitet statt frei eingegeben. Das Inventar v2 nutzt **20 feste Basisplätze** plus Ausrüstung/Schnellzugriff; die **Traglast** bleibt `5 + 2 × Stärke` (Überlastungsfolgen in der UI). Details: `docs/inventory-v2.md`. Der Look-Tab ist ausdrücklich kosmetisch und verändert keine Regelwerte.
+Regelbegriffe und abgeleitete Werte besitzen kontextuelle Hilfen. Im Kompetenzen-Subtab verbinden Attributkarten per Bracket-Linien die davon abhängigen abgeleiteten Werte (Filter, ausgegraute Restwerte, Wert-Flash). Attribute, Fertigkeitsbudgets, Verteidigung, Gesundheit, Widerstände, Erholung und Traglast werden aus den Core-Regeln abgeleitet statt frei eingegeben. Das Inventar v2 nutzt **20 feste Basisplätze** plus Ausrüstung; die **Traglast** bleibt `5 + 2 × Stärke` (Überlastungsfolgen in der UI). Details: `docs/inventory-v2.md`. Der Look-Tab ist ausdrücklich kosmetisch und verändert keine Regelwerte.
 
 Die regelrelevanten Character-Creation-Daten werden getrennt gespeichert:
 
@@ -170,6 +170,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-06** — Inventar Ausrüstung: Paper-Doll inkl. Füße, PNG-Kacheln, gleiche Panel-Höhen; Schnellzugriff-UI entfernt (Domain bleibt) (`feat/inventory-equipment-paper-doll-feet`)
 - **2026-09-04** — Charakter-Tab startet auf Archetype; fertige Untertabs mit Checkbox-Icon; Archetyp-Beschreibungen (Rolle + mechanische Auswirkungen); Attributsbonus-Überschrift; „Frei +N“-Pills an Skill-Nodes entfernt (`feat/background-skill-points-in-nodes`, #103)
 - **2026-09-03** — Sticky preview: Essenz- and Archetype-Pills (icons, no Spezies pill) (`feat/background-skill-points-in-nodes`, #103)
 - **2026-09-03** — Attribute-Tab: Fertigkeiten-Karussell über Attributsbonus; Formel unter Skill-Nodes; Tab-Split Charakter/Hintergrund/Details (`feat/background-skill-points-in-nodes`, #103)
@@ -179,7 +180,6 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-09-03** — Preset skill provenance is single-source: `sagadrive_profile.freeSkillRanks` only (`fix/skill-progression-v2-remove-legacy`)
 - **2026-09-03** — Character presets no longer enforce a minimum of 6 trained skills (`fix/skill-progression-v2-remove-legacy`)
 - **2026-09-03** — Skill Progression v2 only: complete V2 provenance mandatory, fail-closed (Migration 014 unchanged) (`fix/skill-progression-v2-remove-legacy`)
-- **2026-09-02** — Skill Progression v2 Post-Merge Hardening: combined-state validation, level slot = one decision, spec draft + cascade prune (`fix/skill-progression-v2-post-merge-hardening`)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 

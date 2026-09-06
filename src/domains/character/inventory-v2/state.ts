@@ -141,7 +141,7 @@ export function isQuickSlotIndex(index: unknown): index is number {
   );
 }
 
-/** Is `value` one of the seven named equipment slots? */
+/** Is `value` one of the eight named equipment slots? */
 export function isEquipmentSlot(value: unknown): value is EquipmentSlot {
   return typeof value === 'string' && EQUIPMENT_SLOTS.includes(value as EquipmentSlot);
 }

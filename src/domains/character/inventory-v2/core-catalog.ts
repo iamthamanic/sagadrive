@@ -6,8 +6,8 @@
  * can create, edit or archive one. Ids are stable contracts — renaming an entry
  * must not change its id, because owned instances will reference the id.
  *
- * V1 playtest catalog (#108 option 11B): exactly 35 setting-neutral mechanical
- * archetypes. Do not invent extra entries here; further Core additions need a
+ * V1 playtest catalog (#108 option 11B + feet wearable): exactly 36
+ * setting-neutral mechanical archetypes. Further Core additions need a
  * separate issue.
  *
  * Location: src/domains/character/inventory-v2/core-catalog.ts
@@ -17,10 +17,10 @@ import type { CatalogDefinitionRecord } from './catalog';
 import type { ItemDefinition } from './types';
 
 /** Bumped whenever Core entries are added or changed, for cache invalidation. */
-export const CORE_CATALOG_VERSION = 2;
+export const CORE_CATALOG_VERSION = 3;
 
-/** Exact V1 Core catalog size — the completeness gate for #108. */
-export const CORE_CATALOG_SIZE = 35;
+/** Exact Core catalog size — completeness gate (was 35 in #108; +1 feet). */
+export const CORE_CATALOG_SIZE = 36;
 
 function deepFreeze<T>(value: T): T {
   if (value && typeof value === 'object' && !Object.isFrozen(value)) {
@@ -477,6 +477,18 @@ const CORE_DEFINITIONS: readonly ItemDefinition[] = deepFreeze([
     cost: 3,
     stackLimit: 1,
     equipSlots: ['special'],
+  },
+  {
+    id: 'core.misc.footwear',
+    scope: 'core',
+    name: 'Schuhe / Fußschutz',
+    description:
+      'Schuhe, Stiefel oder Fußschutz ohne eigenen Schutzwert. Schutz kommt nur, wenn eine Regel oder Fähigkeit ihn ausdrücklich vergibt. Nur im Füße-Slot ausrüstbar.',
+    type: 'misc',
+    load: 1,
+    cost: 1,
+    stackLimit: 1,
+    equipSlots: ['feet'],
   },
 ] satisfies ItemDefinition[]);
 

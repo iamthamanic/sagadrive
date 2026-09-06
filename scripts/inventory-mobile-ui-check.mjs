@@ -41,7 +41,6 @@ const requiredFiles = [
   'src/app/character/inventory/InventoryMoveTargetSheet.tsx',
   'src/app/character/inventory/InventoryBaseGrid.tsx',
   'src/app/character/inventory/InventoryEquipmentPanel.tsx',
-  'src/app/character/inventory/InventoryQuickSlotsBar.tsx',
   'src/app/character/inventory/InventoryItemActions.tsx',
   'src/app/character/inventory/InventoryContainerPanel.tsx',
 ];
@@ -56,13 +55,10 @@ const switchSrc = read('src/app/character/inventory/InventoryMobileViewSwitch.ts
 const moveSheet = read('src/app/character/inventory/InventoryMoveTargetSheet.tsx');
 const grid = read('src/app/character/inventory/InventoryBaseGrid.tsx');
 const equipment = read('src/app/character/inventory/InventoryEquipmentPanel.tsx');
-const quick = read('src/app/character/inventory/InventoryQuickSlotsBar.tsx');
 const actions = read('src/app/character/inventory/InventoryItemActions.tsx');
 const container = read('src/app/character/inventory/InventoryContainerPanel.tsx');
 const catalog = read('src/app/character/inventory/InventoryCatalogDialog.tsx');
-const allUi = [panel, switchSrc, moveSheet, grid, equipment, quick, actions, container, catalog].join(
-  '\n',
-);
+const allUi = [panel, switchSrc, moveSheet, grid, equipment, actions, container, catalog].join('\n');
 
 section('2 · Mobile segment Inventar | Ausrüstung');
 requireMatch(panel, /InventoryMobileViewSwitch/, 'Panel wires InventoryMobileViewSwitch');
@@ -81,12 +77,10 @@ requireMatch(grid, /Inventarplatz \$\{slotIndex \+ 1\}: leer|Inventarplatz \$\{.
 requireMatch(grid, /Inventarplatz \$\{slotIndex \+ 1\}: \$\{displayName\} ×\$\{qty\}/, 'aria occupied ×qty');
 requireMatch(grid, /min-h-\[88px\]|min-h-11|min-h-\[44px\]/, 'Slot min touch height');
 
-section('4 · Equipment / Quick / Actions touch + a11y');
-requireMatch(equipment, /min-h-11/, 'Equipment min-h-11');
+section('4 · Equipment / Actions touch + a11y');
+requireMatch(equipment, /md:hidden/, 'Equipment mobile square grid');
 requireMatch(equipment, /: leer`|: leer'/, 'Equipment empty aria');
 requireMatch(equipment, /Zweihändig \/ gekoppelt/, 'Two-handed copy');
-requireMatch(quick, /min-h-11/, 'Quick slots min-h-11');
-requireMatch(quick, /Schnellzugriff \$\{index \+ 1\}: leer/, 'Quick empty aria');
 requireMatch(actions, /min-h-11/, 'Item actions min-h-11');
 requireMatch(actions, /useIsMobile|actionsSheetOpen/, 'Mobile actions Sheet');
 requireMatch(actions, /data-inventory-item-actions-sheet|SheetContent/, 'Actions Sheet content');

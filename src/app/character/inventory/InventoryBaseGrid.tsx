@@ -33,7 +33,8 @@ export interface InventoryBaseGridProps {
   onRequestMove: (slotIndex: number) => void;
   onRequestSplit: (slotIndex: number) => void;
   onOpenContainer?: (containerInstanceId: string) => void;
-  onRequestQuickAssign?: (instanceId: string) => void;
+  /** Desktop: stretch cells to fill equal-height panel beside Ausrüstung. */
+  fillPanel?: boolean;
 }
 
 function matchesFilter(
@@ -71,7 +72,7 @@ export function InventoryBaseGrid({
   onRequestMove,
   onRequestSplit,
   onOpenContainer,
-  onRequestQuickAssign,
+  fillPanel = false,
 }: InventoryBaseGridProps) {
   const handleDragStart = (event: DragEvent<HTMLDivElement>, slotIndex: number) => {
     const instanceId = state.baseSlots[slotIndex];
@@ -108,7 +109,12 @@ export function InventoryBaseGrid({
 
   return (
     <div
-      className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-5"
+      className={[
+        'grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-5',
+        fillPanel ? 'h-full min-h-0 lg:auto-rows-fr lg:grid-rows-4' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       data-inventory-base-grid
       role="list"
       aria-label="Inventar-Basisplätze"
@@ -144,6 +150,7 @@ export function InventoryBaseGrid({
             aria-label={ariaLabel}
             className={[
               'relative flex min-h-[88px] flex-col rounded-lg border p-2 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              fillPanel ? 'lg:min-h-0 lg:h-full' : '',
               occupied
                 ? 'border-border bg-card hover:bg-accent/40'
                 : 'border-dashed border-border/70 bg-muted/15 text-muted-foreground',
@@ -172,7 +179,6 @@ export function InventoryBaseGrid({
                     onRequestMove={() => onRequestMove(slotIndex)}
                     onRequestSplit={() => onRequestSplit(slotIndex)}
                     onOpenContainer={onOpenContainer}
-                    onRequestQuickAssign={onRequestQuickAssign}
                   />
                 </div>
                 <p className="break-words pr-10 text-sm font-medium leading-snug">

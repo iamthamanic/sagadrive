@@ -1,16 +1,16 @@
 /**
  * CharacterInventoryV2Panel — orchestrates Inventory v2 UI (#110/#111/#113).
  * Loads catalog via item-catalog-service, applies domain ops through onChange.
- * Desktop (md+): base grid beside Ausrüstung + Schnellzugriff (lg:flex-row).
+ * Desktop (md+): base grid beside Ausrüstung (lg:flex-row).
  * Mobile (<640px): segmented Inventar | Ausrüstung views; move via Sheet.
  * Location: src/app/character/inventory/CharacterInventoryV2Panel.tsx
  */
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUpDown, Plus } from 'lucide-react';
+import { ArrowDownAZ, CircleHelp, Plus } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
 import {
   BASE_SLOT_COUNT,
   calculateTotalLoad,
@@ -38,7 +38,6 @@ import {
 } from './InventoryMobileViewSwitch';
 import { InventoryMoveTargetSheet } from './InventoryMoveTargetSheet';
 import { InventoryOverflowSection } from './InventoryOverflowSection';
-import { InventoryQuickSlotsBar } from './InventoryQuickSlotsBar';
 import { InventorySummaryBar } from './InventorySummaryBar';
 
 export interface InventoryLoadInfo {
@@ -111,7 +110,6 @@ export function CharacterInventoryV2Panel({
   const [splitAmount, setSplitAmount] = useState(1);
   const [highlightedSlots, setHighlightedSlots] = useState<ReadonlySet<number>>(new Set());
   const [openContainerInstanceId, setOpenContainerInstanceId] = useState<string | null>(null);
-  const [pendingQuickAssignId, setPendingQuickAssignId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<InventoryMobileView>('inventar');
   const [moveSheetSlot, setMoveSheetSlot] = useState<number | null>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -310,85 +308,110 @@ export function CharacterInventoryV2Panel({
     mode.kind === 'move' || mode.kind === 'split' ? mode.sourceSlot : null;
 
   const toolbar = (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          className="min-h-11"
-          onClick={() => setCatalogOpen(true)}
-          disabled={catalogLoading && !catalog}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Gegenstand hinzufügen
-        </Button>
-        <Button type="button" variant="outline" className="min-h-11" onClick={handleSort}>
-          <ArrowUpDown className="mr-2 h-4 w-4" />
-          Sortieren
-        </Button>
+    <div className="flex min-w-0 flex-nowrap items-center gap-2">
+      <Button
+        type="button"
+        className="h-11 shrink-0"
+        onClick={() => setCatalogOpen(true)}
+        disabled={catalogLoading && !catalog}
+      >
+        <Plus className="mr-2 h-4 w-4" />
+        Gegenstand hinzufügen
+      </Button>
+      <Tooltip pinOnClick={false}>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="size-11 shrink-0"
+            onClick={handleSort}
+            aria-label="Inventar sortieren"
+          >
+            <ArrowDownAZ className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="max-w-[14rem] text-xs leading-snug">
+          Gegenstände im Inventar sortieren
+        </TooltipContent>
+      </Tooltip>
+      <Input
+        id="inventory-grid-filter"
+        className="h-11 min-w-0 flex-1"
+        value={filterQuery}
+        onChange={(event) => setFilterQuery(event.target.value)}
+        placeholder="Name / Typ filtern…"
+        aria-label="Filter (nur Anzeige)"
+      />
+    </div>
+  );
+
+  const inventoryHelp = isNarrow
+    ? `${BASE_SLOT_COUNT} feste Basisplätze. Menü „Verschieben“ öffnet die Zielplatz-Auswahl.`
+    : `${BASE_SLOT_COUNT} feste Basisplätze. Drag & Drop oder Menü „Verschieben“. Filter ändert nicht die gespeicherte Reihenfolge.`;
+
+  /** Matching outer shells so Inventar + Ausrüstung read as equal panels on desktop. */
+  const panelShellClass =
+    'min-w-0 rounded-xl border border-foreground/10 bg-card/20 p-3 lg:flex lg:min-h-[30rem] lg:flex-col';
+
+  const baseGridBlock = (
+    <div className={`${panelShellClass} flex-1`} data-inventory-panel="inventar">
+      <div className="mb-3 flex items-center gap-1.5">
+        <h3 className="text-sm font-semibold tracking-wide">Inventar</h3>
+        <Tooltip pinOnClick={false}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex size-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+              aria-label="Hilfe: Inventar"
+            >
+              <CircleHelp className="pointer-events-none size-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            sideOffset={6}
+            className="max-w-[260px] px-2.5 py-1.5 text-left text-[11px] leading-relaxed"
+          >
+            {inventoryHelp}
+          </TooltipContent>
+        </Tooltip>
       </div>
-      <div className="w-full min-w-0 space-y-2 sm:max-w-xs">
-        <Label htmlFor="inventory-grid-filter">Filter (nur Anzeige)</Label>
-        <Input
-          id="inventory-grid-filter"
-          value={filterQuery}
-          onChange={(event) => setFilterQuery(event.target.value)}
-          placeholder="Name / Typ filtern…"
+      <div className="min-h-0 flex-1">
+        <InventoryBaseGrid
+          state={state}
+          lookup={lookup}
+          strength={strength}
+          selectedSourceSlot={selectedSourceSlot}
+          moveMode={mode.kind === 'move' || mode.kind === 'split'}
+          highlightedSlots={highlightedSlots}
+          filterQuery={filterQuery}
+          fillPanel
+          onSelectSlot={handleSelectSlot}
+          onDropSlot={handleDropSlot}
+          onApplyResult={apply}
+          onRefuse={refuse}
+          onRequestMove={handleRequestMove}
+          onRequestSplit={handleRequestSplit}
+          onOpenContainer={(containerInstanceId) => {
+            setOpenContainerInstanceId(containerInstanceId);
+          }}
         />
       </div>
     </div>
   );
 
-  const baseGridBlock = (
-    <div className="min-w-0 flex-1 space-y-2">
-      <InventoryBaseGrid
-        state={state}
-        lookup={lookup}
-        strength={strength}
-        selectedSourceSlot={selectedSourceSlot}
-        moveMode={mode.kind === 'move' || mode.kind === 'split'}
-        highlightedSlots={highlightedSlots}
-        filterQuery={filterQuery}
-        onSelectSlot={handleSelectSlot}
-        onDropSlot={handleDropSlot}
-        onApplyResult={apply}
-        onRefuse={refuse}
-        onRequestMove={handleRequestMove}
-        onRequestSplit={handleRequestSplit}
-        onOpenContainer={(containerInstanceId) => {
-          setOpenContainerInstanceId(containerInstanceId);
-        }}
-        onRequestQuickAssign={(instanceId) => {
-          setPendingQuickAssignId(instanceId);
-        }}
-      />
-      <p className="text-xs text-muted-foreground">
-        {BASE_SLOT_COUNT} feste Basisplätze.
-        {isNarrow
-          ? ' Menü „Verschieben“ öffnet die Zielplatz-Auswahl.'
-          : ' Drag & Drop oder Menü „Verschieben“. Filter ändert nicht die gespeicherte Reihenfolge.'}
-      </p>
-    </div>
-  );
-
   const equipmentBlock = (
-    <aside className="w-full min-w-0 space-y-5 lg:w-72 lg:shrink-0">
+    <aside
+      className={`${panelShellClass} w-full lg:w-96 lg:shrink-0`}
+      data-inventory-panel="ausruestung"
+    >
       <InventoryEquipmentPanel
         state={state}
         lookup={lookup}
         strength={strength}
         onApplyResult={apply}
         onRefuse={refuse}
-        onRequestQuickAssign={(instanceId) => {
-          setPendingQuickAssignId(instanceId);
-        }}
-      />
-      <InventoryQuickSlotsBar
-        state={state}
-        lookup={lookup}
-        onApplyResult={apply}
-        onRefuse={refuse}
-        pendingAssignInstanceId={pendingQuickAssignId}
-        onPendingAssignHandled={() => setPendingQuickAssignId(null)}
       />
     </aside>
   );
@@ -480,7 +503,7 @@ export function CharacterInventoryV2Panel({
           {toolbar}
           {modeBanner}
           {catalogErrorBanner}
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
             {baseGridBlock}
             {equipmentBlock}
           </div>

@@ -25,7 +25,7 @@ export type InventoryItemType =
   | 'container'
   | 'misc';
 
-/** The seven named equipment positions. */
+/** The eight named equipment positions (incl. feet / Schuhe). */
 export type EquipmentSlot =
   | 'head'
   | 'body'
@@ -33,7 +33,8 @@ export type EquipmentSlot =
   | 'accessory2'
   | 'mainHand'
   | 'offHand'
-  | 'special';
+  | 'special'
+  | 'feet';
 
 /** Single source of truth for equipment-slot iteration order. */
 export const EQUIPMENT_SLOTS: readonly EquipmentSlot[] = [
@@ -44,6 +45,7 @@ export const EQUIPMENT_SLOTS: readonly EquipmentSlot[] = [
   'mainHand',
   'offHand',
   'special',
+  'feet',
 ];
 
 /** The two hand references a two-handed item occupies. */

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Inventory v2 equipment / container / quick-access UI contract (#111).
- * Static checks that new panels exist, import domain ops, and that the
- * CharacterInventoryV2Panel wires Ausrüstung + Schnellzugriff.
+ * Inventory v2 equipment / container UI contract (#111).
+ * Static checks that panels exist, import domain ops, and that the
+ * CharacterInventoryV2Panel wires Ausrüstung (ohne Schnellzugriff-UI).
  * Location: scripts/inventory-equipment-ui-check.mjs
  */
 import { existsSync, readFileSync } from 'node:fs';
@@ -44,7 +44,8 @@ function rejectMatch(content, pattern, label) {
 
 const requiredFiles = [
   'src/app/character/inventory/InventoryEquipmentPanel.tsx',
-  'src/app/character/inventory/InventoryQuickSlotsBar.tsx',
+  'src/app/character/inventory/InventoryEquipmentPaperDollFigure.tsx',
+  'src/app/character/inventory/InventoryEquipmentPaperDollHotspots.tsx',
   'src/app/character/inventory/InventoryContainerPanel.tsx',
   'src/app/character/inventory/inventory-equip-preview.ts',
   'src/app/character/inventory/inventory-ui-labels.ts',
@@ -58,48 +59,58 @@ for (const rel of requiredFiles) {
 }
 
 const equipment = read('src/app/character/inventory/InventoryEquipmentPanel.tsx');
-const quick = read('src/app/character/inventory/InventoryQuickSlotsBar.tsx');
+const figure = read('src/app/character/inventory/InventoryEquipmentPaperDollFigure.tsx');
 const container = read('src/app/character/inventory/InventoryContainerPanel.tsx');
 const panel = read('src/app/character/inventory/CharacterInventoryV2Panel.tsx');
 const actions = read('src/app/character/inventory/InventoryItemActions.tsx');
 const labels = read('src/app/character/inventory/inventory-ui-labels.ts');
 const grid = read('src/app/character/inventory/InventoryBaseGrid.tsx');
-const allNew = [equipment, quick, container, panel, actions, labels, grid].join('\n');
+const allNew = [equipment, figure, container, panel, actions, labels, grid].join('\n');
 
 section('2 · Domain-Ops importiert (kein Reimplementieren)');
-for (const op of [
-  'equipItem',
-  'unequipItem',
-  'moveIntoContainer',
-  'moveOutOfContainer',
-  'assignQuickSlot',
-  'clearQuickSlot',
-]) {
+for (const op of ['equipItem', 'unequipItem', 'moveIntoContainer', 'moveOutOfContainer']) {
   requireMatch(allNew, new RegExp(`\\b${op}\\b`), `Domain-Op ${op}`);
 }
 requireMatch(equipment, /from ['"].*domains\/character\/inventory-v2/, 'Equipment imports domain');
-requireMatch(quick, /from ['"].*domains\/character\/inventory-v2/, 'QuickSlots imports domain');
 requireMatch(container, /from ['"].*domains\/character\/inventory-v2/, 'Container imports domain');
 
 section('3 · Panel-Verdrahtung');
 requireMatch(panel, /InventoryEquipmentPanel/, 'Panel rendert EquipmentPanel');
-requireMatch(panel, /InventoryQuickSlotsBar/, 'Panel rendert QuickSlots');
 requireMatch(panel, /InventoryContainerPanel/, 'Panel rendert ContainerPanel');
 requireMatch(panel, /lg:flex-row/, 'Layout flex-col lg:flex-row');
-requireMatch(panel, /lg:w-72/, 'Aside lg:w-72');
+requireMatch(panel, /lg:w-96/, 'Aside lg:w-96 for paper-doll');
 requireMatch(panel, /openContainerInstanceId/, 'Container open state');
+rejectMatch(panel, /InventoryQuickSlotsBar/, 'Schnellzugriff-UI entfernt');
+rejectMatch(allNew, /Schnellzugriff zuweisen/, 'Kein Schnellzugriff-Menü');
 
 section('4 · Labels & Wortlaut');
 requireMatch(labels, /EQUIPMENT_SLOT_LABELS/, 'EQUIPMENT_SLOT_LABELS');
+requireMatch(labels, /EQUIPMENT_SLOT_HELP/, 'Slot help tooltips');
+requireMatch(labels, /Helm|Stirnband/, 'Head help examples');
+requireMatch(equipment, /CircleHelp|data-equipment-slot-help/, 'Slot help trigger');
 requireMatch(labels, /Kopfbedeckung/, 'Category hint Kopf');
+requireMatch(labels, /Schuhe \/ Fußschutz/, 'Category hint Füße');
+requireMatch(labels, /feet:\s*'Füße'/, 'Label Füße');
+requireMatch(equipment, /data-equipment-paper-doll/, 'Desktop paper-doll marker');
+requireMatch(equipment, /InventoryEquipmentPaperDollFigure/, 'Paper-doll figure');
+requireMatch(equipment, /InventoryEquipmentPaperDollHotspots/, 'Paper-doll hotspots');
+requireMatch(equipment, /selectedSlot|data-equipment-slot-selected/, 'Sticky slot selection');
+requireMatch(figure, /equipment-paper-doll\.png|data-equipment-paper-doll-figure/, 'Figure uses sketch asset');
+requireMatch(equipment, /data-equipment-slot-square|InventoryItemThumb/, 'Square PNG slot tiles');
+requireMatch(equipment, /md:hidden/, 'Mobile list fallback');
+const hotspots = read('src/app/character/inventory/InventoryEquipmentPaperDollHotspots.tsx');
+requireMatch(hotspots, /data-equipment-hotspot/, 'Hotspot markers');
+requireMatch(hotspots, /data-equipment-hotspot-selected/, 'Sticky hotspot selection');
+requireMatch(hotspots, /feet/, 'Feet hotspot');
+const thumb = read('src/components/InventoryItemThumb.tsx');
+requireMatch(thumb, /slots\/head|SLOT_ICONS/, 'Slot PNG placeholders');
+requireMatch(thumb, /onError/, 'PNG missing → slot fallback');
 requireMatch(labels, /Benötigt Stärke/, 'Strength copy helper');
 requireMatch(labels, /Nicht genügend freie Inventarplätze/, 'Displace no-room copy');
 requireMatch(equipment, /Ablegen ins Inventar/, 'Unequip wording');
 requireMatch(equipment, /Zweihändig \/ gekoppelt/, 'Two-handed off-hand link');
-requireMatch(quick, /Aus Schnellzugriff entfernen/, 'Quick clear wording');
 requireMatch(actions, /Öffnen/, 'Container open action');
 requireMatch(actions, /In Behälter verschieben/, 'Move into container action');
-requireMatch(actions, /Schnellzugriff zuweisen/, 'Quick assign action');
 requireMatch(actions, /Aus Inventar entfernen/, 'Remove wording kept');
 rejectMatch(actions, /Ablegen\b(?! ins Inventar)/, 'Bare Ablegen must not appear for delete');
 rejectMatch(actions, /Ausrüstungs-UI folgt in #111/, 'Placeholder #111 toast removed');
