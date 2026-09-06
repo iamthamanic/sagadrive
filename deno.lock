@@ -52,6 +52,8 @@
         "npm:@supabase/supabase-js@*",
         "npm:@tailwindcss/vite@4.1.12",
         "npm:@types/node@^20.10.0",
+        "npm:@types/react-dom@^18.3.7",
+        "npm:@types/react@^18.3.31",
         "npm:@types/three@0.183.1",
         "npm:@vitejs/plugin-react@^4.7.0",
         "npm:class-variance-authority@~0.7.1",

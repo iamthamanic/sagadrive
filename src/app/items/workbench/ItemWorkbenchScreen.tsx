@@ -116,6 +116,7 @@ export function ItemWorkbenchScreen({
           onRestore={() => {
             void editor.handleRestore();
           }}
+          onAssetKeyChange={editor.applyAssetKey}
         />
       )}
 

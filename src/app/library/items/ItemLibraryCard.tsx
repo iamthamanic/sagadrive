@@ -1,6 +1,6 @@
 /**
- * ItemLibraryCard — list/grid row for a Library Items definition (#138).
- * Always shows InventoryItemThumb (type/kind fallback) plus Quelle and meta text.
+ * ItemLibraryCard — list/grid row for a Library Items definition (#138/#140).
+ * Resolves thumbnail2d assetKey when present; otherwise type/icon fallback.
  * Location: src/app/library/items/ItemLibraryCard.tsx
  */
 import type { ItemDefinition } from '../../../domains/items';
@@ -11,6 +11,7 @@ import {
 import { InventoryItemThumb } from '../../../components/InventoryItemThumb';
 import { Badge } from '../../../components/ui/badge';
 import { cn } from '../../../components/ui/utils';
+import { useItemThumbnailSrc } from '../../items/useItemThumbnailSrc';
 import {
   ITEM_CONTEXT_LABELS,
   ITEM_KIND_LABELS,
@@ -62,6 +63,7 @@ export function ItemLibraryCard({ definition, viewMode, onOpen }: ItemLibraryCar
   const sourceLabel = LIBRARY_SOURCE_LABELS[source];
   const mechanics = mechanicsHint(normalized);
   const isGrid = viewMode === 'grid';
+  const assetSrc = useItemThumbnailSrc(normalized.assetKey);
 
   return (
     <button
@@ -85,6 +87,7 @@ export function ItemLibraryCard({ definition, viewMode, onOpen }: ItemLibraryCar
         <InventoryItemThumb
           slot={thumbSlot(normalized)}
           definition={normalized}
+          assetSrc={assetSrc}
           alt={`Vorschaubild ${normalized.name}`}
           className="size-full"
         />

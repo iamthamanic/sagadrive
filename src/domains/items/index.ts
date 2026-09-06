@@ -84,3 +84,26 @@ export {
   itemMatchesLibraryFilters,
   librarySourceFromOrigin,
 } from './library-query';
+
+export type {
+  ItemThumbnailAssetRecord,
+  ItemThumbnailJobStatus,
+  ItemThumbnailKind,
+  ItemThumbnailMime,
+  ItemThumbnailOrigin,
+  ItemThumbnailPromptInput,
+} from './assets';
+export {
+  ITEM_THUMBNAIL_ALLOWED_MIME,
+  ITEM_THUMBNAIL_ASSET_KEY_PREFIX,
+  ITEM_THUMBNAIL_KIND,
+  ITEM_THUMBNAIL_MAX_BYTES,
+  ITEM_THUMBNAIL_ORIGINS,
+  buildItemThumbnailAssetKey,
+  buildItemThumbnailPrompt,
+  buildItemThumbnailStoragePath,
+  extensionForItemThumbnailMime,
+  isAllowedItemThumbnailMime,
+  parseItemThumbnailAssetKey,
+  sniffItemThumbnailMime,
+} from './assets';

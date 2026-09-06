@@ -117,6 +117,27 @@ Der Prompt liegt versioniert unter `supabase/functions/_shared/character-lore-pr
 
 Character-Portraits werden über denselben konfigurierten Supabase-Client direkt in den privaten Storage-Bucket `character-portraits` geladen. Dadurch funktioniert `Portrait erzeugen` sowohl gegen Hosted Supabase als auch im dokumentierten Self-Host-Stack mit `VITE_SUPABASE_URL`. Migration `006_character_portrait_storage.sql` legt den privaten Bucket mit 5-MB-/MIME-Limits an und erlaubt authentifizierten Nutzern ausschließlich Zugriff auf Objekte unter ihrem eigenen User-ID-Pfad. Der CharacterEditor speichert weiterhin eine signierte Portrait-URL.
 
+## Item-Thumbnails (2D) + Meshy
+
+Die Item-Workbench kann PNG/JPEG-Thumbnails (max. 10 MB) hochladen oder optional über Meshy Text-to-Image generieren. Die Edge Function `item-thumbnail` hält `MESHY_API_KEY` ausschließlich serverseitig — **nie** als `VITE_` / `NEXT_PUBLIC_` Client-Env. Fehlt der Key, antwortet Generate mit `not-configured` (fail-closed); Upload und Typ-Fallbacks bleiben nutzbar. Erfolgreiche Meshy-Ergebnisse werden vor dem Setzen von `assetKey` in den privaten Bucket `item-thumbnails` materialisiert (Provider-URLs sind keine Dauerreferenz).
+
+Server-Env (Supabase Edge / Host Secrets — nicht im Vite-Bundle):
+
+```text
+# Required for Meshy generate; omit to keep upload-only / placeholder
+MESHY_API_KEY=
+# Optional overrides
+# MESHY_API_BASE_URL=https://api.meshy.ai/openapi/v1
+# MESHY_TEXT_TO_IMAGE_MODEL=nano-banana
+ITEM_THUMBNAIL_RATE_LIMIT_PER_MINUTE=4
+# CORS (fail-closed; falls back to CHARACTER_AI_ALLOWED_ORIGIN if unset)
+ITEM_THUMBNAIL_ALLOWED_ORIGIN=http://localhost:3004
+# Offline/dev only: mock Meshy provider (never enable in production)
+# ITEM_THUMBNAIL_MESHY_MOCK=1
+```
+
+Migration `017_item_thumbnail_assets.sql` legt Bucket, Manifest-/Job-Tabellen und die persistente Rate-Limit-RPC an. Offline-CI deckt Validierung und Mock-Provider über `supabase/functions/_shared/item-thumbnail_test.ts` ab — Live-Meshy ist für den Test-Gate nicht erforderlich.
+
 ## Avatar-Asset-Katalog
 
 Die 3D-Vorschau löst die gewählte SagaDrive-Spezies über stabile Avatar-Manifeste auf. Remote-Fallbacks werden nur mit dokumentierter Provenienz und Lizenz ausgeliefert und auf einen konkreten Upstream-Commit gepinnt; veränderliche `main`-URLs sind nicht Teil des freigegebenen Katalogs. Spezies ohne nachweisbar passendes Spezialasset verwenden ausdrücklich gekennzeichnete neutrale Fallbacks statt ungeprüfter Modelle. Self-Host-Installationen können dieselben Manifest-IDs über `VITE_AVATAR_ASSET_BASE_URL` mit eigenen Dateien bedienen.
@@ -141,9 +162,10 @@ Für den aktuellen Character-/Lore-Stand sind bei bestehenden Datenbanken diese 
 014_character_abilities_emotion_profiles.sql
 015_inventory_item_definitions.sql
 016_character_inventory_v2.sql
+017_item_thumbnail_assets.sql
 ```
 
-`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz, `006` richtet den privaten owner-scoped Portrait-Storage ein, `007` ergänzt `sagadrive_profile` sowie persistente Character-Notizen, `008` legt owner-scoped Weltprofile an, `009` speichert Abenteuer-Bögen inkl. Entwicklungsgeschichte, `010`–`013` bringen V3-Spalten/Presets nach und `014` ergänzt `abilities`/`emotion_profiles` für Character-Save. `015` legt den Inventory-v2-Katalog an; `016` persistiert den Charakter-Inventarzustand. Self-Host: `bash scripts/apply-migrations.sh 015_inventory_item_definitions.sql` und `… 016_character_inventory_v2.sql`. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
+`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz, `006` richtet den privaten owner-scoped Portrait-Storage ein, `007` ergänzt `sagadrive_profile` sowie persistente Character-Notizen, `008` legt owner-scoped Weltprofile an, `009` speichert Abenteuer-Bögen inkl. Entwicklungsgeschichte, `010`–`013` bringen V3-Spalten/Presets nach und `014` ergänzt `abilities`/`emotion_profiles` für Character-Save. `015` legt den Inventory-v2-Katalog an; `016` persistiert den Charakter-Inventarzustand; `017` richtet Item-Thumbnail-Storage, Manifeste, Jobs und Rate-Limits ein. Self-Host: `bash scripts/apply-migrations.sh 015_inventory_item_definitions.sql` und `… 016_character_inventory_v2.sql` sowie `… 017_item_thumbnail_assets.sql`. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
 
 ## Quality Gates
 

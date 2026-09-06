@@ -461,6 +461,14 @@ function checkItemWorkbench() {
   });
 }
 
+function checkItemThumbnailAssets() {
+  console.log('Item Epic thumbnails + Meshy (#140): upload/generate contract, secrets fail-closed...');
+  execFileSync(process.execPath, ['scripts/item-thumbnail-assets-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -475,6 +483,7 @@ checkItemDefinitionPersistence();
 checkItemStandardPacks();
 checkItemLibraryBrowser();
 checkItemWorkbench();
+checkItemThumbnailAssets();
 checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();

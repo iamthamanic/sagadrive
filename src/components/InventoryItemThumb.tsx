@@ -1,11 +1,11 @@
 /**
  * InventoryItemThumb — square PNG thumbnail for inventory/equipment.
- * Prefers definition.iconKey → items/{iconKey}.png, else type PNG, else
- * equipment-slot placeholder. onError falls back to the slot glyph.
+ * Resolution order: assetSrc (storage thumbnail) → iconKey → type PNG → slot glyph.
  * Location: src/components/InventoryItemThumb.tsx
  */
 import { useEffect, useState } from 'react';
 import type { EquipmentSlot, InventoryItemType, ItemDefinition } from '../domains/character/inventory-v2';
+import { parseItemThumbnailAssetKey } from '../domains/items';
 
 import slotHead from '../assets/inventory/slots/head.png';
 import slotBody from '../assets/inventory/slots/body.png';
@@ -56,11 +56,17 @@ function itemIconSrc(iconKey: string | undefined): string | null {
   return ITEM_ICON_MODULES[key] ?? null;
 }
 
+/**
+ * Sync fallback chain without remote asset URLs.
+ * Prefer `assetSrc` when the caller already resolved `assetKey` → signed URL.
+ */
 export function resolveInventoryThumbSrc(options: {
   definition?: ItemDefinition | null;
   slot: EquipmentSlot;
+  assetSrc?: string | null;
 }): string {
-  const { definition, slot } = options;
+  const { definition, slot, assetSrc } = options;
+  if (assetSrc) return assetSrc;
   if (definition) {
     const custom = itemIconSrc(definition.iconKey);
     if (custom) return custom;
@@ -69,9 +75,15 @@ export function resolveInventoryThumbSrc(options: {
   return SLOT_ICONS[slot];
 }
 
+export function definitionHasThumbnailAsset(definition?: ItemDefinition | null): boolean {
+  return Boolean(parseItemThumbnailAssetKey(definition?.assetKey));
+}
+
 export interface InventoryItemThumbProps {
   slot: EquipmentSlot;
   definition?: ItemDefinition | null;
+  /** Resolved signed URL for definition.assetKey (thumbnail2d). */
+  assetSrc?: string | null;
   muted?: boolean;
   className?: string;
   alt?: string;
@@ -80,11 +92,12 @@ export interface InventoryItemThumbProps {
 export function InventoryItemThumb({
   slot,
   definition,
+  assetSrc = null,
   muted = false,
   className,
   alt = '',
 }: InventoryItemThumbProps) {
-  const primary = resolveInventoryThumbSrc({ definition, slot });
+  const primary = resolveInventoryThumbSrc({ definition, slot, assetSrc });
   const fallback = SLOT_ICONS[slot];
   const [src, setSrc] = useState(primary);
 
