@@ -1,63 +1,46 @@
-import { lazy, Suspense, useState, type ReactNode } from "react";
-import { AuthProvider } from "./lib/auth-context";
-import { ThemeProvider } from "./lib/theme-provider";
-import { AuthGate } from "./components/auth/AuthGate";
-import { Layout } from "./components/Layout";
-import { Dashboard } from "./components/Dashboard";
-import { ViewLoadingFallback } from "./components/ViewLoadingFallback";
-import { Toaster } from "./components/ui/sonner";
+/**
+ * App — composition root: AuthGate, Layout, History routing (#133), lazy views.
+ * Location: src/App.tsx
+ */
+import { lazy, Suspense, useState, type ReactNode } from 'react';
+import { AuthProvider } from './lib/auth-context';
+import { ThemeProvider } from './lib/theme-provider';
+import { AuthGate } from './components/auth/AuthGate';
+import { Layout } from './components/Layout';
+import { Dashboard } from './components/Dashboard';
+import { ViewLoadingFallback } from './components/ViewLoadingFallback';
+import { Toaster } from './components/ui/sonner';
+import { useAppLocation } from './app/shell/routing';
+import {
+  ItemCreatePlaceholder,
+  ItemDetailPlaceholder,
+  NotFoundPlaceholder,
+} from './app/items/ItemRoutePlaceholders';
 
 const CharacterEditor = lazy(() =>
-  import("./components/CharacterEditor").then((module) => ({ default: module.CharacterEditor })),
+  import('./components/CharacterEditor').then((module) => ({ default: module.CharacterEditor })),
 );
 const GamemasterPanel = lazy(() =>
-  import("./components/GamemasterPanel").then((module) => ({ default: module.GamemasterPanel })),
+  import('./components/GamemasterPanel').then((module) => ({ default: module.GamemasterPanel })),
 );
 const Marketplace = lazy(() =>
-  import("./components/Marketplace").then((module) => ({ default: module.Marketplace })),
+  import('./components/Marketplace').then((module) => ({ default: module.Marketplace })),
 );
 const ProjectJoin = lazy(() =>
-  import("./components/ProjectJoin").then((module) => ({ default: module.ProjectJoin })),
+  import('./components/ProjectJoin').then((module) => ({ default: module.ProjectJoin })),
 );
 const Library = lazy(() =>
-  import("./components/Library").then((module) => ({ default: module.Library })),
+  import('./components/Library').then((module) => ({ default: module.Library })),
 );
 const Profile = lazy(() =>
-  import("./components/Profile").then((module) => ({ default: module.Profile })),
+  import('./components/Profile').then((module) => ({ default: module.Profile })),
 );
 const RulesetsTest = lazy(() =>
-  import("./components/RulesetsTest").then((module) => ({ default: module.RulesetsTest })),
+  import('./components/RulesetsTest').then((module) => ({ default: module.RulesetsTest })),
 );
 
 if (import.meta.env.DEV) {
-  void import("./lib/devtrack").then(({ initDevTrack }) => initDevTrack());
-}
-
-type AppView =
-  | "dashboard"
-  | "character-editor"
-  | "adventure-editor"
-  | "gamemaster"
-  | "marketplace"
-  | "library"
-  | "profile"
-  | "join"
-  | "rulesets-test";
-
-const APP_VIEWS = new Set<string>([
-  "dashboard",
-  "character-editor",
-  "adventure-editor",
-  "gamemaster",
-  "marketplace",
-  "library",
-  "profile",
-  "join",
-  "rulesets-test",
-]);
-
-function isAppView(view: string): view is AppView {
-  return APP_VIEWS.has(view);
+  void import('./lib/devtrack').then(({ initDevTrack }) => initDevTrack());
 }
 
 function LazyView({ children }: { children: ReactNode }) {
@@ -68,9 +51,10 @@ function CharacterEditorView() {
   // Capture edit id once per mount so clearing sessionStorage after hydrate
   // does not remount the editor mid-load.
   const [mountKey] = useState(
-    () => (typeof sessionStorage !== 'undefined'
-      ? sessionStorage.getItem('sagadrive:character-edit-id')
-      : null) ?? 'new-character',
+    () =>
+      (typeof sessionStorage !== 'undefined'
+        ? sessionStorage.getItem('sagadrive:character-edit-id')
+        : null) ?? 'new-character',
   );
   return (
     <LazyView>
@@ -79,83 +63,98 @@ function CharacterEditorView() {
   );
 }
 
-export default function App() {
-  const [currentView, setCurrentView] = useState<AppView>("dashboard");
-  const [inSession, setInSession] = useState(false);
-  const [sessionRole, setSessionRole] = useState<"player" | "gamemaster" | null>(null);
+function AppShell() {
+  const { currentView, itemId, route, navigateToView } = useAppLocation();
 
   const handleNavigate = (view: string) => {
-    if (!isAppView(view)) {
-      console.warn("⚠️ App: Unknown view:", view);
-      return;
-    }
-    setCurrentView(view);
+    navigateToView(view);
   };
+
+  const layoutView =
+    currentView === 'item-create' || currentView === 'item-detail' ? 'library' : currentView;
 
   const renderView = () => {
     switch (currentView) {
-      case "dashboard":
+      case 'dashboard':
         return <Dashboard onNavigate={handleNavigate} />;
-      case "character-editor":
+      case 'character-editor':
         return <CharacterEditorView />;
-      case "adventure-editor":
+      case 'adventure-editor':
         return <Dashboard onNavigate={handleNavigate} />;
-      case "gamemaster":
+      case 'gamemaster':
         return (
           <LazyView>
             <GamemasterPanel />
           </LazyView>
         );
-      case "marketplace":
+      case 'marketplace':
         return (
           <LazyView>
             <Marketplace />
           </LazyView>
         );
-      case "library":
+      case 'library':
         return (
           <LazyView>
             <Library onNavigate={handleNavigate} />
           </LazyView>
         );
-      case "profile":
+      case 'profile':
         return (
           <LazyView>
             <Profile />
           </LazyView>
         );
-      case "join":
+      case 'join':
         return (
           <LazyView>
             <ProjectJoin
-              onBack={() => handleNavigate("dashboard")}
+              onBack={() => handleNavigate('dashboard')}
               onJoinAsGM={() => undefined}
               onJoinAsPlayer={() => undefined}
             />
           </LazyView>
         );
-      case "rulesets-test":
+      case 'rulesets-test':
         return (
           <LazyView>
             <RulesetsTest />
           </LazyView>
+        );
+      case 'item-create':
+        return <ItemCreatePlaceholder onBack={() => handleNavigate('library')} />;
+      case 'item-detail':
+        return (
+          <ItemDetailPlaceholder
+            itemId={itemId ?? ''}
+            onBack={() => handleNavigate('library')}
+          />
+        );
+      case 'not-found':
+        return (
+          <NotFoundPlaceholder
+            attemptedPath={route.kind === 'not-found' ? route.attemptedPath : '/'}
+            onHome={() => handleNavigate('dashboard')}
+          />
         );
       default:
         return <Dashboard onNavigate={handleNavigate} />;
     }
   };
 
-  if (inSession && sessionRole) {
-    return <div className="h-screen bg-background">{renderView()}</div>;
-  }
+  return (
+    <Layout currentView={layoutView} onNavigate={handleNavigate}>
+      {renderView()}
+    </Layout>
+  );
+}
 
+export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
         <AuthGate>
-          <Layout currentView={currentView} onNavigate={handleNavigate}>
-            {renderView()}
-          </Layout>
+          <AppShell />
           <Toaster />
         </AuthGate>
       </ThemeProvider>

@@ -199,6 +199,14 @@ function checkInventoryE2eIntegration() {
   });
 }
 
+function checkItemRoutingFoundation() {
+  console.log('Item Epic routing foundation (#133): History paths, placeholders, no parallel currentView...');
+  execFileSync(process.execPath, ['scripts/item-routing-foundation-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -413,6 +421,7 @@ execFileSync('npm', ['run', 'checks'], {
 
 checkChangedDenoFunctions();
 checkArchitectureBoundaries();
+checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();

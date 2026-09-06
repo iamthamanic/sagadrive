@@ -170,6 +170,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-06** — App-Shell History-URL-Routing: `/library`, `/items/create`, `/items/:id` (Platzhalter bis Workbench) (`feat/133-item-routing-foundation`, #133)
 - **2026-09-06** — Inventar Ausrüstung: Paper-Doll inkl. Füße, PNG-Kacheln, gleiche Panel-Höhen; Schnellzugriff-UI entfernt (Domain bleibt) (`feat/inventory-equipment-paper-doll-feet`)
 - **2026-09-04** — Charakter-Tab startet auf Archetype; fertige Untertabs mit Checkbox-Icon; Archetyp-Beschreibungen (Rolle + mechanische Auswirkungen); Attributsbonus-Überschrift; „Frei +N“-Pills an Skill-Nodes entfernt (`feat/background-skill-points-in-nodes`, #103)
 - **2026-09-03** — Sticky preview: Essenz- and Archetype-Pills (icons, no Spezies pill) (`feat/background-skill-points-in-nodes`, #103)
@@ -179,7 +180,6 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-09-03** — Essenz-Auswahl als Karussell (wie Archetyp/Spezies) (`feat/background-skill-points-in-nodes`, #103)
 - **2026-09-03** — Preset skill provenance is single-source: `sagadrive_profile.freeSkillRanks` only (`fix/skill-progression-v2-remove-legacy`)
 - **2026-09-03** — Character presets no longer enforce a minimum of 6 trained skills (`fix/skill-progression-v2-remove-legacy`)
-- **2026-09-03** — Skill Progression v2 only: complete V2 provenance mandatory, fail-closed (Migration 014 unchanged) (`fix/skill-progression-v2-remove-legacy`)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 

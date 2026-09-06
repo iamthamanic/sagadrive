@@ -32,6 +32,11 @@ const VIEW_LABELS: Record<string, string> = {
   'adventure-editor': 'Abenteuer Editor',
   marketplace: 'Marktplatz',
   profile: 'Einstellungen',
+  join: 'Beitreten',
+  gamemaster: 'Spielleitung',
+  'item-create': 'Neues Item',
+  'item-detail': 'Item',
+  'not-found': 'Nicht gefunden',
 };
 
 const SIDEBAR_COLLAPSED_KEY = 'sagadrive-sidebar-collapsed';
