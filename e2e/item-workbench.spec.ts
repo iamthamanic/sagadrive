@@ -134,6 +134,7 @@ test('item workbench create landing, type picker, editor, and core readonly fork
   await expect(page.locator('[data-item-workbench="create"]').first()).toBeVisible();
   await expect(page.locator('[data-item-workbench-editor]').first()).toBeVisible();
   await expect(page.locator('[data-item-workbench-visuals]').first()).toBeVisible();
+  await expect(page.locator('[data-item-workbench-model3d]').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Speichern' }).first()).toBeVisible();
 
   await page.locator('[data-item-workbench-name]').first().fill('Feldkommunikator');

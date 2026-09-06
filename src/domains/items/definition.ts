@@ -51,9 +51,11 @@ export interface ItemDefinition extends ItemMechanics {
   twoHanded?: boolean;
   /** Capacity positions of a container definition; required when `type === 'container'`. */
   containerCapacity?: number;
-  /** Future-facing visual metadata. No 3D behavior in this epic. */
+  /** Future-facing visual metadata. Library/Inventory use assetKey only — never model3d. */
   iconKey?: string;
   assetKey?: string;
+  /** Optional Workbench 3D GLB key (`model3d:{uuid}`). Display-only; not used as thumbnail. */
+  model3d?: string;
 
   /** Semantic kind — may diverge from `type` (e.g. kindKey=device with type=tool). */
   kindKey?: ItemKindKey;

@@ -35,6 +35,7 @@ export function buildForkedItemDefinitionDraft(
     basedOnDefinitionId: _basedOn,
     origin: _origin,
     assetKey: _assetKey,
+    model3d: _model3d,
     ...rest
   } = normalized;
 

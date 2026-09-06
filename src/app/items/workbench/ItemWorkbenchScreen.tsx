@@ -117,6 +117,7 @@ export function ItemWorkbenchScreen({
             void editor.handleRestore();
           }}
           onAssetKeyChange={editor.applyAssetKey}
+          onModel3dChange={editor.applyModel3d}
         />
       )}
 

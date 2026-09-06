@@ -107,3 +107,23 @@ export {
   parseItemThumbnailAssetKey,
   sniffItemThumbnailMime,
 } from './assets';
+
+export type {
+  ItemModel3dAssetRecord,
+  ItemModel3dJobStatus,
+  ItemModel3dKind,
+  ItemModel3dMime,
+  ItemModel3dOrigin,
+} from './model3d-assets';
+export {
+  ITEM_MODEL3D_ASSET_KEY_PREFIX,
+  ITEM_MODEL3D_KIND,
+  ITEM_MODEL3D_MAX_BYTES,
+  ITEM_MODEL3D_MIME,
+  ITEM_MODEL3D_ORIGINS,
+  buildItemModel3dAssetKey,
+  buildItemModel3dStoragePath,
+  isAllowedItemModel3dMime,
+  parseItemModel3dAssetKey,
+  sniffItemModel3dGlb,
+} from './model3d-assets';
