@@ -21,6 +21,7 @@ import {
   setWorldModuleSettingValue,
 } from '../worldModuleRegistry';
 import type { CreateWorldProfileDto, WorldModuleConfigMap, WorldProfileVm } from '../types/world.types';
+import { WorldItemCatalogModuleSection } from './WorldItemCatalogModuleSection';
 import { WorldItemCatalogSection } from './WorldItemCatalogSection';
 
 interface WorldProfileEditorDialogProps {
@@ -119,7 +120,7 @@ export function WorldProfileEditorDialog({
               </p>
             </div>
 
-            {WORLD_MODULE_REGISTRY.map((module) => (
+            {WORLD_MODULE_REGISTRY.filter((module) => !module.customEditor).map((module) => (
               <Card key={module.id}>
                 <CardHeader className="pb-3">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -167,6 +168,12 @@ export function WorldProfileEditorDialog({
                 </CardContent>
               </Card>
             ))}
+
+            <WorldItemCatalogModuleSection
+              modules={modules}
+              onModulesChange={setModules}
+              worldProfileId={world?.id ?? null}
+            />
           </div>
 
           {world?.id ? (

@@ -477,6 +477,14 @@ function checkItemModel3dAssets() {
   });
 }
 
+function checkItemWorldCatalogModule() {
+  console.log('Item Epic world item-catalog module (#142): pack selection + pure resolver...');
+  execFileSync(process.execPath, ['scripts/item-world-catalog-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -493,6 +501,7 @@ checkItemLibraryBrowser();
 checkItemWorkbench();
 checkItemThumbnailAssets();
 checkItemModel3dAssets();
+checkItemWorldCatalogModule();
 checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();

@@ -1,6 +1,15 @@
+/**
+ * worldModuleRegistry — stable world-profile module IDs, defaults, and
+ * normalize helpers for JSONB `modules` (#29 / #142).
+ * Location: src/modules/worlds/worldModuleRegistry.ts
+ */
+import {
+  ITEM_CATALOG_MODULE_ID,
+  normalizeItemCatalogModuleConfig,
+} from '../../domains/items/world-catalog';
 import type { WorldModuleConfigMap } from './types/world.types';
 
-export type WorldModuleId = 'species-development';
+export type WorldModuleId = 'species-development' | 'item-catalog';
 export type SpeciesDevelopmentMode = 'explicit' | 'progressive' | 'disabled';
 
 export interface WorldModuleSettingOption {
@@ -21,6 +30,11 @@ export interface WorldModuleDefinition {
   label: string;
   description: string;
   settings: readonly WorldModuleSettingDefinition[];
+  /**
+   * When true, WorldProfileEditorDialog renders a dedicated section instead of
+   * the generic string-setting Select UI.
+   */
+  customEditor?: boolean;
 }
 
 const SPECIES_DEVELOPMENT_MODE_OPTIONS: readonly WorldModuleSettingOption[] = [
@@ -54,6 +68,14 @@ export const WORLD_MODULE_REGISTRY: readonly WorldModuleDefinition[] = [
         options: SPECIES_DEVELOPMENT_MODE_OPTIONS,
       },
     ],
+  },
+  {
+    id: 'item-catalog',
+    label: 'Gegenstände & Ausrüstung',
+    description:
+      'Wählt Built-in-Packs und einzelne Gegenstände aus, die in dieser Welt standardmäßig angeboten werden. Core-Archetypen bleiben immer sichtbar.',
+    settings: [],
+    customEditor: true,
   },
 ] as const;
 
@@ -116,6 +138,18 @@ export function normalizeWorldModuleConfigMap(value: unknown): WorldModuleConfig
   for (const definition of WORLD_MODULE_REGISTRY) {
     const existingConfig = normalized[definition.id];
     if (!existingConfig) continue;
+
+    if (definition.id === ITEM_CATALOG_MODULE_ID) {
+      const { config } = normalizeItemCatalogModuleConfig(existingConfig);
+      normalized[definition.id] = {
+        ...existingConfig,
+        enabledPackIds: config.enabledPackIds,
+        includedDefinitionIds: config.includedDefinitionIds,
+        excludedDefinitionIds: config.excludedDefinitionIds,
+        allowPersonalItems: config.allowPersonalItems,
+      };
+      continue;
+    }
 
     const canonicalConfig = { ...existingConfig };
     for (const setting of definition.settings) {
