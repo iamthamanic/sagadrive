@@ -437,6 +437,14 @@ function checkItemDefinitionPersistence() {
   });
 }
 
+function checkItemStandardPacks() {
+  console.log('Builtin standard item packs (#137): Fantasy/Sci-Fi/Contemporary 40/40/40 + context packs...');
+  execFileSync(process.execPath, ['scripts/item-standard-packs-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -448,6 +456,7 @@ checkArchitectureBoundaries();
 checkItemDomainTaxonomy();
 checkSagaDriveItemRulesKernel();
 checkItemDefinitionPersistence();
+checkItemStandardPacks();
 checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();

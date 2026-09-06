@@ -170,6 +170,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-06** — Builtin-Standardpacks: Fantasy/Sci-Fi/Contemporary je 40 Items + Kontext-Packs (`feat/137-builtin-standard-packs`, #137)
 - **2026-09-06** — ItemDefinition-Persistenz: Personal/World CRUD + Fork, Taxonomie-Roundtrip, owner/world aus Auth (`feat/136-item-definition-persistence`, #136)
 - **2026-09-06** — Item-Rules-Kernel: Last/Kosten/Schutz/Traglast/Werkzeug unter `domains/rules/sagadrive/items`; Inventory re-exportiert kompatibel (`feat/135-item-rules-kernel`, #135)
 - **2026-09-06** — Item-Domain: `ItemDefinition` + Taxonomie/Provenienz unter `src/domains/items/**`; Inventory v2 re-exportiert kompatibel (`feat/134-item-domain-taxonomy`, #134)
@@ -179,7 +180,6 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-09-03** — Sticky preview: Essenz- and Archetype-Pills (icons, no Spezies pill) (`feat/background-skill-points-in-nodes`, #103)
 - **2026-09-03** — Attribute-Tab: Fertigkeiten-Karussell über Attributsbonus; Formel unter Skill-Nodes; Tab-Split Charakter/Hintergrund/Details (`feat/background-skill-points-in-nodes`, #103)
 - **2026-09-03** — Hintergrund-Skill-Nodes: CircleHelp (Check-Terminologie); Status-Box entfernt; Spezialisieren im Node (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Hintergrundpunkte in den Pool-Skill-Boxen: −/+ und Klick, zentrierte Karten, Budget-Badge (`feat/background-skill-points-in-nodes`, #103)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 

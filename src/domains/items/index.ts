@@ -1,12 +1,14 @@
 /**
- * items — public domain API for ItemDefinition + taxonomy/provenance (#134)
- * and definition write/fork helpers (#136).
+ * items — public domain API for ItemDefinition + taxonomy/provenance (#134),
+ * definition write/fork helpers (#136), and builtin standard packs (#137).
  * Inventory v2 re-exports ItemDefinition for compatibility; new consumers
  * should prefer this barrel.
  * Location: src/domains/items/index.ts
  */
 
 export type { ItemDefinition } from './definition';
+
+export type { ItemPack } from './pack';
 
 export type {
   ItemCapability,
@@ -45,3 +47,27 @@ export type { ItemDefinitionPayloadVersion } from './payload';
 
 export type { ItemDefinitionWriteDraft } from './fork';
 export { buildForkedItemDefinitionDraft } from './fork';
+
+export {
+  ALL_ITEM_PACKS,
+  BASE_PACK_SIZE,
+  BASE_PACKS,
+  BUILTIN_STANDARD_DEFINITIONS,
+  CONTEMPORARY_BASIC_DEFINITIONS,
+  CONTEMPORARY_BASIC_PACK,
+  CONTEMPORARY_BASIC_PACK_ID,
+  CONTEXT_PACKS,
+  FANTASY_BASIC_DEFINITIONS,
+  FANTASY_BASIC_PACK,
+  FANTASY_BASIC_PACK_ID,
+  SCIFI_BASIC_DEFINITIONS,
+  SCIFI_BASIC_PACK,
+  SCIFI_BASIC_PACK_ID,
+  STRESS_TEST_PACK_COMBINATIONS,
+  getBuiltinStandardDefinition,
+  getItemPack,
+  listBaseItemPacks,
+  listBuiltinStandardDefinitions,
+  listContextItemPacks,
+  listItemPacks,
+} from './packs';
