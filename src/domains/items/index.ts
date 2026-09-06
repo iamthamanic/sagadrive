@@ -1,7 +1,7 @@
 /**
  * items — public domain API for ItemDefinition + taxonomy/provenance (#134),
  * definition write/fork helpers (#136), builtin standard packs (#137),
- * and Library Items query helpers (#138).
+ * Library Items query helpers (#138), and world item-catalog module (#142).
  * Inventory v2 re-exports ItemDefinition for compatibility; new consumers
  * should prefer this barrel.
  * Location: src/domains/items/index.ts
@@ -127,3 +127,19 @@ export {
   parseItemModel3dAssetKey,
   sniffItemModel3dGlb,
 } from './model3d-assets';
+
+export type {
+  ItemCatalogModuleConfig,
+  ItemCatalogModuleDiagnosis,
+  ItemCatalogResolveDiagnosis,
+  NormalizeItemCatalogModuleResult,
+  ResolveWorldItemCatalogInput,
+  ResolvedWorldItemCatalog,
+} from './world-catalog';
+export {
+  ITEM_CATALOG_MODULE_ID,
+  defaultItemCatalogModuleConfig,
+  getItemCatalogModuleConfig,
+  normalizeItemCatalogModuleConfig,
+  resolveWorldItemCatalog,
+} from './world-catalog';
