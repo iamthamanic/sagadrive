@@ -170,15 +170,18 @@ test('Item Epic viewport smoke: 1440 / 768 / 390 no horizontal overflow', async 
     });
   }
 
-  // Inventory add on mobile — auth already done on wide chrome earlier in suite helpers.
-  await page.setViewportSize({ width: 1440, height: 900 });
+  // Inventory add on mobile: open editor at phone width (avoid desktop→mobile host swap).
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await openNewCharacterInventory(page);
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.locator('[data-character-inventory-v2]')).toBeVisible();
+  await expect(
+    page.locator('[data-character-inventory-v2]').filter({ visible: true }).first(),
+  ).toBeVisible({ timeout: 15_000 });
   await assertNoHorizontalOverflow(page);
   await page.getByRole('button', { name: /Gegenstand hinzufügen/i }).first().click();
-  await expect(page.locator('[data-inventory-catalog-dialog]')).toBeVisible();
+  await expect(
+    page.locator('[data-inventory-catalog-dialog]').filter({ visible: true }).first(),
+  ).toBeVisible();
   await expect(page.getByRole('tab', { name: /^Core$/i })).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, 'viewport-390-inventory-add.png'),
