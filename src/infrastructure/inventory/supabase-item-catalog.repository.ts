@@ -14,6 +14,7 @@ import { getAuthenticatedUserId } from '../../lib/authenticatedUser';
 import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../lib/networkTimeout';
 import {
   buildForkedItemDefinitionDraft,
+  getBuiltinStandardDefinition,
   validateItemDefinitionMetadata,
 } from '../../domains/items';
 import type { ItemDefinitionWriteDraft } from '../../domains/items';
@@ -347,13 +348,35 @@ export class SupabaseItemCatalogRepository {
     return this.createWorldDefinition(worldProfileId, draft);
   }
 
-  private async resolveForkSource(sourceDefinitionId: string): Promise<ItemDefinition | null> {
-    if (sourceDefinitionId.startsWith('core:')) {
-      return getCoreItemDefinition(sourceDefinitionId) ?? null;
+  /**
+   * Resolve any readable definition by id for Workbench load / fork (#139).
+   * Core and builtin-standard are local; Personal/World go through RLS.
+   */
+  async getDefinitionById(definitionId: string): Promise<{
+    definition: ItemDefinition;
+    record: CatalogDefinitionRecord | null;
+  } | null> {
+    const trimmed = definitionId.trim();
+    if (!trimmed) return null;
+
+    const core = getCoreItemDefinition(trimmed);
+    if (core) {
+      return { definition: core, record: null };
     }
 
-    const record = await this.loadPersistedRecord(sourceDefinitionId);
-    return record?.definition ?? null;
+    const builtin = getBuiltinStandardDefinition(trimmed);
+    if (builtin) {
+      return { definition: builtin, record: null };
+    }
+
+    const record = await this.loadPersistedRecord(trimmed);
+    if (!record) return null;
+    return { definition: record.definition, record };
+  }
+
+  private async resolveForkSource(sourceDefinitionId: string): Promise<ItemDefinition | null> {
+    const resolved = await this.getDefinitionById(sourceDefinitionId);
+    return resolved?.definition ?? null;
   }
 
   /** Load one persisted row; RLS decides visibility. Returns null when absent. */

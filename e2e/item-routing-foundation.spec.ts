@@ -35,18 +35,24 @@ test('library URL is reload-stable', async ({ page }) => {
   });
 });
 
-test('item create and detail placeholders are addressable', async ({ page }) => {
+test('item create workbench and detail routes are addressable', async ({ page }) => {
   await ensureLoggedIn(page);
   await page.goto('/items/create');
-  await expect(page.getByRole('heading', { name: 'Neues Item' })).toBeVisible();
+  await expect(page.locator('[data-item-workbench="landing"]').first()).toBeVisible();
+  await expect(page.getByText('Klicke hier, um ein Item zu erstellen').first()).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '02-items-create-placeholder.png'),
     fullPage: true,
   });
 
   await page.goto('/items/demo-item');
-  await expect(page.getByRole('heading', { name: 'Item' })).toBeVisible();
-  await expect(page.getByRole('code')).toContainText('/items/demo-item');
+  await expect(
+    page
+      .locator(
+        '[data-item-workbench="error"], [data-item-workbench="loading"], [data-item-workbench="readonly"], [data-item-workbench="edit"]',
+      )
+      .first(),
+  ).toBeVisible({ timeout: 20_000 });
 
   await page.goto('/does-not-exist');
   await expect(page.getByRole('heading', { name: 'Seite nicht gefunden' })).toBeVisible();

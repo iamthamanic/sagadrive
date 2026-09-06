@@ -453,6 +453,14 @@ function checkItemLibraryBrowser() {
   });
 }
 
+function checkItemWorkbench() {
+  console.log('Item Epic Workbench (#139): create/edit/readonly/fork UI + catalog wiring...');
+  execFileSync(process.execPath, ['scripts/item-workbench-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -466,6 +474,7 @@ checkSagaDriveItemRulesKernel();
 checkItemDefinitionPersistence();
 checkItemStandardPacks();
 checkItemLibraryBrowser();
+checkItemWorkbench();
 checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-hidden="true">
+  <!-- Original SagaDrive workbench line-art (#139). Light strokes on transparent; not copied from any stock reference. -->
+  <g fill="none" stroke="#c8d0d8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M72 268h496"/>
+    <path d="M96 268v48M544 268v48"/>
+    <path d="M120 268v-36h400v36"/>
+    <path d="M140 232h360"/>
+    <rect x="168" y="176" width="88" height="56" rx="4"/>
+    <path d="M188 176v-28h48v28"/>
+    <circle cx="212" cy="148" r="10"/>
+    <path d="M280 210h120"/>
+    <path d="M300 210v-48l40-18 40 18v48"/>
+    <path d="M340 144v-28"/>
+    <path d="M320 116h40"/>
+    <rect x="430" y="188" width="70" height="44" rx="3"/>
+    <path d="M444 188v-22h42v22"/>
+    <path d="M160 268c40-52 80-78 160-78s120 26 160 78"/>
+    <path d="M210 250h24M406 250h24"/>
+    <path d="M520 210l36-44M556 166l18 8"/>
+    <circle cx="574" cy="158" r="8"/>
+  </g>
+</svg>

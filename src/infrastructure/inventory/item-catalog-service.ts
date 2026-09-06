@@ -107,6 +107,17 @@ export async function loadWorldProfileItemCatalog(
   );
 }
 
+/**
+ * Load one definition for the Item Workbench (#139).
+ * Core/builtin resolve locally; Personal/World via RLS. Returns null when missing.
+ */
+export async function getItemDefinitionById(definitionId: string): Promise<{
+  definition: ItemDefinition;
+  record: CatalogDefinitionRecord | null;
+} | null> {
+  return supabaseItemCatalogRepository.getDefinitionById(definitionId);
+}
+
 export function createPersonalDefinition(draft: ItemDefinitionDraft): Promise<CatalogDefinitionRecord> {
   return supabaseItemCatalogRepository.createPersonalDefinition(draft);
 }
