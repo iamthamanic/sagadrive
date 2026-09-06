@@ -1,6 +1,6 @@
 # Composition Gate — item-routing-foundation
 
-- HEAD_SHA: WORKTREE (uncommitted on `feat/133-item-routing-foundation`; base `1383cdc`)
+- HEAD_SHA: 
 - Date: 2026-09-06
 - Verdict: CLEAR
 

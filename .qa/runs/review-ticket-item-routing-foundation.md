@@ -1,7 +1,7 @@
 # Review Ticket — item-routing-foundation
 
 - BASE_SHA: `1383cdc9771f781d9c9665ba3252150b3e62c42a`
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 
 - Date: 2026-09-06
 - Verdict: **ACCEPT**
 
