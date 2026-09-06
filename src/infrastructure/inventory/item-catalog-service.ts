@@ -1,12 +1,14 @@
 /**
  * item-catalog-service — application-facing facade for the Inventory v2 catalog
- * (#107 / #136). This is the boundary the character UI consumes; app slices must
- * not query `inventory_item_definitions` themselves. Lifecycle ops adapt the
- * `domains/items` write/fork API onto the existing catalog table.
+ * (#107 / #136 / #138). This is the boundary the character UI and Library Items
+ * browser consume; app slices must not query `inventory_item_definitions`
+ * themselves. Lifecycle ops adapt the `domains/items` write/fork API onto the
+ * existing catalog table.
  * Location: src/infrastructure/inventory/item-catalog-service.ts
  */
 import {
   createDefinitionLookup,
+  listCoreItemDefinitions,
   selectCatalogDefinitions,
 } from '../../domains/character/inventory-v2';
 import type {
@@ -14,6 +16,11 @@ import type {
   ItemDefinition,
   ItemDefinitionLookup,
 } from '../../domains/character/inventory-v2';
+import {
+  compareLibraryItemDefinitions,
+  listBuiltinStandardDefinitions,
+  normalizeItemDefinition,
+} from '../../domains/items';
 import {
   supabaseItemCatalogRepository,
 } from './supabase-item-catalog.repository';
@@ -31,6 +38,14 @@ export interface CharacterItemCatalog {
   lookup: ItemDefinitionLookup;
   /** Raw records, for callers that need status or ownership. */
   records: CatalogDefinitionRecord[];
+}
+
+/** Library Items browser catalog (#138): Core + builtin-standard + persisted. */
+export interface LibraryItemCatalog {
+  /** Active definitions visible in the Library Items tab, already ordered. */
+  definitions: ItemDefinition[];
+  /** Raw persisted records (Personal/World), including archived. */
+  persistedRecords: CatalogDefinitionRecord[];
 }
 
 /**
@@ -53,6 +68,30 @@ export async function loadCharacterItemCatalog(
     lookup: createDefinitionLookup(records, context),
     records,
   };
+}
+
+/**
+ * Load the Library Items catalog: local Core + builtin-standard packs plus
+ * Personal/World rows RLS already returns. Filter is UX-only; visibility is
+ * server-side (#136). Archived persisted rows are omitted from `definitions`.
+ */
+export async function loadLibraryItemCatalog(): Promise<LibraryItemCatalog> {
+  const persistedRecords = await supabaseItemCatalogRepository.listLibraryPersistedRecords();
+  const byId = new Map<string, ItemDefinition>();
+
+  for (const definition of listCoreItemDefinitions()) {
+    byId.set(definition.id, normalizeItemDefinition(definition));
+  }
+  for (const definition of listBuiltinStandardDefinitions()) {
+    byId.set(definition.id, normalizeItemDefinition(definition));
+  }
+  for (const record of persistedRecords) {
+    if (record.status !== 'active') continue;
+    byId.set(record.definition.id, normalizeItemDefinition(record.definition));
+  }
+
+  const definitions = [...byId.values()].sort(compareLibraryItemDefinitions);
+  return { definitions, persistedRecords };
 }
 
 /**

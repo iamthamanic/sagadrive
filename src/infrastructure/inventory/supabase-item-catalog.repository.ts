@@ -167,6 +167,28 @@ export class SupabaseItemCatalogRepository {
     return [...coreCatalogRecords(), ...persisted];
   }
 
+  /**
+   * Library Items browser (#138): Personal + all World definitions RLS already
+   * allows (no character effective-world narrowing). Core/builtin stay local.
+   * Includes archived rows; UI filters to active.
+   */
+  async listLibraryPersistedRecords(): Promise<CatalogDefinitionRecord[]> {
+    await getAuthenticatedUserId();
+
+    const { data, error } = await raceWithTimeoutReject(
+      supabase.from(DEFINITIONS_TABLE).select(ITEM_DEFINITION_COLUMNS),
+      SUPABASE_QUERY_TIMEOUT_MS,
+      'Gegenstandskatalog konnte nicht geladen werden (Zeitüberschreitung).',
+    );
+    if (error) {
+      throw new Error(`Failed to load library item definitions: ${error.message}`);
+    }
+
+    return ((data ?? []) as ItemDefinitionDto[])
+      .map(mapDefinitionRow)
+      .filter((record): record is CatalogDefinitionRecord => record !== null);
+  }
+
   /** Create a Personal definition owned by the authenticated user. */
   async createPersonalDefinition(draft: ItemDefinitionDraft): Promise<CatalogDefinitionRecord> {
     const userId = await getAuthenticatedUserId();

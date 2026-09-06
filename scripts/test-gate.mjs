@@ -445,6 +445,14 @@ function checkItemStandardPacks() {
   });
 }
 
+function checkItemLibraryBrowser() {
+  console.log('Item Epic Library Items browser (#138): slice composition, filters, UI contract...');
+  execFileSync(process.execPath, ['scripts/item-library-browser-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -457,6 +465,7 @@ checkItemDomainTaxonomy();
 checkSagaDriveItemRulesKernel();
 checkItemDefinitionPersistence();
 checkItemStandardPacks();
+checkItemLibraryBrowser();
 checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();

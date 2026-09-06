@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
-import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2 } from 'lucide-react';
+import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package } from 'lucide-react';
 import { useCharacterSummaries } from '../modules/characters/hooks/useCharacterSummaries';
 import type { CharacterSummaryVm } from '../modules/characters/types/character.types';
 import { CreateCharacterEntryDialog } from '../modules/characters/components/CreateCharacterEntryDialog';
@@ -23,11 +23,18 @@ const WorldProfileEditorDialog = lazy(() =>
   })),
 );
 
+const ItemLibraryBrowser = lazy(() =>
+  import('../app/library/items').then((module) => ({
+    default: module.ItemLibraryBrowser,
+  })),
+);
+
 interface LibraryProps {
   onNavigate: (view: string) => void;
+  onNavigateToItem: (itemId: string) => void;
 }
 
-type LibraryTab = 'characters' | 'adventures' | 'worlds';
+type LibraryTab = 'characters' | 'adventures' | 'worlds' | 'items';
 
 const SPECIES_DEVELOPMENT_MODE_LABELS = {
   explicit: 'Explizit',
@@ -46,7 +53,7 @@ const PROJECT_STATUS_LABELS: Record<ProjectSummaryVm['status'], string> = {
   archived: 'Archiviert',
 };
 
-export function Library({ onNavigate }: LibraryProps) {
+export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<LibraryTab>('characters');
   const [visitedTabs, setVisitedTabs] = useState<Set<LibraryTab>>(() => new Set(['characters']));
@@ -69,6 +76,7 @@ export function Library({ onNavigate }: LibraryProps) {
     updateWorld,
     deleteWorld,
   } = useWorldProfiles({ enabled: visitedTabs.has('worlds') });
+  const itemsTabVisited = visitedTabs.has('items');
 
   // Always re-fetch character summaries when Library mounts so saves from the
   // editor are visible immediately (cache may still look "fresh" otherwise).
@@ -314,33 +322,39 @@ export function Library({ onNavigate }: LibraryProps) {
         <div>
           <h1 className="text-xl md:text-2xl">Meine Bibliothek</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Verwalte deine Charaktere, Abenteuer und Welten
+            Verwalte deine Charaktere, Abenteuer, Welten und Gegenstände
           </p>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Suche in deiner Bibliothek..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        {activeTab !== 'items' ? (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Suche in deiner Bibliothek..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        ) : null}
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="characters">
-              <User className="w-4 h-4 mr-2" />
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-1">
+            <TabsTrigger value="characters" className="min-h-11">
+              <User className="w-4 h-4 mr-2 shrink-0" />
               Charaktere
             </TabsTrigger>
-            <TabsTrigger value="adventures">
-              <BookOpen className="w-4 h-4 mr-2" />
+            <TabsTrigger value="adventures" className="min-h-11">
+              <BookOpen className="w-4 h-4 mr-2 shrink-0" />
               Abenteuer
             </TabsTrigger>
-            <TabsTrigger value="worlds">
-              <Globe2 className="w-4 h-4 mr-2" />
+            <TabsTrigger value="worlds" className="min-h-11">
+              <Globe2 className="w-4 h-4 mr-2 shrink-0" />
               Welten
+            </TabsTrigger>
+            <TabsTrigger value="items" className="min-h-11">
+              <Package className="w-4 h-4 mr-2 shrink-0" />
+              Items
             </TabsTrigger>
           </TabsList>
 
@@ -444,6 +458,24 @@ export function Library({ onNavigate }: LibraryProps) {
                 }
               />
             )}
+          </TabsContent>
+
+          <TabsContent value="items" className="space-y-4">
+            {itemsTabVisited ? (
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                  </div>
+                }
+              >
+                <ItemLibraryBrowser
+                  enabled={itemsTabVisited}
+                  onCreateItem={() => onNavigate('item-create')}
+                  onOpenItem={onNavigateToItem}
+                />
+              </Suspense>
+            ) : null}
           </TabsContent>
         </Tabs>
       </div>

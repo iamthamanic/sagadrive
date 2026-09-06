@@ -170,6 +170,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-06** — Bibliothek Items-Tab: List/Grid, Suche/Filter, Core+Standard+Personal+Welt (`feat/138-library-items-browser`, #138)
 - **2026-09-06** — Builtin-Standardpacks: Fantasy/Sci-Fi/Contemporary je 40 Items + Kontext-Packs (`feat/137-builtin-standard-packs`, #137)
 - **2026-09-06** — ItemDefinition-Persistenz: Personal/World CRUD + Fork, Taxonomie-Roundtrip, owner/world aus Auth (`feat/136-item-definition-persistence`, #136)
 - **2026-09-06** — Item-Rules-Kernel: Last/Kosten/Schutz/Traglast/Werkzeug unter `domains/rules/sagadrive/items`; Inventory re-exportiert kompatibel (`feat/135-item-rules-kernel`, #135)
