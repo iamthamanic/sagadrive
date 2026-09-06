@@ -52,7 +52,7 @@ Der Character Editor wird als praktische Regelabbildung geprüft: Legal-Builds s
 
 ## Composition Gate
 
-- HEAD_SHA: pending-commit on branch `chore/21-validate-character-editor-rules-ux`
+- HEAD_SHA: `92b0a61` on branch `chore/21-validate-character-editor-rules-ux`
 - Date: 2026-09-06
 - Verdict: **CLEAR**
 - Proof: `.qa/runs/composition-gate-validate-character-editor-rules-ux.md`

@@ -1,6 +1,6 @@
 # Composition Gate Proof — validate-character-editor-rules-ux (#21)
 
-- HEAD_SHA: pending-commit on branch `chore/21-validate-character-editor-rules-ux`
+- HEAD_SHA: `92b0a61` on branch `chore/21-validate-character-editor-rules-ux`
 - BASE_SHA: `a9ebc92` (main after #29)
 - Date: 2026-09-06
 
