@@ -34,6 +34,7 @@ export function buildForkedItemDefinitionDraft(
     scope: _scope,
     basedOnDefinitionId: _basedOn,
     origin: _origin,
+    assetKey: _assetKey,
     ...rest
   } = normalized;
 

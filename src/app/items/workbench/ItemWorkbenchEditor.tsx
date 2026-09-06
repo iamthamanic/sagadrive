@@ -25,6 +25,7 @@ export interface ItemWorkbenchEditorProps {
   onRequestTypePicker: () => void;
   onArchive: () => void;
   onRestore: () => void;
+  onAssetKeyChange: (assetKey: string | undefined) => void;
 }
 
 export function ItemWorkbenchEditor({
@@ -40,13 +41,19 @@ export function ItemWorkbenchEditor({
   onRequestTypePicker,
   onArchive,
   onRestore,
+  onAssetKeyChange,
 }: ItemWorkbenchEditorProps) {
   return (
     <div
       className="grid grid-cols-1 gap-8 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]"
       data-item-workbench-editor
     >
-      <ItemVisualsPanel form={form} definition={definition} />
+      <ItemVisualsPanel
+        form={form}
+        definition={definition}
+        readOnly={readOnly}
+        onAssetKeyChange={onAssetKeyChange}
+      />
 
       <div className="flex min-w-0 flex-col gap-8">
         {readOnly && (

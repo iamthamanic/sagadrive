@@ -38,6 +38,7 @@ import {
 import { InventoryEquipmentPaperDollFigure } from './InventoryEquipmentPaperDollFigure';
 import { InventoryEquipmentPaperDollHotspots } from './InventoryEquipmentPaperDollHotspots';
 import { InventoryItemThumb } from '../../../components/InventoryItemThumb';
+import { useItemThumbnailSrc } from '../../items/useItemThumbnailSrc';
 import {
   freeSlotsForEquipDisplace,
   itemDisplayName,
@@ -153,6 +154,7 @@ function EquipmentSlotTile({
     : isOffHandLinked
       ? 'Zweihändig'
       : EQUIPMENT_SLOT_LABELS[slot];
+  const assetSrc = useItemThumbnailSrc(isOffHandLinked ? undefined : definition?.assetKey);
 
   return (
     <div
@@ -211,6 +213,7 @@ function EquipmentSlotTile({
         <InventoryItemThumb
           slot={slot}
           definition={isOffHandLinked ? null : definition}
+          assetSrc={assetSrc}
           muted={!filled}
           className="size-full"
           alt=""
