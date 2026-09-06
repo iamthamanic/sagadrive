@@ -64,7 +64,7 @@ function CharacterEditorView() {
 }
 
 function AppShell() {
-  const { currentView, itemId, route, navigateToView } = useAppLocation();
+  const { currentView, itemId, route, navigateToView, navigateToItem } = useAppLocation();
 
   const handleNavigate = (view: string) => {
     navigateToView(view);
@@ -96,7 +96,7 @@ function AppShell() {
       case 'library':
         return (
           <LazyView>
-            <Library onNavigate={handleNavigate} />
+            <Library onNavigate={handleNavigate} onNavigateToItem={navigateToItem} />
           </LazyView>
         );
       case 'profile':

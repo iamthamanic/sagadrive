@@ -1,6 +1,7 @@
 /**
  * items — public domain API for ItemDefinition + taxonomy/provenance (#134),
- * definition write/fork helpers (#136), and builtin standard packs (#137).
+ * definition write/fork helpers (#136), builtin standard packs (#137),
+ * and Library Items query helpers (#138).
  * Inventory v2 re-exports ItemDefinition for compatibility; new consumers
  * should prefer this barrel.
  * Location: src/domains/items/index.ts
@@ -71,3 +72,15 @@ export {
   listContextItemPacks,
   listItemPacks,
 } from './packs';
+
+export type { ItemLibraryFilters, LibraryItemSource } from './library-query';
+export {
+  EMPTY_ITEM_LIBRARY_FILTERS,
+  buildPackMembershipIndex,
+  compareLibraryItemDefinitions,
+  filterItemLibraryCatalog,
+  hasActiveItemLibraryFilters,
+  itemMatchesFulltext,
+  itemMatchesLibraryFilters,
+  librarySourceFromOrigin,
+} from './library-query';
