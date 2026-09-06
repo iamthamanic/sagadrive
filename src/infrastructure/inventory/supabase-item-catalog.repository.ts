@@ -169,6 +169,33 @@ export class SupabaseItemCatalogRepository {
   }
 
   /**
+   * Read `world_profiles.modules` for the effective world (#143).
+   * Returns null when the row is missing or RLS denies read — callers apply
+   * `item-catalog` module defaults (prior Core+World+Personal semantics).
+   */
+  async loadWorldProfileModules(
+    worldProfileId: string,
+  ): Promise<Record<string, unknown> | null> {
+    const id = assertUuid(worldProfileId, 'Weltprofil');
+    const { data, error } = await raceWithTimeoutReject(
+      supabase
+        .from('world_profiles')
+        .select('modules')
+        .eq('id', id)
+        .maybeSingle(),
+      SUPABASE_QUERY_TIMEOUT_MS,
+      'Weltmodule konnten nicht geladen werden (Zeitüberschreitung).',
+    );
+    if (error) {
+      throw new Error(`Failed to load world profile modules: ${error.message}`);
+    }
+    if (!data || typeof data.modules !== 'object' || data.modules === null || Array.isArray(data.modules)) {
+      return null;
+    }
+    return data.modules as Record<string, unknown>;
+  }
+
+  /**
    * Library Items browser (#138): Personal + all World definitions RLS already
    * allows (no character effective-world narrowing). Core/builtin stay local.
    * Includes archived rows; UI filters to active.

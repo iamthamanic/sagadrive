@@ -92,10 +92,14 @@ section('4 · Katalog-Service Loader');
 requireMatch(service, /loadWorldProfileItemCatalog/, 'loadWorldProfileItemCatalog export');
 requireMatch(service, /scope === ['"]world['"]/, 'filter world scope');
 
-section('5 · Character catalog scope badges');
-requireMatch(catalogDialog, /['"]Core['"]/, 'Core badge string');
-requireMatch(catalogDialog, /['"]Welt['"]/, 'Welt badge string');
-requireMatch(catalogDialog, /['"]Eigen['"]/, 'Eigen badge string');
+section('5 · Character catalog source badges (#143)');
+requireMatch(catalogDialog, /INVENTORY_SOURCE_LABELS/, 'INVENTORY_SOURCE_LABELS usage');
+requireMatch(catalogDialog, /librarySourceFromOrigin/, 'source from origin');
+const inventoryLabels = read('src/app/character/inventory/inventory-ui-labels.ts');
+requireMatch(inventoryLabels, /core:\s*['"]Core['"]/, 'Core badge string');
+requireMatch(inventoryLabels, /standard:\s*['"]Standard['"]/, 'Standard badge string');
+requireMatch(inventoryLabels, /world:\s*['"]Welt['"]/, 'Welt badge string');
+requireMatch(inventoryLabels, /personal:\s*['"]Eigen['"]/, 'Eigen badge string');
 
 check(failures === 0, `${failures} Fehler insgesamt`);
 

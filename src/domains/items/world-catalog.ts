@@ -1,7 +1,8 @@
 /**
  * World profile `item-catalog` module — config normalize/validate and pure
  * availability resolver (#142). Availability is separate from definition
- * scope/ownership. Character Inventory (#143) will consume the resolver.
+ * scope/ownership. Character Inventory (#143) consumes
+ * {@link composeCharacterInventoryAddCatalog}.
  * Location: src/domains/items/world-catalog.ts
  *
  * Domain-pure: no React, no Supabase, no UI imports.
@@ -293,4 +294,59 @@ export function resolveWorldItemCatalog(
       ignoredCoreExcludeIds: dedupePreserveOrder(ignoredCoreExcludeIds),
     },
   };
+}
+
+export interface ComposeCharacterInventoryAddCatalogInput {
+  /** Adventure > Character > null — null means Core + Personal only (no packs). */
+  effectiveWorldProfileId: string | null;
+  /** World `item-catalog` module; defaults apply when module missing. Ignored if no world. */
+  config: ItemCatalogModuleConfig;
+  coreDefinitions: readonly ItemDefinition[];
+  resolveDefinition: (definitionId: string) => ItemDefinition | undefined;
+  packs?: readonly ItemPack[];
+  worldDefinitions?: readonly ItemDefinition[];
+  personalDefinitions?: readonly ItemDefinition[];
+}
+
+/**
+ * Character Inventory v2 add-catalog composition (#143).
+ *
+ * - Null world: Core ∪ Personal (no built-in packs / includes).
+ * - Effective world: {@link resolveWorldItemCatalog} with that world's module config.
+ */
+export function composeCharacterInventoryAddCatalog(
+  input: ComposeCharacterInventoryAddCatalogInput,
+): ResolvedWorldItemCatalog {
+  const personalDefinitions = input.personalDefinitions ?? [];
+
+  if (!input.effectiveWorldProfileId) {
+    const definitions: ItemDefinition[] = [];
+    const emitted = new Set<string>();
+    for (const definition of input.coreDefinitions) {
+      definitions.push(definition);
+      emitted.add(definition.id);
+    }
+    for (const definition of personalDefinitions) {
+      if (emitted.has(definition.id)) continue;
+      definitions.push(definition);
+      emitted.add(definition.id);
+    }
+    return {
+      definitions,
+      diagnosis: {
+        unknownPackIds: [],
+        unresolvedIncludedDefinitionIds: [],
+        ignoredCoreExcludeIds: [],
+      },
+    };
+  }
+
+  return resolveWorldItemCatalog({
+    config: input.config,
+    coreDefinitions: input.coreDefinitions,
+    resolveDefinition: input.resolveDefinition,
+    packs: input.packs,
+    worldDefinitions: input.worldDefinitions,
+    personalDefinitions,
+  });
 }

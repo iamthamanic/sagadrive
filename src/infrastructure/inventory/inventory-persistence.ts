@@ -21,6 +21,7 @@ import type {
   LegacyMigrationResult,
   MigratedPersonalDefinitionDraft,
 } from '../../domains/character/inventory-v2';
+import { getBuiltinStandardDefinition } from '../../domains/items';
 import { getAuthenticatedUserId } from '../../lib/authenticatedUser';
 import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../lib/networkTimeout';
 import { supabase } from '../../lib/supabase';
@@ -96,7 +97,12 @@ export async function assertWritableInventoryV2(
     : null;
   const catalog = await supabaseItemCatalogRepository.listCatalogRecords(worldProfileId);
   const visible = new Set(catalog.map((record) => record.definition.id));
-  const missing = [...definitionIds].filter((id) => !visible.has(id));
+  // Builtin-standard ids resolve locally (#137/#143). Owned pack instances must
+  // remain writable after the world excludes them from the add-catalog.
+  const missing = [...definitionIds].filter((id) => {
+    if (visible.has(id)) return false;
+    return getBuiltinStandardDefinition(id) === undefined;
+  });
   if (missing.length > 0) {
     throw new Error(
       `Unbekannte oder nicht sichtbare Gegenstandsdefinitionen: ${missing.slice(0, 5).join(', ')}`,

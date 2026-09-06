@@ -618,8 +618,10 @@ section('9 · Persistenz- und Sicherheitsvertrag');
   );
 
   const service = read('src/infrastructure/inventory/item-catalog-service.ts');
-  requireMatch(service, /selectCatalogDefinitions/, 'Facade filtert über die Domänen-Policy');
+  requireMatch(service, /composeCharacterInventoryAddCatalog/, 'Facade komponiert Add-Katalog über World-Resolver (#143)');
   requireMatch(service, /createDefinitionLookup/, 'Facade liefert Lookup für besessene Instanzen');
+  requireMatch(service, /getBuiltinStandardDefinition/, 'Lookup löst Builtin-Standard für Besitz auf');
+  requireMatch(service, /loadWorldProfileModules/, 'Facade lädt Weltmodule für item-catalog');
 
   // Layering: the domain policy must not import persistence or infrastructure.
   // Comments may legitimately name where the enforcement lives, so only import
