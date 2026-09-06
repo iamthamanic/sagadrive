@@ -485,6 +485,14 @@ function checkItemWorldCatalogModule() {
   });
 }
 
+function checkItemInventoryWorldCatalogWire() {
+  console.log('Item Epic inventory ↔ world catalog wire (#143): add-catalog composition + labels...');
+  execFileSync(process.execPath, ['scripts/item-inventory-world-catalog-wire-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 console.log('Test Gate: running project checks...');
 execFileSync('npm', ['run', 'checks'], {
   cwd: root,
@@ -502,6 +510,7 @@ checkItemWorkbench();
 checkItemThumbnailAssets();
 checkItemModel3dAssets();
 checkItemWorldCatalogModule();
+checkItemInventoryWorldCatalogWire();
 checkItemRoutingFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();

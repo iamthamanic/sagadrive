@@ -1,12 +1,17 @@
 /**
  * inventory-ui-labels — German labels and load-capacity helpers for Inventory v2
- * desktop UI (#110/#111). Shared by summary bar, grid, equipment, catalog and forms.
+ * desktop UI (#110/#111/#143). Shared by summary bar, grid, equipment, catalog and forms.
  * Location: src/app/character/inventory/inventory-ui-labels.ts
  */
 import type {
   EquipmentSlot,
   InventoryItemType,
 } from '../../../domains/character/inventory-v2';
+import type {
+  ItemContext,
+  ItemSettingTag,
+  LibraryItemSource,
+} from '../../../domains/items';
 
 /** German type labels matching issue #110 catalog / grid copy. */
 export const INVENTORY_TYPE_LABELS: Record<InventoryItemType, string> = {
@@ -18,6 +23,77 @@ export const INVENTORY_TYPE_LABELS: Record<InventoryItemType, string> = {
   container: 'Behälter',
   misc: 'Sonstiges',
 };
+
+/** Source badges for Add-catalog (#143) — text labels, not color-only. */
+export const INVENTORY_SOURCE_LABELS: Record<LibraryItemSource, string> = {
+  core: 'Core',
+  standard: 'Standard',
+  world: 'Welt',
+  personal: 'Eigen',
+};
+
+export const INVENTORY_SETTING_LABELS: Record<ItemSettingTag, string> = {
+  fantasy: 'Fantasy',
+  'sci-fi': 'Sci-Fi',
+  contemporary: 'Gegenwart',
+};
+
+export const INVENTORY_CONTEXT_LABELS: Record<ItemContext, string> = {
+  combat: 'Kampf',
+  exploration: 'Erkundung',
+  survival: 'Überleben',
+  medical: 'Medizin',
+  social: 'Sozial',
+  domestic: 'Haushalt',
+  office: 'Büro',
+  sports: 'Sport',
+  science: 'Wissenschaft',
+  engineering: 'Technik',
+  travel: 'Reise',
+  entertainment: 'Unterhaltung',
+  urban: 'Urban',
+};
+
+export const INVENTORY_SOURCE_FILTER_OPTIONS: ReadonlyArray<{
+  value: 'all' | LibraryItemSource;
+  label: string;
+}> = [
+  { value: 'all', label: 'Alle Quellen' },
+  { value: 'core', label: 'Core' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'world', label: 'Welt' },
+  { value: 'personal', label: 'Eigen' },
+];
+
+export const INVENTORY_SETTING_FILTER_OPTIONS: ReadonlyArray<{
+  value: 'all' | ItemSettingTag;
+  label: string;
+}> = [
+  { value: 'all', label: 'Alle Settings' },
+  { value: 'fantasy', label: 'Fantasy' },
+  { value: 'sci-fi', label: 'Sci-Fi' },
+  { value: 'contemporary', label: 'Gegenwart' },
+];
+
+export const INVENTORY_CONTEXT_FILTER_OPTIONS: ReadonlyArray<{
+  value: 'all' | ItemContext;
+  label: string;
+}> = [
+  { value: 'all', label: 'Alle Kontexte' },
+  { value: 'combat', label: 'Kampf' },
+  { value: 'exploration', label: 'Erkundung' },
+  { value: 'survival', label: 'Überleben' },
+  { value: 'medical', label: 'Medizin' },
+  { value: 'social', label: 'Sozial' },
+  { value: 'domestic', label: 'Haushalt' },
+  { value: 'office', label: 'Büro' },
+  { value: 'sports', label: 'Sport' },
+  { value: 'science', label: 'Wissenschaft' },
+  { value: 'engineering', label: 'Technik' },
+  { value: 'travel', label: 'Reise' },
+  { value: 'entertainment', label: 'Unterhaltung' },
+  { value: 'urban', label: 'Urban' },
+];
 
 
 /** Equipment slot labels for Ausrüstung panel (#111 + feet paper-doll). */

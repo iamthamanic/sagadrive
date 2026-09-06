@@ -129,6 +129,7 @@ export {
 } from './model3d-assets';
 
 export type {
+  ComposeCharacterInventoryAddCatalogInput,
   ItemCatalogModuleConfig,
   ItemCatalogModuleDiagnosis,
   ItemCatalogResolveDiagnosis,
@@ -138,6 +139,7 @@ export type {
 } from './world-catalog';
 export {
   ITEM_CATALOG_MODULE_ID,
+  composeCharacterInventoryAddCatalog,
   defaultItemCatalogModuleConfig,
   getItemCatalogModuleConfig,
   normalizeItemCatalogModuleConfig,
