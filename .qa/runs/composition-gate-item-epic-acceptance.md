@@ -1,7 +1,7 @@
 # Composition Gate — item-epic-acceptance
 
-- HEAD_SHA: cfec90eb61ef54b1f5200c0ef23b2859e82bc609
-- BASE_SHA: ea61b7fc32981efcf1716847eba4b57c8b47b547
+- HEAD_SHA: 07de4372d9a86746f999e9703cfbef93734c0c13
+- BASE_SHA: cfec90eb61ef54b1f5200c0ef23b2859e82bc609
 - Date: 2026-09-06
 - Verdict: CLEAR
 
