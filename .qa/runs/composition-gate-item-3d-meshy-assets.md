@@ -1,10 +1,9 @@
 # Composition Gate — item-3d-meshy-assets
 
-- HEAD_SHA: 9a5afbac342fcadeea9a4f170e2da6a2a3c3792f
+- HEAD_SHA: efd9ca0d25b99b571d0a70a1d9e7f885e070a039
 - BASE_SHA: 9a5afbac342fcadeea9a4f170e2da6a2a3c3792f
 - Date: 2026-09-06
 - Verdict: CLEAR
-- Note: WORKTREE — implementation lives as uncommitted changes on `feat/141-item-3d-meshy`; update HEAD_SHA after parent commit. BASE_SHA = merge-base with origin/main (same tip until commit).
 
 ## Event
 

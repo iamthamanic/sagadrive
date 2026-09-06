@@ -66,7 +66,7 @@ Out of scope: B-07/B-08/B-09 (no permission-admin / route maps).
 
 ## Composition Gate
 
-Proof: `.qa/runs/composition-gate-item-3d-meshy-assets.md` — Verdict CLEAR (WORKTREE until parent commit updates HEAD_SHA). Simulations: `N-actors`, `Invalid/missing`, `Two consumers / crash`.
+Proof: `.qa/runs/composition-gate-item-3d-meshy-assets.md` — Verdict CLEAR (CLEAR at efd9ca0). Simulations: `N-actors`, `Invalid/missing`, `Two consumers / crash`.
 
 ## Implementation Notes
 
@@ -75,4 +75,3 @@ Proof: `.qa/runs/composition-gate-item-3d-meshy-assets.md` — Verdict CLEAR (WO
 - Domain key `model3d:{uuid}`; fork strips `model3d`; Library/Inventory unchanged (thumbnail only).
 - Workbench: GLB upload, Image-to-3D (disabled without thumbnail), remove/retry, lazy Three preview with reduced-motion-aware spin; fail-closed Meshy copy when key missing.
 - Client invokes only `item-model3d`; `MESHY_API_KEY` server-only. Offline Deno tests + `scripts/item-model3d-assets-check.mjs` in test-gate.
-- Left uncommitted for parent agent (no push/PR).
