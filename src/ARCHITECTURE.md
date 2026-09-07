@@ -36,9 +36,9 @@ SagaDrive uses a **Modular Monolith** with explicit layers:
 
 | Path | Status |
 |------|--------|
-| `src/modules/**` | Frozen (#165). Shrink only via domain migrations (#166–#175). Never add files. Legacy feature modules removed through #172 (`modules/characters` gone). Remaining shared UI migration: #174; final eradicate + gate: #175. |
-| `src/components/**` except `components/ui/**` | Feature/shell screens migrated to `app/**` in #173. Remaining generic pieces (icons, connectors, figma helper) move to `shared/ui` in #174. |
-| `src/components/ui/**` | Temporary UI kit; move to `shared/ui` in #174. |
+| `src/modules/**` | Frozen (#165). Feature modules removed through #172. Final empty-tree cleanup in #175. |
+| `src/components/**` | Removed in #174 (kit → `shared/ui`, feature leftovers → `app/**`). #175 asserts zero leftovers. |
+| `src/shared/ui/**` | Canonical fachlich neutrale UI (Radix kit + presentation helpers). |
 
 Baseline file: `.qa/architecture/legacy-freeze-baseline.json`. New paths outside that set fail CI; deletions are allowed. No new compatibility barrels or permanent deprecated re-exports.
 

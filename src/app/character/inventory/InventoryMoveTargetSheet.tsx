@@ -4,14 +4,14 @@
  * Verschieben / Zusammenführen / Tauschen before calling parent onPickTarget.
  * Location: src/app/character/inventory/InventoryMoveTargetSheet.tsx
  */
-import { Button } from '../../../components/ui/button';
+import { Button } from '../../../shared/ui/button';
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '../../../components/ui/sheet';
+} from '../../../shared/ui/sheet';
 import {
   BASE_SLOT_COUNT,
   isSameStackFamily,

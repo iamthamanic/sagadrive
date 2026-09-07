@@ -3,7 +3,7 @@
  * Location: src/app/items/workbench/ItemModelPreview.tsx
  */
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '../../../components/ui/button';
+import { Button } from '../../../shared/ui/button';
 import type { ItemModelPreviewState } from './ItemModelPreviewRuntime';
 
 export interface ItemModelPreviewProps {

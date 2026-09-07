@@ -11,7 +11,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../../components/ui/alert-dialog';
+} from '../../../shared/ui/alert-dialog';
 
 export interface ItemArchiveDialogProps {
   open: boolean;

@@ -14,15 +14,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../../components/ui/alert-dialog';
-import { Button } from '../../../components/ui/button';
+} from '../../../shared/ui/alert-dialog';
+import { Button } from '../../../shared/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../../../components/ui/dropdown-menu';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
+} from '../../../shared/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../shared/ui/tooltip';
 import {
   EQUIPMENT_SLOTS,
   HAND_SLOTS,
@@ -37,7 +37,7 @@ import {
 } from '../../../domains/character/inventory-v2';
 import { InventoryEquipmentPaperDollFigure } from './InventoryEquipmentPaperDollFigure';
 import { InventoryEquipmentPaperDollHotspots } from './InventoryEquipmentPaperDollHotspots';
-import { InventoryItemThumb } from '../../../components/InventoryItemThumb';
+import { InventoryItemThumb } from '../../../app/character/inventory/InventoryItemThumb';
 import { useItemThumbnailSrc } from '../../items/useItemThumbnailSrc';
 import {
   freeSlotsForEquipDisplace,

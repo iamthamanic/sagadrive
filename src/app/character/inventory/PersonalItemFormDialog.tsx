@@ -15,9 +15,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../../components/ui/alert-dialog';
-import { Button } from '../../../components/ui/button';
-import { Checkbox } from '../../../components/ui/checkbox';
+} from '../../../shared/ui/alert-dialog';
+import { Button } from '../../../shared/ui/button';
+import { Checkbox } from '../../../shared/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -25,17 +25,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+} from '../../../shared/ui/dialog';
+import { Input } from '../../../shared/ui/input';
+import { Label } from '../../../shared/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
-import { Textarea } from '../../../components/ui/textarea';
+} from '../../../shared/ui/select';
+import { Textarea } from '../../../shared/ui/textarea';
 import type {
   EquipmentSlot,
   InventoryItemType,

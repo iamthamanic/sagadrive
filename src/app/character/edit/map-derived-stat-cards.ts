@@ -2,7 +2,7 @@
  * map-derived-stat-cards — Maps rules kernel derived stats to UI card props.
  * Location: src/app/character/edit/map-derived-stat-cards.ts
  */
-import type { DerivedStatCardProps } from '../../../components/DerivedStatCard';
+import type { DerivedStatCardProps } from '../../../app/character/shared/DerivedStatCard';
 import {
   computeSagaDriveDerivedStats,
   type ComputeSagaDriveDerivedStatsInput,

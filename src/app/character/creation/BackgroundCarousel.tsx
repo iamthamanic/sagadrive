@@ -26,14 +26,14 @@ import {
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Card, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Badge } from '../../../shared/ui/badge';
+import { Button } from '../../../shared/ui/button';
+import { Card, CardHeader, CardTitle } from '../../../shared/ui/card';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-} from '../../../components/ui/carousel';
+} from '../../../shared/ui/carousel';
 import {
   getSagaDriveSkill,
   type SagaDriveSkillKey,

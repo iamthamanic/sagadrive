@@ -7,9 +7,9 @@
  */
 import { useState } from 'react';
 import { ImageOff } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent } from '../../components/ui/card';
-import { cn } from '../../components/ui/utils';
+import { Button } from '../../shared/ui/button';
+import { Card, CardContent } from '../../shared/ui/card';
+import { cn } from '../../shared/ui/utils';
 
 type EntityBrowserCardProps = {
   title: string;

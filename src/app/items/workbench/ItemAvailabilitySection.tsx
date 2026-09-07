@@ -3,14 +3,14 @@
  * World id is chosen from editable profiles only (never free-text).
  * Location: src/app/items/workbench/ItemAvailabilitySection.tsx
  */
-import { Label } from '../../../components/ui/label';
+import { Label } from '../../../shared/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from '../../../shared/ui/select';
 import type { WorldProfileVm } from '../../../domains/world/contracts/world.types';
 import type { WorkbenchFormState } from './workbenchForm';
 

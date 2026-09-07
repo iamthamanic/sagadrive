@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
-import { Input } from '../../../components/ui/input';
+import { Input } from '../../../shared/ui/input';
 import { ItemLibraryFiltersBar } from './ItemLibraryFilters';
 import { ItemLibraryResults } from './ItemLibraryResults';
 import { ItemLibraryToolbar } from './ItemLibraryToolbar';

@@ -3,16 +3,16 @@
  * Progressive disclosure: only relevant controls for the current inventory type.
  * Location: src/app/items/workbench/ItemRulesSection.tsx
  */
-import { Checkbox } from '../../../components/ui/checkbox';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+import { Checkbox } from '../../../shared/ui/checkbox';
+import { Input } from '../../../shared/ui/input';
+import { Label } from '../../../shared/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from '../../../shared/ui/select';
 import { WEAPON_DAMAGE_OPTIONS } from '../../character/inventory/inventory-ui-labels';
 import {
   parseItemCost,

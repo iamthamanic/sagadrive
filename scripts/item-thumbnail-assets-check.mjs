@@ -116,7 +116,7 @@ section('5 · Workbench visuals wired');
 
 section('6 · Thumb resolver chain assetKey → iconKey → type');
 {
-  const thumb = read('src/components/InventoryItemThumb.tsx');
+  const thumb = read('src/app/character/inventory/InventoryItemThumb.tsx');
   check(/assetSrc/.test(thumb), 'accepts resolved assetSrc');
   check(/iconKey/.test(thumb), 'falls back to iconKey');
   check(/TYPE_ICONS/.test(thumb), 'falls back to type icons');

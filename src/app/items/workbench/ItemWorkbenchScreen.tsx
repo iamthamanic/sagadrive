@@ -3,7 +3,7 @@
  * Wired from App shell routes `/items/create` and `/items/:itemId`.
  * Location: src/app/items/workbench/ItemWorkbenchScreen.tsx
  */
-import { Button } from '../../../components/ui/button';
+import { Button } from '../../../shared/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,7 +13,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../../components/ui/alert-dialog';
+} from '../../../shared/ui/alert-dialog';
 import { ItemArchiveDialog } from './ItemArchiveDialog';
 import { ItemForkDialog } from './ItemForkDialog';
 import { ItemTypePickerDialog } from './ItemTypePickerDialog';

@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 import { CircleHelp } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
-import { cn } from '../../../components/ui/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../shared/ui/tooltip';
+import { cn } from '../../../shared/ui/utils';
 
 interface RuleHelpProps {
   label: string;

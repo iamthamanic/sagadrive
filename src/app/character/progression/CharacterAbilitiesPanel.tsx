@@ -1,4 +1,4 @@
-import { Badge } from '../../../components/ui/badge';
+import { Badge } from '../../../shared/ui/badge';
 import type { AbilityDto } from '../../../domains/character';
 import { RuleHelp } from './RuleHelp';
 

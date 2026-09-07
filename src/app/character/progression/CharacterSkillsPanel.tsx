@@ -3,8 +3,8 @@
  * Location: src/app/character/progression/CharacterSkillsPanel.tsx
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Badge } from '../../../components/ui/badge';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
+import { Badge } from '../../../shared/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../shared/ui/accordion';
 import {
   SAGA_DRIVE_START_FREE_SKILL_POINTS,
   createEmptySagaDriveSkillRanks,

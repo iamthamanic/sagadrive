@@ -1,6 +1,6 @@
 # SagaDrive UI Generation Guidelines
 
-Diese Regeln gelten fuer neue und ueberarbeitete SagaDrive-Produktoberflaechen. `src/THEME_GUIDE.md` ist die kanonische Detailreferenz. UI-Primitives unter `src/components/ui/` sind die technische Source of Truth.
+Diese Regeln gelten fuer neue und ueberarbeitete SagaDrive-Produktoberflaechen. `src/THEME_GUIDE.md` ist die kanonische Detailreferenz. UI-Primitives unter `src/shared/ui/` sind die technische Source of Truth.
 
 ## Grundstil
 
@@ -73,11 +73,11 @@ Merksatz: **Cyan = ausgewaehlt oder wichtigste Aktion. Gold = Hover und Premium-
 
 Vor lokalen Styles zuerst die bestehenden Primitives pruefen:
 
-- `src/components/ui/button.tsx`
-- `src/components/ui/tabs.tsx`
-- `src/components/ui/select.tsx`
-- `src/components/ui/input.tsx`
-- `src/components/ui/textarea.tsx`
+- `src/shared/ui/button.tsx`
+- `src/shared/ui/tabs.tsx`
+- `src/shared/ui/select.tsx`
+- `src/shared/ui/input.tsx`
+- `src/shared/ui/textarea.tsx`
 - `src/styles/globals.css`
 
 Wenn eine Regel fuer mehrere Screens gelten soll, wird zuerst das passende Primitive oder Theme-Token angepasst. Keine CharacterEditor-spezifischen Farb-Hardcodes fuer allgemeine Designsystem-Regeln.

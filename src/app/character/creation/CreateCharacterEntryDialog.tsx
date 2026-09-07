@@ -5,14 +5,14 @@
 import { useEffect, useState } from 'react';
 import { Loader2, Sparkles, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button } from '../../../components/ui/button';
+import { Button } from '../../../shared/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
+} from '../../../shared/ui/dialog';
 import { clearCharacterEditorBootstrap, setCharacterEditorBootstrap } from '../shared/characterEditorBootstrap';
 import { assertValidSnapshot, characterPresetService } from '../../../infrastructure/character/character-preset-service';
 import type { CharacterPresetVm } from '../../../domains/character/contracts/character-preset.types';

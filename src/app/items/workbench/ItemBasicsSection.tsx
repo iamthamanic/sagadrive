@@ -2,9 +2,9 @@
  * ItemBasicsSection — name + description for Workbench (#139).
  * Location: src/app/items/workbench/ItemBasicsSection.tsx
  */
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
+import { Input } from '../../../shared/ui/input';
+import { Label } from '../../../shared/ui/label';
+import { Textarea } from '../../../shared/ui/textarea';
 import type { WorkbenchFormState } from './workbenchForm';
 
 export interface ItemBasicsSectionProps {

@@ -2,7 +2,7 @@
  * GenderReadingSelect — Dropdown for männlich/weiblich/divers gelesen with icons.
  * Location: src/app/character/creation/GenderReadingSelect.tsx
  */
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select';
 import type { CharacterGenderReading } from '../../../domains/character';
 import { GENDER_READING_OPTIONS, isCharacterGenderReading } from '../../../domains/character/use-cases/genderReading';
 import { GenderReadingIcon } from './GenderReadingIcon';

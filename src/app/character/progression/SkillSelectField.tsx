@@ -9,8 +9,8 @@ import {
   SelectContent,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
-import { cn } from '../../../components/ui/utils';
+} from '../../../shared/ui/select';
+import { cn } from '../../../shared/ui/utils';
 import {
   getSagaDriveAttribute,
   getSagaDriveSkill,

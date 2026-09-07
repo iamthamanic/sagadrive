@@ -5,11 +5,11 @@
 import { useEffect, useState } from 'react';
 import { Copy, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
-import { Switch } from '../../../components/ui/switch';
+import { Badge } from '../../../shared/ui/badge';
+import { Button } from '../../../shared/ui/button';
+import { Input } from '../../../shared/ui/input';
+import { Label } from '../../../shared/ui/label';
+import { Switch } from '../../../shared/ui/switch';
 import { characterPresetService } from '../../../infrastructure/character/character-preset-service';
 import type { CharacterPresetReleaseMode, CharacterPresetSnapshot, CharacterPresetVm } from '../../../domains/character/contracts/character-preset.types';
 import type { CharacterRulesetKey } from '../../../domains/rules/sagadrive/character-creation';

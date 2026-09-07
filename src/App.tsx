@@ -9,7 +9,7 @@ import { AuthGate } from './app/shell/auth/AuthGate';
 import { Layout } from './app/shell/Layout';
 import { Dashboard } from './app/dashboard/Dashboard';
 import { ViewLoadingFallback } from './app/shell/ViewLoadingFallback';
-import { Toaster } from './components/ui/sonner';
+import { Toaster } from './shared/ui/sonner';
 import { useAppLocation } from './app/shell/routing';
 import { NotFoundPlaceholder } from './app/items/ItemRoutePlaceholders';
 import { ItemWorkbenchScreen } from './app/items/workbench';

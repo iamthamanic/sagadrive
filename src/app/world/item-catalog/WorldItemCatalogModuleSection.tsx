@@ -6,13 +6,13 @@
  * Location: src/app/world/item-catalog/WorldItemCatalogModuleSection.tsx
  */
 import { Package, Plus, X } from 'lucide-react';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Checkbox } from '../../../components/ui/checkbox';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
-import { Switch } from '../../../components/ui/switch';
+import { Badge } from '../../../shared/ui/badge';
+import { Button } from '../../../shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../shared/ui/card';
+import { Checkbox } from '../../../shared/ui/checkbox';
+import { Input } from '../../../shared/ui/input';
+import { Label } from '../../../shared/ui/label';
+import { Switch } from '../../../shared/ui/switch';
 import { useItemWorldAvailability } from './useItemWorldAvailability';
 import type { WorldModuleConfigMap } from '../../../domains/world/contracts/world.types';
 

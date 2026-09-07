@@ -5,16 +5,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Sparkles, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { Button } from '../../../components/ui/button';
-import { Label } from '../../../components/ui/label';
+import { Button } from '../../../shared/ui/button';
+import { Label } from '../../../shared/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
-import { Textarea } from '../../../components/ui/textarea';
+} from '../../../shared/ui/select';
+import { Textarea } from '../../../shared/ui/textarea';
 import { useProjects } from '../../project/hooks/useProjects';
 import { buildCharacterBackgroundExamples } from '../../../domains/character/use-cases/character-lore-examples';
 import { characterLoreService } from '../../../infrastructure/character/character-lore-service';

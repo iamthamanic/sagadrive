@@ -2,7 +2,7 @@
  * ItemWorkbenchEditor — desktop 2-col / mobile single-col parameter layout (#139).
  * Location: src/app/items/workbench/ItemWorkbenchEditor.tsx
  */
-import { Button } from '../../../components/ui/button';
+import { Button } from '../../../shared/ui/button';
 import type { ItemDefinition } from '../../../domains/character/inventory-v2';
 import type { WorldProfileVm } from '../../../domains/world/contracts/world.types';
 import { ItemAvailabilitySection } from './ItemAvailabilitySection';

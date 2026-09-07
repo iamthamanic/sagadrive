@@ -20,14 +20,14 @@ import {
   type SagaDriveAttributeKey,
 } from '../../../domains/rules/sagadrive/character-creation';
 import { RuleHelp } from '../shared/RuleHelp';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Card, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Badge } from '../../../shared/ui/badge';
+import { Button } from '../../../shared/ui/button';
+import { Card, CardHeader, CardTitle } from '../../../shared/ui/card';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-} from '../../../components/ui/carousel';
+} from '../../../shared/ui/carousel';
 import type { CarouselScrollPhase } from '../../../app/character/shared/carousel.types';
 import { useCarouselScrollSync } from '../../../app/character/shared/useCarouselScrollSync';
 

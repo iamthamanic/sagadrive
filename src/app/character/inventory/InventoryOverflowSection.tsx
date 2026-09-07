@@ -3,8 +3,8 @@
  * Shows stacks that did not fit the 20 base slots and offers recovery into a free slot.
  * Location: src/app/character/inventory/InventoryOverflowSection.tsx
  */
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
+import { Button } from '../../../shared/ui/button';
+import { Badge } from '../../../shared/ui/badge';
 import type {
   InventoryState,
   ItemDefinitionLookup,

@@ -2,15 +2,15 @@
  * ItemTaxonomySection — kind/setting/tech/context/capability/role (#139).
  * Location: src/app/items/workbench/ItemTaxonomySection.tsx
  */
-import { Button } from '../../../components/ui/button';
-import { Label } from '../../../components/ui/label';
+import { Button } from '../../../shared/ui/button';
+import { Label } from '../../../shared/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from '../../../shared/ui/select';
 import {
   ITEM_CAPABILITIES,
   ITEM_CONTEXTS,

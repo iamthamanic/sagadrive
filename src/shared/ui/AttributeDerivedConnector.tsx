@@ -14,7 +14,7 @@
  *  - CHA-Hinweis kommt vom Parent (kein Baum).
  *
  * Rein dekorativ (aria-hidden), rein clientseitig, Vercel-kompatibel.
- * Location: src/components/AttributeDerivedConnector.tsx
+ * Location: src/shared/ui/AttributeDerivedConnector.tsx
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
