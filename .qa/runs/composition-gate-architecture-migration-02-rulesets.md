@@ -1,6 +1,6 @@
 # Composition Gate — architecture-migration-02-rulesets
 
-- HEAD_SHA: 4ba818c47f56cb552125088b371c12790084a814
+- HEAD_SHA: 13370151cfdebc51c9334775c2b473f8fc0b8ad4
 - BASE_SHA: de4ed6c9d0dc45866848c7809220bf048147c781
 - Date: 2026-09-07
 - Verdict: CLEAR
