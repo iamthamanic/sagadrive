@@ -6,8 +6,8 @@ import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package } 
 import { useCharacterSummaries } from '../modules/characters/hooks/useCharacterSummaries';
 import type { CharacterSummaryVm } from '../modules/characters/types/character.types';
 import { CreateCharacterEntryDialog } from '../modules/characters/components/CreateCharacterEntryDialog';
-import { useProjectSummaries } from '../modules/projects/hooks/useProjectSummaries';
-import type { ProjectSummaryVm } from '../modules/projects/types/project.types';
+import { useProjectSummaries } from '../app/project/hooks/useProjectSummaries';
+import type { ProjectSummaryVm } from '../domains/project/contracts/project.types';
 import { useAuth } from '../lib/auth-context';
 import { EntityBrowser, type EntityBrowserRenderContext } from './EntityBrowser';
 import { EntityBrowserCard } from './EntityBrowserCard';

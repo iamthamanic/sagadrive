@@ -21,8 +21,8 @@ function rejectMatch(content, pattern, label) {
 
 const canonicalRls = read('src/supabase/schema_v3_rls.sql');
 const migration = read('supabase/migrations/004_project_membership_security.sql');
-const projectService = read('src/modules/projects/services/project.service.ts');
-const memberService = read('src/modules/projects/services/project-member.service.ts');
+const projectService = read('src/infrastructure/project/project-service.ts');
+const memberService = read('src/infrastructure/project/project-member-service.ts');
 const loreFunction = read('supabase/functions/character-lore/index.ts');
 const loreAccess = read('supabase/functions/_shared/character-lore-access.ts');
 

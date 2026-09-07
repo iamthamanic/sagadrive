@@ -1,7 +1,11 @@
-import { supabase } from '../../../lib/supabase';
-import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
-import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../../lib/networkTimeout';
-import { projectMemberService } from './project-member.service';
+/**
+ * project-service — Supabase adapter for projects/campaigns.
+ * Location: src/infrastructure/project/project-service.ts
+ */
+import { supabase } from '../../lib/supabase';
+import { getAuthenticatedUserId } from '../../lib/authenticatedUser';
+import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../lib/networkTimeout';
+import { projectMemberService } from './project-member-service';
 import type {
   ProjectDto,
   ProjectVm,
@@ -12,7 +16,7 @@ import type {
   ProjectSummaryVm,
   SessionDto,
   SessionVm,
-} from '../types/project.types';
+} from '../../domains/project/contracts/project.types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;

@@ -1,7 +1,11 @@
+/**
+ * useProjects — App-slice hook for project create/join/manage.
+ * Location: src/app/project/hooks/useProjects.ts
+ */
 import { useState, useEffect } from 'react';
-import { projectService } from '../services/project.service';
+import { projectService } from '../../../infrastructure/project/project-service';
 import { ENTITY_CACHE_KEYS, entityCache } from '../../../lib/entityCache';
-import type { ProjectDto, ProjectVm, CreateProjectDto, JoinProjectDto } from '../types/project.types';
+import type { ProjectDto, ProjectVm, CreateProjectDto, JoinProjectDto } from '../../../domains/project/contracts/project.types';
 
 function toProjectDtoUpdates(updates: Partial<ProjectVm>): Partial<ProjectDto> {
   const dto: Partial<ProjectDto> = {};

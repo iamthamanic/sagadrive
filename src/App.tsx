@@ -24,7 +24,7 @@ const Marketplace = lazy(() =>
   import('./components/Marketplace').then((module) => ({ default: module.Marketplace })),
 );
 const ProjectJoin = lazy(() =>
-  import('./components/ProjectJoin').then((module) => ({ default: module.ProjectJoin })),
+  import('./app/project/ProjectJoin').then((module) => ({ default: module.ProjectJoin })),
 );
 const Library = lazy(() =>
   import('./components/Library').then((module) => ({ default: module.Library })),
