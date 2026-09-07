@@ -1,6 +1,6 @@
 # Composition Gate — architecture-migration-07-character-core
 
-- HEAD_SHA: 823b400013d4fb5164e2d80513bb4b2f9c22df59
+- HEAD_SHA: 0af8b2d784b719f0cafb661b6b8bfc85a97313ab
 - BASE_SHA: fe7ca7f6afade2491ca44a2b48dcffabc8665f29
 - Date: 2026-09-07
 - Verdict: CLEAR
