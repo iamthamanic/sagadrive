@@ -1,7 +1,7 @@
 # Composition Gate — architecture-migration-09-app-shell
 
-- HEAD_SHA: WORKTREE
-- BASE_SHA: 4d7a078
+- HEAD_SHA: 016e84b66b165c58b11f075b90ae79fa09200760
+- BASE_SHA: 4d7a0789c837f2bbb457b05c530773f61734f5e7
 - Date: 2026-09-07
 - Verdict: CLEAR
 
