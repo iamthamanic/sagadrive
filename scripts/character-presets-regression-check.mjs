@@ -24,8 +24,8 @@ function rejectMatch(content, pattern, label) {
 
 const migration = read('supabase/migrations/012_character_presets.sql');
 const migrationHardening = read('supabase/migrations/013_character_presets_rls_hardening.sql');
-const types = read('src/modules/characters/types/characterPreset.types.ts');
-const service = read('src/modules/characters/services/characterPreset.service.ts');
+const types = read('src/domains/character/contracts/character-preset.types.ts');
+const service = read('src/infrastructure/character/character-preset-service.ts');
 const panel = read('src/app/character/progression/CharacterPresetPanel.tsx');
 const dialog = read('src/app/character/creation/CreateCharacterEntryDialog.tsx');
 const editor = read('src/app/character/edit/CharacterEditor.tsx');

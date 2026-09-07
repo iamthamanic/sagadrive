@@ -8,7 +8,7 @@ import {
   type SagaDriveArchetypeKey,
   type SagaDriveSkillKey,
 } from '../../../domains/rules/sagadrive/character-creation';
-import type { CharacterAttributesDto } from '../../../modules/characters/types/character.types';
+import type { CharacterAttributesDto } from '../../../domains/character';
 import type { SagaDriveBackgroundSkillPoints } from '../../../domains/rules/sagadrive/skill-progression';
 import { ArchetypeCarousel, type CarouselScrollPhase } from './ArchetypeCarousel';
 import { ArchetypeSkillChoice } from './ArchetypeSkillChoice';

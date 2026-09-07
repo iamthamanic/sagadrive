@@ -1,6 +1,6 @@
 /**
  * CharacterBackgroundComposer — BG story field with examples, generate CTA, and explicit draft accept.
- * Location: src/modules/characters/components/CharacterBackgroundComposer.tsx
+ * Location: src/app/character/creation/CharacterBackgroundComposer.tsx
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Sparkles, X } from 'lucide-react';

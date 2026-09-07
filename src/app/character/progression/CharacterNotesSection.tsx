@@ -1,6 +1,6 @@
 /**
  * CharacterNotesSection — Free-form notes under Hintergrundgeschichte.
- * Location: src/modules/characters/components/CharacterNotesSection.tsx
+ * Location: src/app/character/progression/CharacterNotesSection.tsx
  */
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';

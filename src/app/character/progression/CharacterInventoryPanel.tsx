@@ -14,7 +14,7 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
-import type { ItemDto, ItemType } from '../../../modules/characters/types/character.types';
+import type { ItemDto, ItemType } from '../../../domains/character';
 import { RuleHelp } from './RuleHelp';
 
 interface CharacterInventoryPanelProps {

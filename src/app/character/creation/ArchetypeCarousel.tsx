@@ -1,6 +1,6 @@
 /**
  * ArchetypeCarousel — Swipebare Archetyp-Auswahl mit Icon und Kernfähigkeit, analog zum Spezies-Karussell.
- * Location: src/modules/characters/components/ArchetypeCarousel.tsx
+ * Location: src/app/character/creation/ArchetypeCarousel.tsx
  */
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { sagaDriveArchetypeOptions, type SagaDriveArchetypeKey } from '../../../domains/rules/sagadrive/character-creation';
@@ -19,10 +19,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '../../../components/ui/collapsible';
-import type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
-import { useCarouselScrollSync } from '../../../modules/characters/hooks/useCarouselScrollSync';
+import type { CarouselScrollPhase } from '../../../app/character/shared/carousel.types';
+import { useCarouselScrollSync } from '../../../app/character/shared/useCarouselScrollSync';
 
-export type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
+export type { CarouselScrollPhase } from '../../../app/character/shared/carousel.types';
 
 interface ArchetypeCarouselProps {
   selectedArchetype?: SagaDriveArchetypeKey;

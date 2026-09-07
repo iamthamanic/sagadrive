@@ -1,9 +1,9 @@
 /**
  * GenderReadingIcon — Lucide icon for character gender-reading options in the editor.
- * Location: src/modules/characters/components/GenderReadingIcon.tsx
+ * Location: src/app/character/creation/GenderReadingIcon.tsx
  */
 import { Mars, NonBinary, Venus, type LucideIcon } from 'lucide-react';
-import type { CharacterGenderReading } from '../../../modules/characters/types/character.types';
+import type { CharacterGenderReading } from '../../../domains/character';
 
 const GENDER_READING_ICONS: Record<CharacterGenderReading, LucideIcon> = {
   'masculine-read': Mars,

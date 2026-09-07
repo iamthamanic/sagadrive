@@ -1,6 +1,6 @@
 /**
  * BackgroundCarousel — Swipebare Hintergrund-Framework-Auswahl (Frameworks + Custom), analog zum Archetyp-Karussell.
- * Location: src/modules/characters/components/BackgroundCarousel.tsx
+ * Location: src/app/character/creation/BackgroundCarousel.tsx
  */
 import {
   ChevronLeft,
@@ -39,8 +39,8 @@ import {
   type SagaDriveSkillKey,
 } from '../../../domains/rules/sagadrive/character-creation';
 import type { SagaDriveBackgroundTemplate } from '../../../domains/rules/sagadrive/background-templates';
-import type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
-import { useCarouselScrollSync } from '../../../modules/characters/hooks/useCarouselScrollSync';
+import type { CarouselScrollPhase } from '../../../app/character/shared/carousel.types';
+import { useCarouselScrollSync } from '../../../app/character/shared/useCarouselScrollSync';
 import { RuleHelp } from '../shared/RuleHelp';
 
 export type BackgroundCarouselSelection = string | null;

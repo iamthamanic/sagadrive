@@ -1,6 +1,6 @@
 /**
  * CreateCharacterEntryDialog — Two-card create chooser: own character vs preset version.
- * Location: src/modules/characters/components/CreateCharacterEntryDialog.tsx
+ * Location: src/app/character/creation/CreateCharacterEntryDialog.tsx
  */
 import { useEffect, useState } from 'react';
 import { Loader2, Sparkles, UserPlus } from 'lucide-react';
@@ -14,8 +14,8 @@ import {
   DialogTitle,
 } from '../../../components/ui/dialog';
 import { clearCharacterEditorBootstrap, setCharacterEditorBootstrap } from '../shared/characterEditorBootstrap';
-import { assertValidSnapshot, characterPresetService } from '../../../modules/characters/services/characterPreset.service';
-import type { CharacterPresetVm } from '../../../modules/characters/types/characterPreset.types';
+import { assertValidSnapshot, characterPresetService } from '../../../infrastructure/character/character-preset-service';
+import type { CharacterPresetVm } from '../../../domains/character/contracts/character-preset.types';
 
 type CreateStep = 'chooser' | 'presets' | 'versions';
 

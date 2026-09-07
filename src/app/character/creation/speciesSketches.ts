@@ -1,7 +1,7 @@
 /**
  * speciesSketches — Meshy-generated minimal fashion-sketch line-art per SagaDrive Spezies.
  * Style: #94A3B8 (muted-foreground) ink lines on transparent background, simple universal clothing.
- * Location: src/modules/characters/components/speciesSketches.ts
+ * Location: src/app/character/creation/speciesSketches.ts
  */
 import alienSketch from '../../../assets/species/alien.png';
 import cyborgSketch from '../../../assets/species/cyborg.png';

@@ -32,7 +32,7 @@ const assertPersistence = read('src/domains/character/use-cases/assert-character
 const normalize = read('src/domains/character/use-cases/normalize-character.ts');
 const derived = read('src/domains/rules/sagadrive/derived-stats/compute-derived-stats.ts');
 const repository = read('src/infrastructure/character/supabase-character.repository.ts');
-const presetService = read('src/modules/characters/services/characterPreset.service.ts');
+const presetService = read('src/infrastructure/character/character-preset-service.ts');
 const domainCheck = read('scripts/skill-progression-domain-check.mjs');
 
 requireMatch(rules, /SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS = 2/, 'two background skill points');

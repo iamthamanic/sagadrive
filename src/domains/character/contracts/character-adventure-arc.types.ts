@@ -1,6 +1,6 @@
 /**
  * characterAdventureArc.types — DTOs/VMs for adventure participation + development history.
- * Location: src/modules/characters/types/characterAdventureArc.types.ts
+ * Location: src/domains/character/contracts/character-adventure-arc.types.ts
  */
 
 export type CharacterAdventureArcStatus = 'active' | 'completed' | 'left';

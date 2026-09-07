@@ -2,7 +2,7 @@ import type {
   CharacterAppearanceDto,
   CharacterAvatarDto,
   CharacterAvatarFormat,
-} from './types/character.types';
+} from '../../domains/character/domain/character.entity';
 
 const DEFAULT_HAIR_COLOR = '#000000';
 const DEFAULT_SKIN_TONE = '#F5E6D3';

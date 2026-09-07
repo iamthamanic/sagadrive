@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { VRM, VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 import { normalizeAvatarModelUrl } from '../../avatar';
-import type { CharacterAvatarDto } from '../../types/character.types';
+import type { CharacterAvatarDto } from '../../../../domains/character/domain/character.entity';
 import type { AvatarAssetManifest } from '../manifests';
 
 export type AvatarRuntimeState =

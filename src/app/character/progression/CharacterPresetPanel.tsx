@@ -1,6 +1,6 @@
 /**
  * CharacterPresetPanel — Einstellungen → Preset: save/release, versions, rename/delete/duplicate, auto toggle, marketplace stub.
- * Location: src/modules/characters/components/CharacterPresetPanel.tsx
+ * Location: src/app/character/progression/CharacterPresetPanel.tsx
  */
 import { useEffect, useState } from 'react';
 import { Copy, Loader2, Pencil, Trash2 } from 'lucide-react';
@@ -10,8 +10,8 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Switch } from '../../../components/ui/switch';
-import { characterPresetService } from '../../../modules/characters/services/characterPreset.service';
-import type { CharacterPresetReleaseMode, CharacterPresetSnapshot, CharacterPresetVm } from '../../../modules/characters/types/characterPreset.types';
+import { characterPresetService } from '../../../infrastructure/character/character-preset-service';
+import type { CharacterPresetReleaseMode, CharacterPresetSnapshot, CharacterPresetVm } from '../../../domains/character/contracts/character-preset.types';
 import type { CharacterRulesetKey } from '../../../domains/rules/sagadrive/character-creation';
 
 type CharacterPresetPanelProps = {

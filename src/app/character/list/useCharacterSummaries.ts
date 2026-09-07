@@ -1,13 +1,13 @@
 /**
  * Cached character summaries for Bibliothek/Dashboard list views.
- * Location: src/modules/characters/hooks/useCharacterSummaries.ts
+ * Location: src/app/character/list/useCharacterSummaries.ts
  */
 
 import { useCallback } from 'react';
 import { ENTITY_CACHE_KEYS, entityCache } from '../../../lib/entityCache';
 import { useCachedEntityList } from '../../../lib/useCachedEntityList';
-import { characterService } from '../services/character.service';
-import type { CharacterSummaryVm } from '../types/character.types';
+import { characterService } from '../../../infrastructure/character/character-service';
+import type { CharacterSummaryVm } from '../../../domains/character';
 
 interface UseCharacterSummariesOptions {
   enabled?: boolean;

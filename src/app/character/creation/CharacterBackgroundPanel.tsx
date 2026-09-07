@@ -30,7 +30,7 @@ import {
   isSagaDriveSkillKey,
   type SagaDriveSkillKey,
 } from '../../../domains/rules/sagadrive/character-creation';
-import type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
+import type { CarouselScrollPhase } from '../../../app/character/shared/carousel.types';
 import type { SagaDriveBackgroundSkillPoints } from '../../../domains/rules/sagadrive/skill-progression';
 import { SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS } from '../../../domains/rules/sagadrive/skill-progression';
 import { BackgroundCarousel } from './BackgroundCarousel';

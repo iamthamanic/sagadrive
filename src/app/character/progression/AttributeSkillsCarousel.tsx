@@ -28,10 +28,10 @@ import {
   CarouselContent,
   CarouselItem,
 } from '../../../components/ui/carousel';
-import type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
-import { useCarouselScrollSync } from '../../../modules/characters/hooks/useCarouselScrollSync';
+import type { CarouselScrollPhase } from '../../../app/character/shared/carousel.types';
+import { useCarouselScrollSync } from '../../../app/character/shared/useCarouselScrollSync';
 
-export type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
+export type { CarouselScrollPhase } from '../../../app/character/shared/carousel.types';
 
 const ATTRIBUTE_ICONS: Readonly<Record<SagaDriveAttributeKey, LucideIcon>> = {
   strength: Dumbbell,

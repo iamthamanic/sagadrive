@@ -1,6 +1,6 @@
 /**
  * SpeciesCarousel — Swipebare Spezies-Auswahl mit Skizzen, angelehnt an ProjectCarousel (Scriptony).
- * Location: src/modules/characters/components/SpeciesCarousel.tsx
+ * Location: src/app/character/creation/SpeciesCarousel.tsx
  */
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { sagaDriveRaceOptions } from '../../../domains/rules/sagadrive/character-creation';
@@ -16,7 +16,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from '../../../components/ui/carousel';
-import { useCarouselScrollSync } from '../../../modules/characters/hooks/useCarouselScrollSync';
+import { useCarouselScrollSync } from '../../../app/character/shared/useCarouselScrollSync';
 
 interface SpeciesCarouselProps {
   selectedRace: string;

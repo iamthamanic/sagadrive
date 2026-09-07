@@ -1,6 +1,6 @@
 /**
  * SpeciesTraitIcon — Lucide icon for each SagaDrive species trait option.
- * Location: src/modules/characters/components/SpeciesTraitIcon.tsx
+ * Location: src/app/character/creation/SpeciesTraitIcon.tsx
  */
 import {
   Activity,

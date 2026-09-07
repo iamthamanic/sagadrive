@@ -1,6 +1,6 @@
 /**
  * ArchetypeSkillChoice — Auswahl des Archetyp-Fertigkeitspunkts mit sichtbarer Regelwirkung.
- * Location: src/modules/characters/components/ArchetypeSkillChoice.tsx
+ * Location: src/app/character/creation/ArchetypeSkillChoice.tsx
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Badge } from '../../../components/ui/badge';

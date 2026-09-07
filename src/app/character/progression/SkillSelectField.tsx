@@ -1,6 +1,6 @@
 /**
  * SkillSelectField — Fertigkeits-Dropdown mit RuleHelp und erklärenden Optionen im Menü.
- * Location: src/modules/characters/components/SkillSelectField.tsx
+ * Location: src/app/character/progression/SkillSelectField.tsx
  */
 import * as SelectPrimitive from '@radix-ui/react-select@2.1.6';
 import { CheckIcon } from 'lucide-react@0.487.0';
