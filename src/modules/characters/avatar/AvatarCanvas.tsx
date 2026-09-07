@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import type { CharacterAvatarDto } from '../types/character.types';
+import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
 import { CharacterStudioRuntime, type AvatarRuntimeState } from './characterStudio/CharacterStudioRuntime';
 import { getAvatarAssetManifest, resolveAvatarModelUrl } from './manifests';
 

@@ -1,4 +1,4 @@
-import type { CharacterAvatarDto, CharacterAvatarFormat } from '../types/character.types';
+import type { CharacterAvatarDto, CharacterAvatarFormat } from '../../../domains/character/domain/character.entity';
 import { normalizeAvatarModelUrl, normalizeSafeUrl } from '../avatar';
 
 export type AvatarAssetRepresentation =

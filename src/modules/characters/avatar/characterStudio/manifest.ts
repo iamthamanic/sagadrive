@@ -1,4 +1,4 @@
-import type { CharacterAvatarFormat } from '../../types/character.types';
+import type { CharacterAvatarFormat } from '../../../../domains/character/domain/character.entity';
 import { normalizeSafeUrl } from '../../avatar';
 
 export interface CharacterStudioTraitAsset {
