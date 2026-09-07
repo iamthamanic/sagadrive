@@ -1,4 +1,8 @@
-import type { CharacterLoreContext } from './types';
+/**
+ * character-lore-examples — Pure background example builders for lore UX.
+ * Location: src/domains/character/use-cases/character-lore-examples.ts
+ */
+import type { CharacterLoreContext } from '../contracts/character-lore.types';
 
 const attributeLabels: Record<keyof CharacterLoreContext['attributes'], string> = {
   strength: 'körperliche Stärke',

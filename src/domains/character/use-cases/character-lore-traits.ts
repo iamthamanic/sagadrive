@@ -1,4 +1,8 @@
-import type { CharacterLoreContext, CharacterTraitCategory } from './types';
+/**
+ * character-lore-traits — Pure trait suggestion catalog for character lore.
+ * Location: src/domains/character/use-cases/character-lore-traits.ts
+ */
+import type { CharacterLoreContext, CharacterTraitCategory } from '../contracts/character-lore.types';
 
 const commonSuggestions: Record<CharacterTraitCategory, readonly string[]> = {
   personality: [

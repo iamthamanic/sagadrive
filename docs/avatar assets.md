@@ -2,7 +2,7 @@
 
 ## Zweck
 
-Der Avatar-Asset-Katalog trennt die SagaDrive-Rendering-Runtime von den tatsächlich ausgelieferten 3D-Modellen. Ein Asset wird nur als Remote-Fallback in `src/modules/characters/avatar/manifests.ts` aufgenommen, wenn Herkunft, konkreter Dateipfad und Lizenz nachvollziehbar geprüft werden können.
+Der Avatar-Asset-Katalog trennt die SagaDrive-Rendering-Runtime von den tatsächlich ausgelieferten 3D-Modellen. Ein Asset wird nur als Remote-Fallback in `src/infrastructure/character/avatar/avatar-asset-manifests.ts` aufgenommen, wenn Herkunft, konkreter Dateipfad und Lizenz nachvollziehbar geprüft werden können.
 
 `VITE_AVATAR_ASSET_BASE_URL` kann dieselben stabilen Manifest-IDs auf selbst gehostete Dateien umleiten. Fehlt ein Self-Host-Asset, verwendet SagaDrive den unten dokumentierten, commit-gepinnten Remote-Fallback.
 

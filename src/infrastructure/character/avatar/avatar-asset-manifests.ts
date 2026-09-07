@@ -1,5 +1,9 @@
+/**
+ * avatar-asset-manifests — Self-hosted avatar model catalog + provenance.
+ * Location: src/infrastructure/character/avatar/avatar-asset-manifests.ts
+ */
 import type { CharacterAvatarDto, CharacterAvatarFormat } from '../../../domains/character/domain/character.entity';
-import { normalizeAvatarModelUrl, normalizeSafeUrl } from '../avatar';
+import { normalizeAvatarModelUrl, normalizeSafeUrl } from '../../../domains/character/use-cases/avatar-presets';
 
 export type AvatarAssetRepresentation =
   | { kind: 'species-specific' }

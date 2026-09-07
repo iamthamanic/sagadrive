@@ -10,4 +10,8 @@ export * from './use-cases/normalize-character';
 export * from './use-cases/assert-character-persistence';
 export * from './contracts/character-preset.types';
 export * from './contracts/character-adventure-arc.types';
+export * from './contracts/character-lore.types';
+export * from './use-cases/character-lore-traits';
+export * from './use-cases/character-lore-examples';
+export * from './use-cases/avatar-presets';
 export * from './use-cases/genderReading';

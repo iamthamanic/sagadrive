@@ -18,8 +18,8 @@ function rejectMatch(content, pattern, label) {
   if (pattern.test(content)) fail(label);
 }
 
-const manifests = read('src/modules/characters/avatar/manifests.ts');
-const avatarPresets = read('src/modules/characters/avatar.ts');
+const manifests = read('src/infrastructure/character/avatar/avatar-asset-manifests.ts');
+const avatarPresets = read('src/domains/character/use-cases/avatar-presets.ts');
 const assetDocs = read('docs/avatar assets.md');
 
 const raceMappings = [

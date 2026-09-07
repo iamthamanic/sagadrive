@@ -1,7 +1,11 @@
+/**
+ * AvatarCanvas — React canvas host for the CharacterStudio Three.js runtime.
+ * Location: src/app/character/avatar/AvatarCanvas.tsx
+ */
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
-import { CharacterStudioRuntime, type AvatarRuntimeState } from './characterStudio/CharacterStudioRuntime';
-import { getAvatarAssetManifest, resolveAvatarModelUrl } from './manifests';
+import { CharacterStudioRuntime, type AvatarRuntimeState } from '../../../infrastructure/character/avatar/character-studio-runtime';
+import { getAvatarAssetManifest, resolveAvatarModelUrl } from '../../../infrastructure/character/avatar/avatar-asset-manifests';
 
 interface AvatarCanvasProps {
   avatar: CharacterAvatarDto;

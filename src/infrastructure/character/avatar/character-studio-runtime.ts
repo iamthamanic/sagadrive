@@ -1,10 +1,14 @@
+/**
+ * character-studio-runtime — Three.js / VRM avatar runtime (no React).
+ * Location: src/infrastructure/character/avatar/character-studio-runtime.ts
+ */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { VRM, VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
-import { normalizeAvatarModelUrl } from '../../avatar';
-import type { CharacterAvatarDto } from '../../../../domains/character/domain/character.entity';
-import type { AvatarAssetManifest } from '../manifests';
+import { normalizeAvatarModelUrl } from '../../../domains/character/use-cases/avatar-presets';
+import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
+import type { AvatarAssetManifest } from './avatar-asset-manifests';
 
 export type AvatarRuntimeState =
   | { status: 'loading'; message: string }

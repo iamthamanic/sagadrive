@@ -1,5 +1,9 @@
-import type { CharacterAvatarFormat } from '../../../../domains/character/domain/character.entity';
-import { normalizeSafeUrl } from '../../avatar';
+/**
+ * character-studio-manifest — Parse CharacterStudio trait JSON into typed groups.
+ * Location: src/infrastructure/character/avatar/character-studio-manifest.ts
+ */
+import type { CharacterAvatarFormat } from '../../../domains/character/domain/character.entity';
+import { normalizeSafeUrl } from '../../../domains/character/use-cases/avatar-presets';
 
 export interface CharacterStudioTraitAsset {
   id: string;

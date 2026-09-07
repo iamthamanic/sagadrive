@@ -5,7 +5,7 @@
 import { supabase } from '../../lib/supabase';
 import { getAuthenticatedUserId } from '../../lib/authenticatedUser';
 import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../lib/networkTimeout';
-import { normalizeCharacterAppearance } from '../../modules/characters/avatar';
+import { normalizeCharacterAppearance } from '../../domains/character/use-cases/avatar-presets';
 import type { CreateCharacterDto, UpdateCharacterDto } from '../../domains/character/contracts/character.commands';
 import type { CharacterSummaryVm, CharacterVm } from '../../domains/character/contracts/character.views';
 import { assertValidSagaDriveCharacterPersistence } from '../../domains/character/use-cases/assert-character-persistence';

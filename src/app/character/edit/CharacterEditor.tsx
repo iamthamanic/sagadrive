@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { Camera, CheckCircle2, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { AvatarCanvas } from '../../../modules/characters/avatar/AvatarCanvas';
-import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../modules/characters/avatar';
+import { AvatarCanvas } from '../avatar/AvatarCanvas';
+import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../domains/character/use-cases/avatar-presets';
 import { characterService } from '../../../infrastructure/character/character-service';
 import type {
   AbilityDto,
@@ -13,7 +13,7 @@ import type {
   SagaDriveProfileDto,
   SagaDriveSpeciesTraitInstanceDto,
 } from '../../../domains/character';
-import type { CharacterLoreContext } from '../../../modules/characters/lore/types';
+import type { CharacterLoreContext } from '../../../domains/character/contracts/character-lore.types';
 import { AttributeD20Icon } from '../../../components/AttributeD20Icon';
 import { DerivedStatCard } from '../../../components/DerivedStatCard';
 import { AttributeDerivedConnector } from '../../../components/AttributeDerivedConnector';
@@ -46,7 +46,7 @@ import {
 import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
 import { takeCharacterEditorBootstrap, clearCharacterEditorBootstrap } from '../shared/characterEditorBootstrap';
 import { assertValidSnapshot, characterPresetService } from '../../../infrastructure/character/character-preset-service';
-import { normalizeSafeUrl } from '../../../modules/characters/avatar';
+import { normalizeSafeUrl } from '../../../domains/character/use-cases/avatar-presets';
 import type { CharacterPresetReleaseMode, CharacterPresetSnapshot } from '../../../domains/character/contracts/character-preset.types';
 import { buildSagaDriveDerivedStatCards } from './map-derived-stat-cards';
 import { getSagaDriveBackgroundTemplate } from '../../../domains/rules/sagadrive/background-templates';

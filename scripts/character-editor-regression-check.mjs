@@ -1,11 +1,11 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import process from 'node:process';
 
 function read(path) { return readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'); }
 function requireMatch(content, pattern, label) { if (!pattern.test(content)) { console.error(`Character editor regression check failed: missing ${label}.`); process.exit(1); } }
 function rejectMatch(content, pattern, label) { if (pattern.test(content)) { console.error(`Character editor regression check failed: ${label}.`); process.exit(1); } }
 
-const runtime = read('src/modules/characters/avatar/characterStudio/CharacterStudioRuntime.ts');
+const runtime = read('src/infrastructure/character/avatar/character-studio-runtime.ts');
 const editor = read('src/app/character/edit/CharacterEditor.tsx');
 const backgroundAllocator = read('src/app/character/creation/BackgroundSkillPointsAllocator.tsx');
 const backgroundPanel = read('src/app/character/creation/CharacterBackgroundPanel.tsx');
@@ -27,7 +27,7 @@ const abilitiesPanel = read('src/app/character/progression/CharacterAbilitiesPan
 const skillsPanel = read('src/app/character/progression/CharacterSkillsPanel.tsx');
 const attributeSkillNode = read('src/app/character/progression/AttributeSkillNode.tsx');
 const attributeSkillsCarousel = read('src/app/character/progression/AttributeSkillsCarousel.tsx');
-const loreService = read('src/modules/characters/lore/service.ts');
+const loreService = read('src/infrastructure/character/character-lore-service.ts');
 const rulesetMigration = read('supabase/migrations/005_character_ruleset_metadata.sql');
 const portraitStorageMigration = read('supabase/migrations/006_character_portrait_storage.sql');
 const sagaDriveProfileMigration = read('supabase/migrations/007_sagadrive_character_profile.sql');
@@ -218,11 +218,11 @@ requireMatch(abilitiesMigration, /ADD COLUMN IF NOT EXISTS abilities JSONB/, 'ab
 requireMatch(abilitiesMigration, /ADD COLUMN IF NOT EXISTS emotion_profiles JSONB/, 'emotion_profiles column migration');
 requireMatch(characterRepository, /abilities:\s*payload\.abilities \?\? \[\]/, 'abilities persisted on create');
 requireMatch(read('src/infrastructure/character/character-service.ts'), /invalidate\(ENTITY_CACHE_KEYS\.characterSummaries\)/, 'character list cache invalidation after writes');
-rejectMatch(
-  read('src/modules/characters/index.ts'),
-  /characterEditorBootstrap|character\.service|characterPreset|characterAdventureArc|useCharacterSummaries/,
-  'modules/characters index still re-exports migrated character-core paths',
-);
+if (existsSync(new URL('../src/modules/characters', import.meta.url))) {
+  console.error('Character editor regression check failed: src/modules/characters still exists.');
+  process.exit(1);
+}
+
 requireMatch(read('src/app/character/shared/characterEditorBootstrap.ts'), /kind:\s*'character-edit'/, 'character-edit bootstrap implementation in character app slice');
 requireMatch(read('src/components/Library.tsx'), /app\/character\/shared\/characterEditorBootstrap/, 'library imports canonical bootstrap path');
 requireMatch(read('src/app/character/edit/CharacterEditor.tsx'), /hydrateEditorFromPersistedCharacter/, 'editor hydrate from persisted character');
