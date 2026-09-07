@@ -5,10 +5,10 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, CircleHelp, Minus, Plus } from 'lucide-react';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+import { Badge } from '../../../shared/ui/badge';
+import { Button } from '../../../shared/ui/button';
+import { Input } from '../../../shared/ui/input';
+import { Label } from '../../../shared/ui/label';
 import {
   Select,
   SelectContent,
@@ -16,8 +16,8 @@ import {
   SelectItemText,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
+} from '../../../shared/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../shared/ui/tooltip';
 import {
   getBackgroundSpecializationSuggestionNames,
   getSagaDriveBackgroundTemplate,

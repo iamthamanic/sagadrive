@@ -2,7 +2,7 @@
 
 ## Status
 
-Diese Datei ist die kanonische Designsystem-Referenz fuer SagaDrive. Fuer AI-/Figma-Make-Generierung gilt zusaetzlich `src/guidelines/Guidelines.md`. Die technische Source of Truth sind die Theme-Tokens in `src/styles/globals.css` und die Primitives unter `src/components/ui/`.
+Diese Datei ist die kanonische Designsystem-Referenz fuer SagaDrive. Fuer AI-/Figma-Make-Generierung gilt zusaetzlich `src/guidelines/Guidelines.md`. Die technische Source of Truth sind die Theme-Tokens in `src/styles/globals.css` und die Primitives unter `src/shared/ui/`.
 
 ## Design Read
 
@@ -199,7 +199,7 @@ Disabled                  -> Neutral
 
 ## Umsetzung fuer neue Screens
 
-1. Bestehendes Primitive unter `src/components/ui/` pruefen.
+1. Bestehendes Primitive unter `src/shared/ui/` pruefen.
 2. Theme-Tokens aus `src/styles/globals.css` verwenden.
 3. Allgemeine Designsystem-Regeln im Primitive oder Theme loesen, nicht lokal im Feature.
 4. `src/guidelines/Guidelines.md` bei AI-/Figma-Make-Generierung beachten.

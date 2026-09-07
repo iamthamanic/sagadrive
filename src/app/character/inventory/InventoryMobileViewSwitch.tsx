@@ -4,7 +4,7 @@
  * Exposes selected state via aria-selected for assistive tech.
  * Location: src/app/character/inventory/InventoryMobileViewSwitch.tsx
  */
-import { Button } from '../../../components/ui/button';
+import { Button } from '../../../shared/ui/button';
 
 export type InventoryMobileView = 'inventar' | 'ausruestung';
 

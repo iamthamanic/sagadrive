@@ -4,9 +4,9 @@
  * Location: src/app/character/progression/AttributeSkillNode.tsx
  */
 import { CircleHelp, Minus, Plus } from 'lucide-react';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
+import { Badge } from '../../../shared/ui/badge';
+import { Button } from '../../../shared/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../shared/ui/tooltip';
 import {
   getSagaDriveAttribute,
   getSagaDriveSkill,

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Button } from '../../components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Input } from '../../components/ui/input';
+import { Button } from '../../shared/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
+import { Input } from '../../shared/ui/input';
 import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package } from 'lucide-react';
 import { useCharacterSummaries } from '../character/list/useCharacterSummaries';
 import type { CharacterSummaryVm } from '../../domains/character';

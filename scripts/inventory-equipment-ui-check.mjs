@@ -102,7 +102,7 @@ const hotspots = read('src/app/character/inventory/InventoryEquipmentPaperDollHo
 requireMatch(hotspots, /data-equipment-hotspot/, 'Hotspot markers');
 requireMatch(hotspots, /data-equipment-hotspot-selected/, 'Sticky hotspot selection');
 requireMatch(hotspots, /feet/, 'Feet hotspot');
-const thumb = read('src/components/InventoryItemThumb.tsx');
+const thumb = read('src/app/character/inventory/InventoryItemThumb.tsx');
 requireMatch(thumb, /slots\/head|SLOT_ICONS/, 'Slot PNG placeholders');
 requireMatch(thumb, /onError/, 'PNG missing → slot fallback');
 requireMatch(labels, /Benötigt Stärke/, 'Strength copy helper');

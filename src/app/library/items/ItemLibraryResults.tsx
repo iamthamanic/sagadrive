@@ -4,8 +4,8 @@
  */
 import { Package, RefreshCw } from 'lucide-react';
 import type { ItemDefinition } from '../../../domains/items';
-import { Button } from '../../../components/ui/button';
-import { cn } from '../../../components/ui/utils';
+import { Button } from '../../../shared/ui/button';
+import { cn } from '../../../shared/ui/utils';
 import { ItemLibraryCard } from './ItemLibraryCard';
 import type { ItemLibraryViewMode } from './itemLibraryLabels';
 

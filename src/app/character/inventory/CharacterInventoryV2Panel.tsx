@@ -8,9 +8,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowDownAZ, CircleHelp, Plus } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
+import { Button } from '../../../shared/ui/button';
+import { Input } from '../../../shared/ui/input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../shared/ui/tooltip';
 import {
   BASE_SLOT_COUNT,
   calculateTotalLoad,

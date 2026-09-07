@@ -2,8 +2,8 @@
  * CharacterNotesSection — Free-form notes under Hintergrundgeschichte.
  * Location: src/app/character/progression/CharacterNotesSection.tsx
  */
-import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
+import { Label } from '../../../shared/ui/label';
+import { Textarea } from '../../../shared/ui/textarea';
 
 type CharacterNotesSectionProps = {
   value: string;

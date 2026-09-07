@@ -3,7 +3,7 @@
  * Location: src/app/character/creation/ArchetypeSkillChoice.tsx
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Badge } from '../../../components/ui/badge';
+import { Badge } from '../../../shared/ui/badge';
 import {
   SAGA_DRIVE_START_SKILL_CAP,
   getSagaDriveAttribute,

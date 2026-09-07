@@ -137,7 +137,7 @@ section('6 · Library/Inventory must not mount 3D');
 {
   const library = read('src/app/library/items/ItemLibraryCard.tsx');
   const equipment = read('src/app/character/inventory/InventoryEquipmentPanel.tsx');
-  const thumb = read('src/components/InventoryItemThumb.tsx');
+  const thumb = read('src/app/character/inventory/InventoryItemThumb.tsx');
   check(!/model3d|ItemModelPreview|GLTFLoader/.test(library), 'library card must not load 3D');
   check(!/model3d|ItemModelPreview|GLTFLoader/.test(equipment), 'inventory equipment must not load 3D');
   check(!/model3d|GLTFLoader/.test(thumb), 'InventoryItemThumb must not load 3D');

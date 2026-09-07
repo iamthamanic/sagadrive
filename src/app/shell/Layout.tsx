@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth-context';
 import { toast } from 'sonner';
-import { ImageWithFallback } from '../../components/figma/ImageWithFallback';
+import { ImageWithFallback } from '../../shared/ui/figma/ImageWithFallback';
 import logoImage from 'figma:asset/5cdcbab5ea0860d6cbb920fecd888377cdc015a0.png';
 
 interface LayoutProps {

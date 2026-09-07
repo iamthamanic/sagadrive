@@ -7,16 +7,16 @@
  * is sanitized through the domain so changing an earlier slot prunes dependent later slots.
  */
 import { useState } from 'react';
-import { Badge } from '../../../components/ui/badge';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+import { Badge } from '../../../shared/ui/badge';
+import { Input } from '../../../shared/ui/input';
+import { Label } from '../../../shared/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from '../../../shared/ui/select';
 import {
   getSagaDriveSkill,
   sagaDriveSkillDefinitions,

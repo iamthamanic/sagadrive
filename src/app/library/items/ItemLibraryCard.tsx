@@ -8,9 +8,9 @@ import {
   librarySourceFromOrigin,
   normalizeItemDefinition,
 } from '../../../domains/items';
-import { InventoryItemThumb } from '../../../components/InventoryItemThumb';
-import { Badge } from '../../../components/ui/badge';
-import { cn } from '../../../components/ui/utils';
+import { InventoryItemThumb } from '../../../app/character/inventory/InventoryItemThumb';
+import { Badge } from '../../../shared/ui/badge';
+import { cn } from '../../../shared/ui/utils';
 import { useItemThumbnailSrc } from '../../items/useItemThumbnailSrc';
 import {
   ITEM_CONTEXT_LABELS,

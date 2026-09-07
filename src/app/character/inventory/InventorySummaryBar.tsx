@@ -4,7 +4,7 @@
  * Remains visible on both mobile Inventar and Ausrüstung segments.
  * Location: src/app/character/inventory/InventorySummaryBar.tsx
  */
-import { Badge } from '../../../components/ui/badge';
+import { Badge } from '../../../shared/ui/badge';
 import { RuleHelp } from '../shared/RuleHelp';
 import { BASE_SLOT_COUNT } from '../../../domains/character/inventory-v2';
 import { inventoryCarryCapacity } from './inventory-ui-labels';

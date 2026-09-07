@@ -16,8 +16,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '../../../components/ui/alert-dialog';
-import { Button } from '../../../components/ui/button';
+} from '../../../shared/ui/alert-dialog';
+import { Button } from '../../../shared/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -25,24 +25,24 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
+} from '../../../shared/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../../../components/ui/dropdown-menu';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+} from '../../../shared/ui/dropdown-menu';
+import { Input } from '../../../shared/ui/input';
+import { Label } from '../../../shared/ui/label';
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '../../../components/ui/sheet';
-import { useIsMobile } from '../../../components/ui/use-mobile';
+} from '../../../shared/ui/sheet';
+import { useIsMobile } from '../../../shared/ui/use-mobile';
 import {
   consumeItem,
   equipItem,

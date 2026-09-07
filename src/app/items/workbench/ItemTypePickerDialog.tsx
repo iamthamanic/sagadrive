@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
+} from '../../../shared/ui/dialog';
 import { WORKBENCH_TYPE_ENTRIES } from './workbenchLabels';
 import type { WorkbenchTypeEntry } from './workbenchForm';
 

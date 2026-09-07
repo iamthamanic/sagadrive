@@ -205,7 +205,7 @@ export function collectLegacyFreezePaths(rootDir = root) {
     for (const file of walkFiles(componentsDir)) {
       if (!SOURCE_EXT.test(file)) continue;
       const rel = relative(rootDir, file).replace(/\\/g, '/');
-      if (rel.startsWith('src/components/ui/') || rel === 'src/components/ui') continue;
+      if (rel.startsWith('src/shared/ui/') || rel === 'src/components/ui') continue;
       paths.push(rel);
     }
   }

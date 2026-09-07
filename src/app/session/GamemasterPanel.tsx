@@ -3,14 +3,14 @@
  * Location: src/app/session/GamemasterPanel.tsx
  */
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Textarea } from '../../components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Slider } from '../../components/ui/slider';
-import { Switch } from '../../components/ui/switch';
-import { Label } from '../../components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Button } from '../../shared/ui/button';
+import { Textarea } from '../../shared/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
+import { Slider } from '../../shared/ui/slider';
+import { Switch } from '../../shared/ui/switch';
+import { Label } from '../../shared/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Wand2, Eye, ImagePlus, Volume2, Users } from 'lucide-react';
 
 export function GamemasterPanel() {

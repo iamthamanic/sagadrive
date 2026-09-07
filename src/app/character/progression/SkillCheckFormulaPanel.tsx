@@ -2,7 +2,7 @@
  * SkillCheckFormulaPanel — Full skill check breakdown from domain rules (#90).
  * Location: src/app/character/progression/SkillCheckFormulaPanel.tsx
  */
-import { Badge } from '../../../components/ui/badge';
+import { Badge } from '../../../shared/ui/badge';
 import {
   getSagaDriveAttribute,
   getSagaDriveSkill,

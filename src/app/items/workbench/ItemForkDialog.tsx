@@ -3,7 +3,7 @@
  * Location: src/app/items/workbench/ItemForkDialog.tsx
  */
 import { useState } from 'react';
-import { Button } from '../../../components/ui/button';
+import { Button } from '../../../shared/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -11,15 +11,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
-import { Label } from '../../../components/ui/label';
+} from '../../../shared/ui/dialog';
+import { Label } from '../../../shared/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from '../../../shared/ui/select';
 import type { ForkDefinitionTarget } from '../../../infrastructure/inventory/item-catalog-service';
 import type { WorldProfileVm } from '../../../domains/world/contracts/world.types';
 

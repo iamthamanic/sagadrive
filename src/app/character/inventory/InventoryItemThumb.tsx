@@ -1,28 +1,28 @@
 /**
  * InventoryItemThumb — square PNG thumbnail for inventory/equipment.
  * Resolution order: assetSrc (storage thumbnail) → iconKey → type PNG → slot glyph.
- * Location: src/components/InventoryItemThumb.tsx
+ * Location: src/app/character/inventory/InventoryItemThumb.tsx
  */
 import { useEffect, useState } from 'react';
-import type { EquipmentSlot, InventoryItemType, ItemDefinition } from '../domains/character/inventory-v2';
-import { parseItemThumbnailAssetKey } from '../domains/items';
+import type { EquipmentSlot, InventoryItemType, ItemDefinition } from '../../../domains/character/inventory-v2';
+import { parseItemThumbnailAssetKey } from '../../../domains/items';
 
-import slotHead from '../assets/inventory/slots/head.png';
-import slotBody from '../assets/inventory/slots/body.png';
-import slotAccessory1 from '../assets/inventory/slots/accessory1.png';
-import slotAccessory2 from '../assets/inventory/slots/accessory2.png';
-import slotMainHand from '../assets/inventory/slots/mainHand.png';
-import slotOffHand from '../assets/inventory/slots/offHand.png';
-import slotSpecial from '../assets/inventory/slots/special.png';
-import slotFeet from '../assets/inventory/slots/feet.png';
+import slotHead from '../../../assets/inventory/slots/head.png';
+import slotBody from '../../../assets/inventory/slots/body.png';
+import slotAccessory1 from '../../../assets/inventory/slots/accessory1.png';
+import slotAccessory2 from '../../../assets/inventory/slots/accessory2.png';
+import slotMainHand from '../../../assets/inventory/slots/mainHand.png';
+import slotOffHand from '../../../assets/inventory/slots/offHand.png';
+import slotSpecial from '../../../assets/inventory/slots/special.png';
+import slotFeet from '../../../assets/inventory/slots/feet.png';
 
-import typeWeapon from '../assets/inventory/items/weapon.png';
-import typeArmor from '../assets/inventory/items/armor.png';
-import typeShield from '../assets/inventory/items/shield.png';
-import typeTool from '../assets/inventory/items/tool.png';
-import typeConsumable from '../assets/inventory/items/consumable.png';
-import typeContainer from '../assets/inventory/items/container.png';
-import typeMisc from '../assets/inventory/items/misc.png';
+import typeWeapon from '../../../assets/inventory/items/weapon.png';
+import typeArmor from '../../../assets/inventory/items/armor.png';
+import typeShield from '../../../assets/inventory/items/shield.png';
+import typeTool from '../../../assets/inventory/items/tool.png';
+import typeConsumable from '../../../assets/inventory/items/consumable.png';
+import typeContainer from '../../../assets/inventory/items/container.png';
+import typeMisc from '../../../assets/inventory/items/misc.png';
 
 const SLOT_ICONS: Record<EquipmentSlot, string> = {
   head: slotHead,

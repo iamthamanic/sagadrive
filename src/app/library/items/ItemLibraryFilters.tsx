@@ -17,16 +17,16 @@ import {
   type ItemSettingTag,
   type LibraryItemSource,
 } from '../../../domains/items';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Label } from '../../../components/ui/label';
+import { Badge } from '../../../shared/ui/badge';
+import { Button } from '../../../shared/ui/button';
+import { Label } from '../../../shared/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from '../../../shared/ui/select';
 import {
   ITEM_CONTEXT_LABELS,
   ITEM_KIND_LABELS,

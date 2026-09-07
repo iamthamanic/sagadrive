@@ -14,10 +14,10 @@ import type {
   SagaDriveSpeciesTraitInstanceDto,
 } from '../../../domains/character';
 import type { CharacterLoreContext } from '../../../domains/character/contracts/character-lore.types';
-import { AttributeD20Icon } from '../../../components/AttributeD20Icon';
-import { DerivedStatCard } from '../../../components/DerivedStatCard';
-import { AttributeDerivedConnector } from '../../../components/AttributeDerivedConnector';
-import { IdentityPreviewPills } from '../../../components/IdentityPreviewPills';
+import { AttributeD20Icon } from '../../../shared/ui/AttributeD20Icon';
+import { DerivedStatCard } from '../shared/DerivedStatCard';
+import { AttributeDerivedConnector } from '../../../shared/ui/AttributeDerivedConnector';
+import { IdentityPreviewPills } from '../shared/IdentityPreviewPills';
 import { CharacterAssistantButton } from '../assistant/CharacterAssistantButton';
 import {
   CharacterArchetypePanel,
@@ -107,16 +107,16 @@ import {
   type SagaDriveSpecializationRecordDto,
 } from '../../../domains/rules/sagadrive/skill-progression';
 import { getSagaDriveSpeciesTraitOptionCatalog } from '../../../domains/rules/sagadrive/species-trait-options';
-import { Badge } from '../../../components/ui/badge';
-import { Button } from '../../../components/ui/button';
-import { Card, CardContent, CardHeader } from '../../../components/ui/card';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectItemText, SelectTrigger, SelectValue } from '../../../components/ui/select';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
-import { Separator } from '../../../components/ui/separator';
-import { Slider } from '../../../components/ui/slider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
+import { Badge } from '../../../shared/ui/badge';
+import { Button } from '../../../shared/ui/button';
+import { Card, CardContent, CardHeader } from '../../../shared/ui/card';
+import { Input } from '../../../shared/ui/input';
+import { Label } from '../../../shared/ui/label';
+import { Select, SelectContent, SelectItem, SelectItemText, SelectTrigger, SelectValue } from '../../../shared/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../shared/ui/tooltip';
+import { Separator } from '../../../shared/ui/separator';
+import { Slider } from '../../../shared/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../shared/ui/tabs';
 
 type ActivityTrackingWindow = Window & { trackActivity?: (description: string) => void };
 type EditorTab = 'info' | 'values' | 'appearance' | 'inventory' | 'settings';

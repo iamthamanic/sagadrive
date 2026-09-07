@@ -1,12 +1,12 @@
 /**
  * IdentityPreviewPills — Compact Essenz / Archetype badges for the sticky preview card.
  * Spezies is intentionally omitted from this card.
- * Location: src/components/IdentityPreviewPills.tsx
+ * Location: src/app/character/shared/IdentityPreviewPills.tsx
  */
-import type { SagaDriveArchetypeKey, SagaDriveEssenceKey } from '../domains/rules/sagadrive/character-creation';
-import { ArchetypeIcon } from '../app/character/creation/ArchetypeIcon';
-import { EssenceIcon } from '../app/character/creation/EssenceIcon';
-import { Badge } from './ui/badge';
+import type { SagaDriveArchetypeKey, SagaDriveEssenceKey } from '../../../domains/rules/sagadrive/character-creation';
+import { ArchetypeIcon } from '../creation/ArchetypeIcon';
+import { EssenceIcon } from '../creation/EssenceIcon';
+import { Badge } from '../../../shared/ui/badge';
 
 type IdentityPreviewPillsProps = {
   essenceKey?: SagaDriveEssenceKey;

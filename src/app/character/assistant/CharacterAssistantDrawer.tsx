@@ -10,15 +10,15 @@
  */
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Send, Sparkles, User } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
+import { Button } from '../../../shared/ui/button';
+import { Input } from '../../../shared/ui/input';
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '../../../components/ui/sheet';
+} from '../../../shared/ui/sheet';
 
 interface ChatMessage {
   id: string;

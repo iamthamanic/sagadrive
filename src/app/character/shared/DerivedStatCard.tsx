@@ -2,10 +2,10 @@
  * DerivedStatCard — Abgeleiteter Wert mit sichtbarer Formel-Aufschlüsselung im Character Editor.
  * Die Anzeigezahl leuchtet kurz auf, wenn sich der berechnete Wert ändert (z.B. nach
  * Änderung eines verbundenen Grundattributs).
- * Location: src/components/DerivedStatCard.tsx
+ * Location: src/app/character/shared/DerivedStatCard.tsx
  */
 import { useEffect, useRef, useState } from 'react';
-import { RuleHelp } from '../app/character/shared/RuleHelp';
+import { RuleHelp } from './RuleHelp';
 
 export interface DerivedStatTerm {
   label: string;

@@ -4,7 +4,7 @@
  * Location: src/app/character/shared/useCarouselScrollSync.ts
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { CarouselApi } from '../../../components/ui/carousel';
+import type { CarouselApi } from '../../../shared/ui/carousel';
 import type { CarouselScrollPhase } from './carousel.types';
 
 const SCROLL_SETTLE_MS = 120;

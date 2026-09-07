@@ -3,8 +3,8 @@
  * Location: src/app/library/items/ItemLibraryToolbar.tsx
  */
 import { LayoutGrid, List, Plus } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
-import { cn } from '../../../components/ui/utils';
+import { Button } from '../../../shared/ui/button';
+import { cn } from '../../../shared/ui/utils';
 import type { ItemLibraryViewMode } from './itemLibraryLabels';
 
 export interface ItemLibraryToolbarProps {

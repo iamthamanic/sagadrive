@@ -3,7 +3,7 @@
  * Location: src/app/items/workbench/ItemWorkbenchTopbar.tsx
  */
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
+import { Button } from '../../../shared/ui/button';
 
 export interface ItemWorkbenchTopbarProps {
   title: string;

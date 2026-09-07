@@ -1,6 +1,6 @@
 /**
  * AttributeD20Icon — Wireframe icosahedron (classic RPG d20) for attribute bonus cards in the Character Editor.
- * Location: src/components/AttributeD20Icon.tsx
+ * Location: src/shared/ui/AttributeD20Icon.tsx
  */
 import { useId } from 'react';
 

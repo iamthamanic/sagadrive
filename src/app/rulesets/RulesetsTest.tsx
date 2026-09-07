@@ -3,7 +3,7 @@
  * Location: src/app/rulesets/RulesetsTest.tsx
  */
 import { Loader2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { useOfficialRulesets } from './hooks/useRulesets';
 
 export function RulesetsTest() {

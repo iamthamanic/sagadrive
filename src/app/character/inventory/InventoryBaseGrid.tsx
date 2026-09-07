@@ -6,7 +6,7 @@
  * Location: src/app/character/inventory/InventoryBaseGrid.tsx
  */
 import type { DragEvent, KeyboardEvent } from 'react';
-import { Badge } from '../../../components/ui/badge';
+import { Badge } from '../../../shared/ui/badge';
 import {
   BASE_SLOT_COUNT,
   type InventoryState,

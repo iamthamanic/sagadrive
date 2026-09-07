@@ -6,7 +6,7 @@
  * Location: src/app/character/inventory/InventoryContainerPanel.tsx
  */
 import { useState } from 'react';
-import { Button } from '../../../components/ui/button';
+import { Button } from '../../../shared/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -14,15 +14,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../../components/ui/dialog';
+} from '../../../shared/ui/dialog';
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '../../../components/ui/sheet';
-import { useIsMobile } from '../../../components/ui/use-mobile';
+} from '../../../shared/ui/sheet';
+import { useIsMobile } from '../../../shared/ui/use-mobile';
 import {
   freeBaseSlotIndices,
   isContainerInstance,

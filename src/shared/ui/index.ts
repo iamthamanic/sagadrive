@@ -1,9 +1,15 @@
-/** Shared UI primitives — re-exports canonical Radix components. */
-export * from '../../components/ui/button';
-export * from '../../components/ui/badge';
-export * from '../../components/ui/card';
-export * from '../../components/ui/input';
-export * from '../../components/ui/label';
-export * from '../../components/ui/select';
-export * from '../../components/ui/tabs';
-export * from '../../components/ui/tooltip';
+/**
+ * shared/ui — fachlich neutrale UI-Primitives und Präsentationsbausteine.
+ * Location: src/shared/ui/index.ts
+ */
+export * from './button';
+export * from './badge';
+export * from './card';
+export * from './input';
+export * from './label';
+export * from './select';
+export * from './tabs';
+export * from './tooltip';
+export * from './AttributeD20Icon';
+export * from './AttributeDerivedConnector';
+export { ImageWithFallback } from './figma/ImageWithFallback';

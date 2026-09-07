@@ -3,10 +3,10 @@
  * Location: src/app/items/workbench/ItemVisualsPanel.tsx
  */
 import { useRef } from 'react';
-import { InventoryItemThumb } from '../../../components/InventoryItemThumb';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+import { InventoryItemThumb } from '../../../app/character/inventory/InventoryItemThumb';
+import { Button } from '../../../shared/ui/button';
+import { Input } from '../../../shared/ui/input';
+import { Label } from '../../../shared/ui/label';
 import type { ItemDefinition } from '../../../domains/character/inventory-v2';
 import { ItemModelPreview } from './ItemModelPreview';
 import type { WorkbenchFormState } from './workbenchForm';

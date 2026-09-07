@@ -12,7 +12,7 @@ export type UseTooltipPinOptions = {
 /**
  * useTooltipPin — Hover preview + click-to-pin open state for Radix tooltips.
  * Hover opens temporarily; click toggles pinned mode until dismiss, outside click, or Escape.
- * Location: src/components/ui/useTooltipPin.ts
+ * Location: src/shared/ui/useTooltipPin.ts
  */
 export function useTooltipPin(options: UseTooltipPinOptions = {}) {
   const { open: controlledPinned, onOpenChange, defaultOpen = false } = options;

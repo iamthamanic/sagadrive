@@ -7,9 +7,9 @@
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight, List } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '../../components/ui/carousel';
-import { cn } from '../../components/ui/utils';
+import { Button } from '../../shared/ui/button';
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '../../shared/ui/carousel';
+import { cn } from '../../shared/ui/utils';
 
 export type EntityBrowserViewMode = 'carousel' | 'list';
 

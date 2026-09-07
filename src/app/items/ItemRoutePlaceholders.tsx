@@ -2,7 +2,7 @@
  * Placeholder screens for unknown Item routes. Create/detail live in workbench (#139).
  * Location: src/app/items/ItemRoutePlaceholders.tsx
  */
-import { Button } from '../../components/ui/button';
+import { Button } from '../../shared/ui/button';
 
 export function NotFoundPlaceholder({
   attemptedPath,
