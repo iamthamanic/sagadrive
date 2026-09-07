@@ -32,17 +32,20 @@ SagaDrive uses a **Modular Monolith** with explicit layers:
 
 **Sole target architecture:** #94 layers above. There is no parallel “modules-first” or “components-first” feature architecture.
 
-**Legacy (transitional — eradicate via #164):**
+**Canonical layers only (#94 / #175):**
 
 | Path | Status |
 |------|--------|
-| `src/modules/**` | Frozen (#165). Feature modules removed through #172. Final empty-tree cleanup in #175. |
-| `src/components/**` | Removed in #174 (kit → `shared/ui`, feature leftovers → `app/**`). #175 asserts zero leftovers. |
-| `src/shared/ui/**` | Canonical fachlich neutrale UI (Radix kit + presentation helpers). |
+| `src/domains/**` | Pure domain / contracts / rules |
+| `src/infrastructure/**` | Adapters (Supabase, storage, Three runtime, …) |
+| `src/app/**` | Vertical slices / user journeys |
+| `src/shared/ui/**` | Fachlich neutrale UI primitives |
 
-Baseline file: `.qa/architecture/legacy-freeze-baseline.json`. New paths outside that set fail CI; deletions are allowed. No new compatibility barrels or permanent deprecated re-exports.
+**Forbidden (eradicated):** `src/modules/**`, `src/components/**` — must not exist; recreating fails CI.
 
-**Validation:** `node scripts/architecture-boundary-check.mjs` enforces import rules on `domains/`, `infrastructure/`, `app/`, `shared/ui/` **and** the legacy freeze (part of `npm run test-gate`).
+Historical freeze baseline (deletion record): `.qa/architecture/legacy-freeze-baseline.json`. No compatibility barrels.
+
+**Validation:** `node scripts/architecture-boundary-check.mjs` enforces import rules **and** legacy eradication (part of `npm run test-gate`).
 
 Design reference: `.qa/design/scalable-domain-vertical-slice-architecture.md`
 

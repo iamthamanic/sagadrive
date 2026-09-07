@@ -1,6 +1,6 @@
 import { Badge } from '../../../shared/ui/badge';
 import type { AbilityDto } from '../../../domains/character';
-import { RuleHelp } from './RuleHelp';
+import { RuleHelp } from '../shared/RuleHelp';
 
 interface CharacterAbilitiesPanelProps {
   abilities: readonly AbilityDto[];

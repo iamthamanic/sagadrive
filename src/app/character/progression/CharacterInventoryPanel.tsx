@@ -15,7 +15,7 @@ import { Label } from '../../../shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select';
 import { Textarea } from '../../../shared/ui/textarea';
 import type { ItemDto, ItemType } from '../../../domains/character';
-import { RuleHelp } from './RuleHelp';
+import { RuleHelp } from '../shared/RuleHelp';
 
 interface CharacterInventoryPanelProps {
   items: ItemDto[];
