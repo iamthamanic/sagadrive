@@ -186,8 +186,8 @@ function collectUnder(subpath, baseSrc = srcRoot) {
 }
 
 /**
- * Rel paths under src/modules/** and src/components/** except components/ui/**.
- * ui primitives remain allowed to grow until Shared UI consolidation (#174).
+ * Rel paths under src/modules/** and src/components/** (fully eradicated after #175).
+ * Any file under these roots is a hard failure — baseline deletions are historical only.
  */
 export function collectLegacyFreezePaths(rootDir = root) {
   const paths = [];
@@ -204,13 +204,27 @@ export function collectLegacyFreezePaths(rootDir = root) {
   if (existsSync(componentsDir)) {
     for (const file of walkFiles(componentsDir)) {
       if (!SOURCE_EXT.test(file)) continue;
-      const rel = relative(rootDir, file).replace(/\\/g, '/');
-      if (rel.startsWith('src/shared/ui/') || rel === 'src/components/ui') continue;
-      paths.push(rel);
+      paths.push(relative(rootDir, file).replace(/\\/g, '/'));
     }
   }
 
   return [...new Set(paths)].sort();
+}
+
+/** Hard fail if eradicated roots exist (even empty or with non-source files). */
+export function checkEradicatedLegacyRoots(rootDir = root) {
+  const violations = [];
+  for (const rel of ['src/modules', 'src/components']) {
+    const abs = join(rootDir, rel);
+    if (existsSync(abs)) {
+      violations.push({
+        file: rel,
+        rule: 'eradicated legacy root must not exist (#175)',
+        scope: 'legacy-eradicate',
+      });
+    }
+  }
+  return violations;
 }
 
 export function loadLegacyFreezeBaseline(baselinePath = DEFAULT_LEGACY_BASELINE) {
@@ -275,6 +289,7 @@ export function runArchitectureBoundaryCheck(options = {}) {
   let legacyRemoved = 0;
 
   if (!skipLegacyFreeze) {
+    violations.push(...checkEradicatedLegacyRoots(rootDir));
     const baseline = loadLegacyFreezeBaseline(baselinePath);
     if (baseline.missing) {
       violations.push({
@@ -319,6 +334,6 @@ if (isMain) {
   }
 
   console.log(
-    `Architecture boundary check passed (${counts.domain} domain, ${counts.infrastructure} infrastructure, ${counts.app} app, ${counts.sharedUi} shared/ui; legacy freeze ${counts.legacyCurrent}/${counts.legacyBaseline} paths, ${counts.legacyRemoved} removed OK).`,
+    `Architecture boundary check passed (${counts.domain} domain, ${counts.infrastructure} infrastructure, ${counts.app} app, ${counts.sharedUi} shared/ui; legacy eradicated ${counts.legacyRemoved}/${counts.legacyBaseline} baseline paths removed, current=${counts.legacyCurrent}).`,
   );
 }

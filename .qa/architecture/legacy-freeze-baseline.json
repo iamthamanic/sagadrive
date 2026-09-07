@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Legacy freeze baseline (#165). New paths under modules/** or feature components/** fail CI; deletions OK.",
+  "description": "Historical legacy freeze baseline (#165). After #175, src/modules and src/components must not exist; any recreation fails architecture-boundary-check.",
   "generatedForIssue": 165,
   "paths": [
     "src/components/AttributeD20Icon.tsx",
@@ -87,5 +87,6 @@
     "src/modules/worlds/services/worldProfile.service.ts",
     "src/modules/worlds/types/world.types.ts",
     "src/modules/worlds/worldModuleRegistry.ts"
-  ]
+  ],
+  "eradicatedInIssue": 175
 }

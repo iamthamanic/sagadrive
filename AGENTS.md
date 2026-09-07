@@ -60,30 +60,20 @@ src/
 ├── infrastructure/    # Supabase adapters — NO UI
 ├── app/               # Vertical slices (user journeys)
 │   └── character/
-│       ├── edit/      # CharacterEditor composition root
-│       ├── creation/  # species, background, archetype, essence
-│       ├── progression/ # skills, abilities, stats, inventory
-│       └── shared/    # slice-neutral presentation helpers (e.g. RuleHelp)
-├── shared/ui/         # Presentation primitives (re-exports components/ui until #174)
-├── modules/           # LEGACY ONLY — frozen; migrate/delete, never grow (#164/#165)
-└── components/        # LEGACY feature screens + ui kit — feature paths frozen (#165); ui → shared/ui (#174)
-```
-
-**#94 is the only target architecture.** `src/modules/**` and feature files under `src/components/**` (everything except `src/components/ui/**`) are a transitional Legacy state to eradicate (#164). No new files there; baseline: `.qa/architecture/legacy-freeze-baseline.json`.
-
-**Boundary enforcement:** `scripts/architecture-boundary-check.mjs` — layer import rules + legacy freeze (wired into `npm run test-gate`).
-
-### Frontend Modules (legacy — freeze baseline #165)
-```
-src/
-├── modules/            # Frozen legacy (characters, projects, sessions, rulesets, marketplace, worlds)
-├── components/         # Frozen feature screens + assistant/auth; ui/ still migrates in #174
-├── lib/
-│   └── supabase.ts     # Supabase client (infrastructure adapters preferred)
+│       ├── edit/        # CharacterEditor composition root
+│       ├── creation/    # species, background, archetype, essence
+│       ├── progression/ # skills, abilities, stats, inventory panels
+│       └── shared/      # slice-neutral presentation helpers (e.g. RuleHelp)
+├── shared/ui/         # Presentation primitives (Radix kit + helpers)
+├── lib/               # App-wide helpers (auth context, theme, supabase client)
 └── utils/
     └── supabase/
-        └── info.tsx    # Project credentials
+        └── info.tsx   # Project credentials
 ```
+
+**#94 is the only architecture.** `src/modules/**` and `src/components/**` are eradicated (#164/#175). Recreating them fails `architecture-boundary-check` (wired into `npm run test-gate`). Historical freeze baseline: `.qa/architecture/legacy-freeze-baseline.json`.
+
+**Boundary enforcement:** `scripts/architecture-boundary-check.mjs` — layer import rules + legacy eradication gate.
 
 ### Backend Functions
 ```
@@ -111,7 +101,7 @@ supabase/functions/
 
 - `src/THEME_GUIDE.md` is the canonical SagaDrive design-system reference.
 - `src/guidelines/Guidelines.md` contains compact AI/Figma-Make generation rules.
-- `src/styles/globals.css` and `src/components/ui/` are the technical source of truth.
+- `src/styles/globals.css` and `src/shared/ui/` are the technical source of truth.
 - Do not introduce local color conventions that conflict with these files.
 
 ### Brand Color Roles
@@ -335,9 +325,9 @@ Neue Features folgen der **#94 Layered Architecture** — nicht dem legacy `src/
 2. **User Journey / Use Case** als Vertical Slice unter `src/app/<domain>/<slice>/`.
 3. **Pure Business-/Rules-Logik** nach `src/domains/**` (kein React, kein Supabase).
 4. **Supabase / Storage / Netzwerk** ausschließlich über `src/infrastructure/**`.
-5. **Generic UI** nach `src/shared/ui` bzw. bestehende `src/components/ui` Primitives.
+5. **Generic UI** nach `src/shared/ui`.
 6. **Andere Domains** nur über deren öffentliche APIs konsumieren — keine privaten Slice-Internals.
-7. **`src/modules/**`** und Feature-Dateien unter **`src/components/**`** (außer `components/ui`) sind **Legacy-Freeze** (#165): nur migrieren/löschen, **keine neuen Pfade**, keine Compatibility-Barrels als Dauerlösung.
+7. **`src/modules/**` und `src/components/**` existieren nicht** (#175). Nicht neu anlegen; CI schlägt fehl.
 8. **Keine neuen generischen** `services/`, `types/`, `utils/`-Dumping-Folder als Architekturstandard.
 9. **Keine Business Rules in React** — Rules-Kernel bleibt UI-frei.
 10. **Kein Supabase in Domain/Rules/App-Slices** — nur Infrastructure.

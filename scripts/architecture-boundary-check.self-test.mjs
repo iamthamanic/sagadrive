@@ -7,6 +7,7 @@ import process from 'node:process';
 import {
   checkCharacterCrossSliceImports,
   checkContentImportPaths,
+  checkEradicatedLegacyRoots,
   checkLegacyFreeze,
   extractImportPaths,
   resolveRelativeImport,
@@ -115,6 +116,11 @@ assert(
     v.file.includes('BrandNewScreen'),
   ),
   'legacy freeze must reject new feature screens under src/components/**',
+);
+
+assert(
+  checkEradicatedLegacyRoots().length === 0,
+  'live repo must not contain src/modules or src/components',
 );
 
 const live = runArchitectureBoundaryCheck();
