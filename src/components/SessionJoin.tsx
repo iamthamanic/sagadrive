@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { ArrowLeft, Users, Gamepad2, Copy, Check, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { useSessions } from '../modules/sessions';
+import { useSessions } from '../app/session/hooks/useSessions';
 import { toast } from 'sonner';
 
 interface SessionJoinProps {

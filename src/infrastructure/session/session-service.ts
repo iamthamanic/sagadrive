@@ -1,5 +1,9 @@
-import { supabase } from '../../../lib/supabase';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+/**
+ * session-service — Session persistence/API adapter.
+ * Location: src/infrastructure/session/session-service.ts
+ */
+import { supabase } from '../../lib/supabase';
+import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import type {
   SessionDto,
   SessionVm,
@@ -7,7 +11,7 @@ import type {
   JoinSessionDto,
   SessionPlayerDto,
   SessionPlayerVm,
-} from '../types/session.types';
+} from '../../domains/session/contracts/session.types';
 
 /**
  * Session Service
