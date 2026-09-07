@@ -1,7 +1,7 @@
 # Composition Gate — architecture-migration-11-eradicate
 
-- HEAD_SHA: WORKTREE
-- BASE_SHA: 2aac389
+- HEAD_SHA: 5c6f875d53617ea8da98c857e17e8c5ae9cf49f5
+- BASE_SHA: 2aac389bc8c7964a57e7d0048d5b2ba3bedccc59
 - Date: 2026-09-07
 - Verdict: SKIPPED
 
