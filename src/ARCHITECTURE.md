@@ -30,9 +30,19 @@ SagaDrive uses a **Modular Monolith** with explicit layers:
 - `app/character/progression/` — skills, abilities, statistics, inventory, presets (`progression/index.ts`)
 - `app/character/shared/` — presentation helpers shared across character slices
 
-**Compatibility:** Legacy imports under `src/modules/characters` and `src/modules/rulesets` re-export canonical paths until remaining domains migrate.
+**Sole target architecture:** #94 layers above. There is no parallel “modules-first” or “components-first” feature architecture.
 
-**Validation:** `node scripts/architecture-boundary-check.mjs` scans `domains/`, `infrastructure/`, `app/`, and `shared/ui/` (part of `npm run test-gate`).
+**Legacy (transitional — eradicate via #164):**
+
+| Path | Status |
+|------|--------|
+| `src/modules/**` | Frozen (#165). Shrink only via domain migrations (#166–#172). Never add files. |
+| `src/components/**` except `components/ui/**` | Frozen feature/shell screens (#165). Migrate to `app/**` / `shared/ui` (#173–#174). |
+| `src/components/ui/**` | Temporary UI kit; move to `shared/ui` in #174. |
+
+Baseline file: `.qa/architecture/legacy-freeze-baseline.json`. New paths outside that set fail CI; deletions are allowed. No new compatibility barrels or permanent deprecated re-exports.
+
+**Validation:** `node scripts/architecture-boundary-check.mjs` enforces import rules on `domains/`, `infrastructure/`, `app/`, `shared/ui/` **and** the legacy freeze (part of `npm run test-gate`).
 
 Design reference: `.qa/design/scalable-domain-vertical-slice-architecture.md`
 

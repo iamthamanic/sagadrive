@@ -64,28 +64,22 @@ src/
 │       ├── creation/  # species, background, archetype, essence
 │       ├── progression/ # skills, abilities, stats, inventory
 │       └── shared/    # slice-neutral presentation helpers (e.g. RuleHelp)
-├── shared/ui/         # Presentation primitives (re-exports components/ui)
-└── modules/           # Legacy barrels during incremental migration
+├── shared/ui/         # Presentation primitives (re-exports components/ui until #174)
+├── modules/           # LEGACY ONLY — frozen; migrate/delete, never grow (#164/#165)
+└── components/        # LEGACY feature screens + ui kit — feature paths frozen (#165); ui → shared/ui (#174)
 ```
 
-**Boundary enforcement:** `scripts/architecture-boundary-check.mjs` (wired into `npm run test-gate`).
+**#94 is the only target architecture.** `src/modules/**` and feature files under `src/components/**` (everything except `src/components/ui/**`) are a transitional Legacy state to eradicate (#164). No new files there; baseline: `.qa/architecture/legacy-freeze-baseline.json`.
 
-### Frontend Modules (legacy barrels)
+**Boundary enforcement:** `scripts/architecture-boundary-check.mjs` — layer import rules + legacy freeze (wired into `npm run test-gate`).
+
+### Frontend Modules (legacy — freeze baseline #165)
 ```
 src/
-├── modules/
-│   ├── characters/     # Character management
-│   ├── projects/        # Project/Campaign management
-│   ├── sessions/        # Session management
-│   ├── rulesets/       # Ruleset configuration
-│   └── marketplace/     # Template marketplace
-├── components/
-│   ├── ui/             # Radix UI components
-│   ├── CharacterEditor.tsx
-│   ├── Dashboard.tsx
-│   └── Layout.tsx
+├── modules/            # Frozen legacy (characters, projects, sessions, rulesets, marketplace, worlds)
+├── components/         # Frozen feature screens + assistant/auth; ui/ still migrates in #174
 ├── lib/
-│   └── supabase.ts     # Supabase client
+│   └── supabase.ts     # Supabase client (infrastructure adapters preferred)
 └── utils/
     └── supabase/
         └── info.tsx    # Project credentials
@@ -343,7 +337,7 @@ Neue Features folgen der **#94 Layered Architecture** — nicht dem legacy `src/
 4. **Supabase / Storage / Netzwerk** ausschließlich über `src/infrastructure/**`.
 5. **Generic UI** nach `src/shared/ui` bzw. bestehende `src/components/ui` Primitives.
 6. **Andere Domains** nur über deren öffentliche APIs konsumieren — keine privaten Slice-Internals.
-7. **`src/modules/**`** ist Legacy/Compatibility — für bereits migrierte Character-/SagaDrive-Rules-Bereiche **keine neue Implementierung** dort anlegen.
+7. **`src/modules/**`** und Feature-Dateien unter **`src/components/**`** (außer `components/ui`) sind **Legacy-Freeze** (#165): nur migrieren/löschen, **keine neuen Pfade**, keine Compatibility-Barrels als Dauerlösung.
 8. **Keine neuen generischen** `services/`, `types/`, `utils/`-Dumping-Folder als Architekturstandard.
 9. **Keine Business Rules in React** — Rules-Kernel bleibt UI-frei.
 10. **Kein Supabase in Domain/Rules/App-Slices** — nur Infrastructure.

@@ -7,6 +7,7 @@ import process from 'node:process';
 import {
   checkCharacterCrossSliceImports,
   checkContentImportPaths,
+  checkLegacyFreeze,
   extractImportPaths,
   resolveRelativeImport,
   runArchitectureBoundaryCheck,
@@ -93,7 +94,38 @@ const domainReactViolations = checkContentImportPaths(
 );
 assert(domainReactViolations.length === 1, 'domain React import should fail');
 
+assert(
+  checkLegacyFreeze(
+    ['src/modules/characters/foo.ts', 'src/modules/characters/bar.ts'],
+    ['src/modules/characters/foo.ts'],
+  ).some((v) => v.file === 'src/modules/characters/bar.ts'),
+  'legacy freeze must reject paths absent from baseline',
+);
+
+assert(
+  checkLegacyFreeze(['src/modules/characters/foo.ts'], [
+    'src/modules/characters/foo.ts',
+    'src/modules/characters/old.ts',
+  ]).length === 0,
+  'legacy freeze must allow deletions relative to baseline',
+);
+
+assert(
+  checkLegacyFreeze(['src/components/BrandNewScreen.tsx'], []).some((v) =>
+    v.file.includes('BrandNewScreen'),
+  ),
+  'legacy freeze must reject new feature screens under src/components/**',
+);
+
 const live = runArchitectureBoundaryCheck();
 assert(live.violations.length === 0, `live repo should pass, got ${JSON.stringify(live.violations)}`);
+assert(
+  typeof live.counts.legacyBaseline === 'number' && live.counts.legacyBaseline > 0,
+  'live check must load legacy freeze baseline',
+);
+assert(
+  live.counts.legacyCurrent <= live.counts.legacyBaseline,
+  'live legacy path count must not exceed baseline',
+);
 
 console.log('Architecture boundary self-test passed.');
