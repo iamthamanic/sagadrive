@@ -1,15 +1,20 @@
 #!/usr/bin/env node
 /**
- * architecture-boundary-check — Enforces Modular Monolith layer import rules (#94, hardened).
+ * architecture-boundary-check — Enforces Modular Monolith layer import rules (#94)
+ * plus Legacy Freeze baseline (#165): no new paths under modules/** or feature components/**.
  * Location: scripts/architecture-boundary-check.mjs
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, normalize, relative } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const root = process.cwd();
 const srcRoot = join(root, 'src');
+const DEFAULT_LEGACY_BASELINE = join(root, '.qa/architecture/legacy-freeze-baseline.json');
+
+/** Source extensions counted as legacy freeze paths (not vendor/build). */
+const SOURCE_EXT = /\.(ts|tsx|js|jsx|mjs)$/;
 
 const IMPORT_PATH_RULES = {
   domains: [
@@ -180,9 +185,66 @@ function collectUnder(subpath, baseSrc = srcRoot) {
   }
 }
 
+/**
+ * Rel paths under src/modules/** and src/components/** except components/ui/**.
+ * ui primitives remain allowed to grow until Shared UI consolidation (#174).
+ */
+export function collectLegacyFreezePaths(rootDir = root) {
+  const paths = [];
+  const modulesDir = join(rootDir, 'src', 'modules');
+  const componentsDir = join(rootDir, 'src', 'components');
+
+  if (existsSync(modulesDir)) {
+    for (const file of walkFiles(modulesDir)) {
+      if (!SOURCE_EXT.test(file)) continue;
+      paths.push(relative(rootDir, file).replace(/\\/g, '/'));
+    }
+  }
+
+  if (existsSync(componentsDir)) {
+    for (const file of walkFiles(componentsDir)) {
+      if (!SOURCE_EXT.test(file)) continue;
+      const rel = relative(rootDir, file).replace(/\\/g, '/');
+      if (rel.startsWith('src/components/ui/') || rel === 'src/components/ui') continue;
+      paths.push(rel);
+    }
+  }
+
+  return [...new Set(paths)].sort();
+}
+
+export function loadLegacyFreezeBaseline(baselinePath = DEFAULT_LEGACY_BASELINE) {
+  if (!existsSync(baselinePath)) {
+    return { version: 0, paths: [], missing: true, path: baselinePath };
+  }
+  const raw = JSON.parse(readFileSync(baselinePath, 'utf8'));
+  const paths = Array.isArray(raw.paths) ? raw.paths.map((p) => String(p).replace(/\\/g, '/')) : [];
+  return { version: raw.version ?? 1, paths: [...new Set(paths)].sort(), missing: false, path: baselinePath };
+}
+
+/**
+ * New legacy paths vs baseline → violations. Deletions (baseline − current) are allowed.
+ */
+export function checkLegacyFreeze(currentPaths, baselinePaths) {
+  const allowed = new Set(baselinePaths);
+  const violations = [];
+  for (const file of currentPaths) {
+    if (!allowed.has(file)) {
+      violations.push({
+        file,
+        rule: 'new legacy path (not in freeze baseline)',
+        scope: 'legacy-freeze',
+      });
+    }
+  }
+  return violations;
+}
+
 export function runArchitectureBoundaryCheck(options = {}) {
   const rootDir = options.root ?? root;
   const src = options.srcRoot ?? join(rootDir, 'src');
+  const baselinePath = options.legacyBaselinePath ?? join(rootDir, '.qa/architecture/legacy-freeze-baseline.json');
+  const skipLegacyFreeze = options.skipLegacyFreeze === true;
 
   const domainFiles = collectUnder('domains', src);
   const rulesFiles = domainFiles.filter((file) => file.includes('domains/rules/'));
@@ -208,6 +270,27 @@ export function runArchitectureBoundaryCheck(options = {}) {
     ...appFiles.flatMap((file) => checkCharacterCrossSliceImports(file, readFileSync(file, 'utf8'))),
   ];
 
+  let legacyCurrent = [];
+  let legacyBaseline = [];
+  let legacyRemoved = 0;
+
+  if (!skipLegacyFreeze) {
+    const baseline = loadLegacyFreezeBaseline(baselinePath);
+    if (baseline.missing) {
+      violations.push({
+        file: relative(rootDir, baselinePath).replace(/\\/g, '/') || baselinePath,
+        rule: 'missing legacy freeze baseline',
+        scope: 'legacy-freeze',
+      });
+    } else {
+      legacyCurrent = collectLegacyFreezePaths(rootDir);
+      legacyBaseline = baseline.paths;
+      violations.push(...checkLegacyFreeze(legacyCurrent, legacyBaseline));
+      const currentSet = new Set(legacyCurrent);
+      legacyRemoved = legacyBaseline.filter((p) => !currentSet.has(p)).length;
+    }
+  }
+
   return {
     violations,
     counts: {
@@ -215,6 +298,9 @@ export function runArchitectureBoundaryCheck(options = {}) {
       infrastructure: infrastructureFiles.length,
       app: appFiles.length,
       sharedUi: sharedUiFiles.length,
+      legacyCurrent: legacyCurrent.length,
+      legacyBaseline: legacyBaseline.length,
+      legacyRemoved,
     },
   };
 }
@@ -233,6 +319,6 @@ if (isMain) {
   }
 
   console.log(
-    `Architecture boundary check passed (${counts.domain} domain, ${counts.infrastructure} infrastructure, ${counts.app} app, ${counts.sharedUi} shared/ui files scanned).`,
+    `Architecture boundary check passed (${counts.domain} domain, ${counts.infrastructure} infrastructure, ${counts.app} app, ${counts.sharedUi} shared/ui; legacy freeze ${counts.legacyCurrent}/${counts.legacyBaseline} paths, ${counts.legacyRemoved} removed OK).`,
   );
 }
