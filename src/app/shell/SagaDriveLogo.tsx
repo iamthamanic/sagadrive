@@ -1,8 +1,8 @@
 /**
  * SagaDriveLogo — Animiertes Markenlogo (Pulse + Aura + Sparkles) für Login und Auth-Loading.
- * Location: src/components/SagaDriveLogo.tsx
+ * Location: src/app/shell/SagaDriveLogo.tsx
  */
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ImageWithFallback } from '../../components/figma/ImageWithFallback';
 import logoImage from 'figma:asset/5cdcbab5ea0860d6cbb920fecd888377cdc015a0.png';
 
 interface SagaDriveLogoProps {

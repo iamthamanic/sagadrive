@@ -1,24 +1,24 @@
 /**
- * CharacterAssistantDrawer (src/components/assistant/CharacterAssistantDrawer.tsx)
+ * CharacterAssistantDrawer (src/app/character/assistant/CharacterAssistantDrawer.tsx)
  *
  * UI-only chat side drawer for the character-creation assistant (Placeholder for a
  * future real assistant backend). Renders a right-side Sheet with a header, a
  * scrollable message list seeded with a welcome message, and an input row with a
  * send button. Sending a message only appends it locally; no network calls.
  *
- * Location: src/components/assistant/CharacterAssistantDrawer.tsx
+ * Location: src/app/character/assistant/CharacterAssistantDrawer.tsx
  */
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Send, Sparkles, User } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '../ui/sheet';
+} from '../../../components/ui/sheet';
 
 interface ChatMessage {
   id: string;

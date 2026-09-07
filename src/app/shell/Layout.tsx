@@ -1,6 +1,6 @@
 /**
  * Layout — Desktop sidebar + mobile bottom nav shell for authenticated views.
- * Location: src/components/Layout.tsx
+ * Location: src/app/shell/Layout.tsx
  * Desktop sidebar collapses to icon-only rail; state persisted in localStorage.
  */
 import { useEffect, useState, type ReactNode } from 'react';
@@ -14,9 +14,9 @@ import {
   ShoppingBag,
   User,
 } from 'lucide-react';
-import { useAuth } from '../lib/auth-context';
+import { useAuth } from '../../lib/auth-context';
 import { toast } from 'sonner';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ImageWithFallback } from '../../components/figma/ImageWithFallback';
 import logoImage from 'figma:asset/5cdcbab5ea0860d6cbb920fecd888377cdc015a0.png';
 
 interface LayoutProps {

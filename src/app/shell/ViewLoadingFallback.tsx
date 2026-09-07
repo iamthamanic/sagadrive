@@ -1,6 +1,6 @@
 /**
  * Lightweight fallback while lazy-loaded views are fetched.
- * Location: src/components/ViewLoadingFallback.tsx
+ * Location: src/app/shell/ViewLoadingFallback.tsx
  */
 import { SagaDriveLogo } from './SagaDriveLogo';
 

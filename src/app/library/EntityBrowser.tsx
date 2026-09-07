@@ -3,13 +3,13 @@
  * Renders a Scriptony-style carousel (center-focus, dots, chevron navigation) or a compact list view,
  * persists the chosen view mode per storageKey in localStorage and falls back safely
  * (desktop = list, mobile = carousel) when localStorage is unavailable (private mode).
- * Location: src/components/EntityBrowser.tsx.
+ * Location: src/app/library/EntityBrowser.tsx
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronLeft, ChevronRight, List } from 'lucide-react';
-import { Button } from './ui/button';
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from './ui/carousel';
-import { cn } from './ui/utils';
+import { Button } from '../../components/ui/button';
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '../../components/ui/carousel';
+import { cn } from '../../components/ui/utils';
 
 export type EntityBrowserViewMode = 'carousel' | 'list';
 

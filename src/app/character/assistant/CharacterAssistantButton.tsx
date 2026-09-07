@@ -1,16 +1,16 @@
 /**
- * CharacterAssistantButton (src/components/assistant/CharacterAssistantButton.tsx)
+ * CharacterAssistantButton (src/app/character/assistant/CharacterAssistantButton.tsx)
  *
  * Header button that opens the CharacterAssistantDrawer. Owns the drawer open
  * state so the CharacterEditor header stays clean; the label stays "Assistant"
  * (icon + text) per product decision, UI-only for now — the real assistant
  * backend comes later.
  *
- * Location: src/components/assistant/CharacterAssistantButton.tsx
+ * Location: src/app/character/assistant/CharacterAssistantButton.tsx
  */
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '../../../components/ui/button';
 import { CharacterAssistantDrawer } from './CharacterAssistantDrawer';
 
 export function CharacterAssistantButton() {

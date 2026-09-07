@@ -1,11 +1,11 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
 import { Plus, Users, Gamepad2, TrendingUp, Calendar } from 'lucide-react';
 import { useState } from 'react';
-import { useProjectSummaries } from '../app/project/hooks/useProjectSummaries';
-import { useCharacterSummaries } from '../app/character/list/useCharacterSummaries';
-import { CreateCharacterEntryDialog } from '../app/character/creation/CreateCharacterEntryDialog';
-import { useAuth } from '../lib/auth-context';
+import { useProjectSummaries } from '../project/hooks/useProjectSummaries';
+import { useCharacterSummaries } from '../character/list/useCharacterSummaries';
+import { CreateCharacterEntryDialog } from '../character/creation/CreateCharacterEntryDialog';
+import { useAuth } from '../../lib/auth-context';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
