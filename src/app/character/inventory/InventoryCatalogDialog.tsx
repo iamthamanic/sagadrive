@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
-import { InventoryItemThumb } from '../../../app/character/inventory/InventoryItemThumb';
+import { InventoryItemThumb } from './InventoryItemThumb';
 import { Badge } from '../../../shared/ui/badge';
 import { Button } from '../../../shared/ui/button';
 import {
@@ -45,7 +45,7 @@ import {
   type LibraryItemSource,
 } from '../../../domains/items';
 import type { CharacterItemCatalog } from '../../../infrastructure/inventory/item-catalog-service';
-import { useItemThumbnailSrc } from '../../items/useItemThumbnailSrc';
+import { useItemThumbnailSrc } from '../../items';
 import {
   INVENTORY_CONTEXT_FILTER_OPTIONS,
   INVENTORY_CONTEXT_LABELS,

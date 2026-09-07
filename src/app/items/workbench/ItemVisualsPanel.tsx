@@ -3,7 +3,7 @@
  * Location: src/app/items/workbench/ItemVisualsPanel.tsx
  */
 import { useRef } from 'react';
-import { InventoryItemThumb } from '../../../app/character/inventory/InventoryItemThumb';
+import { InventoryItemThumb } from '../../character';
 import { Button } from '../../../shared/ui/button';
 import { Input } from '../../../shared/ui/input';
 import { Label } from '../../../shared/ui/label';

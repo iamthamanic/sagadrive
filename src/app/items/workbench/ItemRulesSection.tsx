@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../shared/ui/select';
-import { WEAPON_DAMAGE_OPTIONS } from '../../character/inventory/inventory-ui-labels';
+import { WEAPON_DAMAGE_OPTIONS } from '../../character';
 import {
   parseItemCost,
   parseItemLoad,

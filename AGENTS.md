@@ -271,7 +271,6 @@ supabase/functions/
    ```typescript
    // src/app/character/edit/CharacterEditor.tsx
    import { characterService } from '../../../infrastructure/character/character-service';
-   // or legacy barrel: '../../../modules/characters/services/character.service'
    ```
 
 4. **Edge Functions** (Deno backend — separate from frontend infrastructure)
@@ -326,8 +325,8 @@ Neue Features folgen der **#94 Layered Architecture** — nicht dem legacy `src/
 3. **Pure Business-/Rules-Logik** nach `src/domains/**` (kein React, kein Supabase).
 4. **Supabase / Storage / Netzwerk** ausschließlich über `src/infrastructure/**`.
 5. **Generic UI** nach `src/shared/ui`.
-6. **Andere Domains** nur über deren öffentliche APIs konsumieren — keine privaten Slice-Internals.
-7. **`src/modules/**` und `src/components/**` existieren nicht** (#175). Nicht neu anlegen; CI schlägt fehl.
+6. **Andere App-Areas** nur über deren **öffentliche Area-Barrels** (`src/app/<area>/index.ts`) konsumieren — keine privaten Nested-Imports (`hooks/`, `inventory/`, …).
+7. **`src/modules/**` und `src/components/**` existieren nicht** (#175). Nicht neu anlegen; CI schlägt fehl. Auch keine neuen Feature-Dumping-Roots (`src/features`, `src/services`, …) — nur die #94-Allowlist.
 8. **Keine neuen generischen** `services/`, `types/`, `utils/`-Dumping-Folder als Architekturstandard.
 9. **Keine Business Rules in React** — Rules-Kernel bleibt UI-frei.
 10. **Kein Supabase in Domain/Rules/App-Slices** — nur Infrastructure.

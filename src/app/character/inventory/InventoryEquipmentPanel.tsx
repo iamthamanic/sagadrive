@@ -37,8 +37,8 @@ import {
 } from '../../../domains/character/inventory-v2';
 import { InventoryEquipmentPaperDollFigure } from './InventoryEquipmentPaperDollFigure';
 import { InventoryEquipmentPaperDollHotspots } from './InventoryEquipmentPaperDollHotspots';
-import { InventoryItemThumb } from '../../../app/character/inventory/InventoryItemThumb';
-import { useItemThumbnailSrc } from '../../items/useItemThumbnailSrc';
+import { InventoryItemThumb } from './InventoryItemThumb';
+import { useItemThumbnailSrc } from '../../items';
 import {
   freeSlotsForEquipDisplace,
   itemDisplayName,

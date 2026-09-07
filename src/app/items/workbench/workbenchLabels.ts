@@ -11,7 +11,7 @@ import type {
   ItemSettingTag,
   ItemTechLevel,
 } from '../../../domains/items';
-import { ITEM_KIND_LABELS } from '../../library/items/itemLibraryLabels';
+import { ITEM_KIND_LABELS } from '../../library';
 
 export const DIRTY_LEAVE_MESSAGE = 'Ungespeicherte Änderungen verwerfen?';
 

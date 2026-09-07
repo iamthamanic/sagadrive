@@ -8,10 +8,10 @@ import {
   librarySourceFromOrigin,
   normalizeItemDefinition,
 } from '../../../domains/items';
-import { InventoryItemThumb } from '../../../app/character/inventory/InventoryItemThumb';
+import { InventoryItemThumb } from '../../character';
 import { Badge } from '../../../shared/ui/badge';
 import { cn } from '../../../shared/ui/utils';
-import { useItemThumbnailSrc } from '../../items/useItemThumbnailSrc';
+import { useItemThumbnailSrc } from '../../items';
 import {
   ITEM_CONTEXT_LABELS,
   ITEM_KIND_LABELS,

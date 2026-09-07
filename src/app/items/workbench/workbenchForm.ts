@@ -22,7 +22,7 @@ import {
   parseItemLoad,
   parseMinimumStrength,
   parseProtection,
-} from '../../character/inventory/inventory-ui-labels';
+} from '../../character';
 import type { WORKBENCH_TYPE_ENTRIES } from './workbenchLabels';
 
 type MiscEquipChoice = 'none' | 'head' | 'accessory' | 'special' | 'feet';

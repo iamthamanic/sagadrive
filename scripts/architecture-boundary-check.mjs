@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * architecture-boundary-check — Enforces Modular Monolith layer import rules (#94)
- * plus Legacy Freeze baseline (#165): no new paths under modules/** or feature components/**.
+ * architecture-boundary-check — Enforces Modular Monolith layer import rules (#94),
+ * eradicated legacy roots (#175), cross-area public APIs, and src/ code-root allowlist.
  * Location: scripts/architecture-boundary-check.mjs
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -15,6 +15,22 @@ const DEFAULT_LEGACY_BASELINE = join(root, '.qa/architecture/legacy-freeze-basel
 
 /** Source extensions counted as legacy freeze paths (not vendor/build). */
 const SOURCE_EXT = /\.(ts|tsx|js|jsx|mjs)$/;
+
+/**
+ * Directories under src/ that may contain feature/product TypeScript.
+ * Anything else with .ts/.tsx is a dumping-ground violation.
+ */
+export const ALLOWED_SRC_CODE_ROOTS = new Set([
+  'domains',
+  'infrastructure',
+  'app',
+  'shared',
+  'lib',
+  'utils',
+  'supabase',
+  'assets',
+  'styles',
+]);
 
 const IMPORT_PATH_RULES = {
   domains: [
@@ -157,6 +173,98 @@ export function checkCharacterCrossSliceImports(filePath, content) {
   return violations;
 }
 
+export function getAppAreaFromPath(normalizedPath) {
+  const match = normalizedPath.replace(/\\/g, '/').match(/(?:^|\/)app\/([^/]+)(?:\/|$)/);
+  return match?.[1] ?? null;
+}
+
+export function isAppAreaPublicApi(resolvedImportPath, targetArea) {
+  const normalized = resolvedImportPath.replace(/\\/g, '/').replace(/\.tsx?$/, '');
+  return normalized === `app/${targetArea}` || normalized === `app/${targetArea}/index`;
+}
+
+/**
+ * Cross-area rule: app/<areaA> may only import app/<areaB> via that area's public barrel
+ * (`app/<areaB>` or `app/<areaB>/index`). Private nested paths are forbidden.
+ * Area public barrels (`app/<area>/index.ts`) are exempt (they re-export internals).
+ */
+export function checkAppCrossAreaImports(filePath, content) {
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  const fromArea = getAppAreaFromPath(normalizedPath);
+  if (!fromArea) return [];
+
+  if (new RegExp(`/app/${fromArea}/index\\.tsx?$`).test(normalizedPath)) return [];
+
+  const displayPath = normalizedPath.includes('/src/')
+    ? normalizedPath.slice(normalizedPath.indexOf('src/'))
+    : normalizedPath.includes('src/')
+      ? normalizedPath.slice(normalizedPath.indexOf('src/'))
+      : normalizedPath;
+
+  const violations = [];
+  for (const importPath of extractImportPaths(content)) {
+    if (!importPath.startsWith('.')) continue;
+
+    const resolved = resolveRelativeImport(filePath, importPath);
+    const resolvedArea = resolved.match(/^app\/([^/]+)/)?.[1];
+    if (!resolvedArea || resolvedArea === fromArea) continue;
+    if (isAppAreaPublicApi(resolved, resolvedArea)) continue;
+
+    violations.push({
+      file: displayPath,
+      rule: `private cross-area import (${fromArea} → ${importPath}; use app/${resolvedArea} public barrel)`,
+      scope: 'app-cross-area',
+    });
+  }
+
+  return violations;
+}
+
+function directoryContainsSource(dir) {
+  try {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      const stat = statSync(full);
+      if (stat.isDirectory()) {
+        if (directoryContainsSource(full)) return true;
+        continue;
+      }
+      if (SOURCE_EXT.test(entry)) return true;
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
+
+/**
+ * Reject unknown src/* dumping grounds that contain TypeScript/JS feature code.
+ */
+export function checkAllowedSrcCodeRoots(rootDir = root) {
+  const srcDir = join(rootDir, 'src');
+  if (!existsSync(srcDir)) return [];
+
+  const violations = [];
+  for (const entry of readdirSync(srcDir)) {
+    const full = join(srcDir, entry);
+    let stat;
+    try {
+      stat = statSync(full);
+    } catch {
+      continue;
+    }
+    if (!stat.isDirectory()) continue;
+    if (ALLOWED_SRC_CODE_ROOTS.has(entry)) continue;
+    if (!directoryContainsSource(full)) continue;
+    violations.push({
+      file: `src/${entry}`,
+      rule: 'unknown feature code root (not in #94 allowlist)',
+      scope: 'src-root-allowlist',
+    });
+  }
+  return violations;
+}
+
 export function checkContentImportPaths(content, rules, scopeLabel, fileLabel = 'inline') {
   const violations = [];
   for (const importPath of extractImportPaths(content)) {
@@ -282,6 +390,7 @@ export function runArchitectureBoundaryCheck(options = {}) {
       checkFileImportPaths(file, IMPORT_PATH_RULES['shared/ui'], 'shared/ui', rootDir),
     ),
     ...appFiles.flatMap((file) => checkCharacterCrossSliceImports(file, readFileSync(file, 'utf8'))),
+    ...appFiles.flatMap((file) => checkAppCrossAreaImports(file, readFileSync(file, 'utf8'))),
   ];
 
   let legacyCurrent = [];
@@ -290,6 +399,7 @@ export function runArchitectureBoundaryCheck(options = {}) {
 
   if (!skipLegacyFreeze) {
     violations.push(...checkEradicatedLegacyRoots(rootDir));
+    violations.push(...checkAllowedSrcCodeRoots(rootDir));
     const baseline = loadLegacyFreezeBaseline(baselinePath);
     if (baseline.missing) {
       violations.push({
