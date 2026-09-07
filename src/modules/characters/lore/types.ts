@@ -1,4 +1,4 @@
-import type { CharacterRulesetKey } from '../../rulesets/characterCreation';
+import type { CharacterRulesetKey } from '../../../domains/rules/sagadrive/character-creation';
 
 export type CharacterTraitCategory = 'personality' | 'ideals' | 'bonds' | 'flaws';
 

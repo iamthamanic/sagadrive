@@ -5,7 +5,7 @@
  * Skill provenance lives only on sagadrive_profile (freeSkillRanks, backgroundSkillPoints,
  * archetypeTrainingSkill, skillAdvances, specializations) — no parallel top-level freeSkillRanks.
  */
-import type { CharacterRulesetKey, SagaDriveSkillKey } from '../../rulesets/characterCreation';
+import type { CharacterRulesetKey, SagaDriveSkillKey } from '../../../domains/rules/sagadrive/character-creation';
 import type {
   AbilityDto,
   CharacterAppearanceDto,

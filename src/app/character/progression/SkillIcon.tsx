@@ -23,7 +23,7 @@ import {
   Zap,
   type LucideIcon,
 } from 'lucide-react';
-import type { SagaDriveSkillKey } from '../../../modules/rulesets/characterCreation';
+import type { SagaDriveSkillKey } from '../../../domains/rules/sagadrive/character-creation';
 
 const SKILL_ICONS: Record<SagaDriveSkillKey, LucideIcon> = {
   athletics: Dumbbell,

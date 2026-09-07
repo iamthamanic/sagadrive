@@ -16,7 +16,7 @@ import {
   sagaDriveSkillDefinitions,
   type CharacterRulesetKey,
   type SagaDriveSkillKey,
-} from '../../rulesets/characterCreation';
+} from '../../../domains/rules/sagadrive/character-creation';
 import type { CharacterAttributesDto, CharacterGenderReading, SagaDriveProfileDto } from '../types/character.types';
 import type {
   CharacterPresetDto,

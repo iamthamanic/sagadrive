@@ -19,7 +19,7 @@ import {
   Waves,
   type LucideIcon,
 } from 'lucide-react';
-import type { SagaDriveSpeciesTraitKey } from '../../../modules/rulesets/characterCreation';
+import type { SagaDriveSpeciesTraitKey } from '../../../domains/rules/sagadrive/character-creation';
 
 const SPECIES_TRAIT_ICONS: Record<SagaDriveSpeciesTraitKey, LucideIcon> = {
   'sharpened-sense': Ear,

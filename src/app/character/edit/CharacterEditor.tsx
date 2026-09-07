@@ -105,7 +105,7 @@ import {
   type SagaDriveBackgroundSkillPoints,
   type SagaDriveSkillAdvanceDto,
   type SagaDriveSpecializationRecordDto,
-} from '../../../modules/rulesets/skillProgression';
+} from '../../../domains/rules/sagadrive/skill-progression';
 import { getSagaDriveSpeciesTraitOptionCatalog } from '../../../domains/rules/sagadrive/species-trait-options';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';

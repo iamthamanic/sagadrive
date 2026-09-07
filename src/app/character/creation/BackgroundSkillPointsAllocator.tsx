@@ -6,8 +6,8 @@
 import {
   SAGA_DRIVE_START_BACKGROUND_SKILL_POINTS,
   type SagaDriveBackgroundSkillPoints,
-} from '../../../modules/rulesets/skillProgression';
-import type { SagaDriveSkillKey } from '../../../modules/rulesets/characterCreation';
+} from '../../../domains/rules/sagadrive/skill-progression';
+import type { SagaDriveSkillKey } from '../../../domains/rules/sagadrive/character-creation';
 
 function sumBackgroundPoints(points: SagaDriveBackgroundSkillPoints): number {
   return Object.values(points).reduce<number>((sum, value) => sum + (value ?? 0), 0);

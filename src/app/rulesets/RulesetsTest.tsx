@@ -1,6 +1,10 @@
-import { useOfficialRulesets } from '../modules/rulesets';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+/**
+ * RulesetsTest — Vertical-slice screen listing official rulesets (catalog smoke UI).
+ * Location: src/app/rulesets/RulesetsTest.tsx
+ */
 import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { useOfficialRulesets } from './hooks/useRulesets';
 
 export function RulesetsTest() {
   const { rulesets, loading, error } = useOfficialRulesets();
@@ -30,18 +34,14 @@ export function RulesetsTest() {
     <div className="p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="mb-2">Verfügbare Regelwerke</h1>
-        <p className="text-muted-foreground mb-6">
-          {rulesets.length} offizielle Regelwerke gefunden
-        </p>
+        <p className="text-muted-foreground mb-6">{rulesets.length} offizielle Regelwerke gefunden</p>
 
         <div className="grid gap-4">
           {rulesets.map((ruleset) => (
             <Card key={ruleset.id}>
               <CardHeader>
                 <CardTitle>{ruleset.name}</CardTitle>
-                <CardDescription>
-                  {ruleset.description || 'Kein Beschreibung'}
-                </CardDescription>
+                <CardDescription>{ruleset.description || 'Kein Beschreibung'}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">
@@ -54,11 +54,11 @@ export function RulesetsTest() {
                   </div>
                   <div>
                     <span className="font-medium">Klassen:</span>{' '}
-                    {ruleset.classes_config.map(c => c.name).join(', ')}
+                    {ruleset.classes_config.map((c) => c.name).join(', ')}
                   </div>
                   <div>
                     <span className="font-medium">Völker:</span>{' '}
-                    {ruleset.races_config.map(r => r.name).join(', ')}
+                    {ruleset.races_config.map((r) => r.name).join(', ')}
                   </div>
                 </div>
               </CardContent>

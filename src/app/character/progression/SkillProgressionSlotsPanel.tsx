@@ -21,7 +21,7 @@ import {
   getSagaDriveSkill,
   sagaDriveSkillDefinitions,
   type SagaDriveSkillKey,
-} from '../../../modules/rulesets/characterCreation';
+} from '../../../domains/rules/sagadrive/character-creation';
 import {
   getSagaDriveSkillAdvanceLevels,
   getSagaDriveSkillCap,
@@ -33,7 +33,7 @@ import {
   type SagaDriveSkillAdvanceLevel,
   type SagaDriveSpecializationRecordDto,
   type SagaDriveStartSkillBuild,
-} from '../../../modules/rulesets/skillProgression';
+} from '../../../domains/rules/sagadrive/skill-progression';
 import { RuleHelp } from '../shared/RuleHelp';
 
 type SlotDecisionKind = 'rank-up' | 'learn' | 'specialization' | '';

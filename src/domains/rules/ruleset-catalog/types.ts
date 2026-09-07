@@ -1,15 +1,14 @@
-// ============================================
-// RULESETS Module - TypeScript Types
-// ============================================
-
+/**
+ * ruleset-catalog types — Contracts for persisted ruleset catalog entities (not SagaDrive kernel rules).
+ * Location: src/domains/rules/ruleset-catalog/types.ts
+ */
 export interface Ruleset {
   id: string;
   creator_user_id: string | null;
   name: string;
   description: string | null;
   version: string | null;
-  
-  // Rule configs (flexible JSONB)
+
   attributes_config: {
     primary: string[];
     derived: string[];
@@ -27,17 +26,16 @@ export interface Ruleset {
     speed: number;
     size: string;
   }>;
-  combat_rules: Record<string, any>;
-  dice_rules: Record<string, any>;
-  level_progression: Record<string, any>;
-  
-  // Metadata
+  combat_rules: Record<string, unknown>;
+  dice_rules: Record<string, unknown>;
+  level_progression: Record<string, unknown>;
+
   is_official: boolean;
   is_public: boolean;
   is_marketplace_item: boolean;
   downloads_count: number;
   rating: number | null;
-  
+
   created_at: string;
   updated_at: string;
 }
@@ -50,8 +48,8 @@ export interface CreateRulesetDTO {
   skills_config?: Ruleset['skills_config'];
   classes_config?: Ruleset['classes_config'];
   races_config?: Ruleset['races_config'];
-  combat_rules?: Record<string, any>;
-  dice_rules?: Record<string, any>;
+  combat_rules?: Record<string, unknown>;
+  dice_rules?: Record<string, unknown>;
   is_public?: boolean;
 }
 
