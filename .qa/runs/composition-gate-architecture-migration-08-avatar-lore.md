@@ -1,7 +1,7 @@
 # Composition Gate — architecture-migration-08-avatar-lore
 
-- HEAD_SHA: WORKTREE
-- BASE_SHA: 5822c59
+- HEAD_SHA: cdb594a931205c42e75c5e0ddde97ede35be9c8f
+- BASE_SHA: 5822c5998b5a90bf78a79a6a9f8550c022490f06
 - Date: 2026-09-07
 - Verdict: CLEAR
 
