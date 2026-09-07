@@ -4,7 +4,7 @@
  */
 import { Button } from '../../../components/ui/button';
 import type { ItemDefinition } from '../../../domains/character/inventory-v2';
-import type { WorldProfileVm } from '../../../modules/worlds/types/world.types';
+import type { WorldProfileVm } from '../../../domains/world/contracts/world.types';
 import { ItemAvailabilitySection } from './ItemAvailabilitySection';
 import { ItemBasicsSection } from './ItemBasicsSection';
 import { ItemRulesSection } from './ItemRulesSection';

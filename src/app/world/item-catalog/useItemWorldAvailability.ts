@@ -3,7 +3,7 @@
  * (#142). Wraps pack toggles, include/exclude lists, personal switch, and a
  * live effective-count via the domain-pure resolver. Does not call Supabase
  * for pack data; optional world-scoped defs load through the catalog service.
- * Location: src/modules/worlds/hooks/useItemWorldAvailability.ts
+ * Location: src/app/world/item-catalog/useItemWorldAvailability.ts
  */
 import { useEffect, useState } from 'react';
 import { listCoreItemDefinitions } from '../../../domains/character/inventory-v2';
@@ -26,7 +26,7 @@ import {
   listContextItemPacks,
 } from '../../../domains/items/packs';
 import { loadWorldProfileItemCatalog } from '../../../infrastructure/inventory/item-catalog-service';
-import type { WorldModuleConfigMap } from '../types/world.types';
+import type { WorldModuleConfigMap } from '../../../domains/world/contracts/world.types';
 
 const BASE_PACK_LABELS: Readonly<Record<string, string>> = {
   [FANTASY_BASIC_PACK_ID]: 'Fantasy',

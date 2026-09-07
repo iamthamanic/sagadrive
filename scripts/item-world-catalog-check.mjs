@@ -71,16 +71,16 @@ section('1 · structure & purity');
   check(barrel.includes('resolveWorldItemCatalog'), 'barrel exports resolver');
   check(barrel.includes('ITEM_CATALOG_MODULE_ID'), 'barrel exports module id');
 
-  const registry = read('src/modules/worlds/worldModuleRegistry.ts');
+  const registry = read('src/domains/world/worldModuleRegistry.ts');
   check(registry.includes("'item-catalog'"), 'registry includes item-catalog');
   check(registry.includes('customEditor'), 'customEditor flag');
   check(registry.includes('normalizeItemCatalogModuleConfig'), 'registry normalizes item-catalog');
 
-  const editor = read('src/modules/worlds/components/WorldProfileEditorDialog.tsx');
+  const editor = read('src/app/world/profile-editor/WorldProfileEditorDialog.tsx');
   check(editor.includes('WorldItemCatalogModuleSection'), 'editor wires module section');
   check(editor.includes('!module.customEditor'), 'generic settings skip customEditor');
 
-  const sectionUi = read('src/modules/worlds/components/WorldItemCatalogModuleSection.tsx');
+  const sectionUi = read('src/app/world/item-catalog/WorldItemCatalogModuleSection.tsx');
   check(sectionUi.includes('Gegenstände & Ausrüstung'), 'German section title');
   check(sectionUi.includes('Eigene Items der Spieler erlauben'), 'personal toggle copy');
   check(sectionUi.includes('Einzelnen Gegenstand hinzufügen'), 'search-add copy');
@@ -88,16 +88,16 @@ section('1 · structure & purity');
   check(sectionUi.includes('useItemWorldAvailability'), 'uses hook');
   check(!/supabase\.from\(/.test(sectionUi), 'section no direct supabase');
 
-  const hook = read('src/modules/worlds/hooks/useItemWorldAvailability.ts');
+  const hook = read('src/app/world/item-catalog/useItemWorldAvailability.ts');
   check(hook.includes('resolveWorldItemCatalog'), 'hook uses domain resolver');
   check(hook.includes('listBaseItemPacks'), 'hook lists base packs');
   check(hook.includes('listContextItemPacks'), 'hook lists context packs');
 
   for (const file of [
     'src/domains/items/world-catalog.ts',
-    'src/modules/worlds/hooks/useItemWorldAvailability.ts',
-    'src/modules/worlds/components/WorldItemCatalogModuleSection.tsx',
-    'src/modules/worlds/worldModuleRegistry.ts',
+    'src/app/world/item-catalog/useItemWorldAvailability.ts',
+    'src/app/world/item-catalog/WorldItemCatalogModuleSection.tsx',
+    'src/domains/world/worldModuleRegistry.ts',
   ]) {
     const text = read(file);
     const codeOnly = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');

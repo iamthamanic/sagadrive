@@ -1,13 +1,13 @@
 /**
  * worldModuleRegistry — stable world-profile module IDs, defaults, and
  * normalize helpers for JSONB `modules` (#29 / #142).
- * Location: src/modules/worlds/worldModuleRegistry.ts
+ * Location: src/domains/world/worldModuleRegistry.ts
  */
 import {
   ITEM_CATALOG_MODULE_ID,
   normalizeItemCatalogModuleConfig,
-} from '../../domains/items/world-catalog';
-import type { WorldModuleConfigMap } from './types/world.types';
+} from '../items/world-catalog';
+import type { WorldModuleConfigMap } from './contracts/world.types';
 
 export type WorldModuleId = 'species-development' | 'item-catalog';
 export type SpeciesDevelopmentMode = 'explicit' | 'progressive' | 'disabled';

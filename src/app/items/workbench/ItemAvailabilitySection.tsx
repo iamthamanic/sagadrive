@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
-import type { WorldProfileVm } from '../../../modules/worlds/types/world.types';
+import type { WorldProfileVm } from '../../../domains/world/contracts/world.types';
 import type { WorkbenchFormState } from './workbenchForm';
 
 export interface ItemAvailabilitySectionProps {

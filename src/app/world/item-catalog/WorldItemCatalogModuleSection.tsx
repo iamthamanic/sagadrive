@@ -3,7 +3,7 @@
  * (#142): base/context pack toggles, search-add includes/excludes, personal
  * switch, and live effective count. Title: „Gegenstände & Ausrüstung“.
  * Distinct from WorldItemCatalogSection (world-scoped definition authoring #112).
- * Location: src/modules/worlds/components/WorldItemCatalogModuleSection.tsx
+ * Location: src/app/world/item-catalog/WorldItemCatalogModuleSection.tsx
  */
 import { Package, Plus, X } from 'lucide-react';
 import { Badge } from '../../../components/ui/badge';
@@ -13,8 +13,8 @@ import { Checkbox } from '../../../components/ui/checkbox';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Switch } from '../../../components/ui/switch';
-import { useItemWorldAvailability } from '../hooks/useItemWorldAvailability';
-import type { WorldModuleConfigMap } from '../types/world.types';
+import { useItemWorldAvailability } from './useItemWorldAvailability';
+import type { WorldModuleConfigMap } from '../../../domains/world/contracts/world.types';
 
 export interface WorldItemCatalogModuleSectionProps {
   modules: WorldModuleConfigMap;

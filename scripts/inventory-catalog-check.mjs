@@ -582,7 +582,7 @@ section('9 · Persistenz- und Sicherheitsvertrag');
     'Charakter-Bindung an Weltprofil-Eigentum gekoppelt',
   );
 
-  const worldService = read('src/modules/worlds/services/worldProfile.service.ts');
+  const worldService = read('src/infrastructure/world/world-profile-service.ts');
   requireMatch(
     worldService,
     /inventory_item_definitions/,

@@ -3,7 +3,7 @@
  * item definitions (#112). Lists create/edit/archive/restore via the catalog
  * service and reuses PersonalItemFormDialog in `mode="world"`. Core clone opens
  * the same form with a template (new World ID on save; Core never mutated).
- * Location: src/modules/worlds/components/WorldItemCatalogSection.tsx
+ * Location: src/app/world/item-catalog/WorldItemCatalogSection.tsx
  */
 import { useEffect, useState } from 'react';
 import { Archive, Plus, RotateCcw } from 'lucide-react';

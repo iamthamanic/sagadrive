@@ -43,8 +43,8 @@ function rejectMatch(content, pattern, label) {
   }
 }
 
-const editor = read('src/modules/worlds/components/WorldProfileEditorDialog.tsx');
-const sectionUi = read('src/modules/worlds/components/WorldItemCatalogSection.tsx');
+const editor = read('src/app/world/profile-editor/WorldProfileEditorDialog.tsx');
+const sectionUi = read('src/app/world/item-catalog/WorldItemCatalogSection.tsx');
 const personalForm = read('src/app/character/inventory/PersonalItemFormDialog.tsx');
 const catalogDialog = read('src/app/character/inventory/InventoryCatalogDialog.tsx');
 const service = read('src/infrastructure/inventory/item-catalog-service.ts');

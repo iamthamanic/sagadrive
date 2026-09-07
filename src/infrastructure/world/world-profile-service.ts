@@ -1,11 +1,15 @@
-import { supabase } from '../../../lib/supabase';
-import { normalizeWorldModuleConfigMap } from '../worldModuleRegistry';
+/**
+ * world-profile-service — Supabase adapter for world profiles.
+ * Location: src/infrastructure/world/world-profile-service.ts
+ */
+import { supabase } from '../../lib/supabase';
+import { normalizeWorldModuleConfigMap } from '../../domains/world/worldModuleRegistry';
 import type {
   CreateWorldProfileDto,
   UpdateWorldProfileDto,
   WorldProfileDto,
   WorldProfileVm,
-} from '../types/world.types';
+} from '../../domains/world/contracts/world.types';
 
 function normalizeName(value: string): string {
   const name = value.trim();
