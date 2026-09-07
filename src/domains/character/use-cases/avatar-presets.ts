@@ -1,8 +1,12 @@
+/**
+ * avatar-presets — Race presets, appearance normalization, and safe URL helpers.
+ * Location: src/domains/character/use-cases/avatar-presets.ts
+ */
 import type {
   CharacterAppearanceDto,
   CharacterAvatarDto,
   CharacterAvatarFormat,
-} from '../../domains/character/domain/character.entity';
+} from '../domain/character.entity';
 
 const DEFAULT_HAIR_COLOR = '#000000';
 const DEFAULT_SKIN_TONE = '#F5E6D3';

@@ -4,8 +4,8 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '../../../components/ui/popover';
-import { getCharacterTraitSuggestions } from '../../../modules/characters/lore/traits';
-import type { CharacterLoreContext, CharacterTraitCategory } from '../../../modules/characters/lore/types';
+import { getCharacterTraitSuggestions } from '../../../domains/character/use-cases/character-lore-traits';
+import type { CharacterLoreContext, CharacterTraitCategory } from '../../../domains/character/contracts/character-lore.types';
 
 interface CharacterTraitEditorProps {
   id: string;

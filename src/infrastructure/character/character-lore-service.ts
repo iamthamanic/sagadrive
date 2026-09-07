@@ -1,5 +1,9 @@
-import { supabase } from '../../../lib/supabase';
-import type { CharacterLoreGenerationRequest, CharacterLoreGenerationResult } from './types';
+/**
+ * character-lore-service — Edge-function adapter for AI background generation.
+ * Location: src/infrastructure/character/character-lore-service.ts
+ */
+import { supabase } from '../../lib/supabase';
+import type { CharacterLoreGenerationRequest, CharacterLoreGenerationResult } from '../../domains/character/contracts/character-lore.types';
 
 type CharacterLoreFunctionResponse =
   | {

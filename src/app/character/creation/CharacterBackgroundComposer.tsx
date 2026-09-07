@@ -16,9 +16,9 @@ import {
 } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
 import { useProjects } from '../../project/hooks/useProjects';
-import { buildCharacterBackgroundExamples } from '../../../modules/characters/lore/examples';
-import { characterLoreService } from '../../../modules/characters/lore/service';
-import type { CharacterLoreContext } from '../../../modules/characters/lore/types';
+import { buildCharacterBackgroundExamples } from '../../../domains/character/use-cases/character-lore-examples';
+import { characterLoreService } from '../../../infrastructure/character/character-lore-service';
+import type { CharacterLoreContext } from '../../../domains/character/contracts/character-lore.types';
 
 interface CharacterBackgroundComposerProps {
   value: string;

@@ -5,7 +5,7 @@
 import { supabase } from '../../lib/supabase';
 import { getAuthenticatedUserId } from '../../lib/authenticatedUser';
 import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../lib/networkTimeout';
-import { normalizeCharacterAppearance, normalizeSafeUrl } from '../../modules/characters/avatar';
+import { normalizeCharacterAppearance, normalizeSafeUrl } from '../../domains/character/use-cases/avatar-presets';
 import { assertValidSagaDriveCharacterPersistence } from '../../domains/character';
 import {
   SAGA_DRIVE_SPECIES_TRAIT_BUDGET,

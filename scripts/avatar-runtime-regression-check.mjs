@@ -19,9 +19,9 @@ function requireDependency(record, name, expected, label) {
   }
 }
 
-const runtime = read('src/modules/characters/avatar/characterStudio/CharacterStudioRuntime.ts');
-const canvas = read('src/modules/characters/avatar/AvatarCanvas.tsx');
-const manifests = read('src/modules/characters/avatar/manifests.ts');
+const runtime = read('src/infrastructure/character/avatar/character-studio-runtime.ts');
+const canvas = read('src/app/character/avatar/AvatarCanvas.tsx');
+const manifests = read('src/infrastructure/character/avatar/avatar-asset-manifests.ts');
 const editor = read('src/app/character/edit/CharacterEditor.tsx');
 const packageJson = JSON.parse(read('package.json'));
 const packageLock = JSON.parse(read('package-lock.json'));
