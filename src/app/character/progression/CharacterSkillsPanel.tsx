@@ -13,7 +13,7 @@ import {
   sagaDriveSkillDefinitions,
   type SagaDriveAttributeKey,
   type SagaDriveSkillKey,
-} from '../../../modules/rulesets/characterCreation';
+} from '../../../domains/rules/sagadrive/character-creation';
 import type { CharacterAttributesDto } from '../../../modules/characters/types/character.types';
 import {
   getSagaDriveSkillCap,
@@ -22,7 +22,7 @@ import {
   type SagaDriveSkillAdvanceDto,
   type SagaDriveSpecializationRecordDto,
   type SagaDriveStartSkillBuild,
-} from '../../../modules/rulesets/skillProgression';
+} from '../../../domains/rules/sagadrive/skill-progression';
 import type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
 import { AttributeSkillConnector } from './AttributeSkillConnector';
 import { AttributeSkillNode } from './AttributeSkillNode';

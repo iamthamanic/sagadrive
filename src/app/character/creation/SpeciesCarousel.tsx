@@ -3,7 +3,7 @@
  * Location: src/modules/characters/components/SpeciesCarousel.tsx
  */
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { sagaDriveRaceOptions } from '../../../modules/rulesets/characterCreation';
+import { sagaDriveRaceOptions } from '../../../domains/rules/sagadrive/character-creation';
 import { RuleHelp } from '../shared/RuleHelp';
 import { SpeciesBannerFlag } from './SpeciesBannerFlag';
 import { getSpeciesColorway } from './speciesBanners';

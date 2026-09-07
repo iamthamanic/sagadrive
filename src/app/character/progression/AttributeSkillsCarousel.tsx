@@ -18,7 +18,7 @@ import {
   sagaDriveAttributeDefinitions,
   sagaDriveSkillDefinitions,
   type SagaDriveAttributeKey,
-} from '../../../modules/rulesets/characterCreation';
+} from '../../../domains/rules/sagadrive/character-creation';
 import { RuleHelp } from '../shared/RuleHelp';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';

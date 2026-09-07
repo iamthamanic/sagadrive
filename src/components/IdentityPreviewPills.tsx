@@ -3,7 +3,7 @@
  * Spezies is intentionally omitted from this card.
  * Location: src/components/IdentityPreviewPills.tsx
  */
-import type { SagaDriveArchetypeKey, SagaDriveEssenceKey } from '../modules/rulesets/characterCreation';
+import type { SagaDriveArchetypeKey, SagaDriveEssenceKey } from '../domains/rules/sagadrive/character-creation';
 import { ArchetypeIcon } from '../app/character/creation/ArchetypeIcon';
 import { EssenceIcon } from '../app/character/creation/EssenceIcon';
 import { Badge } from './ui/badge';

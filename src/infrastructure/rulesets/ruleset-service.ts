@@ -1,14 +1,11 @@
-// ============================================
-// RULESETS Module - Service Layer
-// ============================================
-
-import { supabase } from '../../../lib/supabase';
-import type { Ruleset, CreateRulesetDTO, UpdateRulesetDTO } from '../types/ruleset.types';
+/**
+ * ruleset-service — Ruleset catalog service (Supabase adapter).
+ * Location: src/infrastructure/rulesets/ruleset-service.ts
+ */
+import { supabase } from '../../lib/supabase';
+import type { CreateRulesetDTO, Ruleset, UpdateRulesetDTO } from '../../domains/rules/ruleset-catalog';
 
 export const rulesetService = {
-  /**
-   * Get all available rulesets (official + public + user's own)
-   */
   async getAll(): Promise<Ruleset[]> {
     const { data, error } = await supabase
       .from('rulesets')
@@ -20,9 +17,6 @@ export const rulesetService = {
     return data || [];
   },
 
-  /**
-   * Get official rulesets only (D&D 5e, DSA, etc.)
-   */
   async getOfficial(): Promise<Ruleset[]> {
     const { data, error } = await supabase
       .from('rulesets')
@@ -34,23 +28,13 @@ export const rulesetService = {
     return data || [];
   },
 
-  /**
-   * Get a single ruleset by ID
-   */
   async getById(id: string): Promise<Ruleset | null> {
-    const { data, error } = await supabase
-      .from('rulesets')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await supabase.from('rulesets').select('*').eq('id', id).single();
 
     if (error) throw error;
     return data;
   },
 
-  /**
-   * Create a custom ruleset
-   */
   async create(dto: CreateRulesetDTO): Promise<Ruleset> {
     const { data, error } = await supabase
       .from('rulesets')
@@ -66,9 +50,6 @@ export const rulesetService = {
     return data;
   },
 
-  /**
-   * Update a ruleset
-   */
   async update(dto: UpdateRulesetDTO): Promise<Ruleset> {
     const { id, ...updates } = dto;
     const { data, error } = await supabase
@@ -85,14 +66,8 @@ export const rulesetService = {
     return data;
   },
 
-  /**
-   * Delete a ruleset
-   */
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('rulesets')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('rulesets').delete().eq('id', id);
 
     if (error) throw error;
   },

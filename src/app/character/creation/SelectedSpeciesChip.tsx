@@ -3,7 +3,7 @@
  * Shows beside the Charaktername input when a Spezies is selected.
  * Location: src/modules/characters/components/SelectedSpeciesChip.tsx
  */
-import { getCharacterCreationOptionLabel, sagaDriveRaceOptions } from '../../../modules/rulesets/characterCreation';
+import { getCharacterCreationOptionLabel, sagaDriveRaceOptions } from '../../../domains/rules/sagadrive/character-creation';
 import { getSpeciesBannerUrl } from './speciesBanners';
 
 type SelectedSpeciesChipProps = {

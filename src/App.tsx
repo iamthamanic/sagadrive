@@ -33,7 +33,7 @@ const Profile = lazy(() =>
   import('./components/Profile').then((module) => ({ default: module.Profile })),
 );
 const RulesetsTest = lazy(() =>
-  import('./components/RulesetsTest').then((module) => ({ default: module.RulesetsTest })),
+  import('./app/rulesets/RulesetsTest').then((module) => ({ default: module.RulesetsTest })),
 );
 
 if (import.meta.env.DEV) {

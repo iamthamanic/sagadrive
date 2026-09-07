@@ -1,10 +1,10 @@
-// ============================================
-// RULESETS Module - React Hooks
-// ============================================
-
-import { useState, useEffect } from 'react';
-import { rulesetService } from '../services/ruleset.service';
-import type { Ruleset } from '../types/ruleset.types';
+/**
+ * useRulesets — App-slice hooks for loading ruleset catalog data.
+ * Location: src/app/rulesets/hooks/useRulesets.ts
+ */
+import { useEffect, useState } from 'react';
+import type { Ruleset } from '../../../domains/rules/ruleset-catalog';
+import { rulesetService } from '../../../infrastructure/rulesets/ruleset-service';
 
 export function useRulesets() {
   const [rulesets, setRulesets] = useState<Ruleset[]>([]);
@@ -12,7 +12,7 @@ export function useRulesets() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    loadRulesets();
+    void loadRulesets();
   }, []);
 
   const loadRulesets = async () => {
@@ -43,7 +43,7 @@ export function useOfficialRulesets() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    loadRulesets();
+    void loadRulesets();
   }, []);
 
   const loadRulesets = async () => {

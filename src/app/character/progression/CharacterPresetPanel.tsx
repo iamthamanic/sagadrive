@@ -12,7 +12,7 @@ import { Label } from '../../../components/ui/label';
 import { Switch } from '../../../components/ui/switch';
 import { characterPresetService } from '../../../modules/characters/services/characterPreset.service';
 import type { CharacterPresetReleaseMode, CharacterPresetSnapshot, CharacterPresetVm } from '../../../modules/characters/types/characterPreset.types';
-import type { CharacterRulesetKey } from '../../../modules/rulesets/characterCreation';
+import type { CharacterRulesetKey } from '../../../domains/rules/sagadrive/character-creation';
 
 type CharacterPresetPanelProps = {
   characterId: string | null;

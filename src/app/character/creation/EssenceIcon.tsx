@@ -10,7 +10,7 @@ import {
   PersonStanding,
   type LucideIcon,
 } from 'lucide-react';
-import type { SagaDriveEssenceKey } from '../../../modules/rulesets/characterCreation';
+import type { SagaDriveEssenceKey } from '../../../domains/rules/sagadrive/character-creation';
 
 const ESSENCE_ICONS: Record<SagaDriveEssenceKey, LucideIcon> = {
   physical: PersonStanding,
