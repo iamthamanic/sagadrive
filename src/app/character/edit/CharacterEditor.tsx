@@ -18,7 +18,7 @@ import { AttributeD20Icon } from '../../../components/AttributeD20Icon';
 import { DerivedStatCard } from '../../../components/DerivedStatCard';
 import { AttributeDerivedConnector } from '../../../components/AttributeDerivedConnector';
 import { IdentityPreviewPills } from '../../../components/IdentityPreviewPills';
-import { CharacterAssistantButton } from '../../../components/assistant/CharacterAssistantButton';
+import { CharacterAssistantButton } from '../assistant/CharacterAssistantButton';
 import {
   CharacterArchetypePanel,
   CharacterBackgroundComposer,

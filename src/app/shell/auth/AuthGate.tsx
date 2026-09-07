@@ -1,10 +1,10 @@
 /**
  * AuthGate ensures user is authenticated before showing content.
  * Während Session-Check: animiertes SagaDrive-Logo statt generischem Spinner.
- * Location: src/components/auth/AuthGate.tsx
+ * Location: src/app/shell/auth/AuthGate.tsx
  */
 import { useEffect, type ReactNode } from 'react';
-import { useAuth } from '../../lib/auth-context';
+import { useAuth } from '../../../lib/auth-context';
 import { LoginScreen } from './LoginScreen';
 import { SagaDriveLogo } from '../SagaDriveLogo';
 

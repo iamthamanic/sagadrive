@@ -5,17 +5,17 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { AuthProvider } from './lib/auth-context';
 import { ThemeProvider } from './lib/theme-provider';
-import { AuthGate } from './components/auth/AuthGate';
-import { Layout } from './components/Layout';
-import { Dashboard } from './components/Dashboard';
-import { ViewLoadingFallback } from './components/ViewLoadingFallback';
+import { AuthGate } from './app/shell/auth/AuthGate';
+import { Layout } from './app/shell/Layout';
+import { Dashboard } from './app/dashboard/Dashboard';
+import { ViewLoadingFallback } from './app/shell/ViewLoadingFallback';
 import { Toaster } from './components/ui/sonner';
 import { useAppLocation } from './app/shell/routing';
 import { NotFoundPlaceholder } from './app/items/ItemRoutePlaceholders';
 import { ItemWorkbenchScreen } from './app/items/workbench';
 
 const CharacterEditor = lazy(() =>
-  import('./components/CharacterEditor').then((module) => ({ default: module.CharacterEditor })),
+  import('./app/character/edit/CharacterEditor').then((module) => ({ default: module.CharacterEditor })),
 );
 const GamemasterPanel = lazy(() =>
   import('./app/session/GamemasterPanel').then((module) => ({ default: module.GamemasterPanel })),
@@ -27,10 +27,10 @@ const ProjectJoin = lazy(() =>
   import('./app/project/ProjectJoin').then((module) => ({ default: module.ProjectJoin })),
 );
 const Library = lazy(() =>
-  import('./components/Library').then((module) => ({ default: module.Library })),
+  import('./app/library/Library').then((module) => ({ default: module.Library })),
 );
 const Profile = lazy(() =>
-  import('./components/Profile').then((module) => ({ default: module.Profile })),
+  import('./app/profile/Profile').then((module) => ({ default: module.Profile })),
 );
 const RulesetsTest = lazy(() =>
   import('./app/rulesets/RulesetsTest').then((module) => ({ default: module.RulesetsTest })),

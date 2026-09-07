@@ -224,9 +224,9 @@ if (existsSync(new URL('../src/modules/characters', import.meta.url))) {
 }
 
 requireMatch(read('src/app/character/shared/characterEditorBootstrap.ts'), /kind:\s*'character-edit'/, 'character-edit bootstrap implementation in character app slice');
-requireMatch(read('src/components/Library.tsx'), /app\/character\/shared\/characterEditorBootstrap/, 'library imports canonical bootstrap path');
+requireMatch(read('src/app/library/Library.tsx'), /app\/character\/shared\/characterEditorBootstrap/, 'library imports canonical bootstrap path');
 requireMatch(read('src/app/character/edit/CharacterEditor.tsx'), /hydrateEditorFromPersistedCharacter/, 'editor hydrate from persisted character');
-requireMatch(read('src/components/Library.tsx'), /refreshCharacters\(\{\s*force:\s*true\s*\}\)/, 'library force-refreshes character summaries');
+requireMatch(read('src/app/library/Library.tsx'), /refreshCharacters\(\{\s*force:\s*true\s*\}\)/, 'library force-refreshes character summaries');
 
 requireMatch(characterRepository, /supabase\.storage[\s\S]*?\.from\(CHARACTER_PORTRAIT_BUCKET\)[\s\S]*?\.upload\(filePath, file/, 'portrait upload through configured Supabase Storage client');
 requireMatch(characterRepository, /createSignedUrl\(filePath, 31_536_000\)/, 'private portrait signed URL creation');

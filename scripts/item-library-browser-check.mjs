@@ -49,7 +49,7 @@ section('1 · slice files exist');
 
 section('2 · Library composes slice only');
 {
-  const library = read('src/components/Library.tsx');
+  const library = read('src/app/library/Library.tsx');
   check(/ItemLibraryBrowser/.test(library), 'Library imports/renders ItemLibraryBrowser');
   check(/value=["']items["']/.test(library), 'Items tab trigger present');
   check(/onNavigateToItem/.test(library), 'Library receives onNavigateToItem');

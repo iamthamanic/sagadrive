@@ -3,13 +3,13 @@
  * Renders a thumbnail slot (image with graceful initials/icon fallback on error or missing URL),
  * title, meta line and optional meta chips; `variant="list"` gives a compact horizontal row,
  * `variant="carousel"` a larger centered card with action buttons.
- * Location: src/components/EntityBrowserCard.tsx.
+ * Location: src/app/library/EntityBrowserCard.tsx
  */
 import { useState } from 'react';
 import { ImageOff } from 'lucide-react';
-import { Button } from './ui/button';
-import { Card, CardContent } from './ui/card';
-import { cn } from './ui/utils';
+import { Button } from '../../components/ui/button';
+import { Card, CardContent } from '../../components/ui/card';
+import { cn } from '../../components/ui/utils';
 
 type EntityBrowserCardProps = {
   title: string;
