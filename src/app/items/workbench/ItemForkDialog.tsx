@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 import type { ForkDefinitionTarget } from '../../../infrastructure/inventory/item-catalog-service';
-import type { WorldProfileVm } from '../../../modules/worlds/types/world.types';
+import type { WorldProfileVm } from '../../../domains/world/contracts/world.types';
 
 export interface ItemForkDialogProps {
   open: boolean;

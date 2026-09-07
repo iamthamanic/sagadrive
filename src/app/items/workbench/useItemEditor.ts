@@ -17,7 +17,7 @@ import {
   type ForkDefinitionTarget,
 } from '../../../infrastructure/inventory/item-catalog-service';
 import { setNavigationBlocker } from '../../shell/routing';
-import { useWorldProfiles } from '../../../modules/worlds/hooks/useWorldProfiles';
+import { useWorldProfiles } from '../../world/profile-editor';
 import {
   applyTypeEntry,
   buildWorkbenchDraft,

@@ -1,13 +1,17 @@
+/**
+ * useWorldProfiles — App hook for world profile list/CRUD.
+ * Location: src/app/world/profile-editor/useWorldProfiles.ts
+ */
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../lib/auth-context';
 import { ENTITY_CACHE_KEYS, entityCache } from '../../../lib/entityCache';
 import { useCachedEntityList } from '../../../lib/useCachedEntityList';
-import { worldProfileService } from '../services/worldProfile.service';
+import { worldProfileService } from '../../../infrastructure/world/world-profile-service';
 import type {
   CreateWorldProfileDto,
   UpdateWorldProfileDto,
   WorldProfileVm,
-} from '../types/world.types';
+} from '../../../domains/world/contracts/world.types';
 
 interface UseWorldProfilesOptions {
   enabled?: boolean;

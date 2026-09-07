@@ -1,3 +1,7 @@
+/**
+ * WorldProfileEditorDialog — Vertical slice: create/edit world profile + modules.
+ * Location: src/app/world/profile-editor/WorldProfileEditorDialog.tsx
+ */
 import { useEffect, useState } from 'react';
 import { Puzzle } from 'lucide-react';
 import { Badge } from '../../../components/ui/badge';
@@ -15,14 +19,13 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
+import { WorldItemCatalogModuleSection, WorldItemCatalogSection } from '../item-catalog';
 import {
   WORLD_MODULE_REGISTRY,
   getWorldModuleSettingValue,
   setWorldModuleSettingValue,
-} from '../worldModuleRegistry';
-import type { CreateWorldProfileDto, WorldModuleConfigMap, WorldProfileVm } from '../types/world.types';
-import { WorldItemCatalogModuleSection } from './WorldItemCatalogModuleSection';
-import { WorldItemCatalogSection } from './WorldItemCatalogSection';
+} from '../../../domains/world/worldModuleRegistry';
+import type { CreateWorldProfileDto, WorldModuleConfigMap, WorldProfileVm } from '../../../domains/world/contracts/world.types';
 
 interface WorldProfileEditorDialogProps {
   open: boolean;

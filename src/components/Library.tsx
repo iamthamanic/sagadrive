@@ -11,14 +11,14 @@ import type { ProjectSummaryVm } from '../domains/project/contracts/project.type
 import { useAuth } from '../lib/auth-context';
 import { EntityBrowser, type EntityBrowserRenderContext } from './EntityBrowser';
 import { EntityBrowserCard } from './EntityBrowserCard';
-import { getSpeciesDevelopmentMode } from '../modules/worlds/worldModuleRegistry';
-import { useWorldProfiles } from '../modules/worlds/hooks/useWorldProfiles';
-import type { CreateWorldProfileDto, WorldProfileVm } from '../modules/worlds/types/world.types';
+import { getSpeciesDevelopmentMode } from '../domains/world/worldModuleRegistry';
+import { useWorldProfiles } from '../app/world/profile-editor';
+import type { CreateWorldProfileDto, WorldProfileVm } from '../domains/world/contracts/world.types';
 import { toast } from 'sonner';
 import { setCharacterEditorBootstrap } from '../app/character/shared/characterEditorBootstrap';
 
 const WorldProfileEditorDialog = lazy(() =>
-  import('../modules/worlds/components/WorldProfileEditorDialog').then((module) => ({
+  import('../app/world/profile-editor/WorldProfileEditorDialog').then((module) => ({
     default: module.WorldProfileEditorDialog,
   })),
 );
