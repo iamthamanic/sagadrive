@@ -18,7 +18,7 @@ const CharacterEditor = lazy(() =>
   import('./components/CharacterEditor').then((module) => ({ default: module.CharacterEditor })),
 );
 const GamemasterPanel = lazy(() =>
-  import('./components/GamemasterPanel').then((module) => ({ default: module.GamemasterPanel })),
+  import('./app/session/GamemasterPanel').then((module) => ({ default: module.GamemasterPanel })),
 );
 const Marketplace = lazy(() =>
   import('./components/Marketplace').then((module) => ({ default: module.Marketplace })),

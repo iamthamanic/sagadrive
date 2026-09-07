@@ -1,5 +1,9 @@
-import { supabase } from '../../../lib/supabase';
-import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+/**
+ * session-service — Session persistence/API adapter.
+ * Location: src/infrastructure/session/session-service.ts
+ */
+import { supabase } from '../../lib/supabase';
+import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import type {
   SessionDto,
   SessionVm,
@@ -7,7 +11,7 @@ import type {
   JoinSessionDto,
   SessionPlayerDto,
   SessionPlayerVm,
-} from '../types/session.types';
+} from '../../domains/session/contracts/session.types';
 
 /**
  * Session Service
@@ -199,9 +203,11 @@ class SessionService {
     }
 
     // 3. Extract sessions from player records and filter out completed ones
-    const playerSessions = (playerRecords || [])
-      .map((record: any) => record.sessions)
-      .filter((session: SessionDto) => session.status !== 'completed');
+    type PlayerSessionJoinRow = { sessions: SessionDto | SessionDto[] | null };
+    const playerSessions = ((playerRecords || []) as PlayerSessionJoinRow[])
+      .map((record) => record.sessions)
+      .flatMap((session) => (Array.isArray(session) ? session : session ? [session] : []))
+      .filter((session) => session.status !== 'completed');
 
     // 4. Combine GM sessions and player sessions (avoid duplicates)
     const allSessionIds = new Set<string>();

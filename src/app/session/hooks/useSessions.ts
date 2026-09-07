@@ -1,6 +1,10 @@
+/**
+ * useSessions — App-slice hook for session create/join/leave.
+ * Location: src/app/session/hooks/useSessions.ts
+ */
 import { useState, useEffect, useCallback } from 'react';
-import { sessionService } from '../services/session.service';
-import type { SessionVm, CreateSessionDto, JoinSessionDto } from '../types/session.types';
+import { sessionService } from '../../../infrastructure/session/session-service';
+import type { SessionVm, CreateSessionDto, JoinSessionDto } from '../../../domains/session/contracts/session.types';
 
 interface UseSessionsReturn {
   sessions: SessionVm[];
