@@ -31,8 +31,8 @@ const loreService = read('src/modules/characters/lore/service.ts');
 const rulesetMigration = read('supabase/migrations/005_character_ruleset_metadata.sql');
 const portraitStorageMigration = read('supabase/migrations/006_character_portrait_storage.sql');
 const sagaDriveProfileMigration = read('supabase/migrations/007_sagadrive_character_profile.sql');
-const projectTypes = read('src/modules/projects/types/project.types.ts');
-const projectService = read('src/modules/projects/services/project.service.ts');
+const projectTypes = read('src/domains/project/contracts/project.types.ts');
+const projectService = read('src/infrastructure/project/project-service.ts');
 
 requireMatch(runtime, /this\.applyAppearance\(this\.currentAvatar \?\? avatar, this\.currentManifest \?\? manifest\)/, 'latest avatar appearance replay after async model load');
 requireMatch(editor, /ruleset_key:\s*ruleset/, 'SagaDrive Core ruleset in CharacterEditor save payload');

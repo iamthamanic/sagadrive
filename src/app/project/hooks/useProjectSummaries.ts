@@ -1,13 +1,13 @@
 /**
  * Cached project summaries for Bibliothek/Dashboard list views.
- * Location: src/modules/projects/hooks/useProjectSummaries.ts
+ * Location: src/app/project/hooks/useProjectSummaries.ts
  */
 
 import { useCallback } from 'react';
 import { ENTITY_CACHE_KEYS } from '../../../lib/entityCache';
 import { useCachedEntityList } from '../../../lib/useCachedEntityList';
-import { projectService } from '../services/project.service';
-import type { ProjectSummaryVm } from '../types/project.types';
+import { projectService } from '../../../infrastructure/project/project-service';
+import type { ProjectSummaryVm } from '../../../domains/project/contracts/project.types';
 
 interface UseProjectSummariesOptions {
   enabled?: boolean;

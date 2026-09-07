@@ -1,11 +1,15 @@
+/**
+ * ProjectJoin — Vertical slice: create or join a project by code.
+ * Location: src/app/project/ProjectJoin.tsx
+ */
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Plus, LogIn, Copy, Check, ArrowLeft } from 'lucide-react';
-import { useProjects } from '../modules/projects';
+import { useProjects } from './hooks/useProjects';
 import { toast } from 'sonner';
 
 interface ProjectJoinProps {

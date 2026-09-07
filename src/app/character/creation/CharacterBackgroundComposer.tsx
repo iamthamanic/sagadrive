@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
-import { useProjects } from '../../../modules/projects';
+import { useProjects } from '../../project/hooks/useProjects';
 import { buildCharacterBackgroundExamples } from '../../../modules/characters/lore/examples';
 import { characterLoreService } from '../../../modules/characters/lore/service';
 import type { CharacterLoreContext } from '../../../modules/characters/lore/types';

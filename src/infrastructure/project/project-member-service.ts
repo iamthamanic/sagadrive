@@ -1,9 +1,10 @@
-// ============================================
-// PROJECT MEMBERS - Service Layer
-// ============================================
+/**
+ * project-member-service — Supabase adapter for project membership RPCs.
+ * Location: src/infrastructure/project/project-member-service.ts
+ */
 
-import { supabase } from '../../../lib/supabase';
-import type { ProjectMemberDto, JoinProjectDto } from '../types/project.types';
+import { supabase } from '../../lib/supabase';
+import type { ProjectMemberDto, JoinProjectDto } from '../../domains/project/contracts/project.types';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
