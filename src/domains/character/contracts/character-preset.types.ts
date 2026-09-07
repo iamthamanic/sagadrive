@@ -1,6 +1,6 @@
 /**
  * characterPreset.types — Versioned character sheet presets (SagaDrive Core MVP).
- * Location: src/modules/characters/types/characterPreset.types.ts
+ * Location: src/domains/character/contracts/character-preset.types.ts
  *
  * Skill provenance lives only on sagadrive_profile (freeSkillRanks, backgroundSkillPoints,
  * archetypeTrainingSkill, skillAdvances, specializations) — no parallel top-level freeSkillRanks.

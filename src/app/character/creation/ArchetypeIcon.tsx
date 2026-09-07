@@ -1,6 +1,6 @@
 /**
  * ArchetypeIcon — Lucide icon for each SagaDrive primary archetype option.
- * Location: src/modules/characters/components/ArchetypeIcon.tsx
+ * Location: src/app/character/creation/ArchetypeIcon.tsx
  */
 import {
   Brain,

@@ -1,7 +1,7 @@
 /**
  * useCarouselScrollSync — Ref-based Embla scroll sync: index tracking, programmatic
  * scroll-to-selection, skipSelect guard, optional scroll-phase debounce for connectors.
- * Location: src/modules/characters/hooks/useCarouselScrollSync.ts
+ * Location: src/app/character/shared/useCarouselScrollSync.ts
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CarouselApi } from '../../../components/ui/carousel';

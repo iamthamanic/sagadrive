@@ -1,12 +1,12 @@
 /**
  * characterPreset.service — Owner-scoped CRUD + append-only Level versions for character presets.
- * Location: src/modules/characters/services/characterPreset.service.ts
+ * Location: src/infrastructure/character/character-preset-service.ts
  */
-import { supabase } from '../../../lib/supabase';
-import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
-import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../../lib/networkTimeout';
-import { normalizeCharacterAppearance, normalizeSafeUrl } from '../avatar';
-import { assertValidSagaDriveCharacterPersistence } from '../../../domains/character';
+import { supabase } from '../../lib/supabase';
+import { getAuthenticatedUserId } from '../../lib/authenticatedUser';
+import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../lib/networkTimeout';
+import { normalizeCharacterAppearance, normalizeSafeUrl } from '../../modules/characters/avatar';
+import { assertValidSagaDriveCharacterPersistence } from '../../domains/character';
 import {
   SAGA_DRIVE_SPECIES_TRAIT_BUDGET,
   createEmptySagaDriveSkillRanks,
@@ -16,8 +16,8 @@ import {
   sagaDriveSkillDefinitions,
   type CharacterRulesetKey,
   type SagaDriveSkillKey,
-} from '../../../domains/rules/sagadrive/character-creation';
-import type { CharacterAttributesDto, CharacterGenderReading, SagaDriveProfileDto } from '../types/character.types';
+} from '../../domains/rules/sagadrive/character-creation';
+import type { CharacterAttributesDto, CharacterGenderReading, SagaDriveProfileDto } from '../../domains/character';
 import type {
   CharacterPresetDto,
   CharacterPresetOrigin,
@@ -26,7 +26,7 @@ import type {
   CharacterPresetVm,
   CreateCharacterPresetInput,
   ReleaseCharacterPresetVersionInput,
-} from '../types/characterPreset.types';
+} from '../../domains/character/contracts/character-preset.types';
 
 const TABLE = 'character_presets';
 

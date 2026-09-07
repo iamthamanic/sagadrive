@@ -1,6 +1,6 @@
 /**
  * CharacterStatisticsPanel — Adventure arcs + development timeline for a saved character.
- * Location: src/modules/characters/components/CharacterStatisticsPanel.tsx
+ * Location: src/app/character/progression/CharacterStatisticsPanel.tsx
  */
 import { useEffect, useState } from 'react';
 import { Loader2, Plus } from 'lucide-react';
@@ -11,11 +11,11 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Textarea } from '../../../components/ui/textarea';
-import { characterAdventureArcService } from '../../../modules/characters/services/characterAdventureArc.service';
+import { characterAdventureArcService } from '../../../infrastructure/character/character-adventure-arc-service';
 import type {
   CharacterAdventureArcVm,
   CharacterAdventureDevelopmentKind,
-} from '../../../modules/characters/types/characterAdventureArc.types';
+} from '../../../domains/character/contracts/character-adventure-arc.types';
 
 const DEVELOPMENT_KIND_OPTIONS: ReadonlyArray<{ value: CharacterAdventureDevelopmentKind; label: string }> = [
   { value: 'note', label: 'Notiz' },

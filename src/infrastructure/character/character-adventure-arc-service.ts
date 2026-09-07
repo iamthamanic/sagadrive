@@ -1,8 +1,8 @@
 /**
  * characterAdventureArc.service — Sync memberships to arcs and persist developments.
- * Location: src/modules/characters/services/characterAdventureArc.service.ts
+ * Location: src/infrastructure/character/character-adventure-arc-service.ts
  */
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import type {
   AppendAdventureDevelopmentInput,
   CharacterAdventureArcDto,
@@ -10,7 +10,7 @@ import type {
   CharacterAdventureArcVm,
   CharacterAdventureDevelopmentDto,
   CharacterAdventureDevelopmentKind,
-} from '../types/characterAdventureArc.types';
+} from '../../domains/character/contracts/character-adventure-arc.types';
 
 const TABLE = 'character_adventure_arcs';
 

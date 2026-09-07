@@ -1,11 +1,6 @@
-// Character Module Exports
-export * from './types/character.types';
-export * from './types/characterAdventureArc.types';
-export * from './types/characterPreset.types';
-export * from './services/character.service';
-export * from './services/characterAdventureArc.service';
-export * from './services/characterPreset.service';
-export * from './hooks/useCharacters';
-export * from './hooks/useCharacterSummaries';
-export * from './characterEditorBootstrap';
+/**
+ * characters legacy module — Avatar + Lore only until #172 migrates them.
+ * Location: src/modules/characters/index.ts
+ */
+export * from './avatar';
 export * from './lore';

@@ -14,7 +14,7 @@ import {
   type SagaDriveAttributeKey,
   type SagaDriveSkillKey,
 } from '../../../domains/rules/sagadrive/character-creation';
-import type { CharacterAttributesDto } from '../../../modules/characters/types/character.types';
+import type { CharacterAttributesDto } from '../../../domains/character';
 import {
   getSagaDriveSkillCap,
   resolveSagaDriveSkillRanksSafe,
@@ -23,7 +23,7 @@ import {
   type SagaDriveSpecializationRecordDto,
   type SagaDriveStartSkillBuild,
 } from '../../../domains/rules/sagadrive/skill-progression';
-import type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
+import type { CarouselScrollPhase } from '../../../app/character/shared/carousel.types';
 import { AttributeSkillConnector } from './AttributeSkillConnector';
 import { AttributeSkillNode } from './AttributeSkillNode';
 import { AttributeSkillsCarousel } from './AttributeSkillsCarousel';

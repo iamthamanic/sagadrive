@@ -1,7 +1,7 @@
 /**
  * SpeciesTraitOptionItem — Select-Option mit Beschreibung am Eintrag.
  * Label geht in ItemText (Trigger); Beschreibung bleibt nur in der offenen Liste sichtbar.
- * Location: src/modules/characters/components/SpeciesTraitOptionItem.tsx
+ * Location: src/app/character/creation/SpeciesTraitOptionItem.tsx
  */
 import * as SelectPrimitive from '@radix-ui/react-select@2.1.6';
 import { CheckIcon } from 'lucide-react';

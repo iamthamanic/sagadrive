@@ -1,7 +1,7 @@
 /**
  * SpeciesBannerFlag — Rechteckiges Spezies-Wappen oben links im Karussell.
  * Shimmer-Overlay in Wappen-Akzentfarbe pro Spezies.
- * Location: src/modules/characters/components/SpeciesBannerFlag.tsx
+ * Location: src/app/character/creation/SpeciesBannerFlag.tsx
  */
 import type { CSSProperties } from 'react';
 import { getSpeciesBannerUrl, getSpeciesColorway } from './speciesBanners';

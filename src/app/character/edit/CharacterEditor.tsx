@@ -3,17 +3,17 @@ import { Camera, CheckCircle2, CircleHelp, Eye, Save, Upload, X } from 'lucide-r
 import { toast } from 'sonner@2.0.3';
 import { AvatarCanvas } from '../../../modules/characters/avatar/AvatarCanvas';
 import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../modules/characters/avatar';
-import { characterService } from '../../../modules/characters/services/character.service';
+import { characterService } from '../../../infrastructure/character/character-service';
 import type {
   AbilityDto,
   CharacterAppearanceDto,
   CharacterAttributesDto,
   CharacterGenderReading,
-  CharacterLoreContext,
   ItemDto,
   SagaDriveProfileDto,
   SagaDriveSpeciesTraitInstanceDto,
-} from '../../../modules/characters';
+} from '../../../domains/character';
+import type { CharacterLoreContext } from '../../../modules/characters/lore/types';
 import { AttributeD20Icon } from '../../../components/AttributeD20Icon';
 import { DerivedStatCard } from '../../../components/DerivedStatCard';
 import { AttributeDerivedConnector } from '../../../components/AttributeDerivedConnector';
@@ -45,9 +45,9 @@ import {
 } from '../../../domains/character/inventory-v2';
 import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
 import { takeCharacterEditorBootstrap, clearCharacterEditorBootstrap } from '../shared/characterEditorBootstrap';
-import { assertValidSnapshot, characterPresetService } from '../../../modules/characters/services/characterPreset.service';
+import { assertValidSnapshot, characterPresetService } from '../../../infrastructure/character/character-preset-service';
 import { normalizeSafeUrl } from '../../../modules/characters/avatar';
-import type { CharacterPresetReleaseMode, CharacterPresetSnapshot } from '../../../modules/characters/types/characterPreset.types';
+import type { CharacterPresetReleaseMode, CharacterPresetSnapshot } from '../../../domains/character/contracts/character-preset.types';
 import { buildSagaDriveDerivedStatCards } from './map-derived-stat-cards';
 import { getSagaDriveBackgroundTemplate } from '../../../domains/rules/sagadrive/background-templates';
 import {

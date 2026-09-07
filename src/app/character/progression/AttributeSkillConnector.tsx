@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SagaDriveSkillKey } from '../../../domains/rules/sagadrive/character-creation';
-import type { CarouselScrollPhase } from '../../../modules/characters/hooks/carousel.types';
+import type { CarouselScrollPhase } from '../../../app/character/shared/carousel.types';
 
 interface AttributeSkillConnectorProps {
   skills: readonly SagaDriveSkillKey[];

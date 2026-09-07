@@ -24,7 +24,7 @@ for (const [name, entry] of Object.entries(entries)) {
   execFileSync(esbuild, [join(root, entry), '--bundle', '--format=esm', `--outfile=${join(outdir, `${name}.mjs`)}`], { stdio: 'inherit' });
 }
 execFileSync(esbuild, [
-  join(root, 'src/modules/characters/services/characterPreset.service.ts'),
+  join(root, 'src/infrastructure/character/character-preset-service.ts'),
   '--bundle',
   '--format=esm',
   `--outfile=${join(outdir, 'preset.mjs')}`,

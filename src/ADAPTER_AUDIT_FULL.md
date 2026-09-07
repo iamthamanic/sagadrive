@@ -83,7 +83,7 @@ Das SagaDrive-Projekt ist **stark an Supabase gekoppelt**. Alle Module (Characte
 | `/lib/supabase.ts` | `import { createClient } from '@supabase/supabase-js'` | **Haupt-Client** (exportiert `supabase`) | 1 |
 | `/lib/auth-context.tsx` | `import { supabase } from './supabase'` | Auth Context | 2 |
 | `/lib/auth-context.tsx` | `import type { User } from '@supabase/supabase-js'` | Type Import | 3 |
-| `/modules/characters/services/character.service.ts` | `import { supabase } from '../../../lib/supabase'` | DB-Operationen | 1 |
+| `/infrastructure/character/character-service.ts` | `import { supabase } from '../../../lib/supabase'` | DB-Operationen | 1 |
 | `/modules/sessions/services/session.service.ts` | `import { supabase } from '../../../lib/supabase'` | DB-Operationen | 1 |
 | `/modules/projects/services/project.service.ts` | `import { supabase } from '../../../lib/supabase'` | DB-Operationen | 1 |
 | `/modules/marketplace/services/marketplace.service.ts` | `import { supabase } from '../../../lib/supabase'` | DB-Operationen | 1 |
@@ -99,7 +99,7 @@ Das SagaDrive-Projekt ist **stark an Supabase gekoppelt**. Alle Module (Characte
 
 ### 🔴 DB-Operationen (`.from()`, `.select()`, `.insert()`, `.update()`, `.delete()`)
 
-#### `/modules/characters/services/character.service.ts` (CLIENT-SIDE)
+#### `/infrastructure/character/character-service.ts` (CLIENT-SIDE)
 
 **getUserCharacters()** – Zeilen 42-53:
 ```typescript
@@ -306,10 +306,10 @@ if (!user) {
 
 | Datei | Methode | Zeile |
 |-------|---------|-------|
-| `/modules/characters/services/character.service.ts` | `getUserCharacters()` | 42 |
-| `/modules/characters/services/character.service.ts` | `createCharacter()` | 87 |
-| `/modules/characters/services/character.service.ts` | `searchCharacters()` | 175 |
-| `/modules/characters/services/character.service.ts` | `uploadPortrait()` | 200 |
+| `/infrastructure/character/character-service.ts` | `getUserCharacters()` | 42 |
+| `/infrastructure/character/character-service.ts` | `createCharacter()` | 87 |
+| `/infrastructure/character/character-service.ts` | `searchCharacters()` | 175 |
+| `/infrastructure/character/character-service.ts` | `uploadPortrait()` | 200 |
 | `/modules/sessions/services/session.service.ts` | `createSession()` | 61 |
 | `/modules/sessions/services/session.service.ts` | `joinSession()` | 95 |
 | `/modules/sessions/services/session.service.ts` | `getUserSessions()` | 173 |
@@ -324,7 +324,7 @@ if (!user) {
 
 ### 🟡 Storage-Aufrufe (`.storage.*`)
 
-#### `/modules/characters/services/character.service.ts` (CLIENT → BFF)
+#### `/infrastructure/character/character-service.ts` (CLIENT → BFF)
 
 **uploadPortrait()** – Zeilen 200-227:
 ```typescript
@@ -512,7 +512,7 @@ export const publicAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." // JWT AN
 
 | Operation | Fundstelle | Client/Server | Methode | Zeile |
 |-----------|-----------|---------------|---------|-------|
-| **Upload (Client → BFF)** | `/modules/characters/services/character.service.ts` | CLIENT | `fetch()` zu BFF | 209-218 |
+| **Upload (Client → BFF)** | `/infrastructure/character/character-service.ts` | CLIENT | `fetch()` zu BFF | 209-218 |
 | **Upload (BFF → Storage)** | `/supabase/functions/server/index.tsx` | SERVER | `supabaseAdmin.storage.upload()` | 106-116 |
 | **Signed URL (BFF)** | `/supabase/functions/server/index.tsx` | SERVER | `supabaseAdmin.storage.createSignedUrl()` | 119-126 |
 | **Get Signed URL (BFF)** | `/supabase/functions/server/index.tsx` | SERVER | `supabaseAdmin.storage.createSignedUrl()` | 158-165 |
@@ -656,7 +656,7 @@ export const publicAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." // JWT AN
 - Migrations-Pfad zu anderem Backend erfordert **vollständiges Rewrite** aller Services
 
 **Betroffene Dateien (5 Module):**
-- `/modules/characters/services/character.service.ts`
+- `/infrastructure/character/character-service.ts`
 - `/modules/sessions/services/session.service.ts`
 - `/modules/projects/services/project.service.ts`
 - `/modules/marketplace/services/marketplace.service.ts`
@@ -949,7 +949,7 @@ const user = await authAdapter.getCurrentUser();
 #### 2. **Storage-URL parametrisieren**
 
 **Betroffene Dateien:**
-- `/modules/characters/services/character.service.ts` (Zeile 210)
+- `/infrastructure/character/character-service.ts` (Zeile 210)
 
 **Strategie:**
 
@@ -1438,7 +1438,7 @@ export class ConvexAdapter implements IDbAdapter {
 | **`/lib/supabase.ts`** | Client Init | `createClient()` | CLIENT | 1, 6, 15 | 2 |
 | **`/lib/auth-context.tsx`** | Auth | `.auth.getSession()`, `.auth.onAuthStateChange()`, `.auth.signInWithPassword()`, `.auth.signUp()`, `.auth.signOut()` | CLIENT | 21, 29, 37, 45, 53 | 5 |
 | **`/utils/supabase/info.tsx`** | Config | Hardcoded `projectId`, `publicAnonKey` | CLIENT | 3-4 | - |
-| **`/modules/characters/services/character.service.ts`** | DB + Auth | `.auth.getUser()` (4x), `.auth.getSession()` (1x), `.from()` (6x), `.select()` (4x), `.insert()` (1x), `.update()` (1x), `.delete()` (1x) | CLIENT | 42, 48, 66, 87, 123, 140, 161, 175, 181, 200, 209 | 18 |
+| **`/infrastructure/character/character-service.ts`** | DB + Auth | `.auth.getUser()` (4x), `.auth.getSession()` (1x), `.from()` (6x), `.select()` (4x), `.insert()` (1x), `.update()` (1x), `.delete()` (1x) | CLIENT | 42, 48, 66, 87, 123, 140, 161, 175, 181, 200, 209 | 18 |
 | **`/modules/sessions/services/session.service.ts`** | DB + Auth | `.auth.getUser()` (4x), `.from()` (10+x), `.select()`, `.insert()`, `.update()`, `.delete()` | CLIENT | 61, 77, 95, 173, 268, ... | 20+ |
 | **`/modules/projects/services/project.service.ts`** | DB + Auth | `.auth.getUser()` (4x), `.from()` (10+x), `.select()`, `.insert()`, `.update()` | CLIENT | 94, 122, 136, 204, 318, ... | 20+ |
 | **`/modules/marketplace/services/marketplace.service.ts`** | DB + RPC | `.auth.getUser()` (1x), `.from()` (3x), `.select()`, `.rpc()` | CLIENT | 16, 63, 129, 221 | 6 |

@@ -8,7 +8,7 @@ import {
   getSagaDriveSkill,
   type SagaDriveSkillKey,
 } from '../../../domains/rules/sagadrive/character-creation';
-import type { CharacterAttributesDto } from '../../../modules/characters/types/character.types';
+import type { CharacterAttributesDto } from '../../../domains/character';
 import {
   SAGA_DRIVE_SPECIALIZATION_BONUS,
   getSagaDriveAppliedExperienceBonus,

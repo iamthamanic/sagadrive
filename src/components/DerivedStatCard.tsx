@@ -5,7 +5,7 @@
  * Location: src/components/DerivedStatCard.tsx
  */
 import { useEffect, useRef, useState } from 'react';
-import { RuleHelp } from '../modules/characters/components/RuleHelp';
+import { RuleHelp } from '../app/character/shared/RuleHelp';
 
 export interface DerivedStatTerm {
   label: string;

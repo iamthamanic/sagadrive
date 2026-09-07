@@ -1,6 +1,6 @@
 /**
  * SkillIcon — Lucide icon for each SagaDrive skill option in selects and lists.
- * Location: src/modules/characters/components/SkillIcon.tsx
+ * Location: src/app/character/progression/SkillIcon.tsx
  */
 import {
   BookOpen,

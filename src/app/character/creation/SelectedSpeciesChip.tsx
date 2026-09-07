@@ -1,7 +1,7 @@
 /**
  * SelectedSpeciesChip — Compact Spezies Wappen + label for the preview name row.
  * Shows beside the Charaktername input when a Spezies is selected.
- * Location: src/modules/characters/components/SelectedSpeciesChip.tsx
+ * Location: src/app/character/creation/SelectedSpeciesChip.tsx
  */
 import { getCharacterCreationOptionLabel, sagaDriveRaceOptions } from '../../../domains/rules/sagadrive/character-creation';
 import { getSpeciesBannerUrl } from './speciesBanners';

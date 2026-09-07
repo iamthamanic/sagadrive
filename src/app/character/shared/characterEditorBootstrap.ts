@@ -1,9 +1,8 @@
 /**
  * characterEditorBootstrap — One-shot draft for opening CharacterEditor from a preset.
  * Location: src/app/character/shared/characterEditorBootstrap.ts
- * Canonical home since the post-merge hardening; src/modules/** keeps only a compatibility barrel.
  */
-import type { CharacterPresetSnapshot } from '../../../modules/characters/types/characterPreset.types';
+import type { CharacterPresetSnapshot } from '../../../domains/character/contracts/character-preset.types';
 
 export type CharacterEditorBootstrap =
   | {

@@ -1,5 +1,5 @@
 import { Badge } from '../../../components/ui/badge';
-import type { AbilityDto } from '../../../modules/characters/types/character.types';
+import type { AbilityDto } from '../../../domains/character';
 import { RuleHelp } from './RuleHelp';
 
 interface CharacterAbilitiesPanelProps {

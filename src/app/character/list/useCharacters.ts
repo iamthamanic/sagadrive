@@ -1,6 +1,10 @@
+/**
+ * useCharacters — App hook for full character list CRUD.
+ * Location: src/app/character/list/useCharacters.ts
+ */
 import { useState, useEffect, useCallback } from 'react';
-import { characterService } from '../services/character.service';
-import type { CharacterVm, CreateCharacterDto, UpdateCharacterDto } from '../types/character.types';
+import { characterService } from '../../../infrastructure/character/character-service';
+import type { CharacterVm, CreateCharacterDto, UpdateCharacterDto } from '../../../domains/character';
 
 interface UseCharactersReturn {
   characters: CharacterVm[];

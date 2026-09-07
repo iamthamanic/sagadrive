@@ -1,6 +1,6 @@
 /**
  * skillRuleHelp — Gemeinsame Tooltip-Inhalte und abgeleitete Hinweise für SagaDrive-Fertigkeiten.
- * Location: src/modules/characters/components/skillRuleHelp.tsx
+ * Location: src/app/character/progression/skillRuleHelp.tsx
  */
 import {
   getSagaDriveAttribute,

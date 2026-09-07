@@ -1,8 +1,8 @@
 /**
  * genderReading — Labels and helpers for character gender-reading options.
- * Location: src/modules/characters/utils/genderReading.ts
+ * Location: src/domains/character/use-cases/genderReading.ts
  */
-import type { CharacterGenderReading } from '../types/character.types';
+import type { CharacterGenderReading } from '../domain/character.entity';
 
 export const GENDER_READING_OPTIONS: readonly {
   value: CharacterGenderReading;

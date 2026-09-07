@@ -1,7 +1,7 @@
 /**
  * speciesBanners — Flat-color heraldic coat of arms per SagaDrive Spezies.
  * Style: bold logo, distinct colors/patterns, no shading, uniform 400×512px RGB.
- * Location: src/modules/characters/components/speciesBanners.ts
+ * Location: src/app/character/creation/speciesBanners.ts
  */
 import alienBanner from '../../../assets/species/banners/alien.png';
 import cyborgBanner from '../../../assets/species/banners/cyborg.png';

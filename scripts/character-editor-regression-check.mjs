@@ -218,7 +218,11 @@ requireMatch(abilitiesMigration, /ADD COLUMN IF NOT EXISTS abilities JSONB/, 'ab
 requireMatch(abilitiesMigration, /ADD COLUMN IF NOT EXISTS emotion_profiles JSONB/, 'emotion_profiles column migration');
 requireMatch(characterRepository, /abilities:\s*payload\.abilities \?\? \[\]/, 'abilities persisted on create');
 requireMatch(read('src/infrastructure/character/character-service.ts'), /invalidate\(ENTITY_CACHE_KEYS\.characterSummaries\)/, 'character list cache invalidation after writes');
-requireMatch(read('src/modules/characters/characterEditorBootstrap.ts'), /export \* from '\.\.\/\.\.\/app\/character\/shared\/characterEditorBootstrap'/, 'legacy bootstrap path is a compatibility barrel');
+rejectMatch(
+  read('src/modules/characters/index.ts'),
+  /characterEditorBootstrap|character\.service|characterPreset|characterAdventureArc|useCharacterSummaries/,
+  'modules/characters index still re-exports migrated character-core paths',
+);
 requireMatch(read('src/app/character/shared/characterEditorBootstrap.ts'), /kind:\s*'character-edit'/, 'character-edit bootstrap implementation in character app slice');
 requireMatch(read('src/components/Library.tsx'), /app\/character\/shared\/characterEditorBootstrap/, 'library imports canonical bootstrap path');
 requireMatch(read('src/app/character/edit/CharacterEditor.tsx'), /hydrateEditorFromPersistedCharacter/, 'editor hydrate from persisted character');
@@ -237,8 +241,8 @@ requireMatch(projectTypes, /status: 'active' \| 'paused' \| 'completed' \| 'arch
 requireMatch(projectService, /value === 'active' \|\| value === 'paused' \|\| value === 'completed' \|\| value === 'archived'/, 'legacy archived project runtime validation');
 
 const adventureArcMigration = read('supabase/migrations/009_character_adventure_arcs.sql');
-const adventureArcTypes = read('src/modules/characters/types/characterAdventureArc.types.ts');
-const adventureArcService = read('src/modules/characters/services/characterAdventureArc.service.ts');
+const adventureArcTypes = read('src/domains/character/contracts/character-adventure-arc.types.ts');
+const adventureArcService = read('src/infrastructure/character/character-adventure-arc-service.ts');
 const notesSection = read('src/app/character/progression/CharacterNotesSection.tsx');
 const statisticsPanel = read('src/app/character/progression/CharacterStatisticsPanel.tsx');
 

@@ -91,7 +91,7 @@ export class SupabaseAuthAdapter implements IAuthAdapter {
 ### 2. Storage-URL parametrisieren
 
 **Risiko:** Niedrig  
-**Betroffene Dateien:** `/modules/characters/services/character.service.ts`
+**Betroffene Dateien:** `/infrastructure/character/character-service.ts`
 
 ```typescript
 // /lib/config.ts

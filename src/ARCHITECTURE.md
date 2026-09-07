@@ -36,7 +36,7 @@ SagaDrive uses a **Modular Monolith** with explicit layers:
 
 | Path | Status |
 |------|--------|
-| `src/modules/**` | Frozen (#165). Shrink only via domain migrations (#166–#172). Never add files. `modules/rulesets` removed in #166; `modules/projects` removed in #167; `modules/sessions` removed in #168; `modules/worlds` removed in #169; `modules/marketplace` removed in #170. |
+| `src/modules/**` | Frozen (#165). Shrink only via domain migrations (#166–#172). Never add files. `modules/rulesets` removed in #166; `modules/projects` removed in #167; `modules/sessions` removed in #168; `modules/worlds` removed in #169; `modules/marketplace` removed in #170; character-core outside avatar/lore removed in #171. |
 | `src/components/**` except `components/ui/**` | Frozen feature/shell screens (#165). Migrate to `app/**` / `shared/ui` (#173–#174). |
 | `src/components/ui/**` | Temporary UI kit; move to `shared/ui` in #174. |
 

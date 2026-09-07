@@ -1,7 +1,7 @@
 /**
  * useSelectionGraph — Pool vs. selected node visibility for multi-pick graphs
  * (Background training: 4 pool nodes, swap at 2/2, optional edit mode).
- * Location: src/modules/characters/hooks/useSelectionGraph.ts
+ * Location: src/app/character/shared/useSelectionGraph.ts
  */
 import { useCallback, useEffect, useState } from 'react';
 

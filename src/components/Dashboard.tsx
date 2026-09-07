@@ -3,8 +3,8 @@ import { Button } from './ui/button';
 import { Plus, Users, Gamepad2, TrendingUp, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import { useProjectSummaries } from '../app/project/hooks/useProjectSummaries';
-import { useCharacterSummaries } from '../modules/characters/hooks/useCharacterSummaries';
-import { CreateCharacterEntryDialog } from '../modules/characters/components/CreateCharacterEntryDialog';
+import { useCharacterSummaries } from '../app/character/list/useCharacterSummaries';
+import { CreateCharacterEntryDialog } from '../app/character/creation/CreateCharacterEntryDialog';
 import { useAuth } from '../lib/auth-context';
 
 interface DashboardProps {
