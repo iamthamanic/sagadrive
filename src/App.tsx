@@ -21,7 +21,7 @@ const GamemasterPanel = lazy(() =>
   import('./app/session/GamemasterPanel').then((module) => ({ default: module.GamemasterPanel })),
 );
 const Marketplace = lazy(() =>
-  import('./components/Marketplace').then((module) => ({ default: module.Marketplace })),
+  import('./app/marketplace/browse/Marketplace').then((module) => ({ default: module.Marketplace })),
 );
 const ProjectJoin = lazy(() =>
   import('./app/project/ProjectJoin').then((module) => ({ default: module.ProjectJoin })),

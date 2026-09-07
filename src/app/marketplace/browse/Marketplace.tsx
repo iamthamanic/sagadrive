@@ -1,13 +1,17 @@
+/**
+ * Marketplace — Vertical slice: browse/download marketplace templates.
+ * Location: src/app/marketplace/browse/Marketplace.tsx
+ */
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Badge } from './ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { Badge } from '../../../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Search, Download, Star, TrendingUp, Loader2, Package, Plus } from 'lucide-react';
-import { useMarketplace } from '../modules/marketplace';
-import type { MarketplaceItemType } from '../modules/marketplace';
+import { useMarketplace } from './useMarketplace';
+import type { MarketplaceItemType } from '../../../domains/marketplace/contracts/marketplace.types';
 import { toast } from 'sonner';
 
 export function Marketplace() {

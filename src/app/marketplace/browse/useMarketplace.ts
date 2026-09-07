@@ -1,6 +1,10 @@
+/**
+ * useMarketplace — App hook for marketplace browse/download.
+ * Location: src/app/marketplace/browse/useMarketplace.ts
+ */
 import { useState, useEffect } from 'react';
-import type { MarketplaceItem, MarketplaceFilters } from '../types/marketplace.types';
-import * as marketplaceService from '../services/marketplace.service';
+import type { MarketplaceItem, MarketplaceFilters } from '../../../domains/marketplace/contracts/marketplace.types';
+import * as marketplaceService from '../../../infrastructure/marketplace/marketplace-service';
 
 export function useMarketplace(filters?: MarketplaceFilters) {
   const [items, setItems] = useState<MarketplaceItem[]>([]);

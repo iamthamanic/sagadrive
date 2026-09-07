@@ -75,7 +75,7 @@ interface MarketplaceItem {
 
 ### Get All Items
 ```typescript
-import { useMarketplace } from '../modules/marketplace';
+import { useMarketplace } from '../app/marketplace/browse';
 
 function MyComponent() {
   const { items, isLoading, error } = useMarketplace({
@@ -91,7 +91,7 @@ function MyComponent() {
 
 ### Create Item
 ```typescript
-import { createMarketplaceItem } from '../modules/marketplace';
+import { createMarketplaceItem } from '../app/marketplace/browse';
 
 await createMarketplaceItem({
   type: 'adventure',
@@ -109,7 +109,7 @@ await createMarketplaceItem({
 
 ### Download Item
 ```typescript
-import { useMarketplace } from '../modules/marketplace';
+import { useMarketplace } from '../app/marketplace/browse';
 
 function ItemCard({ item }) {
   const { downloadItem } = useMarketplace();
@@ -204,8 +204,8 @@ Before deploying to production:
 
 ## Related Files
 
-- `/modules/marketplace/` - Business logic
-- `/components/Marketplace.tsx` - UI Component
+- `/app/marketplace/browse/ + /domains/marketplace/ + /infrastructure/marketplace/` - Business logic
+- `/app/marketplace/browse/Marketplace.tsx` - UI Component
 - `/components/MarketplaceTest.tsx` - Test UI (remove in prod)
 - `/supabase/deploy_marketplace.sql` - DB Schema
 - `/supabase/add_marketplace_rpc.sql` - RPC Functions

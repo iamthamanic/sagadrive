@@ -9,7 +9,7 @@ export interface MarketplaceItem {
   description: string | null;
   author_id: string;
   author_name?: string; // Joined from users table
-  data: Record<string, any>; // Item-specific data (flexible JSONB)
+  data: Record<string, unknown>; // Item-specific data (flexible JSONB)
   rating: number;
   downloads: number;
   price: number; // 0.00 = free
@@ -23,7 +23,7 @@ export interface CreateMarketplaceItemDTO {
   type: MarketplaceItemType;
   title: string;
   description?: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   price?: number;
   image_url?: string;
   tags?: string[];
@@ -32,7 +32,7 @@ export interface CreateMarketplaceItemDTO {
 export interface UpdateMarketplaceItemDTO {
   title?: string;
   description?: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   price?: number;
   image_url?: string;
   tags?: string[];
