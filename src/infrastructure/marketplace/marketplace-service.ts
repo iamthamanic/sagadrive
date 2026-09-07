@@ -1,10 +1,14 @@
-import { supabase } from '../../../lib/supabase';
+/**
+ * marketplace-service — Supabase adapter for marketplace catalog/downloads.
+ * Location: src/infrastructure/marketplace/marketplace-service.ts
+ */
+import { supabase } from '../../lib/supabase';
 import type {
   MarketplaceItem,
   CreateMarketplaceItemDTO,
   UpdateMarketplaceItemDTO,
   MarketplaceFilters,
-} from '../types/marketplace.types';
+} from '../../domains/marketplace/contracts/marketplace.types';
 
 /**
  * Get all marketplace items with optional filtering
