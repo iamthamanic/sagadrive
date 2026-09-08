@@ -43,7 +43,9 @@ SagaDrive uses a **Modular Monolith** with explicit layers:
 
 **Forbidden (eradicated):** `src/modules/**`, `src/components/**` — must not exist; recreating fails CI.
 
-**Allowed code-bearing `src/` roots:** `domains/`, `infrastructure/`, `app/`, `shared/`, `lib/`, `utils/`, `supabase/`, `assets/`, `styles/`. Any other directory that contains TypeScript/JS fails the architecture gate.
+**Allowed code-bearing `src/` roots:** `domains/`, `infrastructure/`, `app/`, `shared/`, `lib/`, `utils/`, `supabase/`, `assets/`, `styles/`. Any other directory that contains TypeScript/JS fails the architecture gate. Top-level source under `src/` is limited to composition roots `App.tsx` and `main.tsx` — no ad-hoc `src/FooService.ts`.
+
+**Cross-area imports:** relative and `@/` alias paths are checked the same way. Area barrels (`app/<area>/index.ts`) may re-export own-area internals only; other areas still require that area's public barrel.
 
 Historical freeze baseline (deletion record): `.qa/architecture/legacy-freeze-baseline.json`. No compatibility barrels.
 

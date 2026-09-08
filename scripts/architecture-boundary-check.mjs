@@ -32,6 +32,9 @@ export const ALLOWED_SRC_CODE_ROOTS = new Set([
   'styles',
 ]);
 
+/** Composition-root TS/JS files allowed directly under src/ (not feature dumping). */
+export const ALLOWED_SRC_TOP_LEVEL_FILES = new Set(['App.tsx', 'main.tsx']);
+
 const IMPORT_PATH_RULES = {
   domains: [
     { label: 'React', test: (p) => /^react(?:\/|$)/.test(p) },
@@ -121,6 +124,21 @@ export function resolveRelativeImport(filePath, importPath) {
   return absolute.replace(/^\/+/, '');
 }
 
+/**
+ * Resolve relative (./) and Vite/TS alias (@/) imports to a path under src/.
+ * Example: `@/app/project/hooks/useProjects` → `app/project/hooks/useProjects`
+ */
+export function resolveSrcImport(filePath, importPath) {
+  const normalized = importPath.replace(/\\/g, '/');
+  if (normalized.startsWith('@/')) {
+    return normalized.slice(2).replace(/\.tsx?$/, '');
+  }
+  if (normalized.startsWith('.')) {
+    return resolveRelativeImport(filePath, normalized).replace(/\.tsx?$/, '');
+  }
+  return normalized.replace(/\.tsx?$/, '');
+}
+
 export function getCharacterSliceFromPath(normalizedPath) {
   const match = normalizedPath.replace(/\\/g, '/').match(/app\/character\/(edit|creation|progression)(?:\/|$)/);
   return match?.[1];
@@ -150,9 +168,9 @@ export function checkCharacterCrossSliceImports(filePath, content) {
 
   const violations = [];
   for (const importPath of extractImportPaths(content)) {
-    if (!importPath.startsWith('.')) continue;
+    if (!importPath.startsWith('.') && !importPath.startsWith('@/')) continue;
 
-    const resolved = resolveRelativeImport(filePath, importPath);
+    const resolved = resolveSrcImport(filePath, importPath);
     const targetSlice = getCharacterSliceFromResolvedImport(resolved);
     if (!targetSlice || targetSlice === 'shared' || targetSlice === fromSlice) continue;
 
@@ -186,14 +204,14 @@ export function isAppAreaPublicApi(resolvedImportPath, targetArea) {
 /**
  * Cross-area rule: app/<areaA> may only import app/<areaB> via that area's public barrel
  * (`app/<areaB>` or `app/<areaB>/index`). Private nested paths are forbidden.
- * Area public barrels (`app/<area>/index.ts`) are exempt (they re-export internals).
+ * Area public barrels (`app/<area>/index.ts`) may re-export **own-area** internals only;
+ * they must still use other areas' public barrels (no private cross-area re-export).
+ * Relative and `@/` alias imports are both checked.
  */
 export function checkAppCrossAreaImports(filePath, content) {
   const normalizedPath = filePath.replace(/\\/g, '/');
   const fromArea = getAppAreaFromPath(normalizedPath);
   if (!fromArea) return [];
-
-  if (new RegExp(`/app/${fromArea}/index\\.tsx?$`).test(normalizedPath)) return [];
 
   const displayPath = normalizedPath.includes('/src/')
     ? normalizedPath.slice(normalizedPath.indexOf('src/'))
@@ -203,9 +221,9 @@ export function checkAppCrossAreaImports(filePath, content) {
 
   const violations = [];
   for (const importPath of extractImportPaths(content)) {
-    if (!importPath.startsWith('.')) continue;
+    if (!importPath.startsWith('.') && !importPath.startsWith('@/')) continue;
 
-    const resolved = resolveRelativeImport(filePath, importPath);
+    const resolved = resolveSrcImport(filePath, importPath);
     const resolvedArea = resolved.match(/^app\/([^/]+)/)?.[1];
     if (!resolvedArea || resolvedArea === fromArea) continue;
     if (isAppAreaPublicApi(resolved, resolvedArea)) continue;
@@ -238,7 +256,8 @@ function directoryContainsSource(dir) {
 }
 
 /**
- * Reject unknown src/* dumping grounds that contain TypeScript/JS feature code.
+ * Reject unknown src/* dumping grounds: non-allowlisted directories with TS/JS,
+ * and non-allowlisted top-level source files (e.g. src/NewCharacterService.ts).
  */
 export function checkAllowedSrcCodeRoots(rootDir = root) {
   const srcDir = join(rootDir, 'src');
@@ -253,12 +272,21 @@ export function checkAllowedSrcCodeRoots(rootDir = root) {
     } catch {
       continue;
     }
-    if (!stat.isDirectory()) continue;
-    if (ALLOWED_SRC_CODE_ROOTS.has(entry)) continue;
-    if (!directoryContainsSource(full)) continue;
+    if (stat.isDirectory()) {
+      if (ALLOWED_SRC_CODE_ROOTS.has(entry)) continue;
+      if (!directoryContainsSource(full)) continue;
+      violations.push({
+        file: `src/${entry}`,
+        rule: 'unknown feature code root (not in #94 allowlist)',
+        scope: 'src-root-allowlist',
+      });
+      continue;
+    }
+    if (!SOURCE_EXT.test(entry)) continue;
+    if (ALLOWED_SRC_TOP_LEVEL_FILES.has(entry)) continue;
     violations.push({
       file: `src/${entry}`,
-      rule: 'unknown feature code root (not in #94 allowlist)',
+      rule: 'unknown top-level feature file (use domains|infrastructure|app|shared|lib)',
       scope: 'src-root-allowlist',
     });
   }

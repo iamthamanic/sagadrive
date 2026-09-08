@@ -137,6 +137,15 @@ assert(
   `private cross-area import must fail, got ${JSON.stringify(privateCrossArea)}`,
 );
 
+const aliasPrivateCrossArea = checkAppCrossAreaImports(
+  '/repo/src/app/character/edit/CharacterBackgroundComposer.tsx',
+  "import { useProjects } from '@/app/project/hooks/useProjects';",
+);
+assert(
+  aliasPrivateCrossArea.some((v) => v.rule.includes('private cross-area import')),
+  `@/ alias private cross-area import must fail, got ${JSON.stringify(aliasPrivateCrossArea)}`,
+);
+
 const publicCrossArea = checkAppCrossAreaImports(
   '/repo/src/app/character/edit/CharacterBackgroundComposer.tsx',
   "import { useProjects } from '../../project';",
@@ -146,13 +155,40 @@ assert(
   `public area barrel must pass, got ${JSON.stringify(publicCrossArea)}`,
 );
 
-const areaBarrelExempt = checkAppCrossAreaImports(
-  '/repo/src/app/character/index.ts',
-  "import { useProjects } from '../project/hooks/useProjects';",
+const aliasPublicCrossArea = checkAppCrossAreaImports(
+  '/repo/src/app/character/edit/CharacterBackgroundComposer.tsx',
+  "import { useProjects } from '@/app/project';",
 );
 assert(
-  areaBarrelExempt.length === 0,
-  `area public barrel may re-export internals, got ${JSON.stringify(areaBarrelExempt)}`,
+  aliasPublicCrossArea.length === 0,
+  `@/ public area barrel must pass, got ${JSON.stringify(aliasPublicCrossArea)}`,
+);
+
+const areaBarrelPrivateCross = checkAppCrossAreaImports(
+  '/repo/src/app/character/index.ts',
+  "export { useProjects } from '../project/hooks/useProjects';",
+);
+assert(
+  areaBarrelPrivateCross.some((v) => v.rule.includes('private cross-area import')),
+  `area barrel must not re-export other areas' private paths, got ${JSON.stringify(areaBarrelPrivateCross)}`,
+);
+
+const areaBarrelOwnInternals = checkAppCrossAreaImports(
+  '/repo/src/app/character/index.ts',
+  "export { useCharacters } from './list';",
+);
+assert(
+  areaBarrelOwnInternals.length === 0,
+  `area barrel may re-export own internals, got ${JSON.stringify(areaBarrelOwnInternals)}`,
+);
+
+const areaBarrelPublicCross = checkAppCrossAreaImports(
+  '/repo/src/app/character/index.ts',
+  "export { useProjects } from '../project';",
+);
+assert(
+  areaBarrelPublicCross.length === 0,
+  `area barrel may re-export other areas via public barrel, got ${JSON.stringify(areaBarrelPublicCross)}`,
 );
 
 const fixtureRoot = mkdtempSync(join(tmpdir(), 'arch-allowlist-'));
@@ -160,14 +196,20 @@ mkdirSync(join(fixtureRoot, 'src/features'), { recursive: true });
 writeFileSync(join(fixtureRoot, 'src/features/dump.ts'), 'export const x = 1;\n');
 mkdirSync(join(fixtureRoot, 'src/domains'), { recursive: true });
 writeFileSync(join(fixtureRoot, 'src/domains/ok.ts'), 'export const y = 1;\n');
+writeFileSync(join(fixtureRoot, 'src/NewCharacterService.ts'), 'export const z = 1;\n');
+writeFileSync(join(fixtureRoot, 'src/App.tsx'), 'export {};\n');
 const allowlistHits = checkAllowedSrcCodeRoots(fixtureRoot);
 assert(
   allowlistHits.some((v) => v.file === 'src/features' && v.rule.includes('allowlist')),
   `unknown src root must fail, got ${JSON.stringify(allowlistHits)}`,
 );
 assert(
-  !allowlistHits.some((v) => v.file === 'src/domains'),
-  'allowed roots must not be flagged',
+  allowlistHits.some((v) => v.file === 'src/NewCharacterService.ts'),
+  `unknown top-level src file must fail, got ${JSON.stringify(allowlistHits)}`,
+);
+assert(
+  !allowlistHits.some((v) => v.file === 'src/App.tsx' || v.file === 'src/domains'),
+  'allowed roots/files must not be flagged',
 );
 
 const live = runArchitectureBoundaryCheck();
