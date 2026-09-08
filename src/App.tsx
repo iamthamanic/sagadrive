@@ -1,39 +1,38 @@
 /**
  * App — composition root: AuthGate, Layout, History routing (#133), lazy views.
  * Location: src/App.tsx
+ *
+ * App-area imports must go through each area's public barrel (`app/<area>`) or
+ * heavy screen entry (`app/<area>/root`) — enforced by architecture-boundary-check.
  */
 import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { AuthProvider } from './lib/auth-context';
 import { ThemeProvider } from './lib/theme-provider';
-import { AuthGate } from './app/shell/auth/AuthGate';
-import { Layout } from './app/shell/Layout';
-import { Dashboard } from './app/dashboard/Dashboard';
-import { ViewLoadingFallback } from './app/shell/ViewLoadingFallback';
+import { AuthGate, Layout, ViewLoadingFallback, useAppLocation } from './app/shell';
+import { Dashboard } from './app/dashboard';
 import { Toaster } from './shared/ui/sonner';
-import { useAppLocation } from './app/shell/routing';
-import { NotFoundPlaceholder } from './app/items/ItemRoutePlaceholders';
-import { ItemWorkbenchScreen } from './app/items/workbench';
+import { NotFoundPlaceholder, ItemWorkbenchScreen } from './app/items';
 
 const CharacterEditor = lazy(() =>
-  import('./app/character/edit/CharacterEditor').then((module) => ({ default: module.CharacterEditor })),
+  import('./app/character/root').then((module) => ({ default: module.CharacterEditor })),
 );
 const GamemasterPanel = lazy(() =>
-  import('./app/session/GamemasterPanel').then((module) => ({ default: module.GamemasterPanel })),
+  import('./app/session').then((module) => ({ default: module.GamemasterPanel })),
 );
 const Marketplace = lazy(() =>
-  import('./app/marketplace/browse/Marketplace').then((module) => ({ default: module.Marketplace })),
+  import('./app/marketplace').then((module) => ({ default: module.Marketplace })),
 );
 const ProjectJoin = lazy(() =>
-  import('./app/project/ProjectJoin').then((module) => ({ default: module.ProjectJoin })),
+  import('./app/project').then((module) => ({ default: module.ProjectJoin })),
 );
 const Library = lazy(() =>
-  import('./app/library/Library').then((module) => ({ default: module.Library })),
+  import('./app/library/root').then((module) => ({ default: module.Library })),
 );
 const Profile = lazy(() =>
-  import('./app/profile/Profile').then((module) => ({ default: module.Profile })),
+  import('./app/profile').then((module) => ({ default: module.Profile })),
 );
 const RulesetsTest = lazy(() =>
-  import('./app/rulesets/RulesetsTest').then((module) => ({ default: module.RulesetsTest })),
+  import('./app/rulesets').then((module) => ({ default: module.RulesetsTest })),
 );
 
 if (import.meta.env.DEV) {

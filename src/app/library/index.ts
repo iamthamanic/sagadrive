@@ -2,9 +2,8 @@
  * library area — public API for other app areas.
  * Location: src/app/library/index.ts
  *
- * The Library screen itself is composition-root only (`App.tsx` imports
- * `./Library` directly) so this barrel does not re-export it — that would
- * create cycles when items/workbench imports labels from here.
+ * The Library screen mounts via `./root` (composition root only) so this barrel
+ * stays free of the screen — items/workbench imports labels from here without cycles.
  */
 export { ItemLibraryBrowser, useItemLibrary } from './items';
 export type { UseItemLibraryOptions, UseItemLibraryResult } from './items';
