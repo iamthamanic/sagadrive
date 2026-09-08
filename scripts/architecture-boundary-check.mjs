@@ -40,6 +40,7 @@ const IMPORT_PATH_RULES = {
     { label: 'React', test: (p) => /^react(?:\/|$)/.test(p) },
     { label: 'React DOM', test: (p) => p.startsWith('react-dom') },
     { label: 'UI components', test: (p) => p.includes('/components/') },
+    { label: 'Shared UI', test: (p) => /(?:^|\/)shared\/ui(?:\/|$)/.test(p) || p.includes('@/shared/ui') },
     { label: 'App slices', test: (p) => p.includes('/app/') },
     { label: 'Supabase client', test: (p) => p.includes('supabase') },
     { label: 'Infrastructure internals', test: (p) => p.includes('/infrastructure/') },
@@ -48,6 +49,7 @@ const IMPORT_PATH_RULES = {
     { label: 'React', test: (p) => /^react(?:\/|$)/.test(p) },
     { label: 'React DOM', test: (p) => p.startsWith('react-dom') },
     { label: 'UI components', test: (p) => p.includes('/components/') },
+    { label: 'Shared UI', test: (p) => /(?:^|\/)shared\/ui(?:\/|$)/.test(p) || p.includes('@/shared/ui') },
     { label: 'App slices', test: (p) => p.includes('/app/') },
     { label: 'Supabase client', test: (p) => p.includes('supabase') },
     { label: 'Infrastructure internals', test: (p) => p.includes('/infrastructure/') },
@@ -56,10 +58,8 @@ const IMPORT_PATH_RULES = {
   infrastructure: [
     { label: 'React', test: (p) => /^react(?:\/|$)/.test(p) },
     { label: 'App slices', test: (p) => p.includes('/app/') },
-    {
-      label: 'UI components folder',
-      test: (p) => /\/components\/(?!ui(?:\/|$))/.test(p),
-    },
+    { label: 'Shared UI', test: (p) => /(?:^|\/)shared\/ui(?:\/|$)/.test(p) || p.includes('@/shared/ui') },
+    { label: 'UI components folder', test: (p) => p.includes('/components/') },
   ],
   app: [
     { label: 'Supabase client', test: (p) => p.includes('supabase') },
@@ -99,6 +99,8 @@ export function extractImportPaths(content) {
     /\bimport\s+(?:type\s+)?(?:[\w*{}\s,$]+\s+from\s+)?['"]([^'"]+)['"]/g,
     /\bexport\s+(?:type\s+)?(?:[\w*{}\s,$]+\s+from\s+)?['"]([^'"]+)['"]/g,
     /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+    // Static template literals only (no ${...} interpolation).
+    /\bimport\s*\(\s*`([^`${]*)`\s*\)/g,
   ];
 
   for (const pattern of patterns) {
@@ -158,7 +160,8 @@ export function checkCharacterCrossSliceImports(filePath, content) {
   const normalizedPath = filePath.replace(/\\/g, '/');
   const fromSlice = getCharacterSliceFromPath(normalizedPath);
   if (!fromSlice) return [];
-  if (/app\/character\/[^/]+\/index\.ts$/.test(normalizedPath)) return [];
+  // Slice public barrels may re-export own-slice + shared internals; other slices
+  // still require an allowed public barrel (no private cross-slice re-export).
 
   const displayPath = normalizedPath.includes('/src/')
     ? normalizedPath.slice(normalizedPath.indexOf('src/'))

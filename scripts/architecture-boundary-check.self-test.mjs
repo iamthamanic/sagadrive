@@ -65,6 +65,31 @@ assertNoCrossSliceViolation(
   "import { CharacterArchetypePanel } from '../../creation';",
 );
 
+assertViolation(
+  'slice barrel private re-export',
+  '/repo/src/app/character/progression/index.ts',
+  "export { Foo } from '../creation/CharacterArchetypePanel';",
+  'private cross-slice import',
+);
+
+assertNoCrossSliceViolation(
+  'slice barrel own-slice re-export',
+  '/repo/src/app/character/creation/index.ts',
+  "export { CharacterArchetypePanel } from './CharacterArchetypePanel';",
+);
+
+assertNoCrossSliceViolation(
+  'slice barrel allowed public re-export',
+  '/repo/src/app/character/edit/index.ts',
+  "export { CharacterArchetypePanel } from '../creation';",
+);
+
+assertNoCrossSliceViolation(
+  'slice barrel inventory non-slice path',
+  '/repo/src/app/character/progression/index.ts',
+  "export { CharacterInventoryV2Panel } from '../inventory/CharacterInventoryV2Panel';",
+);
+
 const dynamicSupabase = "const client = await import('../../../lib/supabase');";
 const appDynamicViolations = checkContentImportPaths(
   dynamicSupabase,
@@ -99,6 +124,40 @@ const domainReactViolations = checkContentImportPaths(
   'src/domains/character/example.ts',
 );
 assert(domainReactViolations.length === 1, 'domain React import should fail');
+
+const domainSharedUiRules = [
+  { label: 'UI components', test: (p) => p.includes('/components/') },
+  { label: 'Shared UI', test: (p) => /(?:^|\/)shared\/ui(?:\/|$)/.test(p) || p.includes('@/shared/ui') },
+];
+assert(
+  checkContentImportPaths(
+    "import { Button } from '../../shared/ui/button';",
+    domainSharedUiRules,
+    'domains',
+    'src/domains/character/example.ts',
+  ).some((v) => v.rule === 'Shared UI'),
+  'domain → shared/ui relative must fail',
+);
+assert(
+  checkContentImportPaths(
+    "import { Button } from '@/shared/ui/button';",
+    domainSharedUiRules,
+    'domains',
+    'src/domains/character/example.ts',
+  ).some((v) => v.rule === 'Shared UI'),
+  'domain → @/shared/ui must fail',
+);
+
+assert(
+  extractImportPaths("const m = await import(`@/app/project/hooks/useProjects`);").includes(
+    '@/app/project/hooks/useProjects',
+  ),
+  'extractImportPaths should capture static template-literal dynamic imports',
+);
+assert(
+  !extractImportPaths("const m = await import(`@/app/${name}`);").length,
+  'extractImportPaths should ignore interpolated template dynamic imports',
+);
 
 assert(
   checkLegacyFreeze(
