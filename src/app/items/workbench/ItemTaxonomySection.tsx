@@ -25,7 +25,7 @@ import {
   type ItemSettingTag,
   type ItemTechLevel,
 } from '../../../domains/items';
-import { ITEM_CONTEXT_LABELS, ITEM_SETTING_LABELS } from '../../library/items/itemLibraryLabels';
+import { ITEM_CONTEXT_LABELS, ITEM_SETTING_LABELS } from '../../library';
 import type { WorkbenchFormState } from './workbenchForm';
 import {
   ITEM_CAPABILITY_LABELS,

@@ -2,9 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../shared/ui/button';
 import { Plus, Users, Gamepad2, TrendingUp, Calendar } from 'lucide-react';
 import { useState } from 'react';
-import { useProjectSummaries } from '../project/hooks/useProjectSummaries';
-import { useCharacterSummaries } from '../character/list/useCharacterSummaries';
-import { CreateCharacterEntryDialog } from '../character/creation/CreateCharacterEntryDialog';
+import { useProjectSummaries } from '../project';
+import { useCharacterSummaries, CreateCharacterEntryDialog } from '../character';
 import { useAuth } from '../../lib/auth-context';
 
 interface DashboardProps {

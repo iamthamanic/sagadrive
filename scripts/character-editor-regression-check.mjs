@@ -224,7 +224,8 @@ if (existsSync(new URL('../src/modules/characters', import.meta.url))) {
 }
 
 requireMatch(read('src/app/character/shared/characterEditorBootstrap.ts'), /kind:\s*'character-edit'/, 'character-edit bootstrap implementation in character app slice');
-requireMatch(read('src/app/library/Library.tsx'), /character\/shared\/characterEditorBootstrap/, 'library imports canonical bootstrap path');
+requireMatch(read('src/app/character/index.ts'), /setCharacterEditorBootstrap/, 'character area public barrel exports bootstrap');
+requireMatch(read('src/app/library/Library.tsx'), /setCharacterEditorBootstrap/, 'library uses character public API for bootstrap');
 requireMatch(read('src/app/character/edit/CharacterEditor.tsx'), /hydrateEditorFromPersistedCharacter/, 'editor hydrate from persisted character');
 requireMatch(read('src/app/library/Library.tsx'), /refreshCharacters\(\{\s*force:\s*true\s*\}\)/, 'library force-refreshes character summaries');
 

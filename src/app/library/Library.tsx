@@ -3,22 +3,20 @@ import { Button } from '../../shared/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Input } from '../../shared/ui/input';
 import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package } from 'lucide-react';
-import { useCharacterSummaries } from '../character/list/useCharacterSummaries';
+import { useCharacterSummaries, CreateCharacterEntryDialog, setCharacterEditorBootstrap } from '../character';
 import type { CharacterSummaryVm } from '../../domains/character';
-import { CreateCharacterEntryDialog } from '../character/creation/CreateCharacterEntryDialog';
-import { useProjectSummaries } from '../project/hooks/useProjectSummaries';
+import { useProjectSummaries } from '../project';
 import type { ProjectSummaryVm } from '../../domains/project/contracts/project.types';
 import { useAuth } from '../../lib/auth-context';
 import { EntityBrowser, type EntityBrowserRenderContext } from './EntityBrowser';
 import { EntityBrowserCard } from './EntityBrowserCard';
 import { getSpeciesDevelopmentMode } from '../../domains/world/worldModuleRegistry';
-import { useWorldProfiles } from '../world/profile-editor';
+import { useWorldProfiles } from '../world';
 import type { CreateWorldProfileDto, WorldProfileVm } from '../../domains/world/contracts/world.types';
 import { toast } from 'sonner';
-import { setCharacterEditorBootstrap } from '../character/shared/characterEditorBootstrap';
 
 const WorldProfileEditorDialog = lazy(() =>
-  import('../world/profile-editor/WorldProfileEditorDialog').then((module) => ({
+  import('../world').then((module) => ({
     default: module.WorldProfileEditorDialog,
   })),
 );

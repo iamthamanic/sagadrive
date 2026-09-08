@@ -11,8 +11,8 @@ SagaDrive uses a **Modular Monolith** with explicit layers:
 | Rules kernel | `src/domains/rules/sagadrive/*` | stdlib, sibling rule slices | React, UI, Supabase, `app/`, `infrastructure/` |
 | Character domain | `src/domains/character/*` | rules kernel (public API) | React, UI, Supabase |
 | Infrastructure | `src/infrastructure/*` | domains, `lib/supabase` | React UI (`components/`, `app/`) |
-| App slices | `src/app/<area>/<slice>/` | domains, infrastructure, `shared/ui`, sibling slice **public barrels only** | Supabase, other slices' **private** file imports |
-| Shared UI | `src/shared/ui/` | `components/ui` | domain rules, infrastructure, app slices |
+| App slices | `src/app/<area>/` | domains, infrastructure, `shared/ui`, other areas **only via `app/<area>` public barrel** | Supabase, other areas' **private** nested files |
+| Shared UI | `src/shared/ui/` | React, local utils | domain rules, infrastructure, app slices |
 
 **Character slice boundaries:**
 
@@ -42,6 +42,8 @@ SagaDrive uses a **Modular Monolith** with explicit layers:
 | `src/shared/ui/**` | Fachlich neutrale UI primitives |
 
 **Forbidden (eradicated):** `src/modules/**`, `src/components/**` — must not exist; recreating fails CI.
+
+**Allowed code-bearing `src/` roots:** `domains/`, `infrastructure/`, `app/`, `shared/`, `lib/`, `utils/`, `supabase/`, `assets/`, `styles/`. Any other directory that contains TypeScript/JS fails the architecture gate.
 
 Historical freeze baseline (deletion record): `.qa/architecture/legacy-freeze-baseline.json`. No compatibility barrels.
 

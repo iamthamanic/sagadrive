@@ -46,11 +46,11 @@ import {
   loadWorldProfileItemCatalog,
   restoreDefinition,
 } from '../../../infrastructure/inventory/item-catalog-service';
-import { PersonalItemFormDialog } from '../../../app/character/inventory/PersonalItemFormDialog';
 import {
+  PersonalItemFormDialog,
   INVENTORY_TYPE_FILTER_OPTIONS,
   INVENTORY_TYPE_LABELS,
-} from '../../../app/character/inventory/inventory-ui-labels';
+} from '../../character';
 
 export interface WorldItemCatalogSectionProps {
   worldProfileId: string;

@@ -5,6 +5,8 @@
  */
 import process from 'node:process';
 import {
+  checkAllowedSrcCodeRoots,
+  checkAppCrossAreaImports,
   checkCharacterCrossSliceImports,
   checkContentImportPaths,
   checkEradicatedLegacyRoots,
@@ -13,6 +15,9 @@ import {
   resolveRelativeImport,
   runArchitectureBoundaryCheck,
 } from './architecture-boundary-check.mjs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 function assert(condition, message) {
   if (!condition) {
@@ -121,6 +126,48 @@ assert(
 assert(
   checkEradicatedLegacyRoots().length === 0,
   'live repo must not contain src/modules or src/components',
+);
+
+const privateCrossArea = checkAppCrossAreaImports(
+  '/repo/src/app/character/edit/CharacterBackgroundComposer.tsx',
+  "import { useProjects } from '../../project/hooks/useProjects';",
+);
+assert(
+  privateCrossArea.some((v) => v.rule.includes('private cross-area import')),
+  `private cross-area import must fail, got ${JSON.stringify(privateCrossArea)}`,
+);
+
+const publicCrossArea = checkAppCrossAreaImports(
+  '/repo/src/app/character/edit/CharacterBackgroundComposer.tsx',
+  "import { useProjects } from '../../project';",
+);
+assert(
+  publicCrossArea.length === 0,
+  `public area barrel must pass, got ${JSON.stringify(publicCrossArea)}`,
+);
+
+const areaBarrelExempt = checkAppCrossAreaImports(
+  '/repo/src/app/character/index.ts',
+  "import { useProjects } from '../project/hooks/useProjects';",
+);
+assert(
+  areaBarrelExempt.length === 0,
+  `area public barrel may re-export internals, got ${JSON.stringify(areaBarrelExempt)}`,
+);
+
+const fixtureRoot = mkdtempSync(join(tmpdir(), 'arch-allowlist-'));
+mkdirSync(join(fixtureRoot, 'src/features'), { recursive: true });
+writeFileSync(join(fixtureRoot, 'src/features/dump.ts'), 'export const x = 1;\n');
+mkdirSync(join(fixtureRoot, 'src/domains'), { recursive: true });
+writeFileSync(join(fixtureRoot, 'src/domains/ok.ts'), 'export const y = 1;\n');
+const allowlistHits = checkAllowedSrcCodeRoots(fixtureRoot);
+assert(
+  allowlistHits.some((v) => v.file === 'src/features' && v.rule.includes('allowlist')),
+  `unknown src root must fail, got ${JSON.stringify(allowlistHits)}`,
+);
+assert(
+  !allowlistHits.some((v) => v.file === 'src/domains'),
+  'allowed roots must not be flagged',
 );
 
 const live = runArchitectureBoundaryCheck();
