@@ -331,7 +331,7 @@ Neue Features folgen der **#94 Layered Architecture** — nicht dem legacy `src/
 9. **Keine Business Rules in React** — Rules-Kernel bleibt UI-frei.
 10. **Kein Supabase in Domain/Rules/App-Slices** — nur Infrastructure.
 
-**Character-Slice-Regel:** `edit/` ist der Composition Root; konsumiert `creation/` + `progression/` nur über deren `index.ts`. `creation/` und `progression/` importieren einander nicht privat (öffentliche Barrel nur wo dokumentiert, z. B. `SkillSelectField` in Background).
+**Character-Slice-Regel:** `edit/` ist der Composition Root; konsumiert `creation/` + `progression/` nur über deren `index.ts`. Slice-`index.ts` darf nur **eigene** Slice-Internals (plus `shared/`) re-exportieren — keine privaten Cross-Slice-Pfade. `creation/` und `progression/` importieren einander nicht privat (öffentliche Barrel nur wo dokumentiert, z. B. `SkillSelectField` in Background).
 
 Vor Commit: `npm run test-gate` (inkl. `architecture-boundary-check`).
 
