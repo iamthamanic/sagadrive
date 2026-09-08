@@ -204,6 +204,91 @@ export function isAppAreaPublicApi(resolvedImportPath, targetArea) {
   return normalized === `app/${targetArea}` || normalized === `app/${targetArea}/index`;
 }
 
+/** Composition-root mount entry for heavy screens (kept off the light public barrel). */
+export function isAppAreaRootEntry(resolvedImportPath, targetArea) {
+  const normalized = resolvedImportPath.replace(/\\/g, '/').replace(/\.tsx?$/, '');
+  return normalized === `app/${targetArea}/root`;
+}
+
+export function isAppAreaCompositionEntry(resolvedImportPath, targetArea) {
+  return isAppAreaPublicApi(resolvedImportPath, targetArea) || isAppAreaRootEntry(resolvedImportPath, targetArea);
+}
+
+export function isSrcCompositionRootFile(filePath) {
+  const normalized = filePath.replace(/\\/g, '/');
+  return /(?:^|\/)src\/(?:App|main)\.tsx?$/.test(normalized);
+}
+
+/**
+ * Composition root (src/App.tsx, src/main.tsx) may only reach app areas via
+ * `app/<area>` public barrels or `app/<area>/root` screen entries.
+ */
+export function checkCompositionRootImports(filePath, content) {
+  if (!isSrcCompositionRootFile(filePath)) return [];
+
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  const displayPath = normalizedPath.includes('/src/')
+    ? normalizedPath.slice(normalizedPath.indexOf('src/'))
+    : normalizedPath.includes('src/')
+      ? normalizedPath.slice(normalizedPath.indexOf('src/'))
+      : normalizedPath;
+
+  const violations = [];
+  for (const importPath of extractImportPaths(content)) {
+    if (!importPath.startsWith('.') && !importPath.startsWith('@/')) continue;
+
+    const resolved = resolveSrcImport(filePath, importPath);
+    if (!resolved.startsWith('app/')) continue;
+
+    const resolvedArea = resolved.match(/^app\/([^/]+)/)?.[1];
+    if (!resolvedArea) continue;
+    if (isAppAreaCompositionEntry(resolved, resolvedArea)) continue;
+
+    violations.push({
+      file: displayPath,
+      rule: `composition root private app import (${importPath}; use app/${resolvedArea} or app/${resolvedArea}/root)`,
+      scope: 'composition-root',
+    });
+  }
+
+  return violations;
+}
+
+/**
+ * `app/<area>/root` is reserved for the composition root — other files must use
+ * the area public barrel (or stay inside the same area without using /root).
+ */
+export function checkAppRootEntryConsumers(filePath, content) {
+  if (isSrcCompositionRootFile(filePath)) return [];
+
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  const displayPath = normalizedPath.includes('/src/')
+    ? normalizedPath.slice(normalizedPath.indexOf('src/'))
+    : normalizedPath.includes('src/')
+      ? normalizedPath.slice(normalizedPath.indexOf('src/'))
+      : normalizedPath;
+
+  // Area root.ts itself re-exports internals — allow.
+  if (/\/app\/[^/]+\/root\.tsx?$/.test(normalizedPath)) return [];
+
+  const violations = [];
+  for (const importPath of extractImportPaths(content)) {
+    if (!importPath.startsWith('.') && !importPath.startsWith('@/')) continue;
+
+    const resolved = resolveSrcImport(filePath, importPath);
+    const match = resolved.match(/^app\/([^/]+)\/root$/);
+    if (!match) continue;
+
+    violations.push({
+      file: displayPath,
+      rule: `app/${match[1]}/root is composition-root only (${importPath})`,
+      scope: 'composition-root',
+    });
+  }
+
+  return violations;
+}
+
 /**
  * Cross-area rule: app/<areaA> may only import app/<areaB> via that area's public barrel
  * (`app/<areaB>` or `app/<areaB>/index`). Private nested paths are forbidden.
@@ -423,6 +508,18 @@ export function runArchitectureBoundaryCheck(options = {}) {
     ...appFiles.flatMap((file) => checkCharacterCrossSliceImports(file, readFileSync(file, 'utf8'))),
     ...appFiles.flatMap((file) => checkAppCrossAreaImports(file, readFileSync(file, 'utf8'))),
   ];
+
+  const allSrcFiles = walkFiles(src);
+  for (const file of allSrcFiles) {
+    const content = readFileSync(file, 'utf8');
+    violations.push(...checkAppRootEntryConsumers(file, content));
+  }
+
+  for (const compositionName of ['App.tsx', 'main.tsx']) {
+    const compositionFile = join(src, compositionName);
+    if (!existsSync(compositionFile)) continue;
+    violations.push(...checkCompositionRootImports(compositionFile, readFileSync(compositionFile, 'utf8')));
+  }
 
   let legacyCurrent = [];
   let legacyBaseline = [];

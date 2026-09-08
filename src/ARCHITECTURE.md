@@ -47,6 +47,8 @@ SagaDrive uses a **Modular Monolith** with explicit layers:
 
 **Cross-area imports:** relative and `@/` alias paths are checked the same way. Area barrels (`app/<area>/index.ts`) may re-export own-area internals only; other areas still require that area's public barrel.
 
+**Composition root:** `src/App.tsx` / `src/main.tsx` may only import app code via `app/<area>` (public barrel) or `app/<area>/root` (heavy screen entry). `root` is forbidden for everyone else.
+
 Historical freeze baseline (deletion record): `.qa/architecture/legacy-freeze-baseline.json`. No compatibility barrels.
 
 **Validation:** `node scripts/architecture-boundary-check.mjs` enforces import rules **and** legacy eradication (part of `npm run test-gate`).

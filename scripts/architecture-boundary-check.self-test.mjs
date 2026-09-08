@@ -7,7 +7,9 @@ import process from 'node:process';
 import {
   checkAllowedSrcCodeRoots,
   checkAppCrossAreaImports,
+  checkAppRootEntryConsumers,
   checkCharacterCrossSliceImports,
+  checkCompositionRootImports,
   checkContentImportPaths,
   checkEradicatedLegacyRoots,
   checkLegacyFreeze,
@@ -269,6 +271,38 @@ assert(
 assert(
   !allowlistHits.some((v) => v.file === 'src/App.tsx' || v.file === 'src/domains'),
   'allowed roots/files must not be flagged',
+);
+
+const compositionPrivate = checkCompositionRootImports(
+  '/repo/src/App.tsx',
+  "import { CharacterEditor } from './app/character/edit/CharacterEditor';",
+);
+assert(
+  compositionPrivate.some((v) => v.rule.includes('composition root private app import')),
+  `composition root private path must fail, got ${JSON.stringify(compositionPrivate)}`,
+);
+
+const compositionPublic = checkCompositionRootImports(
+  '/repo/src/App.tsx',
+  [
+    "import { Dashboard } from './app/dashboard';",
+    "import { AuthGate } from './app/shell';",
+    "const X = lazy(() => import('./app/character/root'));",
+    "const Y = lazy(() => import('./app/library/root'));",
+  ].join('\n'),
+);
+assert(
+  compositionPublic.length === 0,
+  `composition root barrels/roots must pass, got ${JSON.stringify(compositionPublic)}`,
+);
+
+const nonRootUsingRoot = checkAppRootEntryConsumers(
+  '/repo/src/app/dashboard/Dashboard.tsx',
+  "import { CharacterEditor } from '../character/root';",
+);
+assert(
+  nonRootUsingRoot.some((v) => v.rule.includes('composition-root only')),
+  `non-composition consumers of /root must fail, got ${JSON.stringify(nonRootUsingRoot)}`,
 );
 
 const live = runArchitectureBoundaryCheck();
