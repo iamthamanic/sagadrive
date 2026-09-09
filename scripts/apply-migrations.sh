@@ -31,6 +31,9 @@ migrations=(
   014_character_abilities_emotion_profiles.sql
   015_inventory_item_definitions.sql
   016_character_inventory_v2.sql
+  017_item_thumbnail_assets.sql
+  018_item_model3d_assets.sql
+  019_world_profiles_read_for_adventure.sql
 )
 
 only="${1:-}"

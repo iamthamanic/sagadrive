@@ -62,8 +62,12 @@ const cases = [
   ['/', 'view', 'dashboard'],
   ['/library', 'view', 'library'],
   ['/items/create', 'item-create', null],
+  ['/items/create/new/waffe', 'item-create', 'waffe'],
+  ['/items/create/new/ruestung', 'item-create', 'ruestung'],
   ['/items/abc-123', 'item-detail', 'abc-123'],
   ['/items/create/', 'item-create', null],
+  ['/items/create/new', 'not-found', null],
+  ['/items/create/foo', 'not-found', null],
   ['/nope', 'not-found', null],
 ];
 
@@ -78,6 +82,12 @@ for (const [path, kind, extra] of cases) {
   if (kind === 'item-detail' && resolved.itemId !== extra) {
     throw new Error(`resolvePathname(${path}) expected itemId ${extra}, got ${resolved.itemId}`);
   }
+  if (kind === 'item-create') {
+    const slug = resolved.typeSlug ?? null;
+    if (slug !== extra) {
+      throw new Error(`resolvePathname(${path}) expected typeSlug ${extra}, got ${slug}`);
+    }
+  }
 }
 
 if (routes.pathForView('library') !== '/library') {
@@ -88,6 +98,9 @@ if (routes.pathForView('project-join') !== '/join') {
 }
 if (routes.pathForItemDetail('x y') !== '/items/x%20y') {
   throw new Error('pathForItemDetail encoding failed');
+}
+if (routes.pathForItemCreateType('Waffe') !== '/items/create/new/waffe') {
+  throw new Error('pathForItemCreateType(Waffe) mismatch');
 }
 
 const unknown = routes.resolvePathname('/totally-unknown');

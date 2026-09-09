@@ -115,52 +115,61 @@ test('item workbench create landing, type picker, editor, and core readonly fork
   await ensureLoggedIn(page);
 
   await page.goto('/items/create');
-  await expect(page.locator('[data-item-workbench="landing"]').first()).toBeVisible();
-  await expect(page.getByText('Klicke hier, um ein Item zu erstellen').first()).toBeVisible();
-  await expect(page.locator('[data-item-workbench-art]').first()).toBeVisible();
+  await expect(page.locator('[data-item-workbench="landing"]')).toBeVisible();
+  await expect(page.locator('[data-app-shell="desktop"]')).toBeVisible();
+  const typePicker = page.locator('[data-item-workbench-type-picker]');
+  await expect(typePicker).toHaveCount(1);
+  await expect(typePicker).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '01-create-landing.png'),
     fullPage: true,
   });
 
-  await page.locator('[data-item-workbench-landing]').first().click();
-  await expect(page.locator('[data-item-workbench-type-picker]').first()).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '02-type-picker.png'),
     fullPage: true,
   });
 
-  await page.locator('[data-item-workbench-type-option="device"]').first().click();
-  await expect(page.locator('[data-item-workbench="create"]').first()).toBeVisible();
-  await expect(page.locator('[data-item-workbench-editor]').first()).toBeVisible();
-  await expect(page.locator('[data-item-workbench-visuals]').first()).toBeVisible();
-  await expect(page.locator('[data-item-workbench-model3d]').first()).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Speichern' }).first()).toBeVisible();
+  await typePicker.locator('[data-item-workbench-type-option="device"]').click();
+  await expect(page).toHaveURL(/\/items\/create\/new\/geraet$/);
+  const forge = page.locator('[data-item-workbench="create"]');
+  await expect(forge).toBeVisible();
+  await expect(forge.locator('[data-item-workbench-editor]')).toBeVisible();
+  await expect(forge.locator('[data-item-workbench-visuals]')).toBeVisible();
+  await expect(forge.locator('[data-item-workbench-visual-toggle]')).toBeVisible();
+  await forge.locator('[data-item-workbench-visual-3d]').click();
+  await expect(forge.locator('[data-item-workbench-model3d]')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Speichern' })).toBeVisible();
 
-  await page.locator('[data-item-workbench-name]').first().fill('Feldkommunikator');
-  await expect(page.locator('[data-item-workbench-topbar] h1').first()).toContainText(
-    'Feldkommunikator',
-  );
+  await forge.locator('[data-item-workbench-name]').fill('Feldkommunikator');
+  await expect(page.locator('[data-item-workbench-topbar] h1')).toContainText('Feldkommunikator');
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '03-editor-desktop.png'),
     fullPage: true,
   });
 
-  await page.getByRole('button', { name: 'Speichern' }).first().click();
+  // Assert details panel can scroll past taxonomy into rules (forge scroll contract).
+  const details = forge.locator('[data-item-workbench-panel-scroll="details"]');
+  await expect(details).toBeVisible();
+  await details.evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+  });
+  await expect(forge.locator('[data-item-workbench-rules]')).toBeVisible();
+  await expect(forge.getByText('SagaDrive-Regeln')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Speichern' }).click();
   await expect(page).toHaveURL(/\/items\/personal(%3A|:)/, { timeout: 20_000 });
-  await expect(page.locator('[data-item-workbench="edit"]').first()).toBeVisible({
+  await expect(page.locator('[data-item-workbench="edit"]')).toBeVisible({
     timeout: 20_000,
   });
 
   // Core / builtin readonly + fork CTA
   await page.goto('/items/core.weapon.light-melee');
-  await expect(page.locator('[data-item-workbench="readonly"]').first()).toBeVisible({
+  await expect(page.locator('[data-item-workbench="readonly"]')).toBeVisible({
     timeout: 20_000,
   });
-  await expect(page.locator('[data-item-workbench-readonly-banner]').first()).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Als eigenes Item verwenden' }).first(),
-  ).toBeVisible();
+  await expect(page.locator('[data-item-workbench-readonly-banner]')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Als eigenes Item verwenden' })).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '04-readonly-core-fork.png'),
     fullPage: true,
@@ -168,11 +177,13 @@ test('item workbench create landing, type picker, editor, and core readonly fork
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/items/create');
-  await page.locator('[data-item-workbench-landing]').filter({ visible: true }).click();
-  await page.locator('[data-item-workbench-type-option="tool"]').filter({ visible: true }).click();
-  await expect(
-    page.locator('[data-item-workbench-editor]').filter({ visible: true }),
-  ).toBeVisible();
+  await expect(page.locator('[data-app-shell="mobile"]')).toBeVisible();
+  const mobilePicker = page.locator('[data-item-workbench-type-picker]');
+  await expect(mobilePicker).toHaveCount(1);
+  await expect(mobilePicker).toBeVisible();
+  await mobilePicker.locator('[data-item-workbench-type-option="tool"]').click();
+  await expect(page).toHaveURL(/\/items\/create\/new\/werkzeug$/);
+  await expect(page.locator('[data-item-workbench-editor]')).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '05-editor-mobile.png'),
     fullPage: true,

@@ -117,6 +117,8 @@ section('5 · Workbench 3D UI wired');
   check(/GLB hochladen/.test(panel), 'upload CTA');
   check(/Aus Bild generieren/.test(panel), 'generate CTA');
   check(/3D-Modell entfernen/.test(panel), 'remove CTA');
+  check(/data-item-workbench-visual-toggle/.test(panel), '2D/3D toggle');
+  check(/data-item-workbench-visual-3d/.test(panel), '3D toggle control');
   check(/Erneut versuchen/.test(panel), 'retry CTA');
   check(/nicht konfiguriert/.test(panel), 'fail-closed Meshy copy');
   check(/useItemModel3dAssets/.test(panel), 'uses useItemModel3dAssets');

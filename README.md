@@ -214,6 +214,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-09** — Item-Workbench Forge: typed Create-URLs, Visuals-Dropzone mit Auto-Draft, Scroll-Layout, Single-Shell App-Layout (`feat/item-workbench-forge-ux`)
 - **2026-09-06** — Item Epic Abnahme: Docs-Sync (`docs/items.md`), Meta-Gate + Playwright-Hop Library→Workbench→Inventar (`feat/144-item-epic-acceptance`, #144)
 - **2026-09-06** — Bibliothek Items-Tab: List/Grid, Suche/Filter, Core+Standard+Personal+Welt (`feat/138-library-items-browser`, #138)
 - **2026-09-06** — Builtin-Standardpacks: Fantasy/Sci-Fi/Contemporary je 40 Items + Kontext-Packs (`feat/137-builtin-standard-packs`, #137)

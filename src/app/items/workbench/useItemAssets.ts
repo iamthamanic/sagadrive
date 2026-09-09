@@ -18,6 +18,7 @@ import {
   itemThumbnailService,
   type ItemThumbnailJobUiStatus,
 } from '../../../infrastructure/inventory/item-thumbnail-service';
+import { queuePendingItemAsset, takePendingItemAsset } from './itemAssetPending';
 
 export type ItemAssetsPhase =
   | 'idle'
@@ -32,6 +33,8 @@ export interface UseItemAssetsOptions {
   definition: ItemDefinition | null;
   readOnly: boolean;
   onAssetKeyChange: (assetKey: string | undefined) => void;
+  /** Auto-create draft before first upload/generate when create has no definition id yet. */
+  ensureDraftId?: () => Promise<string | null>;
 }
 
 function mapJobToPhase(status: ItemThumbnailJobUiStatus): ItemAssetsPhase {
@@ -41,10 +44,16 @@ function mapJobToPhase(status: ItemThumbnailJobUiStatus): ItemAssetsPhase {
   return 'idle';
 }
 
-export function useItemAssets({ definition, readOnly, onAssetKeyChange }: UseItemAssetsOptions) {
+export function useItemAssets({
+  definition,
+  readOnly,
+  onAssetKeyChange,
+  ensureDraftId,
+}: UseItemAssetsOptions) {
   const definitionId = definition?.id ?? null;
+  const canEdit = !readOnly;
   const canMutate =
-    !readOnly &&
+    canEdit &&
     !!definitionId &&
     (definition?.scope === 'personal' || definition?.scope === 'world');
 
@@ -59,6 +68,11 @@ export function useItemAssets({ definition, readOnly, onAssetKeyChange }: UseIte
   const [busy, setBusy] = useState(false);
   const pollRef = useRef<number | null>(null);
   const submitLock = useRef(false);
+  const ensureDraftIdRef = useRef(ensureDraftId);
+  ensureDraftIdRef.current = ensureDraftId;
+  const onAssetKeyChangeRef = useRef(onAssetKeyChange);
+  onAssetKeyChangeRef.current = onAssetKeyChange;
+  const pendingHandledRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,7 +141,7 @@ export function useItemAssets({ definition, readOnly, onAssetKeyChange }: UseIte
           setErrorMessage('');
           if (snap.signedUrl) setResolvedUrl(snap.signedUrl);
           setLocalPreviewUrl(null);
-          if (snap.assetKey) onAssetKeyChange(snap.assetKey);
+          if (snap.assetKey) onAssetKeyChangeRef.current(snap.assetKey);
           toast.success('Thumbnail generiert');
           return;
         }
@@ -156,12 +170,12 @@ export function useItemAssets({ definition, readOnly, onAssetKeyChange }: UseIte
         pollRef.current = null;
       }
     };
-  }, [jobId, phase, onAssetKeyChange]);
+  }, [jobId, phase]);
 
   const displayUrl = localPreviewUrl || resolvedUrl;
 
-  const uploadFile = async (file: File) => {
-    if (!canMutate || !definitionId || submitLock.current) return;
+  const runUpload = async (id: string, file: File) => {
+    if (submitLock.current) return;
     submitLock.current = true;
     setBusy(true);
     setErrorMessage('');
@@ -169,9 +183,9 @@ export function useItemAssets({ definition, readOnly, onAssetKeyChange }: UseIte
     setLocalPreviewUrl(preview);
     setPhase('uploading');
     try {
-      const result = await itemThumbnailService.uploadThumbnail(definitionId, file);
+      const result = await itemThumbnailService.uploadThumbnail(id, file);
       setResolvedUrl(result.signedUrl);
-      onAssetKeyChange(result.assetKey);
+      onAssetKeyChangeRef.current(result.assetKey);
       setPhase('idle');
       toast.success('Thumbnail hochgeladen');
     } catch (error) {
@@ -185,8 +199,63 @@ export function useItemAssets({ definition, readOnly, onAssetKeyChange }: UseIte
     }
   };
 
+  const runUploadRef = useRef(runUpload);
+  runUploadRef.current = runUpload;
+
+  useEffect(() => {
+    if (!canMutate || !definitionId || pendingHandledRef.current) return;
+    const action = takePendingItemAsset(['thumbnail-upload', 'thumbnail-generate']);
+    if (!action) return;
+    pendingHandledRef.current = true;
+    if (action.type === 'thumbnail-upload') {
+      void runUploadRef.current(definitionId, action.file);
+    } else if (action.type === 'thumbnail-generate') {
+      setUserExtra(action.userExtra);
+      setPhase('confirm-generate');
+      setBusy(false);
+    }
+  }, [canMutate, definitionId]);
+
+  const uploadFile = async (file: File) => {
+    if (!canEdit || submitLock.current) return;
+    if (!definitionId) {
+      queuePendingItemAsset({ type: 'thumbnail-upload', file });
+      setBusy(true);
+      setErrorMessage('');
+      setLocalPreviewUrl(URL.createObjectURL(file));
+      setPhase('uploading');
+      const id = (await ensureDraftIdRef.current?.()) ?? null;
+      if (!id) {
+        takePendingItemAsset(['thumbnail-upload', 'thumbnail-generate']);
+        setLocalPreviewUrl(null);
+        setBusy(false);
+        setPhase('failed');
+        setErrorMessage('Entwurf konnte nicht angelegt werden');
+        toast.error('Entwurf konnte nicht angelegt werden');
+      }
+      // Remount / canMutate effect consumes pending upload.
+      return;
+    }
+    if (!canMutate) return;
+    await runUpload(definitionId, file);
+  };
+
   const requestGenerate = () => {
-    if (!canMutate || !meshyConfigured || busy) return;
+    if (!canEdit || !meshyConfigured || busy) return;
+    if (!definitionId) {
+      queuePendingItemAsset({ type: 'thumbnail-generate', userExtra });
+      setBusy(true);
+      void (async () => {
+        const id = (await ensureDraftIdRef.current?.()) ?? null;
+        if (!id) {
+          takePendingItemAsset(['thumbnail-upload', 'thumbnail-generate']);
+          setBusy(false);
+          toast.error('Entwurf konnte nicht angelegt werden');
+        }
+      })();
+      return;
+    }
+    if (!canMutate) return;
     setPhase('confirm-generate');
   };
 
@@ -230,7 +299,7 @@ export function useItemAssets({ definition, readOnly, onAssetKeyChange }: UseIte
       await itemThumbnailService.removeThumbnail(definitionId);
       setResolvedUrl(null);
       setLocalPreviewUrl(null);
-      onAssetKeyChange(undefined);
+      onAssetKeyChangeRef.current(undefined);
       setPhase('idle');
       toast.success('Thumbnail entfernt');
     } catch (error) {
@@ -242,6 +311,7 @@ export function useItemAssets({ definition, readOnly, onAssetKeyChange }: UseIte
   };
 
   return {
+    canEdit,
     canMutate,
     meshyConfigured,
     phase,
@@ -274,6 +344,7 @@ export interface UseItemModel3dAssetsOptions {
   definition: ItemDefinition | null;
   readOnly: boolean;
   onModel3dChange: (model3d: string | undefined) => void;
+  ensureDraftId?: () => Promise<string | null>;
 }
 
 function mapModel3dJobToPhase(status: ItemModel3dJobUiStatus): ItemModel3dPhase {
@@ -288,10 +359,12 @@ export function useItemModel3dAssets({
   definition,
   readOnly,
   onModel3dChange,
+  ensureDraftId,
 }: UseItemModel3dAssetsOptions) {
   const definitionId = definition?.id ?? null;
+  const canEdit = !readOnly;
   const canMutate =
-    !readOnly &&
+    canEdit &&
     !!definitionId &&
     (definition?.scope === 'personal' || definition?.scope === 'world');
 
@@ -308,6 +381,11 @@ export function useItemModel3dAssets({
   const [busy, setBusy] = useState(false);
   const pollRef = useRef<number | null>(null);
   const submitLock = useRef(false);
+  const ensureDraftIdRef = useRef(ensureDraftId);
+  ensureDraftIdRef.current = ensureDraftId;
+  const onModel3dChangeRef = useRef(onModel3dChange);
+  onModel3dChangeRef.current = onModel3dChange;
+  const pendingHandledRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -368,7 +446,7 @@ export function useItemModel3dAssets({
           setJobId(null);
           setErrorMessage('');
           if (snap.signedUrl) setResolvedUrl(snap.signedUrl);
-          if (snap.model3d) onModel3dChange(snap.model3d);
+          if (snap.model3d) onModel3dChangeRef.current(snap.model3d);
           toast.success('3D-Modell generiert');
           return;
         }
@@ -397,18 +475,18 @@ export function useItemModel3dAssets({
         pollRef.current = null;
       }
     };
-  }, [jobId, phase, onModel3dChange]);
+  }, [jobId, phase]);
 
-  const uploadFile = async (file: File) => {
-    if (!canMutate || !definitionId || submitLock.current) return;
+  const runUpload = async (id: string, file: File) => {
+    if (submitLock.current) return;
     submitLock.current = true;
     setBusy(true);
     setErrorMessage('');
     setPhase('uploading');
     try {
-      const result = await itemModel3dService.uploadModel(definitionId, file);
+      const result = await itemModel3dService.uploadModel(id, file);
       setResolvedUrl(result.signedUrl);
-      onModel3dChange(result.model3d);
+      onModel3dChangeRef.current(result.model3d);
       setPhase('idle');
       toast.success('3D-Modell hochgeladen');
     } catch (error) {
@@ -421,8 +499,59 @@ export function useItemModel3dAssets({
     }
   };
 
+  const runUploadRef = useRef(runUpload);
+  runUploadRef.current = runUpload;
+
+  useEffect(() => {
+    if (!canMutate || !definitionId || pendingHandledRef.current) return;
+    const action = takePendingItemAsset(['model3d-upload', 'model3d-generate']);
+    if (!action) return;
+    pendingHandledRef.current = true;
+    if (action.type === 'model3d-upload') {
+      void runUploadRef.current(definitionId, action.file);
+    } else if (action.type === 'model3d-generate') {
+      setPhase('confirm-generate');
+      setBusy(false);
+    }
+  }, [canMutate, definitionId]);
+
+  const uploadFile = async (file: File) => {
+    if (!canEdit || submitLock.current) return;
+    if (!definitionId) {
+      queuePendingItemAsset({ type: 'model3d-upload', file });
+      setBusy(true);
+      setErrorMessage('');
+      setPhase('uploading');
+      const id = (await ensureDraftIdRef.current?.()) ?? null;
+      if (!id) {
+        takePendingItemAsset(['model3d-upload', 'model3d-generate']);
+        setBusy(false);
+        setPhase('failed');
+        setErrorMessage('Entwurf konnte nicht angelegt werden');
+        toast.error('Entwurf konnte nicht angelegt werden');
+      }
+      return;
+    }
+    if (!canMutate) return;
+    await runUpload(definitionId, file);
+  };
+
   const requestGenerate = () => {
-    if (!canMutate || !meshyConfigured || !hasThumbnail || busy) return;
+    if (!canEdit || !meshyConfigured || !hasThumbnail || busy) return;
+    if (!definitionId) {
+      queuePendingItemAsset({ type: 'model3d-generate' });
+      setBusy(true);
+      void (async () => {
+        const id = (await ensureDraftIdRef.current?.()) ?? null;
+        if (!id) {
+          takePendingItemAsset(['model3d-upload', 'model3d-generate']);
+          setBusy(false);
+          toast.error('Entwurf konnte nicht angelegt werden');
+        }
+      })();
+      return;
+    }
+    if (!canMutate) return;
     setPhase('confirm-generate');
   };
 
@@ -467,7 +596,7 @@ export function useItemModel3dAssets({
     try {
       await itemModel3dService.removeModel(definitionId);
       setResolvedUrl(null);
-      onModel3dChange(undefined);
+      onModel3dChangeRef.current(undefined);
       setPhase('idle');
       toast.success('3D-Modell entfernt');
     } catch (error) {
@@ -479,6 +608,7 @@ export function useItemModel3dAssets({
   };
 
   return {
+    canEdit,
     canMutate,
     meshyConfigured,
     hasThumbnail,

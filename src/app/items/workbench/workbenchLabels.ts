@@ -15,31 +15,98 @@ import { ITEM_KIND_LABELS } from '../../library';
 
 export const DIRTY_LEAVE_MESSAGE = 'Ungespeicherte Änderungen verwerfen?';
 
+/** URL segment for `/items/create/new/:slug` (German, ASCII). */
 export const WORKBENCH_TYPE_ENTRIES: ReadonlyArray<{
   id: string;
+  slug: string;
   label: string;
   kindKey: ItemKindKey;
   type: InventoryItemType;
   description: string;
 }> = [
-  { id: 'weapon', label: 'Waffe', kindKey: 'weapon', type: 'weapon', description: 'Nah- oder Fernkampf' },
-  { id: 'armor', label: 'Rüstung', kindKey: 'armor', type: 'armor', description: 'Körperschutz' },
-  { id: 'shield', label: 'Schild', kindKey: 'shield', type: 'shield', description: 'Verteidigung in der Hand' },
-  { id: 'tool', label: 'Werkzeug', kindKey: 'tool', type: 'tool', description: 'Handwerk und Nutzen' },
-  { id: 'device', label: 'Gerät', kindKey: 'device', type: 'tool', description: 'Technik und Module' },
+  {
+    id: 'weapon',
+    slug: 'waffe',
+    label: 'Waffe',
+    kindKey: 'weapon',
+    type: 'weapon',
+    description: 'Nah- oder Fernkampf',
+  },
+  {
+    id: 'armor',
+    slug: 'ruestung',
+    label: 'Rüstung',
+    kindKey: 'armor',
+    type: 'armor',
+    description: 'Körperschutz',
+  },
+  {
+    id: 'shield',
+    slug: 'schild',
+    label: 'Schild',
+    kindKey: 'shield',
+    type: 'shield',
+    description: 'Verteidigung in der Hand',
+  },
+  {
+    id: 'tool',
+    slug: 'werkzeug',
+    label: 'Werkzeug',
+    kindKey: 'tool',
+    type: 'tool',
+    description: 'Handwerk und Nutzen',
+  },
+  {
+    id: 'device',
+    slug: 'geraet',
+    label: 'Gerät',
+    kindKey: 'device',
+    type: 'tool',
+    description: 'Technik und Module',
+  },
   {
     id: 'consumable',
+    slug: 'verbrauchsgut',
     label: 'Verbrauchsgut',
     kindKey: 'consumable',
     type: 'consumable',
     description: 'Einmalig oder stapelbar',
   },
-  { id: 'container', label: 'Behälter', kindKey: 'container', type: 'container', description: 'Tragen und lagern' },
-  { id: 'document', label: 'Dokument', kindKey: 'document', type: 'misc', description: 'Notizen und Belege' },
-  { id: 'key', label: 'Schlüssel/Zugang', kindKey: 'key', type: 'misc', description: 'Zugang und Sperren' },
-  { id: 'clothing', label: 'Kleidung', kindKey: 'clothing', type: 'misc', description: 'Tracht und Stil' },
+  {
+    id: 'container',
+    slug: 'behaelter',
+    label: 'Behälter',
+    kindKey: 'container',
+    type: 'container',
+    description: 'Tragen und lagern',
+  },
+  {
+    id: 'document',
+    slug: 'dokument',
+    label: 'Dokument',
+    kindKey: 'document',
+    type: 'misc',
+    description: 'Notizen und Belege',
+  },
+  {
+    id: 'key',
+    slug: 'schluessel',
+    label: 'Schlüssel/Zugang',
+    kindKey: 'key',
+    type: 'misc',
+    description: 'Zugang und Sperren',
+  },
+  {
+    id: 'clothing',
+    slug: 'kleidung',
+    label: 'Kleidung',
+    kindKey: 'clothing',
+    type: 'misc',
+    description: 'Tracht und Stil',
+  },
   {
     id: 'resource',
+    slug: 'ressource',
     label: 'Ressource/Geld',
     kindKey: 'resource',
     type: 'misc',
@@ -47,12 +114,18 @@ export const WORKBENCH_TYPE_ENTRIES: ReadonlyArray<{
   },
   {
     id: 'misc',
+    slug: 'sonstiges',
     label: 'Alltags-/Sonstiges',
     kindKey: 'misc',
     type: 'misc',
     description: 'Alles andere',
   },
 ];
+
+export function workbenchEntryBySlug(slug: string) {
+  const normalized = slug.trim().toLowerCase();
+  return WORKBENCH_TYPE_ENTRIES.find((entry) => entry.slug === normalized) ?? null;
+}
 
 export const ITEM_TECH_LEVEL_LABELS: Record<ItemTechLevel, string> = {
   primitive: 'Primitiv',

@@ -1,7 +1,8 @@
 /**
- * Layout — Desktop sidebar + mobile bottom nav shell for authenticated views.
+ * Layout — single shell with CSS desktop/mobile chrome; one children mount.
+ * Chrome toggles via Tailwind `md:` so resize does not remount route state.
+ * `data-app-shell` tracks viewport for e2e; Radix portals stay unduplicated.
  * Location: src/app/shell/Layout.tsx
- * Desktop sidebar collapses to icon-only rail; state persisted in localStorage.
  */
 import { useEffect, useState, type ReactNode } from 'react';
 import {
@@ -40,10 +41,29 @@ const VIEW_LABELS: Record<string, string> = {
 };
 
 const SIDEBAR_COLLAPSED_KEY = 'sagadrive-sidebar-collapsed';
+/** Tailwind `md` breakpoint — keep in sync with CSS. */
+const DESKTOP_MQ = '(min-width: 768px)';
+
+function useIsDesktop(): boolean {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(DESKTOP_MQ).matches : true,
+  );
+
+  useEffect(() => {
+    const media = window.matchMedia(DESKTOP_MQ);
+    const onChange = () => setIsDesktop(media.matches);
+    onChange();
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, []);
+
+  return isDesktop;
+}
 
 export function Layout({ children, currentView, onNavigate }: LayoutProps) {
   const { signOut } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const isDesktop = useIsDesktop();
 
   useEffect(() => {
     try {
@@ -87,17 +107,17 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
   const CollapseIcon = sidebarCollapsed ? ChevronRight : ChevronLeft;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Desktop: Sidebar + Content Layout */}
-      <div className="hidden md:flex md:h-screen">
-        {/* Desktop Sidebar */}
+    <div
+      className="min-h-screen bg-background"
+      data-app-shell={isDesktop ? 'desktop' : 'mobile'}
+    >
+      <div className="flex h-screen flex-col md:flex-row">
         <aside
-          className={`bg-sidebar border-r border-sidebar-border flex flex-col transition-[width] duration-200 ease-out ${
+          className={`hidden md:flex bg-sidebar border-r border-sidebar-border flex-col transition-[width] duration-200 ease-out ${
             sidebarCollapsed ? 'w-[4.5rem]' : 'w-64'
           }`}
           data-collapsed={sidebarCollapsed ? 'true' : 'false'}
         >
-          {/* Logo + collapse control */}
           <div className={`border-b border-sidebar-border ${sidebarCollapsed ? 'p-3' : 'p-4 pl-6 pr-3'}`}>
             <div className={`flex items-center ${sidebarCollapsed ? 'flex-col gap-2' : 'gap-2'}`}>
               <div className={`flex items-center min-w-0 ${sidebarCollapsed ? 'justify-center' : 'flex-1 gap-3'}`}>
@@ -127,7 +147,6 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
             </div>
           </div>
 
-          {/* Navigation */}
           <nav className={`flex-1 overflow-y-auto ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
             <div className="space-y-1">
               {navItems.map((item) => {
@@ -156,7 +175,6 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
             </div>
           </nav>
 
-          {/* Settings + Logout */}
           <div className={`border-t border-sidebar-border ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
             <div className={`flex ${sidebarCollapsed ? 'flex-col items-stretch gap-1' : 'items-center gap-2'}`}>
               <button
@@ -190,65 +208,50 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
           </div>
         </aside>
 
-        {/* Desktop Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          {/* Desktop Header */}
-          <header className="h-16 bg-card border-b border-border px-6 flex items-center flex-shrink-0">
+        <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+          <header className="md:hidden bg-card border-b border-border px-4 py-3 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 flex-shrink-0">
+                  <ImageWithFallback
+                    src={logoImage}
+                    alt="SagaDrive Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <h1 className="text-base">SagaDrive</h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onNavigate('profile')}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  title="Einstellungen"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors"
+                  title="Abmelden"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <header className="hidden md:flex h-16 bg-card border-b border-border px-6 items-center flex-shrink-0">
             <h2 className="text-foreground font-[Darker_Grotesque]">
               {VIEW_LABELS[currentView] || 'Dashboard'}
             </h2>
           </header>
 
-          {/* Scrollable Content */}
-          <main className="flex-1 overflow-y-auto">
-            {children}
-          </main>
+          <main className="flex-1 overflow-y-auto pb-20 md:pb-0">{children}</main>
         </div>
-      </div>
 
-      {/* Mobile: Header + Content + Bottom Nav */}
-      <div className="md:hidden flex flex-col h-screen">
-        {/* Mobile Header */}
-        <header className="bg-card border-b border-border px-4 py-3 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 flex-shrink-0">
-                <ImageWithFallback
-                  src={logoImage}
-                  alt="SagaDrive Logo"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <h1 className="text-base">SagaDrive</h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onNavigate('profile')}
-                className="p-2 hover:bg-muted rounded-lg transition-colors"
-                title="Einstellungen"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors"
-                title="Abmelden"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* Mobile Main Content */}
-        <main className="flex-1 overflow-y-auto pb-20">
-          {children}
-        </main>
-
-        {/* Mobile Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-pb">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-pb">
           <div className="grid grid-cols-4 gap-1 px-2 py-2">
             {mobileNavItems.map((item) => {
               const Icon = item.icon;

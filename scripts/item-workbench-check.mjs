@@ -50,6 +50,7 @@ section('1 · slice files exist');
   'src/app/items/workbench/workbenchLabels.ts',
   'src/assets/items/workbench-line-art.svg',
   '.qa/acceptance/item-workbench.md',
+  '.qa/acceptance/item-workbench-forge-layout.md',
   'e2e/item-workbench.spec.ts',
 ].forEach(mustExist);
 
@@ -111,11 +112,55 @@ section('6 · UX contract strings / a11y hooks');
   check(/data-item-workbench-landing/.test(landing), 'landing data hook');
   check(/data-item-workbench-art/.test(landing), 'line-art data hook');
   check(/Zurück zu Items/.test(topbar), 'back copy');
-  check(/Speichern/.test(screen) || /Speichern/.test(topbar), 'save CTA');
+  check(/Speichern/.test(screen) || /Speichern/.test(topbar) || /Speichern/.test(editor), 'save CTA');
   check(/Als eigenes Item verwenden/.test(screen), 'fork CTA copy');
   check(/Waffe/.test(labels) && /Gerät/.test(labels) && /Verbrauchsgut/.test(labels), 'type picker labels');
-  check(/md:grid-cols-\[/.test(editor), 'desktop two-column grid');
+  check(/md:grid-cols-\[minmax\(0,18rem\)_minmax\(0,1fr\)\]/.test(editor), 'desktop two-column forge grid');
+  check(/data-item-workbench-panel-scroll="details"/.test(editor), 'details panel scroll container');
+  check(/overflow-y-auto/.test(editor) && /md:overflow-hidden/.test(read('src/app/items/workbench/ItemWorkbenchEditor.tsx')), 'right scrolls, left fixed');
+  check(/h-full min-h-0/.test(screen) && /overflow-hidden/.test(screen), 'screen fills main without outer scroll');
+  check(/order-1/.test(editor) && /order-2/.test(editor), 'mobile stack order');
+  check(/data-item-workbench-panel="visuals-basics"/.test(editor), 'kind+basics under visuals');
+  check(/ItemKindField/.test(editor) && /ItemBasicsSection/.test(editor), 'Item-Art and name under visuals');
+  check(/data-item-workbench-setting-tech/.test(read('src/app/items/workbench/ItemTaxonomySection.tsx')), 'setting + tech-level row');
+  check(!/wb-basics/.test(read('src/app/items/workbench/ItemBasicsSection.tsx')), 'no Basisdaten heading');
+  check(!/ItemWorkbenchStage/.test(editor), 'stage square removed');
+  check(/data-item-workbench-visual-toggle/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), '2D/3D visuals toggle');
+  check(!/ItemWorkbenchFlowLines/.test(editor), 'flow lines removed from editor');
+  check(/animateExpand/.test(editor), 'create expand-out animation hook');
+  check(/data-item-workbench-primary/.test(topbar), 'save/fork primary in topbar');
+  check(/hidePrimary=\{editor\.mode === 'landing'\}/.test(screen), 'topbar save visible on create/edit');
+  check(!/data-item-workbench-save-slot/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'no save under visuals');
+  check(!/data-item-workbench-art/.test(editor), 'no workbench art in forge editor');
+  check(/isTypePickerVisible/.test(read('src/app/items/workbench/useItemEditor.ts')), 'type picker mode-gated visibility');
+  check(/requestKindChange/.test(read('src/app/items/workbench/useItemEditor.ts')), 'Item-Art dropdown applies type template');
+  check(/onKindChange/.test(read('src/app/items/workbench/ItemKindField.tsx')), 'kind field change callback');
+  check(!/>Typ-Vorlage/.test(read('src/app/items/workbench/ItemTaxonomySection.tsx')), 'no Typ-Vorlage button');
+  check(/handleTypePickerOpenChange/.test(read('src/app/items/workbench/useItemEditor.ts')), 'type picker ignores Radix reopen');
+  check(/onNavigateToCreateType/.test(read('src/app/items/workbench/useItemEditor.ts')), 'type pick navigates to typed create URL');
+  check(/workbenchEntryBySlug/.test(read('src/app/items/workbench/useItemEditor.ts')), 'typed create hydrates from slug');
+  check(/slug: 'waffe'/.test(labels), 'German URL slug for Waffe');
+  check(/createTypeSlug/.test(read('src/App.tsx')), 'App passes createTypeSlug from route');
+  check(/navigateToItemCreateType/.test(read('src/App.tsx')), 'App navigates typed create');
   check(/min-h-11/.test(topbar), 'topbar ≥44px targets');
+  check(/ensureDraftId/.test(read('src/app/items/workbench/useItemEditor.ts')), 'auto-draft for assets');
+  check(/ensureDraftId=\{editor\.ensureDraftId\}/.test(screen), 'screen wires ensureDraftId');
+  check(/assets\.canEdit/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'upload UI when editable without save-first');
+  check(!/Speichere das Item zuerst/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'no save-first asset copy');
+  check(/data-item-workbench-visual-dropzone/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'fixed visuals dropzone');
+  check(/onDrop/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'drag-drop upload');
+  check(/h-44/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'stable dropzone height');
+  check(/queuePendingItemAsset/.test(read('src/app/items/workbench/useItemAssets.ts')), 'pending asset across remount');
+  check(/data-item-workbench-world-draft-hint/.test(read('src/app/items/workbench/ItemAvailabilitySection.tsx')), 'world→personal auto-draft hint');
+  check(/Als persönliches Item angelegt/.test(read('src/app/items/workbench/useItemEditor.ts')), 'toast when world draft falls back');
+  {
+    const layout = read('src/app/shell/Layout.tsx');
+    const childrenMounts = (layout.match(/\{children\}/g) || []).length;
+    check(childrenMounts === 1, 'single children mount (no remount on resize)');
+    check(/data-app-shell=\{isDesktop \? 'desktop' : 'mobile'\}/.test(layout), 'data-app-shell desktop|mobile marker');
+    check(/hidden md:flex/.test(layout) && /md:hidden/.test(layout), 'CSS chrome toggle (stable route state)');
+    check(/matchMedia/.test(layout), 'shell marker via matchMedia');
+  }
   check(/Item erstellt/.test(read('src/app/items/workbench/useItemEditor.ts')), 'create toast');
   check(/Item gespeichert/.test(read('src/app/items/workbench/useItemEditor.ts')), 'save toast');
 }

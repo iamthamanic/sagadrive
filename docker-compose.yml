@@ -177,11 +177,11 @@ services:
     networks:
       - sagadrive-network
 
-  # Edge Runtime (Functions)
+  # Edge Runtime (Functions) — main dispatcher routes /<fn> to each function folder
   supabase-edge:
     image: supabase/edge-runtime:v1.29.0
     container_name: sagadrive-edge
-    command: ["start", "--main-service", "/home/deno/functions/characters", "--import-map", "/home/deno/import_map.json", "--port", "9998"]
+    command: ["start", "--main-service", "/home/deno/functions/main", "--import-map", "/home/deno/import_map.json", "--port", "9998"]
     environment:
       <<: *supabase-env
       JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
@@ -194,6 +194,16 @@ services:
       CHARACTER_AI_API_KEY: ${CHARACTER_AI_API_KEY:-}
       CHARACTER_AI_RATE_LIMIT_PER_MINUTE: ${CHARACTER_AI_RATE_LIMIT_PER_MINUTE:-6}
       CHARACTER_AI_ALLOWED_ORIGIN: ${CHARACTER_AI_ALLOWED_ORIGIN:-}
+      MESHY_API_KEY: ${MESHY_API_KEY:-}
+      MESHY_API_BASE_URL: ${MESHY_API_BASE_URL:-https://api.meshy.ai/openapi/v1}
+      MESHY_TEXT_TO_IMAGE_MODEL: ${MESHY_TEXT_TO_IMAGE_MODEL:-nano-banana}
+      MESHY_IMAGE_TO_3D_MODEL: ${MESHY_IMAGE_TO_3D_MODEL:-latest}
+      ITEM_THUMBNAIL_RATE_LIMIT_PER_MINUTE: ${ITEM_THUMBNAIL_RATE_LIMIT_PER_MINUTE:-4}
+      ITEM_THUMBNAIL_ALLOWED_ORIGIN: ${ITEM_THUMBNAIL_ALLOWED_ORIGIN:-http://localhost:3004}
+      ITEM_THUMBNAIL_MESHY_MOCK: ${ITEM_THUMBNAIL_MESHY_MOCK:-}
+      ITEM_MODEL3D_RATE_LIMIT_PER_MINUTE: ${ITEM_MODEL3D_RATE_LIMIT_PER_MINUTE:-2}
+      ITEM_MODEL3D_ALLOWED_ORIGIN: ${ITEM_MODEL3D_ALLOWED_ORIGIN:-http://localhost:3004}
+      ITEM_MODEL3D_MESHY_MOCK: ${ITEM_MODEL3D_MESHY_MOCK:-}
     volumes:
       - ./supabase/functions:/home/deno/functions:ro
       - ./supabase/config/import_map.json:/home/deno/import_map.json:ro

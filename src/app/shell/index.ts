@@ -8,6 +8,7 @@ export { ViewLoadingFallback } from './ViewLoadingFallback';
 export {
   knownViewIds,
   normalizeViewId,
+  pathForItemCreateType,
   pathForItemDetail,
   pathForView,
   resolvePathname,

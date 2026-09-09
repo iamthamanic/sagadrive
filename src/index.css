@@ -7,3 +7,25 @@
 @layer base {
   html, body, #root { min-height: 100vh; height: 100%; margin: 0; }
 }
+
+/* Item workbench forge: side panels expand outward from center (create). */
+@keyframes forge-panel-out-left {
+  from { opacity: 0; transform: translateX(2.5rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes forge-panel-out-right {
+  from { opacity: 0; transform: translateX(-2.5rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.forge-panel-out-left {
+  animation: forge-panel-out-left 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.forge-panel-out-right {
+  animation: forge-panel-out-right 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .forge-panel-out-left,
+  .forge-panel-out-right {
+    animation: none;
+  }
+}

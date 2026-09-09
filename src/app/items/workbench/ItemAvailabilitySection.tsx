@@ -100,6 +100,16 @@ export function ItemAvailabilitySection({
               Keine editierbare Welt verfügbar. Lege zuerst eine Welt in der Bibliothek an.
             </p>
           )}
+          {!scopeLocked && !form.worldProfileId.trim() && (
+            <p
+              className="text-xs text-muted-foreground"
+              data-item-workbench-world-draft-hint
+              role="status"
+            >
+              Ohne gewählte Welt wird ein vorzeitiger Visuals-Upload als persönliches Item
+              angelegt. Speichern mit Welt-Item erfordert weiterhin eine Welt.
+            </p>
+          )}
         </div>
       )}
     </section>

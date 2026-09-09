@@ -3,7 +3,8 @@
  * Persistence via catalog service only; no Supabase in this slice.
  * Location: src/app/items/workbench/useItemEditor.ts
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { toast } from 'sonner';
 import type { ItemDefinition } from '../../../domains/character/inventory-v2';
 import {
@@ -27,31 +28,87 @@ import {
   type WorkbenchFormState,
   type WorkbenchTypeEntry,
 } from './workbenchForm';
-import { DIRTY_LEAVE_MESSAGE } from './workbenchLabels';
+import { DIRTY_LEAVE_MESSAGE, workbenchEntryBySlug, WORKBENCH_TYPE_ENTRIES } from './workbenchLabels';
 
 export type WorkbenchEditorMode = 'landing' | 'create' | 'edit' | 'readonly';
 
 export interface UseItemEditorOptions {
   route: 'create' | 'detail';
   itemId: string | null;
+  /** When set on create route (`/items/create/new/waffe`), forge opens typed. */
+  createTypeSlug?: string | null;
+  /** Navigate to `/items/create/new/:slug` after type pick from the entry modal. */
+  onNavigateToCreateType?: (typeSlug: string) => void;
   onCreated: (itemId: string) => void;
   onBack: () => void;
 }
 
-export function useItemEditor({ route, itemId, onCreated, onBack }: UseItemEditorOptions) {
-  const [mode, setMode] = useState<WorkbenchEditorMode>(route === 'create' ? 'landing' : 'edit');
-  const [form, setForm] = useState<WorkbenchFormState>(() => emptyWorkbenchForm());
-  const [baseline, setBaseline] = useState(() => serializeForm(emptyWorkbenchForm()));
+export function useItemEditor({
+  route,
+  itemId,
+  createTypeSlug = null,
+  onNavigateToCreateType,
+  onCreated,
+  onBack,
+}: UseItemEditorOptions) {
+  const typedEntry =
+    route === 'create' && createTypeSlug ? workbenchEntryBySlug(createTypeSlug) : null;
+  const typedCreate = Boolean(typedEntry);
+  const invalidCreateSlug = Boolean(route === 'create' && createTypeSlug && !typedEntry);
+
+  const [mode, setMode] = useState<WorkbenchEditorMode>(() => {
+    if (route === 'detail') return 'edit';
+    if (typedCreate) return 'create';
+    return 'landing';
+  });
+  const [form, setForm] = useState<WorkbenchFormState>(() =>
+    typedEntry ? emptyWorkbenchForm(typedEntry) : emptyWorkbenchForm(),
+  );
+  const [baseline, setBaseline] = useState(() =>
+    serializeForm(typedEntry ? emptyWorkbenchForm(typedEntry) : emptyWorkbenchForm()),
+  );
   const [definition, setDefinition] = useState<ItemDefinition | null>(null);
   const [archived, setArchived] = useState(false);
   const [loading, setLoading] = useState(route === 'detail');
-  const [loadError, setLoadError] = useState('');
+  const [loadError, setLoadError] = useState(() =>
+    invalidCreateSlug ? 'Unbekannter Item-Typ.' : '',
+  );
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const [typePickerOpen, setTypePickerOpen] = useState(false);
+  const [typePickerOpen, setTypePickerOpenState] = useState(
+    () => route === 'create' && !typedCreate && !invalidCreateSlug,
+  );
   const [forkOpen, setForkOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [pendingTypeEntry, setPendingTypeEntry] = useState<WorkbenchTypeEntry | null>(null);
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+  const formRef = useRef(form);
+  formRef.current = form;
+  /** After typed URL or first landing pick, the entry modal must never come back this session. */
+  const entryTypeChosenRef = useRef(typedCreate);
+  /** Blocks ghost reopen of the entry modal right after a selection. */
+  const suppressPickerUntilRef = useRef(0);
+
+  const openTypePicker = () => {
+    if (Date.now() < suppressPickerUntilRef.current) return;
+    if (modeRef.current !== 'landing') return;
+    if (entryTypeChosenRef.current) return;
+    setTypePickerOpenState(true);
+  };
+
+  const closeTypePicker = () => {
+    setTypePickerOpenState(false);
+  };
+
+  /** Radix may emit onOpenChange(true) during teardown — never honor opens from the dialog. */
+  const handleTypePickerOpenChange = (open: boolean) => {
+    if (!open) closeTypePicker();
+  };
+
+  /** Entry modal only on create landing before a type is chosen. */
+  const isTypePickerVisible =
+    mode === 'landing' && typePickerOpen && !entryTypeChosenRef.current;
 
   const { worlds, isLoading: worldsLoading } = useWorldProfiles({ enabled: true });
   const editableWorldIds = worlds.map((world) => world.id);
@@ -156,26 +213,45 @@ export function useItemEditor({ route, itemId, onCreated, onBack }: UseItemEdito
   };
 
   const openLanding = () => {
-    setTypePickerOpen(true);
+    openTypePicker();
   };
 
   const selectTypeEntry = (entry: WorkbenchTypeEntry) => {
-    if (mode === 'create' || mode === 'edit') {
+    const fromLanding = modeRef.current === 'landing';
+    suppressPickerUntilRef.current = Date.now() + 1200;
+
+    if (fromLanding) {
+      entryTypeChosenRef.current = true;
+      // Close modal first, then URL drives forge mount (`/items/create/new/waffe`).
+      flushSync(() => {
+        setTypePickerOpenState(false);
+        setPendingTypeEntry(null);
+      });
+      if (onNavigateToCreateType) {
+        onNavigateToCreateType(entry.slug);
+        return;
+      }
+      // Fallback if navigation is unavailable (tests / partial mounts).
+      flushSync(() => {
+        const next = emptyWorkbenchForm(entry);
+        setForm(next);
+        setBaseline(serializeForm(next));
+        setMode('create');
+        setDefinition(null);
+        setArchived(false);
+      });
+      return;
+    }
+
+    // Item-Art dropdown in forge — keep URL, apply template defaults.
+    flushSync(() => {
+      setTypePickerOpenState(false);
       if (typeChangeLosesValues(form, entry) && !window.confirm('Typabhängige Werte gehen verloren. Fortfahren?')) {
         return;
       }
-      const next = applyTypeEntry(form, entry);
-      setForm(next);
-      setTypePickerOpen(false);
+      setForm(applyTypeEntry(form, entry));
       setPendingTypeEntry(null);
-      return;
-    }
-    const next = emptyWorkbenchForm(entry);
-    markClean(next);
-    setMode('create');
-    setTypePickerOpen(false);
-    setDefinition(null);
-    setArchived(false);
+    });
   };
 
   const requestTypeChange = (entry: WorkbenchTypeEntry) => {
@@ -190,12 +266,19 @@ export function useItemEditor({ route, itemId, onCreated, onBack }: UseItemEdito
     selectTypeEntry(entry);
   };
 
+  const requestKindChange = (kindKey: WorkbenchTypeEntry['kindKey']) => {
+    const entry = WORKBENCH_TYPE_ENTRIES.find((candidate) => candidate.kindKey === kindKey);
+    if (!entry) return;
+    requestTypeChange(entry);
+  };
+
   const confirmPendingTypeChange = () => {
     if (!pendingTypeEntry) return;
+    suppressPickerUntilRef.current = Date.now() + 1200;
     const next = applyTypeEntry(form, pendingTypeEntry);
     setForm(next);
     setPendingTypeEntry(null);
-    setTypePickerOpen(false);
+    closeTypePicker();
   };
 
   const applyAssetKey = (assetKey: string | undefined) => {
@@ -216,6 +299,87 @@ export function useItemEditor({ route, itemId, onCreated, onBack }: UseItemEdito
       delete next.model3d;
       return next;
     });
+  };
+
+  /** Auto-create a draft so 2D/3D upload can run before the user hits Speichern. */
+  const ensureDraftPromiseRef = useRef<Promise<string | null> | null>(null);
+  const ensureDraftId = async (): Promise<string | null> => {
+    if (definition?.id) return definition.id;
+    if (mode === 'readonly' || mode === 'landing') return null;
+    if (ensureDraftPromiseRef.current) return ensureDraftPromiseRef.current;
+
+    ensureDraftPromiseRef.current = (async () => {
+      const nameFallback =
+        WORKBENCH_TYPE_ENTRIES.find((entry) => entry.kindKey === form.kindKey)?.label ??
+        'Neues Item';
+      const worldWithoutId =
+        form.availability === 'world' && !form.worldProfileId.trim();
+      const draftForm: WorkbenchFormState = {
+        ...form,
+        name: form.name.trim() || nameFallback,
+        // World without a chosen world → personal so upload is not blocked.
+        availability:
+          form.availability === 'world' && form.worldProfileId.trim()
+            ? 'world'
+            : 'personal',
+      };
+      if (worldWithoutId) {
+        toast.message('Als persönliches Item angelegt', {
+          description:
+            'Welt-Item braucht eine gewählte Welt. Du kannst Eigentum später vor dem Speichern setzen.',
+        });
+      }
+      const payload = buildWorkbenchDraft(draftForm);
+      if (typeof payload === 'string') {
+        setSaveError(payload);
+        toast.error(payload);
+        return null;
+      }
+      setSaving(true);
+      setSaveError('');
+      try {
+        const record =
+          draftForm.availability === 'world'
+            ? await createWorldDefinition(draftForm.worldProfileId.trim(), payload)
+            : await createPersonalDefinition(payload);
+
+        const fromServer = formFromDefinition(record.definition, {
+          worldProfileId: record.worldProfileId ?? '',
+          availability: record.definition.scope === 'world' ? 'world' : 'personal',
+        });
+        // Keep edits made while the draft request was in flight.
+        const live = formRef.current;
+        const next: WorkbenchFormState = {
+          ...fromServer,
+          ...live,
+          availability: fromServer.availability,
+          worldProfileId: fromServer.worldProfileId,
+        };
+        if (!live.name.trim()) {
+          next.name = '';
+        }
+        setDefinition(record.definition);
+        setMode('edit');
+        markClean(next);
+        setNavigationBlocker(null);
+        onCreated(record.definition.id);
+        return record.definition.id;
+      } catch (err) {
+        console.error('[item-workbench] auto-draft failed', err);
+        const message = err instanceof Error ? err.message : 'Entwurf konnte nicht angelegt werden.';
+        setSaveError(message);
+        toast.error(message);
+        return null;
+      } finally {
+        setSaving(false);
+      }
+    })();
+
+    try {
+      return await ensureDraftPromiseRef.current;
+    } finally {
+      ensureDraftPromiseRef.current = null;
+    }
   };
 
   const handleSave = async () => {
@@ -379,7 +543,9 @@ export function useItemEditor({ route, itemId, onCreated, onBack }: UseItemEdito
     setSaveError,
     dirty,
     typePickerOpen,
-    setTypePickerOpen,
+    isTypePickerVisible,
+    handleTypePickerOpenChange,
+    openTypePicker,
     forkOpen,
     setForkOpen,
     archiveOpen,
@@ -390,9 +556,11 @@ export function useItemEditor({ route, itemId, onCreated, onBack }: UseItemEdito
     worldsLoading,
     openLanding,
     requestTypeChange,
+    requestKindChange,
     confirmPendingTypeChange,
     selectTypeEntry,
     handleSave,
+    ensureDraftId,
     handleFork,
     handleArchive,
     handleRestore,
@@ -408,6 +576,7 @@ function typeChangeLosesValues(form: WorkbenchFormState, entry: WorkbenchTypeEnt
   if (form.type === 'weapon') return true;
   if (form.type === 'armor') return true;
   if (form.type === 'container') return true;
-  if (form.traits.trim().length > 0 && entry.type !== form.type) return true;
+  // Kind change (e.g. tool→device, document→key) resets traits via emptyWorkbenchForm.
+  if (form.traits.trim().length > 0) return true;
   return false;
 }

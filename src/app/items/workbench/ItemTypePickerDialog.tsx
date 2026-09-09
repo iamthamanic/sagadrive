@@ -24,6 +24,7 @@ export function ItemTypePickerDialog({ open, onOpenChange, onSelect }: ItemTypeP
       <DialogContent
         className="max-h-[90dvh] w-[calc(100%-1rem)] overflow-y-auto sm:max-w-2xl"
         data-item-workbench-type-picker
+        onCloseAutoFocus={(event) => event.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle>Item-Typ wählen</DialogTitle>
@@ -37,7 +38,10 @@ export function ItemTypePickerDialog({ open, onOpenChange, onSelect }: ItemTypeP
               key={entry.id}
               type="button"
               className="flex min-h-11 flex-col items-start gap-0.5 rounded-lg border border-border/70 bg-background px-4 py-3 text-left transition hover:border-primary/60 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={() => onSelect(entry)}
+              onClick={() => {
+                // Single click: parent closes modal + switches to forge atomically.
+                onSelect(entry);
+              }}
               data-item-workbench-type-option={entry.id}
             >
               <span className="font-medium">{entry.label}</span>
