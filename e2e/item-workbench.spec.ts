@@ -116,7 +116,9 @@ test('item workbench create landing, type picker, editor, and core readonly fork
 
   await page.goto('/items/create');
   await expect(page.locator('[data-item-workbench="landing"]').first()).toBeVisible();
-  await expect(page.locator('[data-item-workbench-type-picker]').first()).toBeVisible();
+  // Layout mounts desktop+mobile trees; both Dialogs portal to body (topmost wins).
+  const typePicker = page.locator('[data-item-workbench-type-picker]').last();
+  await expect(typePicker).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '01-create-landing.png'),
     fullPage: true,
@@ -127,17 +129,18 @@ test('item workbench create landing, type picker, editor, and core readonly fork
     fullPage: true,
   });
 
-  await page.locator('[data-item-workbench-type-option="device"]').first().click();
+  await typePicker.locator('[data-item-workbench-type-option="device"]').click({ force: true });
   await expect(page).toHaveURL(/\/items\/create\/new\/geraet$/);
-  await expect(page.locator('[data-item-workbench="create"]').first()).toBeVisible();
-  await expect(page.locator('[data-item-workbench-editor]').first()).toBeVisible();
-  await expect(page.locator('[data-item-workbench-visuals]').first()).toBeVisible();
-  await expect(page.locator('[data-item-workbench-visual-toggle]').first()).toBeVisible();
-  await page.locator('[data-item-workbench-visual-3d]').first().click();
-  await expect(page.locator('[data-item-workbench-model3d]').first()).toBeVisible();
+  const forge = page.locator('[data-item-workbench="create"]').first();
+  await expect(forge).toBeVisible();
+  await expect(forge.locator('[data-item-workbench-editor]')).toBeVisible();
+  await expect(forge.locator('[data-item-workbench-visuals]')).toBeVisible();
+  await expect(forge.locator('[data-item-workbench-visual-toggle]')).toBeVisible();
+  await forge.locator('[data-item-workbench-visual-3d]').click();
+  await expect(forge.locator('[data-item-workbench-model3d]')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Speichern' }).first()).toBeVisible();
 
-  await page.locator('[data-item-workbench-name]').first().fill('Feldkommunikator');
+  await forge.locator('[data-item-workbench-name]').fill('Feldkommunikator');
   await expect(page.locator('[data-item-workbench-topbar] h1').first()).toContainText(
     'Feldkommunikator',
   );
@@ -145,6 +148,15 @@ test('item workbench create landing, type picker, editor, and core readonly fork
     path: path.join(EVIDENCE_DIR, '03-editor-desktop.png'),
     fullPage: true,
   });
+
+  // Assert details panel can scroll past taxonomy into rules (forge scroll contract).
+  const details = forge.locator('[data-item-workbench-panel-scroll="details"]');
+  await expect(details).toBeVisible();
+  await details.evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+  });
+  await expect(forge.locator('[data-item-workbench-rules]')).toBeVisible();
+  await expect(forge.getByText('SagaDrive-Regeln')).toBeVisible();
 
   await page.getByRole('button', { name: 'Speichern' }).first().click();
   await expect(page).toHaveURL(/\/items\/personal(%3A|:)/, { timeout: 20_000 });
@@ -168,12 +180,11 @@ test('item workbench create landing, type picker, editor, and core readonly fork
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/items/create');
-  await expect(page.locator('[data-item-workbench-type-picker]').filter({ visible: true })).toBeVisible();
-  await page.locator('[data-item-workbench-type-option="tool"]').filter({ visible: true }).click();
+  const mobilePicker = page.locator('[data-item-workbench-type-picker]').last();
+  await expect(mobilePicker).toBeVisible();
+  await mobilePicker.locator('[data-item-workbench-type-option="tool"]').click();
   await expect(page).toHaveURL(/\/items\/create\/new\/werkzeug$/);
-  await expect(
-    page.locator('[data-item-workbench-editor]').filter({ visible: true }),
-  ).toBeVisible();
+  await expect(page.locator('[data-item-workbench-editor]').last()).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '05-editor-mobile.png'),
     fullPage: true,

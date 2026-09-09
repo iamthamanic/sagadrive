@@ -65,7 +65,7 @@ export function ItemWorkbenchEditor({
       data-item-workbench-editor
       data-item-workbench-expanded="true"
     >
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col gap-4 overflow-hidden md:grid md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] md:grid-rows-1 md:gap-5 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto md:grid md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] md:grid-rows-1 md:gap-5 md:overflow-hidden lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         <div
           className={`order-1 flex shrink-0 flex-col gap-4 md:min-h-0 md:overflow-hidden md:pr-1 ${
             playAnim ? 'forge-panel-out-left' : ''
@@ -86,7 +86,7 @@ export function ItemWorkbenchEditor({
         </div>
 
         <div
-          className={`order-2 flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain md:pr-1 ${
+          className={`order-2 flex min-h-0 min-w-0 flex-col gap-4 md:flex-1 md:overflow-y-auto md:overscroll-contain md:pr-1 ${
             playAnim ? 'forge-panel-out-right' : ''
           }`}
           data-item-workbench-panel="details"

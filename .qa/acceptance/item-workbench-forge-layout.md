@@ -13,32 +13,38 @@ Create-/Edit-Workbench: Typ-Modal → 3-Spalten (Visuals | Basisdaten | Einordnu
 - Thumbnail/3D assets (#140/#141) optional
 
 ## Happy Path
-- [ ] `/items/create` öffnet Typ-Modal; Typwahl → `/items/create/new/<slug>` Forge
-- [ ] Desktop 3-Col: Visuals | Basisdaten | Einordnung/Regeln; Visuals/Details fahren aus; Mobile gestapelt
-- [ ] Speichern-CTA oben rechts in der Topbar (create/edit/readonly-Fork)
-- [ ] Werkbank-Art größer und links ausgerichtet
-- [ ] Edit/Readonly: gleiches 3-Col, Seiten sofort offen (keine Ausfahr-Animation)
+- [x] `/items/create` öffnet Typ-Modal; Typwahl → `/items/create/new/<slug>` Forge
+- [x] Desktop 2-Col: Visuals+Art+Basics (links fix) | Einordnung/Regeln (rechts scroll); Ausfahr-Animation; Mobile gestapelt
+- [x] Speichern-CTA oben rechts in der Topbar (create/edit/readonly-Fork)
+- [x] Visuals Dropzone feste Höhe; 2D/3D Klick + Drag-and-Drop
+- [x] Edit/Readonly: gleiches Layout, Seiten sofort offen (keine Ausfahr-Animation)
 
 ## Edge Cases
-- [ ] Readonly: Fork bleibt in Topbar
-- [ ] Reduced-motion: Panel-Ausfahren pausieren
+- [x] Readonly: Fork bleibt in Topbar
+- [x] Reduced-motion: Panel-Ausfahren pausieren
+- [x] Asset-Upload vor Speichern: Auto-Draft + Pending-Queue über Remount
 
 ## Regression
-- [ ] Dirty guard, Type-Picker, Archive/Fork, Toasts unverändert
-- [ ] `item-workbench-check.mjs` grün
-- [ ] E2E findet Speichern + Editor-Hooks
+- [x] Dirty guard, Type-Picker, Archive/Fork, Toasts unverändert
+- [x] `item-workbench-check.mjs` grün
+- [ ] E2E findet Speichern + Editor-Hooks (Selektoren: visible filter wegen Dual-Shell)
 
 ## Assumptions
 - „Ausfahren“ = Panels starten nahe der Mitte und bewegen sich nach L/R
-- Mitte = Basisdaten; Rechts = Taxonomy, Rules, Availability
+- Links = Visuals + Item-Art + Name/Beschreibung; Rechts = Taxonomy, Rules, Availability
 
 ## Security Coverage
 | Item | Coverage |
 |------|----------|
 | F-01 AuthGate | unverändert hinter AuthGate |
-| No new writes | nur Layout/Animation; Persistenz weiter catalog service |
+| Asset writes | Auto-draft + Edge upload weiter catalog/edge authz; keine Client-Secrets |
+
+## Composition Gate
+- Proof: `.qa/runs/composition-gate-item-workbench-forge-layout.md`
+- Verdict: CLEAR (auto-draft once per first asset action; pending across remount)
 
 ## Implementation Notes
 - Typed create URL hydrates forge; entry modal only on `/items/create`
-- No Stage square / flow lines; Speichern in Topbar rechts; Werkbank-Art `object-left`
-- Viewport-fit height
+- No Stage square / flow lines; Speichern in Topbar rechts
+- Viewport-fit: Screen `h-full overflow-hidden`; details panel scrolls
+- Edge `main` dispatcher + nginx strip for multi-function runtime
