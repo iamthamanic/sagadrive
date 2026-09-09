@@ -1,6 +1,6 @@
 # Composition Gate — item-workbench-forge-layout
 
-- HEAD_SHA: 0573bb03c614b7d66ce6c0680206fbeb35e36c30 (+ follow-up e2e visible selectors)
+- HEAD_SHA: e1f6d0e1025b93fc1bbacb6457a4b7ad157855db
 - Date: 2026-09-09
 - Verdict: CLEAR
 
