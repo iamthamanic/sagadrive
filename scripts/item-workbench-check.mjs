@@ -153,8 +153,14 @@ section('6 · UX contract strings / a11y hooks');
   check(/queuePendingItemAsset/.test(read('src/app/items/workbench/useItemAssets.ts')), 'pending asset across remount');
   check(/data-item-workbench-world-draft-hint/.test(read('src/app/items/workbench/ItemAvailabilitySection.tsx')), 'world→personal auto-draft hint');
   check(/Als persönliches Item angelegt/.test(read('src/app/items/workbench/useItemEditor.ts')), 'toast when world draft falls back');
-  check(/data-app-shell="desktop"/.test(read('src/app/shell/Layout.tsx')) && /data-app-shell="mobile"/.test(read('src/app/shell/Layout.tsx')), 'single shell desktop XOR mobile');
-  check(/matchMedia/.test(read('src/app/shell/Layout.tsx')), 'shell switches via matchMedia');
+  {
+    const layout = read('src/app/shell/Layout.tsx');
+    const childrenMounts = (layout.match(/\{children\}/g) || []).length;
+    check(childrenMounts === 1, 'single children mount (no remount on resize)');
+    check(/data-app-shell=\{isDesktop \? 'desktop' : 'mobile'\}/.test(layout), 'data-app-shell desktop|mobile marker');
+    check(/hidden md:flex/.test(layout) && /md:hidden/.test(layout), 'CSS chrome toggle (stable route state)');
+    check(/matchMedia/.test(layout), 'shell marker via matchMedia');
+  }
   check(/Item erstellt/.test(read('src/app/items/workbench/useItemEditor.ts')), 'create toast');
   check(/Item gespeichert/.test(read('src/app/items/workbench/useItemEditor.ts')), 'save toast');
 }
