@@ -2,8 +2,8 @@
  * main — Edge Runtime dispatcher for all supabase/functions/* workers.
  * Location: supabase/functions/main/index.ts
  *
- * Expected path: /<function-name>/…
- * Also accepts /functions/v1/<function-name>/… if a proxy forgot to strip.
+ * Nginx may strip `/functions/v1`; workers still expect that prefix in pathname.
+ * Always forward `/functions/v1/<function-name>/…` to the worker.
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
@@ -29,6 +29,21 @@ function resolveServiceName(pathname: string): string | null {
     return segments[2] ?? null;
   }
   return segments[0] ?? null;
+}
+
+/** Workers strip `/functions/v1/<name>`; restore that prefix after nginx strip. */
+function toWorkerRequest(req: Request, serviceName: string): Request {
+  const url = new URL(req.url);
+  const segments = url.pathname.split('/').filter(Boolean);
+  let afterService: string[];
+  if (segments[0] === 'functions' && segments[1] === 'v1') {
+    afterService = segments.slice(3);
+  } else {
+    afterService = segments.slice(1);
+  }
+  const suffix = afterService.length > 0 ? `/${afterService.join('/')}` : '';
+  url.pathname = `/functions/v1/${serviceName}${suffix}`;
+  return new Request(url.toString(), req);
 }
 
 console.log('SagaDrive edge main dispatcher started');
@@ -68,7 +83,7 @@ serve(async (req: Request) => {
       envVars,
     });
 
-    return await worker.fetch(req);
+    return await worker.fetch(toWorkerRequest(req, serviceName));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('edge main dispatch failed', message);

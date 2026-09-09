@@ -83,6 +83,8 @@ export function useItemEditor({
   const [pendingTypeEntry, setPendingTypeEntry] = useState<WorkbenchTypeEntry | null>(null);
   const modeRef = useRef(mode);
   modeRef.current = mode;
+  const formRef = useRef(form);
+  formRef.current = form;
   /** After typed URL or first landing pick, the entry modal must never come back this session. */
   const entryTypeChosenRef = useRef(typedCreate);
   /** Blocks ghost reopen of the entry modal right after a selection. */
@@ -341,12 +343,19 @@ export function useItemEditor({
             ? await createWorldDefinition(draftForm.worldProfileId.trim(), payload)
             : await createPersonalDefinition(payload);
 
-        const next = formFromDefinition(record.definition, {
+        const fromServer = formFromDefinition(record.definition, {
           worldProfileId: record.worldProfileId ?? '',
           availability: record.definition.scope === 'world' ? 'world' : 'personal',
         });
-        // Keep the user's typed name field if they left it empty (draft used fallback).
-        if (!form.name.trim()) {
+        // Keep edits made while the draft request was in flight.
+        const live = formRef.current;
+        const next: WorkbenchFormState = {
+          ...fromServer,
+          ...live,
+          availability: fromServer.availability,
+          worldProfileId: fromServer.worldProfileId,
+        };
+        if (!live.name.trim()) {
           next.name = '';
         }
         setDefinition(record.definition);
@@ -567,6 +576,7 @@ function typeChangeLosesValues(form: WorkbenchFormState, entry: WorkbenchTypeEnt
   if (form.type === 'weapon') return true;
   if (form.type === 'armor') return true;
   if (form.type === 'container') return true;
-  if (form.traits.trim().length > 0 && entry.type !== form.type) return true;
+  // Kind change (e.g. tool→device, document→key) resets traits via emptyWorkbenchForm.
+  if (form.traits.trim().length > 0) return true;
   return false;
 }
