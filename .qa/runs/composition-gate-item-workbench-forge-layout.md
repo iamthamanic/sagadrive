@@ -1,6 +1,6 @@
 # Composition Gate — item-workbench-forge-layout
 
-- HEAD_SHA: WORKTREE (pre-commit; updated on commit)
+- HEAD_SHA: 24a59302aba60c188d70b47c639568b10359f599
 - Date: 2026-09-09
 - Verdict: CLEAR
 
