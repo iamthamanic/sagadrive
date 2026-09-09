@@ -310,6 +310,8 @@ export function useItemEditor({
       const nameFallback =
         WORKBENCH_TYPE_ENTRIES.find((entry) => entry.kindKey === form.kindKey)?.label ??
         'Neues Item';
+      const worldWithoutId =
+        form.availability === 'world' && !form.worldProfileId.trim();
       const draftForm: WorkbenchFormState = {
         ...form,
         name: form.name.trim() || nameFallback,
@@ -319,6 +321,12 @@ export function useItemEditor({
             ? 'world'
             : 'personal',
       };
+      if (worldWithoutId) {
+        toast.message('Als persönliches Item angelegt', {
+          description:
+            'Welt-Item braucht eine gewählte Welt. Du kannst Eigentum später vor dem Speichern setzen.',
+        });
+      }
       const payload = buildWorkbenchDraft(draftForm);
       if (typeof payload === 'string') {
         setSaveError(payload);

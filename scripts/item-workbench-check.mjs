@@ -151,6 +151,10 @@ section('6 · UX contract strings / a11y hooks');
   check(/onDrop/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'drag-drop upload');
   check(/h-44/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'stable dropzone height');
   check(/queuePendingItemAsset/.test(read('src/app/items/workbench/useItemAssets.ts')), 'pending asset across remount');
+  check(/data-item-workbench-world-draft-hint/.test(read('src/app/items/workbench/ItemAvailabilitySection.tsx')), 'world→personal auto-draft hint');
+  check(/Als persönliches Item angelegt/.test(read('src/app/items/workbench/useItemEditor.ts')), 'toast when world draft falls back');
+  check(/data-app-shell="desktop"/.test(read('src/app/shell/Layout.tsx')) && /data-app-shell="mobile"/.test(read('src/app/shell/Layout.tsx')), 'single shell desktop XOR mobile');
+  check(/matchMedia/.test(read('src/app/shell/Layout.tsx')), 'shell switches via matchMedia');
   check(/Item erstellt/.test(read('src/app/items/workbench/useItemEditor.ts')), 'create toast');
   check(/Item gespeichert/.test(read('src/app/items/workbench/useItemEditor.ts')), 'save toast');
 }

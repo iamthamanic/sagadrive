@@ -27,7 +27,9 @@ Create-/Edit-Workbench: Typ-Modal → 3-Spalten (Visuals | Basisdaten | Einordnu
 ## Regression
 - [x] Dirty guard, Type-Picker, Archive/Fork, Toasts unverändert
 - [x] `item-workbench-check.mjs` grün
-- [x] E2E findet Speichern + Editor-Hooks (topmost dual-shell dialog; details scroll assert)
+- [x] E2E findet Speichern + Editor-Hooks (single shell; details scroll assert)
+- [x] Layout mountet nur eine Shell (desktop XOR mobile) — keine doppelten Dialoge
+- [x] Welt ohne Weltwahl: Hinweis + Toast bei Visuals-Auto-Draft als persönlich
 
 ## Assumptions
 - „Ausfahren“ = Panels starten nahe der Mitte und bewegen sich nach L/R
