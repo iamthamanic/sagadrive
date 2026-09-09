@@ -8,9 +8,11 @@ import type { ItemModelPreviewState } from './ItemModelPreviewRuntime';
 
 export interface ItemModelPreviewProps {
   modelUrl: string | null;
+  /** Fill parent height (Visuals dropzone) instead of fixed h-48. */
+  fill?: boolean;
 }
 
-export function ItemModelPreview({ modelUrl }: ItemModelPreviewProps) {
+export function ItemModelPreview({ modelUrl, fill = false }: ItemModelPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const runtimeRef = useRef<{ dispose: () => void; resetView: () => void } | null>(null);
   const [state, setState] = useState<ItemModelPreviewState>({
@@ -65,39 +67,52 @@ export function ItemModelPreview({ modelUrl }: ItemModelPreviewProps) {
   }, [modelUrl]);
 
   if (!modelUrl) {
-    return (
-      <p className="text-xs text-muted-foreground" data-item-model3d-empty>
-        Noch kein 3D-Modell.
-      </p>
-    );
+    return null;
   }
 
   return (
-    <div className="relative flex w-full flex-col gap-2" data-item-model3d-preview>
+    <div
+      className={`relative flex w-full flex-col ${fill ? 'h-full min-h-0' : 'gap-2'}`}
+      data-item-model3d-preview
+    >
       <canvas
         ref={canvasRef}
-        className="h-48 w-full rounded-lg bg-muted/20"
+        className={
+          fill
+            ? 'h-full min-h-0 w-full rounded-lg bg-muted/20'
+            : 'h-48 w-full rounded-lg bg-muted/20'
+        }
         aria-label="3D-Modellvorschau"
       />
       {state.status === 'ready' && (
         <Button
           type="button"
           variant="ghost"
-          className="h-11 min-h-11 self-center"
+          className={
+            fill
+              ? 'absolute bottom-1 left-1/2 h-8 min-h-8 -translate-x-1/2 px-2 text-xs'
+              : 'h-11 min-h-11 self-center'
+          }
           data-item-model3d-reset-view
-          onClick={() => runtimeRef.current?.resetView()}
+          onClick={(event) => {
+            event.stopPropagation();
+            runtimeRef.current?.resetView();
+          }}
         >
           Ansicht zurücksetzen
         </Button>
       )}
       {state.status === 'loading' && (
-        <p className="text-center text-xs text-muted-foreground" role="status">
+        <p
+          className={`text-center text-xs text-muted-foreground ${fill ? 'absolute inset-x-2 top-2' : ''}`}
+          role="status"
+        >
           {state.message}
         </p>
       )}
       {state.status === 'error' && (
         <p
-          className="text-center text-xs text-muted-foreground"
+          className={`text-center text-xs text-muted-foreground ${fill ? 'absolute inset-x-2 top-2' : ''}`}
           role="status"
           data-item-model3d-fallback
         >

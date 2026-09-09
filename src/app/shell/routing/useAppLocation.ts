@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   normalizeViewId,
+  pathForItemCreateType,
   pathForItemDetail,
   pathForView,
   resolvePathname,
@@ -57,6 +58,7 @@ export function useAppLocation() {
   const route: ResolvedRoute = resolvePathname(pathname);
   const currentView: ShellViewId = routeToShellView(route);
   const itemId = route.kind === 'item-detail' ? route.itemId : null;
+  const createTypeSlug = route.kind === 'item-create' ? route.typeSlug ?? null : null;
 
   const navigateToPath = (nextPath: string, options?: { replace?: boolean }) => {
     if (typeof window === 'undefined') return;
@@ -85,13 +87,19 @@ export function useAppLocation() {
     navigateToPath(pathForItemDetail(id), options);
   };
 
+  const navigateToItemCreateType = (typeSlug: string, options?: { replace?: boolean }) => {
+    navigateToPath(pathForItemCreateType(typeSlug), options);
+  };
+
   return {
     pathname,
     route,
     currentView,
     itemId,
+    createTypeSlug,
     navigateToPath,
     navigateToView,
     navigateToItem,
+    navigateToItemCreateType,
   };
 }

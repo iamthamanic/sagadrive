@@ -60,7 +60,15 @@ function CharacterEditorView() {
 }
 
 function AppShell() {
-  const { currentView, itemId, route, navigateToView, navigateToItem } = useAppLocation();
+  const {
+    currentView,
+    itemId,
+    createTypeSlug,
+    route,
+    navigateToView,
+    navigateToItem,
+    navigateToItemCreateType,
+  } = useAppLocation();
 
   const handleNavigate = (view: string) => {
     navigateToView(view);
@@ -120,9 +128,12 @@ function AppShell() {
       case 'item-create':
         return (
           <ItemWorkbenchScreen
+            key={createTypeSlug ?? 'picker'}
             route="create"
+            createTypeSlug={createTypeSlug}
             onBack={() => handleNavigate('library')}
             onNavigateToItem={(id) => navigateToItem(id, { replace: true })}
+            onNavigateToCreateType={(slug) => navigateToItemCreateType(slug, { replace: true })}
           />
         );
       case 'item-detail':

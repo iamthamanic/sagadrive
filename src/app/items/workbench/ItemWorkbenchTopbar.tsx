@@ -1,5 +1,5 @@
 /**
- * ItemWorkbenchTopbar — back | title | primary save/fork CTA (#139).
+ * ItemWorkbenchTopbar — back | title | primary (Speichern / Fork) top-right (#139).
  * Location: src/app/items/workbench/ItemWorkbenchTopbar.tsx
  */
 import { ArrowLeft } from 'lucide-react';
@@ -9,6 +9,8 @@ export interface ItemWorkbenchTopbarProps {
   title: string;
   primaryLabel: string;
   primaryDisabled?: boolean;
+  /** Hide primary (e.g. landing before type pick). */
+  hidePrimary?: boolean;
   onBack: () => void;
   onPrimary: () => void;
   saving?: boolean;
@@ -18,13 +20,14 @@ export function ItemWorkbenchTopbar({
   title,
   primaryLabel,
   primaryDisabled,
+  hidePrimary,
   onBack,
   onPrimary,
   saving,
 }: ItemWorkbenchTopbarProps) {
   return (
     <header
-      className="flex flex-wrap items-center gap-3 border-b border-border/60 pb-4"
+      className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border/60 pb-2"
       data-item-workbench-topbar
     >
       <Button
@@ -42,15 +45,19 @@ export function ItemWorkbenchTopbar({
         {title}
       </h1>
 
-      <Button
-        type="button"
-        className="h-11 min-h-11 min-w-[7.5rem]"
-        onClick={onPrimary}
-        disabled={primaryDisabled || saving}
-        data-item-workbench-primary
-      >
-        {saving ? 'Speichern…' : primaryLabel}
-      </Button>
+      {hidePrimary ? (
+        <div className="min-w-[7.5rem]" aria-hidden="true" />
+      ) : (
+        <Button
+          type="button"
+          className="h-11 min-h-11 min-w-[7.5rem] shrink-0"
+          onClick={onPrimary}
+          disabled={primaryDisabled || saving}
+          data-item-workbench-primary
+        >
+          {saving ? 'Speichern…' : primaryLabel}
+        </Button>
+      )}
     </header>
   );
 }

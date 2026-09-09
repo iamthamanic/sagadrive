@@ -103,16 +103,13 @@ test('Item Epic hop: Library Items → Workbench visible → Inventory add label
     fullPage: true,
   });
 
-  // 2 · Workbench create landing
+  // 2 · Workbench create type picker
   await page.getByRole('button', { name: 'Neues Item erstellen' }).click();
   await expect(page).toHaveURL(/\/items\/create$/);
   await expect(page.locator('[data-item-workbench]').first()).toBeVisible({ timeout: 20_000 });
-  await expect(
-    page
-      .locator('[data-item-workbench-landing]')
-      .or(page.getByText(/Klicke hier, um ein Item zu erstellen/i))
-      .first(),
-  ).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('[data-item-workbench-type-picker]').first()).toBeVisible({
+    timeout: 20_000,
+  });
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '02-workbench.png'),
     fullPage: true,

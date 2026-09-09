@@ -1,6 +1,6 @@
 /**
  * ItemWorkbenchScreen — create / edit / readonly / fork surface for ItemDefinitions (#139).
- * Wired from App shell routes `/items/create` and `/items/:itemId`.
+ * Wired from App shell routes `/items/create`, `/items/create/new/:slug`, and `/items/:itemId`.
  * Location: src/app/items/workbench/ItemWorkbenchScreen.tsx
  */
 import { Button } from '../../../shared/ui/button';
@@ -25,19 +25,26 @@ import { useItemEditor } from './useItemEditor';
 export interface ItemWorkbenchScreenProps {
   route: 'create' | 'detail';
   itemId?: string | null;
+  /** Create forge type from URL (`waffe` → `/items/create/new/waffe`). */
+  createTypeSlug?: string | null;
   onBack: () => void;
   onNavigateToItem: (itemId: string) => void;
+  onNavigateToCreateType?: (typeSlug: string) => void;
 }
 
 export function ItemWorkbenchScreen({
   route,
   itemId = null,
+  createTypeSlug = null,
   onBack,
   onNavigateToItem,
+  onNavigateToCreateType,
 }: ItemWorkbenchScreenProps) {
   const editor = useItemEditor({
     route,
     itemId,
+    createTypeSlug,
+    onNavigateToCreateType,
     onBack,
     onCreated: onNavigateToItem,
   });
@@ -88,18 +95,27 @@ export function ItemWorkbenchScreen({
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6" data-item-workbench={editor.mode}>
+    <div
+      className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col gap-2 overflow-hidden p-3 md:gap-3 md:p-4"
+      data-item-workbench={editor.mode}
+    >
       <ItemWorkbenchTopbar
         title={title}
         primaryLabel={primaryLabel}
         primaryDisabled={editor.mode === 'landing'}
-        saving={editor.saving && editor.mode !== 'readonly'}
+        hidePrimary={editor.mode === 'landing'}
+        saving={editor.saving && editor.mode !== 'landing'}
         onBack={editor.handleBack}
         onPrimary={handlePrimary}
       />
 
       {editor.mode === 'landing' ? (
-        <ItemWorkbenchLanding onStart={editor.openLanding} />
+        editor.isTypePickerVisible ? (
+          // Library CTA opens the type modal immediately — no Landing CTA underneath.
+          <div className="min-h-[12rem] flex-1" data-item-workbench-landing-shell aria-hidden />
+        ) : (
+          <ItemWorkbenchLanding onStart={editor.openLanding} />
+        )
       ) : (
         <ItemWorkbenchEditor
           form={editor.form}
@@ -110,22 +126,27 @@ export function ItemWorkbenchScreen({
           worlds={editor.worlds}
           worldsLoading={editor.worldsLoading}
           saveError={editor.saveError}
+          animateExpand={editor.mode === 'create'}
           onChange={editor.setForm}
-          onRequestTypePicker={() => editor.setTypePickerOpen(true)}
+          onKindChange={editor.requestKindChange}
           onArchive={() => editor.setArchiveOpen(true)}
           onRestore={() => {
             void editor.handleRestore();
           }}
           onAssetKeyChange={editor.applyAssetKey}
           onModel3dChange={editor.applyModel3d}
+          ensureDraftId={editor.ensureDraftId}
         />
       )}
 
-      <ItemTypePickerDialog
-        open={editor.typePickerOpen}
-        onOpenChange={editor.setTypePickerOpen}
-        onSelect={editor.requestTypeChange}
-      />
+      {editor.isTypePickerVisible ? (
+        <ItemTypePickerDialog
+          key="entry-picker"
+          open
+          onOpenChange={editor.handleTypePickerOpenChange}
+          onSelect={editor.requestTypeChange}
+        />
+      ) : null}
 
       <ItemForkDialog
         open={editor.forkOpen}

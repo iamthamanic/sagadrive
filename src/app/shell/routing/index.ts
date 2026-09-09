@@ -5,6 +5,7 @@
 export {
   knownViewIds,
   normalizeViewId,
+  pathForItemCreateType,
   pathForItemDetail,
   pathForView,
   resolvePathname,

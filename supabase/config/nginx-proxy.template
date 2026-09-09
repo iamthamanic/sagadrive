@@ -1,5 +1,6 @@
+# Strip /functions/v1 so edge main receives /<function-name>/…
 location /functions/v1/ {
-    proxy_pass http://supabase-edge:9998/functions/v1/;
+    proxy_pass http://supabase-edge:9998/;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";

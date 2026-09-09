@@ -116,24 +116,24 @@ test('item workbench create landing, type picker, editor, and core readonly fork
 
   await page.goto('/items/create');
   await expect(page.locator('[data-item-workbench="landing"]').first()).toBeVisible();
-  await expect(page.getByText('Klicke hier, um ein Item zu erstellen').first()).toBeVisible();
-  await expect(page.locator('[data-item-workbench-art]').first()).toBeVisible();
+  await expect(page.locator('[data-item-workbench-type-picker]').first()).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '01-create-landing.png'),
     fullPage: true,
   });
 
-  await page.locator('[data-item-workbench-landing]').first().click();
-  await expect(page.locator('[data-item-workbench-type-picker]').first()).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '02-type-picker.png'),
     fullPage: true,
   });
 
   await page.locator('[data-item-workbench-type-option="device"]').first().click();
+  await expect(page).toHaveURL(/\/items\/create\/new\/geraet$/);
   await expect(page.locator('[data-item-workbench="create"]').first()).toBeVisible();
   await expect(page.locator('[data-item-workbench-editor]').first()).toBeVisible();
   await expect(page.locator('[data-item-workbench-visuals]').first()).toBeVisible();
+  await expect(page.locator('[data-item-workbench-visual-toggle]').first()).toBeVisible();
+  await page.locator('[data-item-workbench-visual-3d]').first().click();
   await expect(page.locator('[data-item-workbench-model3d]').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Speichern' }).first()).toBeVisible();
 
@@ -168,8 +168,9 @@ test('item workbench create landing, type picker, editor, and core readonly fork
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/items/create');
-  await page.locator('[data-item-workbench-landing]').filter({ visible: true }).click();
+  await expect(page.locator('[data-item-workbench-type-picker]').filter({ visible: true })).toBeVisible();
   await page.locator('[data-item-workbench-type-option="tool"]').filter({ visible: true }).click();
+  await expect(page).toHaveURL(/\/items\/create\/new\/werkzeug$/);
   await expect(
     page.locator('[data-item-workbench-editor]').filter({ visible: true }),
   ).toBeVisible();

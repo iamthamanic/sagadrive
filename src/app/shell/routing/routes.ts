@@ -19,7 +19,7 @@ export type ShellViewId =
 
 export type ResolvedRoute =
   | { kind: 'view'; view: Exclude<ShellViewId, 'item-detail' | 'item-create' | 'not-found'> }
-  | { kind: 'item-create' }
+  | { kind: 'item-create'; typeSlug?: string }
   | { kind: 'item-detail'; itemId: string }
   | { kind: 'not-found'; attemptedPath: string };
 
@@ -63,12 +63,38 @@ export function pathForItemDetail(itemId: string): string {
   return `/items/${safe}`;
 }
 
+/** Typed create forge: `/items/create/new/waffe` */
+export function pathForItemCreateType(typeSlug: string): string {
+  const safe = encodeURIComponent(typeSlug.trim().toLowerCase());
+  return `/items/create/new/${safe}`;
+}
+
 export function resolvePathname(pathname: string): ResolvedRoute {
   const raw = pathname.trim() || '/';
   const path = raw.length > 1 && raw.endsWith('/') ? raw.slice(0, -1) : raw;
 
+  const createTypedMatch = path.match(/^\/items\/create\/new\/([^/]+)$/);
+  if (createTypedMatch) {
+    let typeSlug = createTypedMatch[1] ?? '';
+    try {
+      typeSlug = decodeURIComponent(typeSlug);
+    } catch {
+      // keep raw segment
+    }
+    typeSlug = typeSlug.trim().toLowerCase();
+    if (!typeSlug) {
+      return { kind: 'not-found', attemptedPath: path };
+    }
+    return { kind: 'item-create', typeSlug };
+  }
+
   if (path === '/items/create') {
     return { kind: 'item-create' };
+  }
+
+  // Reject unknown /items/create/... so they don't fall through as item ids.
+  if (path.startsWith('/items/create/')) {
+    return { kind: 'not-found', attemptedPath: path };
   }
 
   const itemMatch = path.match(/^\/items\/([^/]+)$/);
