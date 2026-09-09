@@ -27,7 +27,7 @@ Create-/Edit-Workbench: Typ-Modal → 3-Spalten (Visuals | Basisdaten | Einordnu
 ## Regression
 - [x] Dirty guard, Type-Picker, Archive/Fork, Toasts unverändert
 - [x] `item-workbench-check.mjs` grün
-- [ ] E2E findet Speichern + Editor-Hooks (Selektoren: visible filter wegen Dual-Shell)
+- [x] E2E findet Speichern + Editor-Hooks (topmost dual-shell dialog; details scroll assert)
 
 ## Assumptions
 - „Ausfahren“ = Panels starten nahe der Mitte und bewegen sich nach L/R
