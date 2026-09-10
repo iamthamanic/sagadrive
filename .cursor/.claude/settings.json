@@ -14,8 +14,6 @@
       "Bash(gh *)",
       "Bash(npm *)",
       "Bash(npx *)",
-      "Bash(deno check *)",
-      "Bash(deno test *)",
       "Read(*)",
       "Edit(src/*)",
       "Edit(supabase/*)",

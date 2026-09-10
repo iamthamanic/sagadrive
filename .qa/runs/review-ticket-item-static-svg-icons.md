@@ -1,29 +1,25 @@
-# Review Ticket — item-static-svg-icons
+# Review Ticket — item-static-svg-icons (follow-up)
 
 - Date: 2026-09-10
 - Branch: `feat/item-static-svg-icons`
 - Verdict: **ACCEPT**
 
-## Scope
+## Scope (this push)
 
-Static SagaDrive item icons: Cursor Agent image generation → gitignored PNG sources → VTracer (GH Action / optional local) → production SVG under `public/assets/items/`. Wire `iconKey` on builtin packs + Core shared keys. Inventory/Workbench resolve SVG via `<img>`.
+- Library tabs: `@container` + `@[42rem]:grid-cols-4`, shell `min-w-0` / `overflow-x-hidden`
+- Skill `.cursor/skills/svg-icon-create` + `scripts/generate-builtin-item-icons.mjs`
+- AgentShield: prompt defenses in `.cursor/.claude/CLAUDE.md`; remove open `deno *` allows
+
+Excluded from commit: `.tmp-item-count/`, `.qa/.tsconfig.verify.json`, debug evidence PNGs, unrelated debug run notes.
 
 ## Checks
 
 | Check | Result |
 |-------|--------|
 | `npm run test-gate` | PASS |
-| Forced `tsc` on touched TS | PASS |
-| `item-icon-assets-check` | OK |
-| Composition gate | CLEAR (worktree proof `.qa/runs/composition-gate-item-static-svg-icons.md`) |
+| Composition gate (icons) | CLEAR (prior) + SKIPPED proofs for layout/tooling |
 | AgentShield `.cursor` | Grade A — 0 critical/high |
-
-## Security notes
-
-- SVGs sanitized (no script/foreignObject/event handlers/external URLs/base64 rasters).
-- Rendered as external `<img src>` only.
-- PNG sources gitignored; no Meshy client secrets.
 
 ## Residual risk
 
-AI→VTracer icons vary in detail; valid SVGs are not auto-regenerated. Style-ref PNGs committed for regen consistency.
+Cursor IDE Simple Browser may crop a fixed 1440px layout; responsive behavior verified via real viewport emulation (360–1024px).
