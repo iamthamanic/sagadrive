@@ -35,7 +35,7 @@ section('1 · slice files exist');
 [
   'src/domains/items/assets.ts',
   'src/infrastructure/inventory/item-thumbnail-service.ts',
-  'src/app/items/workbench/useItemAssets.ts',
+  'src/app/items/visuals/useItemAssets.ts',
   'src/app/items/workbench/ItemVisualsPanel.tsx',
   'src/app/items/useItemThumbnailSrc.ts',
   'supabase/migrations/017_item_thumbnail_assets.sql',
@@ -64,7 +64,7 @@ section('3 · no Meshy secrets in client / Vite env');
 {
   const clientFiles = [
     'src/infrastructure/inventory/item-thumbnail-service.ts',
-    'src/app/items/workbench/useItemAssets.ts',
+    'src/app/items/visuals/useItemAssets.ts',
     'src/app/items/workbench/ItemVisualsPanel.tsx',
     '.env.example',
   ];
@@ -99,16 +99,19 @@ section('4 · Edge Function fail-closed + security');
 section('5 · Workbench visuals wired');
 {
   const panel = read('src/app/items/workbench/ItemVisualsPanel.tsx');
-  const hook = read('src/app/items/workbench/useItemAssets.ts');
+  const toolsBar = read('src/app/items/visuals/ItemVisualToolsBar.tsx');
+  const modeToggle = read('src/app/items/visuals/ItemVisualModeToggle.tsx');
+  const hook = read('src/app/items/visuals/useItemAssets.ts');
   const editor = read('src/app/items/workbench/ItemWorkbenchEditor.tsx');
   const screen = read('src/app/items/workbench/ItemWorkbenchScreen.tsx');
   check(/Bild hochladen/.test(panel), 'upload CTA');
-  check(/Bild generieren/.test(panel), 'generate CTA');
+  check(/Bild generieren/.test(toolsBar), 'generate CTA');
   check(/Bild entfernen/.test(panel), 'remove CTA');
-  check(/data-item-workbench-visual-toggle/.test(panel), '2D/3D toggle');
+  check(/data-item-workbench-visual-toggle/.test(modeToggle), '2D/3D toggle');
   check(/Erneut versuchen/.test(panel), 'retry CTA');
-  check(/nicht konfiguriert/.test(panel), 'fail-closed Meshy copy');
+  check(/Meshy nicht verbunden|nicht konfiguriert/.test(panel), 'fail-closed Meshy copy');
   check(/useItemAssets/.test(panel), 'uses useItemAssets');
+  check(/useItemVisualTools/.test(panel), 'uses useItemVisualTools');
   check(/itemThumbnailService/.test(hook), 'hook uses service');
   check(/onAssetKeyChange/.test(editor), 'editor wires asset key');
   check(/applyAssetKey/.test(screen), 'screen wires applyAssetKey');

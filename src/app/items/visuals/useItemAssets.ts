@@ -1,7 +1,7 @@
 /**
- * useItemAssets — Workbench thumbnail (#140) + model3d (#141) UI state.
+ * useItemAssets — reusable item thumbnail (#140) + model3d (#141) UI state.
  * Network via itemThumbnailService / itemModel3dService only; no Supabase imports.
- * Location: src/app/items/workbench/useItemAssets.ts
+ * Location: src/app/items/visuals/useItemAssets.ts
  */
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';

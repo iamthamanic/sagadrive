@@ -20,6 +20,22 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
+/**
+ * Edge Functions running in Docker often sign URLs with the internal Kong host
+ * (`http://supabase-kong:8000/...`). Browsers cannot resolve that — rewrite to
+ * the public VITE_SUPABASE_URL origin when needed.
+ */
+export function rewriteBrowserStorageUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== 'supabase-kong') return url;
+    const publicOrigin = new URL(supabaseUrl).origin;
+    return `${publicOrigin}${parsed.pathname}${parsed.search}`;
+  } catch {
+    return url;
+  }
+}
+
 // Server client for authenticated requests
 export const createServerClient = () => {
   return createClient(supabaseUrl, supabaseAnonKey);

@@ -62,8 +62,9 @@ Module id: `item-catalog` on `world_profiles.modules`.
 | Thumbnail PNG/JPEG ≤10 MB | `item-thumbnails` | `item-thumbnail` | **none** — no `VITE_*MESHY` / `NEXT_PUBLIC_*MESHY` |
 | GLB ≤50 MB | `item-models` | `item-model3d` | **none** — same |
 
-- `MESHY_API_KEY` is **server-only** (Supabase Edge / host secrets)
-- Missing key → generate returns `not-configured` (**fail-closed**); upload-only remains
+- User Meshy keys: Settings → AI → Bild/3D (`ai-provider-credentials`); encrypted at rest (`CREDENTIALS_ENCRYPTION_KEY`)
+- Host `MESHY_API_KEY` is **server-only** and used in prod **only** when `AI_PROVIDER_ALLOW_HOST_KEYS=1` (local/CI); otherwise generate needs a user key
+- Missing user key (and no allow-host) → generate returns `not-configured` (**fail-closed**); upload-only remains
 - Meshy results are materialized into private storage before `assetKey` / `model3d` is set
 - Library + Inventory show **thumbnails only** — no 3D renderer on those surfaces
 - CI uses mocks/adapters (`ITEM_THUMBNAIL_MESHY_MOCK` / `ITEM_MODEL3D_MESHY_MOCK`); live Meshy is not required

@@ -119,12 +119,15 @@ Character-Portraits werden über denselben konfigurierten Supabase-Client direkt
 
 ## Item-Thumbnails (2D) + Meshy
 
-Die Item-Workbench kann PNG/JPEG-Thumbnails (max. 10 MB) hochladen oder optional über Meshy Text-to-Image generieren. Die Edge Function `item-thumbnail` hält `MESHY_API_KEY` ausschließlich serverseitig — **nie** als `VITE_` / `NEXT_PUBLIC_` Client-Env. Fehlt der Key, antwortet Generate mit `not-configured` (fail-closed); Upload und Typ-Fallbacks bleiben nutzbar. Erfolgreiche Meshy-Ergebnisse werden vor dem Setzen von `assetKey` in den privaten Bucket `item-thumbnails` materialisiert (Provider-URLs sind keine Dauerreferenz).
+Die Item-Workbench kann PNG/JPEG-Thumbnails (max. 10 MB) hochladen oder optional über Meshy Text-to-Image generieren. Keys liegen **nie** im Client (`VITE_` / `NEXT_PUBLIC_`). In Prod gilt **User-BYOK** (Einstellungen → AI → Bild, Edge `ai-provider-credentials`, verschlüsselt mit `CREDENTIALS_ENCRYPTION_KEY`). Host-`MESHY_API_KEY` nur mit `AI_PROVIDER_ALLOW_HOST_KEYS=1` (lokal/CI). Fehlt ein nutzbarer Key, antwortet Generate mit `not-configured` (fail-closed); Upload und Typ-Fallbacks bleiben nutzbar. Erfolgreiche Meshy-Ergebnisse werden vor dem Setzen von `assetKey` in den privaten Bucket `item-thumbnails` materialisiert (Provider-URLs sind keine Dauerreferenz).
 
 Server-Env (Supabase Edge / Host Secrets — nicht im Vite-Bundle):
 
 ```text
-# Required for Meshy generate; omit to keep upload-only / placeholder
+# Required to store user keys in Settings
+CREDENTIALS_ENCRYPTION_KEY=
+# Optional local/CI host fallback (never for prod)
+# AI_PROVIDER_ALLOW_HOST_KEYS=1
 MESHY_API_KEY=
 # Optional overrides
 # MESHY_API_BASE_URL=https://api.meshy.ai/openapi/v1
@@ -136,16 +139,17 @@ ITEM_THUMBNAIL_ALLOWED_ORIGIN=http://localhost:3004
 # ITEM_THUMBNAIL_MESHY_MOCK=1
 ```
 
-Migration `017_item_thumbnail_assets.sql` legt Bucket, Manifest-/Job-Tabellen und die persistente Rate-Limit-RPC an. Offline-CI deckt Validierung und Mock-Provider über `supabase/functions/_shared/item-thumbnail_test.ts` ab — Live-Meshy ist für den Test-Gate nicht erforderlich.
+Migration `017_item_thumbnail_assets.sql` legt Bucket, Manifest-/Job-Tabellen und die persistente Rate-Limit-RPC an. `020_user_ai_provider_credentials.sql` speichert verschlüsselte User-Provider-Keys. Offline-CI deckt Validierung und Mock-Provider über `supabase/functions/_shared/item-thumbnail_test.ts` ab — Live-Meshy ist für den Test-Gate nicht erforderlich.
 
 ## Item-3D (GLB) + Meshy Image-to-3D
 
-Die Item-Workbench kann optional GLB-Modelle (max. 50 MB) hochladen oder über Meshy Image-to-3D aus einem **gespeicherten Thumbnail** generieren. Die Edge Function `item-model3d` hält `MESHY_API_KEY` ausschließlich serverseitig — **nie** als `VITE_` / `NEXT_PUBLIC_` Client-Env. Fehlt der Key, antwortet Generate mit `not-configured` (fail-closed); GLB-Upload bleibt nutzbar. Erfolgreiche Meshy-Ergebnisse werden vor dem Setzen von `payload.model3d` in den privaten Bucket `item-models` materialisiert (Provider-URLs sind keine Dauerreferenz). Bibliothek und Inventar laden weiterhin nur Thumbnails — kein 3D.
+Die Item-Workbench kann optional GLB-Modelle (max. 50 MB) hochladen oder über Meshy Image-to-3D aus einem **gespeicherten Thumbnail** generieren. Keys liegen **nie** im Client. In Prod: User-BYOK unter Einstellungen → AI → 3D (gleicher Meshy-Credential wie Bild). Host-`MESHY_API_KEY` nur mit `AI_PROVIDER_ALLOW_HOST_KEYS=1`. Fehlt ein nutzbarer Key, antwortet Generate mit `not-configured` (fail-closed); GLB-Upload bleibt nutzbar. Erfolgreiche Meshy-Ergebnisse werden vor dem Setzen von `payload.model3d` in den privaten Bucket `item-models` materialisiert (Provider-URLs sind keine Dauerreferenz). Bibliothek und Inventar laden weiterhin nur Thumbnails — kein 3D.
 
 Server-Env (Supabase Edge / Host Secrets — nicht im Vite-Bundle):
 
 ```text
-# Required for Meshy Image-to-3D; omit to keep GLB-upload-only
+CREDENTIALS_ENCRYPTION_KEY=
+# AI_PROVIDER_ALLOW_HOST_KEYS=1
 MESHY_API_KEY=
 # Optional overrides
 # MESHY_API_BASE_URL=https://api.meshy.ai/openapi/v1
@@ -185,9 +189,10 @@ Für den aktuellen Character-/Lore-Stand sind bei bestehenden Datenbanken diese 
 016_character_inventory_v2.sql
 017_item_thumbnail_assets.sql
 018_item_model3d_assets.sql
+020_user_ai_provider_credentials.sql
 ```
 
-`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz, `006` richtet den privaten owner-scoped Portrait-Storage ein, `007` ergänzt `sagadrive_profile` sowie persistente Character-Notizen, `008` legt owner-scoped Weltprofile an, `009` speichert Abenteuer-Bögen inkl. Entwicklungsgeschichte, `010`–`013` bringen V3-Spalten/Presets nach und `014` ergänzt `abilities`/`emotion_profiles` für Character-Save. `015` legt den Inventory-v2-Katalog an; `016` persistiert den Charakter-Inventarzustand; `017` richtet Item-Thumbnail-Storage, Manifeste, Jobs und Rate-Limits ein; `018` richtet Item-3D-Storage (GLB), Manifeste, Image-to-3D-Jobs und Rate-Limits ein. Self-Host: `bash scripts/apply-migrations.sh 015_inventory_item_definitions.sql` und `… 016_character_inventory_v2.sql` sowie `… 017_item_thumbnail_assets.sql` und `… 018_item_model3d_assets.sql`. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
+`002` stellt die vier Trait-Gruppen auf Arrays um, `003` aktiviert die persistente Character-Lore-Quota, `004` macht Projektmitgliedschaft zu einem server-/GM-kontrollierten Autorisierungsnachweis, `005` ergänzt die stabile Regelset-/D&D-Hintergrund-Persistenz, `006` richtet den privaten owner-scoped Portrait-Storage ein, `007` ergänzt `sagadrive_profile` sowie persistente Character-Notizen, `008` legt owner-scoped Weltprofile an, `009` speichert Abenteuer-Bögen inkl. Entwicklungsgeschichte, `010`–`013` bringen V3-Spalten/Presets nach und `014` ergänzt `abilities`/`emotion_profiles` für Character-Save. `015` legt den Inventory-v2-Katalog an; `016` persistiert den Charakter-Inventarzustand; `017` richtet Item-Thumbnail-Storage, Manifeste, Jobs und Rate-Limits ein; `018` richtet Item-3D-Storage (GLB), Manifeste, Image-to-3D-Jobs und Rate-Limits ein; `020` speichert verschlüsselte User-AI-Provider-Credentials (BYOK). Self-Host: `bash scripts/apply-migrations.sh 015_inventory_item_definitions.sql` und `… 016_character_inventory_v2.sql` sowie `… 017_item_thumbnail_assets.sql`, `… 018_item_model3d_assets.sql` und `… 020_user_ai_provider_credentials.sql`. Bei Schema V3 zuerst die kanonischen RLS-Policies aus `src/supabase/schema_v3_rls.sql` anwenden und danach die Migrationen in der genannten Reihenfolge.
 
 ## Quality Gates
 
@@ -214,6 +219,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-11** — AI Provider BYOK: Settings → AI (Meshy Key, Credits); Prod nur User-Keys; wiederverwendbare Item-Visual-Tools-Hooks (`feat/ai-provider-credentials`)
 - **2026-09-09** — Item-Workbench Forge: typed Create-URLs, Visuals-Dropzone mit Auto-Draft, Scroll-Layout, Single-Shell App-Layout (`feat/item-workbench-forge-ux`)
 - **2026-09-06** — Item Epic Abnahme: Docs-Sync (`docs/items.md`), Meta-Gate + Playwright-Hop Library→Workbench→Inventar (`feat/144-item-epic-acceptance`, #144)
 - **2026-09-06** — Bibliothek Items-Tab: List/Grid, Suche/Filter, Core+Standard+Personal+Welt (`feat/138-library-items-browser`, #138)
@@ -223,10 +229,6 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-09-06** — Item-Domain: `ItemDefinition` + Taxonomie/Provenienz unter `src/domains/items/**`; Inventory v2 re-exportiert kompatibel (`feat/134-item-domain-taxonomy`, #134)
 - **2026-09-06** — App-Shell History-URL-Routing: `/library`, `/items/create`, `/items/:id` (Platzhalter bis Workbench) (`feat/133-item-routing-foundation`, #133)
 - **2026-09-06** — Inventar Ausrüstung: Paper-Doll inkl. Füße, PNG-Kacheln, gleiche Panel-Höhen; Schnellzugriff-UI entfernt (Domain bleibt) (`feat/inventory-equipment-paper-doll-feet`)
-- **2026-09-04** — Charakter-Tab startet auf Archetype; fertige Untertabs mit Checkbox-Icon; Archetyp-Beschreibungen (Rolle + mechanische Auswirkungen); Attributsbonus-Überschrift; „Frei +N“-Pills an Skill-Nodes entfernt (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Sticky preview: Essenz- and Archetype-Pills (icons, no Spezies pill) (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Attribute-Tab: Fertigkeiten-Karussell über Attributsbonus; Formel unter Skill-Nodes; Tab-Split Charakter/Hintergrund/Details (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Hintergrund-Skill-Nodes: CircleHelp (Check-Terminologie); Status-Box entfernt; Spezialisieren im Node (`feat/background-skill-points-in-nodes`, #103)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 
