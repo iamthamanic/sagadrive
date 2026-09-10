@@ -50,6 +50,18 @@ export interface StandardItemInput {
   damageType?: string;
   protection?: ItemDefinition['protection'];
   traits?: string[];
+  /**
+   * Static SVG slug under `/assets/items/{iconKey}.svg`.
+   * Defaults to definition id with dots → hyphens (`builtin.fantasy.longsword` → `builtin-fantasy-longsword`).
+   */
+  iconKey?: string;
+}
+
+/**
+ * `builtin.fantasy.longsword` → `builtin-fantasy-longsword` for public SVG path.
+ */
+export function builtinDefinitionIdToIconKey(definitionId: string): string {
+  return definitionId.replace(/\./g, '-');
 }
 
 /**
@@ -57,6 +69,7 @@ export interface StandardItemInput {
  * Throws at module load if basedOnDefinitionId is unknown — fail closed.
  */
 export function buildStandardItem(input: StandardItemInput): ItemDefinition {
+  const iconKey = input.iconKey ?? builtinDefinitionIdToIconKey(input.id);
   const basedOn = input.basedOnDefinitionId;
   if (basedOn !== undefined) {
     const snapshot = CORE_MECHANIC_SNAPSHOTS[basedOn];
@@ -82,6 +95,7 @@ export function buildStandardItem(input: StandardItemInput): ItemDefinition {
       damageType: snapshot.damageType,
       protection: snapshot.protection,
       traits: snapshot.traits,
+      iconKey,
       kindKey: input.kindKey,
       settingTags: [...input.settingTags],
       techLevel: input.techLevel,
@@ -115,6 +129,7 @@ export function buildStandardItem(input: StandardItemInput): ItemDefinition {
     damageType: input.damageType,
     protection: input.protection,
     traits: input.traits,
+    iconKey,
     kindKey: input.kindKey,
     settingTags: [...input.settingTags],
     techLevel: input.techLevel,

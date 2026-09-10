@@ -214,6 +214,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-10** — Static Item-Icons: Cursor→PNG→VTracer SVGs für Core+Builtin-Katalog; Inventar/Workbench nutzen `/assets/items/{slug}.svg` (`feat/item-static-svg-icons`)
 - **2026-09-09** — Item-Workbench Forge: typed Create-URLs, Visuals-Dropzone mit Auto-Draft, Scroll-Layout, Single-Shell App-Layout (`feat/item-workbench-forge-ux`)
 - **2026-09-06** — Item Epic Abnahme: Docs-Sync (`docs/items.md`), Meta-Gate + Playwright-Hop Library→Workbench→Inventar (`feat/144-item-epic-acceptance`, #144)
 - **2026-09-06** — Bibliothek Items-Tab: List/Grid, Suche/Filter, Core+Standard+Personal+Welt (`feat/138-library-items-browser`, #138)
@@ -223,10 +224,6 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-09-06** — Item-Domain: `ItemDefinition` + Taxonomie/Provenienz unter `src/domains/items/**`; Inventory v2 re-exportiert kompatibel (`feat/134-item-domain-taxonomy`, #134)
 - **2026-09-06** — App-Shell History-URL-Routing: `/library`, `/items/create`, `/items/:id` (Platzhalter bis Workbench) (`feat/133-item-routing-foundation`, #133)
 - **2026-09-06** — Inventar Ausrüstung: Paper-Doll inkl. Füße, PNG-Kacheln, gleiche Panel-Höhen; Schnellzugriff-UI entfernt (Domain bleibt) (`feat/inventory-equipment-paper-doll-feet`)
-- **2026-09-04** — Charakter-Tab startet auf Archetype; fertige Untertabs mit Checkbox-Icon; Archetyp-Beschreibungen (Rolle + mechanische Auswirkungen); Attributsbonus-Überschrift; „Frei +N“-Pills an Skill-Nodes entfernt (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Sticky preview: Essenz- and Archetype-Pills (icons, no Spezies pill) (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Attribute-Tab: Fertigkeiten-Karussell über Attributsbonus; Formel unter Skill-Nodes; Tab-Split Charakter/Hintergrund/Details (`feat/background-skill-points-in-nodes`, #103)
-- **2026-09-03** — Hintergrund-Skill-Nodes: CircleHelp (Check-Terminologie); Status-Box entfernt; Spezialisieren im Node (`feat/background-skill-points-in-nodes`, #103)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 

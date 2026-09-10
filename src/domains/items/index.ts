@@ -65,6 +65,7 @@ export {
   SCIFI_BASIC_PACK,
   SCIFI_BASIC_PACK_ID,
   STRESS_TEST_PACK_COMBINATIONS,
+  builtinDefinitionIdToIconKey,
   getBuiltinStandardDefinition,
   getItemPack,
   listBaseItemPacks,
@@ -107,6 +108,26 @@ export {
   parseItemThumbnailAssetKey,
   sniffItemThumbnailMime,
 } from './assets';
+
+export type {
+  ItemIconGenerationStatus,
+  ItemIconManifestEntry,
+  ItemIconPromptInput,
+} from './icon-assets';
+export {
+  ITEM_ICON_MANIFEST_PATH,
+  ITEM_ICON_OUTPUT_DIR,
+  ITEM_ICON_PUBLIC_DIR,
+  ITEM_ICON_SLUG_PATTERN,
+  ITEM_ICON_SOURCE_DIR,
+  buildItemIconOutputPath,
+  buildItemIconPrompt,
+  buildItemIconPublicSrc,
+  buildItemIconSourcePath,
+  getItemIconStyleTemplate,
+  isItemIconSlug,
+  normalizeItemIconSlug,
+} from './icon-assets';
 
 export type {
   ItemModel3dAssetRecord,

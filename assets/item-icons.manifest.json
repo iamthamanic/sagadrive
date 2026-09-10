@@ -1,0 +1,1242 @@
+[
+  {
+    "id": "builtin-contemporary-backpack",
+    "slug": "builtin-contemporary-backpack",
+    "name": "Rucksack",
+    "iconPrompt": "Everyday modern backpack.",
+    "iconKey": "builtin-contemporary-backpack",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-backpack.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-backpack.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-ballpoint-pen",
+    "slug": "builtin-contemporary-ballpoint-pen",
+    "name": "Kugelschreiber",
+    "iconPrompt": "Simple ballpoint pen.",
+    "iconKey": "builtin-contemporary-ballpoint-pen",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-ballpoint-pen.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-ballpoint-pen.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-bank-card",
+    "slug": "builtin-contemporary-bank-card",
+    "name": "Bankkarte",
+    "iconPrompt": "Payment card blank, no logos no numbers no text.",
+    "iconKey": "builtin-contemporary-bank-card",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-bank-card.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-bank-card.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-bike-helmet",
+    "slug": "builtin-contemporary-bike-helmet",
+    "name": "Fahrradhelm",
+    "iconPrompt": "Bicycle helmet.",
+    "iconKey": "builtin-contemporary-bike-helmet",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-bike-helmet.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-bike-helmet.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-car-keys",
+    "slug": "builtin-contemporary-car-keys",
+    "name": "Autoschlüssel",
+    "iconPrompt": "Car key fob with key.",
+    "iconKey": "builtin-contemporary-car-keys",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-car-keys.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-car-keys.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-cash",
+    "slug": "builtin-contemporary-cash",
+    "name": "Bargeld",
+    "iconPrompt": "Stack of paper bills and coins, no readable numbers or letters.",
+    "iconKey": "builtin-contemporary-cash",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-cash.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-cash.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-charger",
+    "slug": "builtin-contemporary-charger",
+    "name": "Ladegerät",
+    "iconPrompt": "Phone charger brick and cable coiled.",
+    "iconKey": "builtin-contemporary-charger",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-charger.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-charger.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-coffee-cup",
+    "slug": "builtin-contemporary-coffee-cup",
+    "name": "Kaffeebecher",
+    "iconPrompt": "Takeaway coffee cup with lid, no logos or text.",
+    "iconKey": "builtin-contemporary-coffee-cup",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-coffee-cup.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-coffee-cup.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-contract",
+    "slug": "builtin-contemporary-contract",
+    "name": "Vertrag",
+    "iconPrompt": "Folded contract papers with blank seal, no readable text.",
+    "iconKey": "builtin-contemporary-contract",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-contract.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-contract.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-document-folder",
+    "slug": "builtin-contemporary-document-folder",
+    "name": "Dokumentenmappe",
+    "iconPrompt": "Manila document folder.",
+    "iconKey": "builtin-contemporary-document-folder",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-document-folder.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-document-folder.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-drivers-license",
+    "slug": "builtin-contemporary-drivers-license",
+    "name": "Führerschein",
+    "iconPrompt": "Drivers license card blank, no readable text.",
+    "iconKey": "builtin-contemporary-drivers-license",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-drivers-license.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-drivers-license.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-duct-tape",
+    "slug": "builtin-contemporary-duct-tape",
+    "name": "Klebeband",
+    "iconPrompt": "Roll of silver duct tape.",
+    "iconKey": "builtin-contemporary-duct-tape",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-duct-tape.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-duct-tape.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-first-aid-kit",
+    "slug": "builtin-contemporary-first-aid-kit",
+    "name": "Erste-Hilfe-Set",
+    "iconPrompt": "Red first-aid kit box with white cross symbol only.",
+    "iconKey": "builtin-contemporary-first-aid-kit",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-first-aid-kit.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-first-aid-kit.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-flashlight",
+    "slug": "builtin-contemporary-flashlight",
+    "name": "Taschenlampe",
+    "iconPrompt": "Handheld flashlight.",
+    "iconKey": "builtin-contemporary-flashlight",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-flashlight.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-flashlight.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-groceries",
+    "slug": "builtin-contemporary-groceries",
+    "name": "Lebensmittel",
+    "iconPrompt": "Small grocery bag with bread and produce, no labels.",
+    "iconKey": "builtin-contemporary-groceries",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-groceries.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-groceries.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-guitar",
+    "slug": "builtin-contemporary-guitar",
+    "name": "Gitarre",
+    "iconPrompt": "Acoustic guitar.",
+    "iconKey": "builtin-contemporary-guitar",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-guitar.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-guitar.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-handbag",
+    "slug": "builtin-contemporary-handbag",
+    "name": "Handtasche",
+    "iconPrompt": "Simple modern handbag.",
+    "iconKey": "builtin-contemporary-handbag",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-handbag.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-handbag.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-headphones",
+    "slug": "builtin-contemporary-headphones",
+    "name": "Kopfhörer",
+    "iconPrompt": "Over-ear headphones.",
+    "iconKey": "builtin-contemporary-headphones",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-headphones.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-headphones.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-id-card",
+    "slug": "builtin-contemporary-id-card",
+    "name": "Personalausweis",
+    "iconPrompt": "ID card blank silhouette, no readable text or photo detail.",
+    "iconKey": "builtin-contemporary-id-card",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-id-card.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-id-card.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-key-card",
+    "slug": "builtin-contemporary-key-card",
+    "name": "Schlüsselkarte",
+    "iconPrompt": "Blank key card fob, no logos.",
+    "iconKey": "builtin-contemporary-key-card",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-key-card.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-key-card.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-keyring",
+    "slug": "builtin-contemporary-keyring",
+    "name": "Schlüsselbund",
+    "iconPrompt": "Modern keyring with house keys.",
+    "iconKey": "builtin-contemporary-keyring",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-keyring.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-keyring.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-kitchen-knife",
+    "slug": "builtin-contemporary-kitchen-knife",
+    "name": "Küchenmesser",
+    "iconPrompt": "Kitchen chef knife.",
+    "iconKey": "builtin-contemporary-kitchen-knife",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-kitchen-knife.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-kitchen-knife.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-laptop",
+    "slug": "builtin-contemporary-laptop",
+    "name": "Laptop",
+    "iconPrompt": "Open laptop computer, blank screen, no logos no text.",
+    "iconKey": "builtin-contemporary-laptop",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-laptop.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-laptop.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-lighter",
+    "slug": "builtin-contemporary-lighter",
+    "name": "Feuerzeug",
+    "iconPrompt": "Disposable lighter.",
+    "iconKey": "builtin-contemporary-lighter",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-lighter.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-lighter.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-medication",
+    "slug": "builtin-contemporary-medication",
+    "name": "Medikamente",
+    "iconPrompt": "Pill bottle and blister pack, no text.",
+    "iconKey": "builtin-contemporary-medication",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-medication.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-medication.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-notebook",
+    "slug": "builtin-contemporary-notebook",
+    "name": "Notizbuch",
+    "iconPrompt": "Closed notebook with blank cover.",
+    "iconKey": "builtin-contemporary-notebook",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-notebook.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-notebook.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-powerbank",
+    "slug": "builtin-contemporary-powerbank",
+    "name": "Powerbank",
+    "iconPrompt": "Rectangular portable powerbank.",
+    "iconKey": "builtin-contemporary-powerbank",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-powerbank.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-powerbank.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-shopping-bag",
+    "slug": "builtin-contemporary-shopping-bag",
+    "name": "Einkaufstasche",
+    "iconPrompt": "Paper shopping bag with handles, no logos or text.",
+    "iconKey": "builtin-contemporary-shopping-bag",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-shopping-bag.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-shopping-bag.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-smartphone",
+    "slug": "builtin-contemporary-smartphone",
+    "name": "Smartphone",
+    "iconPrompt": "Modern smartphone front view, blank dark screen, no logos no text.",
+    "iconKey": "builtin-contemporary-smartphone",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-smartphone.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-smartphone.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-soccer-ball",
+    "slug": "builtin-contemporary-soccer-ball",
+    "name": "Fußball",
+    "iconPrompt": "Classic soccer ball.",
+    "iconKey": "builtin-contemporary-soccer-ball",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-soccer-ball.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-soccer-ball.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-sports-bag",
+    "slug": "builtin-contemporary-sports-bag",
+    "name": "Sporttasche",
+    "iconPrompt": "Sports duffel bag.",
+    "iconKey": "builtin-contemporary-sports-bag",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-sports-bag.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-sports-bag.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-tablet",
+    "slug": "builtin-contemporary-tablet",
+    "name": "Tablet",
+    "iconPrompt": "Flat tablet device, blank screen, no logos.",
+    "iconKey": "builtin-contemporary-tablet",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-tablet.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-tablet.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-toolbox",
+    "slug": "builtin-contemporary-toolbox",
+    "name": "Werkzeugkoffer",
+    "iconPrompt": "Red metal toolbox closed.",
+    "iconKey": "builtin-contemporary-toolbox",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-toolbox.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-toolbox.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-transit-ticket",
+    "slug": "builtin-contemporary-transit-ticket",
+    "name": "Fahrkarte",
+    "iconPrompt": "Blank transit ticket stub, no readable text.",
+    "iconKey": "builtin-contemporary-transit-ticket",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-transit-ticket.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-transit-ticket.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-umbrella",
+    "slug": "builtin-contemporary-umbrella",
+    "name": "Regenschirm",
+    "iconPrompt": "Folded compact umbrella.",
+    "iconKey": "builtin-contemporary-umbrella",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-umbrella.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-umbrella.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-wallet",
+    "slug": "builtin-contemporary-wallet",
+    "name": "Geldbörse",
+    "iconPrompt": "Bifold leather wallet.",
+    "iconKey": "builtin-contemporary-wallet",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-wallet.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-wallet.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-water-bottle",
+    "slug": "builtin-contemporary-water-bottle",
+    "name": "Wasserflasche",
+    "iconPrompt": "Reusable water bottle.",
+    "iconKey": "builtin-contemporary-water-bottle",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-water-bottle.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-water-bottle.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-whistle",
+    "slug": "builtin-contemporary-whistle",
+    "name": "Trillerpfeife",
+    "iconPrompt": "Metal referee whistle on cord.",
+    "iconKey": "builtin-contemporary-whistle",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-whistle.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-whistle.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-work-clothes",
+    "slug": "builtin-contemporary-work-clothes",
+    "name": "Arbeitskleidung",
+    "iconPrompt": "Folded work overalls / coveralls.",
+    "iconKey": "builtin-contemporary-work-clothes",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-work-clothes.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-work-clothes.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-contemporary-work-gloves",
+    "slug": "builtin-contemporary-work-gloves",
+    "name": "Arbeitshandschuhe",
+    "iconPrompt": "Pair of work gloves.",
+    "iconKey": "builtin-contemporary-work-gloves",
+    "sourcePng": "assets/item-icon-sources/builtin-contemporary-work-gloves.png",
+    "outputSvg": "public/assets/items/builtin-contemporary-work-gloves.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-antidote",
+    "slug": "builtin-fantasy-antidote",
+    "name": "Gegengift",
+    "iconPrompt": "Small glass vial with green antidote liquid and cork.",
+    "iconKey": "builtin-fantasy-antidote",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-antidote.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-antidote.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-arrows",
+    "slug": "builtin-fantasy-arrows",
+    "name": "Pfeile",
+    "iconPrompt": "Bundle of wooden arrows with feather fletching tied together.",
+    "iconKey": "builtin-fantasy-arrows",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-arrows.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-arrows.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-backpack",
+    "slug": "builtin-fantasy-backpack",
+    "name": "Rucksack",
+    "iconPrompt": "Brown leather travel backpack with straps.",
+    "iconKey": "builtin-fantasy-backpack",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-backpack.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-backpack.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-battle-axe",
+    "slug": "builtin-fantasy-battle-axe",
+    "name": "Streitaxt",
+    "iconPrompt": "One-handed battle axe with crescent steel blade and wooden haft.",
+    "iconKey": "builtin-fantasy-battle-axe",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-battle-axe.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-battle-axe.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-belt-pouch",
+    "slug": "builtin-fantasy-belt-pouch",
+    "name": "Gürteltasche",
+    "iconPrompt": "Small brown leather belt pouch with drawstring.",
+    "iconKey": "builtin-fantasy-belt-pouch",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-belt-pouch.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-belt-pouch.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-blanket",
+    "slug": "builtin-fantasy-blanket",
+    "name": "Decke",
+    "iconPrompt": "Folded wool travel blanket.",
+    "iconKey": "builtin-fantasy-blanket",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-blanket.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-blanket.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-bolts",
+    "slug": "builtin-fantasy-bolts",
+    "name": "Bolzen",
+    "iconPrompt": "Bundle of short crossbow bolts with metal tips.",
+    "iconKey": "builtin-fantasy-bolts",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-bolts.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-bolts.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-book",
+    "slug": "builtin-fantasy-book",
+    "name": "Buch",
+    "iconPrompt": "Thick bound leather book closed.",
+    "iconKey": "builtin-fantasy-book",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-book.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-book.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-chainmail",
+    "slug": "builtin-fantasy-chainmail",
+    "name": "Kettenhemd",
+    "iconPrompt": "Shirt of interlocking steel chainmail rings.",
+    "iconKey": "builtin-fantasy-chainmail",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-chainmail.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-chainmail.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-coin-purse",
+    "slug": "builtin-fantasy-coin-purse",
+    "name": "Münzbeutel",
+    "iconPrompt": "Small coin purse spilling a few gold coins.",
+    "iconKey": "builtin-fantasy-coin-purse",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-coin-purse.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-coin-purse.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-compass",
+    "slug": "builtin-fantasy-compass",
+    "name": "Kompass",
+    "iconPrompt": "Brass compass with magnetic needle under glass.",
+    "iconKey": "builtin-fantasy-compass",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-compass.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-compass.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-craftsman-tools",
+    "slug": "builtin-fantasy-craftsman-tools",
+    "name": "Handwerkszeug",
+    "iconPrompt": "Hammer, tongs and file as a small craftsman tool set.",
+    "iconKey": "builtin-fantasy-craftsman-tools",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-craftsman-tools.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-craftsman-tools.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-crossbow",
+    "slug": "builtin-fantasy-crossbow",
+    "name": "Armbrust",
+    "iconPrompt": "Heavy wooden crossbow with metal prod and stock.",
+    "iconKey": "builtin-fantasy-crossbow",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-crossbow.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-crossbow.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-dagger",
+    "slug": "builtin-fantasy-dagger",
+    "name": "Dolch",
+    "iconPrompt": "Small double-edged dagger with short blade and wrapped handle.",
+    "iconKey": "builtin-fantasy-dagger",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-dagger.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-dagger.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-gemstone",
+    "slug": "builtin-fantasy-gemstone",
+    "name": "Edelstein",
+    "iconPrompt": "Cut blue gemstone sparkling simply.",
+    "iconKey": "builtin-fantasy-gemstone",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-gemstone.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-gemstone.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-grappling-hook",
+    "slug": "builtin-fantasy-grappling-hook",
+    "name": "Enterhaken",
+    "iconPrompt": "Iron three-prong grappling hook with rope attached.",
+    "iconKey": "builtin-fantasy-grappling-hook",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-grappling-hook.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-grappling-hook.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-healer-kit",
+    "slug": "builtin-fantasy-healer-kit",
+    "name": "Heilerset",
+    "iconPrompt": "Open healer kit pouch with bandages and salve jars.",
+    "iconKey": "builtin-fantasy-healer-kit",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-healer-kit.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-healer-kit.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-healing-potion",
+    "slug": "builtin-fantasy-healing-potion",
+    "name": "Heiltrank",
+    "iconPrompt": "Small round glass potion bottle filled with bright red healing liquid and cork stopper.",
+    "iconKey": "builtin-fantasy-healing-potion",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-healing-potion.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-healing-potion.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-keyring",
+    "slug": "builtin-fantasy-keyring",
+    "name": "Schlüsselbund",
+    "iconPrompt": "Iron ring with several old skeleton keys.",
+    "iconKey": "builtin-fantasy-keyring",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-keyring.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-keyring.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-lantern",
+    "slug": "builtin-fantasy-lantern",
+    "name": "Laterne",
+    "iconPrompt": "Metal oil lantern with glass panes and handle.",
+    "iconKey": "builtin-fantasy-lantern",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-lantern.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-lantern.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-leather-armor",
+    "slug": "builtin-fantasy-leather-armor",
+    "name": "Lederharnisch",
+    "iconPrompt": "Hardened brown leather chest armor / cuirass, front view.",
+    "iconKey": "builtin-fantasy-leather-armor",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-leather-armor.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-leather-armor.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-light-shield",
+    "slug": "builtin-fantasy-light-shield",
+    "name": "leichter Schild",
+    "iconPrompt": "Round wooden shield with leather rim and simple metal boss.",
+    "iconKey": "builtin-fantasy-light-shield",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-light-shield.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-light-shield.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-lockpicks",
+    "slug": "builtin-fantasy-lockpicks",
+    "name": "Dietrichset",
+    "iconPrompt": "Set of metal lockpick tools on a small ring.",
+    "iconKey": "builtin-fantasy-lockpicks",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-lockpicks.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-lockpicks.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-longbow",
+    "slug": "builtin-fantasy-longbow",
+    "name": "Langbogen",
+    "iconPrompt": "Tall wooden longbow with taut bowstring.",
+    "iconKey": "builtin-fantasy-longbow",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-longbow.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-longbow.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-longsword",
+    "slug": "builtin-fantasy-longsword",
+    "name": "Langschwert",
+    "iconPrompt": "Balanced iron longsword with leather-wrapped grip, simple crossguard, blade pointing up.",
+    "iconKey": "builtin-fantasy-longsword",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-longsword.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-longsword.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-map",
+    "slug": "builtin-fantasy-map",
+    "name": "Karte",
+    "iconPrompt": "Rolled parchment map with simple ink coastline marks.",
+    "iconKey": "builtin-fantasy-map",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-map.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-map.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-musical-instrument",
+    "slug": "builtin-fantasy-musical-instrument",
+    "name": "Musikinstrument",
+    "iconPrompt": "Simple wooden lute / string instrument.",
+    "iconKey": "builtin-fantasy-musical-instrument",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-musical-instrument.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-musical-instrument.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-plate-armor",
+    "slug": "builtin-fantasy-plate-armor",
+    "name": "Plattenrüstung",
+    "iconPrompt": "Steel plate breastplate with simple pauldrons, front view.",
+    "iconKey": "builtin-fantasy-plate-armor",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-plate-armor.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-plate-armor.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-quarterstaff",
+    "slug": "builtin-fantasy-quarterstaff",
+    "name": "Kampfstab",
+    "iconPrompt": "Plain wooden quarterstaff with simple metal endcaps.",
+    "iconKey": "builtin-fantasy-quarterstaff",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-quarterstaff.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-quarterstaff.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-rope",
+    "slug": "builtin-fantasy-rope",
+    "name": "Seil",
+    "iconPrompt": "Coiled hemp rope.",
+    "iconKey": "builtin-fantasy-rope",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-rope.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-rope.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-sealed-letter",
+    "slug": "builtin-fantasy-sealed-letter",
+    "name": "versiegelter Brief",
+    "iconPrompt": "Folded sealed letter with red wax seal.",
+    "iconKey": "builtin-fantasy-sealed-letter",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-sealed-letter.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-sealed-letter.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-shortbow",
+    "slug": "builtin-fantasy-shortbow",
+    "name": "Kurzbogen",
+    "iconPrompt": "Compact wooden shortbow with taut string, unstrung arrow not included.",
+    "iconKey": "builtin-fantasy-shortbow",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-shortbow.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-shortbow.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-shortsword",
+    "slug": "builtin-fantasy-shortsword",
+    "name": "Kurzschwert",
+    "iconPrompt": "Compact shortsword with short blade and simple hilt, leather grip.",
+    "iconKey": "builtin-fantasy-shortsword",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-shortsword.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-shortsword.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-spear",
+    "slug": "builtin-fantasy-spear",
+    "name": "Speer",
+    "iconPrompt": "Wooden spear with iron leaf-shaped tip and wrapped grip.",
+    "iconKey": "builtin-fantasy-spear",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-spear.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-spear.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-tinderbox",
+    "slug": "builtin-fantasy-tinderbox",
+    "name": "Zunderzeug",
+    "iconPrompt": "Small metal tinderbox with flint and steel.",
+    "iconKey": "builtin-fantasy-tinderbox",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-tinderbox.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-tinderbox.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-torch",
+    "slug": "builtin-fantasy-torch",
+    "name": "Fackel",
+    "iconPrompt": "Wooden torch with burning pitch-soaked cloth tip (simple flame).",
+    "iconKey": "builtin-fantasy-torch",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-torch.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-torch.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-travel-rations",
+    "slug": "builtin-fantasy-travel-rations",
+    "name": "Reiseproviant",
+    "iconPrompt": "Wrapped travel rations: dried meat and hardtack tied in cloth.",
+    "iconKey": "builtin-fantasy-travel-rations",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-travel-rations.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-travel-rations.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-warhammer",
+    "slug": "builtin-fantasy-warhammer",
+    "name": "Kriegshammer",
+    "iconPrompt": "Two-handed warhammer with heavy metal head and long wooden shaft.",
+    "iconKey": "builtin-fantasy-warhammer",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-warhammer.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-warhammer.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-waterskin",
+    "slug": "builtin-fantasy-waterskin",
+    "name": "Wasserschlauch",
+    "iconPrompt": "Leather waterskin flask with cork stopper.",
+    "iconKey": "builtin-fantasy-waterskin",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-waterskin.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-waterskin.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-fantasy-writing-kit",
+    "slug": "builtin-fantasy-writing-kit",
+    "name": "Schreibzeug",
+    "iconPrompt": "Quill pen, ink bottle and rolled parchment.",
+    "iconKey": "builtin-fantasy-writing-kit",
+    "sourcePng": "assets/item-icon-sources/builtin-fantasy-writing-kit.png",
+    "outputSvg": "public/assets/items/builtin-fantasy-writing-kit.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-access-card",
+    "slug": "builtin-scifi-access-card",
+    "name": "Zugangskarte",
+    "iconPrompt": "Access keycard with chip stripe, no readable text.",
+    "iconKey": "builtin-scifi-access-card",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-access-card.png",
+    "outputSvg": "public/assets/items/builtin-scifi-access-card.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-ammo-pack",
+    "slug": "builtin-scifi-ammo-pack",
+    "name": "Munitionspack",
+    "iconPrompt": "Compact ammo / energy magazine pack.",
+    "iconKey": "builtin-scifi-ammo-pack",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-ammo-pack.png",
+    "outputSvg": "public/assets/items/builtin-scifi-ammo-pack.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-antitoxin",
+    "slug": "builtin-scifi-antitoxin",
+    "name": "Antitoxin",
+    "iconPrompt": "Small sci-fi antitoxin vial with green fluid.",
+    "iconKey": "builtin-scifi-antitoxin",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-antitoxin.png",
+    "outputSvg": "public/assets/items/builtin-scifi-antitoxin.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-breathing-apparatus",
+    "slug": "builtin-scifi-breathing-apparatus",
+    "name": "Atemgerät",
+    "iconPrompt": "Breathing mask with air canister.",
+    "iconKey": "builtin-scifi-breathing-apparatus",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-breathing-apparatus.png",
+    "outputSvg": "public/assets/items/builtin-scifi-breathing-apparatus.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-cable-tether",
+    "slug": "builtin-scifi-cable-tether",
+    "name": "Kabel/Leine",
+    "iconPrompt": "Coiled safety tether cable with carabiners.",
+    "iconKey": "builtin-scifi-cable-tether",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-cable-tether.png",
+    "outputSvg": "public/assets/items/builtin-scifi-cable-tether.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-communicator",
+    "slug": "builtin-scifi-communicator",
+    "name": "Kommunikator",
+    "iconPrompt": "Wrist or handheld sci-fi communicator.",
+    "iconKey": "builtin-scifi-communicator",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-communicator.png",
+    "outputSvg": "public/assets/items/builtin-scifi-communicator.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-compact-energy-weapon",
+    "slug": "builtin-scifi-compact-energy-weapon",
+    "name": "kompakte Energiewaffe",
+    "iconPrompt": "Compact futuristic energy pistol, sleek gray and blue accents.",
+    "iconKey": "builtin-scifi-compact-energy-weapon",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-compact-energy-weapon.png",
+    "outputSvg": "public/assets/items/builtin-scifi-compact-energy-weapon.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-credits",
+    "slug": "builtin-scifi-credits",
+    "name": "Credits",
+    "iconPrompt": "Stack of futuristic credit chips / coins.",
+    "iconKey": "builtin-scifi-credits",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-credits.png",
+    "outputSvg": "public/assets/items/builtin-scifi-credits.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-data-chip",
+    "slug": "builtin-scifi-data-chip",
+    "name": "Datenchip",
+    "iconPrompt": "Tiny data chip cartridge.",
+    "iconKey": "builtin-scifi-data-chip",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-data-chip.png",
+    "outputSvg": "public/assets/items/builtin-scifi-data-chip.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-datapad",
+    "slug": "builtin-scifi-datapad",
+    "name": "Datapad",
+    "iconPrompt": "Flat rectangular datapad tablet screen.",
+    "iconKey": "builtin-scifi-datapad",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-datapad.png",
+    "outputSvg": "public/assets/items/builtin-scifi-datapad.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-emergency-ration",
+    "slug": "builtin-scifi-emergency-ration",
+    "name": "Notration",
+    "iconPrompt": "Sealed emergency ration pack bar.",
+    "iconKey": "builtin-scifi-emergency-ration",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-emergency-ration.png",
+    "outputSvg": "public/assets/items/builtin-scifi-emergency-ration.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-encrypted-file",
+    "slug": "builtin-scifi-encrypted-file",
+    "name": "verschlüsselte Datei",
+    "iconPrompt": "Encrypted data crystal / locked file module.",
+    "iconKey": "builtin-scifi-encrypted-file",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-encrypted-file.png",
+    "outputSvg": "public/assets/items/builtin-scifi-encrypted-file.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-energy-blade",
+    "slug": "builtin-scifi-energy-blade",
+    "name": "Energieklinge",
+    "iconPrompt": "Energy blade sword with glowing cyan edge and dark hilt.",
+    "iconKey": "builtin-scifi-energy-blade",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-energy-blade.png",
+    "outputSvg": "public/assets/items/builtin-scifi-energy-blade.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-energy-cell",
+    "slug": "builtin-scifi-energy-cell",
+    "name": "Energiezelle",
+    "iconPrompt": "Cylindrical glowing energy cell battery.",
+    "iconKey": "builtin-scifi-energy-cell",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-energy-cell.png",
+    "outputSvg": "public/assets/items/builtin-scifi-energy-cell.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-engineering-kit",
+    "slug": "builtin-scifi-engineering-kit",
+    "name": "Engineering-Kit",
+    "iconPrompt": "Open engineering tool kit case.",
+    "iconKey": "builtin-scifi-engineering-kit",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-engineering-kit.png",
+    "outputSvg": "public/assets/items/builtin-scifi-engineering-kit.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-equipment-bag",
+    "slug": "builtin-scifi-equipment-bag",
+    "name": "Ausrüstungstasche",
+    "iconPrompt": "Rugged equipment duffel bag sci-fi style.",
+    "iconKey": "builtin-scifi-equipment-bag",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-equipment-bag.png",
+    "outputSvg": "public/assets/items/builtin-scifi-equipment-bag.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-flashlight",
+    "slug": "builtin-scifi-flashlight",
+    "name": "Taschenlampe",
+    "iconPrompt": "Futuristic flashlight torch.",
+    "iconKey": "builtin-scifi-flashlight",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-flashlight.png",
+    "outputSvg": "public/assets/items/builtin-scifi-flashlight.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-hand-scanner",
+    "slug": "builtin-scifi-hand-scanner",
+    "name": "Handscanner",
+    "iconPrompt": "Handheld scanning device with display.",
+    "iconKey": "builtin-scifi-hand-scanner",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-hand-scanner.png",
+    "outputSvg": "public/assets/items/builtin-scifi-hand-scanner.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-heavy-energy-rifle",
+    "slug": "builtin-scifi-heavy-energy-rifle",
+    "name": "schweres Energiegewehr",
+    "iconPrompt": "Heavy two-handed energy rifle, bulky sci-fi design.",
+    "iconKey": "builtin-scifi-heavy-energy-rifle",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-heavy-energy-rifle.png",
+    "outputSvg": "public/assets/items/builtin-scifi-heavy-energy-rifle.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-heavy-protective-suit",
+    "slug": "builtin-scifi-heavy-protective-suit",
+    "name": "schwerer Schutzanzug",
+    "iconPrompt": "Heavy powered armor chest piece, bulky sci-fi.",
+    "iconKey": "builtin-scifi-heavy-protective-suit",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-heavy-protective-suit.png",
+    "outputSvg": "public/assets/items/builtin-scifi-heavy-protective-suit.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-hypospray",
+    "slug": "builtin-scifi-hypospray",
+    "name": "Hypospray",
+    "iconPrompt": "Futuristic hypospray injector device.",
+    "iconKey": "builtin-scifi-hypospray",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-hypospray.png",
+    "outputSvg": "public/assets/items/builtin-scifi-hypospray.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-identity-module",
+    "slug": "builtin-scifi-identity-module",
+    "name": "Identitätsmodul",
+    "iconPrompt": "Small identity badge module device.",
+    "iconKey": "builtin-scifi-identity-module",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-identity-module.png",
+    "outputSvg": "public/assets/items/builtin-scifi-identity-module.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-light-protective-suit",
+    "slug": "builtin-scifi-light-protective-suit",
+    "name": "leichter Schutzanzug",
+    "iconPrompt": "Light flexible sci-fi protective vest / suit torso.",
+    "iconKey": "builtin-scifi-light-protective-suit",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-light-protective-suit.png",
+    "outputSvg": "public/assets/items/builtin-scifi-light-protective-suit.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-medkit",
+    "slug": "builtin-scifi-medkit",
+    "name": "Medkit",
+    "iconPrompt": "White and red futuristic medkit case.",
+    "iconKey": "builtin-scifi-medkit",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-medkit.png",
+    "outputSvg": "public/assets/items/builtin-scifi-medkit.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-multi-scanner",
+    "slug": "builtin-scifi-multi-scanner",
+    "name": "Multiscanner",
+    "iconPrompt": "Advanced multi-scanner wand device.",
+    "iconKey": "builtin-scifi-multi-scanner",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-multi-scanner.png",
+    "outputSvg": "public/assets/items/builtin-scifi-multi-scanner.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-multitool",
+    "slug": "builtin-scifi-multitool",
+    "name": "Multitool",
+    "iconPrompt": "Folding sci-fi multitool.",
+    "iconKey": "builtin-scifi-multitool",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-multitool.png",
+    "outputSvg": "public/assets/items/builtin-scifi-multitool.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-navigation-module",
+    "slug": "builtin-scifi-navigation-module",
+    "name": "Navigationsmodul",
+    "iconPrompt": "Compact navigation module with antenna.",
+    "iconKey": "builtin-scifi-navigation-module",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-navigation-module.png",
+    "outputSvg": "public/assets/items/builtin-scifi-navigation-module.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-personal-shield-emitter",
+    "slug": "builtin-scifi-personal-shield-emitter",
+    "name": "persönlicher Schildemitter",
+    "iconPrompt": "Handheld personal energy shield emitter disc.",
+    "iconKey": "builtin-scifi-personal-shield-emitter",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-personal-shield-emitter.png",
+    "outputSvg": "public/assets/items/builtin-scifi-personal-shield-emitter.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-portable-energy-pack",
+    "slug": "builtin-scifi-portable-energy-pack",
+    "name": "tragbarer Energiepack",
+    "iconPrompt": "Portable backpack energy pack unit.",
+    "iconKey": "builtin-scifi-portable-energy-pack",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-portable-energy-pack.png",
+    "outputSvg": "public/assets/items/builtin-scifi-portable-energy-pack.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-precision-tools",
+    "slug": "builtin-scifi-precision-tools",
+    "name": "Präzisionswerkzeug",
+    "iconPrompt": "Set of precision electronic tools.",
+    "iconKey": "builtin-scifi-precision-tools",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-precision-tools.png",
+    "outputSvg": "public/assets/items/builtin-scifi-precision-tools.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-repair-material",
+    "slug": "builtin-scifi-repair-material",
+    "name": "Reparaturmaterial",
+    "iconPrompt": "Repair material cartridges and sealant tube.",
+    "iconKey": "builtin-scifi-repair-material",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-repair-material.png",
+    "outputSvg": "public/assets/items/builtin-scifi-repair-material.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-research-kit",
+    "slug": "builtin-scifi-research-kit",
+    "name": "Forschungskit",
+    "iconPrompt": "Portable research kit with vials and instruments.",
+    "iconKey": "builtin-scifi-research-kit",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-research-kit.png",
+    "outputSvg": "public/assets/items/builtin-scifi-research-kit.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-sample-container",
+    "slug": "builtin-scifi-sample-container",
+    "name": "Probenbehälter",
+    "iconPrompt": "Sealed transparent sample container cylinder.",
+    "iconKey": "builtin-scifi-sample-container",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-sample-container.png",
+    "outputSvg": "public/assets/items/builtin-scifi-sample-container.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-signal-beacon",
+    "slug": "builtin-scifi-signal-beacon",
+    "name": "Signalgeber",
+    "iconPrompt": "Emergency signal beacon with antenna light.",
+    "iconKey": "builtin-scifi-signal-beacon",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-signal-beacon.png",
+    "outputSvg": "public/assets/items/builtin-scifi-signal-beacon.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-spacesuit",
+    "slug": "builtin-scifi-spacesuit",
+    "name": "Raumanzug",
+    "iconPrompt": "White and orange space suit helmet and torso.",
+    "iconKey": "builtin-scifi-spacesuit",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-spacesuit.png",
+    "outputSvg": "public/assets/items/builtin-scifi-spacesuit.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-standard-energy-weapon",
+    "slug": "builtin-scifi-standard-energy-weapon",
+    "name": "Standard-Energiewaffe",
+    "iconPrompt": "Standard sci-fi sidearm energy pistol.",
+    "iconKey": "builtin-scifi-standard-energy-weapon",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-standard-energy-weapon.png",
+    "outputSvg": "public/assets/items/builtin-scifi-standard-energy-weapon.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-stun-device",
+    "slug": "builtin-scifi-stun-device",
+    "name": "Betäubungsgerät",
+    "iconPrompt": "Hand-held stun baton / nonlethal energy stunner.",
+    "iconKey": "builtin-scifi-stun-device",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-stun-device.png",
+    "outputSvg": "public/assets/items/builtin-scifi-stun-device.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-tactical-protective-suit",
+    "slug": "builtin-scifi-tactical-protective-suit",
+    "name": "taktischer Schutzanzug",
+    "iconPrompt": "Tactical armored sci-fi suit torso with plates.",
+    "iconKey": "builtin-scifi-tactical-protective-suit",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-tactical-protective-suit.png",
+    "outputSvg": "public/assets/items/builtin-scifi-tactical-protective-suit.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-universal-backpack",
+    "slug": "builtin-scifi-universal-backpack",
+    "name": "Universalrucksack",
+    "iconPrompt": "Modular sci-fi backpack.",
+    "iconKey": "builtin-scifi-universal-backpack",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-universal-backpack.png",
+    "outputSvg": "public/assets/items/builtin-scifi-universal-backpack.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin-scifi-water-purifier",
+    "slug": "builtin-scifi-water-purifier",
+    "name": "Wasseraufbereiter",
+    "iconPrompt": "Handheld water purifier device with filter.",
+    "iconKey": "builtin-scifi-water-purifier",
+    "sourcePng": "assets/item-icon-sources/builtin-scifi-water-purifier.png",
+    "outputSvg": "public/assets/items/builtin-scifi-water-purifier.svg",
+    "status": "ready"
+  },
+  {
+    "id": "core-misc-footwear",
+    "slug": "core-misc-footwear",
+    "name": "Schuhe / Fußschutz",
+    "iconPrompt": "Simple pair of sturdy leather boots.",
+    "iconKey": "core-misc-footwear",
+    "sourcePng": "assets/item-icon-sources/core-misc-footwear.png",
+    "outputSvg": "public/assets/items/core-misc-footwear.svg",
+    "status": "ready"
+  },
+  {
+    "id": "health-potion",
+    "slug": "health-potion",
+    "name": "health-potion",
+    "iconPrompt": "Small round glass potion bottle filled with bright red healing liquid and a cork stopper.",
+    "iconKey": "health-potion",
+    "sourcePng": "assets/item-icon-sources/health-potion.png",
+    "outputSvg": "public/assets/items/health-potion.svg",
+    "status": "ready"
+  },
+  {
+    "id": "iron-sword",
+    "slug": "iron-sword",
+    "name": "iron-sword",
+    "iconPrompt": "Simple forged iron longsword with dark leather grip.",
+    "iconKey": "iron-sword",
+    "sourcePng": "assets/item-icon-sources/iron-sword.png",
+    "outputSvg": "public/assets/items/iron-sword.svg",
+    "status": "ready"
+  },
+  {
+    "id": "skull-sword",
+    "slug": "skull-sword",
+    "name": "skull-sword",
+    "iconPrompt": "Black cursed longsword with skull-shaped pommel and subtle purple magical runes.",
+    "iconKey": "skull-sword",
+    "sourcePng": "assets/item-icon-sources/skull-sword.png",
+    "outputSvg": "public/assets/items/skull-sword.svg",
+    "status": "ready"
+  }
+]

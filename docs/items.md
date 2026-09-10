@@ -70,6 +70,54 @@ Module id: `item-catalog` on `world_profiles.modules`.
 
 Env detail: `README.md` sections „Item-Thumbnails“ and „Item-3D“.
 
+### Static SVG item icons (Cursor → VTracer)
+
+Separate from Meshy `assetKey` thumbnails. Production icons are **SVG files** under
+`public/assets/items/{slug}.svg`, referenced via definition `iconKey` (= slug).
+
+| Stage | Location |
+|---|---|
+| Prompt helper | `src/domains/items/icon-assets.ts` (`buildItemIconPrompt`) |
+| Manifest | `assets/item-icons.manifest.json` |
+| Source PNG (gitignored) | `assets/item-icon-sources/{slug}.png` |
+| Production SVG | `public/assets/items/{slug}.svg` |
+| Vectorize script | `npm run icons:vectorize` (optional local VTracer) |
+| CI | `.github/workflows/vectorize-item-icons.yml` |
+
+Resolution in UI: signed `assetSrc` → `/assets/items/{iconKey}.svg` → type PNG → slot glyph.
+SVGs are loaded as `<img src>` — never via `dangerouslySetInnerHTML`.
+
+#### Generate new item icon
+
+1. Add/update the item in `assets/item-icons.manifest.json` (`iconPrompt`, `status: needs-png` or `regenerate`).
+2. Ask Cursor Agent to generate the image with the shared SagaDrive icon prompt.
+3. Save the PNG to `assets/item-icon-sources/{slug}.png`.
+4. Run vectorization (`npm run icons:vectorize` if VTracer is installed, or push/force-add the PNG and run the GitHub Action).
+5. Commit the resulting SVG under `public/assets/items/`. Set manifest `status: ready`.
+6. Set the definition `iconKey` to the slug. SagaDrive uses only the SVG.
+
+Valid SVGs are **never** regenerated automatically (`status: ready` skips conversion unless `--force` or `status: regenerate`).
+
+Exact Agent command example:
+
+```text
+Generate the SagaDrive item icon for `skull-sword`.
+
+Read the shared item icon style prompt from the repository
+(`getItemIconStyleTemplate` / `buildItemIconPrompt` in `src/domains/items/icon-assets.ts`).
+Use Cursor image generation.
+Item description:
+"Black cursed longsword with skull-shaped pommel and subtle purple magical runes."
+
+Save the generated source image to the configured item-icon source directory using the correct slug
+(`assets/item-icon-sources/skull-sword.png`).
+Do not modify any other files.
+```
+
+Do **not** install local Flux / Stable Diffusion / Ollama image models for this pipeline.
+Raster generation is Cursor Agent image generation; vectorization is VTracer in GitHub Actions
+(or optional local VTracer).
+
 ## Archive & Fork (#136)
 
 - **Archive**: definition `status: archived` — owned instances stay resolvable; archived defs leave the add-catalog surface
@@ -86,8 +134,8 @@ encode storefront source metadata. Character Editor remains **kein Shop**
 ## Architecture paths (public surfaces)
 
 ```text
-Domain
-  src/domains/items/**                  ItemDefinition, taxonomy, packs, world-catalog, assets, fork
+  Domain
+  src/domains/items/**                  ItemDefinition, taxonomy, packs, world-catalog, assets, icon-assets, fork
   src/domains/character/inventory-v2/** ItemInstance / slots / equip
   src/domains/rules/sagadrive/items/**  load / cost / protection / Traglast / tool kernel
 
@@ -102,6 +150,13 @@ App / UI
   Workbench             → /items/create , /items/:id
   World module UI       → world profile item-catalog
   Character Inventory   → Character Editor Inventar tab (add-catalog)
+
+Static SVG icons
+  assets/item-icons.manifest.json
+  assets/item-icon-sources/
+  public/assets/items/
+  scripts/vectorize-item-icons.mjs
+  .github/workflows/vectorize-item-icons.yml
 
 Edge / storage
   supabase/functions/item-thumbnail/

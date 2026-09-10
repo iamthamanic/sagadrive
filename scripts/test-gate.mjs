@@ -469,6 +469,14 @@ function checkItemThumbnailAssets() {
   });
 }
 
+function checkItemIconAssets() {
+  console.log('Item static SVG icons: Cursor→PNG→VTracer pipeline contract...');
+  execFileSync(process.execPath, ['scripts/item-icon-assets-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkItemModel3dAssets() {
   console.log('Item Epic 3D + Meshy Image-to-3D (#141): GLB upload/generate contract, secrets fail-closed...');
   execFileSync(process.execPath, ['scripts/item-model3d-assets-check.mjs'], {
@@ -516,6 +524,7 @@ checkItemStandardPacks();
 checkItemLibraryBrowser();
 checkItemWorkbench();
 checkItemThumbnailAssets();
+checkItemIconAssets();
 checkItemModel3dAssets();
 checkItemWorldCatalogModule();
 checkItemInventoryWorldCatalogWire();

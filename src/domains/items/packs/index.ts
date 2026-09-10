@@ -15,6 +15,8 @@ import { CONTEXT_PACKS } from './context-packs';
 import { FANTASY_BASIC_DEFINITIONS, FANTASY_BASIC_PACK } from './fantasy-basic';
 import { SCIFI_BASIC_DEFINITIONS, SCIFI_BASIC_PACK } from './scifi-basic';
 
+export { builtinDefinitionIdToIconKey } from './build-standard-item';
+
 /** Exact size of each base pack — completeness gate. */
 export const BASE_PACK_SIZE = 40;
 
