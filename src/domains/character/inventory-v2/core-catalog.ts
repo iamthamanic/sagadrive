@@ -18,10 +18,53 @@ import type { CatalogDefinitionRecord } from './catalog';
 import type { ItemDefinition } from './types';
 
 /** Bumped whenever Core entries are added or changed, for cache invalidation. */
-export const CORE_CATALOG_VERSION = 3;
+export const CORE_CATALOG_VERSION = 4;
 
 /** Exact Core catalog size — completeness gate (was 35 in #108; +1 feet). */
 export const CORE_CATALOG_SIZE = 36;
+
+/**
+ * Core archetypes share concrete pack SVG icons (setting-neutral → representative art).
+ * Footwear has no pack match → dedicated `core-misc-footwear` SVG.
+ */
+const CORE_SHARED_ICON_KEYS: Readonly<Record<string, string>> = Object.freeze({
+  'core.weapon.light-melee': 'builtin-fantasy-dagger',
+  'core.weapon.standard-melee': 'builtin-fantasy-longsword',
+  'core.weapon.heavy-melee': 'builtin-fantasy-warhammer',
+  'core.weapon.reach-melee': 'builtin-fantasy-spear',
+  'core.weapon.light-ranged': 'builtin-fantasy-shortbow',
+  'core.weapon.standard-ranged': 'builtin-fantasy-longbow',
+  'core.weapon.heavy-ranged': 'builtin-fantasy-crossbow',
+  'core.weapon.armor-piercing': 'builtin-fantasy-battle-axe',
+  'core.armor.light': 'builtin-fantasy-leather-armor',
+  'core.armor.medium': 'builtin-fantasy-chainmail',
+  'core.armor.heavy': 'builtin-fantasy-plate-armor',
+  'core.shield.standard': 'builtin-fantasy-light-shield',
+  'core.tool.medical': 'builtin-fantasy-healer-kit',
+  'core.tool.repair': 'builtin-contemporary-toolbox',
+  'core.tool.precision': 'builtin-fantasy-lockpicks',
+  'core.tool.survival': 'builtin-fantasy-tinderbox',
+  'core.tool.climbing': 'builtin-fantasy-grappling-hook',
+  'core.tool.navigation': 'builtin-fantasy-compass',
+  'core.tool.research': 'builtin-scifi-research-kit',
+  'core.tool.craft': 'builtin-fantasy-craftsman-tools',
+  'core.consumable.medical': 'builtin-fantasy-healing-potion',
+  'core.consumable.repair': 'builtin-scifi-repair-material',
+  'core.consumable.ration': 'builtin-fantasy-travel-rations',
+  'core.consumable.energy': 'builtin-scifi-energy-cell',
+  'core.consumable.general': 'builtin-fantasy-arrows',
+  'core.container.pouch': 'builtin-fantasy-belt-pouch',
+  'core.container.bag': 'builtin-contemporary-shopping-bag',
+  'core.container.backpack': 'builtin-fantasy-backpack',
+  'core.container.transport': 'builtin-contemporary-sports-bag',
+  'core.misc.light-source': 'builtin-fantasy-torch',
+  'core.misc.rope': 'builtin-fantasy-rope',
+  'core.misc.documentation': 'builtin-fantasy-book',
+  'core.misc.communicator': 'builtin-contemporary-smartphone',
+  'core.misc.headgear': 'builtin-contemporary-bike-helmet',
+  'core.misc.special-device': 'builtin-contemporary-laptop',
+  'core.misc.footwear': 'core-misc-footwear',
+});
 
 function deepFreeze<T>(value: T): T {
   if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {
@@ -499,7 +542,13 @@ const CORE_DEFINITIONS_RAW: readonly ItemDefinition[] = [
  * Every entry gets kindKey from type and origin=core-archetype via normalize.
  */
 const CORE_DEFINITIONS: readonly ItemDefinition[] = deepFreeze(
-  CORE_DEFINITIONS_RAW.map((definition) => normalizeItemDefinition(definition)),
+  CORE_DEFINITIONS_RAW.map((definition) => {
+    const iconKey = CORE_SHARED_ICON_KEYS[definition.id];
+    if (!iconKey) {
+      throw new Error(`core-catalog: missing shared iconKey for ${definition.id}`);
+    }
+    return normalizeItemDefinition({ ...definition, iconKey });
+  }),
 );
 
 /** All Core definitions, in declaration order (always normalized). */

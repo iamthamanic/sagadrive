@@ -248,7 +248,7 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
             </h2>
           </header>
 
-          <main className="flex-1 overflow-y-auto pb-20 md:pb-0">{children}</main>
+          <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden pb-20 md:pb-0">{children}</main>
         </div>
 
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-pb">

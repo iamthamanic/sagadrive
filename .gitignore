@@ -32,6 +32,14 @@ npm-debug.log*
 *.temp
 .cache/
 
+# Item icon raster sources (Cursor-generated intermediates).
+# Prefer gitignored PNGs; force-add (`git add -f`) only when running the
+# GitHub vectorize workflow. Production assets are SVG under public/assets/items/.
+assets/item-icon-sources/*.png
+assets/item-icon-sources/*.jpg
+assets/item-icon-sources/*.jpeg
+!assets/item-icon-sources/.gitkeep
+
 # Playwright / QA artifacts
 playwright-report/
 .qa/test-results/
