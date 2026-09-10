@@ -1,7 +1,7 @@
 # Composition Gate — item-static-svg-icons
 
-- HEAD_SHA: b58beb6bbb9eca2a7d1ac0814e3878c8739c4b70
-- WORKTREE: uncommitted `feat/item-static-svg-icons` (Cursor→PNG→VTracer static SVG pipeline + catalog wiring)
+- HEAD_SHA: 6287be0dcab6fc62133c400d46b28ed62845aa9f
+- WORKTREE: committed on `feat/item-static-svg-icons` (Cursor→PNG→VTracer static SVG pipeline + catalog wiring)
 - BASE_SHA: b58beb6bbb9eca2a7d1ac0814e3878c8739c4b70
 - Date: 2026-09-10
 - Verdict: CLEAR
