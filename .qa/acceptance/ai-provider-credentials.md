@@ -66,7 +66,7 @@ Out of scope: B-07/B-08/B-09 (no permission-admin).
 
 ## Composition Gate
 
-- HEAD_SHA: b0c7e9e69818cf430449489d807eb7f42d31ad5b
+- HEAD_SHA: 435cd99b994c9a25c0fb9716da2888d7e4c16478
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-ai-provider-credentials.md`
 
