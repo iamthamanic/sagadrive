@@ -52,7 +52,7 @@ Extract Item Workbench →2D / →3D (and related visual tool actions) into reus
 
 ## Composition Gate
 
-- HEAD_SHA: 435cd99b994c9a25c0fb9716da2888d7e4c16478
+- HEAD_SHA: b76a76bbc867cbbf176696b3d1346e7331165f71
 - BASE_SHA: b58beb6bbb9eca2a7d1ac0814e3878c8739c4b70
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-item-visual-tools-hooks.md`
