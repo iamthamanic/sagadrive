@@ -3,7 +3,7 @@
  * Invokes Edge Function only; never embeds Meshy secrets.
  * Location: src/infrastructure/inventory/item-model3d-service.ts
  */
-import { supabase } from '../../lib/supabase';
+import { rewriteBrowserStorageUrl, supabase } from '../../lib/supabase';
 import {
   ITEM_MODEL3D_MAX_BYTES,
   ITEM_MODEL3D_MIME,
@@ -182,7 +182,7 @@ class ItemModel3dService {
     }
     return {
       model3d: response.model3d,
-      signedUrl: response.signedUrl,
+      signedUrl: rewriteBrowserStorageUrl(response.signedUrl),
       mime: ITEM_MODEL3D_MIME,
       byteSize: response.byteSize,
     };
@@ -219,7 +219,10 @@ class ItemModel3dService {
       progress: typeof response.progress === 'number' ? response.progress : 0,
       errorMessage: typeof response.errorMessage === 'string' ? response.errorMessage : undefined,
       model3d: typeof response.model3d === 'string' ? response.model3d : undefined,
-      signedUrl: typeof response.signedUrl === 'string' ? response.signedUrl : undefined,
+      signedUrl:
+        typeof response.signedUrl === 'string'
+          ? rewriteBrowserStorageUrl(response.signedUrl)
+          : undefined,
     };
   }
 
@@ -245,7 +248,7 @@ class ItemModel3dService {
     try {
       const response = await invoke({ action: 'resolve', model3d });
       if (response.status !== 'ok' || typeof response.signedUrl !== 'string') return null;
-      return response.signedUrl;
+      return rewriteBrowserStorageUrl(response.signedUrl);
     } catch {
       return null;
     }

@@ -469,6 +469,14 @@ function checkItemThumbnailAssets() {
   });
 }
 
+function checkAiProviderCredentials() {
+  console.log('AI provider credentials (BYOK): vault + Meshy validate + prod user-keys-only...');
+  execFileSync(process.execPath, ['scripts/ai-provider-credentials-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkItemModel3dAssets() {
   console.log('Item Epic 3D + Meshy Image-to-3D (#141): GLB upload/generate contract, secrets fail-closed...');
   execFileSync(process.execPath, ['scripts/item-model3d-assets-check.mjs'], {
@@ -517,6 +525,7 @@ checkItemLibraryBrowser();
 checkItemWorkbench();
 checkItemThumbnailAssets();
 checkItemModel3dAssets();
+checkAiProviderCredentials();
 checkItemWorldCatalogModule();
 checkItemInventoryWorldCatalogWire();
 checkItemEpicAcceptance();

@@ -1,16 +1,34 @@
 /**
  * ItemVisualsPanel — fixed-size 2D/3D dropzone (click + drag-drop) + generate actions (#140/#141).
+ * Composes reusable visuals hooks/tools from `app/items/visuals`.
  * Location: src/app/items/workbench/ItemVisualsPanel.tsx
  */
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { InventoryItemThumb } from '../../character';
 import { Button } from '../../../shared/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../../shared/ui/dialog';
 import { Input } from '../../../shared/ui/input';
 import { Label } from '../../../shared/ui/label';
 import type { ItemDefinition } from '../../../domains/character/inventory-v2';
-import { ItemModelPreview } from './ItemModelPreview';
+import {
+  ItemVisualModeToggle,
+  ItemVisualToolsBar,
+  useItemAssets,
+  useItemModel3dAssets,
+  useItemVisualTools,
+  type ItemVisualMode,
+} from '../visuals';
+import {
+  ItemModelPreview,
+  type ItemModelPreviewHandle,
+} from './ItemModelPreview';
 import type { WorkbenchFormState } from './workbenchForm';
-import { useItemAssets, useItemModel3dAssets } from './useItemAssets';
 
 export interface ItemVisualsPanelProps {
   form: WorkbenchFormState;
@@ -25,8 +43,6 @@ export interface ItemVisualsPanelProps {
   /** Optional mirror of thumbnail URL for external previews. */
   onPreviewUrlChange?: (url: string | null) => void;
 }
-
-type VisualMode = '2d' | '3d';
 
 function phaseLabel(phase: string, progress: number): string {
   if (phase === 'uploading') return 'Wird hochgeladen…';
@@ -57,12 +73,35 @@ export function ItemVisualsPanel({
   ensureDraftId,
   onPreviewUrlChange,
 }: ItemVisualsPanelProps) {
-  const [mode, setMode] = useState<VisualMode>('2d');
+  const [mode, setMode] = useState<ItemVisualMode>('2d');
   const [dragOver, setDragOver] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const modelFileRef = useRef<HTMLInputElement>(null);
+  const dropzonePreviewRef = useRef<ItemModelPreviewHandle>(null);
+  const modalPreviewRef = useRef<ItemModelPreviewHandle>(null);
   const assets = useItemAssets({ definition, readOnly, onAssetKeyChange, ensureDraftId });
   const model3d = useItemModel3dAssets({ definition, readOnly, onModel3dChange, ensureDraftId });
+
+  const modelJobActive =
+    model3d.phase === 'waiting' ||
+    model3d.phase === 'generating' ||
+    model3d.phase === 'starting' ||
+    model3d.phase === 'uploading';
+
+  const tools = useItemVisualTools({
+    mode,
+    setMode,
+    assets,
+    model3d,
+    modelJobActive,
+    captureSideProfilePng: async () => {
+      const handle = previewOpen
+        ? modalPreviewRef.current
+        : dropzonePreviewRef.current ?? modalPreviewRef.current;
+      return handle?.captureSideProfilePng();
+    },
+  });
 
   useEffect(() => {
     onPreviewUrlChange?.(assets.displayUrl ?? null);
@@ -80,20 +119,12 @@ export function ItemVisualsPanel({
     kindKey: form.kindKey,
   };
 
+  const dropEnabled = mode === '2d' ? assets.canEdit : model3d.canEdit;
   const statusText =
     mode === '2d'
       ? phaseLabel(assets.phase, assets.progress)
       : phaseLabel(model3d.phase, model3d.progress);
   const errorMessage = mode === '2d' ? assets.errorMessage : model3d.errorMessage;
-  const modelJobActive =
-    model3d.phase === 'waiting' ||
-    model3d.phase === 'generating' ||
-    model3d.phase === 'starting' ||
-    model3d.phase === 'uploading';
-
-  const dropEnabled =
-    !readOnly &&
-    (mode === '2d' ? assets.canEdit && !assets.busy : model3d.canEdit && !model3d.busy && !modelJobActive);
 
   const openFilePicker = () => {
     if (!dropEnabled) return;
@@ -102,28 +133,26 @@ export function ItemVisualsPanel({
   };
 
   const onDragEnter = (event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (dropEnabled) setDragOver(true);
-  };
-
-  const onDragOver = (event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (dropEnabled) setDragOver(true);
-  };
-
-  const onDragLeave = (event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setDragOver(false);
-  };
-
-  const onDrop = (event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setDragOver(false);
     if (!dropEnabled) return;
+    event.preventDefault();
+    setDragOver(true);
+  };
+  const onDragOver = (event: DragEvent) => {
+    if (!dropEnabled) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+    setDragOver(true);
+  };
+  const onDragLeave = (event: DragEvent) => {
+    if (!dropEnabled) return;
+    event.preventDefault();
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+    setDragOver(false);
+  };
+  const onDrop = (event: DragEvent) => {
+    if (!dropEnabled) return;
+    event.preventDefault();
+    setDragOver(false);
     const file = event.dataTransfer.files?.[0];
     if (!file) return;
     if (mode === '2d') {
@@ -137,6 +166,21 @@ export function ItemVisualsPanel({
     mode === '2d'
       ? 'Bild hochladen — klicken oder Datei hierher ziehen (PNG/JPEG)'
       : 'GLB hochladen — klicken oder Datei hierher ziehen';
+
+  const renderTools = (options?: { showEnlarge?: boolean; className?: string }) => (
+    <ItemVisualToolsBar
+      mode={mode}
+      tools={tools}
+      showUpload={dropEnabled}
+      showEnlarge={options?.showEnlarge ?? true}
+      showMeshyGenerate2d={assets.canEdit}
+      meshyConfigured={assets.meshyConfigured}
+      assetsPhase={assets.phase}
+      onUploadClick={openFilePicker}
+      onEnlargeClick={() => setPreviewOpen(true)}
+      className={options?.className}
+    />
+  );
 
   return (
     <section
@@ -199,37 +243,7 @@ export function ItemVisualsPanel({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
       >
-        <div
-          className="absolute right-1.5 top-1.5 z-10 inline-flex rounded-md border border-border/70 bg-background/90 p-px"
-          role="group"
-          aria-label="2D oder 3D"
-          data-item-workbench-visual-toggle
-          onClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
-          <Button
-            type="button"
-            size="sm"
-            variant={mode === '2d' ? 'default' : 'ghost'}
-            className="h-7 min-h-7 px-2 text-xs"
-            aria-pressed={mode === '2d'}
-            data-item-workbench-visual-2d
-            onClick={() => setMode('2d')}
-          >
-            2D
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={mode === '3d' ? 'default' : 'ghost'}
-            className="h-7 min-h-7 px-2 text-xs"
-            aria-pressed={mode === '3d'}
-            data-item-workbench-visual-3d
-            onClick={() => setMode('3d')}
-          >
-            3D
-          </Button>
-        </div>
+        <ItemVisualModeToggle mode={mode} onModeChange={setMode} />
 
         {mode === '2d' ? (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2">
@@ -248,9 +262,6 @@ export function ItemVisualsPanel({
                 className="size-16"
               />
             )}
-            {dropEnabled && (
-              <p className="px-2 text-center text-xs text-muted-foreground">{dropHint}</p>
-            )}
           </div>
         ) : (
           <div
@@ -263,16 +274,18 @@ export function ItemVisualsPanel({
                 onClick={(event) => event.stopPropagation()}
                 onKeyDown={(event) => event.stopPropagation()}
               >
-                <ItemModelPreview modelUrl={model3d.previewUrl} fill />
+                <ItemModelPreview
+                  ref={dropzonePreviewRef}
+                  modelUrl={model3d.previewUrl}
+                  fill
+                />
               </div>
-            ) : (
-              dropEnabled && (
-                <p className="px-2 text-center text-xs text-muted-foreground">{dropHint}</p>
-              )
-            )}
+            ) : null}
           </div>
         )}
       </div>
+
+      {renderTools()}
 
       {statusText && (
         <p
@@ -318,7 +331,7 @@ export function ItemVisualsPanel({
                 />
               </div>
 
-              {assets.phase === 'confirm-generate' ? (
+              {assets.phase === 'confirm-generate' && (
                 <div className="flex flex-col gap-2 rounded-lg border border-border/60 bg-background/40 p-3">
                   <p className="text-sm">
                     Externes Meshy-Bild generieren? Es entsteht genau ein Job.
@@ -344,33 +357,6 @@ export function ItemVisualsPanel({
                     </Button>
                   </div>
                 </div>
-              ) : assets.phase === 'failed' ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 min-h-11 w-full"
-                  disabled={assets.busy}
-                  data-item-thumbnail-retry
-                  onClick={() => void assets.retryGenerate()}
-                >
-                  Erneut versuchen
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 min-h-11 w-full"
-                  disabled={
-                    assets.busy ||
-                    assets.phase === 'waiting' ||
-                    assets.phase === 'generating' ||
-                    assets.phase === 'starting'
-                  }
-                  data-item-thumbnail-generate
-                  onClick={assets.requestGenerate}
-                >
-                  Bild generieren
-                </Button>
               )}
             </>
           ) : (
@@ -378,7 +364,7 @@ export function ItemVisualsPanel({
               className="text-center text-xs text-muted-foreground"
               data-item-thumbnail-meshy-off
             >
-              Bildgenerierung ist nicht konfiguriert. Upload bleibt verfügbar.
+              Meshy nicht verbunden (Einstellungen → AI → Bild). Upload bleibt verfügbar.
             </p>
           )}
 
@@ -461,7 +447,7 @@ export function ItemVisualsPanel({
             </>
           ) : (
             <p className="text-xs text-muted-foreground" data-item-model3d-meshy-off>
-              3D-Generierung ist nicht konfiguriert. GLB-Upload bleibt verfügbar.
+              Meshy nicht verbunden (Einstellungen → AI → 3D). GLB-Upload bleibt verfügbar.
             </p>
           )}
 
@@ -479,6 +465,53 @@ export function ItemVisualsPanel({
           )}
         </div>
       )}
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent
+          className="max-h-[90vh] max-w-3xl overflow-hidden p-4 sm:p-6"
+          data-item-workbench-visual-preview-modal
+        >
+          <DialogHeader className="gap-3">
+            <DialogTitle>{previewDefinition.name}</DialogTitle>
+            <DialogDescription className="sr-only">
+              {mode === '2d' ? '2D-Vorschau' : '3D-Vorschau'}
+            </DialogDescription>
+            {renderTools({
+              showEnlarge: false,
+              className: 'flex flex-wrap items-center justify-center gap-1.5 sm:justify-start',
+            })}
+          </DialogHeader>
+          <div className="relative flex min-h-[min(60vh,28rem)] w-full items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-muted/20 p-3 pt-10">
+            <ItemVisualModeToggle mode={mode} onModeChange={setMode} />
+            {mode === '2d' ? (
+              assets.displayUrl ? (
+                <img
+                  src={assets.displayUrl}
+                  alt={previewDefinition.name}
+                  className="max-h-[min(60vh,28rem)] max-w-full object-contain"
+                />
+              ) : (
+                <InventoryItemThumb
+                  slot="special"
+                  definition={previewDefinition}
+                  alt={previewDefinition.name}
+                  className="size-64 max-h-full max-w-full p-0"
+                />
+              )
+            ) : model3d.previewUrl ? (
+              <div className="h-[min(60vh,28rem)] w-full">
+                <ItemModelPreview
+                  ref={modalPreviewRef}
+                  modelUrl={model3d.previewUrl}
+                  fill
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Kein 3D-Modell geladen.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
