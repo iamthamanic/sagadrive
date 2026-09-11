@@ -29,6 +29,12 @@ check(migration.includes('consume_ai_provider_credential_rate_limit'), 'migratio
 check(migration.includes('REVOKE ALL ON TABLE public.user_ai_provider_credentials FROM anon, authenticated'), 'revokes client table access');
 check(migration.includes('GRANT ALL ON TABLE public.user_ai_provider_credentials TO service_role'), 'grants service_role on credentials');
 
+const applyMigrations = read('scripts/apply-migrations.sh');
+check(
+  applyMigrations.includes('020_user_ai_provider_credentials.sql'),
+  'self-host apply-migrations.sh registers 020',
+);
+
 const edge = read('supabase/functions/ai-provider-credentials/index.ts');
 check(edge.includes("action === 'upsert'"), 'edge upsert action');
 check(edge.includes('validateMeshyApiKey') || edge.includes('validateProviderApiKey'), 'edge validates key');

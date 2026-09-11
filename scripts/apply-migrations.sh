@@ -34,6 +34,7 @@ migrations=(
   017_item_thumbnail_assets.sql
   018_item_model3d_assets.sql
   019_world_profiles_read_for_adventure.sql
+  020_user_ai_provider_credentials.sql
 )
 
 only="${1:-}"
