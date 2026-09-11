@@ -1,6 +1,7 @@
 # Composition Gate — item-visual-tools-hooks
 
 - HEAD_SHA: 435cd99b994c9a25c0fb9716da2888d7e4c16478
+- BASE_SHA: b58beb6bbb9eca2a7d1ac0814e3878c8739c4b70
 - Date: 2026-09-11
 - Verdict: CLEAR
 
@@ -14,17 +15,18 @@ Item visual convert/upload tools are composed via shared hooks; Workbench remain
 2. `ItemVisualToolsBar` / `ItemVisualModeToggle` render affordances
 3. Actions still call the same infrastructure services → Edge `item-thumbnail` / `item-model3d` (unchanged)
 
+Cardinality: one snapshot/generate per click (existing submit locks); Library/Inventory do not mount 3D.
+
 ## Simulations
 
-### N-actors
-Hooks are per-definition instance state; no shared mutable credential between definitions beyond existing `itemAssetPending` remount bridge (one pending action).
+| Case | Intended | Composed | Result |
+|------|----------|----------|--------|
+| N-actors | Per-definition hook state; no cross-definition secret sharing | Hooks are instance state; `itemAssetPending` is one pending remount bridge action | pass |
+| Invalid/missing | Meshy off / no thumbnail / readOnly → tools disabled | Same capability gates as pre-extract Workbench panel | pass |
+| Two consumers / crash | Workbench panel + enlarge modal share one tools instance; Library never mounts 3D | Shared `useItemVisualTools` + capture callback; Library/Inventory regression checks forbid 3D | pass |
 
-### Invalid / missing
-Same as before: Meshy off → tools disabled; no thumbnail → Image-to-3D blocked; readOnly hides edit tools.
+## Flags
 
-### Two consumers / crash
-Workbench panel + enlarge modal share the same `useItemVisualTools` instance and preview capture callback — one snapshot/generate per click. Library/Inventory still do not mount 3D (regression checks).
-
-## Findings
-
-None.
+| Tag | Severity | Hops | Why local review missed it | Fix |
+|-----|----------|------|----------------------------|-----|
+| (none) | | | | |

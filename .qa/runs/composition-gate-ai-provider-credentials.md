@@ -1,6 +1,7 @@
 # Composition Gate — ai-provider-credentials
 
 - HEAD_SHA: 435cd99b994c9a25c0fb9716da2888d7e4c16478
+- BASE_SHA: b58beb6bbb9eca2a7d1ac0814e3878c8739c4b70
 - Date: 2026-09-11
 - Verdict: CLEAR
 
@@ -16,37 +17,21 @@ User saves a Meshy API key in Settings → AI; later Item Workbench generate use
 4. Workbench `item-thumbnail` / `item-model3d` `config`/`generate` → `resolveMeshyApiKeyForUser` / `isMeshyConfiguredForUser` → decrypt same row → Meshy provider
 5. Meshy assets still materialize into private buckets (unchanged hop after provider call)
 
+Cardinality: one credential row per `(user_id, provider_id)`; one Meshy generate job per confirmed click (existing submit locks).
+
 ## Simulations
 
-### N-actors
-| Actor | Credential row | Generate key used |
-|-------|----------------|-------------------|
-| User A | `(A, meshy)` only | A's key only |
-| User B | `(B, meshy)` only | B's key only |
+| Case | Intended | Composed | Result |
+|------|----------|----------|--------|
+| N-actors | User A and User B each own `(user_id, meshy)` only | JWT `user_id` + service_role filter; table revoked from authenticated | pass |
+| Invalid/missing | Bad key / missing encrypt key / no user key → fail-closed | Upsert rejects invalid key; 503 without `CREDENTIALS_ENCRYPTION_KEY`; prod without user key → `not-configured` (host key only if `AI_PROVIDER_ALLOW_HOST_KEYS=1`); mocks still enable CI | pass |
+| Two consumers / crash | Bild+3D Settings and thumbnail+model3d generate share one credential; crash mid-upsert does not leak plaintext | Same `provider_id=meshy` row; delete fails both generate paths together; client never stores secret | pass |
 
-No cross-user SELECT (table revoked from authenticated; Edge filters by JWT `user_id`). Cardinality: **one** credential row per `(user_id, provider_id)`.
+## Flags
 
-### Invalid / missing
-| Case | Behavior |
-|------|----------|
-| Invalid Meshy key | Upsert rejected; prior row unchanged |
-| Missing `CREDENTIALS_ENCRYPTION_KEY` | Upsert 503 fail-closed |
-| No user key + no `AI_PROVIDER_ALLOW_HOST_KEYS` | `meshyConfigured=false`, generate `not-configured` even if host `MESHY_API_KEY` set |
-| Mock flags | CI generate still works without user key |
-
-### Two consumers / crash
-| Consumer | Read |
-|----------|------|
-| Settings Bild tab | `list(modality=image)` → same `meshy` row |
-| Settings 3D tab | `list(modality=3d)` → same `meshy` row |
-| Thumbnail generate | decrypt `meshy` for user |
-| Model3d generate | decrypt `meshy` for user |
-
-Crash mid-upsert: no partial plaintext on client; DB either old ciphertext or new after successful write. Delete removes row → both generate paths fail-closed together.
-
-## Findings
-
-None.
+| Tag | Severity | Hops | Why local review missed it | Fix |
+|-----|----------|------|----------------------------|-----|
+| (none) | | | | |
 
 ## Notes
 
