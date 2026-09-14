@@ -60,5 +60,7 @@ Die Bibliothek erhält den Tab `NPCs & Kreaturen` mit EntityBrowser (Suche, Filt
 - Composition: `.qa/runs/composition-gate-npc-creature-library-browser.md` (CLEAR)
 
 ## Composition Gate
+- HEAD_SHA: 0c272dea1420f66ffaa15a277becf6d81653026c
+- BASE_SHA: 9224ce86b250feb1aaf5035440229812a4983df2
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-npc-creature-library-browser.md`
