@@ -1,6 +1,6 @@
 # Composition Gate — npc-creature-domain-persistence
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 3929d3769f0af36789ca2e3cb9992315eccb605e
 - Date: 2026-09-14
 - Verdict: CLEAR
 - Feature: #196 `npc-creature-domain-persistence`

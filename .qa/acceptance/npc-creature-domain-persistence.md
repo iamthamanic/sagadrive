@@ -55,7 +55,7 @@ SagaDrive erhält eine #94-konforme fachliche und persistente Grundlage für NPC
 Not applicable — no UI in this ticket.
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 3929d3769f0af36789ca2e3cb9992315eccb605e
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-npc-creature-domain-persistence.md`
 - Skip reason: n/a
