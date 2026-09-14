@@ -437,6 +437,14 @@ function checkNpcCreaturePowerFramework() {
   });
 }
 
+function checkNpcCreatureDomainPersistence() {
+  console.log('NPC/creature domain persistence (#196): definitions CRUD contracts + RLS wiring...');
+  execFileSync(process.execPath, ['scripts/npc-creature-domain-persistence-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkItemDefinitionPersistence() {
   console.log('ItemDefinition persistence lifecycle & security (#136): CRUD/fork/taxonomy roundtrip...');
   execFileSync(process.execPath, ['scripts/item-definition-persistence-check.mjs'], {
@@ -558,6 +566,7 @@ checkCombatActionEconomyValidation();
 checkDamageHealingDyingValidation();
 checkEnemyEncounterBossValidation();
 checkNpcCreaturePowerFramework();
+checkNpcCreatureDomainPersistence();
 checkCharacterCreationValidation();
 checkPowersEssencesValidation();
 checkDriveMomentumValidation();
