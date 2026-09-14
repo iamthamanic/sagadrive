@@ -5,8 +5,11 @@
  */
 
 export type {
+  NpcCreatureCombatDetails,
   NpcCreatureDefinition,
   NpcCreatureDefinitionWriteDraft,
+  NpcCreatureDetailExtras,
+  NpcCreatureStatOverrides,
 } from './definition';
 
 export type {
@@ -55,8 +58,11 @@ export {
   isNpcCreatureDefinitionVisible,
 } from './policy';
 
-export type { NpcCreatureDerivedPower } from './derived';
-export { deriveNpcCreaturePower } from './derived';
+export type { NpcCreatureDerivedPower, NpcCreatureEffectiveStats } from './derived';
+export {
+  deriveNpcCreaturePower,
+  resolveNpcCreatureEffectiveStats,
+} from './derived';
 
 export type {
   CreateNpcCreatureDefinitionInput,

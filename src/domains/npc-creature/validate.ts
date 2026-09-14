@@ -1,8 +1,8 @@
 /**
- * Fail-closed validation for NPC/creature definitions (#196).
+ * Fail-closed validation for NPC/creature definitions (#196/#198).
  * Location: src/domains/npc-creature/validate.ts
  *
- * Domain-pure: no React, no Supabase, no UI imports.
+ * Domain-pure: no UI framework, no persistence client, no UI imports.
  */
 
 import {
@@ -37,6 +37,100 @@ const MAX_NOTES_LEN = 8000;
 const MAX_TAG_LEN = 48;
 const MAX_TAGS = 24;
 const MAX_PORTRAIT_KEY_LEN = 256;
+const MAX_COMBAT_TEXT_LEN = 4000;
+const MAX_OVERRIDE_ATTR = 20;
+const MAX_OVERRIDE_STAT = 9999;
+
+const COMBAT_DETAIL_KEYS = [
+  'attacks',
+  'reactions',
+  'signatures',
+  'impulseOptions',
+  'wendepunkt',
+  'resistancesNotes',
+  'weaknessesNotes',
+  'immunitiesNotes',
+] as const;
+
+const DETAIL_EXTRA_KEYS = ['senses', 'behavior', 'loot'] as const;
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function validateOptionalNonNegInt(
+  errors: string[],
+  value: unknown,
+  label: string,
+  max: number,
+): void {
+  if (value === undefined) return;
+  pushIf(
+    errors,
+    !isFiniteNumber(value) || !Number.isInteger(value) || value < 0 || value > max,
+    `${label} muss eine ganze Zahl zwischen 0 und ${max} sein.`,
+  );
+}
+
+function validateStatOverrides(
+  errors: string[],
+  overrides: NpcCreatureDefinition['statOverrides'],
+): void {
+  if (overrides === undefined) return;
+  if (typeof overrides !== 'object' || overrides === null || Array.isArray(overrides)) {
+    errors.push('Stat-Overrides müssen ein Objekt sein.');
+    return;
+  }
+  validateOptionalNonNegInt(errors, overrides.health, 'Gesundheit-Override', MAX_OVERRIDE_STAT);
+  validateOptionalNonNegInt(errors, overrides.defense, 'Verteidigung-Override', MAX_OVERRIDE_STAT);
+  validateOptionalNonNegInt(errors, overrides.movementMeters, 'Bewegung-Override', MAX_OVERRIDE_STAT);
+  validateOptionalNonNegInt(errors, overrides.resistanceHigh, 'Körper-Widerstand-Override', MAX_OVERRIDE_STAT);
+  validateOptionalNonNegInt(errors, overrides.resistanceNormal, 'Reflex-Widerstand-Override', MAX_OVERRIDE_STAT);
+  validateOptionalNonNegInt(errors, overrides.resistanceLow, 'Geist-Widerstand-Override', MAX_OVERRIDE_STAT);
+  if (overrides.attributes !== undefined) {
+    const attrs = overrides.attributes;
+    pushIf(
+      errors,
+      !Array.isArray(attrs) || attrs.length !== 6,
+      'Attribut-Overrides brauchen genau 6 Werte.',
+    );
+    if (Array.isArray(attrs) && attrs.length === 6) {
+      for (const attr of attrs) {
+        pushIf(
+          errors,
+          !isFiniteNumber(attr) || !Number.isInteger(attr) || attr < 0 || attr > MAX_OVERRIDE_ATTR,
+          `Jedes Attribut-Override muss 0–${MAX_OVERRIDE_ATTR} sein.`,
+        );
+      }
+    }
+  }
+}
+
+function validateStringMap(
+  errors: string[],
+  value: unknown,
+  allowedKeys: readonly string[],
+  maxLen: number,
+  label: string,
+): void {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    errors.push(`${label} müssen ein Objekt sein.`);
+    return;
+  }
+  const record = value as Record<string, unknown>;
+  for (const key of Object.keys(record)) {
+    pushIf(errors, !allowedKeys.includes(key), `${label}: unbekannter Schlüssel "${key}".`);
+  }
+  for (const key of allowedKeys) {
+    const entry = record[key];
+    if (entry === undefined) continue;
+    pushIf(
+      errors,
+      typeof entry !== 'string' || entry.length > maxLen,
+      `${label}.${key} ist ungültig oder zu lang.`,
+    );
+  }
+}
 
 export type NpcCreatureValidationResult =
   | { ok: true }
@@ -127,6 +221,16 @@ export function validateNpcCreatureDefinition(
       typeof def.notes !== 'string' || def.notes.length > MAX_NOTES_LEN,
       'Notizen sind zu lang.',
     );
+  }
+
+  if (def.statOverrides !== undefined) {
+    validateStatOverrides(errors, def.statOverrides);
+  }
+  if (def.combatDetails !== undefined) {
+    validateStringMap(errors, def.combatDetails, COMBAT_DETAIL_KEYS, MAX_COMBAT_TEXT_LEN, 'Kampfdetails');
+  }
+  if (def.detailExtras !== undefined) {
+    validateStringMap(errors, def.detailExtras, DETAIL_EXTRA_KEYS, MAX_COMBAT_TEXT_LEN, 'Details');
   }
 
   if (def.sheetMode === 'compact' && def.fullSheet !== undefined) {

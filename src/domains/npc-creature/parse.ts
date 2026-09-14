@@ -13,7 +13,13 @@ import {
   type SagaDriveCombatRole,
   type SagaDriveNpcLevel,
 } from '../rules/sagadrive/npc-creature-power';
-import type { NpcCreatureDefinition, NpcCreatureDefinitionWriteDraft } from './definition';
+import type {
+  NpcCreatureCombatDetails,
+  NpcCreatureDefinition,
+  NpcCreatureDefinitionWriteDraft,
+  NpcCreatureDetailExtras,
+  NpcCreatureStatOverrides,
+} from './definition';
 import { NPC_CREATURE_DEFINITION_PAYLOAD_VERSION } from './payload';
 import {
   isNpcCreatureCategory,
@@ -53,6 +59,72 @@ function readTags(value: unknown): readonly string[] | null {
     tags.push(entry);
   }
   return tags;
+}
+
+function readOptionalNonNegInt(value: unknown): number | null | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'number' || !Number.isFinite(value) || !Number.isInteger(value) || value < 0) {
+    return null;
+  }
+  return value;
+}
+
+function readStatOverrides(value: unknown): NpcCreatureStatOverrides | null | undefined {
+  if (value === undefined) return undefined;
+  if (!isRecord(value)) return null;
+  const health = readOptionalNonNegInt(value.health);
+  if (health === null) return null;
+  const defense = readOptionalNonNegInt(value.defense);
+  if (defense === null) return null;
+  const movementMeters = readOptionalNonNegInt(value.movementMeters);
+  if (movementMeters === null) return null;
+  const resistanceHigh = readOptionalNonNegInt(value.resistanceHigh);
+  if (resistanceHigh === null) return null;
+  const resistanceNormal = readOptionalNonNegInt(value.resistanceNormal);
+  if (resistanceNormal === null) return null;
+  const resistanceLow = readOptionalNonNegInt(value.resistanceLow);
+  if (resistanceLow === null) return null;
+
+  let attributes: readonly [number, number, number, number, number, number] | undefined;
+  if (value.attributes !== undefined) {
+    if (!Array.isArray(value.attributes) || value.attributes.length !== 6) return null;
+    const parsed: number[] = [];
+    for (const entry of value.attributes) {
+      if (typeof entry !== 'number' || !Number.isFinite(entry) || !Number.isInteger(entry) || entry < 0) {
+        return null;
+      }
+      parsed.push(entry);
+    }
+    attributes = parsed as [number, number, number, number, number, number];
+  }
+
+  const result: NpcCreatureStatOverrides = {
+    ...(health !== undefined ? { health } : {}),
+    ...(defense !== undefined ? { defense } : {}),
+    ...(movementMeters !== undefined ? { movementMeters } : {}),
+    ...(resistanceHigh !== undefined ? { resistanceHigh } : {}),
+    ...(resistanceNormal !== undefined ? { resistanceNormal } : {}),
+    ...(resistanceLow !== undefined ? { resistanceLow } : {}),
+    ...(attributes !== undefined ? { attributes } : {}),
+  };
+  return result;
+}
+
+function readStringFields(
+  value: unknown,
+  allowedKeys: readonly string[],
+): Record<string, string> | null | undefined {
+  if (value === undefined) return undefined;
+  if (!isRecord(value)) return null;
+  const result: Record<string, string> = {};
+  for (const key of Object.keys(value)) {
+    if (!allowedKeys.includes(key)) return null;
+    const entry = value[key];
+    if (entry === undefined) continue;
+    if (typeof entry !== 'string') return null;
+    result[key] = entry;
+  }
+  return result;
 }
 
 /**
@@ -104,6 +176,30 @@ export function parseNpcCreatureDefinition(
   const notes = payload.notes === undefined ? undefined : readString(payload.notes);
   if (payload.notes !== undefined && notes === null) return null;
 
+  const statOverrides = readStatOverrides(payload.statOverrides);
+  if (statOverrides === null) return null;
+
+  const combatDetailsRaw = readStringFields(payload.combatDetails, [
+    'attacks',
+    'reactions',
+    'signatures',
+    'impulseOptions',
+    'wendepunkt',
+    'resistancesNotes',
+    'weaknessesNotes',
+    'immunitiesNotes',
+  ]);
+  if (combatDetailsRaw === null) return null;
+  const combatDetails = combatDetailsRaw as NpcCreatureCombatDetails | undefined;
+
+  const detailExtrasRaw = readStringFields(payload.detailExtras, [
+    'senses',
+    'behavior',
+    'loot',
+  ]);
+  if (detailExtrasRaw === null) return null;
+  const detailExtras = detailExtrasRaw as NpcCreatureDetailExtras | undefined;
+
   let fullSheet: Readonly<Record<string, unknown>> | undefined;
   if (payload.fullSheet !== undefined) {
     if (!isRecord(payload.fullSheet)) return null;
@@ -124,6 +220,9 @@ export function parseNpcCreatureDefinition(
     tags,
     ...(portraitAssetKey !== undefined ? { portraitAssetKey } : {}),
     ...(notes !== undefined ? { notes } : {}),
+    ...(statOverrides !== undefined ? { statOverrides } : {}),
+    ...(combatDetails !== undefined ? { combatDetails } : {}),
+    ...(detailExtras !== undefined ? { detailExtras } : {}),
     ...(fullSheet !== undefined ? { fullSheet } : {}),
   };
 

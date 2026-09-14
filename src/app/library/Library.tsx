@@ -36,6 +36,8 @@ const NpcCreatureLibraryBrowser = lazy(() =>
 interface LibraryProps {
   onNavigate: (view: string) => void;
   onNavigateToItem: (itemId: string) => void;
+  onNavigateToNpcCreate?: () => void;
+  onNavigateToNpcEdit?: (definitionId: string) => void;
 }
 
 type LibraryTab = 'characters' | 'npcs' | 'adventures' | 'worlds' | 'items';
@@ -57,7 +59,12 @@ const PROJECT_STATUS_LABELS: Record<ProjectSummaryVm['status'], string> = {
   archived: 'Archiviert',
 };
 
-export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
+export function Library({
+  onNavigate,
+  onNavigateToItem,
+  onNavigateToNpcCreate,
+  onNavigateToNpcEdit,
+}: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<LibraryTab>('characters');
   const [visitedTabs, setVisitedTabs] = useState<Set<LibraryTab>>(() => new Set(['characters']));
@@ -95,8 +102,12 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
     setVisitedTabs((current) => new Set(current).add(tab));
   };
 
-  const handleNpcCreateStub = () => {
-    toast.message('NPC-/Kreaturen-Erstellung folgt in Kürze.');
+  const handleNpcCreate = () => {
+    if (onNavigateToNpcCreate) {
+      onNavigateToNpcCreate();
+      return;
+    }
+    onNavigate('npc-creature-create');
   };
 
   const handleDeleteCharacter = async (id: string, name: string) => {
@@ -416,7 +427,8 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
               >
                 <NpcCreatureLibraryBrowser
                   enabled={npcsTabVisited}
-                  onCreateNpc={handleNpcCreateStub}
+                  onCreateNpc={handleNpcCreate}
+                  onEditNpc={onNavigateToNpcEdit}
                 />
               </Suspense>
             ) : null}

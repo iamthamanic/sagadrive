@@ -219,6 +219,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-14** — NPCs & Kreaturen Quick Create + Statblock-Editor mit Live-Vorschau; Library `+ Neu` / Bearbeiten (`feat/npc-creature-quick-create-editor`, #198)
 - **2026-09-11** — AI Provider BYOK: Settings → AI (Meshy Key, Credits); Prod nur User-Keys; wiederverwendbare Item-Visual-Tools-Hooks (`feat/ai-provider-credentials`)
 - **2026-09-09** — Item-Workbench Forge: typed Create-URLs, Visuals-Dropzone mit Auto-Draft, Scroll-Layout, Single-Shell App-Layout (`feat/item-workbench-forge-ux`)
 - **2026-09-06** — Item Epic Abnahme: Docs-Sync (`docs/items.md`), Meta-Gate + Playwright-Hop Library→Workbench→Inventar (`feat/144-item-epic-acceptance`, #144)

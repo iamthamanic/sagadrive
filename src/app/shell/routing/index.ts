@@ -7,6 +7,8 @@ export {
   normalizeViewId,
   pathForItemCreateType,
   pathForItemDetail,
+  pathForNpcCreatureCreate,
+  pathForNpcCreatureEdit,
   pathForView,
   resolvePathname,
   routeToShellView,

@@ -7,6 +7,8 @@ import {
   normalizeViewId,
   pathForItemCreateType,
   pathForItemDetail,
+  pathForNpcCreatureCreate,
+  pathForNpcCreatureEdit,
   pathForView,
   resolvePathname,
   routeToShellView,
@@ -59,6 +61,8 @@ export function useAppLocation() {
   const currentView: ShellViewId = routeToShellView(route);
   const itemId = route.kind === 'item-detail' ? route.itemId : null;
   const createTypeSlug = route.kind === 'item-create' ? route.typeSlug ?? null : null;
+  const npcCreatureDefinitionId =
+    route.kind === 'npc-creature-edit' ? route.definitionId : null;
 
   const navigateToPath = (nextPath: string, options?: { replace?: boolean }) => {
     if (typeof window === 'undefined') return;
@@ -91,15 +95,26 @@ export function useAppLocation() {
     navigateToPath(pathForItemCreateType(typeSlug), options);
   };
 
+  const navigateToNpcCreatureCreate = (options?: { replace?: boolean }) => {
+    navigateToPath(pathForNpcCreatureCreate(), options);
+  };
+
+  const navigateToNpcCreatureEdit = (definitionId: string, options?: { replace?: boolean }) => {
+    navigateToPath(pathForNpcCreatureEdit(definitionId), options);
+  };
+
   return {
     pathname,
     route,
     currentView,
     itemId,
     createTypeSlug,
+    npcCreatureDefinitionId,
     navigateToPath,
     navigateToView,
     navigateToItem,
     navigateToItemCreateType,
+    navigateToNpcCreatureCreate,
+    navigateToNpcCreatureEdit,
   };
 }
