@@ -1893,83 +1893,185 @@ Die Struktur gilt für Verfolgungen zu Fuß, mit Tieren, Fahrzeugen, Schiffen od
 
 ## 15. Gegner- und Spielleitungsregeln
 
-### 15.1 Begegnungsränge
+Kompakte NPC-/Kreaturen-Statblocks nutzen dieselben Kernregeln wie Charaktere (Attribute, Skills, Proben, Verteidigung, Widerstände, Zustände, Schadensklassen, Kampfaktionen). Es gibt kein zweites Kampfsystem. Vollständige Charaktere erhalten keine intrinsischen Standard-/Elite-/Boss-Modifikatoren.
 
-Begegnungen verwenden dieselben fünf Rangnamen und Stufenbereiche wie Spielercharaktere.
+### 15.1 Stufe und Machtgrad
 
-| Begegnungsrang | Charakterstufen |
+Stufe bleibt 1–20 und ist der mechanische Leistungsanker. Für NPCs und Kreaturen wird daraus der **Machtgrad** nur zur Anzeige abgeleitet:
+
+| Machtgrad | Stufen |
 |---|---:|
-| Novize | 1–4 |
-| Spezialist | 5–8 |
-| Experte | 9–12 |
-| Meister | 13–16 |
-| Legende | 17–20 |
+| Gering | 1–4 |
+| Mittel | 5–8 |
+| Hoch | 9–12 |
+| Extrem | 13–16 |
+| Legendär | 17–20 |
 
-### 15.2 Standardgegner
+Die älteren Begegnungsrang-Namen Novize/Spezialist/Experte/Meister/Legende bleiben als synonyme Bandbezeichnung für dieselben Stufenbereiche zulässig.
 
-| Rang | Angriff | Verteidigung | Gesundheit | Standardschaden |
-|---|---:|---:|---:|---:|
-| Novize | +6 | 14 | 18 | d6+1 |
-| Spezialist | +8 | 16 | 20 | d8+1 |
-| Experte | +10 | 18 | 22 | d8+2 |
-| Meister | +12 | 20 | 24 | d10+2 |
-| Legende | +14 | 22 | 26 | d10+3 |
+### 15.2 Standard-Benchmarks (Ausgewogen)
 
-Widerstände liegen normalerweise innerhalb von Verteidigung ±2.
+Verbindliche Playtestwerte für **Standard + Ausgewogen**. Formeln:
 
-Diese Werte sind verbindliche Playtestwerte und müssen in Abschnitt 19 empirisch validiert werden.
+- Primärmodifikator = `6 + floor((Stufe − 1) / 2)`
+- Verteidigung = `14 + floor((Stufe − 1) / 2)`
+- Gesundheit = `18 + 2 × floor((Stufe − 1) / 4)`
 
-### 15.3 Gegnertypen
+| Stufe | Machtgrad | EB | Primärskill | Primärmod. | DEF | Widerstände H/N/T | HP | Basis-Schaden |
+|---:|---|---:|---:|---:|---:|---|---:|---|
+| 1–2 | Gering | +1 | 2 | +6 | 14 | 14/13/11 | 18 | d6+1 |
+| 3–4 | Gering | +1 | 3 | +7 | 15 | 14/13/11 | 18 | d6+1 |
+| 5–6 | Mittel | +2 | 3 | +8 | 16 | 15/14/12 | 20 | d8+1 |
+| 7–8 | Mittel | +2 | 4 | +9 | 17 | 15/14/12 | 20 | d8+1 |
+| 9–10 | Hoch | +3 | 3 | +10 | 18 | 17/16/13 | 22 | d8+2 |
+| 11–12 | Hoch | +3 | 4 | +11 | 19 | 17/16/13 | 22 | d8+2 |
+| 13–14 | Extrem | +4 | 4 | +12 | 20 | 18/17/14 | 24 | d10+2 |
+| 15–16 | Extrem | +4 | 5 | +13 | 21 | 18/17/14 | 24 | d10+2 |
+| 17–18 | Legendär | +5 | 4 | +14 | 22 | 20/19/15 | 26 | d10+3 |
+| 19–20 | Legendär | +5 | 5 | +15 | 23 | 20/19/15 | 26 | d10+3 |
 
-#### Scherge
+H/N/T = Hoch / Normal / Tief (Körper / Reflex / Geist nach Konzept zuweisen).
 
-- Verteidigung -2,
-- Schaden eine Klasse niedriger,
-- keine komplexen Reaktionen,
-- jeder erfolgreiche Schadenseffekt von mindestens 1 besiegt den Schergen.
+Attribut-Defaults nach Machtgrad (nur Generator, kein zweites Point-Buy):
+
+| Machtgrad | Defaults |
+|---|---|
+| Gering | +3,+2,+2,+1,+1,+0 |
+| Mittel | +3,+3,+2,+2,+1,+0 |
+| Hoch | +4,+3,+3,+2,+1,+0 |
+| Extrem | +4,+4,+3,+2,+1,+0 |
+| Legendär | +5,+4,+3,+2,+1,+0 |
+
+Schadensleiter (Schritte ±1 clampen an den Enden): `d4+1`, `d6+1`, `d8+1`, `d8+2`, `d10+2`, `d10+3`, `d12+3`, `d12+4`.
+
+Diese Werte müssen in Abschnitt 19 empirisch validiert werden.
+
+### 15.3 Kampfprofile
+
+Berechnungsreihenfolge: Stufen-Benchmark → Konzept → Profil → Kampfrolle → explizite Ausrüstung/Fähigkeiten.
+
+Profile dürfen keine versteckten Modifikatoren jenseits der Skill-/Attributcaps erzeugen.
+
+#### Nichtkämpferisch
+
+- Primärbenchmark gehört zur gewählten Nichtkampf-Spezialität.
+- Kampfangriffe nutzen einen sekundären / untrainierten Skill.
+- Direkter Schaden standardmäßig `d4+1` oder Ausrüstung.
+- Verteidigung −1.
+- Keine Kampf-Signaturfähigkeit erforderlich.
+- Erhält keinen Stufe-gleichen automatischen Kampfprimärwert.
+
+#### Ausgewogen
+
+Keine Verschiebungen.
+
+#### Zäh
+
+- HP ×1,20 vor Rollenmultiplikator.
+- Körper oder ein Haltbarkeitswiderstand +1.
+- Bewegung −3 m.
+- Primärschaden −1 Schritt.
+
+#### Offensiv
+
+- Primärer Kampfangriff/Effekt +1.
+- Primärschaden +1 Schritt.
+- Verteidigung −1.
+- Schwächster Widerstand −1.
+
+#### Mobil
+
+- Verteidigung +1.
+- Reflex +1.
+- Bewegung +3 m.
+- HP ×0,80 vor Rollenmultiplikator.
+
+#### Fernkampf
+
+- Primärer Fernkampfangriff +1.
+- Bewegung +3 m.
+- Nahkampfangriff −1.
+- HP ×0,80 vor Rollenmultiplikator.
+- Mindestens eine Fernkampf-Primäraktion erforderlich.
+
+#### Kontrolle & Support
+
+- Gewählter Kontroll-/Support-Effekt +1.
+- Geist oder ein Kontrollwiderstand +1.
+- Direktschaden-Angriff −1.
+- Primärer Direktschaden −1 Schritt.
+- Signatur-Budget für Kontrolle, Positionierung, Schutz, Hilfe oder Utility.
+
+### 15.4 Kampfrollen (Standard / Elite / Boss)
+
+Kampfrolle gilt für kompakte Statblocks und beschreibt **Kampfökonomie und Haltbarkeit**, nicht erzählerische Wichtigkeit, Kreaturtyp, Ownership oder Controller.
+
+Kampfrolle ändert **nicht** Angriffsbonus, Verteidigung, Widerstände, Skillmodifikatoren oder Basis-Schaden. Diese kommen aus Stufe + Profil + expliziten Fähigkeiten/Ausrüstung.
+
+HP-Multiplikatoren (Profil- und Rollenmultiplikatoren kombinieren, **einmal** am Ende aufrunden):
+
+| Rolle | HP | Bedrohungseinheiten (gleiche Stufe) |
+|---|---:|---:|
+| Standard | ×1,00 | 1 |
+| Elite | ×1,50 | 2 |
+| Boss | ×2,50 | 4 |
+
+#### Standard
+
+- Normaler Zug: 1 Hauptaktion, Bewegung, Interaktion, 1 Reaktion.
+- Kein zusätzlicher Interleaved-Impuls.
+- Inhalt: 1–2 Primäraktionen, 0–2 Signaturfähigkeiten, optionale normale Reaktion.
 
 #### Elite
 
-- Gesundheit ×2,
-- Angriff +1,
-- mindestens eine besondere Reaktion oder Fähigkeit.
+- HP ×1,50.
+- **Elite-Impuls: 1/Runde**, nach dem Zug einer anderen Figur; nie während des eigenen Zugs.
+- Ein Elite-Impuls erlaubt entweder Bewegung bis zur Hälfte der normalen Bewegung (alle Restriktionen gelten) oder eine explizit als `Elite-Impuls` getaggte Statblock-Fähigkeit.
+- Offensive Impulse sind schwächer: mindestens ein Schadensschritt unter dem Primärangriff, sofern keine explizite Ausgleichskosten/-bedingung.
+- Höchstens ein Interleaved-Impuls nach einem einzelnen anderen Zug.
+- Inhalt: 1–2 Primäraktionen, 2–4 Signaturen, mindestens eine nützliche Elite-Impuls-Option.
 
 #### Boss
 
-- Gesundheit ×3,
-- Verteidigung +1,
-- Angriff +1,
-- Schaden ungefähr eine Klasse höher,
-- zwei Initiativeslots pro Runde,
-- zwei Reaktionen pro Runde,
-- dieselbe starke Spezialfähigkeit normalerweise höchstens einmal pro Runde,
-- mindestens eine Phase, Schwäche oder taktische Veränderung.
+- HP ×2,50.
+- **Boss-Impuls: 2/Runde**, jeweils nach dem Zug einer anderen Figur; höchstens einer nach demselben anderen Zug.
+- Jeder Boss-Impuls: halbe Bewegung oder `Boss-Impuls`-getaggte Fähigkeit (bewusst schwächer als volle Signaturaktionen am eigenen Zug).
+- **Wendepunkt: 1/Kampf**. Jeder Boss definiert einen expliziten Phasen-/Veränderungstrigger, normalerweise beim ersten Erreichen von 50 % max. HP. Kein generisches Condition-Cleanse und keine automatische Immunität.
+- Inhalt: 1–2 Primärangriffe, 3–5 Signaturen, mindestens zwei Boss-Impuls-Optionen, genau ein Wendepunkt.
 
-### 15.4 Bedrohungspunkte
+#### Bedingungen
 
-Innerhalb desselben Begegnungsrangs:
+- Kampfrolle vergibt keine Blanket-Immunitäten und keinen „Legendary Resistance“-Ersatz.
+- Bestehende Zustände wirken normal.
+- **Kampfunfähig** verhindert Elite-/Boss-Impulse.
+- Impulse sind **keine** Reaktionen und verbrauchen die normale Reaktion nicht.
+- Kompakte Statblocks haben standardmäßig kein Drive/Momentum.
+- Bei 0 HP ist der kompakte Statblock besiegt/außerhalb des Konflikts; der GM narrativiert tot, bewusstlos, zerstört, geflohen usw. Vollständige Charaktere nutzen die normalen Sterberegeln.
 
-| Typ | Punkte |
+Alte Scherge-/Minion-Regeln sowie Blanket-+1-Angriff/Verteidigung für Elite/Boss entfallen.
+
+### 15.5 Bedrohungspunkte (gleiche Stufe)
+
+Innerhalb derselben Stufe:
+
+| Rolle | Punkte |
 |---|---:|
-| Scherge | 1 |
-| Standardgegner | 2 |
-| Elite | 4 |
-| Boss | 8 |
+| Standard | 1 |
+| Elite | 2 |
+| Boss | 4 |
 
-Gruppenbudget:
+Gruppenbudget (Playtest):
 
 | Begegnung | Budget |
-|---|---:|
+|---|---|
 | Routine | 1 × Zahl der Spielerfiguren |
 | Standard | 2 × Zahl der Spielerfiguren |
 | Schwer | 2,5 × Zahl der Spielerfiguren |
 | Extrem | 3 × Zahl der Spielerfiguren |
 
-Ein Gegner einen Begegnungsrang über der Gruppe kostet doppelt. Ein Gegner einen Begegnungsrang darunter kostet halbiert.
+Ein Gegner eine Machtgrad-Bandstufe über der Gruppe kostet doppelt. Ein Gegner eine Bandstufe darunter kostet halbiert. Encounter-Budget über stark unterschiedliche Einzelstufen bleibt ein späterer Playtest-/Encounter-Slice.
 
-Auch diese Budgets sind Playtestwerte.
-
-### 15.5 GM-Vorbereitung
+### 15.6 GM-Vorbereitung
 
 Jede bedeutende Szene definiert mindestens:
 
@@ -2232,7 +2334,7 @@ Vor endgültiger Freigabe müssen mindestens praktisch oder mathematisch geprüf
 - Erweitertes Klettern und Erweitertes Schwimmen gegenüber der normalen Bewegungsregel,
 - Kampfwerte und erwartete Kampfdauer,
 - Begegnungsbudgets für unterschiedliche Gruppengrößen,
-- Schergen-, Elite- und Bossregeln,
+- Schergen-, Elite- und Bossregeln (Standard/Elite/Boss inkl. Impulse),
 - Boss-Aktionsökonomie,
 - Schadens- und Heilungskurven über mehrere Konflikte,
 - Rüstung und Durchdringung,
@@ -2284,7 +2386,7 @@ Die SagaDrive Core Rules gelten als final validiert, wenn:
 - Konflikt, Schaden, Heilung und Tod getestet wurden,
 - Ausrüstung und besondere Kräfte in mehreren Weltarten funktionieren,
 - Gegner und Herausforderungen konsistent erstellt werden können,
-- Schergen, Standardgegner, Eliten und Bosse getestet wurden,
+- Standardgegner, Eliten und Bosse getestet wurden,
 - Kräfte mindestens der Ränge Novize, Experte und Legende praktisch getestet wurden,
 - optionale Module ihre Abhängigkeiten deklarieren,
 - mathematische Grenzfälle geprüft wurden,
