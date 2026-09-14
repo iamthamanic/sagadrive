@@ -453,6 +453,14 @@ function checkNpcCreatureLibraryBrowser() {
   });
 }
 
+function checkNpcCreatureCreatorEditor() {
+  console.log('NPC/creature creator editor (#198): quick create, editor, live statblock...');
+  execFileSync(process.execPath, ['scripts/npc-creature-creator-editor-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkItemDefinitionPersistence() {
   console.log('ItemDefinition persistence lifecycle & security (#136): CRUD/fork/taxonomy roundtrip...');
   execFileSync(process.execPath, ['scripts/item-definition-persistence-check.mjs'], {
@@ -576,6 +584,7 @@ checkEnemyEncounterBossValidation();
 checkNpcCreaturePowerFramework();
 checkNpcCreatureDomainPersistence();
 checkNpcCreatureLibraryBrowser();
+checkNpcCreatureCreatorEditor();
 checkCharacterCreationValidation();
 checkPowersEssencesValidation();
 checkDriveMomentumValidation();

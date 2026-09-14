@@ -40,6 +40,7 @@ section('1 · slice files exist');
   'src/app/library/npc-creatures/useNpcCreatureLibrary.ts',
   'src/app/library/npc-creatures/NpcCreatureLibraryFilters.tsx',
   'src/app/library/npc-creatures/NpcCreatureStatblockView.tsx',
+  'src/app/library/npc-creatures/NpcCreatureStatblockPanel.tsx',
   'src/app/library/npc-creatures/npcCreatureLibraryLabels.ts',
   'src/domains/npc-creature/library-query.ts',
   '.qa/acceptance/npc-creature-library-browser.md',
@@ -93,6 +94,7 @@ section('5 · UI contract strings / a11y hooks');
   const browser = read('src/app/library/npc-creatures/NpcCreatureLibraryBrowser.tsx');
   const filters = read('src/app/library/npc-creatures/NpcCreatureLibraryFilters.tsx');
   const statblock = read('src/app/library/npc-creatures/NpcCreatureStatblockView.tsx');
+  const panel = read('src/app/library/npc-creatures/NpcCreatureStatblockPanel.tsx');
 
   check(/Noch keine NPCs oder Kreaturen angelegt/.test(browser), 'empty state copy');
   check(/Erste Figur erstellen/.test(browser), 'empty CTA copy');
@@ -104,10 +106,15 @@ section('5 · UI contract strings / a11y hooks');
   check(/Kategorie/.test(filters) && /Machtgrad/.test(filters) && /Kampfrolle/.test(filters), 'secondary filters');
   check(/Darstellung/.test(filters) && /Quelle/.test(filters), 'sheet/source filters');
   check(/min-h-11/.test(filters) && /min-h-11/.test(browser), 'touch targets ≥44px');
-  check(/deriveNpcCreaturePower|computeCompactStatblockBenchmarks/.test(statblock), 'statblock uses power derivation');
-  check(/Gesundheit/.test(statblock) && /Verteidigung/.test(statblock), 'statblock core labels');
-  check(/grid-cols-1/.test(statblock), 'statblock single-column mobile layout');
+  check(
+    /deriveNpcCreaturePower|computeCompactStatblockBenchmarks|resolveNpcCreatureEffectiveStats/.test(panel)
+      || /deriveNpcCreaturePower/.test(statblock),
+    'statblock uses power derivation',
+  );
+  check(/Gesundheit/.test(panel) && /Verteidigung/.test(panel), 'statblock core labels');
+  check(/grid-cols-1/.test(panel), 'statblock single-column mobile layout');
   check(/data-npc-statblock-view/.test(statblock), 'statblock data hook');
+  check(/NpcCreatureStatblockPanel/.test(statblock), 'dialog reuses panel body');
 }
 
 section('6 · pure filter domain behaviour');

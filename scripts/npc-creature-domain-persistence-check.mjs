@@ -320,7 +320,7 @@ section('6 · domain purity + test-gate wiring');
   rejectMatch(domainIndex, /from ['"]react|supabase|infrastructure/, 'domain barrel stays pure');
 
   const validate = read('src/domains/npc-creature/validate.ts');
-  rejectMatch(validate, /supabase|react/, 'validate has no React/Supabase');
+  rejectMatch(validate, /\bsupabase\b|\breact\b/i, 'validate has no React/Supabase');
 
   const gate = read('scripts/test-gate.mjs');
   requireMatch(
