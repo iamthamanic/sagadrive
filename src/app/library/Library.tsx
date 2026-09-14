@@ -38,6 +38,7 @@ interface LibraryProps {
   onNavigateToItem: (itemId: string) => void;
   onNavigateToNpcCreate?: () => void;
   onNavigateToNpcEdit?: (definitionId: string) => void;
+  onNavigateToCharacterEditor?: () => void;
 }
 
 type LibraryTab = 'characters' | 'npcs' | 'adventures' | 'worlds' | 'items';
@@ -64,6 +65,7 @@ export function Library({
   onNavigateToItem,
   onNavigateToNpcCreate,
   onNavigateToNpcEdit,
+  onNavigateToCharacterEditor,
 }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<LibraryTab>('characters');
@@ -77,7 +79,7 @@ export function Library({
     enabled: visitedTabs.has('characters'),
   });
   const { projects, isLoading: projectsLoading, error: projectsError } = useProjectSummaries({
-    enabled: visitedTabs.has('adventures'),
+    enabled: visitedTabs.has('adventures') || visitedTabs.has('npcs'),
   });
   const {
     worlds,
@@ -89,6 +91,13 @@ export function Library({
   } = useWorldProfiles({ enabled: visitedTabs.has('worlds') });
   const itemsTabVisited = visitedTabs.has('items');
   const npcsTabVisited = visitedTabs.has('npcs');
+
+  const gmProjects = projects.filter(
+    (project) =>
+      project.status === 'active'
+      && Boolean(user?.id)
+      && project.gmUserId === user?.id,
+  );
 
   // Always re-fetch character summaries when Library mounts so saves from the
   // editor are visible immediately (cache may still look "fresh" otherwise).
@@ -429,6 +438,11 @@ export function Library({
                   enabled={npcsTabVisited}
                   onCreateNpc={handleNpcCreate}
                   onEditNpc={onNavigateToNpcEdit}
+                  onNavigateToCharacterEditor={
+                    onNavigateToCharacterEditor
+                      ?? (() => onNavigate('character-editor'))
+                  }
+                  gmProjects={gmProjects}
                 />
               </Suspense>
             ) : null}

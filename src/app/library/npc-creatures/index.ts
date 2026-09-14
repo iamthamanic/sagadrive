@@ -4,6 +4,7 @@
  */
 
 export { NpcCreatureLibraryBrowser } from './NpcCreatureLibraryBrowser';
+export { NpcCreatureAssignControllerDialog } from './NpcCreatureAssignControllerDialog';
 export { useNpcCreatureLibrary } from './useNpcCreatureLibrary';
 export type {
   UseNpcCreatureLibraryOptions,

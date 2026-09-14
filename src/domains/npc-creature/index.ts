@@ -130,3 +130,33 @@ export type {
   ResolveWorldNpcCreatureCatalogInput,
   ResolvedWorldNpcCreatureCatalog,
 } from './world-catalog';
+
+export type {
+  NpcCharacterEditorSeed,
+  NpcLibraryPromotionAction,
+  NpcPromotionPlan,
+  NpcPromotionPlanError,
+  NpcPromotionPlanResult,
+  NpcUnresolvedChoice,
+  NpcUnresolvedChoiceKey,
+} from './promotion';
+export {
+  assertFullSheetHasNoSilentIllegalAttributes,
+  buildCompactToFullWriteDraft,
+  classifyNpcLibraryPromotionAction,
+  isLegalFullBaseAttributes,
+  planCompactToFullPromotion,
+  planTemplateToCharacterPromotion,
+} from './promotion';
+
+export type {
+  NpcControllerAssignment,
+  NpcControllerAssignmentContext,
+  NpcControllerAssignmentErr,
+  NpcControllerAssignmentErrorCode,
+  NpcControllerAssignmentOk,
+} from './controller-assignment';
+export {
+  planNpcControllerAssignment,
+  resolveControllerAfterMemberLeave,
+} from './controller-assignment';
