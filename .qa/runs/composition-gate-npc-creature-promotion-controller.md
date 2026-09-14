@@ -1,6 +1,6 @@
 # Composition Gate — npc-creature-promotion-controller
 
-- HEAD_SHA: pending
+- HEAD_SHA: 0314a51edb4f189c3909c1e916fe91f8ff2199b0
 - BASE_SHA: c7c5de0166c739562dd180623478db44629fb05a
 - Date: 2026-09-14
 - Verdict: CLEAR
