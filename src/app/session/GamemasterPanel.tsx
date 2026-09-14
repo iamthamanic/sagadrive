@@ -1,5 +1,5 @@
 /**
- * GamemasterPanel — Vertical slice GM storytelling controls.
+ * GamemasterPanel — Vertical slice GM storytelling controls + NPC instances (#201).
  * Location: src/app/session/GamemasterPanel.tsx
  */
 import { useState } from 'react';
@@ -12,17 +12,24 @@ import { Switch } from '../../shared/ui/switch';
 import { Label } from '../../shared/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Wand2, Eye, ImagePlus, Volume2, Users } from 'lucide-react';
+import { useAuth } from '../../lib/auth-context';
+import { useProjectSummaries } from '../project';
+import { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
 
 export function GamemasterPanel() {
   const [storyText, setStoryText] = useState('');
   const [autoMode, setAutoMode] = useState(true);
   const [detailLevel, setDetailLevel] = useState([70]);
   const [currentMood, setCurrentMood] = useState('mystical');
+  const { user } = useAuth();
+  const { projects } = useProjectSummaries({ enabled: true });
+  const gmProjects = projects.filter(
+    (project) => user !== null && project.gmUserId === user.id,
+  );
 
   return (
     <div className="w-full h-full overflow-y-auto">
       <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-4 md:space-y-6">
-        {/* Header */}
         <div>
           <h1 className="text-xl md:text-2xl">Gamemaster Panel</h1>
           <p className="text-muted-foreground text-sm md:text-base">
@@ -31,7 +38,6 @@ export function GamemasterPanel() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          {/* Main Storytelling Area */}
           <Card className="lg:col-span-2">
             <CardHeader className="pb-3">
               <CardTitle className="text-base md:text-lg">Storytelling</CardTitle>
@@ -95,7 +101,6 @@ export function GamemasterPanel() {
             </CardContent>
           </Card>
 
-          {/* Live Preview */}
           <Card className="lg:col-span-1">
             <CardHeader className="pb-3">
               <CardTitle className="text-base md:text-lg">Vorschau</CardTitle>
@@ -105,7 +110,7 @@ export function GamemasterPanel() {
               <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
                 <Eye className="w-8 h-8 md:w-12 md:h-12 text-muted-foreground" />
               </div>
-              
+
               <div className="space-y-2">
                 <p className="text-xs md:text-sm font-medium">Aktuelle Szene</p>
                 <p className="text-xs md:text-sm text-muted-foreground line-clamp-3">
@@ -128,18 +133,26 @@ export function GamemasterPanel() {
           </Card>
         </div>
 
-        {/* Control Tabs */}
         <Card>
           <CardContent className="pt-4 md:pt-6">
-            <Tabs defaultValue="scenes">
-              <TabsList className="grid w-full grid-cols-4 h-auto">
+            <Tabs defaultValue="npcs">
+              <TabsList className="grid w-full grid-cols-5 h-auto">
+                <TabsTrigger value="npcs" className="text-xs md:text-sm py-2" data-gm-tab-npcs>
+                  NPCs
+                </TabsTrigger>
                 <TabsTrigger value="scenes" className="text-xs md:text-sm py-2">Szenen</TabsTrigger>
                 <TabsTrigger value="characters" className="text-xs md:text-sm py-2">Chars</TabsTrigger>
                 <TabsTrigger value="objects" className="text-xs md:text-sm py-2">Objekte</TabsTrigger>
                 <TabsTrigger value="sound" className="text-xs md:text-sm py-2">Sound</TabsTrigger>
               </TabsList>
 
-              {/* Scenes Tab */}
+              <TabsContent value="npcs" className="space-y-3 md:space-y-4">
+                <div>
+                  <h4 className="mb-3 text-sm md:text-base">NPCs & Kreaturen im Abenteuer</h4>
+                  <AdventureNpcCreatureInstancesPanel gmProjects={gmProjects} />
+                </div>
+              </TabsContent>
+
               <TabsContent value="scenes" className="space-y-3 md:space-y-4">
                 <div>
                   <h4 className="mb-3 text-sm md:text-base">Szenen-Bibliothek</h4>
@@ -159,7 +172,6 @@ export function GamemasterPanel() {
                 </div>
               </TabsContent>
 
-              {/* Characters Tab */}
               <TabsContent value="characters" className="space-y-3 md:space-y-4">
                 <div>
                   <h4 className="mb-3 text-sm md:text-base">Spieler-Charaktere</h4>
@@ -188,12 +200,11 @@ export function GamemasterPanel() {
                 </div>
               </TabsContent>
 
-              {/* Objects Tab */}
               <TabsContent value="objects" className="space-y-3 md:space-y-4">
                 <div>
                   <h4 className="mb-3 text-sm md:text-base">Objekt-Templates</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-                    {['Lagerfeuer', 'Schwert', 'Altar', 'Truhe', 'Portal', 'Kristall'].map((obj) => (
+                    {['Lagerfeuer', 'Schwert', 'Altar', 'Truhe', 'Portal', 'Schatz'].map((obj) => (
                       <Button
                         key={obj}
                         variant="outline"
@@ -207,7 +218,6 @@ export function GamemasterPanel() {
                 </div>
               </TabsContent>
 
-              {/* Sound Tab */}
               <TabsContent value="sound" className="space-y-3 md:space-y-4">
                 <div>
                   <h4 className="mb-3 text-sm md:text-base">Soundscapes</h4>

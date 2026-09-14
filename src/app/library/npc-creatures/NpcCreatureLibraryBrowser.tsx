@@ -5,7 +5,7 @@
  * Location: src/app/library/npc-creatures/NpcCreatureLibraryBrowser.tsx
  */
 import { useState } from 'react';
-import { Edit, Loader2, Plus, RefreshCw, Search, UserPlus, Users } from 'lucide-react';
+import { Edit, Loader2, Plus, RefreshCw, Search, UserPlus, Users, Swords } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   classifyNpcLibraryPromotionAction,
@@ -24,6 +24,7 @@ import { Input } from '../../../shared/ui/input';
 import { EntityBrowser, type EntityBrowserRenderContext } from '../EntityBrowser';
 import { EntityBrowserCard } from '../EntityBrowserCard';
 import { NpcCreatureAssignControllerDialog } from './NpcCreatureAssignControllerDialog';
+import { NpcCreatureSpawnInstanceDialog } from './NpcCreatureSpawnInstanceDialog';
 import { NpcCreatureLibraryFiltersBar } from './NpcCreatureLibraryFilters';
 import { NpcCreatureStatblockView } from './NpcCreatureStatblockView';
 import {
@@ -89,6 +90,10 @@ export function NpcCreatureLibraryBrowser({
     null,
   );
   const [assignOpen, setAssignOpen] = useState(false);
+  const [spawnDefinition, setSpawnDefinition] = useState<NpcCreatureDefinition | null>(
+    null,
+  );
+  const [spawnOpen, setSpawnOpen] = useState(false);
 
   const openStatblock = (definition: NpcCreatureDefinition) => {
     setViewDefinition(definition);
@@ -148,6 +153,15 @@ export function NpcCreatureLibraryBrowser({
     }
     setAssignDefinition(definition);
     setAssignOpen(true);
+  };
+
+  const handleSpawnInstance = (definition: NpcCreatureDefinition) => {
+    if (gmProjects.length === 0) {
+      toast.error('Zum Abenteuer hinzufügen braucht eine aktive Kampagne als Spielleitung.');
+      return;
+    }
+    setSpawnDefinition(definition);
+    setSpawnOpen(true);
   };
 
   const items = toBrowserItems(library.filteredRecords);
@@ -288,6 +302,19 @@ export function NpcCreatureLibraryBrowser({
                 </Button>
               ) : null}
             </div>
+            {gmProjects.length > 0 ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="h-11 min-h-11 w-full"
+                onClick={() => handleSpawnInstance(definition)}
+                data-npc-library-spawn-instance
+              >
+                <Swords className="mr-1 size-3" aria-hidden="true" />
+                Zum Abenteuer hinzufügen
+              </Button>
+            ) : null}
             {promotion}
           </div>
         }
@@ -390,6 +417,16 @@ export function NpcCreatureLibraryBrowser({
           if (!open) setAssignDefinition(null);
         }}
         definition={assignDefinition}
+        gmProjects={gmProjects}
+      />
+
+      <NpcCreatureSpawnInstanceDialog
+        open={spawnOpen}
+        onOpenChange={(open) => {
+          setSpawnOpen(open);
+          if (!open) setSpawnDefinition(null);
+        }}
+        definition={spawnDefinition}
         gmProjects={gmProjects}
       />
     </div>
