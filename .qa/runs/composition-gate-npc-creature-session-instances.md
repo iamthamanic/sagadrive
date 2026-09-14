@@ -1,6 +1,6 @@
 # Composition Gate — npc-creature-session-instances
 
-- HEAD_SHA: pending-commit
+- HEAD_SHA: 035cd7b4e13d499f47cbb31b5b891eaca49dbfbb
 - BASE_SHA: 0cd62e0b395aa18b203486ef03b692cdd4fc0353
 - Date: 2026-09-14
 - Verdict: CLEAR
