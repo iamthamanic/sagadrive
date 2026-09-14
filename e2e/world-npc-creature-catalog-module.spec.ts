@@ -110,11 +110,11 @@ test('world npc-creature-catalog module toggles packs and shows live count', asy
   // item-catalog still present (regression)
   await expect(page.getByTestId('world-item-catalog-module')).toBeVisible();
 
-  await catalog.getByRole('checkbox', { name: /Fantasy Basics/ }).click();
+  await catalog.locator('#npc-creature-catalog-pack-builtin\\:npc-fantasy-basics').click();
   await expect(catalog.getByText(/Figuren in dieser Welt verfügbar/)).toBeVisible();
   await expect(catalog.getByText(/6 Figuren in dieser Welt verfügbar/)).not.toBeVisible();
 
-  await catalog.getByRole('checkbox', { name: /Tiere/ }).click();
+  await catalog.locator('#npc-creature-catalog-pack-builtin\\:npc-animals').click();
 
   await catalog.getByRole('switch', { name: /Eigene Figuren der Spieler erlauben/ }).click();
 
