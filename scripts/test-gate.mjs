@@ -445,6 +445,14 @@ function checkNpcCreatureDomainPersistence() {
   });
 }
 
+function checkNpcCreatureLibraryBrowser() {
+  console.log('NPC/creature library browser (#197): tab, EntityBrowser, filters, statblock...');
+  execFileSync(process.execPath, ['scripts/npc-creature-library-browser-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkItemDefinitionPersistence() {
   console.log('ItemDefinition persistence lifecycle & security (#136): CRUD/fork/taxonomy roundtrip...');
   execFileSync(process.execPath, ['scripts/item-definition-persistence-check.mjs'], {
@@ -567,6 +575,7 @@ checkDamageHealingDyingValidation();
 checkEnemyEncounterBossValidation();
 checkNpcCreaturePowerFramework();
 checkNpcCreatureDomainPersistence();
+checkNpcCreatureLibraryBrowser();
 checkCharacterCreationValidation();
 checkPowersEssencesValidation();
 checkDriveMomentumValidation();
