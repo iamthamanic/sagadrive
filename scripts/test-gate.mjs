@@ -477,6 +477,14 @@ function checkNpcCreaturePromotion() {
   });
 }
 
+function checkNpcCreatureSessionInstances() {
+  console.log('NPC/creature session instances (#201): spawn/runtime/snapshot isolation...');
+  execFileSync(process.execPath, ['scripts/npc-creature-session-instances-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkItemDefinitionPersistence() {
   console.log('ItemDefinition persistence lifecycle & security (#136): CRUD/fork/taxonomy roundtrip...');
   execFileSync(process.execPath, ['scripts/item-definition-persistence-check.mjs'], {
@@ -603,6 +611,7 @@ checkNpcCreatureLibraryBrowser();
 checkNpcCreatureCreatorEditor();
 checkNpcCreatureWorldCatalog();
 checkNpcCreaturePromotion();
+checkNpcCreatureSessionInstances();
 checkCharacterCreationValidation();
 checkPowersEssencesValidation();
 checkDriveMomentumValidation();

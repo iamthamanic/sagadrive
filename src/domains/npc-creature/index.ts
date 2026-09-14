@@ -1,6 +1,7 @@
 /**
- * npc-creature — public domain API for NPC/creature definitions (#196).
- * Session instances, library UI, and legacy D&D npcs/bestiary are out of scope.
+ * npc-creature — public domain API for NPC/creature definitions (#196)
+ * and adventure/session instances (#201).
+ * Library UI and legacy D&D npcs/bestiary remain app/infra concerns.
  * Location: src/domains/npc-creature/index.ts
  */
 
@@ -160,3 +161,29 @@ export {
   planNpcControllerAssignment,
   resolveControllerAfterMemberLeave,
 } from './controller-assignment';
+
+export type {
+  NpcCreatureDefinitionSnapshot,
+  NpcCreatureInstance,
+  NpcCreatureInstanceKind,
+  NpcCreatureInstanceRuntime,
+  NpcCreatureInstanceRuntimeErr,
+  NpcCreatureInstanceRuntimeErrorCode,
+  NpcCreatureInstanceRuntimeOk,
+  NpcCreatureInstanceRuntimeUpdate,
+  NpcCreatureInstanceSpawnContext,
+  NpcCreatureInstanceSpawnErr,
+  NpcCreatureInstanceSpawnErrorCode,
+  NpcCreatureInstanceSpawnOk,
+  NpcCreatureInstanceSpawnRequest,
+} from './instance';
+export {
+  captureNpcCreatureDefinitionSnapshot,
+  clearTemporaryControllersForSession,
+  formatNpcCreatureInstanceDisplayName,
+  nextInstanceSequenceNumber,
+  planNpcCreatureInstanceRuntimeUpdate,
+  planNpcCreatureInstanceSpawn,
+  resolveInstanceAfterDefinitionChange,
+  resolveInstancePlayView,
+} from './instance';

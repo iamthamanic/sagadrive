@@ -20,7 +20,7 @@ import type {
 
 /**
  * Catalog definition of an NPC or creature.
- * Instances (session HP/conditions/controller) are out of scope for #196.
+ * Adventure/session runtime lives on `NpcCreatureInstance` (#201), not here.
  */
 export interface NpcCreatureDefinition {
   /** Stable catalog id, e.g. `personal:<uuid>` or `world:<uuid>`. */

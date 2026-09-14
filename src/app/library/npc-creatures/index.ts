@@ -5,6 +5,7 @@
 
 export { NpcCreatureLibraryBrowser } from './NpcCreatureLibraryBrowser';
 export { NpcCreatureAssignControllerDialog } from './NpcCreatureAssignControllerDialog';
+export { NpcCreatureSpawnInstanceDialog } from './NpcCreatureSpawnInstanceDialog';
 export { useNpcCreatureLibrary } from './useNpcCreatureLibrary';
 export type {
   UseNpcCreatureLibraryOptions,

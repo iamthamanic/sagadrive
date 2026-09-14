@@ -1,6 +1,7 @@
 /**
  * npc-creature-service — app-facing facade for NPC/creature definition CRUD (#196),
- * world catalog availability (#199), and promotion/controller (#200).
+ * world catalog availability (#199), promotion/controller (#200),
+ * and adventure/session instances (#201).
  * App slices must not query tables directly.
  * Location: src/infrastructure/npc-creature/npc-creature-service.ts
  */
@@ -11,8 +12,11 @@ import {
   getBuiltinNpcCreatureDefinition,
   getCoreNpcCreatureDefinition,
   getNpcCreatureCatalogModuleConfig,
+  isCoreNpcCreatureDefinitionId,
   listCoreNpcCreatureDefinitions,
   planNpcControllerAssignment,
+  planNpcCreatureInstanceRuntimeUpdate,
+  planNpcCreatureInstanceSpawn,
   resolveWorldNpcCreatureCatalog,
   type CreateNpcCreatureDefinitionInput,
   type NpcControllerAssignment,
@@ -20,6 +24,9 @@ import {
   type NpcCreatureCatalogRecord,
   type NpcCreatureDefinition,
   type NpcCreatureDefinitionSummary,
+  type NpcCreatureInstance,
+  type NpcCreatureInstanceKind,
+  type NpcCreatureInstanceRuntimeUpdate,
   type NpcCreatureScope,
   type ResolvedWorldNpcCreatureCatalog,
   type UpdateNpcCreatureDefinitionInput,
@@ -31,9 +38,16 @@ import {
   toNpcControllerAssignment,
   type NpcControllerAssignmentRow,
 } from './npc-creature-controller.persistence';
+import {
+  toInstanceRuntimePayload,
+  toInstanceSnapshotPayload,
+  toNpcCreatureInstance,
+  type NpcCreatureInstanceRow,
+} from './npc-creature-instance.persistence';
 import { supabaseNpcCreatureRepository } from './supabase-npc-creature.repository';
 
 const CONTROLLER_TABLE = 'npc_creature_controller_assignments';
+const INSTANCES_TABLE = 'npc_creature_instances';
 
 export async function listNpcCreatureDefinitions(options?: {
   scope?: NpcCreatureScope;
@@ -253,4 +267,185 @@ export async function assignNpcCreatureController(input: {
     throw new Error('Controller konnte nicht zugewiesen werden.');
   }
   return toNpcControllerAssignment(data as NpcControllerAssignmentRow);
+}
+
+async function resolveDefinitionForInstance(
+  definitionId: string,
+): Promise<NpcCreatureDefinition | null> {
+  const builtin = getBuiltinNpcCreatureDefinition(definitionId);
+  if (builtin) return builtin;
+  const core = getCoreNpcCreatureDefinition(definitionId);
+  if (core) return core;
+  const record = await supabaseNpcCreatureRepository.getDefinitionById(definitionId);
+  return record?.definition ?? null;
+}
+
+function isBuiltinOrCoreDefinitionId(definitionId: string): boolean {
+  if (isCoreNpcCreatureDefinitionId(definitionId)) return true;
+  return Boolean(getBuiltinNpcCreatureDefinition(definitionId));
+}
+
+/** List adventure instances for a project (#201). */
+export async function listNpcCreatureInstances(
+  projectId: string,
+): Promise<NpcCreatureInstance[]> {
+  await getAuthenticatedUserId();
+  const { data, error } = await raceWithTimeoutReject(
+    supabase
+      .from(INSTANCES_TABLE)
+      .select(
+        'id, project_id, session_id, definition_id, display_name, instance_kind, sequence_number, snapshot, runtime, created_by, created_at, updated_at',
+      )
+      .eq('project_id', projectId)
+      .order('updated_at', { ascending: false }),
+    SUPABASE_QUERY_TIMEOUT_MS,
+    'Instanzen konnten nicht geladen werden (Zeitüberschreitung).',
+  );
+  if (error) {
+    throw new Error(`Instanzen konnten nicht geladen werden: ${error.message}`);
+  }
+  const rows = Array.isArray(data) ? data : [];
+  return rows.map((row) => toNpcCreatureInstance(row as NpcCreatureInstanceRow));
+}
+
+/**
+ * Spawn an adventure/session instance from a readable definition (#201).
+ * Snapshot is frozen at spawn; later definition edits do not rewrite it.
+ */
+export async function spawnNpcCreatureInstance(input: {
+  projectId: string;
+  sessionId?: string | null;
+  definitionId: string;
+  instanceKind: NpcCreatureInstanceKind;
+  displayName?: string | null;
+  activeMemberUserIds: readonly string[];
+}): Promise<NpcCreatureInstance> {
+  const actorUserId = await getAuthenticatedUserId();
+  const definition = await resolveDefinitionForInstance(input.definitionId);
+  if (!definition) {
+    throw new Error('Figuren-Vorlage wurde nicht gefunden.');
+  }
+
+  const existing = await listNpcCreatureInstances(input.projectId);
+  const definitionReadable =
+    isBuiltinOrCoreDefinitionId(definition.id)
+    || Boolean(await supabaseNpcCreatureRepository.getDefinitionById(definition.id));
+
+  const planned = planNpcCreatureInstanceSpawn(
+    definition,
+    {
+      projectId: input.projectId,
+      sessionId: input.sessionId ?? null,
+      definitionId: input.definitionId,
+      instanceKind: input.instanceKind,
+      displayName: input.displayName ?? null,
+    },
+    {
+      actorUserId,
+      actorRole: 'gm',
+      activeMemberUserIds: input.activeMemberUserIds,
+      existingInstances: existing,
+      definitionReadable,
+    },
+  );
+  if (planned.ok === false) {
+    throw new Error(planned.message);
+  }
+
+  const { data, error } = await raceWithTimeoutReject(
+    supabase.rpc('spawn_npc_creature_instance', {
+      p_project_id: planned.instance.projectId,
+      p_definition_id: planned.instance.definitionId,
+      p_instance_kind: planned.instance.instanceKind,
+      p_snapshot: toInstanceSnapshotPayload(planned.instance.snapshot),
+      p_runtime: toInstanceRuntimePayload(planned.instance.runtime),
+      p_display_name: planned.instance.displayName,
+      p_sequence_number: planned.instance.sequenceNumber,
+      p_session_id: planned.instance.sessionId,
+    }),
+    SUPABASE_QUERY_TIMEOUT_MS,
+    'Instanz konnte nicht erzeugt werden (Zeitüberschreitung).',
+  );
+  if (error) {
+    throw new Error(`Instanz konnte nicht erzeugt werden: ${error.message}`);
+  }
+  if (!data || typeof data !== 'object') {
+    throw new Error('Instanz konnte nicht erzeugt werden.');
+  }
+  return toNpcCreatureInstance(data as NpcCreatureInstanceRow);
+}
+
+/** Update instance runtime only — snapshot stays frozen (#201). */
+export async function updateNpcCreatureInstanceRuntime(input: {
+  instance: NpcCreatureInstance;
+  patch: NpcCreatureInstanceRuntimeUpdate;
+  activeMemberUserIds: readonly string[];
+}): Promise<NpcCreatureInstance> {
+  const actorUserId = await getAuthenticatedUserId();
+  const planned = planNpcCreatureInstanceRuntimeUpdate(
+    input.instance,
+    input.patch,
+    {
+      actorUserId,
+      actorRole: 'gm',
+      activeMemberUserIds: input.activeMemberUserIds,
+    },
+  );
+  if (planned.ok === false) {
+    throw new Error(planned.message);
+  }
+
+  const { data, error } = await raceWithTimeoutReject(
+    supabase.rpc('update_npc_creature_instance_runtime', {
+      p_instance_id: planned.instance.id,
+      p_runtime: toInstanceRuntimePayload(planned.instance.runtime),
+    }),
+    SUPABASE_QUERY_TIMEOUT_MS,
+    'Instanz-Status konnte nicht gespeichert werden (Zeitüberschreitung).',
+  );
+  if (error) {
+    throw new Error(`Instanz-Status konnte nicht gespeichert werden: ${error.message}`);
+  }
+  if (!data || typeof data !== 'object') {
+    throw new Error('Instanz-Status konnte nicht gespeichert werden.');
+  }
+  return toNpcCreatureInstance(data as NpcCreatureInstanceRow);
+}
+
+/** Remove an instance from the adventure (#201). Does not archive the definition. */
+export async function removeNpcCreatureInstance(instanceId: string): Promise<void> {
+  await getAuthenticatedUserId();
+  const { error } = await raceWithTimeoutReject(
+    supabase.rpc('remove_npc_creature_instance', {
+      p_instance_id: instanceId,
+    }),
+    SUPABASE_QUERY_TIMEOUT_MS,
+    'Instanz konnte nicht entfernt werden (Zeitüberschreitung).',
+  );
+  if (error) {
+    throw new Error(`Instanz konnte nicht entfernt werden: ${error.message}`);
+  }
+}
+
+/**
+ * Session end: clear temporary controllers on session-scoped instances only (#201).
+ * Does not touch campaign controller assignments (#200).
+ */
+export async function clearNpcCreatureInstanceTempControllersForSession(
+  sessionId: string,
+): Promise<number> {
+  await getAuthenticatedUserId();
+  const { data, error } = await raceWithTimeoutReject(
+    supabase.rpc('clear_npc_creature_instance_temp_controllers_for_session', {
+      p_session_id: sessionId,
+    }),
+    SUPABASE_QUERY_TIMEOUT_MS,
+    'Temporäre Controller konnten nicht zurückgesetzt werden (Zeitüberschreitung).',
+  );
+  if (error) {
+    throw new Error(
+      `Temporäre Controller konnten nicht zurückgesetzt werden: ${error.message}`,
+    );
+  }
+  return typeof data === 'number' ? data : 0;
 }

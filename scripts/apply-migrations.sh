@@ -36,6 +36,8 @@ migrations=(
   019_world_profiles_read_for_adventure.sql
   020_user_ai_provider_credentials.sql
   021_npc_creature_definitions.sql
+  022_npc_creature_controller_assignments.sql
+  023_npc_creature_instances.sql
 )
 
 only="${1:-}"
