@@ -56,7 +56,9 @@ Not applicable — no UI in this ticket.
 
 ## Composition Gate
 - HEAD_SHA: 3929d3769f0af36789ca2e3cb9992315eccb605e
+- BASE_SHA: e222563f24ae31b32c6f8cafd792ef6c34a87a9d
 - Verdict: CLEAR
+- Proof: `.qa/runs/composition-gate-npc-creature-domain-persistence.md`
 - Proof: `.qa/runs/composition-gate-npc-creature-domain-persistence.md`
 - Skip reason: n/a
 
