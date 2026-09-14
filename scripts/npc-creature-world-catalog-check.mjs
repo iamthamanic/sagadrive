@@ -113,6 +113,13 @@ section('1 · structure & purity');
   check(hook.includes('resolveWorldNpcCreatureCatalog'), 'hook uses domain resolver');
   check(hook.includes('listBaseNpcCreaturePacks'), 'hook lists base packs');
   check(hook.includes('listContextNpcCreaturePacks'), 'hook lists context packs');
+  check(hook.includes('personalDefinitions'), 'hook supplies personal definitions');
+  check(hook.includes('catalogRevision'), 'hook refreshes on catalogRevision');
+
+  const libraryHook = read('src/app/library/npc-creatures/useNpcCreatureLibrary.ts');
+  check(libraryHook.includes('listCoreNpcCreatureDefinitions'), 'library merges Core');
+  check(libraryHook.includes('listBuiltinNpcCreatureDefinitions'), 'library merges Pack builtins');
+  check(libraryHook.includes('mergeLibraryCatalog'), 'library merge helper');
 
   const service = read('src/infrastructure/npc-creature/npc-creature-service.ts');
   check(service.includes('loadWorldProfileNpcCreatureCatalog'), 'service world catalog load');

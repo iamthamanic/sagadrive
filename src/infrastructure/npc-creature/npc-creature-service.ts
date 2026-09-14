@@ -97,19 +97,24 @@ export interface WorldNpcCreatureAvailability {
 
 /**
  * Compose effective NPC/creature availability for a world profile (#199).
- * Personal definitions are omitted here (editor preview); pass separately when needed.
+ * Includes the caller's active personal definitions when the module allows them.
  */
 export async function loadWorldNpcCreatureAvailability(
   worldProfileId: string,
 ): Promise<WorldNpcCreatureAvailability> {
-  const [modules, worldRecords] = await Promise.all([
+  const [modules, worldRecords, personalRecords] = await Promise.all([
     supabaseNpcCreatureRepository.loadWorldProfileModules(worldProfileId),
     loadWorldProfileNpcCreatureCatalog(worldProfileId),
+    supabaseNpcCreatureRepository.listDefinitions({
+      scope: 'personal',
+      includeArchived: false,
+    }),
   ]);
   const { config } = getNpcCreatureCatalogModuleConfig(modules);
   const worldDefinitions = worldRecords
     .filter((record) => record.status === 'active')
     .map((record) => record.definition);
+  const personalDefinitions = personalRecords.map((record) => record.definition);
 
   const resolveDefinition = (
     definitionId: string,
@@ -118,7 +123,9 @@ export async function loadWorldNpcCreatureAvailability(
     if (builtin) return builtin;
     const core = getCoreNpcCreatureDefinition(definitionId);
     if (core) return core;
-    return worldDefinitions.find((entry) => entry.id === definitionId);
+    const world = worldDefinitions.find((entry) => entry.id === definitionId);
+    if (world) return world;
+    return personalDefinitions.find((entry) => entry.id === definitionId);
   };
 
   const resolved = resolveWorldNpcCreatureCatalog({
@@ -126,7 +133,7 @@ export async function loadWorldNpcCreatureAvailability(
     coreDefinitions: listCoreNpcCreatureDefinitions(),
     resolveDefinition,
     worldDefinitions,
-    personalDefinitions: [],
+    personalDefinitions,
   });
 
   return { config, resolved, worldRecords };

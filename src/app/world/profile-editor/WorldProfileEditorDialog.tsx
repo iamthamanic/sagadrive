@@ -47,6 +47,7 @@ export function WorldProfileEditorDialog({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [modules, setModules] = useState<WorldModuleConfigMap>({});
+  const [npcCatalogRevision, setNpcCatalogRevision] = useState(0);
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -56,6 +57,7 @@ export function WorldProfileEditorDialog({
     setName(world?.name ?? '');
     setDescription(world?.description ?? '');
     setModules(world?.modules ?? {});
+    setNpcCatalogRevision(0);
     setValidationAttempted(false);
     setSaveError(null);
   }, [open, world]);
@@ -186,13 +188,17 @@ export function WorldProfileEditorDialog({
               modules={modules}
               onModulesChange={setModules}
               worldProfileId={world?.id ?? null}
+              catalogRevision={npcCatalogRevision}
             />
           </div>
 
           {world?.id ? (
             <>
               <WorldItemCatalogSection worldProfileId={world.id} />
-              <WorldNpcCreatureCatalogSection worldProfileId={world.id} />
+              <WorldNpcCreatureCatalogSection
+                worldProfileId={world.id}
+                onCatalogChanged={() => setNpcCatalogRevision((token) => token + 1)}
+              />
             </>
           ) : (
             <p className="border-t border-border pt-5 text-sm text-muted-foreground">

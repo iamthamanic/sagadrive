@@ -5,9 +5,9 @@
 import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import {
+  LIBRARY_NPC_CREATURE_SOURCES,
   NPC_CREATURE_CATEGORIES,
   NPC_CREATURE_SHEET_MODES,
-  NPC_CREATURE_SCOPES,
   type LibraryNpcCreatureSource,
   type NpcCreatureCategory,
   type NpcCreatureLibraryFilters as NpcCreatureLibraryFiltersState,
@@ -295,7 +295,7 @@ export function NpcCreatureLibraryFiltersBar({
             })
           }
         >
-          {NPC_CREATURE_SCOPES.map((source) => (
+          {LIBRARY_NPC_CREATURE_SOURCES.map((source) => (
             <SelectItem key={source} value={source}>
               {LIBRARY_NPC_SOURCE_LABELS[source]}
               {filters.sources.includes(source) ? ' ✓' : ''}

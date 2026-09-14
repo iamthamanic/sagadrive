@@ -21,7 +21,7 @@ import {
   type NpcCreatureCatalogModuleConfig,
   type NpcCreatureCatalogModuleDiagnosis,
 } from '../../../domains/npc-creature';
-import { loadWorldProfileNpcCreatureCatalog } from '../../../infrastructure/npc-creature/npc-creature-service';
+import { loadWorldProfileNpcCreatureCatalog, listNpcCreatureDefinitions } from '../../../infrastructure/npc-creature/npc-creature-service';
 import type { WorldModuleConfigMap } from '../../../domains/world/contracts/world.types';
 
 const BASE_PACK_LABELS: Readonly<Record<string, string>> = {
@@ -51,6 +51,8 @@ export interface UseNpcCreatureWorldAvailabilityArgs {
       | ((current: WorldModuleConfigMap) => WorldModuleConfigMap),
   ) => void;
   worldProfileId?: string | null;
+  /** Bump when world-owned definitions change so live count refreshes. */
+  catalogRevision?: number;
 }
 
 export interface UseNpcCreatureWorldAvailabilityResult {
@@ -118,10 +120,12 @@ export function useNpcCreatureWorldAvailability({
   modules,
   onModulesChange,
   worldProfileId,
+  catalogRevision = 0,
 }: UseNpcCreatureWorldAvailabilityArgs): UseNpcCreatureWorldAvailabilityResult {
   const { config, diagnosis } = getNpcCreatureCatalogModuleConfig(modules);
   const [searchQuery, setSearchQuery] = useState('');
   const [worldDefinitions, setWorldDefinitions] = useState<NpcCreatureDefinition[]>([]);
+  const [personalDefinitions, setPersonalDefinitions] = useState<NpcCreatureDefinition[]>([]);
   const [worldDefsLoading, setWorldDefsLoading] = useState(false);
   const [worldDefsError, setWorldDefsError] = useState<string | null>(null);
 
@@ -160,7 +164,24 @@ export function useNpcCreatureWorldAvailability({
     return () => {
       cancelled = true;
     };
-  }, [worldProfileId]);
+  }, [worldProfileId, catalogRevision]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void listNpcCreatureDefinitions({ scope: 'personal', includeArchived: false })
+      .then((records) => {
+        if (cancelled) return;
+        setPersonalDefinitions(records.map((record) => record.definition));
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        console.error('[worlds] npc-creature-catalog personal defs load failed', err);
+        setPersonalDefinitions([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [catalogRevision]);
 
   const enabledPackSet = new Set(config.enabledPackIds);
   const knownBase = listBaseNpcCreaturePacks();
@@ -211,6 +232,8 @@ export function useNpcCreatureWorldAvailability({
     if (builtin) return builtin;
     const world = worldDefinitions.find((entry) => entry.id === definitionId);
     if (world) return world;
+    const personal = personalDefinitions.find((entry) => entry.id === definitionId);
+    if (personal) return personal;
     return getCoreNpcCreatureDefinition(definitionId);
   };
 
@@ -219,7 +242,7 @@ export function useNpcCreatureWorldAvailability({
     coreDefinitions: listCoreNpcCreatureDefinitions(),
     resolveDefinition,
     worldDefinitions,
-    personalDefinitions: [],
+    personalDefinitions,
   });
 
   const query = searchQuery.trim().toLowerCase();

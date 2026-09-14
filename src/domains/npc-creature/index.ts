@@ -82,9 +82,11 @@ export type {
 } from './library-query';
 export {
   EMPTY_NPC_CREATURE_LIBRARY_FILTERS,
+  LIBRARY_NPC_CREATURE_SOURCES,
   compareNpcCreatureLibraryRecords,
   filterNpcCreatureLibraryCatalog,
   hasActiveNpcCreatureLibraryFilters,
+  librarySourceOf,
   npcCreatureMatchesFulltext,
   npcCreatureMatchesLibraryFilters,
 } from './library-query';

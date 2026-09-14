@@ -23,12 +23,14 @@ export interface WorldNpcCreatureCatalogModuleSectionProps {
       | ((current: WorldModuleConfigMap) => WorldModuleConfigMap),
   ) => void;
   worldProfileId?: string | null;
+  catalogRevision?: number;
 }
 
 export function WorldNpcCreatureCatalogModuleSection({
   modules,
   onModulesChange,
   worldProfileId,
+  catalogRevision,
 }: WorldNpcCreatureCatalogModuleSectionProps) {
   const {
     basePacks,
@@ -49,7 +51,12 @@ export function WorldNpcCreatureCatalogModuleSection({
     removeExclude,
     setAllowPersonalDefinitions,
     diagnosis,
-  } = useNpcCreatureWorldAvailability({ modules, onModulesChange, worldProfileId });
+  } = useNpcCreatureWorldAvailability({
+    modules,
+    onModulesChange,
+    worldProfileId,
+    catalogRevision,
+  });
 
   return (
     <Card data-testid="world-npc-creature-catalog-module" data-world-npc-creature-catalog-module>

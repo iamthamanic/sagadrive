@@ -48,10 +48,12 @@ import { WorldNpcCreatureFormDialog } from './WorldNpcCreatureFormDialog';
 
 export interface WorldNpcCreatureCatalogSectionProps {
   worldProfileId: string;
+  onCatalogChanged?: () => void;
 }
 
 export function WorldNpcCreatureCatalogSection({
   worldProfileId,
+  onCatalogChanged,
 }: WorldNpcCreatureCatalogSectionProps) {
   const [records, setRecords] = useState<NpcCreatureCatalogRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +95,10 @@ export function WorldNpcCreatureCatalogSection({
     };
   }, [worldProfileId, reloadToken]);
 
-  const refresh = () => setReloadToken((token) => token + 1);
+  const refresh = () => {
+    setReloadToken((token) => token + 1);
+    onCatalogChanged?.();
+  };
 
   const filtered = records
     .filter((record) => {
