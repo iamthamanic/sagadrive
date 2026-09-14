@@ -67,8 +67,9 @@ test('library NPCs tab order, empty state, filters, and keyboard focus', async (
   await expect(tabs.nth(3)).toHaveText(/Welten/);
   await expect(tabs.nth(4)).toHaveText(/Items/);
 
-  await expect(page.getByText('Noch keine NPCs oder Kreaturen angelegt.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Erste Figur erstellen' })).toBeVisible();
+  // Core + Pack locals always appear even when the DB returns no rows (#199).
+  await expect(page.getByText('Bürger').first()).toBeVisible();
+  await expect(page.locator('[data-npc-library-create]')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Alle' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('[data-npc-library-search]')).toBeVisible();
 
@@ -83,13 +84,13 @@ test('library NPCs tab order, empty state, filters, and keyboard focus', async (
     'true',
   );
 
-  await page.locator('[data-npc-library-search]').fill('wächter');
+  await page.locator('[data-npc-library-search]').fill('zzzz-kein-treffer');
   await expect(page.getByText('Keine Treffer für Suche und Filter')).toBeVisible();
   await page
     .locator('[data-npc-library-empty]')
     .getByRole('button', { name: 'Filter zurücksetzen' })
     .click();
-  await expect(page.getByText('Noch keine NPCs oder Kreaturen angelegt.')).toBeVisible();
+  await expect(page.getByText('Bürger').first()).toBeVisible();
 
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '02-npcs-empty-or-list.png'),
@@ -145,8 +146,11 @@ test('library NPCs tab opens read-only statblock for a definition', async ({ pag
   await ensureLoggedIn(page);
   await openNpcsTab(page);
 
+  await page.locator('[data-npc-library-search]').fill('Waldwächter');
   await expect(page.getByText('Waldwächter').first()).toBeVisible({ timeout: 20_000 });
-  await page.getByRole('button', { name: /Waldwächter öffnen|Öffnen/ }).first().click();
+  const openButton = page.getByRole('button', { name: 'Waldwächter öffnen' });
+  await openButton.scrollIntoViewIfNeeded();
+  await openButton.click();
   await expect(page.locator('[data-npc-statblock-view]')).toBeVisible();
   await expect(page.getByText('Gesundheit')).toBeVisible();
   await expect(page.getByText('Verteidigung')).toBeVisible();
