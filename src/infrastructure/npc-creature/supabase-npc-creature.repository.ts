@@ -253,6 +253,37 @@ export class SupabaseNpcCreatureRepository implements NpcCreatureDefinitionRepos
       'Definition konnte nicht angelegt werden.',
     );
   }
+
+  /**
+   * Read world_profiles.modules for catalog compose (#199).
+   * Same shape as item-catalog repository — modules JSONB only.
+   */
+  async loadWorldProfileModules(
+    worldProfileId: string,
+  ): Promise<Record<string, unknown> | null> {
+    const id = assertUuid(worldProfileId, 'Weltprofil');
+    const { data, error } = await raceWithTimeoutReject(
+      supabase
+        .from('world_profiles')
+        .select('modules')
+        .eq('id', id)
+        .maybeSingle(),
+      SUPABASE_QUERY_TIMEOUT_MS,
+      'Weltmodule konnten nicht geladen werden (Zeitüberschreitung).',
+    );
+    if (error) {
+      throw new Error(`Failed to load world profile modules: ${error.message}`);
+    }
+    if (
+      !data ||
+      typeof data.modules !== 'object' ||
+      data.modules === null ||
+      Array.isArray(data.modules)
+    ) {
+      return null;
+    }
+    return data.modules as Record<string, unknown>;
+  }
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

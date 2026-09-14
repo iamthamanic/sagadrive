@@ -39,6 +39,9 @@ export function isNpcCreatureDefinitionVisible(
   context: NpcCreatureVisibilityContext,
 ): boolean {
   switch (record.definition.scope) {
+    case 'core':
+      // Repository-local Core / builtin pack members are always readable.
+      return true;
     case 'personal': {
       const ownerUserId = normalizeId(record.ownerUserId);
       const userId = normalizeId(context.userId);
@@ -63,6 +66,9 @@ export function canMutateNpcCreatureDefinition(
   context: NpcCreatureMutationContext,
 ): boolean {
   switch (record.definition.scope) {
+    case 'core':
+      // Core / builtin definitions are never mutated through persistence.
+      return false;
     case 'personal': {
       const ownerUserId = normalizeId(record.ownerUserId);
       const userId = normalizeId(context.userId);
@@ -87,6 +93,7 @@ export function canCreateNpcCreatureDefinition(
   context: NpcCreatureMutationContext,
   worldProfileId?: string | null,
 ): boolean {
+  if (scope === 'core') return false;
   if (scope === 'personal') {
     return normalizeId(context.userId) !== null;
   }

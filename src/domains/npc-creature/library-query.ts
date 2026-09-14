@@ -22,7 +22,7 @@ import type {
 /** Primary kind filter: all / npc-only / creature-only. */
 export type NpcCreatureLibraryKindFilter = 'all' | NpcCreatureKind;
 
-/** Quelle buckets shown in the Library NPC browser (Core/Pack later). */
+/** Quelle buckets shown in the Library NPC browser. */
 export type LibraryNpcCreatureSource = NpcCreatureScope;
 
 export interface NpcCreatureLibraryFilters {
@@ -116,8 +116,8 @@ export function filterNpcCreatureLibraryCatalog(
   );
 }
 
-/** Stable Library sort: personal before world, then de-DE name, then id. */
-const SCOPE_SORT_ORDER: readonly NpcCreatureScope[] = ['personal', 'world'];
+/** Stable Library sort: core → world → personal, then de-DE name, then id. */
+const SCOPE_SORT_ORDER: readonly NpcCreatureScope[] = ['core', 'world', 'personal'];
 
 export function compareNpcCreatureLibraryRecords(
   a: NpcCreatureCatalogRecord,

@@ -21,6 +21,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../../../shared/ui/textarea';
 import { WorldItemCatalogModuleSection, WorldItemCatalogSection } from '../item-catalog';
 import {
+  WorldNpcCreatureCatalogModuleSection,
+  WorldNpcCreatureCatalogSection,
+} from '../npc-creature-catalog';
+import {
   WORLD_MODULE_REGISTRY,
   getWorldModuleSettingValue,
   setWorldModuleSettingValue,
@@ -177,14 +181,23 @@ export function WorldProfileEditorDialog({
               onModulesChange={setModules}
               worldProfileId={world?.id ?? null}
             />
+
+            <WorldNpcCreatureCatalogModuleSection
+              modules={modules}
+              onModulesChange={setModules}
+              worldProfileId={world?.id ?? null}
+            />
           </div>
 
           {world?.id ? (
-            <WorldItemCatalogSection worldProfileId={world.id} />
+            <>
+              <WorldItemCatalogSection worldProfileId={world.id} />
+              <WorldNpcCreatureCatalogSection worldProfileId={world.id} />
+            </>
           ) : (
             <p className="border-t border-border pt-5 text-sm text-muted-foreground">
-              Speichere die Welt zuerst, bevor du Ausrüstung & Gegenstände für dieses Weltprofil
-              anlegst.
+              Speichere die Welt zuerst, bevor du Ausrüstung & Gegenstände oder NPCs & Kreaturen
+              für dieses Weltprofil anlegst.
             </p>
           )}
 

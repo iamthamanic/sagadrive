@@ -25,9 +25,25 @@ export type NpcCreatureCategory = (typeof NPC_CREATURE_CATEGORIES)[number];
 export const NPC_CREATURE_SHEET_MODES = ['compact', 'full'] as const;
 export type NpcCreatureSheetMode = (typeof NPC_CREATURE_SHEET_MODES)[number];
 
-/** Persisted scopes. Core packs are repository-local later — not DB rows. */
-export const NPC_CREATURE_SCOPES = ['personal', 'world'] as const;
+/**
+ * Catalog scopes. `personal` / `world` persist to DB; `core` is repository-local
+ * only (Core archetypes + builtin pack members — never DB rows).
+ */
+export const NPC_CREATURE_SCOPES = ['core', 'personal', 'world'] as const;
 export type NpcCreatureScope = (typeof NPC_CREATURE_SCOPES)[number];
+
+/** Scopes that may be written to `npc_creature_definitions`. */
+export const NPC_CREATURE_PERSISTED_SCOPES = ['personal', 'world'] as const;
+export type NpcCreaturePersistedScope = (typeof NPC_CREATURE_PERSISTED_SCOPES)[number];
+
+export function isNpcCreaturePersistedScope(
+  value: unknown,
+): value is NpcCreaturePersistedScope {
+  return (
+    typeof value === 'string' &&
+    (NPC_CREATURE_PERSISTED_SCOPES as readonly string[]).includes(value)
+  );
+}
 
 export const NPC_CREATURE_STATUSES = ['active', 'archived'] as const;
 export type NpcCreatureStatus = (typeof NPC_CREATURE_STATUSES)[number];
