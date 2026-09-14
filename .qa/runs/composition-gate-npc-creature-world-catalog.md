@@ -1,6 +1,6 @@
 # Composition Gate — npc-creature-world-catalog
 
-- HEAD_SHA: 5ac572f651159f21789b05c770ae44f90a3709e7
+- HEAD_SHA: 5023dbd798789493ec323f9e847ae28056a4c243
 - BASE_SHA: d4de351271f75a153d557a1af9bfc83d30c86625
 - Date: 2026-09-14
 - Verdict: CLEAR
