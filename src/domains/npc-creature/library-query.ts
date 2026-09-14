@@ -22,8 +22,24 @@ import type {
 /** Primary kind filter: all / npc-only / creature-only. */
 export type NpcCreatureLibraryKindFilter = 'all' | NpcCreatureKind;
 
-/** Quelle buckets shown in the Library NPC browser (Core/Pack later). */
-export type LibraryNpcCreatureSource = NpcCreatureScope;
+/** Quelle buckets shown in the Library NPC browser. */
+export type LibraryNpcCreatureSource = 'core' | 'pack' | 'world' | 'personal';
+
+export const LIBRARY_NPC_CREATURE_SOURCES: readonly LibraryNpcCreatureSource[] = Object.freeze([
+  'core',
+  'pack',
+  'world',
+  'personal',
+]);
+
+/** Map a definition to Library Quelle (Core vs Pack vs persisted scopes). */
+export function librarySourceOf(definition: NpcCreatureDefinition): LibraryNpcCreatureSource {
+  if (definition.scope === 'world') return 'world';
+  if (definition.scope === 'personal') return 'personal';
+  if (definition.id.startsWith('builtin.')) return 'pack';
+  return 'core';
+}
+
 
 export interface NpcCreatureLibraryFilters {
   kind: NpcCreatureLibraryKindFilter;
@@ -99,7 +115,7 @@ export function npcCreatureMatchesLibraryFilters(
   }
   if (!matchesOrDimension(filters.combatRoles, definition.combatRole)) return false;
   if (!matchesOrDimension(filters.sheetModes, definition.sheetMode)) return false;
-  if (!matchesOrDimension(filters.sources, definition.scope)) return false;
+  if (!matchesOrDimension(filters.sources, librarySourceOf(definition))) return false;
   return true;
 }
 
@@ -116,8 +132,8 @@ export function filterNpcCreatureLibraryCatalog(
   );
 }
 
-/** Stable Library sort: personal before world, then de-DE name, then id. */
-const SCOPE_SORT_ORDER: readonly NpcCreatureScope[] = ['personal', 'world'];
+/** Stable Library sort: core → world → personal, then de-DE name, then id. */
+const SCOPE_SORT_ORDER: readonly NpcCreatureScope[] = ['core', 'world', 'personal'];
 
 export function compareNpcCreatureLibraryRecords(
   a: NpcCreatureCatalogRecord,

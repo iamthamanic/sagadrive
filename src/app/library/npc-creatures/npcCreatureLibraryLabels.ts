@@ -35,6 +35,8 @@ export const NPC_CREATURE_SHEET_MODE_LABELS: Record<NpcCreatureSheetMode, string
 };
 
 export const LIBRARY_NPC_SOURCE_LABELS: Record<LibraryNpcCreatureSource, string> = {
+  core: 'Core',
+  pack: 'Pack',
   personal: 'Eigen',
   world: 'Welt',
 };

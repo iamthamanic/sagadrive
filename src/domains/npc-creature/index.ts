@@ -15,6 +15,7 @@ export type {
 export type {
   NpcCreatureCategory,
   NpcCreatureKind,
+  NpcCreaturePersistedScope,
   NpcCreatureScope,
   NpcCreatureSheetMode,
   NpcCreatureStatus,
@@ -23,11 +24,13 @@ export type {
 export {
   NPC_CREATURE_CATEGORIES,
   NPC_CREATURE_KINDS,
+  NPC_CREATURE_PERSISTED_SCOPES,
   NPC_CREATURE_SCOPES,
   NPC_CREATURE_SHEET_MODES,
   NPC_CREATURE_STATUSES,
   isNpcCreatureCategory,
   isNpcCreatureKind,
+  isNpcCreaturePersistedScope,
   isNpcCreatureScope,
   isNpcCreatureSheetMode,
   isNpcCreatureStatus,
@@ -79,9 +82,51 @@ export type {
 } from './library-query';
 export {
   EMPTY_NPC_CREATURE_LIBRARY_FILTERS,
+  LIBRARY_NPC_CREATURE_SOURCES,
   compareNpcCreatureLibraryRecords,
   filterNpcCreatureLibraryCatalog,
   hasActiveNpcCreatureLibraryFilters,
+  librarySourceOf,
   npcCreatureMatchesFulltext,
   npcCreatureMatchesLibraryFilters,
 } from './library-query';
+
+export type { NpcCreaturePack } from './pack';
+
+export {
+  NPC_CREATURE_CORE_CATALOG_SIZE,
+  NPC_CREATURE_CORE_DEFINITIONS,
+  getCoreNpcCreatureDefinition,
+  isCoreNpcCreatureDefinitionId,
+  listCoreNpcCreatureDefinitions,
+} from './core-catalog';
+
+export {
+  ALL_NPC_CREATURE_PACKS,
+  ANIMALS_PACK_ID,
+  BASE_NPC_CREATURE_PACKS,
+  BUILTIN_NPC_CREATURE_DEFINITIONS,
+  FANTASY_BASICS_PACK_ID,
+  getBuiltinNpcCreatureDefinition,
+  getNpcCreaturePack,
+  listBaseNpcCreaturePacks,
+  listBuiltinNpcCreatureDefinitions,
+  listContextNpcCreaturePacks,
+  listNpcCreaturePacks,
+} from './packs';
+
+export {
+  NPC_CREATURE_CATALOG_MODULE_ID,
+  defaultNpcCreatureCatalogModuleConfig,
+  getNpcCreatureCatalogModuleConfig,
+  normalizeNpcCreatureCatalogModuleConfig,
+  resolveWorldNpcCreatureCatalog,
+} from './world-catalog';
+export type {
+  NormalizeNpcCreatureCatalogModuleResult,
+  NpcCreatureCatalogModuleConfig,
+  NpcCreatureCatalogModuleDiagnosis,
+  NpcCreatureCatalogResolveDiagnosis,
+  ResolveWorldNpcCreatureCatalogInput,
+  ResolvedWorldNpcCreatureCatalog,
+} from './world-catalog';

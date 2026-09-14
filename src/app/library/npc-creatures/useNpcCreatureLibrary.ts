@@ -1,16 +1,17 @@
 /**
- * useNpcCreatureLibrary — query/loading/error/refresh for Library NPCs & Kreaturen (#197).
- * Domain filter/search rules live in domains/npc-creature; this hook holds UI state
- * and loads definitions via the infrastructure facade.
+ * useNpcCreatureLibrary — query/loading/error/refresh for Library NPCs & Kreaturen (#197/#199).
+ * Merges repository-local Core + builtin pack definitions with persisted personal/world rows.
  * Location: src/app/library/npc-creatures/useNpcCreatureLibrary.ts
  */
 import { useEffect, useRef, useState } from 'react';
-import type { NpcCreatureCatalogRecord } from '../../../domains/npc-creature';
+import type { NpcCreatureCatalogRecord, NpcCreatureDefinition } from '../../../domains/npc-creature';
 import {
   EMPTY_NPC_CREATURE_LIBRARY_FILTERS,
   compareNpcCreatureLibraryRecords,
   filterNpcCreatureLibraryCatalog,
   hasActiveNpcCreatureLibraryFilters,
+  listBuiltinNpcCreatureDefinitions,
+  listCoreNpcCreatureDefinitions,
   type NpcCreatureLibraryFilters,
 } from '../../../domains/npc-creature';
 import { listNpcCreatureDefinitions } from '../../../infrastructure/npc-creature/npc-creature-service';
@@ -31,6 +32,32 @@ export interface UseNpcCreatureLibraryResult {
   resetFilters: () => void;
   hasActiveFilters: boolean;
   refresh: () => void;
+}
+
+function toLocalRecord(definition: NpcCreatureDefinition): NpcCreatureCatalogRecord {
+  return {
+    definition,
+    status: 'active',
+    ownerUserId: '',
+    worldProfileId: null,
+  };
+}
+
+function mergeLibraryCatalog(
+  persisted: readonly NpcCreatureCatalogRecord[],
+): NpcCreatureCatalogRecord[] {
+  const local = [
+    ...listCoreNpcCreatureDefinitions().map(toLocalRecord),
+    ...listBuiltinNpcCreatureDefinitions().map(toLocalRecord),
+  ];
+  const byId = new Map<string, NpcCreatureCatalogRecord>();
+  for (const record of local) {
+    byId.set(record.definition.id, record);
+  }
+  for (const record of persisted) {
+    byId.set(record.definition.id, record);
+  }
+  return [...byId.values()].sort(compareNpcCreatureLibraryRecords);
 }
 
 export function useNpcCreatureLibrary(
@@ -58,7 +85,7 @@ export function useNpcCreatureLibrary(
     void listNpcCreatureDefinitions()
       .then((list) => {
         if (requestIdRef.current !== requestId) return;
-        setRecords([...list].sort(compareNpcCreatureLibraryRecords));
+        setRecords(mergeLibraryCatalog(list));
       })
       .catch((err) => {
         console.error('[library/npc-creatures] catalog load failed', err);
@@ -68,7 +95,7 @@ export function useNpcCreatureLibrary(
             ? err.message
             : 'NPCs und Kreaturen konnten nicht geladen werden.',
         );
-        setRecords([]);
+        setRecords(mergeLibraryCatalog([]));
       })
       .finally(() => {
         if (requestIdRef.current === requestId) setIsLoading(false);

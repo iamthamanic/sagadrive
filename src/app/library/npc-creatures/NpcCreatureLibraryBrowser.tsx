@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Edit, Loader2, Plus, RefreshCw, Search, Users } from 'lucide-react';
 import {
   deriveNpcCreaturePower,
+  librarySourceOf,
   type NpcCreatureCatalogRecord,
   type NpcCreatureDefinition,
 } from '../../../domains/npc-creature';
@@ -56,7 +57,7 @@ function buildMetaChips(definition: NpcCreatureDefinition, machtgradLabel: strin
     );
   }
   chips.push(NPC_CREATURE_SHEET_MODE_LABELS[definition.sheetMode]);
-  chips.push(LIBRARY_NPC_SOURCE_LABELS[definition.scope]);
+  chips.push(LIBRARY_NPC_SOURCE_LABELS[librarySourceOf(definition)]);
   return chips;
 }
 

@@ -5,6 +5,7 @@
  */
 import {
   deriveNpcCreaturePower,
+  librarySourceOf,
   resolveNpcCreatureEffectiveStats,
   type NpcCreatureDefinition,
 } from '../../../domains/npc-creature';
@@ -93,7 +94,7 @@ export function NpcCreatureStatblockPanel({
           {NPC_CREATURE_SHEET_MODE_LABELS[definition.sheetMode]}
         </Badge>
         <Badge variant="secondary">{combatLine}</Badge>
-        <Badge variant="outline">{LIBRARY_NPC_SOURCE_LABELS[definition.scope]}</Badge>
+        <Badge variant="outline">{LIBRARY_NPC_SOURCE_LABELS[librarySourceOf(definition)]}</Badge>
       </div>
 
       {definition.description.trim() ? (

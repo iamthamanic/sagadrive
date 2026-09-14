@@ -1,15 +1,19 @@
 /**
  * worldModuleRegistry — stable world-profile module IDs, defaults, and
- * normalize helpers for JSONB `modules` (#29 / #142).
+ * normalize helpers for JSONB `modules` (#29 / #142 / #199).
  * Location: src/domains/world/worldModuleRegistry.ts
  */
 import {
   ITEM_CATALOG_MODULE_ID,
   normalizeItemCatalogModuleConfig,
 } from '../items/world-catalog';
+import {
+  NPC_CREATURE_CATALOG_MODULE_ID,
+  normalizeNpcCreatureCatalogModuleConfig,
+} from '../npc-creature/world-catalog';
 import type { WorldModuleConfigMap } from './contracts/world.types';
 
-export type WorldModuleId = 'species-development' | 'item-catalog';
+export type WorldModuleId = 'species-development' | 'item-catalog' | 'npc-creature-catalog';
 export type SpeciesDevelopmentMode = 'explicit' | 'progressive' | 'disabled';
 
 export interface WorldModuleSettingOption {
@@ -74,6 +78,14 @@ export const WORLD_MODULE_REGISTRY: readonly WorldModuleDefinition[] = [
     label: 'Gegenstände & Ausrüstung',
     description:
       'Wählt Built-in-Packs und einzelne Gegenstände aus, die in dieser Welt standardmäßig angeboten werden. Core-Archetypen bleiben immer sichtbar.',
+    settings: [],
+    customEditor: true,
+  },
+  {
+    id: 'npc-creature-catalog',
+    label: 'NPCs & Kreaturen',
+    description:
+      'Wählt Built-in-Packs und einzelne Figuren aus, die in dieser Welt standardmäßig angeboten werden. Core-Archetypen bleiben immer sichtbar.',
     settings: [],
     customEditor: true,
   },
@@ -147,6 +159,18 @@ export function normalizeWorldModuleConfigMap(value: unknown): WorldModuleConfig
         includedDefinitionIds: config.includedDefinitionIds,
         excludedDefinitionIds: config.excludedDefinitionIds,
         allowPersonalItems: config.allowPersonalItems,
+      };
+      continue;
+    }
+
+    if (definition.id === NPC_CREATURE_CATALOG_MODULE_ID) {
+      const { config } = normalizeNpcCreatureCatalogModuleConfig(existingConfig);
+      normalized[definition.id] = {
+        ...existingConfig,
+        enabledPackIds: config.enabledPackIds,
+        includedDefinitionIds: config.includedDefinitionIds,
+        excludedDefinitionIds: config.excludedDefinitionIds,
+        allowPersonalDefinitions: config.allowPersonalDefinitions,
       };
       continue;
     }
