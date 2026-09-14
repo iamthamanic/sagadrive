@@ -129,7 +129,8 @@ test('quick create flow + desktop live preview + mobile Vorschau', async ({ page
   await page.getByRole('tab', { name: 'NPCs & Kreaturen' }).click();
   await expect(page.locator('[data-npc-library-browser]')).toBeVisible({ timeout: 20_000 });
 
-  await page.locator('[data-npc-library-create-empty]').click();
+  // Core/Pack locals are always listed (#199); use header create CTA.
+  await page.locator('[data-npc-library-create]').click();
   await expect(page.locator('[data-npc-create-screen]')).toBeVisible();
 
   await page.locator('[data-npc-create-kind="npc"]').click();
