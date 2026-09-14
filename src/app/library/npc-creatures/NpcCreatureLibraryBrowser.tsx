@@ -153,17 +153,19 @@ export function NpcCreatureLibraryBrowser({
             >
               <span className="text-xs">Öffnen</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-11 min-h-11 flex-1"
-              onClick={() => onEditNpc?.(definition.id)}
-              aria-label={`${definition.name} bearbeiten`}
-              data-npc-library-edit
-            >
-              <Edit className="mr-1 size-3" aria-hidden="true" />
-              <span className="text-xs">Bearbeiten</span>
-            </Button>
+            {definition.scope === 'personal' ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-11 min-h-11 flex-1"
+                onClick={() => onEditNpc?.(definition.id)}
+                aria-label={`${definition.name} bearbeiten`}
+                data-npc-library-edit
+              >
+                <Edit className="mr-1 size-3" aria-hidden="true" />
+                <span className="text-xs">Bearbeiten</span>
+              </Button>
+            ) : null}
           </div>
         }
       />

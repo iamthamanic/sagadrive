@@ -143,12 +143,18 @@ function EditorFormFields({
   draft,
   updateDraft,
   scopeLabel,
+  disabled = false,
 }: {
   draft: NpcCreatureEditorDraft;
   updateDraft: (patch: Partial<NpcCreatureEditorDraft>) => void;
   scopeLabel: string;
+  disabled?: boolean;
 }) {
-  const preview = previewDefinitionFromDraft('personal:preview', 'personal', draft);
+  const preview = previewDefinitionFromDraft(
+    'personal:preview',
+    'personal',
+    draft,
+  );
   const derived = deriveNpcCreaturePower(preview);
   const recommended = derived.benchmarks;
   const showCombatRole = draft.combatProfile !== 'noncombat';
@@ -156,6 +162,7 @@ function EditorFormFields({
   const showWendepunkt = draft.combatRole === 'boss';
 
   return (
+    <fieldset disabled={disabled} className="min-w-0 border-0 p-0">
     <Tabs defaultValue="basics" className="w-full" data-npc-editor-tabs>
       <TabsList className="flex h-auto min-h-11 w-full flex-wrap justify-start gap-1">
         <TabsTrigger value="basics" className="min-h-11 px-3">
@@ -185,12 +192,12 @@ function EditorFormFields({
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Art</Label>
+            <Label htmlFor="npc-edit-kind">Art</Label>
             <Select
               value={draft.kind}
               onValueChange={(value) => updateDraft({ kind: value as NpcCreatureKind })}
             >
-              <SelectTrigger className="h-11 min-h-11">
+              <SelectTrigger id="npc-edit-kind" className="h-11 min-h-11" aria-label="Art">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -200,12 +207,12 @@ function EditorFormFields({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Kategorie</Label>
+            <Label htmlFor="npc-edit-category">Kategorie</Label>
             <Select
               value={draft.category}
               onValueChange={(value) => updateDraft({ category: value as NpcCreatureCategory })}
             >
-              <SelectTrigger className="h-11 min-h-11">
+              <SelectTrigger id="npc-edit-category" className="h-11 min-h-11" aria-label="Kategorie">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -232,14 +239,14 @@ function EditorFormFields({
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Stufe</Label>
+            <Label htmlFor="npc-edit-level">Stufe</Label>
             <Select
               value={String(draft.level)}
               onValueChange={(value) =>
                 updateDraft({ level: Number(value) as SagaDriveNpcLevel })
               }
             >
-              <SelectTrigger className="h-11 min-h-11" data-npc-edit-level>
+              <SelectTrigger id="npc-edit-level" className="h-11 min-h-11" data-npc-edit-level aria-label="Stufe">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -255,14 +262,14 @@ function EditorFormFields({
             </p>
           </div>
           <div className="space-y-2">
-            <Label>Kampfprofil</Label>
+            <Label htmlFor="npc-edit-profile">Kampfprofil</Label>
             <Select
               value={draft.combatProfile}
               onValueChange={(value) =>
                 updateDraft({ combatProfile: value as SagaDriveCombatProfile })
               }
             >
-              <SelectTrigger className="h-11 min-h-11">
+              <SelectTrigger id="npc-edit-profile" className="h-11 min-h-11" aria-label="Kampfprofil">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -277,14 +284,14 @@ function EditorFormFields({
         </div>
         {showCombatRole ? (
           <div className="space-y-2">
-            <Label>Kampfrolle</Label>
+            <Label htmlFor="npc-edit-role">Kampfrolle</Label>
             <Select
               value={draft.combatRole}
               onValueChange={(value) =>
                 updateDraft({ combatRole: value as SagaDriveCombatRole })
               }
             >
-              <SelectTrigger className="h-11 min-h-11">
+              <SelectTrigger id="npc-edit-role" className="h-11 min-h-11" aria-label="Kampfrolle">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -655,6 +662,7 @@ function EditorFormFields({
         </div>
       </TabsContent>
     </Tabs>
+    </fieldset>
   );
 }
 
@@ -696,6 +704,7 @@ export function NpcCreatureEditorScreen({
     editor.record.definition.id,
     editor.record.definition.scope,
     editor.draft,
+    editor.record.definition,
   );
   const scopeLabel =
     editor.record.definition.scope === 'world'
@@ -745,6 +754,7 @@ export function NpcCreatureEditorScreen({
       draft={editor.draft}
       updateDraft={editor.updateDraft}
       scopeLabel={scopeLabel}
+      disabled={editor.isSaving}
     />
   );
 

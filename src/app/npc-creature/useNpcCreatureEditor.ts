@@ -100,7 +100,13 @@ function cleanStringMap(
   return Object.keys(next).length > 0 ? next : undefined;
 }
 
-export function toWriteDraft(draft: NpcCreatureEditorDraft): NpcCreatureDefinitionWriteDraft {
+export function toWriteDraft(
+  draft: NpcCreatureEditorDraft,
+  base?: Pick<
+    NpcCreatureCatalogRecord['definition'],
+    'sheetMode' | 'fullSheet' | 'portraitAssetKey'
+  >,
+): NpcCreatureDefinitionWriteDraft {
   const combatRole = normalizeCombatRoleForProfile(draft.combatProfile, draft.combatRole);
   const notes = draft.notes.trim();
   const statOverrides = draft.advancedOpen ? cleanOverrides(draft.statOverrides) : undefined;
@@ -108,13 +114,14 @@ export function toWriteDraft(draft: NpcCreatureEditorDraft): NpcCreatureDefiniti
   const detailExtrasRaw = cleanStringMap(draft.detailExtras);
   const combatDetails = combatDetailsRaw as NpcCreatureCombatDetails | undefined;
   const detailExtras = detailExtrasRaw as NpcCreatureDetailExtras | undefined;
+  const sheetMode = base?.sheetMode ?? 'compact';
 
   return {
     name: draft.name.trim(),
     description: draft.description,
     kind: draft.kind,
     category: draft.category,
-    sheetMode: 'compact',
+    sheetMode,
     level: draft.level,
     combatProfile: draft.combatProfile,
     combatRole,
@@ -123,6 +130,8 @@ export function toWriteDraft(draft: NpcCreatureEditorDraft): NpcCreatureDefiniti
     ...(statOverrides ? { statOverrides } : {}),
     ...(combatDetails ? { combatDetails } : {}),
     ...(detailExtras ? { detailExtras } : {}),
+    ...(base?.portraitAssetKey ? { portraitAssetKey: base.portraitAssetKey } : {}),
+    ...(sheetMode === 'full' && base?.fullSheet ? { fullSheet: base.fullSheet } : {}),
   };
 }
 
@@ -130,8 +139,12 @@ export function previewDefinitionFromDraft(
   definitionId: string,
   scope: NpcCreatureCatalogRecord['definition']['scope'],
   draft: NpcCreatureEditorDraft,
+  base?: Pick<
+    NpcCreatureCatalogRecord['definition'],
+    'sheetMode' | 'fullSheet' | 'portraitAssetKey'
+  >,
 ) {
-  return assembleNpcCreatureDefinition(definitionId, scope, toWriteDraft(draft));
+  return assembleNpcCreatureDefinition(definitionId, scope, toWriteDraft(draft, base));
 }
 
 export function useNpcCreatureEditor(definitionId: string | null) {
@@ -213,8 +226,8 @@ export function useNpcCreatureEditor(definitionId: string | null) {
   };
 
   const save = async (): Promise<boolean> => {
-    if (!record || !draft) return false;
-    const writeDraft = toWriteDraft(draft);
+    if (!record || !draft || isSaving) return false;
+    const writeDraft = toWriteDraft(draft, record.definition);
     const assembled = assembleNpcCreatureDefinition(
       record.definition.id,
       record.definition.scope,

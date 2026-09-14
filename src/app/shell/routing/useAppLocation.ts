@@ -51,6 +51,11 @@ export function useAppLocation() {
 
   useEffect(() => {
     const onPopState = () => {
+      if (!allowLeave()) {
+        // Revert browser history navigation when a dirty form blocks leave.
+        window.history.pushState(null, '', pathnameRef.current);
+        return;
+      }
       setPathname(readPathname());
     };
     window.addEventListener('popstate', onPopState);

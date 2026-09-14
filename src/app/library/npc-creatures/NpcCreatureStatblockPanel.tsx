@@ -220,6 +220,18 @@ export function NpcCreatureStatblockPanel({
             </section>
           ) : null}
 
+          {definition.combatDetails?.reactions?.trim() ? (
+            <section aria-labelledby="npc-statblock-reactions">
+              <h4
+                id="npc-statblock-reactions"
+                className="mb-2 text-sm font-semibold text-foreground"
+              >
+                Reaktionen
+              </h4>
+              <p className="whitespace-pre-wrap text-sm">{definition.combatDetails.reactions}</p>
+            </section>
+          ) : null}
+
           {definition.combatDetails?.signatures?.trim() ? (
             <section aria-labelledby="npc-statblock-signatures">
               <h4
@@ -229,6 +241,63 @@ export function NpcCreatureStatblockPanel({
                 Signaturfähigkeiten
               </h4>
               <p className="whitespace-pre-wrap text-sm">{definition.combatDetails.signatures}</p>
+            </section>
+          ) : null}
+
+          {definition.combatDetails?.impulseOptions?.trim() ? (
+            <section aria-labelledby="npc-statblock-impulses">
+              <h4
+                id="npc-statblock-impulses"
+                className="mb-2 text-sm font-semibold text-foreground"
+              >
+                Impulse
+              </h4>
+              <p className="whitespace-pre-wrap text-sm">
+                {definition.combatDetails.impulseOptions}
+              </p>
+            </section>
+          ) : null}
+
+          {definition.combatDetails?.wendepunkt?.trim() ? (
+            <section aria-labelledby="npc-statblock-wendepunkt">
+              <h4
+                id="npc-statblock-wendepunkt"
+                className="mb-2 text-sm font-semibold text-foreground"
+              >
+                Wendepunkt
+              </h4>
+              <p className="whitespace-pre-wrap text-sm">{definition.combatDetails.wendepunkt}</p>
+            </section>
+          ) : null}
+
+          {(definition.combatDetails?.resistancesNotes?.trim()
+            || definition.combatDetails?.weaknessesNotes?.trim()
+            || definition.combatDetails?.immunitiesNotes?.trim()) ? (
+            <section aria-labelledby="npc-statblock-tags-notes">
+              <h4
+                id="npc-statblock-tags-notes"
+                className="mb-2 text-sm font-semibold text-foreground"
+              >
+                Resistenzen / Schwächen / Immunitäten
+              </h4>
+              {definition.combatDetails.resistancesNotes?.trim() ? (
+                <p className="whitespace-pre-wrap text-sm">
+                  <span className="text-muted-foreground">Resistenzen: </span>
+                  {definition.combatDetails.resistancesNotes}
+                </p>
+              ) : null}
+              {definition.combatDetails.weaknessesNotes?.trim() ? (
+                <p className="whitespace-pre-wrap text-sm">
+                  <span className="text-muted-foreground">Schwächen: </span>
+                  {definition.combatDetails.weaknessesNotes}
+                </p>
+              ) : null}
+              {definition.combatDetails.immunitiesNotes?.trim() ? (
+                <p className="whitespace-pre-wrap text-sm">
+                  <span className="text-muted-foreground">Immunitäten: </span>
+                  {definition.combatDetails.immunitiesNotes}
+                </p>
+              ) : null}
             </section>
           ) : null}
         </div>
