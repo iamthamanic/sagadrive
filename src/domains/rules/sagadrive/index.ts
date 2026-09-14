@@ -10,3 +10,4 @@ export * from './species-trait-options';
 export * from './species-resistance-hazards';
 export * from './derived-stats';
 export * from './items';
+export * from './npc-creature-power';

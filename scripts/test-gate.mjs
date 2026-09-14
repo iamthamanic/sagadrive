@@ -429,6 +429,14 @@ function checkSagaDriveItemRulesKernel() {
   });
 }
 
+function checkNpcCreaturePowerFramework() {
+  console.log('NPC/creature power framework (#195): benchmarks, profiles, roles...');
+  execFileSync(process.execPath, ['scripts/npc-creature-power-framework-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkItemDefinitionPersistence() {
   console.log('ItemDefinition persistence lifecycle & security (#136): CRUD/fork/taxonomy roundtrip...');
   execFileSync(process.execPath, ['scripts/item-definition-persistence-check.mjs'], {
@@ -549,6 +557,7 @@ checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
 checkDamageHealingDyingValidation();
 checkEnemyEncounterBossValidation();
+checkNpcCreaturePowerFramework();
 checkCharacterCreationValidation();
 checkPowersEssencesValidation();
 checkDriveMomentumValidation();
