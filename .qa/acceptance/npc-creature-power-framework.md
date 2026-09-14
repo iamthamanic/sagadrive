@@ -48,7 +48,8 @@ N/A (rules-only, no UI)
 
 ## Composition Gate
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: edde5e8150cd2e2c412caa2236f3723dcae2f6e4
+- BASE_SHA: 8a15acaa7828589699dcab2eea86b416ba608c21
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-npc-creature-power-framework.md`
 
