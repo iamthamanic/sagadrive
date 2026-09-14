@@ -85,7 +85,10 @@ test('library NPCs tab order, empty state, filters, and keyboard focus', async (
 
   await page.locator('[data-npc-library-search]').fill('wächter');
   await expect(page.getByText('Keine Treffer für Suche und Filter')).toBeVisible();
-  await page.getByRole('button', { name: 'Filter zurücksetzen' }).click();
+  await page
+    .locator('[data-npc-library-empty]')
+    .getByRole('button', { name: 'Filter zurücksetzen' })
+    .click();
   await expect(page.getByText('Noch keine NPCs oder Kreaturen angelegt.')).toBeVisible();
 
   await page.screenshot({
