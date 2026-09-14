@@ -45,14 +45,16 @@ function LazyView({ children }: { children: ReactNode }) {
 }
 
 function CharacterEditorView() {
-  // Capture edit id once per mount so clearing sessionStorage after hydrate
+  // Capture edit / promotion id once per mount so clearing sessionStorage after hydrate
   // does not remount the editor mid-load.
-  const [mountKey] = useState(
-    () =>
-      (typeof sessionStorage !== 'undefined'
-        ? sessionStorage.getItem('sagadrive:character-edit-id')
-        : null) ?? 'new-character',
-  );
+  const [mountKey] = useState(() => {
+    if (typeof sessionStorage === 'undefined') return 'new-character';
+    const editId = sessionStorage.getItem('sagadrive:character-edit-id');
+    if (editId) return editId;
+    const promotion = sessionStorage.getItem('sagadrive:npc-promotion');
+    if (promotion) return `npc-promotion:${promotion.length}`;
+    return 'new-character';
+  });
   return (
     <LazyView>
       <CharacterEditor key={mountKey} />
@@ -114,6 +116,7 @@ function AppShell() {
               onNavigateToItem={navigateToItem}
               onNavigateToNpcCreate={navigateToNpcCreatureCreate}
               onNavigateToNpcEdit={navigateToNpcCreatureEdit}
+              onNavigateToCharacterEditor={() => handleNavigate('character-editor')}
             />
           </LazyView>
         );

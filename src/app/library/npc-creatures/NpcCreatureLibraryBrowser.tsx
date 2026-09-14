@@ -1,21 +1,29 @@
 /**
- * NpcCreatureLibraryBrowser — Library tab NPCs & Kreaturen (#197).
+ * NpcCreatureLibraryBrowser — Library tab NPCs & Kreaturen (#197) + promotion CTAs (#200).
  * Composes search, filters, EntityBrowser cards/list, empty/loading/error,
- * and read-only Statblock view. Create/edit CTAs wire to #198 journeys.
+ * Statblock view, and Template/Compact/Controller actions.
  * Location: src/app/library/npc-creatures/NpcCreatureLibraryBrowser.tsx
  */
 import { useState } from 'react';
-import { Edit, Loader2, Plus, RefreshCw, Search, Users } from 'lucide-react';
+import { Edit, Loader2, Plus, RefreshCw, Search, UserPlus, Users } from 'lucide-react';
+import { toast } from 'sonner';
 import {
+  classifyNpcLibraryPromotionAction,
   deriveNpcCreaturePower,
   librarySourceOf,
+  planCompactToFullPromotion,
+  planTemplateToCharacterPromotion,
   type NpcCreatureCatalogRecord,
   type NpcCreatureDefinition,
 } from '../../../domains/npc-creature';
+import type { ProjectSummaryVm } from '../../../domains/project/contracts/project.types';
+import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
+import { setCharacterEditorBootstrap } from '../../character';
 import { Button } from '../../../shared/ui/button';
 import { Input } from '../../../shared/ui/input';
 import { EntityBrowser, type EntityBrowserRenderContext } from '../EntityBrowser';
 import { EntityBrowserCard } from '../EntityBrowserCard';
+import { NpcCreatureAssignControllerDialog } from './NpcCreatureAssignControllerDialog';
 import { NpcCreatureLibraryFiltersBar } from './NpcCreatureLibraryFilters';
 import { NpcCreatureStatblockView } from './NpcCreatureStatblockView';
 import {
@@ -36,6 +44,10 @@ export interface NpcCreatureLibraryBrowserProps {
   onCreateNpc?: () => void;
   /** Opens Statblock editor for an existing definition (#198). */
   onEditNpc?: (definitionId: string) => void;
+  /** Opens CharacterEditor after promotion bootstrap (#200). */
+  onNavigateToCharacterEditor?: () => void;
+  /** Active campaigns where the current user is GM (#200). */
+  gmProjects?: readonly ProjectSummaryVm[];
 }
 
 function toBrowserItems(
@@ -65,12 +77,18 @@ export function NpcCreatureLibraryBrowser({
   enabled = true,
   onCreateNpc,
   onEditNpc,
+  onNavigateToCharacterEditor,
+  gmProjects = [],
 }: NpcCreatureLibraryBrowserProps) {
   const library = useNpcCreatureLibrary({ enabled });
   const [viewDefinition, setViewDefinition] = useState<NpcCreatureDefinition | null>(
     null,
   );
   const [statblockOpen, setStatblockOpen] = useState(false);
+  const [assignDefinition, setAssignDefinition] = useState<NpcCreatureDefinition | null>(
+    null,
+  );
+  const [assignOpen, setAssignOpen] = useState(false);
 
   const openStatblock = (definition: NpcCreatureDefinition) => {
     setViewDefinition(definition);
@@ -79,6 +97,57 @@ export function NpcCreatureLibraryBrowser({
 
   const handleCreate = () => {
     onCreateNpc?.();
+  };
+
+  const openCharacterEditor = () => {
+    if (onNavigateToCharacterEditor) {
+      onNavigateToCharacterEditor();
+      return;
+    }
+    toast.error('Charakter-Editor ist nicht verfügbar.');
+  };
+
+  const handleTemplateToCharacter = (definition: NpcCreatureDefinition) => {
+    const result = planTemplateToCharacterPromotion(definition);
+    if (result.ok === false) {
+      toast.error(result.message);
+      return;
+    }
+    setCharacterEditorBootstrap({ kind: 'npc-promotion', plan: result.plan });
+    openCharacterEditor();
+  };
+
+  const handleCompactToFull = async (record: NpcCreatureCatalogRecord) => {
+    try {
+      const userId = await getAuthenticatedUserId();
+      const result = planCompactToFullPromotion(record, {
+        userId,
+        editableWorldProfileIds:
+          record.worldProfileId && record.definition.scope === 'world'
+            ? [record.worldProfileId]
+            : [],
+      });
+      if (result.ok === false) {
+        toast.error(result.message);
+        return;
+      }
+      setCharacterEditorBootstrap({ kind: 'npc-promotion', plan: result.plan });
+      openCharacterEditor();
+    } catch (error) {
+      console.error('Compact→Full plan failed:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'Ausbauen nicht möglich.',
+      );
+    }
+  };
+
+  const handleAssignController = (definition: NpcCreatureDefinition) => {
+    if (gmProjects.length === 0) {
+      toast.error('Spielerzuweisung braucht eine aktive Kampagne als Spielleitung.');
+      return;
+    }
+    setAssignDefinition(definition);
+    setAssignOpen(true);
   };
 
   const items = toBrowserItems(library.filteredRecords);
@@ -123,12 +192,62 @@ export function NpcCreatureLibraryBrowser({
     </div>
   );
 
+  const renderPromotionActions = (record: BrowserItem) => {
+    const { definition } = record;
+    const action = classifyNpcLibraryPromotionAction(definition);
+    if (action === 'template-to-character') {
+      return (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="h-11 min-h-11 w-full"
+          onClick={() => handleTemplateToCharacter(definition)}
+          data-npc-library-template-to-character
+        >
+          Charakter daraus erstellen
+        </Button>
+      );
+    }
+    if (action === 'compact-to-full') {
+      return (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="h-11 min-h-11 w-full"
+          onClick={() => void handleCompactToFull(record)}
+          data-npc-library-compact-to-full
+        >
+          Als vollständigen Charakter ausbauen
+        </Button>
+      );
+    }
+    if (action === 'controller-assign' && gmProjects.length > 0) {
+      return (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="h-11 min-h-11 w-full"
+          onClick={() => handleAssignController(definition)}
+          data-npc-library-assign-controller
+        >
+          <UserPlus className="mr-1 size-3" aria-hidden="true" />
+          Spieler zuweisen
+        </Button>
+      );
+    }
+    return null;
+  };
+
   const renderItem = (
     record: BrowserItem,
     context: EntityBrowserRenderContext,
   ) => {
     const { definition } = record;
     const derived = deriveNpcCreaturePower(definition);
+    const promotion = renderPromotionActions(record);
     return (
       <EntityBrowserCard
         title={definition.name}
@@ -144,29 +263,32 @@ export function NpcCreatureLibraryBrowser({
             : undefined
         }
         actions={
-          <div className="flex w-full gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-11 min-h-11 flex-1"
-              onClick={() => openStatblock(definition)}
-              aria-label={`${definition.name} öffnen`}
-            >
-              <span className="text-xs">Öffnen</span>
-            </Button>
-            {definition.scope === 'personal' ? (
+          <div className="flex w-full flex-col gap-2">
+            <div className="flex w-full gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 className="h-11 min-h-11 flex-1"
-                onClick={() => onEditNpc?.(definition.id)}
-                aria-label={`${definition.name} bearbeiten`}
-                data-npc-library-edit
+                onClick={() => openStatblock(definition)}
+                aria-label={`${definition.name} öffnen`}
               >
-                <Edit className="mr-1 size-3" aria-hidden="true" />
-                <span className="text-xs">Bearbeiten</span>
+                <span className="text-xs">Öffnen</span>
               </Button>
-            ) : null}
+              {definition.scope === 'personal' ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-11 min-h-11 flex-1"
+                  onClick={() => onEditNpc?.(definition.id)}
+                  aria-label={`${definition.name} bearbeiten`}
+                  data-npc-library-edit
+                >
+                  <Edit className="mr-1 size-3" aria-hidden="true" />
+                  <span className="text-xs">Bearbeiten</span>
+                </Button>
+              ) : null}
+            </div>
+            {promotion}
           </div>
         }
       />
@@ -259,6 +381,16 @@ export function NpcCreatureLibraryBrowser({
           setStatblockOpen(open);
           if (!open) setViewDefinition(null);
         }}
+      />
+
+      <NpcCreatureAssignControllerDialog
+        open={assignOpen}
+        onOpenChange={(open) => {
+          setAssignOpen(open);
+          if (!open) setAssignDefinition(null);
+        }}
+        definition={assignDefinition}
+        gmProjects={gmProjects}
       />
     </div>
   );

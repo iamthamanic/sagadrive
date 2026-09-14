@@ -469,6 +469,14 @@ function checkNpcCreatureWorldCatalog() {
   });
 }
 
+function checkNpcCreaturePromotion() {
+  console.log('NPC/creature promotion + controller (#200): template/compact/assign wiring...');
+  execFileSync(process.execPath, ['scripts/npc-creature-promotion-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkItemDefinitionPersistence() {
   console.log('ItemDefinition persistence lifecycle & security (#136): CRUD/fork/taxonomy roundtrip...');
   execFileSync(process.execPath, ['scripts/item-definition-persistence-check.mjs'], {
@@ -594,6 +602,7 @@ checkNpcCreatureDomainPersistence();
 checkNpcCreatureLibraryBrowser();
 checkNpcCreatureCreatorEditor();
 checkNpcCreatureWorldCatalog();
+checkNpcCreaturePromotion();
 checkCharacterCreationValidation();
 checkPowersEssencesValidation();
 checkDriveMomentumValidation();
