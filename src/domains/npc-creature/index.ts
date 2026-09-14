@@ -65,3 +65,17 @@ export type {
   NpcCreatureDefinitionSummary,
   UpdateNpcCreatureDefinitionInput,
 } from './contracts';
+
+export type {
+  LibraryNpcCreatureSource,
+  NpcCreatureLibraryFilters,
+  NpcCreatureLibraryKindFilter,
+} from './library-query';
+export {
+  EMPTY_NPC_CREATURE_LIBRARY_FILTERS,
+  compareNpcCreatureLibraryRecords,
+  filterNpcCreatureLibraryCatalog,
+  hasActiveNpcCreatureLibraryFilters,
+  npcCreatureMatchesFulltext,
+  npcCreatureMatchesLibraryFilters,
+} from './library-query';

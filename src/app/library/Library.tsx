@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Input } from '../../shared/ui/input';
-import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package } from 'lucide-react';
+import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package, Users } from 'lucide-react';
 import { useCharacterSummaries, CreateCharacterEntryDialog, setCharacterEditorBootstrap } from '../character';
 import type { CharacterSummaryVm } from '../../domains/character';
 import { useProjectSummaries } from '../project';
@@ -27,12 +27,18 @@ const ItemLibraryBrowser = lazy(() =>
   })),
 );
 
+const NpcCreatureLibraryBrowser = lazy(() =>
+  import('./npc-creatures').then((module) => ({
+    default: module.NpcCreatureLibraryBrowser,
+  })),
+);
+
 interface LibraryProps {
   onNavigate: (view: string) => void;
   onNavigateToItem: (itemId: string) => void;
 }
 
-type LibraryTab = 'characters' | 'adventures' | 'worlds' | 'items';
+type LibraryTab = 'characters' | 'npcs' | 'adventures' | 'worlds' | 'items';
 
 const SPECIES_DEVELOPMENT_MODE_LABELS = {
   explicit: 'Explizit',
@@ -75,6 +81,7 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
     deleteWorld,
   } = useWorldProfiles({ enabled: visitedTabs.has('worlds') });
   const itemsTabVisited = visitedTabs.has('items');
+  const npcsTabVisited = visitedTabs.has('npcs');
 
   // Always re-fetch character summaries when Library mounts so saves from the
   // editor are visible immediately (cache may still look "fresh" otherwise).
@@ -86,6 +93,10 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
     const tab = value as LibraryTab;
     setActiveTab(tab);
     setVisitedTabs((current) => new Set(current).add(tab));
+  };
+
+  const handleNpcCreateStub = () => {
+    toast.message('NPC-/Kreaturen-Erstellung folgt in Kürze.');
   };
 
   const handleDeleteCharacter = async (id: string, name: string) => {
@@ -320,11 +331,11 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
         <div>
           <h1 className="text-xl md:text-2xl">Meine Bibliothek</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Verwalte deine Charaktere, Abenteuer, Welten und Gegenstände
+            Verwalte deine Charaktere, NPCs & Kreaturen, Abenteuer, Welten und Gegenstände
           </p>
         </div>
 
-        {activeTab !== 'items' ? (
+        {activeTab !== 'items' && activeTab !== 'npcs' ? (
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -337,10 +348,14 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
         ) : null}
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-1">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto gap-1">
             <TabsTrigger value="characters" className="min-h-11">
               <User className="w-4 h-4 mr-2 shrink-0" />
               Charaktere
+            </TabsTrigger>
+            <TabsTrigger value="npcs" className="min-h-11">
+              <Users className="w-4 h-4 mr-2 shrink-0" />
+              NPCs & Kreaturen
             </TabsTrigger>
             <TabsTrigger value="adventures" className="min-h-11">
               <BookOpen className="w-4 h-4 mr-2 shrink-0" />
@@ -388,6 +403,23 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
                 }
               />
             )}
+          </TabsContent>
+
+          <TabsContent value="npcs" className="space-y-4">
+            {npcsTabVisited ? (
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                  </div>
+                }
+              >
+                <NpcCreatureLibraryBrowser
+                  enabled={npcsTabVisited}
+                  onCreateNpc={handleNpcCreateStub}
+                />
+              </Suspense>
+            ) : null}
           </TabsContent>
 
           <TabsContent value="adventures" className="space-y-4">
