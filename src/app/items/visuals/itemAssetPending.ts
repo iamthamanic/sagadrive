@@ -1,6 +1,6 @@
 /**
  * itemAssetPending — queues one 2D/3D action across auto-draft remount (#140/#141).
- * Location: src/app/items/workbench/itemAssetPending.ts
+ * Location: src/app/items/visuals/itemAssetPending.ts
  */
 
 export type PendingItemAssetAction =

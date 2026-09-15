@@ -125,7 +125,8 @@ section('6 · UX contract strings / a11y hooks');
   check(/data-item-workbench-setting-tech/.test(read('src/app/items/workbench/ItemTaxonomySection.tsx')), 'setting + tech-level row');
   check(!/wb-basics/.test(read('src/app/items/workbench/ItemBasicsSection.tsx')), 'no Basisdaten heading');
   check(!/ItemWorkbenchStage/.test(editor), 'stage square removed');
-  check(/data-item-workbench-visual-toggle/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), '2D/3D visuals toggle');
+  check(/ItemVisualModeToggle/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), '2D/3D visuals toggle composed');
+  check(/data-item-workbench-visual-toggle/.test(read('src/app/items/visuals/ItemVisualModeToggle.tsx')), '2D/3D visuals toggle');
   check(!/ItemWorkbenchFlowLines/.test(editor), 'flow lines removed from editor');
   check(/animateExpand/.test(editor), 'create expand-out animation hook');
   check(/data-item-workbench-primary/.test(topbar), 'save/fork primary in topbar');
@@ -149,8 +150,24 @@ section('6 · UX contract strings / a11y hooks');
   check(!/Speichere das Item zuerst/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'no save-first asset copy');
   check(/data-item-workbench-visual-dropzone/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'fixed visuals dropzone');
   check(/onDrop/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'drag-drop upload');
+  check(/useItemVisualTools/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'visuals tools hook composed');
+  check(/ItemVisualToolsBar/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'visuals tools bar composed');
+  {
+    const toolsBar = read('src/app/items/visuals/ItemVisualToolsBar.tsx');
+    check(/data-item-workbench-visual-upload/.test(toolsBar), 'visuals upload affordance');
+    check(/data-item-workbench-visual-enlarge/.test(toolsBar), 'visuals enlarge preview');
+    check(/data-item-workbench-visual-convert/.test(toolsBar), 'visuals 2D/3D convert');
+    check(/data-item-workbench-visual-to-2d/.test(toolsBar), 'visuals arrow to 2D');
+    check(/data-item-workbench-visual-to-3d/.test(toolsBar), 'visuals arrow to 3D');
+    check(/data-item-workbench-visual-generate-2d/.test(toolsBar), 'visuals 2D generate');
+    check(/data-item-workbench-visual-tools/.test(toolsBar), 'visuals tool row');
+  }
+  check(/captureSideProfilePng/.test(read('src/app/items/workbench/ItemModelPreviewRuntime.ts')), '3D side-profile snapshot');
+  check(/preserveDrawingBuffer:\s*true/.test(read('src/app/items/workbench/ItemModelPreviewRuntime.ts')), 'WebGL preserveDrawingBuffer for snapshot');
+  check(/data-item-workbench-visual-preview-modal/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'visuals enlarge modal');
   check(/h-44/.test(read('src/app/items/workbench/ItemVisualsPanel.tsx')), 'stable dropzone height');
-  check(/queuePendingItemAsset/.test(read('src/app/items/workbench/useItemAssets.ts')), 'pending asset across remount');
+  check(/queuePendingItemAsset/.test(read('src/app/items/visuals/useItemAssets.ts')), 'pending asset across remount');
+  check(/useItemVisualTools/.test(read('src/app/items/index.ts')), 'items barrel exports visual tools');
   check(/data-item-workbench-world-draft-hint/.test(read('src/app/items/workbench/ItemAvailabilitySection.tsx')), 'world→personal auto-draft hint');
   check(/Als persönliches Item angelegt/.test(read('src/app/items/workbench/useItemEditor.ts')), 'toast when world draft falls back');
   {

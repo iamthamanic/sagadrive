@@ -1,6 +1,6 @@
 /**
  * item-model3d Edge Function — secure GLB upload + optional Meshy Image-to-3D (#141).
- * Secrets stay server-side; Meshy fail-closed when MESHY_API_KEY is unset.
+ * Secrets stay server-side; Meshy uses user BYOK (host key only if AI_PROVIDER_ALLOW_HOST_KEYS=1).
  * Location: supabase/functions/item-model3d/index.ts
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -13,6 +13,10 @@ import {
   validateGlbBytes,
   type ItemModel3dMime,
 } from '../_shared/item-model3d-glb.ts';
+import {
+  isMeshyConfiguredForUser,
+  resolveMeshyApiKeyForUser,
+} from '../_shared/ai-provider-resolve-meshy.ts';
 import {
   createLiveMeshyImageTo3dProvider,
   createMockMeshyImageTo3dProvider,
@@ -104,11 +108,18 @@ function getRateLimit(): number {
   return Number.isFinite(configured) && configured > 0 ? Math.min(configured, 60) : DEFAULT_RATE_LIMIT;
 }
 
-function resolveProvider(): MeshyImageTo3dProvider | null {
+async function resolveProvider(
+  userId: string,
+  supabaseConfig: SupabaseConfig,
+): Promise<MeshyImageTo3dProvider | null> {
   if (Deno.env.get('ITEM_MODEL3D_MESHY_MOCK') === '1') {
     return createMockMeshyImageTo3dProvider();
   }
-  const config = resolveMeshyImageTo3dConfig();
+  const apiKey = await resolveMeshyApiKeyForUser(userId, {
+    url: supabaseConfig.url,
+    serviceRoleKey: supabaseConfig.serviceRoleKey,
+  });
+  const config = resolveMeshyImageTo3dConfig(Deno.env, apiKey);
   if (!config) return null;
   return createLiveMeshyImageTo3dProvider(config);
 }
@@ -436,8 +447,10 @@ serve(async (request: Request) => {
 
   try {
     if (action === 'config') {
-      const meshyConfigured = resolveMeshyImageTo3dConfig() !== null
-        || Deno.env.get('ITEM_MODEL3D_MESHY_MOCK') === '1';
+      const meshyConfigured = await isMeshyConfiguredForUser(userId, {
+        url: config.url,
+        serviceRoleKey: config.serviceRoleKey,
+      });
       return jsonResponse(request, {
         status: 'ok',
         meshyConfigured,
@@ -497,7 +510,7 @@ serve(async (request: Request) => {
     }
 
     if (action === 'generate') {
-      const provider = resolveProvider();
+      const provider = await resolveProvider(userId, config);
       if (!provider) {
         return jsonResponse(request, {
           status: 'not-configured',
@@ -636,7 +649,7 @@ serve(async (request: Request) => {
         });
       }
 
-      const provider = resolveProvider();
+      const provider = await resolveProvider(userId, config);
       if (!provider || typeof job.provider_task_id !== 'string') {
         return jsonResponse(request, {
           status: 'ok',

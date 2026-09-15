@@ -15,15 +15,31 @@ export type ShellViewId =
   | 'rulesets-test'
   | 'item-create'
   | 'item-detail'
+  | 'npc-creature-create'
+  | 'npc-creature-edit'
   | 'not-found';
 
 export type ResolvedRoute =
-  | { kind: 'view'; view: Exclude<ShellViewId, 'item-detail' | 'item-create' | 'not-found'> }
+  | {
+      kind: 'view';
+      view: Exclude<
+        ShellViewId,
+        'item-detail' | 'item-create' | 'npc-creature-create' | 'npc-creature-edit' | 'not-found'
+      >;
+    }
   | { kind: 'item-create'; typeSlug?: string }
   | { kind: 'item-detail'; itemId: string }
+  | { kind: 'npc-creature-create' }
+  | { kind: 'npc-creature-edit'; definitionId: string }
   | { kind: 'not-found'; attemptedPath: string };
 
-const VIEW_PATHS: Record<Exclude<ShellViewId, 'item-detail' | 'item-create' | 'not-found'>, string> = {
+const VIEW_PATHS: Record<
+  Exclude<
+    ShellViewId,
+    'item-detail' | 'item-create' | 'npc-creature-create' | 'npc-creature-edit' | 'not-found'
+  >,
+  string
+> = {
   dashboard: '/',
   library: '/library',
   'character-editor': '/character-editor',
@@ -36,7 +52,10 @@ const VIEW_PATHS: Record<Exclude<ShellViewId, 'item-detail' | 'item-create' | 'n
 };
 
 /** Legacy aliases still emitted by Dashboard / older callers. */
-const VIEW_ALIASES: Record<string, keyof typeof VIEW_PATHS | 'item-create'> = {
+const VIEW_ALIASES: Record<
+  string,
+  keyof typeof VIEW_PATHS | 'item-create' | 'npc-creature-create'
+> = {
   'project-join': 'join',
   home: 'dashboard',
 };
@@ -52,6 +71,7 @@ export function normalizeViewId(raw: string): string {
 export function pathForView(viewId: string): string | null {
   const normalized = normalizeViewId(viewId);
   if (normalized === 'item-create') return '/items/create';
+  if (normalized === 'npc-creature-create') return '/npc-creatures/create';
   if (normalized in VIEW_PATHS) {
     return VIEW_PATHS[normalized as keyof typeof VIEW_PATHS];
   }
@@ -67,6 +87,15 @@ export function pathForItemDetail(itemId: string): string {
 export function pathForItemCreateType(typeSlug: string): string {
   const safe = encodeURIComponent(typeSlug.trim().toLowerCase());
   return `/items/create/new/${safe}`;
+}
+
+export function pathForNpcCreatureCreate(): string {
+  return '/npc-creatures/create';
+}
+
+export function pathForNpcCreatureEdit(definitionId: string): string {
+  const safe = encodeURIComponent(definitionId.trim());
+  return `/npc-creatures/${safe}`;
 }
 
 export function resolvePathname(pathname: string): ResolvedRoute {
@@ -111,6 +140,28 @@ export function resolvePathname(pathname: string): ResolvedRoute {
     return { kind: 'item-detail', itemId };
   }
 
+  if (path === '/npc-creatures/create') {
+    return { kind: 'npc-creature-create' };
+  }
+
+  if (path.startsWith('/npc-creatures/create/')) {
+    return { kind: 'not-found', attemptedPath: path };
+  }
+
+  const npcMatch = path.match(/^\/npc-creatures\/([^/]+)$/);
+  if (npcMatch) {
+    let definitionId = npcMatch[1] ?? '';
+    try {
+      definitionId = decodeURIComponent(definitionId);
+    } catch {
+      // keep raw segment
+    }
+    if (!definitionId || definitionId === 'create') {
+      return { kind: 'not-found', attemptedPath: path };
+    }
+    return { kind: 'npc-creature-edit', definitionId };
+  }
+
   const view = PATH_TO_VIEW.get(path);
   if (view) {
     return { kind: 'view', view };
@@ -127,11 +178,21 @@ export function routeToShellView(route: ResolvedRoute): ShellViewId {
       return 'item-create';
     case 'item-detail':
       return 'item-detail';
+    case 'npc-creature-create':
+      return 'npc-creature-create';
+    case 'npc-creature-edit':
+      return 'npc-creature-edit';
     case 'not-found':
       return 'not-found';
   }
 }
 
 export function knownViewIds(): string[] {
-  return [...Object.keys(VIEW_PATHS), 'item-create', 'item-detail'];
+  return [
+    ...Object.keys(VIEW_PATHS),
+    'item-create',
+    'item-detail',
+    'npc-creature-create',
+    'npc-creature-edit',
+  ];
 }

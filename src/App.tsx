@@ -12,6 +12,7 @@ import { AuthGate, Layout, ViewLoadingFallback, useAppLocation } from './app/she
 import { Dashboard } from './app/dashboard';
 import { Toaster } from './shared/ui/sonner';
 import { NotFoundPlaceholder, ItemWorkbenchScreen } from './app/items';
+import { NpcCreatureCreateScreen, NpcCreatureEditorScreen } from './app/npc-creature';
 
 const CharacterEditor = lazy(() =>
   import('./app/character/root').then((module) => ({ default: module.CharacterEditor })),
@@ -44,14 +45,16 @@ function LazyView({ children }: { children: ReactNode }) {
 }
 
 function CharacterEditorView() {
-  // Capture edit id once per mount so clearing sessionStorage after hydrate
+  // Capture edit / promotion id once per mount so clearing sessionStorage after hydrate
   // does not remount the editor mid-load.
-  const [mountKey] = useState(
-    () =>
-      (typeof sessionStorage !== 'undefined'
-        ? sessionStorage.getItem('sagadrive:character-edit-id')
-        : null) ?? 'new-character',
-  );
+  const [mountKey] = useState(() => {
+    if (typeof sessionStorage === 'undefined') return 'new-character';
+    const editId = sessionStorage.getItem('sagadrive:character-edit-id');
+    if (editId) return editId;
+    const promotion = sessionStorage.getItem('sagadrive:npc-promotion');
+    if (promotion) return `npc-promotion:${promotion.length}`;
+    return 'new-character';
+  });
   return (
     <LazyView>
       <CharacterEditor key={mountKey} />
@@ -64,10 +67,13 @@ function AppShell() {
     currentView,
     itemId,
     createTypeSlug,
+    npcCreatureDefinitionId,
     route,
     navigateToView,
     navigateToItem,
     navigateToItemCreateType,
+    navigateToNpcCreatureCreate,
+    navigateToNpcCreatureEdit,
   } = useAppLocation();
 
   const handleNavigate = (view: string) => {
@@ -75,7 +81,12 @@ function AppShell() {
   };
 
   const layoutView =
-    currentView === 'item-create' || currentView === 'item-detail' ? 'library' : currentView;
+    currentView === 'item-create'
+    || currentView === 'item-detail'
+    || currentView === 'npc-creature-create'
+    || currentView === 'npc-creature-edit'
+      ? 'library'
+      : currentView;
 
   const renderView = () => {
     switch (currentView) {
@@ -100,7 +111,13 @@ function AppShell() {
       case 'library':
         return (
           <LazyView>
-            <Library onNavigate={handleNavigate} onNavigateToItem={navigateToItem} />
+            <Library
+              onNavigate={handleNavigate}
+              onNavigateToItem={navigateToItem}
+              onNavigateToNpcCreate={navigateToNpcCreatureCreate}
+              onNavigateToNpcEdit={navigateToNpcCreatureEdit}
+              onNavigateToCharacterEditor={() => handleNavigate('character-editor')}
+            />
           </LazyView>
         );
       case 'profile':
@@ -143,6 +160,22 @@ function AppShell() {
             itemId={itemId}
             onBack={() => handleNavigate('library')}
             onNavigateToItem={(id) => navigateToItem(id, { replace: true })}
+          />
+        );
+      case 'npc-creature-create':
+        return (
+          <NpcCreatureCreateScreen
+            onBack={() => handleNavigate('library')}
+            onCreated={(id) => navigateToNpcCreatureEdit(id, { replace: true })}
+            onNavigateToCharacterEditor={() => handleNavigate('character-editor')}
+          />
+        );
+      case 'npc-creature-edit':
+        return (
+          <NpcCreatureEditorScreen
+            key={npcCreatureDefinitionId ?? 'missing'}
+            definitionId={npcCreatureDefinitionId ?? ''}
+            onBack={() => handleNavigate('library')}
           />
         );
       case 'not-found':

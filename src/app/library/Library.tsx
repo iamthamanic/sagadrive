@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Input } from '../../shared/ui/input';
-import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package } from 'lucide-react';
+import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package, Users } from 'lucide-react';
 import { useCharacterSummaries, CreateCharacterEntryDialog, setCharacterEditorBootstrap } from '../character';
 import type { CharacterSummaryVm } from '../../domains/character';
 import { useProjectSummaries } from '../project';
@@ -27,12 +27,21 @@ const ItemLibraryBrowser = lazy(() =>
   })),
 );
 
+const NpcCreatureLibraryBrowser = lazy(() =>
+  import('./npc-creatures').then((module) => ({
+    default: module.NpcCreatureLibraryBrowser,
+  })),
+);
+
 interface LibraryProps {
   onNavigate: (view: string) => void;
   onNavigateToItem: (itemId: string) => void;
+  onNavigateToNpcCreate?: () => void;
+  onNavigateToNpcEdit?: (definitionId: string) => void;
+  onNavigateToCharacterEditor?: () => void;
 }
 
-type LibraryTab = 'characters' | 'adventures' | 'worlds' | 'items';
+type LibraryTab = 'characters' | 'npcs' | 'adventures' | 'worlds' | 'items';
 
 const SPECIES_DEVELOPMENT_MODE_LABELS = {
   explicit: 'Explizit',
@@ -51,7 +60,13 @@ const PROJECT_STATUS_LABELS: Record<ProjectSummaryVm['status'], string> = {
   archived: 'Archiviert',
 };
 
-export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
+export function Library({
+  onNavigate,
+  onNavigateToItem,
+  onNavigateToNpcCreate,
+  onNavigateToNpcEdit,
+  onNavigateToCharacterEditor,
+}: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<LibraryTab>('characters');
   const [visitedTabs, setVisitedTabs] = useState<Set<LibraryTab>>(() => new Set(['characters']));
@@ -64,7 +79,7 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
     enabled: visitedTabs.has('characters'),
   });
   const { projects, isLoading: projectsLoading, error: projectsError } = useProjectSummaries({
-    enabled: visitedTabs.has('adventures'),
+    enabled: visitedTabs.has('adventures') || visitedTabs.has('npcs'),
   });
   const {
     worlds,
@@ -75,6 +90,14 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
     deleteWorld,
   } = useWorldProfiles({ enabled: visitedTabs.has('worlds') });
   const itemsTabVisited = visitedTabs.has('items');
+  const npcsTabVisited = visitedTabs.has('npcs');
+
+  const gmProjects = projects.filter(
+    (project) =>
+      project.status === 'active'
+      && Boolean(user?.id)
+      && project.gmUserId === user?.id,
+  );
 
   // Always re-fetch character summaries when Library mounts so saves from the
   // editor are visible immediately (cache may still look "fresh" otherwise).
@@ -86,6 +109,14 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
     const tab = value as LibraryTab;
     setActiveTab(tab);
     setVisitedTabs((current) => new Set(current).add(tab));
+  };
+
+  const handleNpcCreate = () => {
+    if (onNavigateToNpcCreate) {
+      onNavigateToNpcCreate();
+      return;
+    }
+    onNavigate('npc-creature-create');
   };
 
   const handleDeleteCharacter = async (id: string, name: string) => {
@@ -320,11 +351,11 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
         <div className="min-w-0">
           <h1 className="text-xl md:text-2xl">Meine Bibliothek</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Verwalte deine Charaktere, Abenteuer, Welten und Gegenstände
+            Verwalte deine Charaktere, NPCs & Kreaturen, Abenteuer, Welten und Gegenstände
           </p>
         </div>
 
-        {activeTab !== 'items' ? (
+        {activeTab !== 'items' && activeTab !== 'npcs' ? (
           <div className="relative min-w-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -337,13 +368,20 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
         ) : null}
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="@container w-full min-w-0">
-          <TabsList className="grid h-auto w-full max-w-full min-w-0 grid-cols-2 gap-1 @[42rem]:grid-cols-4">
+          <TabsList className="grid h-auto w-full max-w-full min-w-0 grid-cols-2 gap-1 @[36rem]:grid-cols-3 @[52rem]:grid-cols-5">
             <TabsTrigger
               value="characters"
               className="min-h-11 min-w-0 max-w-full px-2 text-xs sm:text-sm"
             >
               <User className="mr-1.5 size-4 shrink-0 sm:mr-2" />
               <span className="truncate">Charaktere</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="npcs"
+              className="min-h-11 min-w-0 max-w-full px-2 text-xs sm:text-sm"
+            >
+              <Users className="mr-1.5 size-4 shrink-0 sm:mr-2" />
+              <span className="truncate">NPCs & Kreaturen</span>
             </TabsTrigger>
             <TabsTrigger
               value="adventures"
@@ -400,6 +438,29 @@ export function Library({ onNavigate, onNavigateToItem }: LibraryProps) {
                 }
               />
             )}
+          </TabsContent>
+
+          <TabsContent value="npcs" className="min-w-0 space-y-4">
+            {npcsTabVisited ? (
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                  </div>
+                }
+              >
+                <NpcCreatureLibraryBrowser
+                  enabled={npcsTabVisited}
+                  onCreateNpc={handleNpcCreate}
+                  onEditNpc={onNavigateToNpcEdit}
+                  onNavigateToCharacterEditor={
+                    onNavigateToCharacterEditor
+                      ?? (() => onNavigate('character-editor'))
+                  }
+                  gmProjects={gmProjects}
+                />
+              </Suspense>
+            ) : null}
           </TabsContent>
 
           <TabsContent value="adventures" className="min-w-0 space-y-4">

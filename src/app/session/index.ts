@@ -4,4 +4,5 @@
  */
 export { GamemasterPanel } from './GamemasterPanel';
 export { SessionJoin } from './SessionJoin';
+export { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
 export { useSessions } from './hooks/useSessions';

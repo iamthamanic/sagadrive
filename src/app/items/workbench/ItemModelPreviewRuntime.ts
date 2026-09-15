@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 export type ItemModelPreviewState =
   | { status: 'loading'; message: string }
@@ -56,6 +57,8 @@ export class ItemModelPreviewRuntime {
   private loadVersion = 0;
   private disposed = false;
   private readonly allowAutoSpin: boolean;
+  /** While `performance.now() < spinPausedUntil`, auto-spin stays off. */
+  private spinPausedUntil = 0;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -68,6 +71,7 @@ export class ItemModelPreviewRuntime {
       antialias: true,
       alpha: true,
       powerPreference: 'high-performance',
+      preserveDrawingBuffer: true,
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -92,18 +96,30 @@ export class ItemModelPreviewRuntime {
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
-    this.controls.enablePan = false;
-    this.controls.minDistance = 0.8;
-    this.controls.maxDistance = 8;
+    this.controls.enablePan = true;
+    this.controls.screenSpacePanning = true;
+    this.controls.panSpeed = 0.6;
+    this.controls.rotateSpeed = 0.7;
+    this.controls.minDistance = 0.5;
+    this.controls.maxDistance = 12;
     this.controls.target.set(0, 0.5, 0);
     this.controls.update();
 
+    this.controls.addEventListener('start', () => {
+      this.spinPausedUntil = performance.now() + 1800;
+    });
+
     this.loader.crossOrigin = 'anonymous';
+    this.loader.setMeshoptDecoder(MeshoptDecoder);
 
     this.renderer.setAnimationLoop(() => {
       if (this.disposed) return;
-      if (this.allowAutoSpin && this.currentRoot) {
-        this.modelContainer.rotation.y += 0.004;
+      if (
+        this.allowAutoSpin &&
+        this.currentRoot &&
+        performance.now() >= this.spinPausedUntil
+      ) {
+        this.modelContainer.rotation.y += 0.0025;
       }
       this.controls.update();
       this.resize();
@@ -150,8 +166,29 @@ export class ItemModelPreviewRuntime {
   /** Orbit/zoom reset after user interaction (Issue #141). */
   resetView(): void {
     if (this.disposed || !this.currentRoot) return;
+    this.spinPausedUntil = 0;
     this.modelContainer.rotation.set(0, 0, 0);
     this.fitCamera();
+  }
+
+  /**
+   * Pause spin, snap to a side-profile yaw, render once, return a PNG blob.
+   * Leaves the view frozen on that profile so the user sees what was captured.
+   */
+  async captureSideProfilePng(): Promise<Blob | null> {
+    if (this.disposed || !this.currentRoot) return null;
+
+    this.spinPausedUntil = Number.POSITIVE_INFINITY;
+    this.modelContainer.rotation.set(0, Math.PI / 2, 0);
+    this.fitCamera();
+    this.controls.update();
+    this.resize();
+    this.renderer.render(this.scene, this.camera);
+
+    const canvas = this.renderer.domElement;
+    return await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), 'image/png');
+    });
   }
 
   private fitCamera(): void {

@@ -429,6 +429,62 @@ function checkSagaDriveItemRulesKernel() {
   });
 }
 
+function checkNpcCreaturePowerFramework() {
+  console.log('NPC/creature power framework (#195): benchmarks, profiles, roles...');
+  execFileSync(process.execPath, ['scripts/npc-creature-power-framework-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkNpcCreatureDomainPersistence() {
+  console.log('NPC/creature domain persistence (#196): definitions CRUD contracts + RLS wiring...');
+  execFileSync(process.execPath, ['scripts/npc-creature-domain-persistence-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkNpcCreatureLibraryBrowser() {
+  console.log('NPC/creature library browser (#197): tab, EntityBrowser, filters, statblock...');
+  execFileSync(process.execPath, ['scripts/npc-creature-library-browser-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkNpcCreatureCreatorEditor() {
+  console.log('NPC/creature creator editor (#198): quick create, editor, live statblock...');
+  execFileSync(process.execPath, ['scripts/npc-creature-creator-editor-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkNpcCreatureWorldCatalog() {
+  console.log('NPC/creature world catalog (#199): packs + pure resolver + world UI...');
+  execFileSync(process.execPath, ['scripts/npc-creature-world-catalog-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkNpcCreaturePromotion() {
+  console.log('NPC/creature promotion + controller (#200): template/compact/assign wiring...');
+  execFileSync(process.execPath, ['scripts/npc-creature-promotion-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkNpcCreatureSessionInstances() {
+  console.log('NPC/creature session instances (#201): spawn/runtime/snapshot isolation...');
+  execFileSync(process.execPath, ['scripts/npc-creature-session-instances-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkItemDefinitionPersistence() {
   console.log('ItemDefinition persistence lifecycle & security (#136): CRUD/fork/taxonomy roundtrip...');
   execFileSync(process.execPath, ['scripts/item-definition-persistence-check.mjs'], {
@@ -472,6 +528,14 @@ function checkItemThumbnailAssets() {
 function checkItemIconAssets() {
   console.log('Item static SVG icons: Cursor→PNG→VTracer pipeline contract...');
   execFileSync(process.execPath, ['scripts/item-icon-assets-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkAiProviderCredentials() {
+  console.log('AI provider credentials (BYOK): vault + Meshy validate + prod user-keys-only...');
+  execFileSync(process.execPath, ['scripts/ai-provider-credentials-check.mjs'], {
     cwd: root,
     stdio: 'inherit',
   });
@@ -526,6 +590,7 @@ checkItemWorkbench();
 checkItemThumbnailAssets();
 checkItemIconAssets();
 checkItemModel3dAssets();
+checkAiProviderCredentials();
 checkItemWorldCatalogModule();
 checkItemInventoryWorldCatalogWire();
 checkItemEpicAcceptance();
@@ -549,6 +614,13 @@ checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
 checkDamageHealingDyingValidation();
 checkEnemyEncounterBossValidation();
+checkNpcCreaturePowerFramework();
+checkNpcCreatureDomainPersistence();
+checkNpcCreatureLibraryBrowser();
+checkNpcCreatureCreatorEditor();
+checkNpcCreatureWorldCatalog();
+checkNpcCreaturePromotion();
+checkNpcCreatureSessionInstances();
 checkCharacterCreationValidation();
 checkPowersEssencesValidation();
 checkDriveMomentumValidation();

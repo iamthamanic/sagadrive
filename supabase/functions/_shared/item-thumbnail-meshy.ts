@@ -30,10 +30,18 @@ type FetchLike = typeof fetch;
 const DEFAULT_BASE = 'https://api.meshy.ai/openapi/v1';
 const DEFAULT_MODEL = 'nano-banana';
 
+/**
+ * Build Meshy text-to-image config.
+ * - No second arg: legacy env `MESHY_API_KEY` (tests / explicit host paths).
+ * - With second arg (incl. null): only that key — no silent env fallback.
+ */
 export function resolveMeshyProviderConfig(
   env: { get(key: string): string | undefined } = Deno.env,
+  apiKeyOverride?: string | null,
 ): MeshyProviderConfig | null {
-  const apiKey = env.get('MESHY_API_KEY')?.trim() ?? '';
+  const apiKey = apiKeyOverride !== undefined
+    ? (apiKeyOverride?.trim() ?? '')
+    : (env.get('MESHY_API_KEY')?.trim() ?? '');
   if (!apiKey) return null;
 
   const baseUrl = (env.get('MESHY_API_BASE_URL')?.trim() || DEFAULT_BASE).replace(/\/+$/, '');

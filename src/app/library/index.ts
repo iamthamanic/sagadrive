@@ -8,3 +8,14 @@
 export { ItemLibraryBrowser, useItemLibrary } from './items';
 export type { UseItemLibraryOptions, UseItemLibraryResult } from './items';
 export * from './items/itemLibraryLabels';
+export {
+  NpcCreatureLibraryBrowser,
+  useNpcCreatureLibrary,
+  NpcCreatureStatblockView,
+  NpcCreatureStatblockPanel,
+} from './npc-creatures';
+export type {
+  UseNpcCreatureLibraryOptions,
+  UseNpcCreatureLibraryResult,
+} from './npc-creatures';
+export * from './npc-creatures/npcCreatureLibraryLabels';

@@ -45,6 +45,8 @@ import {
 } from '../../../domains/character/inventory-v2';
 import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
 import { takeCharacterEditorBootstrap, clearCharacterEditorBootstrap } from '../shared/characterEditorBootstrap';
+import type { NpcPromotionPlan } from '../../../domains/npc-creature';
+import { promoteNpcCreatureCompactToFull } from '../../../infrastructure/npc-creature/npc-creature-service';
 import { assertValidSnapshot, characterPresetService } from '../../../infrastructure/character/character-preset-service';
 import { normalizeSafeUrl } from '../../../domains/character/use-cases/avatar-presets';
 import type { CharacterPresetReleaseMode, CharacterPresetSnapshot } from '../../../domains/character/contracts/character-preset.types';
@@ -254,6 +256,7 @@ export function CharacterEditor() {
   const [activeValuesSubTab, setActiveValuesSubTab] = useState<ValuesSubTab>('archetype');
   const [activeSettingsSubTab, setActiveSettingsSubTab] = useState<SettingsSubTab>('statistics');
   const [validationAttempted, setValidationAttempted] = useState(false);
+  const [npcPromotionPlan, setNpcPromotionPlan] = useState<NpcPromotionPlan | null>(null);
   const [savedCharacterId, setSavedCharacterId] = useState<string | null>(null);
   const [persistedLevel, setPersistedLevel] = useState<number | null>(null);
   const [characterLevel, setCharacterLevel] = useState(1);
@@ -653,6 +656,37 @@ export function CharacterEditor() {
       return;
     }
 
+    if (bootstrap?.kind === 'npc-promotion') {
+      bootstrapAppliedRef.current = true;
+      const { plan } = bootstrap;
+      const seed = plan.editorSeed;
+      setNpcPromotionPlan(plan);
+      setCharacterName(seed.name);
+      setDescription(seed.description);
+      setCharacterLevel(seed.level);
+      setCharacterRace(seed.race);
+      setNotes(seed.notes ?? '');
+      if (seed.speciesProfileName) {
+        setSpeciesProfileName(seed.speciesProfileName);
+      }
+      if (seed.attributes) {
+        setBaseAttributes(seed.attributes);
+        setAttributeAdvances({});
+      } else {
+        setBaseAttributes(INITIAL_ATTRIBUTES);
+        setAttributeAdvances({});
+      }
+      setValidationAttempted(true);
+      applyRacePreset(seed.race, true);
+      clearCharacterEditorBootstrap();
+      toast.success(
+        plan.kind === 'compact-to-full'
+          ? 'Figur zum Ausbauen geladen — offene Entscheidungen prüfen.'
+          : 'Vorlage geladen — neuer Charakter mit offenen Entscheidungen.',
+      );
+      return;
+    }
+
     if (!editCharacterId) return;
     bootstrapAppliedRef.current = true;
 
@@ -1000,6 +1034,28 @@ export function CharacterEditor() {
         toast.success('Charakter erfolgreich gespeichert');
       }
       trackActivity(`Character Editor: Charakter "${characterName}" gespeichert (ID: ${savedCharacter.id})`);
+
+      if (npcPromotionPlan?.kind === 'compact-to-full') {
+        try {
+          const fullSheet: Record<string, unknown> = {
+            ...savePayload,
+            id: savedCharacter.id,
+          };
+          await promoteNpcCreatureCompactToFull({
+            definitionId: npcPromotionPlan.sourceDefinitionId,
+            fullSheet,
+          });
+          setNpcPromotionPlan(null);
+          toast.success('Figur als vollständiger Charakterbogen gespeichert');
+        } catch (promoteError) {
+          console.error('Compact→Full promotion failed:', promoteError);
+          toast.error(
+            promoteError instanceof Error
+              ? promoteError.message
+              : 'Charakter gespeichert, aber Figur konnte nicht ausgebaut werden.',
+          );
+        }
+      }
     } catch (error) {
       console.error('Character save error:', error);
       toast.error(error instanceof Error ? error.message : 'Fehler beim Speichern');
@@ -1036,6 +1092,31 @@ export function CharacterEditor() {
             <Button onClick={handleSaveCharacter} disabled={saving || uploading}><Save className="mr-2 h-4 w-4" />{saving ? 'Speichert...' : 'Speichern'}</Button>
           </div>
         </div>
+
+        {npcPromotionPlan && npcPromotionPlan.unresolvedChoices.length > 0 ? (
+          <div
+            className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm"
+            role="status"
+            data-npc-promotion-unresolved
+          >
+            <p className="font-medium">
+              Offene Entscheidungen ({npcPromotionPlan.unresolvedChoices.length})
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              Übernommene Felder sind vorausgefüllt. Diese Punkte müssen im Editor legal gewählt werden,
+              bevor der Charakter gespeichert wird:
+            </p>
+            <ul className="mt-2 list-inside list-disc text-muted-foreground">
+              {npcPromotionPlan.unresolvedChoices.map((choice) => (
+                <li key={choice.key}>
+                  <span className="text-foreground">{choice.labelDe}</span>
+                  {' — '}
+                  {choice.reason}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
           <Card className="lg:sticky lg:top-4 lg:col-span-1 lg:self-start">

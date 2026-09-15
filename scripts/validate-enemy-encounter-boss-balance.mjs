@@ -5,9 +5,9 @@
  * Seeded deterministic Monte-Carlo simulation of the §15 encounter system over
  * the shared core probe (scripts/lib/core-probe.mjs):
  *
- *  - §15.2 standard enemy table (bands Novize..Legende)
- *  - §15.3 minion/elite/boss modifiers (incl. two initiative slots, two reactions)
- *  - §15.4 threat points and group budgets (routine/standard/hard/extreme),
+ *  - §15.2 standard enemy table (bands Novize..Legende / Machtgrad)
+ *  - §15.4 Standard/Elite/Boss HP multipliers + impulse tempo (no blanket +1 attack/DEF)
+ *  - §15.5 threat points and group budgets (routine/standard/hard/extreme),
  *    band-shift doubling/halving
  *  - focus fire, action economy, round length, party defeat risk
  *
@@ -60,7 +60,7 @@ const BUDGETS = Object.freeze([
   { name: 'Extrem', multiplier: 3 },
 ]);
 
-const THREAT_POINTS = Object.freeze({ scherge: 1, standard: 2, elite: 4, boss: 8 });
+const THREAT_POINTS = Object.freeze({ standard: 1, elite: 2, boss: 4 });
 
 const PLAYER_COUNTS = Object.freeze([3, 4, 5, 6]);
 const BAND_INDEX = Object.freeze([0, 1, 2, 3, 4]); // Novize..Legende
@@ -69,21 +69,20 @@ const BAND_INDEX = Object.freeze([0, 1, 2, 3, 4]); // Novize..Legende
 
 /**
  * Build an enemy group for a budget. Composition policies mirror common GM
- * practice: boss solo, elite core + minions, minion swarm, mixed standard.
+ * practice: boss solo, elite packs, standard swarm, mixed elite+standard.
  */
 function buildComposition(budget, type) {
-  // §15.4: the GM builds the encounter to fit the budget. A boss costs 8 BP,
+  // §15.5: the GM builds the encounter to fit the budget. A boss costs 4 BP,
   // so boss encounters only exist at budgets that can afford one.
   const compositions = {
-    boss: budget >= 8 ? [{ type: 'boss', count: 1 }] : null,
-    elite: budget >= 4 ? [{ type: 'elite', count: Math.floor(budget / 4) }] : null,
-    minion: budget >= 1 ? [{ type: 'scherge', count: budget }] : null,
-    standard: budget >= 2 ? [{ type: 'standard', count: Math.floor(budget / 2) }] : null,
+    boss: budget >= 4 ? [{ type: 'boss', count: 1 }] : null,
+    elite: budget >= 2 ? [{ type: 'elite', count: Math.floor(budget / 2) }] : null,
+    standard: budget >= 1 ? [{ type: 'standard', count: budget }] : null,
     mixed:
       budget >= 2
         ? [
-            { type: 'standard', count: Math.max(1, Math.floor(budget / 3)) },
-            { type: 'scherge', count: Math.max(0, budget - 2 * Math.max(1, Math.floor(budget / 3))) },
+            { type: 'elite', count: 1 },
+            { type: 'standard', count: Math.max(0, budget - 2) },
           ]
         : null,
   };
@@ -91,7 +90,7 @@ function buildComposition(budget, type) {
 }
 
 function groupThreatCost(composition, bandOffset) {
-  const costs = { scherge: 1, standard: 2, elite: 4, boss: 8 };
+  const costs = { standard: 1, elite: 2, boss: 4 };
   let total = 0;
   for (const part of composition) {
     let cost = costs[part.type] * part.count;
@@ -124,39 +123,26 @@ function buildPartyMember(band, optimized) {
   };
 }
 
-/** §15.2/§15.3: enemy stat block with type modifiers. */
+/** §15.2/§15.4: enemy stat block — role changes HP + impulse tempo only. */
 function buildEnemy(band, type, bandOffset = 0) {
   const base = STANDARD_ENEMIES[Math.min(STANDARD_ENEMIES.length - 1, Math.max(0, band + bandOffset))];
+  const roleMult = type === 'boss' ? 2.5 : type === 'elite' ? 1.5 : 1;
   const enemy = {
     side: 'enemy',
     type,
     name: `${type} (${base.rank}${bandOffset ? ` ${bandOffset > 0 ? '+1' : '-1'} Band` : ''})`,
     defense: base.defense,
-    health: base.health,
+    health: Math.ceil(base.health * roleMult),
+    maxHealth: Math.ceil(base.health * roleMult),
     attackBonus: base.attack,
     damage: { ...base.damage },
-    initiativeSlots: 1,
+    impulseDamage: shiftDamageClass(base.damage, -1),
+    impulsesPerRound: type === 'boss' ? 2 : type === 'elite' ? 1 : 0,
+    impulsesUsed: 0,
     reactionsPerRound: 1,
     reactionAvailable: true,
     downed: false,
   };
-  if (type === 'scherge') {
-    enemy.defense -= 2;
-    enemy.damage = shiftDamageClass(base.damage, -1);
-    enemy.minionHp = 1; // any damage ≥ 1 defeats
-  }
-  if (type === 'elite') {
-    enemy.health *= 2;
-    enemy.attackBonus += 1;
-  }
-  if (type === 'boss') {
-    enemy.health *= 3;
-    enemy.defense += 1;
-    enemy.attackBonus += 1;
-    enemy.damage = shiftDamageClass(base.damage, 1);
-    enemy.initiativeSlots = 2;
-    enemy.reactionsPerRound = 2;
-  }
   return enemy;
 }
 
@@ -216,7 +202,10 @@ function simulateEncounter({ partySize, band, composition, bandOffset, rng, opti
   while (rounds < MAX_ROUNDS) {
     rounds += 1;
 
-    // Party turn: each up member attacks the most damaged living enemy (focus fire).
+    // Reset impulse counters each round (§15.4).
+    for (const enemy of enemies) enemy.impulsesUsed = 0;
+
+    // Party turn: each up member attacks; living Elite/Boss may fire one impulse after.
     for (const member of party) {
       if (member.downed) continue;
       const target = enemies.find((enemy) => !enemy.downed);
@@ -227,29 +216,37 @@ function simulateEncounter({ partySize, band, composition, bandOffset, rng, opti
         const damage = rollDamage(rng, member.damage, grade === 'crit-success');
         applyDamage(target, damage);
       }
+      // §15.4: after another figure finishes its turn — impulse (max one per other turn).
+      for (const enemy of enemies) {
+        if (enemy.downed) continue;
+        if ((enemy.impulsesUsed ?? 0) >= (enemy.impulsesPerRound ?? 0)) continue;
+        const targets = party.filter((m) => !m.downed);
+        if (targets.length === 0) break;
+        const impulseTarget = targets[targets.length - 1];
+        const impulseTotal = rollD20(rng) + enemy.attackBonus;
+        const impulseGrade = resolveGrade(impulseTotal, impulseTarget.defense);
+        if (impulseGrade === 'success' || impulseGrade === 'crit-success') {
+          const damage = rollDamage(rng, enemy.impulseDamage, impulseGrade === 'crit-success');
+          applyDamage(impulseTarget, damage);
+          if (impulseTarget.health <= 0) impulseTarget.downed = true;
+        }
+        enemy.impulsesUsed += 1;
+      }
     }
     if (enemies.every((enemy) => enemy.downed)) break;
 
-    // Enemy turn: two initiative slots for bosses (§15.3).
+    // Enemy main turn: one full attack each (role does not grant extra main actions).
     for (const enemy of enemies) {
       if (enemy.downed) continue;
-      const slots = enemy.initiativeSlots ?? 1;
-      for (let slot = 0; slot < slots; slot += 1) {
-        const targets = party.filter((member) => !member.downed);
-        if (targets.length === 0) break;
-        // §15.3 boss: two slots model stronger tempo — second slot attacks the
-        // second-most-threatened target (soft focus-fire spread).
-        const target = slot === 0 ? targets[0] : targets[targets.length - 1];
-        const total = rollD20(rng) + enemy.attackBonus;
-        const grade = resolveGrade(total, target.defense);
-        if (grade === 'success' || grade === 'crit-success') {
-          const damage = rollDamage(rng, enemy.damage, grade === 'crit-success');
-          applyDamage(target, damage);
-          // §8.5: at 0 HP the member is down (kampfunfähig).
-          if (target.health <= 0) {
-            target.downed = true;
-          }
-        }
+      const targets = party.filter((member) => !member.downed);
+      if (targets.length === 0) break;
+      const target = targets[0];
+      const total = rollD20(rng) + enemy.attackBonus;
+      const grade = resolveGrade(total, target.defense);
+      if (grade === 'success' || grade === 'crit-success') {
+        const damage = rollDamage(rng, enemy.damage, grade === 'crit-success');
+        applyDamage(target, damage);
+        if (target.health <= 0) target.downed = true;
       }
     }
     if (party.every((member) => member.downed)) break;
@@ -271,10 +268,6 @@ function simulateEncounter({ partySize, band, composition, bandOffset, rng, opti
 
 function applyDamage(target, damage) {
   target.health -= damage;
-  if (target.side === 'enemy' && target.type === 'scherge') {
-    // §15.3: any damage ≥ 1 defeats a minion.
-    if (damage >= 1) target.health = 0;
-  }
   if (target.health <= 0) target.downed = true;
 }
 
@@ -291,7 +284,7 @@ function runMatrix() {
       const rank = STANDARD_ENEMIES[band].rank;
       for (const budgetDef of BUDGETS) {
         const budget = Math.round(budgetDef.multiplier * partySize);
-        for (const compositionType of ['boss', 'elite', 'minion', 'mixed']) {
+        for (const compositionType of ['boss', 'elite', 'standard', 'mixed']) {
           const composition = buildComposition(budget, compositionType);
           if (!composition) continue; // composition does not fit this budget (§15.4)
           const cost = groupThreatCost(composition, 0);
@@ -334,7 +327,7 @@ function runMatrix() {
 
   // §19.5 invariant: danger tiers must be monotonic per (rank, party size,
   // composition) — Routine < Standard < Schwer < Extrem in combined danger
-  // (defeat rate + downed share). Minion-swarm action-count edge case: swarm
+  // (defeat rate + downed share). Standard-swarm action-count edge case: swarm
   // danger must not exceed the elite composition at the same budget by >50%.
   const cellKeys = new Map();
   for (const row of rows) {
@@ -358,11 +351,11 @@ function runMatrix() {
         );
       }
     }
-    const swarm = tierRows.find((row) => row.composition === 'minion' && row.difficulty === 'Extrem');
+    const swarm = tierRows.find((row) => row.composition === 'standard' && row.difficulty === 'Extrem');
     const elite = tierRows.find((row) => row.composition === 'elite' && row.difficulty === 'Extrem');
     if (swarm && elite && dangerOf(swarm) > dangerOf(elite) * 1.5 + 1e-9) {
       findings.push(
-        `Schergen-Schwarm sprengt Budget: ${swarm.rank} Größe ${swarm.partySize} — Schwarm ${dangerOf(swarm).toFixed(1)} vs Elite ${dangerOf(elite).toFixed(1)} bei identischem Budget`,
+        `Standard-Schwarm sprengt Budget: ${swarm.rank} Größe ${swarm.partySize} — Schwarm ${dangerOf(swarm).toFixed(1)} vs Elite ${dangerOf(elite).toFixed(1)} bei identischem Budget`,
       );
     }
   }
@@ -374,7 +367,7 @@ function RUNS_PER_CELL_INDEX(run) {
   return run;
 }
 
-// ─── Boss-focused scenarios (§15.3 boss economy) ─────────────────────────────
+// ─── Boss-focused scenarios (§15.4 boss economy) ─────────────────────────────
 
 function runBossScenarios() {
   const findings = [];
@@ -383,7 +376,7 @@ function runBossScenarios() {
   for (const band of BAND_INDEX) {
     const rank = STANDARD_ENEMIES[band].rank;
     for (const partySize of [4]) {
-      const budget = 8; // one boss = 8 threat points → Standard for 4 players
+      const budget = 4; // one boss = 4 threat points → Standard for 4 players
       const composition = [{ type: 'boss', count: 1 }];
 
       // Solo boss vs focused party: boss must not collapse instantly.
@@ -406,21 +399,21 @@ function runBossScenarios() {
       }
       rows.push({
         rank,
-        scenario: 'Solo-Boss (Budget 8, 4 Spieler)',
+        scenario: 'Solo-Boss (Budget 4, 4 Spieler)',
         avgRounds: avgRounds.toFixed(1),
         partyDefeatRate: `${(partyDefeatRate * 100).toFixed(1)}%`,
-        note: '§15.3 Boss: 2 Initiativslots, 2 Reaktionen, HP ×3, Schaden +1 Klasse.',
+        note: '§15.4 Boss: HP ×2,5, 2 Impulse/Runde, kein Blanket-+1 Angriff/DEF.',
       });
 
-      // Band-shift scenario: enemy one rank above the party (double cost §15.4).
-      const shiftedComposition = [{ type: 'standard', count: Math.floor(8) }];
+      // Band-shift scenario: enemy one rank above the party (double cost §15.5).
+      const shiftedComposition = [{ type: 'standard', count: 4 }];
       const shiftCost = groupThreatCost(shiftedComposition, 1);
       rows.push({
         rank,
         scenario: 'Gegner +1 Band (Kosten verdoppelt)',
         avgRounds: '—',
         partyDefeatRate: '—',
-        note: `Budgetkosten ${shiftCost} BP (Standard 8 → effektiv Schwer/Extrem); Simulationszeile folgt in der Matrix.`,
+        note: `Budgetkosten ${shiftCost} BP (Standard 4 → effektiv Schwer/Extrem); Simulationszeile folgt in der Matrix.`,
       });
     }
   }
@@ -439,13 +432,13 @@ function buildReport(matrixRows, matrixFindings, bossRows, bossFindings) {
   lines.push('');
   lines.push(`- Group sizes: 3/4/5/6`);
   lines.push(`- Ranks: Novize–Legende (Band I–V)`);
-  lines.push(`- Compositions: boss / elite / minion / mixed`);
+  lines.push(`- Compositions: boss / elite / standard / mixed`);
   lines.push(`- Encounter rows: ${matrixRows.length} + ${bossRows.length} boss scenarios`);
   lines.push(`- Findings: ${findings.length}`);
   lines.push('');
   lines.push('## Findings');
   if (findings.length === 0) {
-    lines.push('Keine Budget-Sprengung durch Schergen-Schwärme, kein Boss-Kollaps oder Boss-Eskalation; Budgetstufen klar getrennt.');
+    lines.push('Keine Budget-Sprengung durch Standard-Schwärme, kein Boss-Kollaps oder Boss-Eskalation; Budgetstufen klar getrennt.');
   } else {
     findings.forEach((finding) => lines.push(`- ${finding}`));
   }
@@ -470,9 +463,9 @@ function buildReport(matrixRows, matrixFindings, bossRows, bossFindings) {
   lines.push('');
   lines.push('## Notes');
   lines.push('- Monte-Carlo mit fixiertem Seed (byte-reproduzierbar); dokumentiert als Simulation statt exakter Faltung (großer kombinierter Zustandsraum).');
-  lines.push('- Fokusfeuer: Party zielt auf den am stärksten beschädigten Gegner; Bosse splitten Slots auf zwei Ziele.');
-  lines.push('- Schergen fallen bei jedem Schaden ≥ 1 (§15.3); Boss besitzt zwei Initiativslots und zwei Reaktionen (§15.3).');
-  lines.push('- Budgets §15.4: Routine 1× / Standard 2× / Schwer 2,5× / Extrem 3× Spielerzahl; Band-Verschiebung ×2 (höher) bzw. ÷2 (niedriger).');
+  lines.push('- Fokusfeuer: Party zielt auf den am stärksten beschädigten Gegner; Elite/Boss feuern Impulse nach Party-Zügen.');
+  lines.push('- Kampfrolle ändert nur HP und Impulse (§15.4); kein Blanket-+1 Angriff/DEF; kein Scherge/Minion.');
+  lines.push('- Budgets §15.5: Routine 1× / Standard 2× / Schwer 2,5× / Extrem 3× Spielerzahl; Band-Verschiebung ×2 (höher) bzw. ÷2 (niedriger).');
   return lines.join('\n');
 }
 

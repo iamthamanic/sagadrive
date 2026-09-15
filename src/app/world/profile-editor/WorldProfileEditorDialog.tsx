@@ -21,6 +21,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../../../shared/ui/textarea';
 import { WorldItemCatalogModuleSection, WorldItemCatalogSection } from '../item-catalog';
 import {
+  WorldNpcCreatureCatalogModuleSection,
+  WorldNpcCreatureCatalogSection,
+} from '../npc-creature-catalog';
+import {
   WORLD_MODULE_REGISTRY,
   getWorldModuleSettingValue,
   setWorldModuleSettingValue,
@@ -43,6 +47,7 @@ export function WorldProfileEditorDialog({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [modules, setModules] = useState<WorldModuleConfigMap>({});
+  const [npcCatalogRevision, setNpcCatalogRevision] = useState(0);
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -52,6 +57,7 @@ export function WorldProfileEditorDialog({
     setName(world?.name ?? '');
     setDescription(world?.description ?? '');
     setModules(world?.modules ?? {});
+    setNpcCatalogRevision(0);
     setValidationAttempted(false);
     setSaveError(null);
   }, [open, world]);
@@ -177,14 +183,27 @@ export function WorldProfileEditorDialog({
               onModulesChange={setModules}
               worldProfileId={world?.id ?? null}
             />
+
+            <WorldNpcCreatureCatalogModuleSection
+              modules={modules}
+              onModulesChange={setModules}
+              worldProfileId={world?.id ?? null}
+              catalogRevision={npcCatalogRevision}
+            />
           </div>
 
           {world?.id ? (
-            <WorldItemCatalogSection worldProfileId={world.id} />
+            <>
+              <WorldItemCatalogSection worldProfileId={world.id} />
+              <WorldNpcCreatureCatalogSection
+                worldProfileId={world.id}
+                onCatalogChanged={() => setNpcCatalogRevision((token) => token + 1)}
+              />
+            </>
           ) : (
             <p className="border-t border-border pt-5 text-sm text-muted-foreground">
-              Speichere die Welt zuerst, bevor du Ausrüstung & Gegenstände für dieses Weltprofil
-              anlegst.
+              Speichere die Welt zuerst, bevor du Ausrüstung & Gegenstände oder NPCs & Kreaturen
+              für dieses Weltprofil anlegst.
             </p>
           )}
 

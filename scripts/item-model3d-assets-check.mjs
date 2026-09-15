@@ -35,7 +35,7 @@ section('1 · slice files exist');
 [
   'src/domains/items/model3d-assets.ts',
   'src/infrastructure/inventory/item-model3d-service.ts',
-  'src/app/items/workbench/useItemAssets.ts',
+  'src/app/items/visuals/useItemAssets.ts',
   'src/app/items/workbench/ItemVisualsPanel.tsx',
   'src/app/items/workbench/ItemModelPreview.tsx',
   'src/app/items/workbench/ItemModelPreviewRuntime.ts',
@@ -69,7 +69,7 @@ section('3 · no Meshy secrets in client / Vite env');
 {
   const clientFiles = [
     'src/infrastructure/inventory/item-model3d-service.ts',
-    'src/app/items/workbench/useItemAssets.ts',
+    'src/app/items/visuals/useItemAssets.ts',
     'src/app/items/workbench/ItemVisualsPanel.tsx',
     'src/app/items/workbench/ItemModelPreview.tsx',
     '.env.example',
@@ -109,7 +109,9 @@ section('4 · Edge Function fail-closed + security');
 section('5 · Workbench 3D UI wired');
 {
   const panel = read('src/app/items/workbench/ItemVisualsPanel.tsx');
-  const hook = read('src/app/items/workbench/useItemAssets.ts');
+  const toolsBar = read('src/app/items/visuals/ItemVisualToolsBar.tsx');
+  const modeToggle = read('src/app/items/visuals/ItemVisualModeToggle.tsx');
+  const hook = read('src/app/items/visuals/useItemAssets.ts');
   const editor = read('src/app/items/workbench/ItemWorkbenchEditor.tsx');
   const screen = read('src/app/items/workbench/ItemWorkbenchScreen.tsx');
   const preview = read('src/app/items/workbench/ItemModelPreview.tsx');
@@ -117,11 +119,13 @@ section('5 · Workbench 3D UI wired');
   check(/GLB hochladen/.test(panel), 'upload CTA');
   check(/Aus Bild generieren/.test(panel), 'generate CTA');
   check(/3D-Modell entfernen/.test(panel), 'remove CTA');
-  check(/data-item-workbench-visual-toggle/.test(panel), '2D/3D toggle');
-  check(/data-item-workbench-visual-3d/.test(panel), '3D toggle control');
+  check(/data-item-workbench-visual-toggle/.test(modeToggle), '2D/3D toggle');
+  check(/data-item-workbench-visual-3d/.test(modeToggle), '3D toggle control');
+  check(/data-item-workbench-visual-to-3d/.test(toolsBar), '→3D tool control');
   check(/Erneut versuchen/.test(panel), 'retry CTA');
-  check(/nicht konfiguriert/.test(panel), 'fail-closed Meshy copy');
+  check(/Meshy nicht verbunden|nicht konfiguriert/.test(panel), 'fail-closed Meshy copy');
   check(/useItemModel3dAssets/.test(panel), 'uses useItemModel3dAssets');
+  check(/useItemVisualTools/.test(panel), 'uses useItemVisualTools');
   check(/itemModel3dService/.test(hook), 'hook uses model3d service');
   check(/submitLock/.test(hook), 'submit lock for cardinality');
   check(/onModel3dChange/.test(editor), 'editor wires model3d');
