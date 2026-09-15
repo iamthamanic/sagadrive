@@ -24,8 +24,8 @@ export const FANTASY_BASICS_DEFINITIONS: readonly NpcCreatureDefinition[] = Obje
   }),
   buildBuiltinNpcCreature({
     id: 'builtin.npc.fantasy.militia',
-    name: 'Milizionär',
-    description: 'Leicht gerüsteter Verteidiger eines Dorfes oder Außenpostens.',
+    name: 'Milizsoldat',
+    description: 'Leicht gerüsteter Verteidiger eines Dorfes oder Außenpostens (Speer und Schild).',
     kind: 'npc',
     category: 'npc',
     level: 3,
@@ -90,14 +90,16 @@ export const FANTASY_BASICS_DEFINITIONS: readonly NpcCreatureDefinition[] = Obje
   }),
   buildBuiltinNpcCreature({
     id: 'builtin.creature.fantasy.skeleton',
-    name: 'Skelettkrieger',
-    description: 'Untoter Fußsoldat; oft in Gruften.',
+    name: 'Skelett',
+    description:
+      'Bloßer Knochen-Untoter (Schädel + Oberkörper); oft in Gruften. Visuelle Identität (2D/3D): nur Skelett, keine Rüstung.',
     kind: 'creature',
     category: 'untot',
     level: 2,
     combatProfile: 'balanced',
     combatRole: 'standard',
-    tags: ['fantasy', 'untot'],
+    tags: ['fantasy', 'untot', 'skelett'],
+    notes: '3D-Modell-Slot: builtin-creature-fantasy-skeleton — bare bones only.',
   }),
 ]);
 

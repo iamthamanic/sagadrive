@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Edit, Loader2, Plus, RefreshCw, Search, UserPlus, Users, Swords } from 'lucide-react';
 import { toast } from 'sonner';
 import {
+  buildNpcCreatureIconPublicSrc,
   classifyNpcLibraryPromotionAction,
   deriveNpcCreaturePower,
   librarySourceOf,
@@ -262,13 +263,18 @@ export function NpcCreatureLibraryBrowser({
     const { definition } = record;
     const derived = deriveNpcCreaturePower(definition);
     const promotion = renderPromotionActions(record);
+    const iconSrc = definition.iconKey
+      ? buildNpcCreatureIconPublicSrc(definition.iconKey)
+      : null;
     return (
       <EntityBrowserCard
         title={definition.name}
         meta={NPC_CREATURE_CATEGORY_LABELS[definition.category]}
         metaChips={buildMetaChips(definition, derived.machtgradLabel)}
+        imageUrl={iconSrc ?? undefined}
         imageAlt={`Portrait von ${definition.name}`}
         imageFallback={definition.name}
+        imageObjectFit="contain"
         variant={context.variant}
         isCenter={context.isCenter}
         onOpen={

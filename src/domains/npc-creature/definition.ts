@@ -36,7 +36,12 @@ export interface NpcCreatureDefinition {
   combatRole: SagaDriveCombatRole;
   /** Free-form tags; empty/omitted is fine. */
   tags: readonly string[];
-  /** Optional portrait/thumbnail key (asset pipeline later). */
+  /**
+   * Static SVG slug under `/assets/npc-creatures/{iconKey}.svg`.
+   * Parallel to item `iconKey` — not Meshy/storage.
+   */
+  iconKey?: string;
+  /** Optional Meshy/upload portrait key (asset pipeline later). */
   portraitAssetKey?: string;
   /** Optional notes / lore hooks (definition-level only). */
   notes?: string;

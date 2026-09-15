@@ -115,6 +115,17 @@ section('5 · UI contract strings / a11y hooks');
   check(/grid-cols-1/.test(panel), 'statblock single-column mobile layout');
   check(/data-npc-statblock-view/.test(statblock), 'statblock data hook');
   check(/NpcCreatureStatblockPanel/.test(statblock), 'dialog reuses panel body');
+  check(/NpcCreaturePortraitFrame/.test(statblock), 'statblock mounts portrait frame');
+  const portrait = read('src/app/library/npc-creatures/NpcCreaturePortraitFrame.tsx');
+  check(/ItemVisualModeToggle/.test(portrait), 'portrait has 2D/3D toggle');
+  check(/object-contain/.test(portrait), 'portrait centers with object-contain');
+  check(/useImageLightbox/.test(portrait), 'portrait uses reusable image lightbox hook');
+  check(/imageObjectFit=\"contain\"/.test(browser), 'library cards use contain for icons');
+  const card = read('src/app/library/EntityBrowserCard.tsx');
+  check(/useImageLightbox/.test(card), 'entity cards use image lightbox hook');
+  check(/data-entity-thumbnail-enlarge/.test(card), 'thumbnail enlarge hook attr');
+  check(/useImageLightbox/.test(read('src/shared/ui/useImageLightbox.ts')), 'shared lightbox hook exists');
+  check(/data-image-lightbox-dialog/.test(read('src/shared/ui/ImageLightboxDialog.tsx')), 'shared lightbox dialog exists');
 }
 
 section('6 · pure filter domain behaviour');

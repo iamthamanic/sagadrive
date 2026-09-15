@@ -168,6 +168,11 @@ export function parseNpcCreatureDefinition(
   const tags = readTags(payload.tags);
   if (tags === null) return null;
 
+  const iconKey = payload.iconKey === undefined
+    ? undefined
+    : readString(payload.iconKey) ?? null;
+  if (iconKey === null) return null;
+
   const portraitAssetKey = payload.portraitAssetKey === undefined
     ? undefined
     : readString(payload.portraitAssetKey) ?? null;
@@ -218,6 +223,7 @@ export function parseNpcCreatureDefinition(
     combatProfile,
     combatRole,
     tags,
+    ...(iconKey !== undefined ? { iconKey } : {}),
     ...(portraitAssetKey !== undefined ? { portraitAssetKey } : {}),
     ...(notes !== undefined ? { notes } : {}),
     ...(statOverrides !== undefined ? { statOverrides } : {}),

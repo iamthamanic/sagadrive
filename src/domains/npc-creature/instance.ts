@@ -38,6 +38,7 @@ export interface NpcCreatureDefinitionSnapshot {
   combatProfile: SagaDriveCombatProfile;
   combatRole: SagaDriveCombatRole;
   tags: readonly string[];
+  iconKey?: string;
   portraitAssetKey?: string;
   notes?: string;
   /** Max HP frozen at snapshot time from effective definition stats. */
@@ -173,6 +174,7 @@ export function captureNpcCreatureDefinitionSnapshot(
     combatProfile: definition.combatProfile,
     combatRole: definition.combatRole,
     tags: [...definition.tags],
+    iconKey: definition.iconKey,
     portraitAssetKey: definition.portraitAssetKey,
     notes: definition.notes,
     maxHealth: effective.health,

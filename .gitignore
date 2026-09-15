@@ -39,6 +39,10 @@ assets/item-icon-sources/*.png
 assets/item-icon-sources/*.jpg
 assets/item-icon-sources/*.jpeg
 !assets/item-icon-sources/.gitkeep
+assets/npc-creature-icon-sources/*.png
+assets/npc-creature-icon-sources/*.jpg
+assets/npc-creature-icon-sources/*.jpeg
+!assets/npc-creature-icon-sources/.gitkeep
 
 # Playwright / QA artifacts
 playwright-report/

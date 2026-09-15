@@ -1,108 +1,138 @@
 ---
 name: svg-icon-create
 description: >-
-  Create flat vector SVG icons by writing SVG markup directly (no AI image
-  generation). Use when the user says svg-icon-create, asks for an item/asset
-  SVG icon, inventory icon, or public/assets/items/*.svg for SagaDrive.
+  Create SagaDrive pack-quality static SVG icons via Cursor GenerateImage → PNG
+  → VTracer (never hand-authored geometry). Use when the user says svg-icon-create,
+  asks for an item/NPC/creature icon, inventory icon, “mach mir ein Icon/Bild von …”,
+  or any public/assets/items|npc-creatures/*.svg.
 ---
 
 # svg-icon-create
 
-Create a single centered inventory/asset icon as **hand-authored SVG markup**.
+Create **one** SagaDrive inventory / NPC / creature icon in **pack style**
+(same quality as existing sword / potion / wolf / goblin SVGs).
 
-**Never** use image generation, raster embeds, or VTracer-from-PNG for this skill.
-Write the `.svg` file directly.
+**Hard ban:** Do **not** hand-write flat geometric SVG markup. Do **not** invent
+paths/circles/rects as the icon. That look is rejected — only the raster→vector
+pipeline below is allowed.
+
+Invoking this skill (or asking for an icon / “Bild von X” in SagaDrive) **is**
+an explicit image request → you **must** call Cursor `GenerateImage`.
 
 ## When invoked
 
-1. Identify the target: item name, definition id, or free-form asset description.
-2. Resolve **slug** + **output path** (ask only if ambiguous).
-3. Write one SVG matching the style contract below.
-4. Wire catalog/`iconKey`/manifest when the target is a SagaDrive catalog item.
-5. Confirm path + slug in one short reply.
+1. Resolve **kind** (item vs NPC/creature), **slug**, display name, short subject prompt.
+2. Build the full generation prompt from the matching domain helper (do not freestyle style prose).
+3. `GenerateImage` 1:1 with style reference PNGs.
+4. Save + normalize PNG into the correct `assets/*-icon-sources/` path.
+5. Run the matching VTracer script with `--force --slug`.
+6. Upsert manifest + wire `iconKey` when catalog-relevant.
+7. Run the matching assets-check.
+8. Confirm path + slug in one short reply.
 
-## Slug + path (SagaDrive defaults)
+Ask clarifying questions only if kind/slug is ambiguous (<95% confidence).
 
-| Case | Slug | File |
-|------|------|------|
-| Builtin pack item `builtin.fantasy.longsword` | `builtin-fantasy-longsword` (dots → hyphens) | `public/assets/items/{slug}.svg` |
-| Core-only unique art | `core-misc-footwear` | same dir |
-| Free-form / legacy | kebab-case, `[a-z0-9]+(?:-[a-z0-9]+)*` | same dir unless user names another path |
+## Kind → paths
 
-Public URL: `/assets/items/{slug}.svg`  
-`iconKey` on definitions **must equal** the slug.
+| Kind | Slug example | Source PNG | Output SVG | Manifest | Vectorize |
+|------|--------------|------------|------------|----------|-----------|
+| Item | `builtin-fantasy-longsword` | `assets/item-icon-sources/{slug}.png` | `public/assets/items/{slug}.svg` | `assets/item-icons.manifest.json` | `npm run icons:vectorize -- --force --slug {slug}` |
+| NPC / creature | `builtin-creature-fantasy-skeleton` | `assets/npc-creature-icon-sources/{slug}.png` | `public/assets/npc-creatures/{slug}.svg` | `assets/npc-creature-icons.manifest.json` | `npm run icons:vectorize:npc -- --force --slug {slug}` |
 
-Reference style file: `public/assets/items/iron-longsword.svg`  
-Batch generator (bulk only): `node scripts/generate-builtin-item-icons.mjs` — do **not** use it for a single new icon; edit/write the one SVG file.
+Slug rules: kebab-case `[a-z0-9]+(?:-[a-z0-9]+)*`. Builtin ids: dots → hyphens  
+(`builtin.fantasy.longsword` → `builtin-fantasy-longsword`).  
+`iconKey` on definitions **must equal** the slug.  
+Public URLs: `/assets/items/{slug}.svg` or `/assets/npc-creatures/{slug}.svg`.
 
-## Style contract (hard rules)
+## Prompt construction (mandatory)
 
-- `viewBox="0 0 512 512"`
-- Transparent background
-- Centered **single** object, fully visible, no crop
-- Flat vector; simple geometric shapes (`path` / `rect` / `circle` / `ellipse` / `polygon`)
-- Dark outline: `stroke="#1a1f28"` `stroke-width="8"` `stroke-linejoin="round"` `stroke-linecap="round"`
-- Maximum **6** fill colors (outline counts toward the palette budget if distinct)
-- No gradients, filters, text, letters, numbers
-- No embedded raster / `data:image` / base64
-- No UI frame, inventory slot, character holding the object, environment
-- Strong silhouette; family-similar to sibling icons is OK if proportions/details differ
-- `role="img"` + `aria-label` (prefer German display name when from catalog)
-- HTML comment: `<!-- SagaDrive item icon: … Flat vector, transparent bg, ≤6 colors. -->`
+Work from the SagaDrive repo root (`sagadrive/`).
 
-### Setting palettes (pick one; stay ≤6 colors)
+**Items** — `src/domains/items/icon-assets.ts`:
 
-- **Fantasy:** `#9aa3ad` `#7a8490` `#5c6570` `#3d2914` `#6b4a2e` + accent `#c43c3c` / `#3d8f5a` / `#c4a035`
-- **Sci-Fi:** `#2a3340` `#3d4a5c` `#3db8c5` `#2a8f9a` `#b8c4d0`
-- **Contemporary:** `#4a5568` `#6b7280` `#e8ecf0` `#3b6ea5` `#d97706` `#5c4033`
+- Full prompt = `buildItemIconPrompt({ name, iconPrompt })` / `getItemIconStyleTemplate()`.
+- Manifest `iconPrompt` = short object-only subject (no style boilerplate).
+- PNG background per item template (plain / transparent — do not force black).
 
-## SVG skeleton
+**NPC / creatures** — `src/domains/npc-creature/icon-assets.ts`:
 
-```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="DISPLAY_NAME">
-  <!-- SagaDrive item icon: DISPLAY_NAME. Flat vector, transparent bg, ≤6 colors. -->
-  <g stroke="#1a1f28" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
-    <!-- shapes here; stroke="none" on detail fills when outline not wanted -->
-  </g>
-</svg>
+- Full prompt = `buildNpcCreatureIconPrompt({ name, iconPrompt })` / `getNpcCreatureIconStyleTemplate()`.
+- Manifest `iconPrompt` = short concrete subject (e.g. `red fox portrait`, `bare undead skeleton`).
+- **Solid pure BLACK background required on the PNG** (pack parity). Never light/white.
+- Subject must be concrete enough for later 3D (no generic “Wildtier”).
+- Prefer a sibling pack PNG as extra style peer (wolf for animals, goblin/zombie for humanoids).
+
+If you cannot import the TS helpers in-shell, copy the template text from those files
+and substitute the subject line — do not invent a new style paragraph.
+
+## GenerateImage step
+
+Call Cursor `GenerateImage` with:
+
+- `aspect_ratio`: `"1:1"`
+- `description`: full prompt from the helper above
+- `filename`: `{slug}.png`
+- `reference_image_paths` (always include both item style refs):
+  - `assets/item-icon-style-refs/style-ref-sword.png`
+  - `assets/item-icon-style-refs/style-ref-potion.png`
+  - Plus optional sibling under `assets/npc-creature-icon-sources/` or `assets/item-icon-sources/`
+
+Then:
+
+1. Copy/move the generated file into the correct `*-icon-sources/{slug}.png`.
+2. Normalize: `sips -s format png assets/.../{slug}.png` (must be real PNG, not JPEG-as-.png).
+
+## VTracer + sanitize
+
+```bash
+# items
+npm run icons:vectorize -- --force --slug {slug}
+
+# npc / creatures (knocks out black canvas → transparent SVG)
+npm run icons:vectorize:npc -- --force --slug {slug}
 ```
 
-## Catalog wiring (when target is a catalog definition)
+Prefer `.cache/vtracer/vtracer` when present (`VTRACER_BIN=.cache/vtracer/vtracer`).  
+Do **not** hand-edit the resulting SVG paths. Final SVG must be transparent (no full-frame black plate). Sanitize lives in `scripts/lib/item-icon-svg.mjs` (shared).
 
-1. **Builtin-standard** (`builtin.*`): `buildStandardItem` already sets `iconKey` from id → usually only add/overwrite the SVG + manifest entry.
-2. **Core** (`core.*`): prefer sharing an existing pack `iconKey` via `CORE_SHARED_ICON_KEYS` in `src/domains/character/inventory-v2/core-catalog.ts`. Add a dedicated SVG only if no good match.
-3. **Personal/World**: set definition `iconKey` to the slug when editing that definition.
-4. **Manifest** `assets/item-icons.manifest.json`: upsert entry with `slug`, `iconKey`, `outputSvg: public/assets/items/{slug}.svg`, `status: "ready"`.
-5. Do not set Meshy `assetKey` for this static SVG path.
+## Manifest + catalog
+
+Upsert the matching manifest entry:
+
+- `id`, `slug`, `name`, `iconPrompt` (short), `iconKey` (= slug)
+- `sourcePng`, `outputSvg`, `status: "ready"`
+
+Catalog wiring:
+
+1. **Builtin** — `iconKey` usually already derived from id; overwrite SVG + manifest.
+2. **Core items** — prefer shared pack `iconKey` via `CORE_SHARED_ICON_KEYS` when a match exists; else new slug + SVG.
+3. **Core / builtin creatures** — set definition `iconKey` = slug; name/description must match the concrete subject.
+4. Do not set Meshy `assetKey` for this static SVG path.
 
 ## Validation
 
-- Prefer shapes that pass `scripts/lib/item-icon-svg.mjs` (no script/foreignObject, no external URLs except W3C xmlns).
-- Optional: `node scripts/item-icon-assets-check.mjs` after manifest updates.
-- If packs check is relevant: `node scripts/item-standard-packs-check.mjs`.
+```bash
+# items
+node scripts/item-icon-assets-check.mjs
 
-## Clarifying questions (only if needed)
-
-Ask until confident (≥95%):
-
-1. Slug / definition id?
-2. Output path if not `public/assets/items/`?
-3. Setting palette (fantasy / scifi / contemporary)?
-4. Wire `iconKey` + manifest now?
-
-If the user already pointed at an item/file or said “same style as the others”, proceed without questions.
+# npc / creatures (rejects hand-authored 512 geometry)
+node scripts/npc-creature-icon-assets-check.mjs
+```
 
 ## Done criteria
 
-- [ ] SVG file written at the resolved path
-- [ ] Style contract satisfied
-- [ ] Unique enough vs similar existing icons
-- [ ] `iconKey`/manifest updated when catalog-relevant
-- [ ] Short confirmation: path + slug (+ wiring yes/no)
+- [ ] PNG in the correct `*-icon-sources/` path (normalized)
+- [ ] SVG in the correct `public/assets/.../` path via VTracer (not hand markup)
+- [ ] Manifest `status: "ready"`, `iconKey === slug`
+- [ ] Assets-check passes for that kind
+- [ ] Short confirmation: kind + slug + PNG path + SVG path
 
 ## Anti-patterns
 
-- Cursor/GenerateImage or any raster→vector pipeline for this skill
-- Purple glow / soft UI chrome / multi-object scenes
-- Overwriting unrelated legacy files (`skull-sword.svg`, etc.) unless asked
-- Regenerating all 120 icons when one item was requested
+- Hand-authored flat SVG / palette stroke templates / “quick geometry”
+- Skipping GenerateImage or skipping VTracer
+- Light/white background on **creature** PNGs
+- Leaving a solid black full-canvas plate in the **public SVG**
+- Regenerating the entire pack when one icon was requested
+- Using batch generators (`generate-builtin-*-icons.mjs`) for a single new icon
+- Overwriting unrelated legacy files unless asked

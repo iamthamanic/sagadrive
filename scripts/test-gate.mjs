@@ -533,6 +533,14 @@ function checkItemIconAssets() {
   });
 }
 
+function checkNpcCreatureIconAssets() {
+  console.log('NPC/creature static SVG icons: catalog iconKey + public assets...');
+  execFileSync(process.execPath, ['scripts/npc-creature-icon-assets-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAiProviderCredentials() {
   console.log('AI provider credentials (BYOK): vault + Meshy validate + prod user-keys-only...');
   execFileSync(process.execPath, ['scripts/ai-provider-credentials-check.mjs'], {
@@ -589,6 +597,7 @@ checkItemLibraryBrowser();
 checkItemWorkbench();
 checkItemThumbnailAssets();
 checkItemIconAssets();
+checkNpcCreatureIconAssets();
 checkItemModel3dAssets();
 checkAiProviderCredentials();
 checkItemWorldCatalogModule();

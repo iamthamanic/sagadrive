@@ -67,6 +67,9 @@ export function validateAndSanitizeItemIconSvg(svg) {
 
   cleaned = stripLightBackdropGroups(cleaned);
   cleaned = stripLightBackdropPaths(cleaned);
+  cleaned = stripDarkBackdropPaths(cleaned);
+  cleaned = stripMicroSpecklePaths(cleaned);
+  cleaned = cleaned.replace(/<g\b[^>]*>\s*<\/g>/gi, '').replace(/\n{3,}/g, '\n\n');
 
   if (!/<path\b/i.test(cleaned) && !/<circle\b/i.test(cleaned) && !/<rect\b/i.test(cleaned) && !/<polygon\b/i.test(cleaned)) {
     return { ok: false, errors: ['SVG has no drawable shapes after sanitization'] };
@@ -84,7 +87,7 @@ export function validateAndSanitizeItemIconSvg(svg) {
 
 /**
  * Drop near-white / light-gray VTracer backdrop groups/paths for a plain/transparent field.
- * Keeps mid-tone object fills (blade highlights, glass). Threshold is luminance-based.
+ * Keeps mid-tone object fills (blade highlights, glass, skin). Threshold is luminance-based.
  * @param {string} svg
  */
 function stripLightBackdropGroups(svg) {
@@ -92,7 +95,7 @@ function stripLightBackdropGroups(svg) {
     const fillMatch = String(attrs).match(/\bfill\s*=\s*["']([^"']+)["']/i);
     if (!fillMatch) return full;
     const luminance = fillLuminance(fillMatch[1]);
-    if (luminance === null || luminance < 0.85) return full;
+    if (luminance === null || luminance < 0.82) return full;
     return '';
   });
 }
@@ -105,13 +108,56 @@ function stripLightBackdropPaths(svg) {
     const fillMatch = tag.match(/\bfill\s*=\s*["']([^"']+)["']/i);
     if (!fillMatch) return tag;
     const luminance = fillLuminance(fillMatch[1]);
-    if (luminance === null || luminance < 0.85) return tag;
-    // Only strip large backdrop-like paths (short highlight paths stay).
+    if (luminance === null || luminance < 0.82) return tag;
+    // Strip light fills: full-canvas backdrops and residual speckles.
+    // Keep only tiny highlight dots (very short path data).
     const dMatch = tag.match(/\bd\s*=\s*["']([^"']*)["']/i);
     const d = dMatch?.[1] ?? '';
-    if (d.length < 80) return tag;
-    if (!/^M0[,\s]/i.test(d) && !/M0,0/i.test(d) && !/M0,\d+/i.test(d)) return tag;
+    if (d.length > 0 && d.length < 36 && luminance < 0.94) return tag;
     return '';
+  }).replace(/\n{3,}/g, '\n\n');
+}
+
+/**
+ * VTracer often emits a full-frame rect as `M0,1024…Z` (sometimes compound-joined
+ * onto a dark subject silhouette). Strip that canvas plate only — keep mid-tone / silhouette art.
+ * Do NOT strip all near-black fills: pupils, outlines, and bone shadows must stay.
+ */
+const FULL_CANVAS_SUBPATH =
+  /M0,1024c[\d.]+,0,[\d.]+,0,1024,0c0-[\d.]+,0-[\d.]+,0-1024C[\d.]+,0,[\d.]+,0,0,0C0,[\d.]+,0,[\d.]+,0,1024Z/gi;
+
+/**
+ * @param {string} svg
+ */
+function stripDarkBackdropPaths(svg) {
+  return svg.replace(PATH_TAG, (tag) => {
+    const fillMatch = tag.match(/\bfill\s*=\s*["']([^"']+)["']/i);
+    if (!fillMatch) return tag;
+    const luminance = fillLuminance(fillMatch[1]);
+    if (luminance === null || luminance > 0.12) return tag;
+
+    const dMatch = tag.match(/\bd\s*=\s*["']([^"']*)["']/i);
+    const d = dMatch?.[1] ?? '';
+    if (!FULL_CANVAS_SUBPATH.test(d)) return tag;
+    FULL_CANVAS_SUBPATH.lastIndex = 0;
+
+    const peeled = d.replace(FULL_CANVAS_SUBPATH, '').trim();
+    if (!peeled) return '';
+    return tag.replace(/\bd\s*=\s*["'][^"']*["']/i, `d="${peeled}"`);
+  }).replace(/\n{3,}/g, '\n\n');
+}
+
+/**
+ * Drop 1–2px freistellung crumbs (`M58,8V9h1V8H58Z` etc.) left by noisy black
+ * backgrounds. Real facial features have longer path data.
+ * @param {string} svg
+ */
+function stripMicroSpecklePaths(svg) {
+  return svg.replace(PATH_TAG, (tag) => {
+    const dMatch = tag.match(/\bd\s*=\s*["']([^"']*)["']/i);
+    const d = dMatch?.[1] ?? '';
+    if (d.length > 0 && d.length < 48) return '';
+    return tag;
   }).replace(/\n{3,}/g, '\n\n');
 }
 

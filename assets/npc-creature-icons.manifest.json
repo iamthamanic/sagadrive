@@ -1,0 +1,252 @@
+[
+  {
+    "id": "builtin.creature.animal.bear",
+    "slug": "builtin-creature-animal-bear",
+    "name": "Bär",
+    "iconPrompt": "bear facing forward silhouette",
+    "iconKey": "builtin-creature-animal-bear",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-animal-bear.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-animal-bear.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.animal.boar",
+    "slug": "builtin-creature-animal-boar",
+    "name": "Wildschwein",
+    "iconPrompt": "boar with tusks silhouette",
+    "iconKey": "builtin-creature-animal-boar",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-animal-boar.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-animal-boar.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.animal.dire.wolf",
+    "slug": "builtin-creature-animal-dire-wolf",
+    "name": "Schreckenswolf",
+    "iconPrompt": "large dire wolf with raised ears",
+    "iconKey": "builtin-creature-animal-dire-wolf",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-animal-dire-wolf.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-animal-dire-wolf.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.animal.hawk",
+    "slug": "builtin-creature-animal-hawk",
+    "name": "Habicht",
+    "iconPrompt": "hawk with spread wings",
+    "iconKey": "builtin-creature-animal-hawk",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-animal-hawk.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-animal-hawk.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.animal.horse",
+    "slug": "builtin-creature-animal-horse",
+    "name": "Pferd",
+    "iconPrompt": "horse side silhouette",
+    "iconKey": "builtin-creature-animal-horse",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-animal-horse.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-animal-horse.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.animal.rat.swarm",
+    "slug": "builtin-creature-animal-rat-swarm",
+    "name": "Rattenschwarm",
+    "iconPrompt": "cluster of rats swarm silhouette",
+    "iconKey": "builtin-creature-animal-rat-swarm",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-animal-rat-swarm.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-animal-rat-swarm.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.animal.snake",
+    "slug": "builtin-creature-animal-snake",
+    "name": "Schlange",
+    "iconPrompt": "coiled snake silhouette",
+    "iconKey": "builtin-creature-animal-snake",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-animal-snake.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-animal-snake.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.animal.wolf",
+    "slug": "builtin-creature-animal-wolf",
+    "name": "Wolf",
+    "iconPrompt": "wolf side silhouette",
+    "iconKey": "builtin-creature-animal-wolf",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-animal-wolf.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-animal-wolf.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.construct.golem",
+    "slug": "builtin-creature-construct-golem",
+    "name": "Golem",
+    "iconPrompt": "stone golem blocky humanoid",
+    "iconKey": "builtin-creature-construct-golem",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-construct-golem.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-construct-golem.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.fantasy.goblin",
+    "slug": "builtin-creature-fantasy-goblin",
+    "name": "Goblin",
+    "iconPrompt": "green goblin with pointed ears, sly posture",
+    "iconKey": "builtin-creature-fantasy-goblin",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-fantasy-goblin.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-fantasy-goblin.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.fantasy.orc.raider",
+    "slug": "builtin-creature-fantasy-orc-raider",
+    "name": "Ork-Räuber",
+    "iconPrompt": "orc raider with tusks and brute shoulders",
+    "iconKey": "builtin-creature-fantasy-orc-raider",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-fantasy-orc-raider.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-fantasy-orc-raider.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.fantasy.skeleton",
+    "slug": "builtin-creature-fantasy-skeleton",
+    "name": "Skelett",
+    "iconPrompt": "bare undead skeleton skull and upper ribcage on black background, pristine complete unbroken cranium, mid-beige bones, no armor no cloth",
+    "iconKey": "builtin-creature-fantasy-skeleton",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-fantasy-skeleton.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-fantasy-skeleton.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.fantasy.young.dragon",
+    "slug": "builtin-creature-fantasy-young-dragon",
+    "name": "Junger Drache",
+    "iconPrompt": "young dragon head and wing silhouette",
+    "iconKey": "builtin-creature-fantasy-young-dragon",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-fantasy-young-dragon.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-fantasy-young-dragon.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.undead.wraith",
+    "slug": "builtin-creature-undead-wraith",
+    "name": "Geistwesen",
+    "iconPrompt": "ghostly wraith floating hooded form",
+    "iconKey": "builtin-creature-undead-wraith",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-undead-wraith.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-undead-wraith.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.creature.undead.zombie",
+    "slug": "builtin-creature-undead-zombie",
+    "name": "Zombie",
+    "iconPrompt": "zombie shambling humanoid",
+    "iconKey": "builtin-creature-undead-zombie",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-creature-undead-zombie.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-creature-undead-zombie.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.npc.fantasy.hedge.mage",
+    "slug": "builtin-npc-fantasy-hedge-mage",
+    "name": "Heckenmagier",
+    "iconPrompt": "hedge mage with pointed hat and glowing orb",
+    "iconKey": "builtin-npc-fantasy-hedge-mage",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-npc-fantasy-hedge-mage.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-npc-fantasy-hedge-mage.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.npc.fantasy.knight",
+    "slug": "builtin-npc-fantasy-knight",
+    "name": "Ritter",
+    "iconPrompt": "armored knight with helmet and heater shield",
+    "iconKey": "builtin-npc-fantasy-knight",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-npc-fantasy-knight.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-npc-fantasy-knight.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.npc.fantasy.militia",
+    "slug": "builtin-npc-fantasy-militia",
+    "name": "Milizsoldat",
+    "iconPrompt": "village militia soldier with spear and small shield",
+    "iconKey": "builtin-npc-fantasy-militia",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-npc-fantasy-militia.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-npc-fantasy-militia.svg",
+    "status": "ready"
+  },
+  {
+    "id": "builtin.npc.fantasy.village.elder",
+    "slug": "builtin-npc-fantasy-village-elder",
+    "name": "Dorfälteste",
+    "iconPrompt": "wise village elder woman, cloak and silver hair",
+    "iconKey": "builtin-npc-fantasy-village-elder",
+    "sourcePng": "assets/npc-creature-icon-sources/builtin-npc-fantasy-village-elder.png",
+    "outputSvg": "public/assets/npc-creatures/builtin-npc-fantasy-village-elder.svg",
+    "status": "ready"
+  },
+  {
+    "id": "core:creature.fox",
+    "slug": "core-creature-fox",
+    "name": "Fuchs",
+    "iconPrompt": "red fox head profile on black background, pointed ears, amber eye, orange-red fur cream muzzle, pack portrait style like wolf",
+    "iconKey": "core-creature-fox",
+    "sourcePng": "assets/npc-creature-icon-sources/core-creature-fox.png",
+    "outputSvg": "public/assets/npc-creatures/core-creature-fox.svg",
+    "status": "ready"
+  },
+  {
+    "id": "core:creature.minion",
+    "slug": "core-creature-minion",
+    "name": "Scherge",
+    "iconPrompt": "human bandit thug bust with wooden club, rough cloak, unshaven, mid-tone skin, no goblin",
+    "iconKey": "core-creature-minion",
+    "sourcePng": "assets/npc-creature-icon-sources/core-creature-minion.png",
+    "outputSvg": "public/assets/npc-creatures/core-creature-minion.svg",
+    "status": "ready"
+  },
+  {
+    "id": "core:npc.bandit",
+    "slug": "core-npc-bandit",
+    "name": "Bandit",
+    "iconPrompt": "bandit with scarf mask and short sword",
+    "iconKey": "core-npc-bandit",
+    "sourcePng": "assets/npc-creature-icon-sources/core-npc-bandit.png",
+    "outputSvg": "public/assets/npc-creatures/core-npc-bandit.svg",
+    "status": "ready"
+  },
+  {
+    "id": "core:npc.citizen",
+    "slug": "core-npc-citizen",
+    "name": "Bürger",
+    "iconPrompt": "ordinary human male townsfolk bust with thick visible closed smile mouth, white sclera brown iris eyes, cloth cap, grey-blue tunic, mid-tone skin",
+    "iconKey": "core-npc-citizen",
+    "sourcePng": "assets/npc-creature-icon-sources/core-npc-citizen.png",
+    "outputSvg": "public/assets/npc-creatures/core-npc-citizen.svg",
+    "status": "ready"
+  },
+  {
+    "id": "core:npc.guard",
+    "slug": "core-npc-guard",
+    "name": "Wache",
+    "iconPrompt": "town guard with helmet and spear",
+    "iconKey": "core-npc-guard",
+    "sourcePng": "assets/npc-creature-icon-sources/core-npc-guard.png",
+    "outputSvg": "public/assets/npc-creatures/core-npc-guard.svg",
+    "status": "ready"
+  },
+  {
+    "id": "core:npc.merchant",
+    "slug": "core-npc-merchant",
+    "name": "Händler",
+    "iconPrompt": "fantasy merchant with soft cap and satchel",
+    "iconKey": "core-npc-merchant",
+    "sourcePng": "assets/npc-creature-icon-sources/core-npc-merchant.png",
+    "outputSvg": "public/assets/npc-creatures/core-npc-merchant.svg",
+    "status": "ready"
+  }
+]
