@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Iron longsword">
+  <!-- SagaDrive item icon: iron longsword. Flat vector, transparent bg, ≤6 colors. -->
+  <g stroke="#1a1f28" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Blade -->
+    <path fill="#9aa3ad" d="M256 40l22 36v248H234V76z"/>
+    <!-- Fuller -->
+    <rect fill="#7a8490" stroke="none" x="252" y="84" width="8" height="220" rx="2"/>
+    <!-- Crossguard -->
+    <path fill="#5c6570" d="M152 324h208v26H152zm-18 4h22v18h-22zm222 0h22v18h-22z"/>
+    <!-- Grip -->
+    <rect fill="#3d2914" x="234" y="350" width="44" height="90" rx="4"/>
+    <!-- Grip wraps -->
+    <path fill="none" d="M234 372h44M234 394h44M234 416h44"/>
+    <!-- Pommel -->
+    <circle fill="#6b7582" cx="256" cy="460" r="26"/>
+  </g>
+</svg>

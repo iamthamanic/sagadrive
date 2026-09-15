@@ -62,6 +62,8 @@ requireMatch(panel, /BASE_SLOT_COUNT/, 'BASE_SLOT_COUNT in CharacterInventoryV2P
 requireMatch(summary, /Inventar \{occupiedSlots\} \/ \{BASE_SLOT_COUNT\}|Inventar \{.*\} \/ \{BASE_SLOT_COUNT\}/, 'Summary Inventar X / 20');
 requireMatch(summary, /BASE_SLOT_COUNT/, 'Summary uses BASE_SLOT_COUNT');
 requireMatch(grid, /data-inventory-base-grid/, 'Grid test hook');
+requireMatch(grid, /InventoryItemThumb/, 'Occupied slots render InventoryItemThumb');
+requireMatch(grid, /data-inventory-slot-thumb/, 'Slot thumbnail test hook');
 requireMatch(panel, /data-character-inventory-v2/, 'Panel test hook');
 
 section('2 · Domain-Ops (kein Reimplementieren)');

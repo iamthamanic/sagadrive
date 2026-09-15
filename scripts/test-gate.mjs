@@ -525,6 +525,14 @@ function checkItemThumbnailAssets() {
   });
 }
 
+function checkItemIconAssets() {
+  console.log('Item static SVG icons: Cursor→PNG→VTracer pipeline contract...');
+  execFileSync(process.execPath, ['scripts/item-icon-assets-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAiProviderCredentials() {
   console.log('AI provider credentials (BYOK): vault + Meshy validate + prod user-keys-only...');
   execFileSync(process.execPath, ['scripts/ai-provider-credentials-check.mjs'], {
@@ -580,6 +588,7 @@ checkItemStandardPacks();
 checkItemLibraryBrowser();
 checkItemWorkbench();
 checkItemThumbnailAssets();
+checkItemIconAssets();
 checkItemModel3dAssets();
 checkAiProviderCredentials();
 checkItemWorldCatalogModule();

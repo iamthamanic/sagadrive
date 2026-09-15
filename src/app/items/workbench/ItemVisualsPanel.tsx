@@ -246,12 +246,12 @@ export function ItemVisualsPanel({
         <ItemVisualModeToggle mode={mode} onModeChange={setMode} />
 
         {mode === '2d' ? (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+          <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-1.5">
             {assets.displayUrl ? (
               <img
                 src={assets.displayUrl}
                 alt={previewDefinition.name}
-                className="max-h-24 max-w-full object-contain"
+                className="h-[calc(100%-1.25rem)] max-h-32 w-auto max-w-full object-contain"
                 data-item-thumbnail-preview
               />
             ) : (
@@ -259,8 +259,13 @@ export function ItemVisualsPanel({
                 slot="special"
                 definition={previewDefinition}
                 alt={previewDefinition.name}
-                className="size-16"
+                className="size-32 p-0"
               />
+            )}
+            {dropEnabled && (
+              <p className="shrink-0 px-2 text-center text-[0.7rem] leading-tight text-muted-foreground">
+                {dropHint}
+              </p>
             )}
           </div>
         ) : (

@@ -1,0 +1,136 @@
+# Vectorize SagaDrive item icons (PNG → SVG via VTracer).
+# Main supported path for icon vectorization. Does not auto-commit.
+#
+# Triggers:
+#   - workflow_dispatch (manual)
+#   - push when source PNGs or the vectorize script change
+#
+# Output: sanitized SVGs under public/assets/items/ uploaded as a workflow artifact.
+# Commit the artifact SVGs in a follow-up change (valid SVGs are never auto-regenerated).
+
+name: Vectorize Item Icons
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'assets/item-icon-sources/**'
+      - 'assets/item-icons.manifest.json'
+      - 'scripts/vectorize-item-icons.mjs'
+      - 'scripts/lib/item-icon-svg.mjs'
+      - '.github/workflows/vectorize-item-icons.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vectorize-item-icons-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  vectorize:
+    name: VTracer item icons
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install VTracer CLI
+        env:
+          VTRACER_VERSION: '1.0.0-alpha.4'
+        run: |
+          set -euo pipefail
+          mkdir -p .cache/vtracer
+          curl -fsSL \
+            "https://github.com/visioncortex/vtracer/releases/download/${VTRACER_VERSION}/vtracer-x86_64-unknown-linux-musl.tar.gz" \
+            -o /tmp/vtracer.tar.gz
+          tar -xzf /tmp/vtracer.tar.gz -C .cache/vtracer
+          # Tarball may nest the binary; normalize to .cache/vtracer/vtracer
+          if [ ! -x .cache/vtracer/vtracer ]; then
+            found="$(find .cache/vtracer -type f -name vtracer | head -n 1)"
+            if [ -z "$found" ]; then
+              echo "vtracer binary not found in archive"
+              exit 1
+            fi
+            mv "$found" .cache/vtracer/vtracer
+          fi
+          chmod +x .cache/vtracer/vtracer
+          .cache/vtracer/vtracer --version
+
+      - name: Detect source PNGs
+        id: sources
+        run: |
+          count="$(find assets/item-icon-sources -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')"
+          echo "count=${count}" >> "$GITHUB_OUTPUT"
+          echo "Found ${count} PNG source(s)"
+          find assets/item-icon-sources -maxdepth 1 -type f -name '*.png' -print || true
+
+      - name: Vectorize + sanitize
+        if: steps.sources.outputs.count != '0'
+        env:
+          VTRACER_BIN: ${{ github.workspace }}/.cache/vtracer/vtracer
+        run: node scripts/vectorize-item-icons.mjs --require-vtracer
+
+      - name: Validate production SVGs
+        if: steps.sources.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(public/assets/items/*.svg)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No SVG files in public/assets/items/"
+            exit 1
+          fi
+          for f in "${files[@]}"; do
+            echo "Checking $f"
+            if [ ! -s "$f" ]; then
+              echo "FAIL empty: $f"
+              exit 1
+            fi
+            if ! grep -qi '<svg' "$f"; then
+              echo "FAIL missing <svg: $f"
+              exit 1
+            fi
+            if grep -qiE 'data:image/|base64\s*,' "$f"; then
+              echo "FAIL embedded raster: $f"
+              exit 1
+            fi
+            if grep -qiE '<\s*(script|foreignObject)\b' "$f"; then
+              echo "FAIL forbidden tag: $f"
+              exit 1
+            fi
+            if grep -qiE '\son[a-z]+\s*=' "$f"; then
+              echo "FAIL event handler: $f"
+              exit 1
+            fi
+            # Allow only W3C xmlns URLs; reject other http(s) / protocol-relative links.
+            if grep -oiE 'https?://[^"'\''[:space:]<>]+|//[^"'\''[:space:]<>]+' "$f" \
+              | grep -viE '^https?://www\.w3\.org/' \
+              | grep -q .; then
+              echo "FAIL external URL: $f"
+              exit 1
+            fi
+            bytes="$(wc -c < "$f" | tr -d ' ')"
+            echo "OK $f (${bytes} bytes)"
+          done
+
+      - name: Skip notice
+        if: steps.sources.outputs.count == '0'
+        run: echo "No PNG sources under assets/item-icon-sources/ — nothing to vectorize."
+
+      - name: Upload SVG artifact
+        if: steps.sources.outputs.count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: item-icon-svgs
+          path: |
+            public/assets/items/*.svg
+            assets/item-icons.manifest.json
+          if-no-files-found: error

@@ -346,9 +346,9 @@ export function Library({
   );
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
-        <div>
+    <div className="min-w-0 p-4 md:p-8">
+      <div className="mx-auto min-w-0 max-w-7xl space-y-4 md:space-y-6">
+        <div className="min-w-0">
           <h1 className="text-xl md:text-2xl">Meine Bibliothek</h1>
           <p className="text-muted-foreground text-sm md:text-base">
             Verwalte deine Charaktere, NPCs & Kreaturen, Abenteuer, Welten und Gegenstände
@@ -356,7 +356,7 @@ export function Library({
         </div>
 
         {activeTab !== 'items' && activeTab !== 'npcs' ? (
-          <div className="relative">
+          <div className="relative min-w-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Suche in deiner Bibliothek..."
@@ -367,34 +367,49 @@ export function Library({
           </div>
         ) : null}
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-auto gap-1">
-            <TabsTrigger value="characters" className="min-h-11">
-              <User className="w-4 h-4 mr-2 shrink-0" />
-              Charaktere
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="@container w-full min-w-0">
+          <TabsList className="grid h-auto w-full max-w-full min-w-0 grid-cols-2 gap-1 @[36rem]:grid-cols-3 @[52rem]:grid-cols-5">
+            <TabsTrigger
+              value="characters"
+              className="min-h-11 min-w-0 max-w-full px-2 text-xs sm:text-sm"
+            >
+              <User className="mr-1.5 size-4 shrink-0 sm:mr-2" />
+              <span className="truncate">Charaktere</span>
             </TabsTrigger>
-            <TabsTrigger value="npcs" className="min-h-11">
-              <Users className="w-4 h-4 mr-2 shrink-0" />
-              NPCs & Kreaturen
+            <TabsTrigger
+              value="npcs"
+              className="min-h-11 min-w-0 max-w-full px-2 text-xs sm:text-sm"
+            >
+              <Users className="mr-1.5 size-4 shrink-0 sm:mr-2" />
+              <span className="truncate">NPCs & Kreaturen</span>
             </TabsTrigger>
-            <TabsTrigger value="adventures" className="min-h-11">
-              <BookOpen className="w-4 h-4 mr-2 shrink-0" />
-              Abenteuer
+            <TabsTrigger
+              value="adventures"
+              className="min-h-11 min-w-0 max-w-full px-2 text-xs sm:text-sm"
+            >
+              <BookOpen className="mr-1.5 size-4 shrink-0 sm:mr-2" />
+              <span className="truncate">Abenteuer</span>
             </TabsTrigger>
-            <TabsTrigger value="worlds" className="min-h-11">
-              <Globe2 className="w-4 h-4 mr-2 shrink-0" />
-              Welten
+            <TabsTrigger
+              value="worlds"
+              className="min-h-11 min-w-0 max-w-full px-2 text-xs sm:text-sm"
+            >
+              <Globe2 className="mr-1.5 size-4 shrink-0 sm:mr-2" />
+              <span className="truncate">Welten</span>
             </TabsTrigger>
-            <TabsTrigger value="items" className="min-h-11">
-              <Package className="w-4 h-4 mr-2 shrink-0" />
-              Items
+            <TabsTrigger
+              value="items"
+              className="min-h-11 min-w-0 max-w-full px-2 text-xs sm:text-sm"
+            >
+              <Package className="mr-1.5 size-4 shrink-0 sm:mr-2" />
+              <span className="truncate">Items</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="characters" className="space-y-4">
+          <TabsContent value="characters" className="min-w-0 space-y-4">
             {error && (
-              <div className="p-3 bg-destructive/10 border border-destructive rounded-lg">
-                <p className="text-sm text-destructive">{error}</p>
+              <div className="min-w-0 overflow-hidden rounded-lg border border-destructive bg-destructive/10 p-3">
+                <p className="break-words text-sm text-destructive">{error}</p>
               </div>
             )}
 
@@ -425,7 +440,7 @@ export function Library({
             )}
           </TabsContent>
 
-          <TabsContent value="npcs" className="space-y-4">
+          <TabsContent value="npcs" className="min-w-0 space-y-4">
             {npcsTabVisited ? (
               <Suspense
                 fallback={
@@ -448,10 +463,10 @@ export function Library({
             ) : null}
           </TabsContent>
 
-          <TabsContent value="adventures" className="space-y-4">
+          <TabsContent value="adventures" className="min-w-0 space-y-4">
             {projectsError && (
-              <div className="p-3 bg-destructive/10 border border-destructive rounded-lg">
-                <p className="text-sm text-destructive">{projectsError}</p>
+              <div className="min-w-0 overflow-hidden rounded-lg border border-destructive bg-destructive/10 p-3">
+                <p className="break-words text-sm text-destructive">{projectsError}</p>
               </div>
             )}
 
@@ -482,10 +497,10 @@ export function Library({
             )}
           </TabsContent>
 
-          <TabsContent value="worlds" className="space-y-4">
+          <TabsContent value="worlds" className="min-w-0 space-y-4">
             {worldsError && (
-              <div className="p-3 bg-destructive/10 border border-destructive rounded-lg">
-                <p className="text-sm text-destructive">{worldsError}</p>
+              <div className="min-w-0 overflow-hidden rounded-lg border border-destructive bg-destructive/10 p-3">
+                <p className="break-words text-sm text-destructive">{worldsError}</p>
               </div>
             )}
 
@@ -516,7 +531,7 @@ export function Library({
             )}
           </TabsContent>
 
-          <TabsContent value="items" className="space-y-4">
+          <TabsContent value="items" className="min-w-0 space-y-4">
             {itemsTabVisited ? (
               <Suspense
                 fallback={

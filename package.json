@@ -71,6 +71,7 @@
     "test-gate": "node scripts/attribute-bonus-regression-check.mjs && node scripts/skill-progression-regression-check.mjs && node scripts/test-gate.mjs",
     "composition-gate": "node scripts/composition-gate.mjs",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "icons:vectorize": "node scripts/vectorize-item-icons.mjs"
   }
 }

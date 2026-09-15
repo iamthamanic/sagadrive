@@ -306,7 +306,9 @@ section('3 · unique ids, origin, scope, metadata');
     check(def.scope === 'core', `${def.id}: scope=core`);
     check(def.origin === 'builtin-standard', `${def.id}: origin=builtin-standard`);
     check(def.id.startsWith('builtin.'), `${def.id}: builtin. prefix`);
-    check(!def.iconKey && !def.assetKey, `${def.id}: no images/assets in this slice`);
+    const expectedIcon = def.id.replace(/\./g, '-');
+    check(def.iconKey === expectedIcon, `${def.id}: iconKey=${expectedIcon}`);
+    check(!def.assetKey, `${def.id}: no Meshy assetKey on builtin-standard`);
     const meta = items.validateItemDefinitionMetadata(def);
     check(meta.ok, `${def.id}: metadata valid${meta.ok ? '' : `: ${meta.errors?.join('; ')}`}`);
     if (def.basedOnDefinitionId) {
@@ -329,6 +331,7 @@ section('3 · unique ids, origin, scope, metadata');
   for (const core of inv.listCoreItemDefinitions()) {
     check(core.origin === 'core-archetype', `${core.id}: still core-archetype`);
     check(!ids.includes(core.id), `builtin ids do not collide with ${core.id}`);
+    check(typeof core.iconKey === 'string' && core.iconKey.length > 0, `${core.id}: has iconKey`);
   }
 }
 

@@ -1,11 +1,11 @@
 /**
- * InventoryItemThumb — square PNG thumbnail for inventory/equipment.
- * Resolution order: assetSrc (storage thumbnail) → iconKey → type PNG → slot glyph.
+ * InventoryItemThumb — square item thumbnail for inventory/equipment.
+ * Resolution order: assetSrc (storage) → public SVG iconKey → bundled PNG iconKey → type PNG → slot glyph.
  * Location: src/app/character/inventory/InventoryItemThumb.tsx
  */
 import { useEffect, useState } from 'react';
 import type { EquipmentSlot, InventoryItemType, ItemDefinition } from '../../../domains/character/inventory-v2';
-import { parseItemThumbnailAssetKey } from '../../../domains/items';
+import { buildItemIconPublicSrc, parseItemThumbnailAssetKey } from '../../../domains/items';
 
 import slotHead from '../../../assets/inventory/slots/head.png';
 import slotBody from '../../../assets/inventory/slots/body.png';
@@ -50,10 +50,17 @@ const ITEM_ICON_MODULES = import.meta.glob('../assets/inventory/items/*.png', {
   import: 'default',
 }) as Record<string, string>;
 
-function itemIconSrc(iconKey: string | undefined): string | null {
+function bundledItemIconPngSrc(iconKey: string | undefined): string | null {
   if (!iconKey) return null;
   const key = `../assets/inventory/items/${iconKey}.png`;
   return ITEM_ICON_MODULES[key] ?? null;
+}
+
+/** Prefer static public SVG (`/assets/items/{slug}.svg`), then legacy bundled PNG. */
+function itemIconSrc(iconKey: string | undefined): string | null {
+  const svg = buildItemIconPublicSrc(iconKey ?? '');
+  if (svg) return svg;
+  return bundledItemIconPngSrc(iconKey);
 }
 
 /**

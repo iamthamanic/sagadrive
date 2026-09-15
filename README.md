@@ -223,6 +223,8 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-09-14** — World-Modul `npc-creature-catalog`: Pack-Toggles, Includes/Excludes, welt-eigene Figuren ohne Definitionsduplikate (`feat/npc-creature-world-catalog`, #199)
 - **2026-09-14** — NPCs & Kreaturen Quick Create + Statblock-Editor mit Live-Vorschau; Library `+ Neu` / Bearbeiten (`feat/npc-creature-quick-create-editor`, #198)
 - **2026-09-11** — AI Provider BYOK: Settings → AI (Meshy Key, Credits); Prod nur User-Keys; wiederverwendbare Item-Visual-Tools-Hooks (`feat/ai-provider-credentials`)
+- **2026-09-10** — Bibliothek-Tabs: Container-Query + Shell `min-w-0` / overflow-x; Static Item-Icons Cursor→PNG→VTracer (`feat/item-static-svg-icons`)
+- **2026-09-10** — Skill `svg-icon-create` + Generator `scripts/generate-builtin-item-icons.mjs` für hand-authored Item-SVGs (`feat/item-static-svg-icons`)
 - **2026-09-09** — Item-Workbench Forge: typed Create-URLs, Visuals-Dropzone mit Auto-Draft, Scroll-Layout, Single-Shell App-Layout (`feat/item-workbench-forge-ux`)
 - **2026-09-06** — Item Epic Abnahme: Docs-Sync (`docs/items.md`), Meta-Gate + Playwright-Hop Library→Workbench→Inventar (`feat/144-item-epic-acceptance`, #144)
 - **2026-09-06** — Bibliothek Items-Tab: List/Grid, Suche/Filter, Core+Standard+Personal+Welt (`feat/138-library-items-browser`, #138)
