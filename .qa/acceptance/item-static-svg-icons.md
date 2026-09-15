@@ -8,7 +8,7 @@ Ship static SVG inventory icons for Core + builtin catalog via Cursor→VTracer 
 
 - Proof: `.qa/runs/composition-gate-item-static-svg-icons.md`
 - Verdict: **CLEAR**
-- WORKTREE scope on base `b58beb6`
+- HEAD_SHA: `3d259deeadeb6e0b5e6c7e01a749b0cc9b652e31` (post-main merge)
 
 ## Checklist
 
