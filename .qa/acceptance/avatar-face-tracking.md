@@ -17,9 +17,9 @@ In: domain face-tracking-contract, infra runtime (injectable detector + CDN Medi
 Out: VTuber studio, cloud analysis, auto-start on reload.
 
 ## Composition Gate
-- HEAD_SHA: (proof)
-- BASE_SHA: (proof)
-- Verdict: SKIPPED/CLEAR
+- HEAD_SHA: a2458357f3a90db2d23a6b706ebf6771294ac017
+- BASE_SHA: f9d0c7f0481206eb469bcfa3d768156590b19866
+- Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-avatar-face-tracking.md`
 
 ## Implementation Notes
