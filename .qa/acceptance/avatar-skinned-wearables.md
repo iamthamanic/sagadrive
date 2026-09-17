@@ -17,7 +17,7 @@ In: skinned-wearable-plan, AvatarSkinnedWearableRuntime, studio wiring.
 Out: Live provider skinning, workbench skinned authoring.
 
 ## Composition Gate
-- HEAD_SHA: (proof)
-- BASE_SHA: (proof)
-- Verdict: SKIPPED/CLEAR
+- HEAD_SHA: 0728c6e22bd78937b15bb2777493b07407d53e97
+- BASE_SHA: 7035080bc2c9ff88f712fdf444792cf9f67ffb30
+- Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-avatar-skinned-wearables.md`
