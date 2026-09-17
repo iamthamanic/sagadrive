@@ -15,3 +15,4 @@ export * from './use-cases/character-lore-traits';
 export * from './use-cases/character-lore-examples';
 export * from './use-cases/avatar-presets';
 export * from './use-cases/genderReading';
+export * from './avatar';

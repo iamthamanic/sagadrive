@@ -223,6 +223,14 @@ function checkAvatarRuntimeRegressions() {
   });
 }
 
+function checkAvatarTraitLifecycle() {
+  console.log('Avatar trait lifecycle (#13): pure core contracts + dispose/stale-load guards...');
+  execFileSync(process.execPath, ['scripts/avatar-trait-lifecycle-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -618,6 +626,7 @@ checkInventoryMobileUi();
 checkInventoryE2eIntegration();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
+checkAvatarTraitLifecycle();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
