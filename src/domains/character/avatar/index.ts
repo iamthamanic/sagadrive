@@ -218,3 +218,16 @@ export {
   type ContentPackLicense,
   type ContentPackSetting,
 } from './content-pack-v1';
+export {
+  MESHY_AVATAR_JOB_CONTRACT_VERSION,
+  MESHY_AVATAR_PROMPT_MAX_CHARS,
+  MESHY_AVATAR_PROMPT_MIN_CHARS,
+  assertNoCapabilityFromProviderStatus,
+  buildMeshyAvatarIdempotencyKey,
+  mapServerStatusToUi,
+  validateMeshyAvatarPrompt,
+  type AvatarRiggingProvider,
+  type MeshyAvatarJobServerStatus,
+  type MeshyAvatarJobSnapshot,
+  type MeshyAvatarJobUiStatus,
+} from './meshy-avatar-job';

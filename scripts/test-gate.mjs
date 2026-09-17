@@ -327,6 +327,14 @@ function checkAvatarContentPack() {
   });
 }
 
+function checkAvatarMeshyGeneration() {
+  console.log('Avatar Meshy generation (#10): prompt job + SSRF + pending #6...');
+  execFileSync(process.execPath, ['scripts/avatar-meshy-generation-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -735,6 +743,7 @@ checkAvatarSaveExport();
 checkAvatarAnimationRetarget();
 checkAvatarFacialExpressions();
 checkAvatarContentPack();
+checkAvatarMeshyGeneration();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();

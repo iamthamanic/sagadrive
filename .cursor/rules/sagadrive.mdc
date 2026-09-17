@@ -28,7 +28,7 @@ Read [AGENTS.md](../../AGENTS.md) before changing code.
 - Acceptance: `.qa/acceptance/<slug>.md` when present
 - Composition proof: `.qa/runs/composition-gate-<slug>.md` (CLEAR/SKIPPED for current HEAD)
 - Ship only after `@ecc-check` READY / green CI
-- Long queues: after each merge, handoff + stop for user `/compact` before the next issue — see AGENTS.md “Context compact & long queues”
+- Long queues: after each merge, update handoff + auto-compact in-session, then immediately next issue — see AGENTS.md “Context compact & long queues”
 
 ## Security
 
