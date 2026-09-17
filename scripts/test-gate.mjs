@@ -383,6 +383,14 @@ function checkAvatarRiggingProviders() {
   });
 }
 
+function checkAvatarSkinnedWearables() {
+  console.log('Avatar skinned wearables (#162): plan + capability gate...');
+  execFileSync(process.execPath, ['scripts/avatar-skinned-wearables-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -798,6 +806,7 @@ checkAvatarEquipmentVisualContract();
 checkAvatarRigidEquipmentRuntime();
 checkItemAvatarFitWorkbench();
 checkAvatarRiggingProviders();
+checkAvatarSkinnedWearables();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
