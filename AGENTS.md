@@ -311,6 +311,20 @@ const ruleset = {
 
 ## Development Workflow
 
+### Context compact & long queues (mandatory)
+
+Auto-compact is **unreliable** (often mid-ticket, drops paths/partial state). Do **not** wait for the window to hard-fail.
+
+**After every shipped issue** in a multi-ticket loop (`@ecc-runner-loop`, avatar-order, or any N>1 queue):
+
+1. Update the handoff file (default: `/tmp/ecc-runner-loop-avatar-handoff.md` or the path named in the loop prompt) with: last merged issue/PR/SHA, next issue number + title, `paused: false` only if continuing immediately after compact.
+2. **Stop the turn** and tell the user to run `/compact` (or open a fresh chat and `@… continue` with the handoff). Do **not** claim the next issue in the same turn.
+3. Resume the next ticket only **after** the user continues post-compact (or in the new chat with handoff loaded).
+
+**Never compact mid-implementation** of the current issue (verify → PR → merge must stay in one context).
+
+**Never** treat leftover CI poll / babysit timeouts as blockers; only open PRs and current `main` HEAD matter.
+
 ### Before Starting
 1. Read `SOUL.md` (who I am)
 2. Read `USER.md` (who is Ben)
