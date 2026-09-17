@@ -367,6 +367,14 @@ function checkAvatarRigidEquipmentRuntime() {
   });
 }
 
+function checkItemAvatarFitWorkbench() {
+  console.log('Item avatar fit workbench (#160): defaults + Ausrichtung section...');
+  execFileSync(process.execPath, ['scripts/item-avatar-fit-workbench-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -780,6 +788,7 @@ checkAvatarSourceSelector();
 checkSharedAvatarSurfaces();
 checkAvatarEquipmentVisualContract();
 checkAvatarRigidEquipmentRuntime();
+checkItemAvatarFitWorkbench();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();

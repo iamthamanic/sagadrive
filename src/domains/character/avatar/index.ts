@@ -287,3 +287,10 @@ export {
   type RigidEquipmentAttachOp,
   type RigidEquipmentPlan,
 } from './rigid-equipment-plan';
+export {
+  ITEM_AVATAR_FIT_DEFAULTS_VERSION,
+  defaultAnchorForItemType,
+  defaultAnchorForMiscEquip,
+  defaultRigidFitTransform,
+  resolveWorkbenchDefaultAnchor,
+} from './item-avatar-fit-defaults';

@@ -2,11 +2,13 @@
  * ItemWorkbenchEditor — forge Visuals+Art+Basics | Einordnung/Regeln (#139).
  * Location: src/app/items/workbench/ItemWorkbenchEditor.tsx
  */
+import { useEffect, useState } from 'react';
 import { Button } from '../../../shared/ui/button';
 import type { ItemDefinition } from '../../../domains/character/inventory-v2';
 import type { ItemKindKey } from '../../../domains/items';
 import type { WorldProfileVm } from '../../../domains/world/contracts/world.types';
 import { ItemAvailabilitySection } from './ItemAvailabilitySection';
+import { ItemAvatarFitSection, createDefaultItemAvatarFitDraft, type ItemAvatarFitDraft } from './ItemAvatarFitSection';
 import { ItemBasicsSection } from './ItemBasicsSection';
 import { ItemKindField } from './ItemKindField';
 import { ItemRulesSection } from './ItemRulesSection';
@@ -58,6 +60,24 @@ export function ItemWorkbenchEditor({
   ensureDraftId,
 }: ItemWorkbenchEditorProps) {
   const playAnim = animateExpand && !prefersReducedMotion();
+  const hasModel3d = Boolean(definition?.model3d);
+  const [fitDraft, setFitDraft] = useState<ItemAvatarFitDraft>(() =>
+    createDefaultItemAvatarFitDraft({
+      type: form.type,
+      miscEquip: form.miscEquip,
+      hasModel3d,
+    }),
+  );
+
+  useEffect(() => {
+    setFitDraft(
+      createDefaultItemAvatarFitDraft({
+        type: form.type,
+        miscEquip: form.miscEquip,
+        hasModel3d,
+      }),
+    );
+  }, [form.type, form.miscEquip, hasModel3d, definition?.id]);
 
   return (
     <div
@@ -83,6 +103,14 @@ export function ItemWorkbenchEditor({
           />
           <ItemKindField form={form} readOnly={readOnly} onKindChange={onKindChange} />
           <ItemBasicsSection form={form} readOnly={readOnly} onChange={onChange} />
+          <ItemAvatarFitSection
+            itemType={form.type}
+            miscEquip={form.miscEquip}
+            hasModel3d={hasModel3d}
+            readOnly={readOnly}
+            draft={fitDraft}
+            onChange={setFitDraft}
+          />
         </div>
 
         <div
