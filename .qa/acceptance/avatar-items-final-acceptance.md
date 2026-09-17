@@ -18,7 +18,7 @@ In: avatar-items-final-acceptance-check joining #158–#162.
 Out: Live GPU, paid Meshy, full Playwright browser suite (covered by contract matrix in CI).
 
 ## Composition Gate
-- HEAD_SHA: (proof)
-- BASE_SHA: (proof)
-- Verdict: SKIPPED/CLEAR
+- HEAD_SHA: 2c2263d3bee00ec8d84a4eb28319a31feec34f20
+- BASE_SHA: 3923064608b47fe7c64b76b3e66f7b65b66cfa0b
+- Verdict: SKIPPED
 - Proof: `.qa/runs/composition-gate-avatar-items-final-acceptance.md`
