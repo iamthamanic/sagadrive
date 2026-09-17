@@ -29,7 +29,7 @@ Out: Authored binary VRM bytes in git (self-hosted via VITE_AVATAR_ASSET_BASE_UR
 - Out: B-04/B-07/B-08.
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 6d68a1ca42b382aaa1fd775deebec9ad9730f12a
 - BASE_SHA: 8850105eea4e734e9948c2184af973494bba86f0
 - Verdict: CLEAR
 - Proof: .qa/runs/composition-gate-avatar-morphable-base-bodies-v1.md

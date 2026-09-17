@@ -1,6 +1,6 @@
 # Composition Gate — avatar-morphable-base-bodies-v1
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 6d68a1ca42b382aaa1fd775deebec9ad9730f12a
 - BASE_SHA: 8850105eea4e734e9948c2184af973494bba86f0
 - Date: 2026-09-17
 - Verdict: CLEAR
