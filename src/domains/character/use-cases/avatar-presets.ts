@@ -7,6 +7,7 @@ import type {
   CharacterAvatarDto,
   CharacterAvatarFormat,
 } from '../domain/character.entity';
+import { serializePersistedBaseTraits } from '../avatar/trait-layers';
 
 const DEFAULT_HAIR_COLOR = '#000000';
 const DEFAULT_SKIN_TONE = '#F5E6D3';
@@ -176,19 +177,21 @@ export function createCharacterStudioAvatar(input: {
   const modelUrl = normalizeAvatarModelUrl(input.modelUrl ?? '');
   const preset = getAvatarRacePreset(input.race);
 
+  const traits = serializePersistedBaseTraits({
+    head: input.head || preset.head,
+    ears: input.ears || preset.ears,
+    hair: input.hairStyle || preset.hair,
+    clothing: input.clothing || preset.clothing,
+    accessory: input.accessory || preset.accessory || 'none',
+  });
+
   return {
     schema_version: 1,
     provider: 'm3-character-studio',
     preset: preset.id,
     model_format: inferAvatarFormat(modelUrl),
     model_url: modelUrl,
-    traits: {
-      head: input.head || preset.head,
-      ears: input.ears || preset.ears,
-      ...(input.hairStyle ? { hair: input.hairStyle } : {}),
-      ...(input.clothing ? { clothing: input.clothing } : {}),
-      ...(input.accessory ? { accessory: input.accessory } : {}),
-    },
+    traits,
     colors: {
       hair: normalizeHexColor(input.hairColor, preset.hairColor),
       skin: normalizeHexColor(input.skinTone, preset.skinTone),
