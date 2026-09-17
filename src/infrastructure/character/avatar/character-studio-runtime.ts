@@ -43,6 +43,11 @@ import {
   type AvatarFacialRuntimeState,
 } from './avatar-facial-runtime';
 import type { FacialCanonicalKey } from '../../../domains/character/avatar/facial-contract';
+import type { AvatarEquipmentVisual } from '../../../domains/character/avatar';
+import {
+  AvatarRigidEquipmentRuntime,
+  type ResolveRigidEquipmentUrl,
+} from './avatar-rigid-equipment-runtime';
 
 export type AvatarRuntimeState =
   | { status: 'loading'; message: string }
@@ -131,6 +136,7 @@ export class CharacterStudioRuntime {
   };
   private readonly animationRuntime: AvatarAnimationRuntime;
   private readonly facialRuntime: AvatarFacialRuntime;
+  private readonly rigidEquipmentRuntime: AvatarRigidEquipmentRuntime;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -141,6 +147,7 @@ export class CharacterStudioRuntime {
   ) {
     this.animationRuntime = new AvatarAnimationRuntime(this.onAnimationState);
     this.facialRuntime = new AvatarFacialRuntime(this.onFacialState);
+    this.rigidEquipmentRuntime = new AvatarRigidEquipmentRuntime();
     if (typeof window !== 'undefined' && window.matchMedia) {
       this.animationRuntime.setPrefersReducedMotion(
         window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -261,6 +268,7 @@ export class CharacterStudioRuntime {
       this.onRigAnalysis?.(this.lastRigAnalysis);
       this.animationRuntime.bind(root, this.lastRigAnalysis);
       this.facialRuntime.bind(vrm);
+      this.rigidEquipmentRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.onStateChange({
         status: 'ready',
         message: vrm ? `${manifest.displayName} · VRM` : `${manifest.displayName} · glTF`,
@@ -280,6 +288,19 @@ export class CharacterStudioRuntime {
     if (this.currentAvatar && this.currentManifest) {
       this.applyAppearance(this.currentAvatar, this.currentManifest);
     }
+  }
+
+  setRigidEquipmentUrlResolver(resolveUrl: ResolveRigidEquipmentUrl): void {
+    this.rigidEquipmentRuntime.setUrlResolver(resolveUrl);
+  }
+
+  /** Apply #158 visual projection — rigid only; fail-soft; no inventory mutation. */
+  async applyRigidEquipmentVisuals(visuals: readonly AvatarEquipmentVisual[]): Promise<void> {
+    await this.rigidEquipmentRuntime.applyVisuals(visuals);
+  }
+
+  getRigidEquipmentRuntime(): AvatarRigidEquipmentRuntime {
+    return this.rigidEquipmentRuntime;
   }
 
   getLastRigAnalysis(): AvatarRigAnalysisResult | undefined {
@@ -456,6 +477,7 @@ export class CharacterStudioRuntime {
   private removeCurrentModel(): void {
     this.animationRuntime.stopAll();
     this.facialRuntime.resetToNeutral();
+    this.rigidEquipmentRuntime.bindAvatar(null, null);
     if (!this.currentRoot) return;
     this.modelContainer.remove(this.currentRoot);
     VRMUtils.deepDispose(this.currentRoot);
@@ -472,6 +494,7 @@ export class CharacterStudioRuntime {
     this.controls.dispose();
     this.animationRuntime.dispose();
     this.facialRuntime.dispose();
+    this.rigidEquipmentRuntime.dispose();
     this.traitLifecycle.dispose();
     this.runtimeOverlays = [];
     this.removeCurrentModel();

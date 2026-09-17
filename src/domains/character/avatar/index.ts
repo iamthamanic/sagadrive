@@ -281,3 +281,9 @@ export {
   type EquipmentHideRegion,
   type EquipmentVisualStatus,
 } from './equipment-visual-contract';
+export {
+  RIGID_EQUIPMENT_PLAN_VERSION,
+  planRigidEquipmentAttaches,
+  type RigidEquipmentAttachOp,
+  type RigidEquipmentPlan,
+} from './rigid-equipment-plan';
