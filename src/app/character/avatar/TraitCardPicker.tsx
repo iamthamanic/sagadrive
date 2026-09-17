@@ -12,6 +12,7 @@ import {
   listTraitOptionsForGroup,
   traitGroupLabel,
   type AvatarTraitGroupId,
+  type ContentPackSetting,
 } from '../../../domains/character/avatar';
 import { Button } from '../../../shared/ui/button';
 
@@ -26,6 +27,7 @@ interface TraitCardPickerProps {
   onChange: (traitId: string) => void;
   loadState: TraitGroupLoadState;
   onRetry?: (traitId: string) => void;
+  settingFilter?: ContentPackSetting | 'all';
 }
 
 function traitSwatchClass(groupId: AvatarTraitGroupId, traitId: string): string {
@@ -43,10 +45,16 @@ export function TraitCardPicker({
   onChange,
   loadState,
   onRetry,
+  settingFilter = 'all',
 }: TraitCardPickerProps) {
-  const options = listTraitOptionsForGroup(groupId);
+  const [localSetting, setLocalSetting] = useState<ContentPackSetting | 'all'>(settingFilter);
+  const options = listTraitOptionsForGroup(groupId, { setting: localSetting });
   const label = traitGroupLabel(groupId);
   const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setLocalSetting(settingFilter);
+  }, [settingFilter]);
 
   useEffect(() => {
     // Keep focus inside group when selection changes via keyboard.
@@ -59,8 +67,26 @@ export function TraitCardPicker({
 
   return (
     <div className="space-y-2" data-trait-group={groupId}>
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium">{label}</p>
+        <div className="flex flex-wrap gap-1" role="group" aria-label="Setting-Filter">
+          {(['all', 'fantasy', 'sci-fi'] as const).map((setting) => (
+            <button
+              key={setting}
+              type="button"
+              className={`min-h-9 rounded border px-2 py-1 text-[11px] font-medium ${
+                localSetting === setting
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-background'
+              }`}
+              data-content-pack-setting={setting}
+              aria-pressed={localSetting === setting}
+              onClick={() => setLocalSetting(setting)}
+            >
+              {setting === 'all' ? 'Alle' : setting === 'fantasy' ? 'Fantasy' : 'Sci-Fi'}
+            </button>
+          ))}
+        </div>
         {loadState.status === 'loading' && (
           <span className="text-xs text-muted-foreground" role="status">
             Lade …
@@ -68,9 +94,19 @@ export function TraitCardPicker({
         )}
       </div>
 
+      {options.length === 0 ? (
+        <p
+          className="rounded-md border border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground"
+          data-content-pack-empty
+          role="status"
+        >
+          Keine kompatiblen Assets für diesen Filter.
+        </p>
+      ) : (
       <div
         ref={listRef}
         data-trait-card-picker
+        data-content-pack-picker
         role="listbox"
         aria-label={label}
         className="grid max-w-full grid-cols-2 gap-2 overflow-x-hidden sm:grid-cols-2"
@@ -103,6 +139,9 @@ export function TraitCardPicker({
                 aria-hidden
               />
               <span className="text-sm font-medium leading-tight">{option.label}</span>
+              {option.setting ? (
+                <span className="text-[10px] text-muted-foreground">{option.setting}</span>
+              ) : null}
               {loadingThis && (
                 <span className="text-[10px] text-amber-600 dark:text-amber-300">Wird angewendet …</span>
               )}
@@ -110,6 +149,7 @@ export function TraitCardPicker({
           );
         })}
       </div>
+      )}
 
       {loadState.status === 'error' && (
         <div
