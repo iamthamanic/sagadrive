@@ -132,7 +132,7 @@ export class AvatarAnimationRuntime {
   private mixer?: THREE.AnimationMixer;
   private actions = new Map<AvatarAnimationActionId, THREE.AnimationAction>();
   private activeAction: AvatarAnimationActionId | null = null;
-  private attachment?: THREE.Object3D;
+  private attachment?: THREE.Mesh;
   private attachmentParent?: THREE.Object3D;
   private root?: THREE.Object3D;
   private analysis?: AvatarRigAnalysisResult;
