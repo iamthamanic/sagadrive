@@ -1,0 +1,147 @@
+{
+  "contract": "AvatarCreatorFinalVisualUxAcceptanceV1",
+  "issue": 218,
+  "generatedBy": "scripts/avatar-creator-final-acceptance-check.mjs",
+  "mtoonProfileVersion": "SagaDriveMToonProfileV1",
+  "golden": [
+    {
+      "id": "golden-fantasy-adult-elf",
+      "setting": "fantasy",
+      "speciesId": "elf",
+      "fingerprint": "7ec6127b602c17ee",
+      "traits": {
+        "head": "elf-angular",
+        "ears": "elf-long",
+        "hair": "silver-cascade",
+        "clothing": "robe",
+        "accessory": "eyes-glow-elf"
+      },
+      "colors": {
+        "hair": "#C9A227",
+        "skin": "#E7C8B1",
+        "eyes": "#4A7C59"
+      },
+      "preset": "fantasy-elf",
+      "visualRegressionNotes": "Adult fantasy elf — proportions, face readability, hair alpha, robe silhouette, MToon outline."
+    },
+    {
+      "id": "golden-scifi-adult-cyborg",
+      "setting": "sci-fi",
+      "speciesId": "cyborg",
+      "fingerprint": "70b08bb02d6ed0b2",
+      "traits": {
+        "head": "human-balanced",
+        "ears": "round",
+        "hair": "short",
+        "clothing": "casual",
+        "accessory": "optic-implant"
+      },
+      "colors": {
+        "hair": "#1A1A1A",
+        "skin": "#C8C2B8",
+        "eyes": "#2A6FDB"
+      },
+      "preset": "scifi-cyborg",
+      "visualRegressionNotes": "Adult sci-fi cyborg — material separation (skin/metal), cybernetic accessory, outfit fit."
+    }
+  ],
+  "comboCount": 24,
+  "comboFingerprints": [
+    {
+      "id": "fantasy-human-0",
+      "fingerprint": "056685bd11747ece"
+    },
+    {
+      "id": "fantasy-elf-1",
+      "fingerprint": "5385f61e643d3c9b"
+    },
+    {
+      "id": "fantasy-dwarf-2",
+      "fingerprint": "947769720aa0a52d"
+    },
+    {
+      "id": "fantasy-halfling-3",
+      "fingerprint": "e882a6056006dda7"
+    },
+    {
+      "id": "fantasy-orc-4",
+      "fingerprint": "5cee85970257ca51"
+    },
+    {
+      "id": "fantasy-human-5",
+      "fingerprint": "f4d40302d953e0b3"
+    },
+    {
+      "id": "fantasy-human-6",
+      "fingerprint": "5471797286044ed8"
+    },
+    {
+      "id": "fantasy-elf-7",
+      "fingerprint": "0f13645a7717b346"
+    },
+    {
+      "id": "fantasy-dwarf-8",
+      "fingerprint": "97a1f8fb5099d5d1"
+    },
+    {
+      "id": "fantasy-halfling-9",
+      "fingerprint": "f76faca01a5d9c42"
+    },
+    {
+      "id": "fantasy-orc-10",
+      "fingerprint": "4a3881008dc2c43e"
+    },
+    {
+      "id": "fantasy-human-11",
+      "fingerprint": "d49a76a686604c5e"
+    },
+    {
+      "id": "sci-fi-human-0",
+      "fingerprint": "539020f086947f38"
+    },
+    {
+      "id": "sci-fi-cyborg-1",
+      "fingerprint": "05bbf576a48ae6b4"
+    },
+    {
+      "id": "sci-fi-alien-2",
+      "fingerprint": "ee79ae764220bdac"
+    },
+    {
+      "id": "sci-fi-cyborg-3",
+      "fingerprint": "9c73ebffaccf9ae2"
+    },
+    {
+      "id": "sci-fi-alien-4",
+      "fingerprint": "50854bf3a5509db3"
+    },
+    {
+      "id": "sci-fi-human-5",
+      "fingerprint": "acff727c57603d5e"
+    },
+    {
+      "id": "sci-fi-human-6",
+      "fingerprint": "875b1d43da0c6cc7"
+    },
+    {
+      "id": "sci-fi-cyborg-7",
+      "fingerprint": "fe1c36b80c0c0797"
+    },
+    {
+      "id": "sci-fi-alien-8",
+      "fingerprint": "7a4c511f467d7e44"
+    },
+    {
+      "id": "sci-fi-cyborg-9",
+      "fingerprint": "d2466c9d4968e290"
+    },
+    {
+      "id": "sci-fi-alien-10",
+      "fingerprint": "db3f36abafb134b2"
+    },
+    {
+      "id": "sci-fi-human-11",
+      "fingerprint": "4ddc34909a9a974a"
+    }
+  ]
+}
