@@ -351,6 +351,14 @@ function checkSharedAvatarSurfaces() {
   });
 }
 
+function checkAvatarEquipmentVisualContract() {
+  console.log('Avatar equipment visual contract (#158): binding + projection...');
+  execFileSync(process.execPath, ['scripts/avatar-equipment-visual-contract-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -762,6 +770,7 @@ checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();
 checkSharedAvatarSurfaces();
+checkAvatarEquipmentVisualContract();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
