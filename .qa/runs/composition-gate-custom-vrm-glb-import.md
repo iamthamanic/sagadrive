@@ -1,6 +1,7 @@
 # Composition Gate — custom-vrm-glb-import
 
-- HEAD_SHA: 82fb691e666a9df99b9cf3cb48d80f5c248f7306
+- HEAD_SHA: c75110a1856535f606a482d24281e32bf7a85e8d
+- BASE_SHA: 916e34ad6cf8b09bf496d1403536ec954bfd96fb
 - Date: 2026-09-17
 - Verdict: CLEAR
 
@@ -17,9 +18,9 @@ Producer (AvatarImportPanel file pick)
 ## Simulations
 | Case | Intended | Composed | Result |
 |------|----------|----------|--------|
-| 1 event, N actors | One confirmed import → one active artifact per character | deactivate prior actives then insert active | pass |
-| invalid / missing | Bad magic/size/URI → no active artifact, prior model kept | throw before upload / remove on insert fail; UI keeps importedModelUrl | pass |
-| 2 consumers / crash | Retry after fail does not leave orphan active | active only after insert success; upload removed if insert fails | pass |
+| N-actors | One confirmed import → one active artifact per character | deactivate prior actives then insert active | pass |
+| Invalid/missing | Bad magic/size/URI → no active artifact, prior model kept | throw before upload / remove on insert fail; UI keeps importedModelUrl | pass |
+| Two consumers / crash | Retry after fail does not leave orphan active | active only after insert success; upload removed if insert fails | pass |
 
 ## Flags
 (none)
