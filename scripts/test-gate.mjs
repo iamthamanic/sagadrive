@@ -287,6 +287,14 @@ function checkAvatarBodyFaceEditor() {
   });
 }
 
+function checkAvatarFitRange() {
+  console.log('Avatar fit range (#216): AvatarFitRangeV1 compatibility...');
+  execFileSync(process.execPath, ['scripts/avatar-fit-range-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -690,6 +698,7 @@ checkAvatarMorphContract();
 checkAvatarBaseBodies();
 checkAvatarMtoonProfile();
 checkAvatarBodyFaceEditor();
+checkAvatarFitRange();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
