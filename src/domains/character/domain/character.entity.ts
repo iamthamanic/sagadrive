@@ -3,6 +3,7 @@
  * Location: src/domains/character/domain/character.entity.ts
  */
 import type { CharacterRulesetKey, SagaDriveSkillKey } from '../../rules/sagadrive/character-creation';
+import type { SagaDriveAvatarMorphStateV1 } from '../avatar/morph-contract';
 
 export interface CharacterAttributesDto {
   strength: number;
@@ -21,6 +22,11 @@ export interface CharacterAttributeStorageDto extends Partial<CharacterAttribute
 
 export type CharacterAvatarFormat = 'vrm' | 'glb';
 
+/**
+ * Compact appearance avatar DTO.
+ * Optional `morph` follows SagaDriveAvatarMorphV1 (see domains/character/avatar/morph-contract).
+ * Legacy readers ignore unknown fields; morph capabilities are never client-authoritative.
+ */
 export interface CharacterAvatarDto {
   schema_version: 1;
   provider: 'm3-character-studio';
@@ -28,8 +34,12 @@ export interface CharacterAvatarDto {
   model_format: CharacterAvatarFormat;
   model_url?: string;
   traits: { head?: string; ears?: string; hair?: string; clothing?: string; accessory?: string };
-  colors: { hair: string; skin: string };
+  /** hair/skin required for legacy; eyes optional until morph migration. */
+  colors: { hair: string; skin: string; eyes?: string };
   body: { height: number; size: number };
+  morph_contract_version?: 'SagaDriveAvatarMorphV1';
+  /** Validated morph state — prefer morph-contract helpers over raw writes. */
+  morph?: SagaDriveAvatarMorphStateV1;
 }
 
 export type CharacterGenderReading = 'masculine-read' | 'feminine-read' | 'diverse';
