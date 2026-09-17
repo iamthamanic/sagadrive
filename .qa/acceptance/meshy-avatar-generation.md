@@ -18,7 +18,7 @@ In: domain job contract, Edge `character-avatar-meshy`, migration, client servic
 Out: SkinTokens, Morph-Garantie, Marketplace.
 
 ## Composition Gate
-- HEAD_SHA: 1ecb75432795a7e01e6f91fe71add74d17b74f9d
+- HEAD_SHA: c68fa639312a99ad4bda79eac45ecb4f5c08a4b1
 - BASE_SHA: 1a88ea6a908a6836896e9bc7129586bb4a199954
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-meshy-avatar-generation.md`
