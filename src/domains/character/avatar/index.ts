@@ -294,3 +294,21 @@ export {
   defaultRigidFitTransform,
   resolveWorkbenchDefaultAnchor,
 } from './item-avatar-fit-defaults';
+export {
+  RIGGING_JOB_STATUSES,
+  RIGGING_MODES,
+  RIGGING_PROVIDER_CONTRACT_VERSION,
+  RIGGING_PROVIDER_IDS,
+  assertLogicalRiggingAssetKey,
+  assertRiggingCapabilitiesPending,
+  buildRiggingIdempotencyKey,
+  createMockMeshyRiggingProvider,
+  createMockSkinTokensRiggingProvider,
+  selectDefaultRiggingProvider,
+  type AvatarRiggingJobSnapshot,
+  type AvatarRiggingJobStatus,
+  type AvatarRiggingMode,
+  type AvatarRiggingProvider,
+  type AvatarRiggingProviderId,
+  type AvatarRiggingSubmitInput,
+} from './rigging-provider-contract';

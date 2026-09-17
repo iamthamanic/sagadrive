@@ -375,6 +375,14 @@ function checkItemAvatarFitWorkbench() {
   });
 }
 
+function checkAvatarRiggingProviders() {
+  console.log('Avatar rigging providers (#161): Meshy + SkinTokens mocks...');
+  execFileSync(process.execPath, ['scripts/avatar-rigging-providers-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -789,6 +797,7 @@ checkSharedAvatarSurfaces();
 checkAvatarEquipmentVisualContract();
 checkAvatarRigidEquipmentRuntime();
 checkItemAvatarFitWorkbench();
+checkAvatarRiggingProviders();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
