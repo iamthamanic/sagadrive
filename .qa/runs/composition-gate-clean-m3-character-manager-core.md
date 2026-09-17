@@ -1,6 +1,6 @@
 # Composition Gate — clean-m3-character-manager-core
 
-- HEAD_SHA: f4aeb4f42a408dc7d80af815cb32ae2719fcb7a5
+- HEAD_SHA: 6944eee68402a61da65bbff24506f31051643e0b
 - Date: 2026-09-17
 - Verdict: CLEAR
 

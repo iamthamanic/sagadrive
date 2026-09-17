@@ -38,7 +38,7 @@ Out: Trait-Auswahl-UI (#4), Persistenz base vs overlay (#4/#7), Meshy/SkinTokens
 
 ## Composition Gate
 
-- HEAD_SHA: f4aeb4f42a408dc7d80af815cb32ae2719fcb7a5
+- HEAD_SHA: 6944eee68402a61da65bbff24506f31051643e0b
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-clean-m3-character-manager-core.md`
 
