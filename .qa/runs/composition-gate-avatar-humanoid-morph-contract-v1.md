@@ -1,6 +1,6 @@
 # Composition Gate — avatar-humanoid-morph-contract-v1
 
-- HEAD_SHA: aa225385d1302db1a6cac6b531af0c3e7b3f9d9f
+- HEAD_SHA: 5a95dfaa0bf10a4f403c023b07ed59aadcbc12c4
 - BASE_SHA: 061a428aa83a1060fd874f0c4919f2ae9c8a6e15
 - Date: 2026-09-17
 - Verdict: CLEAR
