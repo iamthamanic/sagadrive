@@ -333,6 +333,43 @@ export class CharacterStudioRuntime {
     this.renderer.render(this.scene, this.camera);
   }
 
+  /**
+   * Apply morph contract values to existing morph targets without reloading the model.
+   * Unknown target names are skipped (fail-safe).
+   */
+  applyMorphState(morph: {
+    body: Readonly<Record<string, number>>;
+    face: Readonly<Record<string, number>>;
+  }): void {
+    const root = this.currentRoot;
+    if (!root) return;
+
+    const weights: Record<string, number> = {};
+    for (const [key, value] of Object.entries(morph.body)) {
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        weights[`sd_body_${key}`] = Math.max(-1, Math.min(1, value));
+      }
+    }
+    for (const [key, value] of Object.entries(morph.face)) {
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        weights[`sd_face_${key}`] = Math.max(-1, Math.min(1, value));
+      }
+    }
+
+    root.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const dictionary = object.morphTargetDictionary;
+      const influences = object.morphTargetInfluences;
+      if (!dictionary || !influences) return;
+      for (const [targetName, weight] of Object.entries(weights)) {
+        const index = dictionary[targetName];
+        if (typeof index !== 'number') continue;
+        // Morph targets typically expect 0..1; map [-1,1] → [0,1] around neutral 0.5.
+        influences[index] = (weight + 1) / 2;
+      }
+    });
+  }
+
   private fitCamera(): void {
     if (!this.currentRoot) return;
     this.modelContainer.updateWorldMatrix(true, true);

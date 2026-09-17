@@ -61,6 +61,9 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
 
   useEffect(() => {
     runtimeRef.current?.applyAppearance(avatar, manifest);
+    if (avatar.morph) {
+      runtimeRef.current?.applyMorphState(avatar.morph);
+    }
     const compatibility: MtoonStyleCompatibility | undefined =
       runtimeRef.current?.getStyleCompatibility();
     setStyleNotice(compatibility?.noticeDe ?? null);
