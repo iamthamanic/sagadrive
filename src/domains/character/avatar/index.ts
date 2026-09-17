@@ -172,3 +172,16 @@ export {
   type AvatarSaveExportPayloadV1,
   type AvatarSaveExportUiStatus,
 } from './avatar-save-export';
+export {
+  ANIMATION_CONTRACT_VERSION,
+  AVATAR_ANIMATION_ACTIONS,
+  AVATAR_ANIMATION_CATALOG,
+  animationActionLabelDe,
+  getAnimationCatalogEntry,
+  isAllowlistedAnimationClipId,
+  resolveAnimationCrossfadeSeconds,
+  resolveAvatarAnimationSupport,
+  type AvatarAnimationActionId,
+  type AvatarAnimationClipCatalogEntry,
+  type AvatarAnimationSupportResult,
+} from './animation-contract';

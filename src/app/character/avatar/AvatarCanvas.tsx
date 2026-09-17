@@ -4,10 +4,17 @@
  */
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
-import type { AvatarRigAnalysisResult, MtoonStyleCompatibility } from '../../../domains/character/avatar';
+import type {
+  AvatarAnimationActionId,
+  AvatarAnimationSupportResult,
+  AvatarRigAnalysisResult,
+  MtoonStyleCompatibility,
+} from '../../../domains/character/avatar';
 import { CharacterStudioRuntime, type AvatarRuntimeState } from '../../../infrastructure/character/avatar/character-studio-runtime';
+import type { AvatarAnimationRuntimeState } from '../../../infrastructure/character/avatar/avatar-animation-runtime';
 import { getAvatarAssetManifest, resolveAvatarModelUrl } from '../../../infrastructure/character/avatar/avatar-asset-manifests';
 import { AvatarRigCapabilityPanel } from './AvatarRigCapabilityPanel';
+import { AvatarAnimationPreviewControls } from './AvatarAnimationPreviewControls';
 
 interface AvatarCanvasProps {
   avatar: CharacterAvatarDto;
@@ -27,6 +34,9 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
   const [runtimeState, setRuntimeState] = useState<AvatarRuntimeState>(initialState);
   const [rigAnalysis, setRigAnalysis] = useState<AvatarRigAnalysisResult | null>(null);
   const [styleNotice, setStyleNotice] = useState<string | null>(null);
+  const [animationSupport, setAnimationSupport] = useState<AvatarAnimationSupportResult | null>(null);
+  const [activeAnimation, setActiveAnimation] = useState<AvatarAnimationActionId | null>(null);
+  const [animationMessage, setAnimationMessage] = useState<string | undefined>(undefined);
   const manifest = getAvatarAssetManifest(avatar.preset);
   const modelUrl = resolveAvatarModelUrl(avatar);
 
@@ -34,7 +44,13 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
     const canvas = targetRef.current;
     if (!canvas) return;
 
-    const runtime = new CharacterStudioRuntime(canvas, setRuntimeState, setRigAnalysis);
+    const onAnimation = (state: AvatarAnimationRuntimeState) => {
+      setAnimationSupport(state.support);
+      setActiveAnimation(state.activeAction);
+      setAnimationMessage(state.message);
+    };
+
+    const runtime = new CharacterStudioRuntime(canvas, setRuntimeState, setRigAnalysis, onAnimation);
     runtimeRef.current = runtime;
 
     return () => {
@@ -42,6 +58,15 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
       runtimeRef.current = undefined;
     };
   }, [targetRef]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const sync = () => runtimeRef.current?.setPrefersReducedMotion(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   useEffect(() => {
     const runtime = runtimeRef.current;
@@ -53,6 +78,8 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
         message: 'Für dieses Avatar-Preset ist noch kein sicheres VRM/GLB-Modell hinterlegt.',
       });
       setRigAnalysis(null);
+      setAnimationSupport(null);
+      setActiveAnimation(null);
       return;
     }
 
@@ -108,6 +135,15 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
           </div>
         ) : null}
       </div>
+      <AvatarAnimationPreviewControls
+        support={animationSupport}
+        activeAction={activeAnimation}
+        message={animationMessage}
+        disabled={runtimeState.status !== 'ready'}
+        onSelect={(actionId) => {
+          runtimeRef.current?.playAnimation(actionId);
+        }}
+      />
       <AvatarRigCapabilityPanel analysis={rigAnalysis} />
     </div>
   );

@@ -303,6 +303,14 @@ function checkAvatarSaveExport() {
   });
 }
 
+function checkAvatarAnimationRetarget() {
+  console.log('Avatar animation retarget (#8): Idle/Walk/Combat/Emote via humanoid rig...');
+  execFileSync(process.execPath, ['scripts/avatar-animation-retarget-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -708,6 +716,7 @@ checkAvatarMtoonProfile();
 checkAvatarBodyFaceEditor();
 checkAvatarFitRange();
 checkAvatarSaveExport();
+checkAvatarAnimationRetarget();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();

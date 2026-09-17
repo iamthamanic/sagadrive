@@ -33,6 +33,11 @@ import {
   type MtoonStyleCompatibility,
   type SagaDriveMToonProfileV1,
 } from '../../../domains/character/avatar/mtoon-profile';
+import {
+  AvatarAnimationRuntime,
+  type AvatarAnimationRuntimeState,
+} from './avatar-animation-runtime';
+import type { AvatarAnimationActionId } from '../../../domains/character/avatar/animation-contract';
 
 export type AvatarRuntimeState =
   | { status: 'loading'; message: string }
@@ -41,6 +46,7 @@ export type AvatarRuntimeState =
 
 type RuntimeStateListener = (state: AvatarRuntimeState) => void;
 type RigAnalysisListener = (analysis: AvatarRigAnalysisResult) => void;
+type AnimationStateListener = (state: AvatarAnimationRuntimeState) => void;
 
 function includesHint(value: string, hints: readonly string[]): boolean {
   const normalized = value.toLowerCase();
@@ -117,12 +123,20 @@ export class CharacterStudioRuntime {
     path: 'pbr-fallback',
     noticeDe: null,
   };
+  private readonly animationRuntime: AvatarAnimationRuntime;
 
   constructor(
     canvas: HTMLCanvasElement,
     private readonly onStateChange: RuntimeStateListener,
     private readonly onRigAnalysis?: RigAnalysisListener,
+    private readonly onAnimationState?: AnimationStateListener,
   ) {
+    this.animationRuntime = new AvatarAnimationRuntime(this.onAnimationState);
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      this.animationRuntime.setPrefersReducedMotion(
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      );
+    }
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
@@ -183,6 +197,7 @@ export class CharacterStudioRuntime {
       if (this.disposed) return;
       const delta = this.clock.getDelta();
       this.currentVrm?.update(delta);
+      this.animationRuntime.update(delta);
       this.controls.update();
       this.resize();
       this.renderer.render(this.scene, this.camera);
@@ -235,6 +250,7 @@ export class CharacterStudioRuntime {
       this.fitCamera();
       this.lastRigAnalysis = analyzeAvatarRigFromObject3D(root, { vrm });
       this.onRigAnalysis?.(this.lastRigAnalysis);
+      this.animationRuntime.bind(root, this.lastRigAnalysis);
       this.onStateChange({
         status: 'ready',
         message: vrm ? `${manifest.displayName} · VRM` : `${manifest.displayName} · glTF`,
@@ -270,6 +286,18 @@ export class CharacterStudioRuntime {
 
   getStyleProfile(): SagaDriveMToonProfileV1 {
     return this.styleProfile;
+  }
+
+  playAnimation(actionId: AvatarAnimationActionId): boolean {
+    return this.animationRuntime.play(actionId);
+  }
+
+  getAnimationRuntime(): AvatarAnimationRuntime {
+    return this.animationRuntime;
+  }
+
+  setPrefersReducedMotion(value: boolean): void {
+    this.animationRuntime.setPrefersReducedMotion(value);
   }
 
   /** Portrait capture — same renderer/style path as live preview. */
@@ -404,6 +432,7 @@ export class CharacterStudioRuntime {
   }
 
   private removeCurrentModel(): void {
+    this.animationRuntime.stopAll();
     if (!this.currentRoot) return;
     this.modelContainer.remove(this.currentRoot);
     VRMUtils.deepDispose(this.currentRoot);
@@ -418,6 +447,7 @@ export class CharacterStudioRuntime {
     this.loadVersion += 1;
     this.renderer.setAnimationLoop(null);
     this.controls.dispose();
+    this.animationRuntime.dispose();
     this.traitLifecycle.dispose();
     this.runtimeOverlays = [];
     this.removeCurrentModel();
