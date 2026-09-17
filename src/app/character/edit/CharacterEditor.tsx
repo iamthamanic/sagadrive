@@ -17,6 +17,8 @@ import {
 } from '../../../domains/character/avatar';
 import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../domains/character/use-cases/avatar-presets';
 import { characterService } from '../../../infrastructure/character/character-service';
+import { materializeAvatarSaveExport } from '../../../infrastructure/character/avatar/character-avatar-export-service';
+import { resolveAvatarModelUrl } from '../../../infrastructure/character/avatar/avatar-asset-manifests';
 import type {
   AbilityDto,
   CharacterAppearanceDto,
@@ -1051,16 +1053,44 @@ export function CharacterEditor() {
       momentum: 0,
     };
 
-    const savePayload = {
-      name: characterName.trim(), description: description.trim(), class: characterArchetype, race: characterRace, ruleset_key: ruleset, dnd_background: null as null, level: characterLevel,
-      background_story: backgroundStory.trim() || undefined, notes: notes.trim(), personality_traits: personalityTraits.length > 0 ? personalityTraits : undefined, ideals: ideals.length > 0 ? ideals : undefined, bonds: bonds.length > 0 ? bonds : undefined, flaws: flaws.length > 0 ? flaws : undefined,
-      appearance: { body_size: currentAvatar.body.size, height: currentAvatar.body.height, face_features: currentAvatar.traits.head ?? headStyle, hair_style: currentAvatar.traits.hair ?? hairStyle, hair_color: currentAvatar.colors.hair, skin_tone: currentAvatar.colors.skin, clothing: currentAvatar.traits.clothing ?? clothing, gender_reading: genderReading, avatar: currentAvatar },
-      attributes, skills: finalSkillRanks, sagadrive_profile: sagaDriveProfile, abilities, inventory, inventory_v2: inventoryV2, portrait_url: portraitUrl || undefined,
-    };
-
     setSaving(true);
+    const priorModelUrl = importedModelUrl;
+    let avatarForSave = currentAvatar;
     try {
       trackActivity(`Character Editor: Charakter "${characterName}" wird gespeichert`);
+      // Materialize owner-scoped base GLB only on explicit Save (not live morph edits).
+      // Runtime/inventory overlays are never passed — compact avatar is SoT.
+      try {
+        const exportArtifact = await materializeAvatarSaveExport({
+          avatar: currentAvatar,
+          characterId: savedCharacterId,
+          runtimeOverlays: [],
+          sourceModelUrl: resolveAvatarModelUrl(currentAvatar),
+        });
+        avatarForSave = {
+          ...currentAvatar,
+          model_url: exportArtifact.modelUrl,
+          model_format: 'glb',
+        };
+        setImportedModelUrl(exportArtifact.modelUrl);
+      } catch (exportError) {
+        console.error('Avatar save export error:', exportError);
+        setImportedModelUrl(priorModelUrl);
+        toast.error(
+          exportError instanceof Error
+            ? exportError.message
+            : 'Avatar-Export fehlgeschlagen. Entwurf bleibt erhalten.',
+        );
+        return;
+      }
+
+      const savePayload = {
+        name: characterName.trim(), description: description.trim(), class: characterArchetype, race: characterRace, ruleset_key: ruleset, dnd_background: null as null, level: characterLevel,
+        background_story: backgroundStory.trim() || undefined, notes: notes.trim(), personality_traits: personalityTraits.length > 0 ? personalityTraits : undefined, ideals: ideals.length > 0 ? ideals : undefined, bonds: bonds.length > 0 ? bonds : undefined, flaws: flaws.length > 0 ? flaws : undefined,
+        appearance: { body_size: avatarForSave.body.size, height: avatarForSave.body.height, face_features: avatarForSave.traits.head ?? headStyle, hair_style: avatarForSave.traits.hair ?? hairStyle, hair_color: avatarForSave.colors.hair, skin_tone: avatarForSave.colors.skin, clothing: avatarForSave.traits.clothing ?? clothing, gender_reading: genderReading, avatar: avatarForSave },
+        attributes, skills: finalSkillRanks, sagadrive_profile: sagaDriveProfile, abilities, inventory, inventory_v2: inventoryV2, portrait_url: portraitUrl || undefined,
+      };
+
       const previousLevel = persistedLevel ?? characterLevel;
       const savedCharacter = savedCharacterId
         ? await characterService.updateCharacter(savedCharacterId, savePayload)
@@ -1146,7 +1176,7 @@ export function CharacterEditor() {
             </Select>
             <CharacterAssistantButton />
             <Button variant="outline" onClick={() => trackActivity('Character Editor: Vorschau fokussiert')}><Eye className="mr-2 h-4 w-4" />Vorschau</Button>
-            <Button onClick={handleSaveCharacter} disabled={saving || uploading}><Save className="mr-2 h-4 w-4" />{saving ? 'Speichert...' : 'Speichern'}</Button>
+            <Button onClick={handleSaveCharacter} disabled={saving || uploading} data-avatar-save-export={saving ? 'saving' : 'idle'}><Save className="mr-2 h-4 w-4" />{saving ? 'Speichert...' : 'Speichern'}</Button>
           </div>
         </div>
 

@@ -161,3 +161,14 @@ export {
   type AvatarFitRangeV1,
   type AvatarFitStatus,
 } from './fit-range-contract';
+export {
+  AVATAR_SAVE_EXPORT_MAX_BYTES,
+  AVATAR_SAVE_EXPORT_VERSION,
+  assertExportPayloadSafe,
+  buildAvatarExportStoragePath,
+  buildAvatarSaveExportPayload,
+  encodeAvatarExportGlb,
+  type AvatarSaveExportArtifact,
+  type AvatarSaveExportPayloadV1,
+  type AvatarSaveExportUiStatus,
+} from './avatar-save-export';
