@@ -4,6 +4,7 @@ import { toast } from 'sonner@2.0.3';
 import { AvatarCanvas } from '../avatar/AvatarCanvas';
 import { AvatarImportPanel } from '../avatar/AvatarImportPanel';
 import { AvatarTraitPanels } from '../avatar/AvatarTraitPanels';
+import { BaseBodyMorphFixture } from '../avatar/BaseBodyMorphFixture';
 import type { AvatarTraitGroupId } from '../../../domains/character/avatar';
 import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../domains/character/use-cases/avatar-presets';
 import { characterService } from '../../../infrastructure/character/character-service';
@@ -1151,6 +1152,7 @@ export function CharacterEditor() {
                   toast.success('3D-Charakter importiert');
                 }}
               />
+              {import.meta.env.DEV ? <BaseBodyMorphFixture /> : null}
               {showIdentityPills ? (
                 <IdentityPreviewPills
                   essenceKey={essenceProfile}

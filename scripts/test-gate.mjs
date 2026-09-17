@@ -263,6 +263,14 @@ function checkAvatarMorphContract() {
   });
 }
 
+function checkAvatarBaseBodies() {
+  console.log('Avatar base bodies (#213): morphable humanoid manifest + species presets...');
+  execFileSync(process.execPath, ['scripts/avatar-base-bodies-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -663,6 +671,7 @@ checkAvatarModularTraits();
 checkAvatarCustomImport();
 checkAvatarRigNormalization();
 checkAvatarMorphContract();
+checkAvatarBaseBodies();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
