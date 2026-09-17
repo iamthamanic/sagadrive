@@ -335,6 +335,14 @@ function checkAvatarMeshyGeneration() {
   });
 }
 
+function checkAvatarSourceSelector() {
+  console.log('Avatar source selector (#14): sagadrive|import|meshy + legacy...');
+  execFileSync(process.execPath, ['scripts/avatar-source-selector-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -744,6 +752,7 @@ checkAvatarAnimationRetarget();
 checkAvatarFacialExpressions();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
+checkAvatarSourceSelector();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();

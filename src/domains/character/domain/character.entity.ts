@@ -29,7 +29,13 @@ export type CharacterAvatarFormat = 'vrm' | 'glb';
  */
 export interface CharacterAvatarDto {
   schema_version: 1;
+  /** @deprecated Prefer `source`. Kept for legacy readers; always `m3-character-studio`. */
   provider: 'm3-character-studio';
+  /**
+   * Avatar origin — never a capability proof (#6 owns capabilities).
+   * Missing → resolve via resolveAvatarSource (legacy provider → sagadrive).
+   */
+  source?: 'sagadrive' | 'import' | 'meshy';
   preset: string;
   model_format: CharacterAvatarFormat;
   model_url?: string;

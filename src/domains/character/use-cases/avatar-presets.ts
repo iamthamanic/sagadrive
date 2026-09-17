@@ -7,6 +7,8 @@ import type {
   CharacterAvatarDto,
   CharacterAvatarFormat,
 } from '../domain/character.entity';
+import type { AvatarSource } from '../avatar/avatar-source';
+import { LEGACY_AVATAR_PROVIDER } from '../avatar/avatar-source';
 import { serializePersistedBaseTraits } from '../avatar/trait-layers';
 
 const DEFAULT_HAIR_COLOR = '#000000';
@@ -173,6 +175,7 @@ export function createCharacterStudioAvatar(input: {
   bodySize: number;
   height: number;
   modelUrl?: string;
+  source?: AvatarSource;
 }): CharacterAvatarDto {
   const modelUrl = normalizeAvatarModelUrl(input.modelUrl ?? '');
   const preset = getAvatarRacePreset(input.race);
@@ -187,7 +190,8 @@ export function createCharacterStudioAvatar(input: {
 
   return {
     schema_version: 1,
-    provider: 'm3-character-studio',
+    provider: LEGACY_AVATAR_PROVIDER,
+    source: input.source ?? 'sagadrive',
     preset: preset.id,
     model_format: inferAvatarFormat(modelUrl),
     model_url: modelUrl,
