@@ -205,3 +205,16 @@ export {
   type FacialLayer,
   type FacialVisemeKey,
 } from './facial-contract';
+export {
+  CONTENT_PACK_VERSION,
+  CONTENT_PACK_V1_ASSETS,
+  CONTENT_PACK_V1_MINIMUMS,
+  assertContentPackV1Minimums,
+  countContentPackByCategory,
+  getContentPackAsset,
+  listContentPackAssets,
+  type ContentPackAssetV1,
+  type ContentPackCategory,
+  type ContentPackLicense,
+  type ContentPackSetting,
+} from './content-pack-v1';

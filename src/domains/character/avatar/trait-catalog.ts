@@ -3,9 +3,15 @@
  * Location: src/domains/character/avatar/trait-catalog.ts
  *
  * Domain owns logical ids only. Infrastructure resolves allowlisted asset keys.
+ * Options are sourced from Content Pack v1 (#217) so Fantasy/Sci-Fi coverage stays complete.
  */
 
 import type { AvatarTraitGroupId } from './trait-layers';
+import {
+  CONTENT_PACK_V1_ASSETS,
+  listContentPackAssets,
+  type ContentPackSetting,
+} from './content-pack-v1';
 
 export interface AvatarTraitOption {
   id: string;
@@ -13,64 +19,55 @@ export interface AvatarTraitOption {
   label: string;
   /** Optional short hint for card subtitle. */
   hint?: string;
+  setting?: ContentPackSetting;
+  tags?: readonly string[];
 }
 
-const HEAD_OPTIONS: readonly AvatarTraitOption[] = [
-  { id: 'human-balanced', groupId: 'head', label: 'Ausgewogen' },
-  { id: 'elf-angular', groupId: 'head', label: 'Fein / kantig' },
-  { id: 'dwarf-broad', groupId: 'head', label: 'Breit' },
-  { id: 'halfling-soft', groupId: 'head', label: 'Weich' },
-  { id: 'orc-heavy', groupId: 'head', label: 'Massiv' },
-  { id: 'cyborg-angular', groupId: 'head', label: 'Synthetisch' },
-  { id: 'alien-oval', groupId: 'head', label: 'Oval' },
-  { id: 'neutral-soft', groupId: 'head', label: 'Neutral' },
-];
+function toOption(asset: {
+  id: string;
+  groupId: AvatarTraitGroupId;
+  label: string;
+  setting: ContentPackSetting;
+  tags: readonly string[];
+  category: string;
+}): AvatarTraitOption {
+  return {
+    id: asset.id,
+    groupId: asset.groupId,
+    label: asset.label,
+    hint: asset.category,
+    setting: asset.setting,
+    tags: asset.tags,
+  };
+}
 
-const EARS_OPTIONS: readonly AvatarTraitOption[] = [
-  { id: 'round', groupId: 'ears', label: 'Rund' },
-  { id: 'elf-long', groupId: 'ears', label: 'Lang' },
-  { id: 'orc-pointed', groupId: 'ears', label: 'Spitz' },
-  { id: 'synthetic', groupId: 'ears', label: 'Synthetisch' },
-  { id: 'none', groupId: 'ears', label: 'Keine sichtbar' },
-];
+/** Unique options per group (first wins when same id appears twice). */
+function buildGroupOptions(): Readonly<Record<AvatarTraitGroupId, readonly AvatarTraitOption[]>> {
+  const buckets: Record<AvatarTraitGroupId, AvatarTraitOption[]> = {
+    head: [],
+    ears: [],
+    hair: [],
+    clothing: [],
+    accessory: [],
+  };
+  const seen = new Set<string>();
+  for (const asset of CONTENT_PACK_V1_ASSETS) {
+    const key = `${asset.groupId}:${asset.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    buckets[asset.groupId].push(toOption(asset));
+  }
+  return buckets;
+}
 
-const HAIR_OPTIONS: readonly AvatarTraitOption[] = [
-  { id: 'short', groupId: 'hair', label: 'Kurz' },
-  { id: 'long', groupId: 'hair', label: 'Lang' },
-  { id: 'bald', groupId: 'hair', label: 'Kahl' },
-  { id: 'braided', groupId: 'hair', label: 'Geflochten' },
-  { id: 'wild', groupId: 'hair', label: 'Wild' },
-];
-
-const CLOTHING_OPTIONS: readonly AvatarTraitOption[] = [
-  { id: 'robe', groupId: 'clothing', label: 'Robe' },
-  { id: 'armor', groupId: 'clothing', label: 'Rüstungslook' },
-  { id: 'leather', groupId: 'clothing', label: 'Leder' },
-  { id: 'casual', groupId: 'clothing', label: 'Alltag' },
-  { id: 'noble', groupId: 'clothing', label: 'Edel' },
-];
-
-const ACCESSORY_OPTIONS: readonly AvatarTraitOption[] = [
-  { id: 'none', groupId: 'accessory', label: 'Keins' },
-  { id: 'optic-implant', groupId: 'accessory', label: 'Optik-Implantat' },
-  { id: 'earring', groupId: 'accessory', label: 'Ohrring' },
-  { id: 'scar', groupId: 'accessory', label: 'Narbe' },
-];
-
-const BY_GROUP: Readonly<Record<AvatarTraitGroupId, readonly AvatarTraitOption[]>> = {
-  head: HEAD_OPTIONS,
-  ears: EARS_OPTIONS,
-  hair: HAIR_OPTIONS,
-  clothing: CLOTHING_OPTIONS,
-  accessory: ACCESSORY_OPTIONS,
-};
+const BY_GROUP = buildGroupOptions();
 
 const ALL_OPTIONS: readonly AvatarTraitOption[] = [
-  ...HEAD_OPTIONS,
-  ...EARS_OPTIONS,
-  ...HAIR_OPTIONS,
-  ...CLOTHING_OPTIONS,
-  ...ACCESSORY_OPTIONS,
+  ...BY_GROUP.head,
+  ...BY_GROUP.ears,
+  ...BY_GROUP.hair,
+  ...BY_GROUP.clothing,
+  ...BY_GROUP.accessory,
 ];
 
 const OPTION_INDEX = new Map(
@@ -79,8 +76,13 @@ const OPTION_INDEX = new Map(
 
 export function listTraitOptionsForGroup(
   groupId: AvatarTraitGroupId,
+  filter?: { setting?: ContentPackSetting | 'all' },
 ): readonly AvatarTraitOption[] {
-  return BY_GROUP[groupId];
+  const base = BY_GROUP[groupId];
+  if (!filter?.setting || filter.setting === 'all') return base;
+  return base.filter(
+    (option) => option.setting === filter.setting || option.setting === 'neutral',
+  );
 }
 
 export function getTraitOption(
@@ -119,7 +121,7 @@ export const AVATAR_TRAIT_SECTIONS: readonly AvatarTraitSection[] = [
   {
     id: 'accessories',
     title: 'Accessoires',
-    description: 'Kleine Details am Kopf. Temporäre Helme verstecken Haare zur Laufzeit.',
+    description: 'Kleine Details. Inventar-Items bleiben Overlays.',
     groups: ['accessory'],
   },
 ];
@@ -129,16 +131,26 @@ export function traitGroupLabel(groupId: AvatarTraitGroupId): string {
     case 'head':
       return 'Gesicht';
     case 'ears':
-      return 'Ohren';
+      return 'Ohren / Species';
     case 'hair':
-      return 'Frisur';
+      return 'Haare';
     case 'clothing':
       return 'Kleidung';
     case 'accessory':
       return 'Accessoire';
-    default: {
-      const _exhaustive: never = groupId;
-      return _exhaustive;
-    }
+    default:
+      return groupId;
   }
+}
+
+/** Helper for content-pack aware pickers. */
+export function listTraitOptionsFromContentPack(
+  groupId: AvatarTraitGroupId,
+  setting: ContentPackSetting | 'all' = 'all',
+): readonly AvatarTraitOption[] {
+  return listContentPackAssets({ groupId, setting }).reduce<AvatarTraitOption[]>((acc, asset) => {
+    if (acc.some((item) => item.id === asset.id)) return acc;
+    acc.push(toOption(asset));
+    return acc;
+  }, []);
 }

@@ -319,6 +319,14 @@ function checkAvatarFacialExpressions() {
   });
 }
 
+function checkAvatarContentPack() {
+  console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
+  execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -726,6 +734,7 @@ checkAvatarFitRange();
 checkAvatarSaveExport();
 checkAvatarAnimationRetarget();
 checkAvatarFacialExpressions();
+checkAvatarContentPack();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
