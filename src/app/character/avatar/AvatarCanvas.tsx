@@ -8,13 +8,17 @@ import type {
   AvatarAnimationActionId,
   AvatarAnimationSupportResult,
   AvatarRigAnalysisResult,
+  FacialAvailability,
+  FacialCanonicalKey,
   MtoonStyleCompatibility,
 } from '../../../domains/character/avatar';
 import { CharacterStudioRuntime, type AvatarRuntimeState } from '../../../infrastructure/character/avatar/character-studio-runtime';
 import type { AvatarAnimationRuntimeState } from '../../../infrastructure/character/avatar/avatar-animation-runtime';
+import type { AvatarFacialRuntimeState } from '../../../infrastructure/character/avatar/avatar-facial-runtime';
 import { getAvatarAssetManifest, resolveAvatarModelUrl } from '../../../infrastructure/character/avatar/avatar-asset-manifests';
 import { AvatarRigCapabilityPanel } from './AvatarRigCapabilityPanel';
 import { AvatarAnimationPreviewControls } from './AvatarAnimationPreviewControls';
+import { AvatarFacialPreviewControls } from './AvatarFacialPreviewControls';
 
 interface AvatarCanvasProps {
   avatar: CharacterAvatarDto;
@@ -37,6 +41,9 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
   const [animationSupport, setAnimationSupport] = useState<AvatarAnimationSupportResult | null>(null);
   const [activeAnimation, setActiveAnimation] = useState<AvatarAnimationActionId | null>(null);
   const [animationMessage, setAnimationMessage] = useState<string | undefined>(undefined);
+  const [facialAvailability, setFacialAvailability] = useState<FacialAvailability | null>(null);
+  const [activeFacialKey, setActiveFacialKey] = useState<FacialCanonicalKey | null>(null);
+  const [facialMessage, setFacialMessage] = useState<string | undefined>(undefined);
   const manifest = getAvatarAssetManifest(avatar.preset);
   const modelUrl = resolveAvatarModelUrl(avatar);
 
@@ -49,8 +56,21 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
       setActiveAnimation(state.activeAction);
       setAnimationMessage(state.message);
     };
+    const onFacial = (state: AvatarFacialRuntimeState) => {
+      setFacialAvailability(state.availability);
+      const entries = Object.entries(state.weights).filter(([, w]) => (w ?? 0) > 0.01);
+      const top = entries.sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0];
+      setActiveFacialKey((top?.[0] as FacialCanonicalKey | undefined) ?? 'neutral');
+      setFacialMessage(state.message);
+    };
 
-    const runtime = new CharacterStudioRuntime(canvas, setRuntimeState, setRigAnalysis, onAnimation);
+    const runtime = new CharacterStudioRuntime(
+      canvas,
+      setRuntimeState,
+      setRigAnalysis,
+      onAnimation,
+      onFacial,
+    );
     runtimeRef.current = runtime;
 
     return () => {
@@ -80,6 +100,8 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
       setRigAnalysis(null);
       setAnimationSupport(null);
       setActiveAnimation(null);
+      setFacialAvailability(null);
+      setActiveFacialKey(null);
       return;
     }
 
@@ -142,6 +164,18 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
         disabled={runtimeState.status !== 'ready'}
         onSelect={(actionId) => {
           runtimeRef.current?.playAnimation(actionId);
+        }}
+      />
+      <AvatarFacialPreviewControls
+        availability={facialAvailability}
+        activeKey={activeFacialKey}
+        message={facialMessage}
+        disabled={runtimeState.status !== 'ready'}
+        onSet={(key, weight) => {
+          runtimeRef.current?.setFacialWeight(key, weight);
+        }}
+        onReset={() => {
+          runtimeRef.current?.resetFacialToNeutral();
         }}
       />
       <AvatarRigCapabilityPanel analysis={rigAnalysis} />
