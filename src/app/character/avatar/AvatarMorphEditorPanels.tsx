@@ -208,9 +208,9 @@ export function AvatarMorphEditorPanels({
               <MorphSliderRow
                 key={meta.key}
                 meta={meta}
-                value={draft.body[meta.key]}
+                value={draft.body[meta.key as AvatarMorphBodyKey]}
                 disabled={disabled}
-                onChange={(value) => setBody(meta.key, value)}
+                onChange={(value) => setBody(meta.key as AvatarMorphBodyKey, value)}
               />
             ))}
           </div>
@@ -243,9 +243,9 @@ export function AvatarMorphEditorPanels({
               <MorphSliderRow
                 key={meta.key}
                 meta={meta}
-                value={draft.face[meta.key]}
+                value={draft.face[meta.key as AvatarMorphFaceKey]}
                 disabled={disabled}
-                onChange={(value) => setFace(meta.key, value)}
+                onChange={(value) => setFace(meta.key as AvatarMorphFaceKey, value)}
               />
             ))}
           </div>
