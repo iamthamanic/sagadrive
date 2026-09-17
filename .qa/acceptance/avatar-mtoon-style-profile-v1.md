@@ -25,7 +25,7 @@ Out: Custom shaders, remeshing, per-screen style forks.
 - B-09: render path from material evidence, not client force.
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: d703ac33b56ef3596b5b9a0837c05967d623603a
 - BASE_SHA: 5171597db3244d1c845612a40f8611a1d45c8ce7
 - Verdict: CLEAR
 - Proof: .qa/runs/composition-gate-avatar-mtoon-style-profile-v1.md
