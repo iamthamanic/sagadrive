@@ -17,7 +17,7 @@ In: rigging-provider-contract domain + mocks + test-gate.
 Out: Live GPU/SkinTokens worker, paid Meshy calls in CI.
 
 ## Composition Gate
-- HEAD_SHA: (proof)
-- BASE_SHA: (proof)
-- Verdict: SKIPPED/CLEAR
+- HEAD_SHA: 87aa7b59a7bfbb74d9685b7dc714518afda275a8
+- BASE_SHA: fa37073f6eaf61c6f9b9b8de3fb75d43b438221a
+- Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-avatar-rigging-providers-skintokens.md`
