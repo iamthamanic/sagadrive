@@ -1,20 +1,18 @@
 # Acceptance — avatar-rig-vrm-normalization
 
-<!-- seeded for GitHub issue #6 / avatar-order-06 -->
-
 ## Intent
-Importierte und generierte Avatare werden providerneutral analysiert und auf einen kanonischen SagaDrive-Humanoid-Rig-/Capability-Vertrag normalisiert.
+Normalize imported / loaded avatar skeletons into SagaDriveHumanoidRigV1 capabilities so later equipment and animation tickets consume flags, not raw bone names or provider success claims.
 
 ## Preconditions
-- #5 custom import auf `main` (`rigAnalysisStatus: pending`).
+- Character studio can load a GLB/VRM into CharacterStudioRuntime.
+- Domain layer has no Three.js imports.
 
 ## Happy Path
-- [ ] Pure Domain: `SagaDriveHumanoidRigV1`, capability flags, analysis status DTO.
-- [ ] Alias-Map VRM/Meshy/SkinTokens/Blender → canonical bones/anchors.
-- [ ] Infrastructure analyzer with bounded traversal; no client capability escalation.
+- [ ] After successful model load, runtime analyzes bones with bounded traversal + aliases.
+- [ ] Capabilities resolve to a ladder rung (static → skinned-wearable-ready).
 - [ ] App shows DE labels for analyzing/ready/limited/failed; unsupported features disabled with reason.
 - [ ] Result includes `rigContractVersion`; reproducible for same bone set.
-- [ ] architecture-boundary + typed-strict + rig-check grün.
+- [ ] architecture-boundary + typed-strict + rig-check green.
 
 ## Edge Cases
 - [ ] Incomplete skeleton → `rigged` but not `humanoid`.
@@ -31,13 +29,13 @@ Out: Auto-rig jobs (#161), equipment UI, face tracking, animation assets (#8).
 - Out: B-04/B-07/B-08.
 
 ## Composition Gate
-- HEAD_SHA: 8f6fd2ba9aaee36275e9473a7cbccd59aa71763f
+- HEAD_SHA: b17b6d60359160859fd1923a290de9ecd6ca769a
 - BASE_SHA: 0239079b4abc785e7f366451fdd04059cdea3c02
-- Verdict: CLEAR
-- Proof: 
+- Verdict: CLEAR (CI may also SKIPPED for single-hop)
+- Proof: `.qa/runs/composition-gate-avatar-rig-vrm-normalization.md`
 
 ## Implementation Notes
-- Domain:  — SagaDriveHumanoidRigV1, capability ladder, DE labels.
-- Infra:  + ; wired into CharacterStudioRuntime after load.
+- Domain: `rig-contract.ts` — SagaDriveHumanoidRigV1, capability ladder, DE labels.
+- Infra: `rig-bone-aliases.ts` + `rig-analyzer.ts`; wired into CharacterStudioRuntime after load.
 - App: AvatarRigCapabilityPanel under canvas.
-- Check: .
+- Check: `avatar-rig-normalization-check.mjs`.
