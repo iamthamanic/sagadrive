@@ -55,3 +55,19 @@ export {
   type AvatarImportUiStatus,
   type AvatarRigAnalysisStatus,
 } from './avatar-import';
+export {
+  RIG_CONTRACT_VERSION,
+  SAGA_DRIVE_HUMANOID_ANCHORS,
+  SAGA_DRIVE_HUMANOID_BONES,
+  capabilityFlagLabel,
+  listMissingHumanoidBones,
+  resolveAvatarRigCapabilities,
+  summarizeRigAnalysisStatus,
+  type AvatarRigAnalysisResult,
+  type AvatarRigAnalysisUiStatus,
+  type AvatarRigCapabilities,
+  type AvatarRigCapabilityFlag,
+  type SagaDriveHumanoidAnchorId,
+  type SagaDriveHumanoidBoneId,
+  type SagaDriveHumanoidRigV1,
+} from './rig-contract';
