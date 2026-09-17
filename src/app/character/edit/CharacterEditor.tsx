@@ -3,6 +3,7 @@ import { Camera, CheckCircle2, CircleHelp, Eye, Save, Upload, X } from 'lucide-r
 import { toast } from 'sonner@2.0.3';
 import { AvatarCanvas } from '../avatar/AvatarCanvas';
 import { AvatarImportPanel } from '../avatar/AvatarImportPanel';
+import { AvatarMeshyPanel } from '../avatar/AvatarMeshyPanel';
 import { AvatarTraitPanels } from '../avatar/AvatarTraitPanels';
 import { BaseBodyMorphFixture } from '../avatar/BaseBodyMorphFixture';
 import { AvatarMorphEditorPanels } from '../avatar/AvatarMorphEditorPanels';
@@ -1230,6 +1231,13 @@ export function CharacterEditor() {
                 onImported={(modelUrl) => {
                   setImportedModelUrl(modelUrl);
                   toast.success('3D-Charakter importiert');
+                }}
+              />
+              <AvatarMeshyPanel
+                characterId={savedCharacterId}
+                onSuccess={(modelUrl) => {
+                  setImportedModelUrl(modelUrl);
+                  toast.success('KI-Charakter materialisiert — Rig-Analyse folgt (#6)');
                 }}
               />
               {import.meta.env.DEV ? <BaseBodyMorphFixture /> : null}

@@ -313,13 +313,14 @@ const ruleset = {
 
 ### Context compact & long queues (mandatory)
 
-Auto-compact is **unreliable** (often mid-ticket, drops paths/partial state). Do **not** wait for the window to hard-fail.
+Auto-compact mid-ticket is **unreliable**. Do **not** wait for the window to hard-fail, and do **not** stop the queue for a manual `/compact` prompt.
 
 **After every shipped issue** in a multi-ticket loop (`@ecc-runner-loop`, avatar-order, or any N>1 queue):
 
-1. Update the handoff file (default: `/tmp/ecc-runner-loop-avatar-handoff.md` or the path named in the loop prompt) with: last merged issue/PR/SHA, next issue number + title, `paused: false` only if continuing immediately after compact.
-2. **Stop the turn** and tell the user to run `/compact` (or open a fresh chat and `@… continue` with the handoff). Do **not** claim the next issue in the same turn.
-3. Resume the next ticket only **after** the user continues post-compact (or in the new chat with handoff loaded).
+1. Update the handoff file (default: `/tmp/ecc-runner-loop-avatar-handoff.md` or the path named in the loop prompt) with: last merged issue/PR/SHA, next issue number + title, `paused: false`.
+2. **Auto-compact in-session:** treat the handoff as the only resume brief — drop prior issue diffs, CI logs, and tool dumps from working memory; do not re-read them.
+3. **Immediately claim the next issue** in the same turn (same session). Do not ask the user to `/compact` between tickets.
+4. Only if the platform hard-fails mid-queue (context exhausted / session swap): leave handoff with `paused: false` and end the turn so `@ecc-runner-loop continue` resumes — still not a user-facing pause.
 
 **Never compact mid-implementation** of the current issue (verify → PR → merge must stay in one context).
 
