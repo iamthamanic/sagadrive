@@ -312,3 +312,11 @@ export {
   type AvatarRiggingProviderId,
   type AvatarRiggingSubmitInput,
 } from './rigging-provider-contract';
+export {
+  SKINNED_WEARABLE_PLAN_VERSION,
+  mapFitToSkinnedUiStatus,
+  planSkinnedWearableAttaches,
+  type SkinnedWearableAttachOp,
+  type SkinnedWearablePlan,
+  type SkinnedWearableUiStatus,
+} from './skinned-wearable-plan';

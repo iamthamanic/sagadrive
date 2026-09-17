@@ -48,6 +48,10 @@ import {
   AvatarRigidEquipmentRuntime,
   type ResolveRigidEquipmentUrl,
 } from './avatar-rigid-equipment-runtime';
+import {
+  AvatarSkinnedWearableRuntime,
+  type ResolveSkinnedWearableUrl,
+} from './avatar-skinned-wearable-runtime';
 
 export type AvatarRuntimeState =
   | { status: 'loading'; message: string }
@@ -137,6 +141,7 @@ export class CharacterStudioRuntime {
   private readonly animationRuntime: AvatarAnimationRuntime;
   private readonly facialRuntime: AvatarFacialRuntime;
   private readonly rigidEquipmentRuntime: AvatarRigidEquipmentRuntime;
+  private readonly skinnedWearableRuntime: AvatarSkinnedWearableRuntime;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -148,6 +153,7 @@ export class CharacterStudioRuntime {
     this.animationRuntime = new AvatarAnimationRuntime(this.onAnimationState);
     this.facialRuntime = new AvatarFacialRuntime(this.onFacialState);
     this.rigidEquipmentRuntime = new AvatarRigidEquipmentRuntime();
+    this.skinnedWearableRuntime = new AvatarSkinnedWearableRuntime();
     if (typeof window !== 'undefined' && window.matchMedia) {
       this.animationRuntime.setPrefersReducedMotion(
         window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -269,6 +275,7 @@ export class CharacterStudioRuntime {
       this.animationRuntime.bind(root, this.lastRigAnalysis);
       this.facialRuntime.bind(vrm);
       this.rigidEquipmentRuntime.bindAvatar(root, this.lastRigAnalysis);
+      this.skinnedWearableRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.onStateChange({
         status: 'ready',
         message: vrm ? `${manifest.displayName} · VRM` : `${manifest.displayName} · glTF`,
@@ -299,8 +306,20 @@ export class CharacterStudioRuntime {
     await this.rigidEquipmentRuntime.applyVisuals(visuals);
   }
 
+  setSkinnedWearableUrlResolver(resolveUrl: ResolveSkinnedWearableUrl): void {
+    this.skinnedWearableRuntime.setUrlResolver(resolveUrl);
+  }
+
+  async applySkinnedWearableVisuals(visuals: readonly AvatarEquipmentVisual[]): Promise<void> {
+    await this.skinnedWearableRuntime.applyVisuals(visuals);
+  }
+
   getRigidEquipmentRuntime(): AvatarRigidEquipmentRuntime {
     return this.rigidEquipmentRuntime;
+  }
+
+  getSkinnedWearableRuntime(): AvatarSkinnedWearableRuntime {
+    return this.skinnedWearableRuntime;
   }
 
   getLastRigAnalysis(): AvatarRigAnalysisResult | undefined {
@@ -478,6 +497,7 @@ export class CharacterStudioRuntime {
     this.animationRuntime.stopAll();
     this.facialRuntime.resetToNeutral();
     this.rigidEquipmentRuntime.bindAvatar(null, null);
+    this.skinnedWearableRuntime.bindAvatar(null, null);
     if (!this.currentRoot) return;
     this.modelContainer.remove(this.currentRoot);
     VRMUtils.deepDispose(this.currentRoot);
@@ -495,6 +515,7 @@ export class CharacterStudioRuntime {
     this.animationRuntime.dispose();
     this.facialRuntime.dispose();
     this.rigidEquipmentRuntime.dispose();
+    this.skinnedWearableRuntime.dispose();
     this.traitLifecycle.dispose();
     this.runtimeOverlays = [];
     this.removeCurrentModel();
