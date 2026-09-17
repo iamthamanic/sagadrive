@@ -31,8 +31,13 @@ Out: Auto-rig jobs (#161), equipment UI, face tracking, animation assets (#8).
 - Out: B-04/B-07/B-08.
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
-- Verdict: pending
+- HEAD_SHA: 8f6fd2ba9aaee36275e9473a7cbccd59aa71763f
+- BASE_SHA: 0239079b4abc785e7f366451fdd04059cdea3c02
+- Verdict: CLEAR
+- Proof: 
 
 ## Implementation Notes
-(filled after coding)
+- Domain:  — SagaDriveHumanoidRigV1, capability ladder, DE labels.
+- Infra:  + ; wired into CharacterStudioRuntime after load.
+- App: AvatarRigCapabilityPanel under canvas.
+- Check: .
