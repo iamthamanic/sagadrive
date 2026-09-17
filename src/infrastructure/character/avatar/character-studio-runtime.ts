@@ -477,6 +477,7 @@ export class CharacterStudioRuntime {
   private removeCurrentModel(): void {
     this.animationRuntime.stopAll();
     this.facialRuntime.resetToNeutral();
+    this.rigidEquipmentRuntime.bindAvatar(null, null);
     if (!this.currentRoot) return;
     this.modelContainer.remove(this.currentRoot);
     VRMUtils.deepDispose(this.currentRoot);
