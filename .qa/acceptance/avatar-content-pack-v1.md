@@ -24,3 +24,6 @@ Out: Marketplace, mesh binaries, inventory equipment.
 
 ## Implementation Notes
 (filled after)
+
+## Implementation Notes
+- content-pack-v1.ts + trait-catalog sourced from pack; TraitCardPicker setting filter; avatar-content-pack-check in test-gate.
