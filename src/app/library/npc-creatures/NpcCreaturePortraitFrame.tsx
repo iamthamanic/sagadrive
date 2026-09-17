@@ -10,8 +10,7 @@ import {
   buildNpcCreatureIconPublicSrc,
   type NpcCreatureDefinition,
 } from '../../../domains/npc-creature';
-import { ItemVisualModeToggle } from '../../items/visuals';
-import type { ItemVisualMode } from '../../items/visuals';
+import { ItemVisualModeToggle, type ItemVisualMode } from '../../items';
 import {
   ImageLightboxDialog,
   useImageLightbox,
