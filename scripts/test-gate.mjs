@@ -255,6 +255,14 @@ function checkAvatarRigNormalization() {
   });
 }
 
+function checkAvatarMorphContract() {
+  console.log('Avatar morph contract (#212): SagaDriveAvatarMorphV1 bounds + migration...');
+  execFileSync(process.execPath, ['scripts/avatar-morph-contract-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -654,6 +662,7 @@ checkAvatarTraitLifecycle();
 checkAvatarModularTraits();
 checkAvatarCustomImport();
 checkAvatarRigNormalization();
+checkAvatarMorphContract();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
