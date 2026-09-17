@@ -319,6 +319,14 @@ function checkAvatarFacialExpressions() {
   });
 }
 
+function checkAvatarFaceTracking() {
+  console.log('Avatar face tracking (#12): local MediaPipe head/eyes/expressions...');
+  execFileSync(process.execPath, ['scripts/avatar-face-tracking-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -814,6 +822,7 @@ checkAvatarFitRange();
 checkAvatarSaveExport();
 checkAvatarAnimationRetarget();
 checkAvatarFacialExpressions();
+checkAvatarFaceTracking();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();

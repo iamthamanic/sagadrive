@@ -43,6 +43,7 @@ import {
   type AvatarFacialRuntimeState,
 } from './avatar-facial-runtime';
 import type { FacialCanonicalKey } from '../../../domains/character/avatar/facial-contract';
+import type { FaceTrackingDrive } from '../../../domains/character/avatar/face-tracking-contract';
 import type { AvatarEquipmentVisual } from '../../../domains/character/avatar';
 import {
   AvatarRigidEquipmentRuntime,
@@ -142,6 +143,11 @@ export class CharacterStudioRuntime {
   private readonly facialRuntime: AvatarFacialRuntime;
   private readonly rigidEquipmentRuntime: AvatarRigidEquipmentRuntime;
   private readonly skinnedWearableRuntime: AvatarSkinnedWearableRuntime;
+  private headBone: THREE.Object3D | null = null;
+  private readonly headRestQuaternion = new THREE.Quaternion();
+  private readonly headScratchEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+  private readonly headScratchQuaternion = new THREE.Quaternion();
+  private readonly eyeLookTarget = new THREE.Vector3();
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -274,6 +280,7 @@ export class CharacterStudioRuntime {
       this.onRigAnalysis?.(this.lastRigAnalysis);
       this.animationRuntime.bind(root, this.lastRigAnalysis);
       this.facialRuntime.bind(vrm);
+      this.bindHeadBone(vrm);
       this.rigidEquipmentRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.skinnedWearableRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.onStateChange({
@@ -360,6 +367,38 @@ export class CharacterStudioRuntime {
 
   getFacialRuntime(): AvatarFacialRuntime {
     return this.facialRuntime;
+  }
+
+  /**
+   * Apply local face-tracking drive (#12) onto head bone + facial weights.
+   * Ephemeral only — never written into appearance.avatar.
+   */
+  applyFaceTrackingDrive(drive: FaceTrackingDrive): void {
+    if (this.disposed) return;
+    if (this.headBone) {
+      this.headScratchEuler.set(drive.head.pitch, drive.head.yaw, drive.head.roll, 'YXZ');
+      this.headScratchQuaternion.setFromEuler(this.headScratchEuler);
+      this.headBone.quaternion.copy(this.headRestQuaternion).multiply(this.headScratchQuaternion);
+    }
+    const lookAt = this.currentVrm?.lookAt;
+    if (lookAt) {
+      this.eyeLookTarget.set(
+        drive.eyeLookX * 0.35,
+        1.55 + drive.eyeLookY * 0.2,
+        1.2,
+      );
+      lookAt.lookAt(this.eyeLookTarget);
+    }
+    for (const [key, weight] of Object.entries(drive.facialWeights)) {
+      this.facialRuntime.setWeight(key as FacialCanonicalKey, weight ?? 0);
+    }
+  }
+
+  resetFaceTrackingPose(): void {
+    if (this.headBone) {
+      this.headBone.quaternion.copy(this.headRestQuaternion);
+    }
+    this.facialRuntime.resetToNeutral();
   }
 
   /** Portrait capture — same renderer/style path as live preview. */
@@ -493,9 +532,28 @@ export class CharacterStudioRuntime {
     }
   }
 
+  private bindHeadBone(vrm: VRM | undefined): void {
+    this.headBone = null;
+    const humanoid = vrm?.humanoid as
+      | {
+          getNormalizedBoneNode?: (name: string) => THREE.Object3D | null;
+          getRawBoneNode?: (name: string) => THREE.Object3D | null;
+        }
+      | undefined;
+    if (!humanoid) return;
+    const node =
+      humanoid.getNormalizedBoneNode?.('head') ??
+      humanoid.getRawBoneNode?.('head') ??
+      null;
+    if (!node) return;
+    this.headBone = node;
+    this.headRestQuaternion.copy(node.quaternion);
+  }
+
   private removeCurrentModel(): void {
     this.animationRuntime.stopAll();
     this.facialRuntime.resetToNeutral();
+    this.headBone = null;
     this.rigidEquipmentRuntime.bindAvatar(null, null);
     this.skinnedWearableRuntime.bindAvatar(null, null);
     if (!this.currentRoot) return;
@@ -518,6 +576,7 @@ export class CharacterStudioRuntime {
     this.skinnedWearableRuntime.dispose();
     this.traitLifecycle.dispose();
     this.runtimeOverlays = [];
+    this.headBone = null;
     this.removeCurrentModel();
     this.scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;

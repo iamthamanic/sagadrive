@@ -206,6 +206,26 @@ export {
   type FacialVisemeKey,
 } from './facial-contract';
 export {
+  DEFAULT_FACE_TRACKING_LIMITS,
+  FACE_TRACKING_CONTRACT_VERSION,
+  FACE_TRACKING_STATUSES,
+  assertFaceTrackingDriveLocalOnly,
+  clampAngle,
+  clampUnit,
+  createEmptyFaceTrackingSample,
+  faceTrackingStatusLabelDe,
+  isFaceTrackingStatus,
+  mapFaceTrackingSample,
+  resolveFaceTrackingFpsCap,
+  selectPrimaryFaceIndex,
+  smoothFaceTrackingDrive,
+  type FaceTrackingDrive,
+  type FaceTrackingHeadPose,
+  type FaceTrackingLimits,
+  type FaceTrackingSample,
+  type FaceTrackingStatus,
+} from './face-tracking-contract';
+export {
   CONTENT_PACK_VERSION,
   CONTENT_PACK_V1_ASSETS,
   CONTENT_PACK_V1_MINIMUMS,
