@@ -17,9 +17,9 @@ In: domain avatar-source, DTO source field, AvatarSourceSelector, CharacterEdito
 Out: SkinTokens as source, new capability inventing.
 
 ## Composition Gate
-- HEAD_SHA: (proof)
-- BASE_SHA: (proof)
-- Verdict: SKIPPED/CLEAR
+- HEAD_SHA: 798418f5686453a653581813a518ddf324d30bb0
+- BASE_SHA: 6d1d4e1c3b0edbbfa526b233e5509c3a43c16dc6
+- Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-character-avatar-source-selector.md`
 
 ## Implementation Notes
