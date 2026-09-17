@@ -14,4 +14,7 @@ export {
 } from './shared/characterEditorBootstrap';
 export { InventoryItemThumb } from './inventory/InventoryItemThumb';
 export { PersonalItemFormDialog } from './inventory/PersonalItemFormDialog';
+export { AvatarSurfaceViewer } from './avatar/AvatarSurfaceViewer';
+export { AvatarTokenView } from './avatar/AvatarTokenView';
+export { PlayerAvatarPanel } from './avatar/PlayerAvatarPanel';
 export * from './inventory/inventory-ui-labels';

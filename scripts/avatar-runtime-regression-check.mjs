@@ -45,7 +45,11 @@ requireMatch(manifests, /normalizeAvatarModelUrl\(avatar\.model_url \?\? ''\)/, 
 requireMatch(manifests, /normalizeAvatarModelUrl\(manifest\.fallbackUrl\)/, 'manifest fallback URL normalization');
 requireMatch(canvas, /new CharacterStudioRuntime\(/, 'AvatarCanvas runtime ownership');
 requireMatch(canvas, /runtime\.dispose\(\)/, 'AvatarCanvas unmount cleanup');
-requireMatch(editor, /<AvatarCanvas avatar=\{currentAvatar\} canvasRef=\{avatarCanvasRef\} \/>/, 'shared live-preview canvas ref');
+requireMatch(
+  editor,
+  /(?:<AvatarCanvas avatar=\{currentAvatar\} canvasRef=\{avatarCanvasRef\} \/>)|(?:AvatarSurfaceViewer[\s\S]*canvasRef=\{avatarCanvasRef\})/,
+  'shared live-preview canvas ref',
+);
 requireMatch(editor, /avatarCanvasRef\.current[\s\S]*canvas\.toBlob\(resolve, 'image\/png', 0\.92\)/, 'portrait generation from the same WebGL canvas');
 
 const dependencies = packageJson.dependencies;

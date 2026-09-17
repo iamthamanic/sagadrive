@@ -343,6 +343,14 @@ function checkAvatarSourceSelector() {
   });
 }
 
+function checkSharedAvatarSurfaces() {
+  console.log('Shared avatar surfaces (#9): portrait/compact/full + bounds...');
+  execFileSync(process.execPath, ['scripts/shared-avatar-surfaces-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -753,6 +761,7 @@ checkAvatarFacialExpressions();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();
+checkSharedAvatarSurfaces();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
