@@ -31,8 +31,8 @@ export type MeshyAvatarJobServerStatus =
   | 'canceled'
   | 'provider_unavailable';
 
-/** Provider-neutral rigging port — Meshy result always re-analyzed by #6. */
-export interface AvatarRiggingProvider {
+/** Soft hint for Meshy generation — full provider port lives in rigging-provider-contract (#161). */
+export interface MeshyAvatarRiggingHint {
   readonly id: 'meshy' | 'none';
   /** Soft hint only — never elevates AvatarRigCapabilities. */
   requestedRig: boolean;
