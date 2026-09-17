@@ -231,3 +231,17 @@ export {
   type MeshyAvatarJobSnapshot,
   type MeshyAvatarJobUiStatus,
 } from './meshy-avatar-job';
+export {
+  AVATAR_SOURCES,
+  AVATAR_SOURCE_CONTRACT_VERSION,
+  AVATAR_SOURCE_OPTIONS,
+  LEGACY_AVATAR_PROVIDER,
+  avatarSourceMeta,
+  describeAvatarSourceCapabilities,
+  evaluateAvatarSourceSwitch,
+  isAvatarSource,
+  resolveAvatarSource,
+  type AvatarSource,
+  type AvatarSourceOptionMeta,
+  type AvatarSourceSwitchDecision,
+} from './avatar-source';
