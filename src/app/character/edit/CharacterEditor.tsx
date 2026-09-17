@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent
 import { Camera, CheckCircle2, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { AvatarCanvas } from '../avatar/AvatarCanvas';
+import { AvatarImportPanel } from '../avatar/AvatarImportPanel';
 import { AvatarTraitPanels } from '../avatar/AvatarTraitPanels';
 import type { AvatarTraitGroupId } from '../../../domains/character/avatar';
 import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../domains/character/use-cases/avatar-presets';
@@ -316,6 +317,7 @@ export function CharacterEditor() {
   const [flaws, setFlaws] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [portraitUrl, setPortraitUrl] = useState('');
+  const [importedModelUrl, setImportedModelUrl] = useState<string | undefined>(undefined);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -325,7 +327,8 @@ export function CharacterEditor() {
   const currentAvatar = useMemo(() => createCharacterStudioAvatar({
     race: characterRace, head: headStyle, ears, hairStyle, clothing, accessory: accessory === 'none' ? undefined : accessory,
     hairColor, skinTone, bodySize: bodySize[0] ?? 50, height: height[0] ?? 50,
-  }), [accessory, bodySize, characterRace, clothing, ears, hairColor, hairStyle, headStyle, height, skinTone]);
+    modelUrl: importedModelUrl,
+  }), [accessory, bodySize, characterRace, clothing, ears, hairColor, hairStyle, headStyle, height, importedModelUrl, skinTone]);
 
   const archetype = characterArchetype ? getSagaDriveArchetype(characterArchetype) : undefined;
   const essence = essenceProfile ? getSagaDriveEssence(essenceProfile) : undefined;
@@ -597,6 +600,7 @@ export function CharacterEditor() {
     setSkinTone(appearance.skin_tone || appearance.avatar?.colors.skin || '#c58c6a');
     setClothing(appearance.clothing || appearance.avatar?.traits.clothing || 'casual');
     setAccessory(appearance.avatar?.traits.accessory ?? 'none');
+    setImportedModelUrl(appearance.avatar?.model_url);
     setSavedCharacterId(payload.savedCharacterId);
     setPersistedLevel(payload.persistedLevel);
     clearCharacterEditorBootstrap();
@@ -1140,6 +1144,13 @@ export function CharacterEditor() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="aspect-[4/5] overflow-hidden rounded-lg border border-border bg-[#0B1220] shadow-inner"><AvatarCanvas avatar={currentAvatar} canvasRef={avatarCanvasRef} /></div>
+              <AvatarImportPanel
+                characterId={savedCharacterId}
+                onImported={(modelUrl) => {
+                  setImportedModelUrl(modelUrl);
+                  toast.success('3D-Charakter importiert');
+                }}
+              />
               {showIdentityPills ? (
                 <IdentityPreviewPills
                   essenceKey={essenceProfile}

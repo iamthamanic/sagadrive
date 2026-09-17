@@ -239,6 +239,14 @@ function checkAvatarModularTraits() {
   });
 }
 
+function checkAvatarCustomImport() {
+  console.log('Avatar custom VRM/GLB import (#5): validation + owner storage + UI states...');
+  execFileSync(process.execPath, ['scripts/avatar-custom-import-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -636,6 +644,7 @@ checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarTraitLifecycle();
 checkAvatarModularTraits();
+checkAvatarCustomImport();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();

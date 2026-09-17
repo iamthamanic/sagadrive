@@ -37,3 +37,21 @@ export {
   type AvatarTraitOption,
   type AvatarTraitSection,
 } from './trait-catalog';
+export {
+  AVATAR_IMPORT_ALLOWED_EXTENSIONS,
+  AVATAR_IMPORT_MAX_BYTES,
+  buildAvatarImportStoragePath,
+  containsUnsafeExternalUriHint,
+  earlyCheckAvatarImportFile,
+  extensionFromFileName,
+  formatFromExtension,
+  sanitizeImportResultFromServer,
+  sniffGlbContainer,
+  validateAvatarImportBytes,
+  type AvatarImportArtifact,
+  type AvatarImportEarlyCheck,
+  type AvatarImportExtension,
+  type AvatarImportFormat,
+  type AvatarImportUiStatus,
+  type AvatarRigAnalysisStatus,
+} from './avatar-import';
