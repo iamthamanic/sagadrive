@@ -19,6 +19,12 @@ import { getAvatarAssetManifest, resolveAvatarModelUrl } from '../../../infrastr
 import { AvatarRigCapabilityPanel } from './AvatarRigCapabilityPanel';
 import { AvatarAnimationPreviewControls } from './AvatarAnimationPreviewControls';
 import { AvatarFacialPreviewControls } from './AvatarFacialPreviewControls';
+import { AvatarFaceTrackingControls } from './AvatarFaceTrackingControls';
+import {
+  AvatarFaceTrackingRuntime,
+  type FaceTrackingRuntimeState,
+} from '../../../infrastructure/character/avatar/avatar-face-tracking-runtime';
+import type { FaceTrackingStatus } from '../../../domains/character/avatar';
 
 interface AvatarCanvasProps {
   avatar: CharacterAvatarDto;
@@ -44,6 +50,10 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
   const [facialAvailability, setFacialAvailability] = useState<FacialAvailability | null>(null);
   const [activeFacialKey, setActiveFacialKey] = useState<FacialCanonicalKey | null>(null);
   const [facialMessage, setFacialMessage] = useState<string | undefined>(undefined);
+  const [faceTrackingStatus, setFaceTrackingStatus] = useState<FaceTrackingStatus>('idle');
+  const [faceTrackingMessage, setFaceTrackingMessage] = useState('Face Tracking aus');
+  const [faceTrackingFpsCap, setFaceTrackingFpsCap] = useState(30);
+  const faceTrackingRef = useRef<AvatarFaceTrackingRuntime>();
   const manifest = getAvatarAssetManifest(avatar.preset);
   const modelUrl = resolveAvatarModelUrl(avatar);
 
@@ -63,6 +73,11 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
       setActiveFacialKey((top?.[0] as FacialCanonicalKey | undefined) ?? 'neutral');
       setFacialMessage(state.message);
     };
+    const onFaceTracking = (state: FaceTrackingRuntimeState) => {
+      setFaceTrackingStatus(state.status);
+      setFaceTrackingMessage(state.message);
+      setFaceTrackingFpsCap(state.fpsCap);
+    };
 
     const runtime = new CharacterStudioRuntime(
       canvas,
@@ -73,7 +88,13 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
     );
     runtimeRef.current = runtime;
 
+    const faceTracking = new AvatarFaceTrackingRuntime(onFaceTracking);
+    faceTracking.bindTarget(runtime);
+    faceTrackingRef.current = faceTracking;
+
     return () => {
+      faceTracking.dispose();
+      faceTrackingRef.current = undefined;
       runtime.dispose();
       runtimeRef.current = undefined;
     };
@@ -176,6 +197,18 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
         }}
         onReset={() => {
           runtimeRef.current?.resetFacialToNeutral();
+        }}
+      />
+      <AvatarFaceTrackingControls
+        status={faceTrackingStatus}
+        message={faceTrackingMessage}
+        fpsCap={faceTrackingFpsCap}
+        disabled={runtimeState.status !== 'ready'}
+        onStart={() => {
+          void faceTrackingRef.current?.start();
+        }}
+        onStop={() => {
+          faceTrackingRef.current?.stop();
         }}
       />
       <AvatarRigCapabilityPanel analysis={rigAnalysis} />
