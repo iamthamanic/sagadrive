@@ -16,7 +16,7 @@ In: item-avatar-fit-defaults, ItemAvatarFitSection, editor wiring.
 Out: Full binding persistence API, skinned fit, Playwright (covered by check).
 
 ## Composition Gate
-- HEAD_SHA: (proof)
-- BASE_SHA: (proof)
-- Verdict: SKIPPED/CLEAR
+- HEAD_SHA: fd8edaa3bd392ab1899273cf65bec4f28e170890
+- BASE_SHA: 24929cb001ea6dbacb004d250d8193c284a0772f
+- Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-item-avatar-fit-workbench.md`
