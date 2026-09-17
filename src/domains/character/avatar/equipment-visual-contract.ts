@@ -254,10 +254,11 @@ export function projectInventoryEquipmentVisuals(input: {
   /** When asset was replaced, mark matching bindingIds as needs-review. */
   supersededBindingIds?: ReadonlySet<string>;
 }): AvatarEquipmentVisualProjection {
-  const lookup =
-    typeof input.definitions === 'function'
-      ? input.definitions
-      : (id: string) => input.definitions.get(id);
+  const definitionsInput = input.definitions;
+  const lookup: (id: string) => ItemDefinition | undefined =
+    typeof definitionsInput === 'function'
+      ? definitionsInput
+      : (id: string) => definitionsInput.get(id);
 
   const seenInstances = new Set<string>();
   const visuals: AvatarEquipmentVisual[] = [];
@@ -293,7 +294,7 @@ export function projectInventoryEquipmentVisuals(input: {
     }
 
     const validated = validateAvatarEquipmentBinding(binding);
-    if (!validated.ok) {
+    if (validated.ok === false) {
       visuals.push({
         instanceId,
         definitionId: instance.definitionId,
