@@ -16,7 +16,7 @@ In: rigid-equipment-plan, AvatarRigidEquipmentRuntime, studio wiring.
 Out: Skinned wearables (#160), UI equip picker.
 
 ## Composition Gate
-- HEAD_SHA: (proof)
-- BASE_SHA: (proof)
-- Verdict: SKIPPED/CLEAR
+- HEAD_SHA: 
+- BASE_SHA: 
+- Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-avatar-rigid-equipment-runtime.md`
