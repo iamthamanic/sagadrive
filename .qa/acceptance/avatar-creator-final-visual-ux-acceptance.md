@@ -20,9 +20,9 @@ In: deterministic acceptance matrix + golden evidence JSON; UI structural checks
 Out: Live GPU screenshots, paid Meshy smoke, Face Tracking (#12).
 
 ## Composition Gate
-- HEAD_SHA: (proof)
-- BASE_SHA: (proof)
-- Verdict: SKIPPED/CLEAR
+- HEAD_SHA: 944e7013d2f939379073350c20e0e884858a8d36
+- BASE_SHA: a3e9cb3a3d3f3975a0e2cdf5308cf70bae3f4cf5
+- Verdict: SKIPPED
 - Proof: `.qa/runs/composition-gate-avatar-creator-final-acceptance.md`
 
 ## Evidence
