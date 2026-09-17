@@ -271,6 +271,14 @@ function checkAvatarBaseBodies() {
   });
 }
 
+function checkAvatarMtoonProfile() {
+  console.log('Avatar MToon profile (#214): SagaDriveMToonProfileV1 + style applier...');
+  execFileSync(process.execPath, ['scripts/avatar-mtoon-profile-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -672,6 +680,7 @@ checkAvatarCustomImport();
 checkAvatarRigNormalization();
 checkAvatarMorphContract();
 checkAvatarBaseBodies();
+checkAvatarMtoonProfile();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
