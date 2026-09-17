@@ -226,7 +226,7 @@ export {
   buildMeshyAvatarIdempotencyKey,
   mapServerStatusToUi,
   validateMeshyAvatarPrompt,
-  type AvatarRiggingProvider,
+  type MeshyAvatarRiggingHint,
   type MeshyAvatarJobServerStatus,
   type MeshyAvatarJobSnapshot,
   type MeshyAvatarJobUiStatus,
