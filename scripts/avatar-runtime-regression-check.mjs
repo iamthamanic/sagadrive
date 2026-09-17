@@ -43,7 +43,7 @@ requireMatch(runtime, /this\.renderer\.forceContextLoss\(\)/, 'WebGL context cle
 
 requireMatch(manifests, /normalizeAvatarModelUrl\(avatar\.model_url \?\? ''\)/, 'explicit model URL normalization');
 requireMatch(manifests, /normalizeAvatarModelUrl\(manifest\.fallbackUrl\)/, 'manifest fallback URL normalization');
-requireMatch(canvas, /new CharacterStudioRuntime\(canvas, setRuntimeState\)/, 'AvatarCanvas runtime ownership');
+requireMatch(canvas, /new CharacterStudioRuntime\(canvas, setRuntimeState(?:,\s*setRigAnalysis)?\)/, 'AvatarCanvas runtime ownership');
 requireMatch(canvas, /runtime\.dispose\(\)/, 'AvatarCanvas unmount cleanup');
 requireMatch(editor, /<AvatarCanvas avatar=\{currentAvatar\} canvasRef=\{avatarCanvasRef\} \/>/, 'shared live-preview canvas ref');
 requireMatch(editor, /avatarCanvasRef\.current[\s\S]*canvas\.toBlob\(resolve, 'image\/png', 0\.92\)/, 'portrait generation from the same WebGL canvas');

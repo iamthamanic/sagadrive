@@ -247,6 +247,14 @@ function checkAvatarCustomImport() {
   });
 }
 
+function checkAvatarRigNormalization() {
+  console.log('Avatar rig normalization (#6): humanoid contract + aliases + analyzer...');
+  execFileSync(process.execPath, ['scripts/avatar-rig-normalization-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -645,6 +653,7 @@ checkAvatarRuntimeRegressions();
 checkAvatarTraitLifecycle();
 checkAvatarModularTraits();
 checkAvatarCustomImport();
+checkAvatarRigNormalization();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();

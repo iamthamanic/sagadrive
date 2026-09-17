@@ -8,6 +8,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { VRM, VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 import {
   resolveEffectiveTraits,
+  type AvatarRigAnalysisResult,
   type BaseTraitSelection,
   type RuntimeTraitOverlay,
 } from '../../../domains/character/avatar';
@@ -18,6 +19,7 @@ import {
   createTraitLifecycleThreeAdapter,
   type TraitLifecycleThreeAdapter,
 } from './trait-lifecycle-three-adapter';
+import { analyzeAvatarRigFromObject3D } from './rig-analyzer';
 
 export type AvatarRuntimeState =
   | { status: 'loading'; message: string }
@@ -25,6 +27,7 @@ export type AvatarRuntimeState =
   | { status: 'error'; message: string };
 
 type RuntimeStateListener = (state: AvatarRuntimeState) => void;
+type RigAnalysisListener = (analysis: AvatarRigAnalysisResult) => void;
 
 function includesHint(value: string, hints: readonly string[]): boolean {
   const normalized = value.toLowerCase();
@@ -99,12 +102,14 @@ export class CharacterStudioRuntime {
   private currentManifest?: AvatarAssetManifest;
   /** Runtime-only overlays (equipment etc.) — never written to appearance.avatar.traits. */
   private runtimeOverlays: RuntimeTraitOverlay[] = [];
+  private lastRigAnalysis?: AvatarRigAnalysisResult;
   private loadVersion = 0;
   private disposed = false;
 
   constructor(
     canvas: HTMLCanvasElement,
     private readonly onStateChange: RuntimeStateListener,
+    private readonly onRigAnalysis?: RigAnalysisListener,
   ) {
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -229,6 +234,8 @@ export class CharacterStudioRuntime {
       this.modelContainer.add(root);
       this.applyAppearance(this.currentAvatar ?? avatar, this.currentManifest ?? manifest);
       this.fitCamera();
+      this.lastRigAnalysis = analyzeAvatarRigFromObject3D(root, { vrm });
+      this.onRigAnalysis?.(this.lastRigAnalysis);
       this.onStateChange({
         status: 'ready',
         message: vrm ? `${manifest.displayName} · VRM` : `${manifest.displayName} · glTF`,
@@ -250,8 +257,8 @@ export class CharacterStudioRuntime {
     }
   }
 
-  listRuntimeOverlays(): readonly RuntimeTraitOverlay[] {
-    return this.runtimeOverlays;
+  getLastRigAnalysis(): AvatarRigAnalysisResult | undefined {
+    return this.lastRigAnalysis;
   }
 
   getTraitLifecycle(): TraitLifecycleThreeAdapter {
