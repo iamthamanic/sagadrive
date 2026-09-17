@@ -35,7 +35,7 @@ Out: Auto-rig (#6), Meshy, Morph-Editor (#212+).
 - Out: B-04 SQL injection N/A (storage API), B-07/08 permission admin N/A.
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: a08e0fe85dcd96b8e5cfec16fda646f5ff2c18d7
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-custom-vrm-glb-import.md`
 
