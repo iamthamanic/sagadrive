@@ -219,6 +219,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-15** — NPC/Kreaturen static SVG icons (19 builtins): Cursor→PNG→VTracer wie Items; `iconKey` → `/assets/npc-creatures/{slug}.svg` (`feat/npc-creature-static-svg-icons`)
 - **2026-09-14** — NPC Promotion Compact→Full + Controller-Zuweisung über CharacterEditor (`feat/npc-creature-promotion-controller`, #200)
 - **2026-09-14** — World-Modul `npc-creature-catalog`: Pack-Toggles, Includes/Excludes, welt-eigene Figuren ohne Definitionsduplikate (`feat/npc-creature-world-catalog`, #199)
 - **2026-09-14** — NPCs & Kreaturen Quick Create + Statblock-Editor mit Live-Vorschau; Library `+ Neu` / Bearbeiten (`feat/npc-creature-quick-create-editor`, #198)

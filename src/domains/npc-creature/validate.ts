@@ -205,6 +205,17 @@ export function validateNpcCreatureDefinition(
     }
   }
 
+  if (def.iconKey !== undefined) {
+    pushIf(
+      errors,
+      typeof def.iconKey !== 'string'
+        || def.iconKey.length < 1
+        || def.iconKey.length > MAX_PORTRAIT_KEY_LEN
+        || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(def.iconKey),
+      'Ungültiger Icon-Schlüssel (kebab-case slug erwartet).',
+    );
+  }
+
   if (def.portraitAssetKey !== undefined) {
     pushIf(
       errors,

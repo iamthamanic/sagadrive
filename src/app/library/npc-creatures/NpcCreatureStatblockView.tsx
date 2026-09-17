@@ -1,9 +1,12 @@
 /**
  * NpcCreatureStatblockView — read-only compact Statblock dialog for Library (#197).
- * Body lives in NpcCreatureStatblockPanel (shared with editor live preview).
+ * Shows centered portrait with 2D/3D toggle; body lives in NpcCreatureStatblockPanel.
  * Location: src/app/library/npc-creatures/NpcCreatureStatblockView.tsx
  */
-import type { NpcCreatureDefinition } from '../../../domains/npc-creature';
+import {
+  deriveNpcCreaturePower,
+  type NpcCreatureDefinition,
+} from '../../../domains/npc-creature';
 import {
   Dialog,
   DialogContent,
@@ -12,13 +15,13 @@ import {
   DialogTitle,
 } from '../../../shared/ui/dialog';
 import { Button } from '../../../shared/ui/button';
+import { NpcCreaturePortraitFrame } from './NpcCreaturePortraitFrame';
 import { NpcCreatureStatblockPanel } from './NpcCreatureStatblockPanel';
 import {
   formatNpcLevelMachtgradLine,
   NPC_CREATURE_CATEGORY_LABELS,
   NPC_CREATURE_KIND_LABELS,
 } from './npcCreatureLibraryLabels';
-import { deriveNpcCreaturePower } from '../../../domains/npc-creature';
 
 export interface NpcCreatureStatblockViewProps {
   definition: NpcCreatureDefinition | null;
@@ -42,16 +45,18 @@ export function NpcCreatureStatblockView({
         data-npc-statblock-view
         aria-describedby="npc-statblock-description"
       >
-        <DialogHeader>
-          <DialogTitle className="pr-8 text-left text-lg sm:text-xl">
+        <DialogHeader className="sm:text-center">
+          <DialogTitle className="pr-8 text-center text-lg sm:text-xl">
             {definition.name}
           </DialogTitle>
-          <DialogDescription id="npc-statblock-description" className="text-left">
+          <DialogDescription id="npc-statblock-description" className="text-center">
             {NPC_CREATURE_KIND_LABELS[definition.kind]} ·{' '}
             {NPC_CREATURE_CATEGORY_LABELS[definition.category]} ·{' '}
             {formatNpcLevelMachtgradLine(definition.level, derived.machtgradLabel)}
           </DialogDescription>
         </DialogHeader>
+
+        <NpcCreaturePortraitFrame definition={definition} className="mb-2" />
 
         <NpcCreatureStatblockPanel definition={definition} compactHeader />
 

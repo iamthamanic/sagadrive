@@ -13,3 +13,10 @@ export * from './tooltip';
 export * from './AttributeD20Icon';
 export * from './AttributeDerivedConnector';
 export { ImageWithFallback } from './figma/ImageWithFallback';
+export { ImageLightboxDialog } from './ImageLightboxDialog';
+export type { ImageLightboxDialogProps } from './ImageLightboxDialog';
+export { useImageLightbox } from './useImageLightbox';
+export type {
+  ImageLightboxTarget,
+  UseImageLightboxResult,
+} from './useImageLightbox';

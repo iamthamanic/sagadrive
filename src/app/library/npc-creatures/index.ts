@@ -13,4 +13,5 @@ export type {
 } from './useNpcCreatureLibrary';
 export { NpcCreatureStatblockView } from './NpcCreatureStatblockView';
 export { NpcCreatureStatblockPanel } from './NpcCreatureStatblockPanel';
+export { NpcCreaturePortraitFrame } from './NpcCreaturePortraitFrame';
 export * from './npcCreatureLibraryLabels';

@@ -116,6 +116,28 @@ export {
   listNpcCreaturePacks,
 } from './packs';
 
+export { builtinNpcCreatureIdToIconKey } from './packs/build-builtin';
+
+export type {
+  NpcCreatureIconGenerationStatus,
+  NpcCreatureIconManifestEntry,
+} from './icon-assets';
+export {
+  NPC_CREATURE_ICON_MANIFEST_PATH,
+  NPC_CREATURE_ICON_OUTPUT_DIR,
+  NPC_CREATURE_ICON_PUBLIC_DIR,
+  NPC_CREATURE_ICON_SLUG_PATTERN,
+  NPC_CREATURE_ICON_SOURCE_DIR,
+  NPC_CREATURE_ICON_STYLE_REFS,
+  buildNpcCreatureIconOutputPath,
+  buildNpcCreatureIconPrompt,
+  buildNpcCreatureIconPublicSrc,
+  buildNpcCreatureIconSourcePath,
+  getNpcCreatureIconStyleTemplate,
+  isNpcCreatureIconSlug,
+  normalizeNpcCreatureIconSlug,
+} from './icon-assets';
+
 export {
   NPC_CREATURE_CATALOG_MODULE_ID,
   defaultNpcCreatureCatalogModuleConfig,

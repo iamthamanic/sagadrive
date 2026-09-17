@@ -1,0 +1,58 @@
+---
+description: NPC/creature static SVG icons — mandatory Cursor PNG → VTracer workflow
+globs:
+  - public/assets/npc-creatures/**
+  - assets/npc-creature-icon-sources/**
+  - assets/npc-creature-icons.manifest.json
+  - src/domains/npc-creature/icon-assets.ts
+  - scripts/vectorize-npc-creature-icons.mjs
+  - scripts/npc-creature-icon-assets-check.mjs
+alwaysApply: false
+---
+
+# NPC / Creature icons (hard rule)
+
+**Never** hand-author flat geometric SVGs for `public/assets/npc-creatures/`.
+
+Preferred entry point: **`@svg-icon-create`** — that skill is the GenerateImage → PNG →
+VTracer pipeline (items + creatures). Do not invent a second workflow.
+
+Hand SVG = quality break vs Goblin/Golem/Wraith. The fox regression happened because
+an agent wrote a cartoon SVG instead of running this pipeline.
+
+## Mandatory pipeline (same as good pack icons)
+
+1. **Subject prompt** — short subject only in manifest `iconPrompt`; full prompt via
+   `buildNpcCreatureIconPrompt()` / `getNpcCreatureIconStyleTemplate()` in
+   `src/domains/npc-creature/icon-assets.ts`.
+2. **Cursor `GenerateImage`** — 1:1, style template text + style refs:
+   - `assets/item-icon-style-refs/style-ref-sword.png`
+   - `assets/item-icon-style-refs/style-ref-potion.png`
+   - Prefer also a sibling pack PNG from `assets/npc-creature-icon-sources/` as style peer
+     (e.g. wolf for animals, goblin/zombie for humanoids).
+   - **Solid BLACK background required on the PNG** (pack parity). Never light/white —
+     that destroys near-white subject fills (bones, highlights) in VTracer.
+   - Final SVG must be **transparent** (no black canvas). `vectorize-npc-creature-icons.mjs`
+     knocks out the black field before VTracer and peels any residual full-frame path.
+3. **Save PNG** → `assets/npc-creature-icon-sources/{slug}.png`
+   - Run `sips -s format png …` so the file is real PNG (not JPEG-as-.png).
+4. **VTracer** → `public/assets/npc-creatures/{slug}.svg`
+   ```bash
+   VTRACER_BIN=.cache/vtracer/vtracer node scripts/vectorize-npc-creature-icons.mjs --force --slug {slug}
+   ```
+   Do not hand-edit SVGs or leave a solid black plate in the public asset.
+5. **Manifest** — upsert `assets/npc-creature-icons.manifest.json` (`status: "ready"`,
+   `iconKey === slug`, paths match).
+6. **Catalog** — definition `iconKey` = slug; name/description must match the
+   concrete creature (needed for later 3D). Do not invent generic “Wildtier” art.
+
+## Definition identity
+
+Icons and 3D share one concrete subject (e.g. Fuchs, Skelett bare bones).
+If art and name disagree, fix both — never ship a placeholder silhouette.
+
+## Validation
+
+```bash
+node scripts/npc-creature-icon-assets-check.mjs
+```

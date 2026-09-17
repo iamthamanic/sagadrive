@@ -72,6 +72,7 @@
     "composition-gate": "node scripts/composition-gate.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "icons:vectorize": "node scripts/vectorize-item-icons.mjs"
+    "icons:vectorize": "node scripts/vectorize-item-icons.mjs",
+    "icons:vectorize:npc": "node scripts/vectorize-npc-creature-icons.mjs"
   }
 }
