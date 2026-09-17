@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
 import { Camera, CheckCircle2, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { AvatarCanvas } from '../avatar/AvatarCanvas';
+import { AvatarSurfaceViewer } from '../avatar/AvatarSurfaceViewer';
 import { AvatarImportPanel } from '../avatar/AvatarImportPanel';
 import { AvatarMeshyPanel } from '../avatar/AvatarMeshyPanel';
 import { AvatarSourceSelector } from '../avatar/AvatarSourceSelector';
@@ -1268,7 +1268,21 @@ export function CharacterEditor() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="aspect-[4/5] overflow-hidden rounded-lg border border-border bg-[#0B1220] shadow-inner"><AvatarCanvas avatar={currentAvatar} canvasRef={avatarCanvasRef} /></div>
+              <div className="aspect-[4/5] overflow-hidden rounded-lg border border-border bg-[#0B1220] shadow-inner">
+                <AvatarSurfaceViewer
+                  surface="sheet"
+                  surfaceRef={{
+                    characterId: savedCharacterId ?? 'draft',
+                    displayName: characterName.trim() || 'Charakter',
+                    portraitUrl: portraitUrl || undefined,
+                    modelUrl: importedModelUrl ?? currentAvatar.model_url,
+                  }}
+                  avatar={currentAvatar}
+                  canvasRef={avatarCanvasRef}
+                  size="lg"
+                  className="h-full w-full border-0"
+                />
+              </div>
               <AvatarSourceSelector
                 value={avatarSource}
                 capabilitySummary={sourceCapabilitySummary}

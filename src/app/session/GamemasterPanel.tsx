@@ -11,10 +11,11 @@ import { Slider } from '../../shared/ui/slider';
 import { Switch } from '../../shared/ui/switch';
 import { Label } from '../../shared/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
-import { Wand2, Eye, ImagePlus, Volume2, Users } from 'lucide-react';
+import { Wand2, Eye, ImagePlus, Volume2 } from 'lucide-react';
 import { useAuth } from '../../lib/auth-context';
 import { useProjectSummaries } from '../project';
 import { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
+import { SessionAvatarStrip } from './SessionAvatarStrip';
 
 export function GamemasterPanel() {
   const [storyText, setStoryText] = useState('');
@@ -175,28 +176,13 @@ export function GamemasterPanel() {
               <TabsContent value="characters" className="space-y-3 md:space-y-4">
                 <div>
                   <h4 className="mb-3 text-sm md:text-base">Spieler-Charaktere</h4>
-                  <div className="space-y-2 md:space-y-3">
-                    {['Aria Windwhisper', 'Thorin Steinbrecher', 'Luna Nachtschatten'].map((char) => (
-                      <div
-                        key={char}
-                        className="flex items-center justify-between p-2 md:p-3 border border-border rounded-lg"
-                      >
-                        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
-                          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                            <Users className="w-4 h-4 md:w-5 md:h-5" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-medium text-sm md:text-base truncate">{char}</p>
-                            <p className="text-xs md:text-sm text-muted-foreground">Online</p>
-                          </div>
-                        </div>
-                        <Button size="sm" variant="outline" className="flex-shrink-0 ml-2">
-                          <span className="hidden md:inline">Anpassen</span>
-                          <span className="md:hidden text-xs">Edit</span>
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                  <SessionAvatarStrip
+                    characters={[
+                      { characterId: 'demo-aria', displayName: 'Aria Windwhisper' },
+                      { characterId: 'demo-thorin', displayName: 'Thorin Steinbrecher' },
+                      { characterId: 'demo-luna', displayName: 'Luna Nachtschatten' },
+                    ]}
+                  />
                 </div>
               </TabsContent>
 

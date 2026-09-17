@@ -5,6 +5,7 @@ import { Input } from '../../shared/ui/input';
 import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package, Users } from 'lucide-react';
 import { useCharacterSummaries, CreateCharacterEntryDialog, setCharacterEditorBootstrap } from '../character';
 import type { CharacterSummaryVm } from '../../domains/character';
+import { resolveAvatarSurfaceView } from '../../domains/character/avatar';
 import { useProjectSummaries } from '../project';
 import type { ProjectSummaryVm } from '../../domains/project/contracts/project.types';
 import { useAuth } from '../../lib/auth-context';
@@ -260,11 +261,20 @@ export function Library({
     );
   };
 
-  const renderCharacter = (char: CharacterSummaryVm, context: EntityBrowserRenderContext) => (
+  const renderCharacter = (char: CharacterSummaryVm, context: EntityBrowserRenderContext) => {
+    const surface = resolveAvatarSurfaceView({
+      surface: 'library',
+      ref: {
+        characterId: char.id,
+        displayName: char.name,
+        portraitUrl: char.portraitUrl,
+      },
+    });
+    return (
     <EntityBrowserCard
       title={char.name}
       meta={`Level ${char.level} · ${char.race} · ${char.class}`}
-      imageUrl={char.portraitUrl}
+      imageUrl={surface.portraitUrl}
       imageAlt={`Portrait von ${char.name}`}
       imageFallback={char.name}
       variant={context.variant}
@@ -299,6 +309,7 @@ export function Library({
       }
     />
   );
+  };
 
   const worldsEmptyState = (
     <div className="text-center py-12">

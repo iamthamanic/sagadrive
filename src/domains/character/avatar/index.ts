@@ -245,3 +245,18 @@ export {
   type AvatarSourceOptionMeta,
   type AvatarSourceSwitchDecision,
 } from './avatar-source';
+export {
+  AVATAR_RENDER_MODES,
+  AVATAR_SURFACE_IDS,
+  AVATAR_SURFACE_MAX_LIVE_3D,
+  SHARED_AVATAR_SURFACE_CONTRACT_VERSION,
+  assertNoInventoryInSurfaceRef,
+  defaultRenderModeForSurface,
+  isAvatarRenderMode,
+  isAvatarSurfaceId,
+  resolveAvatarSurfaceView,
+  type AvatarRenderMode,
+  type AvatarSurfaceId,
+  type AvatarSurfaceRef,
+  type AvatarSurfaceViewModel,
+} from './shared-avatar-surface';
