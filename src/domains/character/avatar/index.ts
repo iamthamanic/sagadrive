@@ -18,3 +18,22 @@ export {
   createTraitLifecycleRegistry,
   type TraitLifecycleRegistryOptions,
 } from './trait-lifecycle-registry';
+export {
+  AVATAR_TRAIT_GROUP_IDS,
+  isAvatarTraitGroupId,
+  resolveEffectiveTraits,
+  serializePersistedBaseTraits,
+  type AvatarTraitGroupId,
+  type BaseTraitSelection,
+  type EffectiveTraitSelection,
+  type RuntimeTraitOverlay,
+} from './trait-layers';
+export {
+  AVATAR_TRAIT_SECTIONS,
+  getTraitOption,
+  isAllowedTraitId,
+  listTraitOptionsForGroup,
+  traitGroupLabel,
+  type AvatarTraitOption,
+  type AvatarTraitSection,
+} from './trait-catalog';

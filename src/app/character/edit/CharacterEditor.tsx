@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent
 import { Camera, CheckCircle2, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { AvatarCanvas } from '../avatar/AvatarCanvas';
+import { AvatarTraitPanels } from '../avatar/AvatarTraitPanels';
+import type { AvatarTraitGroupId } from '../../../domains/character/avatar';
 import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../domains/character/use-cases/avatar-presets';
 import { characterService } from '../../../infrastructure/character/character-service';
 import type {
@@ -1455,13 +1457,38 @@ export function CharacterEditor() {
                 <TabsContent value="appearance" className="space-y-6">
                   <div className="rounded-lg border border-primary/30 bg-primary/5 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium">Look ist kosmetisch</p><p className="mt-1 text-sm text-muted-foreground">Körperbau, Gesicht, Haare und Kleidung verändern keine Charakterwerte. Spezies und Speziesmerkmale wählst du im Spezies-Tab.</p></div><Badge variant="outline">Keine Werte</Badge></div></div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2"><div className="space-y-2"><Label>Körperbau</Label><Slider aria-label="Körperbau" value={bodySize} onValueChange={setBodySize} min={0} max={100} step={1} /><div className="flex items-center justify-between text-xs text-muted-foreground"><span>Schmal</span><span>{bodySize[0]}</span><span>Massiv</span></div></div><div className="space-y-2"><Label>Größe</Label><Slider aria-label="Größe" value={height} onValueChange={setHeight} min={0} max={100} step={1} /><div className="flex items-center justify-between text-xs text-muted-foreground"><span>Klein</span><span>{height[0]}</span><span>Groß</span></div></div></div>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="space-y-2"><Label htmlFor="headStyle">Gesicht</Label><Select value={headStyle} onValueChange={setHeadStyle}><SelectTrigger id="headStyle"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="human-balanced">Ausgewogen</SelectItem><SelectItem value="elf-angular">Fein / kantig</SelectItem><SelectItem value="dwarf-broad">Breit</SelectItem><SelectItem value="halfling-soft">Weich</SelectItem><SelectItem value="orc-heavy">Massiv</SelectItem><SelectItem value="cyborg-angular">Synthetisch</SelectItem><SelectItem value="alien-oval">Oval</SelectItem><SelectItem value="neutral-soft">Neutral</SelectItem></SelectContent></Select></div>
-                    <div className="space-y-2"><Label htmlFor="ears">Ohren</Label><Select value={ears} onValueChange={setEars}><SelectTrigger id="ears"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="round">Rund</SelectItem><SelectItem value="elf-long">Lang</SelectItem><SelectItem value="orc-pointed">Spitz</SelectItem><SelectItem value="synthetic">Synthetisch</SelectItem><SelectItem value="none">Keine sichtbar</SelectItem></SelectContent></Select></div>
-                    <div className="space-y-2"><Label htmlFor="hairStyle">Frisur</Label><Select value={hairStyle} onValueChange={setHairStyle}><SelectTrigger id="hairStyle"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="short">Kurz</SelectItem><SelectItem value="long">Lang</SelectItem><SelectItem value="bald">Kahl</SelectItem><SelectItem value="braided">Geflochten</SelectItem><SelectItem value="wild">Wild</SelectItem></SelectContent></Select></div>
-                    <div className="space-y-2"><Label htmlFor="clothing">Kleidung</Label><Select value={clothing} onValueChange={setClothing}><SelectTrigger id="clothing"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="robe">Robe</SelectItem><SelectItem value="armor">Rüstungslook</SelectItem><SelectItem value="leather">Leder</SelectItem><SelectItem value="casual">Alltag</SelectItem><SelectItem value="noble">Edel</SelectItem></SelectContent></Select></div>
-                    <div className="space-y-2"><Label htmlFor="accessory">Accessoire</Label><Select value={accessory} onValueChange={setAccessory}><SelectTrigger id="accessory"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Keins</SelectItem><SelectItem value="optic-implant">Optik-Implantat</SelectItem><SelectItem value="earring">Ohrring</SelectItem><SelectItem value="scar">Narbe</SelectItem></SelectContent></Select></div>
-                  </div>
+                  <AvatarTraitPanels
+                    selection={{
+                      head: headStyle,
+                      ears,
+                      hair: hairStyle,
+                      clothing,
+                      accessory,
+                    }}
+                    onBaseTraitChange={(groupId: AvatarTraitGroupId, traitId: string) => {
+                      switch (groupId) {
+                        case 'head':
+                          setHeadStyle(traitId);
+                          break;
+                        case 'ears':
+                          setEars(traitId);
+                          break;
+                        case 'hair':
+                          setHairStyle(traitId);
+                          break;
+                        case 'clothing':
+                          setClothing(traitId);
+                          break;
+                        case 'accessory':
+                          setAccessory(traitId);
+                          break;
+                        default: {
+                          const _exhaustive: never = groupId;
+                          return _exhaustive;
+                        }
+                      }
+                    }}
+                  />
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="hairColor">Haarfarbe</Label><div className="flex gap-2"><Input id="hairColor" type="color" value={/^#[0-9a-fA-F]{6}$/.test(hairColor) ? hairColor : '#000000'} onChange={(event) => setHairColor(event.target.value)} className="h-10 w-20" /><Input value={hairColor} onChange={(event) => setHairColor(event.target.value)} aria-label="Haarfarbe als Hexwert" /></div></div><div className="space-y-2"><Label htmlFor="skinTone">Hautfarbe</Label><div className="flex gap-2"><Input id="skinTone" type="color" value={/^#[0-9a-fA-F]{6}$/.test(skinTone) ? skinTone : '#F5E6D3'} onChange={(event) => setSkinTone(event.target.value)} className="h-10 w-20" /><Input value={skinTone} onChange={(event) => setSkinTone(event.target.value)} aria-label="Hautfarbe als Hexwert" /></div></div></div>
                 </TabsContent>
 

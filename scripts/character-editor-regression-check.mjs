@@ -37,6 +37,7 @@ const projectService = read('src/infrastructure/project/project-service.ts');
 requireMatch(runtime, /this\.applyAppearance\(this\.currentAvatar \?\? avatar, this\.currentManifest \?\? manifest\)/, 'latest avatar appearance replay after async model load');
 requireMatch(editor, /ruleset_key:\s*ruleset/, 'SagaDrive Core ruleset in CharacterEditor save payload');
 requireMatch(editor, /dnd_background:\s*null/, 'D&D metadata cleared in SagaDrive Core save payload');
+requireMatch(editor, /AvatarTraitPanels/, 'modular trait card panels in appearance tab');
 requireMatch(editor, /TabsTrigger value="info"[\s\S]*TabsTrigger value="values"[\s\S]*TabsTrigger value="appearance"[\s\S]*TabsTrigger value="inventory"[\s\S]*TabsTrigger value="settings"/, 'SagaDrive Core editor tabs');
 requireMatch(editor, /CharacterNotesSection/, 'notes section inside Details Parameter sub-tab');
 requireMatch(editor, /CharacterBackgroundPanel/, 'template-first background panel inside Hintergrund Parameter sub-tab');

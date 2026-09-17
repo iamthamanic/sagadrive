@@ -231,6 +231,14 @@ function checkAvatarTraitLifecycle() {
   });
 }
 
+function checkAvatarModularTraits() {
+  console.log('Avatar modular traits (#4): base/overlay resolve + card picker + allowlist...');
+  execFileSync(process.execPath, ['scripts/avatar-modular-traits-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -627,6 +635,7 @@ checkInventoryE2eIntegration();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
 checkAvatarTraitLifecycle();
+checkAvatarModularTraits();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();

@@ -6,9 +6,18 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { VRM, VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+import {
+  resolveEffectiveTraits,
+  type BaseTraitSelection,
+  type RuntimeTraitOverlay,
+} from '../../../domains/character/avatar';
 import { normalizeAvatarModelUrl } from '../../../domains/character/use-cases/avatar-presets';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
 import type { AvatarAssetManifest } from './avatar-asset-manifests';
+import {
+  createTraitLifecycleThreeAdapter,
+  type TraitLifecycleThreeAdapter,
+} from './trait-lifecycle-three-adapter';
 
 export type AvatarRuntimeState =
   | { status: 'loading'; message: string }
@@ -81,11 +90,15 @@ export class CharacterStudioRuntime {
   private readonly controls: OrbitControls;
   private readonly loader = new GLTFLoader();
   private readonly modelContainer = new THREE.Group();
+  private readonly overlaysGroup = new THREE.Group();
   private readonly clock = new THREE.Clock();
+  private readonly traitLifecycle: TraitLifecycleThreeAdapter;
   private currentRoot?: THREE.Object3D;
   private currentVrm?: VRM;
   private currentAvatar?: CharacterAvatarDto;
   private currentManifest?: AvatarAssetManifest;
+  /** Runtime-only overlays (equipment etc.) — never written to appearance.avatar.traits. */
+  private runtimeOverlays: RuntimeTraitOverlay[] = [];
   private loadVersion = 0;
   private disposed = false;
 
@@ -109,7 +122,9 @@ export class CharacterStudioRuntime {
 
     this.scene.background = new THREE.Color('#09111F');
     this.scene.fog = new THREE.Fog('#09111F', 8, 18);
+    this.modelContainer.add(this.overlaysGroup);
     this.scene.add(this.modelContainer);
+    this.traitLifecycle = createTraitLifecycleThreeAdapter(this.overlaysGroup);
 
     const hemisphere = new THREE.HemisphereLight('#DDEBFF', '#101828', 2.1);
     this.scene.add(hemisphere);
@@ -225,11 +240,40 @@ export class CharacterStudioRuntime {
     }
   }
 
+  /**
+   * Replace runtime overlays (e.g. helmet that hides hair). Does not touch persisted base traits.
+   */
+  setRuntimeOverlays(overlays: readonly RuntimeTraitOverlay[]): void {
+    this.runtimeOverlays = [...overlays];
+    if (this.currentAvatar && this.currentManifest) {
+      this.applyAppearance(this.currentAvatar, this.currentManifest);
+    }
+  }
+
+  listRuntimeOverlays(): readonly RuntimeTraitOverlay[] {
+    return this.runtimeOverlays;
+  }
+
+  getTraitLifecycle(): TraitLifecycleThreeAdapter {
+    return this.traitLifecycle;
+  }
+
   applyAppearance(avatar: CharacterAvatarDto, manifest: AvatarAssetManifest): void {
     this.currentAvatar = avatar;
     this.currentManifest = manifest;
     const root = this.currentRoot;
     if (!root) return;
+
+    const base: BaseTraitSelection = {
+      head: avatar.traits.head,
+      ears: avatar.traits.ears,
+      hair: avatar.traits.hair,
+      clothing: avatar.traits.clothing,
+      accessory: avatar.traits.accessory,
+    };
+    const effective = resolveEffectiveTraits(base, this.runtimeOverlays);
+    const hairHidden =
+      effective.hiddenGroups.includes('hair') || effective.traits.hair === 'bald';
 
     const widthScale = 0.88 + avatar.body.size * 0.0024;
     const heightScale = 0.88 + avatar.body.height * 0.0024;
@@ -239,16 +283,20 @@ export class CharacterStudioRuntime {
       manifest.modelScale * widthScale,
     );
 
-    const clothingColor = clothingTint(avatar.traits.clothing);
+    const clothingColor = clothingTint(effective.traits.clothing ?? avatar.traits.clothing);
     root.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
+      const semanticName = `${object.name}`.toLowerCase();
+      if (includesHint(semanticName, manifest.materialHints.hair)) {
+        object.visible = !hairHidden;
+      }
       for (const material of materialsOf(object)) {
-        const semanticName = `${object.name} ${material.name}`.toLowerCase();
-        if (includesHint(semanticName, manifest.materialHints.hair)) {
-          setMaterialColor(material, avatar.colors.hair);
-        } else if (includesHint(semanticName, manifest.materialHints.skin)) {
+        const materialName = `${object.name} ${material.name}`.toLowerCase();
+        if (includesHint(materialName, manifest.materialHints.hair)) {
+          if (!hairHidden) setMaterialColor(material, avatar.colors.hair);
+        } else if (includesHint(materialName, manifest.materialHints.skin)) {
           setMaterialColor(material, avatar.colors.skin);
-        } else if (includesHint(semanticName, manifest.materialHints.clothing)) {
+        } else if (includesHint(materialName, manifest.materialHints.clothing)) {
           setMaterialColor(material, clothingColor);
         }
       }
@@ -310,6 +358,8 @@ export class CharacterStudioRuntime {
     this.loadVersion += 1;
     this.renderer.setAnimationLoop(null);
     this.controls.dispose();
+    this.traitLifecycle.dispose();
+    this.runtimeOverlays = [];
     this.removeCurrentModel();
     this.scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
