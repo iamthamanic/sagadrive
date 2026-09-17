@@ -311,6 +311,14 @@ function checkAvatarAnimationRetarget() {
   });
 }
 
+function checkAvatarFacialExpressions() {
+  console.log('Avatar facial expressions (#11): blink/emotion/viseme VRM API...');
+  execFileSync(process.execPath, ['scripts/avatar-facial-expressions-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -717,6 +725,7 @@ checkAvatarBodyFaceEditor();
 checkAvatarFitRange();
 checkAvatarSaveExport();
 checkAvatarAnimationRetarget();
+checkAvatarFacialExpressions();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();

@@ -38,6 +38,11 @@ import {
   type AvatarAnimationRuntimeState,
 } from './avatar-animation-runtime';
 import type { AvatarAnimationActionId } from '../../../domains/character/avatar/animation-contract';
+import {
+  AvatarFacialRuntime,
+  type AvatarFacialRuntimeState,
+} from './avatar-facial-runtime';
+import type { FacialCanonicalKey } from '../../../domains/character/avatar/facial-contract';
 
 export type AvatarRuntimeState =
   | { status: 'loading'; message: string }
@@ -47,6 +52,7 @@ export type AvatarRuntimeState =
 type RuntimeStateListener = (state: AvatarRuntimeState) => void;
 type RigAnalysisListener = (analysis: AvatarRigAnalysisResult) => void;
 type AnimationStateListener = (state: AvatarAnimationRuntimeState) => void;
+type FacialStateListener = (state: AvatarFacialRuntimeState) => void;
 
 function includesHint(value: string, hints: readonly string[]): boolean {
   const normalized = value.toLowerCase();
@@ -124,14 +130,17 @@ export class CharacterStudioRuntime {
     noticeDe: null,
   };
   private readonly animationRuntime: AvatarAnimationRuntime;
+  private readonly facialRuntime: AvatarFacialRuntime;
 
   constructor(
     canvas: HTMLCanvasElement,
     private readonly onStateChange: RuntimeStateListener,
     private readonly onRigAnalysis?: RigAnalysisListener,
     private readonly onAnimationState?: AnimationStateListener,
+    private readonly onFacialState?: FacialStateListener,
   ) {
     this.animationRuntime = new AvatarAnimationRuntime(this.onAnimationState);
+    this.facialRuntime = new AvatarFacialRuntime(this.onFacialState);
     if (typeof window !== 'undefined' && window.matchMedia) {
       this.animationRuntime.setPrefersReducedMotion(
         window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -251,6 +260,7 @@ export class CharacterStudioRuntime {
       this.lastRigAnalysis = analyzeAvatarRigFromObject3D(root, { vrm });
       this.onRigAnalysis?.(this.lastRigAnalysis);
       this.animationRuntime.bind(root, this.lastRigAnalysis);
+      this.facialRuntime.bind(vrm);
       this.onStateChange({
         status: 'ready',
         message: vrm ? `${manifest.displayName} · VRM` : `${manifest.displayName} · glTF`,
@@ -298,6 +308,18 @@ export class CharacterStudioRuntime {
 
   setPrefersReducedMotion(value: boolean): void {
     this.animationRuntime.setPrefersReducedMotion(value);
+  }
+
+  setFacialWeight(key: FacialCanonicalKey, weight: number): boolean {
+    return this.facialRuntime.setWeight(key, weight);
+  }
+
+  resetFacialToNeutral(): void {
+    this.facialRuntime.resetToNeutral();
+  }
+
+  getFacialRuntime(): AvatarFacialRuntime {
+    return this.facialRuntime;
   }
 
   /** Portrait capture — same renderer/style path as live preview. */
@@ -433,6 +455,7 @@ export class CharacterStudioRuntime {
 
   private removeCurrentModel(): void {
     this.animationRuntime.stopAll();
+    this.facialRuntime.resetToNeutral();
     if (!this.currentRoot) return;
     this.modelContainer.remove(this.currentRoot);
     VRMUtils.deepDispose(this.currentRoot);
@@ -448,6 +471,7 @@ export class CharacterStudioRuntime {
     this.renderer.setAnimationLoop(null);
     this.controls.dispose();
     this.animationRuntime.dispose();
+    this.facialRuntime.dispose();
     this.traitLifecycle.dispose();
     this.runtimeOverlays = [];
     this.removeCurrentModel();

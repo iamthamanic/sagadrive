@@ -185,3 +185,23 @@ export {
   type AvatarAnimationClipCatalogEntry,
   type AvatarAnimationSupportResult,
 } from './animation-contract';
+export {
+  FACIAL_BLINK_KEY,
+  FACIAL_CANONICAL_KEYS,
+  FACIAL_CONTRACT_VERSION,
+  FACIAL_EMOTION_KEYS,
+  FACIAL_VISEME_KEYS,
+  FACIAL_VRM_ALIASES,
+  applyFacialLayerUpdate,
+  clampFacialWeight,
+  createNeutralFacialWeights,
+  facialKeyLabelDe,
+  facialLayerForKey,
+  resolveFacialAvailability,
+  type FacialAvailability,
+  type FacialBlinkKey,
+  type FacialCanonicalKey,
+  type FacialEmotionKey,
+  type FacialLayer,
+  type FacialVisemeKey,
+} from './facial-contract';
