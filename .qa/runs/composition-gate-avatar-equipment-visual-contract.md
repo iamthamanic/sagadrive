@@ -1,6 +1,6 @@
 # Composition Gate — avatar-equipment-visual-contract
 
-- HEAD_SHA: c2551a4a5df7c2c5feaa24d94c05d2780b75b701
+- HEAD_SHA: cc27fcad309acfb750bbf38a5ed3aa8951926199
 - BASE_SHA: d36a50dbc981d6130d90baaa2890df43e6b69e80
 - Verdict: CLEAR
 
