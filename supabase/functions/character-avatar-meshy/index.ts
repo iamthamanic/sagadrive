@@ -418,6 +418,9 @@ serve(async (request) => {
       const downloaded = await downloadMeshyGlbBytes(glbUrl);
       const artifactId = crypto.randomUUID();
       const storagePath = `${userId}/meshy/${artifactId}.glb`;
+      // Deno fetch body: copy Uint8Array / Blob (lesson from #140)
+      const payload = new Uint8Array(downloaded.bytes.byteLength);
+      payload.set(downloaded.bytes);
       const uploadRes = await fetch(
         `${supabaseUrl}/storage/v1/object/${BUCKET}/${storagePath}`,
         {
@@ -428,7 +431,7 @@ serve(async (request) => {
             'Content-Type': 'model/gltf-binary',
             'x-upsert': 'false',
           },
-          body: downloaded.bytes,
+          body: new Blob([payload]),
         },
       );
       if (!uploadRes.ok) {
