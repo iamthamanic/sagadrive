@@ -150,3 +150,14 @@ export {
   type MtoonStyleCompatibility,
   type SagaDriveMToonProfileV1,
 } from './mtoon-profile';
+export {
+  FIT_RANGE_CONTRACT_VERSION,
+  clampMorphToFitRange,
+  createDefaultTraitFitRange,
+  listPrimaryFitMorphKeys,
+  resolveAvatarFitCompatibility,
+  type AvatarFitCompatibilityResult,
+  type AvatarFitMorphBound,
+  type AvatarFitRangeV1,
+  type AvatarFitStatus,
+} from './fit-range-contract';

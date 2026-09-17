@@ -1539,6 +1539,7 @@ export function CharacterEditor() {
                       clothing,
                       accessory,
                     }}
+                    morph={avatarMorph}
                     onBaseTraitChange={(groupId: AvatarTraitGroupId, traitId: string) => {
                       switch (groupId) {
                         case 'head':
