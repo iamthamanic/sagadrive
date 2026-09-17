@@ -26,7 +26,7 @@ export const FACIAL_CANONICAL_KEYS: readonly FacialCanonicalKey[] = [
 ];
 
 /**
- * Alias table: any of these VRM expression names map onto the canonical key.
+ * Alias table: each listed VRM expression name maps onto the canonical key.
  * First match wins when probing availability; setValue uses the resolved model name.
  */
 export const FACIAL_VRM_ALIASES: Readonly<Record<FacialCanonicalKey, readonly string[]>> = {
