@@ -30,3 +30,7 @@ Out: MediaPipe (#12), Voice/STT.
 
 ## Implementation Notes
 (filled after)
+
+## Implementation Notes
+- Domain facial-contract + infra avatar-facial-runtime + AvatarFacialPreviewControls.
+- Wired into CharacterStudioRuntime/AvatarCanvas; check in test-gate.
