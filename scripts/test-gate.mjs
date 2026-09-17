@@ -399,6 +399,14 @@ function checkAvatarItemsFinalAcceptance() {
   });
 }
 
+function checkAvatarCreatorFinalAcceptance() {
+  console.log('Avatar creator final visual/UX acceptance (#218): combo + golden matrix...');
+  execFileSync(process.execPath, ['scripts/avatar-creator-final-acceptance-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -816,6 +824,7 @@ checkItemAvatarFitWorkbench();
 checkAvatarRiggingProviders();
 checkAvatarSkinnedWearables();
 checkAvatarItemsFinalAcceptance();
+checkAvatarCreatorFinalAcceptance();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
