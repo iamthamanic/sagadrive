@@ -1,6 +1,6 @@
 # Composition Gate — custom-vrm-glb-import
 
-- HEAD_SHA: a08e0fe85dcd96b8e5cfec16fda646f5ff2c18d7
+- HEAD_SHA: 82fb691e666a9df99b9cf3cb48d80f5c248f7306
 - Date: 2026-09-17
 - Verdict: CLEAR
 
