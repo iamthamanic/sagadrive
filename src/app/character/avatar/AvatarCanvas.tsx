@@ -4,7 +4,7 @@
  */
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
-import type { AvatarRigAnalysisResult } from '../../../domains/character/avatar';
+import type { AvatarRigAnalysisResult, MtoonStyleCompatibility } from '../../../domains/character/avatar';
 import { CharacterStudioRuntime, type AvatarRuntimeState } from '../../../infrastructure/character/avatar/character-studio-runtime';
 import { getAvatarAssetManifest, resolveAvatarModelUrl } from '../../../infrastructure/character/avatar/avatar-asset-manifests';
 import { AvatarRigCapabilityPanel } from './AvatarRigCapabilityPanel';
@@ -26,6 +26,7 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
   const runtimeRef = useRef<CharacterStudioRuntime>();
   const [runtimeState, setRuntimeState] = useState<AvatarRuntimeState>(initialState);
   const [rigAnalysis, setRigAnalysis] = useState<AvatarRigAnalysisResult | null>(null);
+  const [styleNotice, setStyleNotice] = useState<string | null>(null);
   const manifest = getAvatarAssetManifest(avatar.preset);
   const modelUrl = resolveAvatarModelUrl(avatar);
 
@@ -60,6 +61,9 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
 
   useEffect(() => {
     runtimeRef.current?.applyAppearance(avatar, manifest);
+    const compatibility: MtoonStyleCompatibility | undefined =
+      runtimeRef.current?.getStyleCompatibility();
+    setStyleNotice(compatibility?.noticeDe ?? null);
   }, [avatar, manifest]);
 
   return (
@@ -90,6 +94,16 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
             oder speichere eine gültige VRM/GLB-URL am Avatar.
           </div>
         )}
+
+        {styleNotice && runtimeState.status === 'ready' ? (
+          <div
+            className="pointer-events-none absolute inset-x-3 bottom-3 rounded-md border border-amber-400/25 bg-slate-950/80 px-2.5 py-1.5 text-[11px] text-amber-100 backdrop-blur"
+            data-testid="avatar-mtoon-style-notice"
+            role="status"
+          >
+            {styleNotice}
+          </div>
+        ) : null}
       </div>
       <AvatarRigCapabilityPanel analysis={rigAnalysis} />
     </div>

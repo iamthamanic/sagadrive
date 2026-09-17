@@ -132,3 +132,21 @@ export {
   type BaseBodyTraitSocket,
   type SagaDriveBaseBodyManifestV1,
 } from './base-body-contract';
+export {
+  MTOON_MATERIAL_CLASSES,
+  MTOON_PROFILE_VERSION,
+  classifyMtoonMaterialClass,
+  createSagaDriveMToonProfileV1,
+  listMtoonMaterialClassIds,
+  resolveMtoonPerformancePreset,
+  resolveMtoonRenderPath,
+  type MtoonLightRig,
+  type MtoonMaterialClass,
+  type MtoonMaterialClassProfile,
+  type MtoonOutlinePolicy,
+  type MtoonPerformancePreset,
+  type MtoonPerformanceProfile,
+  type MtoonRenderPath,
+  type MtoonStyleCompatibility,
+  type SagaDriveMToonProfileV1,
+} from './mtoon-profile';

@@ -20,6 +20,19 @@ import {
   type TraitLifecycleThreeAdapter,
 } from './trait-lifecycle-three-adapter';
 import { analyzeAvatarRigFromObject3D } from './rig-analyzer';
+import {
+  applyMtoonProfileToModel,
+  applyMtoonProfileToRenderer,
+  applyMtoonProfileToScene,
+  capturePortraitFromRenderer,
+  createMtoonStyleLights,
+  type MtoonStyleLights,
+} from './mtoon-style-applier';
+import {
+  createSagaDriveMToonProfileV1,
+  type MtoonStyleCompatibility,
+  type SagaDriveMToonProfileV1,
+} from '../../../domains/character/avatar/mtoon-profile';
 
 export type AvatarRuntimeState =
   | { status: 'loading'; message: string }
@@ -47,13 +60,6 @@ function clothingTint(clothing: string | undefined): string {
     default:
       return '#465A70';
   }
-}
-
-function setMaterialColor(material: THREE.Material, color: string): boolean {
-  if (!('color' in material) || !(material.color instanceof THREE.Color)) return false;
-  material.color.set(color);
-  material.needsUpdate = true;
-  return true;
 }
 
 function materialsOf(mesh: THREE.Mesh): THREE.Material[] {
@@ -105,6 +111,12 @@ export class CharacterStudioRuntime {
   private lastRigAnalysis?: AvatarRigAnalysisResult;
   private loadVersion = 0;
   private disposed = false;
+  private readonly styleProfile: SagaDriveMToonProfileV1 = createSagaDriveMToonProfileV1();
+  private readonly styleLights: MtoonStyleLights;
+  private styleCompatibility: MtoonStyleCompatibility = {
+    path: 'pbr-fallback',
+    noticeDe: null,
+  };
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -118,31 +130,18 @@ export class CharacterStudioRuntime {
       preserveDrawingBuffer: true,
       powerPreference: 'high-performance',
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    applyMtoonProfileToRenderer(this.renderer, this.styleProfile);
 
-    this.scene.background = new THREE.Color('#09111F');
-    this.scene.fog = new THREE.Fog('#09111F', 8, 18);
     this.modelContainer.add(this.overlaysGroup);
     this.scene.add(this.modelContainer);
     this.traitLifecycle = createTraitLifecycleThreeAdapter(this.overlaysGroup);
 
-    const hemisphere = new THREE.HemisphereLight('#DDEBFF', '#101828', 2.1);
-    this.scene.add(hemisphere);
-
-    const key = new THREE.DirectionalLight('#FFF4DE', 4.2);
-    key.position.set(2.5, 4.5, 4);
-    key.castShadow = true;
-    key.shadow.mapSize.set(1024, 1024);
-    this.scene.add(key);
-
-    const rim = new THREE.DirectionalLight('#5EA7FF', 2.2);
-    rim.position.set(-3, 2.5, -4);
-    this.scene.add(rim);
+    this.styleLights = createMtoonStyleLights(this.styleProfile);
+    this.scene.add(this.styleLights.hemisphere);
+    this.scene.add(this.styleLights.key);
+    this.scene.add(this.styleLights.fill);
+    this.scene.add(this.styleLights.rim);
+    applyMtoonProfileToScene(this.scene, this.styleLights, this.styleProfile);
 
     const floorMaterial = new THREE.MeshStandardMaterial({
       color: '#111C2E',
@@ -265,6 +264,20 @@ export class CharacterStudioRuntime {
     return this.traitLifecycle;
   }
 
+  getStyleCompatibility(): MtoonStyleCompatibility {
+    return this.styleCompatibility;
+  }
+
+  getStyleProfile(): SagaDriveMToonProfileV1 {
+    return this.styleProfile;
+  }
+
+  /** Portrait capture — same renderer/style path as live preview. */
+  capturePortraitDataUrl(): string {
+    this.renderNow();
+    return capturePortraitFromRenderer(this.renderer);
+  }
+
   applyAppearance(avatar: CharacterAvatarDto, manifest: AvatarAssetManifest): void {
     this.currentAvatar = avatar;
     this.currentManifest = manifest;
@@ -297,16 +310,19 @@ export class CharacterStudioRuntime {
       if (includesHint(semanticName, manifest.materialHints.hair)) {
         object.visible = !hairHidden;
       }
-      for (const material of materialsOf(object)) {
-        const materialName = `${object.name} ${material.name}`.toLowerCase();
-        if (includesHint(materialName, manifest.materialHints.hair)) {
-          if (!hairHidden) setMaterialColor(material, avatar.colors.hair);
-        } else if (includesHint(materialName, manifest.materialHints.skin)) {
-          setMaterialColor(material, avatar.colors.skin);
-        } else if (includesHint(materialName, manifest.materialHints.clothing)) {
-          setMaterialColor(material, clothingColor);
-        }
-      }
+    });
+
+    const isImportModel = Boolean(avatar.model_url);
+    this.styleCompatibility = applyMtoonProfileToModel({
+      root,
+      profile: this.styleProfile,
+      isImportModel,
+      colors: {
+        skin: avatar.colors.skin,
+        hair: avatar.colors.hair,
+        clothing: clothingColor,
+        eyes: avatar.colors.eyes,
+      },
     });
   }
 
