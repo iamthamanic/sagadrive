@@ -40,7 +40,7 @@ Out: Inventory equipment (#158+), body/face morph editor (#212+), Wallet/NFT/Web
 
 ## Composition Gate
 
-- HEAD_SHA: WORKTREE (updated at commit)
+- HEAD_SHA: 7de369649018ec1780fe5f01b0fb2409668529a6 (updated at commit)
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-characterstudio-modular-traits.md`
 
