@@ -5,7 +5,16 @@ import { AvatarCanvas } from '../avatar/AvatarCanvas';
 import { AvatarImportPanel } from '../avatar/AvatarImportPanel';
 import { AvatarTraitPanels } from '../avatar/AvatarTraitPanels';
 import { BaseBodyMorphFixture } from '../avatar/BaseBodyMorphFixture';
+import { AvatarMorphEditorPanels } from '../avatar/AvatarMorphEditorPanels';
 import type { AvatarTraitGroupId } from '../../../domains/character/avatar';
+import {
+  createDefaultAvatarMorphState,
+  migrateCharacterAvatarDtoToMorph,
+  morphToLegacySlider,
+  validateAvatarMorphInput,
+  withAvatarMorphState,
+  type SagaDriveAvatarMorphStateV1,
+} from '../../../domains/character/avatar';
 import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../domains/character/use-cases/avatar-presets';
 import { characterService } from '../../../infrastructure/character/character-service';
 import type {
@@ -319,17 +328,53 @@ export function CharacterEditor() {
   const [notes, setNotes] = useState('');
   const [portraitUrl, setPortraitUrl] = useState('');
   const [importedModelUrl, setImportedModelUrl] = useState<string | undefined>(undefined);
+  const [avatarMorph, setAvatarMorph] = useState<SagaDriveAvatarMorphStateV1>(() =>
+    createDefaultAvatarMorphState(),
+  );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarCanvasRef = useRef<HTMLCanvasElement>(null);
   const bootstrapAppliedRef = useRef(false);
 
-  const currentAvatar = useMemo(() => createCharacterStudioAvatar({
-    race: characterRace, head: headStyle, ears, hairStyle, clothing, accessory: accessory === 'none' ? undefined : accessory,
-    hairColor, skinTone, bodySize: bodySize[0] ?? 50, height: height[0] ?? 50,
-    modelUrl: importedModelUrl,
-  }), [accessory, bodySize, characterRace, clothing, ears, hairColor, hairStyle, headStyle, height, importedModelUrl, skinTone]);
+  const currentAvatar = useMemo(() => {
+    const base = createCharacterStudioAvatar({
+      race: characterRace,
+      head: headStyle,
+      ears,
+      hairStyle,
+      clothing,
+      accessory: accessory === 'none' ? undefined : accessory,
+      hairColor,
+      skinTone,
+      bodySize: morphToLegacySlider(avatarMorph.body.build),
+      height: morphToLegacySlider(avatarMorph.body.height),
+      modelUrl: importedModelUrl,
+    });
+    return withAvatarMorphState(base, {
+      ...avatarMorph,
+      colors: {
+        ...avatarMorph.colors,
+        hair: hairColor,
+        skin: skinTone,
+      },
+    });
+  }, [
+    accessory,
+    avatarMorph,
+    characterRace,
+    clothing,
+    ears,
+    hairColor,
+    hairStyle,
+    headStyle,
+    importedModelUrl,
+    skinTone,
+  ]);
+
+  const morphCapabilities = importedModelUrl
+    ? ([] as const)
+    : (['morph-body-v1', 'morph-face-v1'] as const);
 
   const archetype = characterArchetype ? getSagaDriveArchetype(characterArchetype) : undefined;
   const essence = essenceProfile ? getSagaDriveEssence(essenceProfile) : undefined;
@@ -602,6 +647,11 @@ export function CharacterEditor() {
     setClothing(appearance.clothing || appearance.avatar?.traits.clothing || 'casual');
     setAccessory(appearance.avatar?.traits.accessory ?? 'none');
     setImportedModelUrl(appearance.avatar?.model_url);
+    setAvatarMorph(
+      appearance.avatar?.morph
+        ? validateAvatarMorphInput(appearance.avatar.morph).state
+        : migrateCharacterAvatarDtoToMorph(appearance.avatar ?? null),
+    );
     setSavedCharacterId(payload.savedCharacterId);
     setPersistedLevel(payload.persistedLevel);
     clearCharacterEditorBootstrap();
@@ -1469,7 +1519,18 @@ export function CharacterEditor() {
 
                 <TabsContent value="appearance" className="space-y-6">
                   <div className="rounded-lg border border-primary/30 bg-primary/5 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium">Look ist kosmetisch</p><p className="mt-1 text-sm text-muted-foreground">Körperbau, Gesicht, Haare und Kleidung verändern keine Charakterwerte. Spezies und Speziesmerkmale wählst du im Spezies-Tab.</p></div><Badge variant="outline">Keine Werte</Badge></div></div>
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2"><div className="space-y-2"><Label>Körperbau</Label><Slider aria-label="Körperbau" value={bodySize} onValueChange={setBodySize} min={0} max={100} step={1} /><div className="flex items-center justify-between text-xs text-muted-foreground"><span>Schmal</span><span>{bodySize[0]}</span><span>Massiv</span></div></div><div className="space-y-2"><Label>Größe</Label><Slider aria-label="Größe" value={height} onValueChange={setHeight} min={0} max={100} step={1} /><div className="flex items-center justify-between text-xs text-muted-foreground"><span>Klein</span><span>{height[0]}</span><span>Groß</span></div></div></div>
+                  <AvatarMorphEditorPanels
+                    morph={avatarMorph}
+                    capabilities={morphCapabilities}
+                    disabled={saving}
+                    onMorphChange={(next) => {
+                      setAvatarMorph(next);
+                      setHairColor(next.colors.hair);
+                      setSkinTone(next.colors.skin);
+                      setBodySize([morphToLegacySlider(next.body.build)]);
+                      setHeight([morphToLegacySlider(next.body.height)]);
+                    }}
+                  />
                   <AvatarTraitPanels
                     selection={{
                       head: headStyle,

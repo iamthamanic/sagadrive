@@ -279,6 +279,14 @@ function checkAvatarMtoonProfile() {
   });
 }
 
+function checkAvatarBodyFaceEditor() {
+  console.log('Avatar body/face editor (#215): morph UI + live apply...');
+  execFileSync(process.execPath, ['scripts/avatar-body-face-editor-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarAssetCatalogRegressions() {
   console.log('Avatar asset catalog regression contract: checking race mappings, provenance, licenses, and pinned fallbacks...');
   execFileSync(process.execPath, ['scripts/avatar-asset-catalog-regression-check.mjs'], {
@@ -681,6 +689,7 @@ checkAvatarRigNormalization();
 checkAvatarMorphContract();
 checkAvatarBaseBodies();
 checkAvatarMtoonProfile();
+checkAvatarBodyFaceEditor();
 checkAvatarAssetCatalogRegressions();
 checkCoreProbabilityValidation();
 checkCombatActionEconomyValidation();
