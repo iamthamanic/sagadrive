@@ -35,7 +35,7 @@ Out: Live-Export bei Slider-Änderung, Marketplace/Batch, Meshy, Inventory bakin
 - Out: B-04 SQL N/A (storage API).
 
 ## Composition Gate
-- HEAD_SHA: 82554a93bf9600dff06fb5e513aba5538188c3c1
+- HEAD_SHA: e55cff3fb06f9b4ff72217b09eae1cf146e0d0b5
 - BASE_SHA: f0d130aeb2734f1b0712c97ac58929035109200d
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-avatar-save-materialized-export.md`

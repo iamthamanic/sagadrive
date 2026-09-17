@@ -1,7 +1,7 @@
 # Composition Gate — avatar-save-materialized-export
 
-- HEAD_SHA: 85562f8d0f8cbb095a909f85813c0c44e8d9adc5
-- BASE_SHA: f0d130a1856535f606a482d24281e32bf7a85e8d
+- HEAD_SHA: e55cff3fb06f9b4ff72217b09eae1cf146e0d0b5
+- BASE_SHA: f0d130aeb2734f1b0712c97ac58929035109200d
 - Verdict: CLEAR
 
 ## Event
@@ -20,3 +20,6 @@ Character Save → materializeAvatarSaveExport → owner-scoped GLB + model_url 
 | Invalid/missing | Export fail → prior model_url kept; draft not cleared; no active flip | pass |
 | Two consumers / crash | Signed URL fail rolls back is_active; compact avatar unchanged | pass |
 | Overlay present | Helmet/armor overlay not in export payload.runtimeOverlays / baseTraits | pass |
+
+## Flags
+- none
