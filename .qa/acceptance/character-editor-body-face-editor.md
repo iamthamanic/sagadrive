@@ -25,7 +25,7 @@ Out: Sculpting, bone gizmos
 - Out: B-04/B-07
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 86d2f6f87afa614a135b048bc1ca991f33ee2286
 - BASE_SHA: 0c8283d0e0c6cbb09a0e77a42bedf1481c53abbc
 - Verdict: CLEAR
 - Proof: .qa/runs/composition-gate-character-editor-body-face-editor.md
