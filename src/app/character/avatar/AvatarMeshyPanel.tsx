@@ -56,6 +56,7 @@ function storeJobId(jobId: string | null): void {
 
 export function AvatarMeshyPanel({ characterId, onSuccess }: AvatarMeshyPanelProps) {
   const [config, setConfig] = useState<MeshyAvatarConfig | null>(null);
+  const [configReady, setConfigReady] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [job, setJob] = useState<MeshyAvatarJobSnapshot | null>(null);
@@ -63,7 +64,15 @@ export function AvatarMeshyPanel({ characterId, onSuccess }: AvatarMeshyPanelPro
   const pollRef = useRef<number | null>(null);
 
   useEffect(() => {
-    void fetchMeshyAvatarConfig().then(setConfig);
+    let cancelled = false;
+    setConfigReady(false);
+    void fetchMeshyAvatarConfig()
+      .then((next) => {
+        if (!cancelled) setConfig(next);
+      })
+      .finally(() => {
+        if (!cancelled) setConfigReady(true);
+      });
     const existing = loadStoredJobId();
     if (existing) {
       void pollMeshyAvatarJob(existing)
@@ -76,6 +85,9 @@ export function AvatarMeshyPanel({ characterId, onSuccess }: AvatarMeshyPanelPro
         })
         .catch(() => storeJobId(null));
     }
+    return () => {
+      cancelled = true;
+    };
   }, [onSuccess]);
 
   useEffect(() => {
@@ -116,6 +128,12 @@ export function AvatarMeshyPanel({ characterId, onSuccess }: AvatarMeshyPanelPro
   const uiStatus: MeshyAvatarJobUiStatus = confirming
     ? 'confirming'
     : job?.status ?? 'idle';
+
+  const promptMin = config?.promptMinChars ?? 8;
+  const promptLen = prompt.trim().length;
+  const promptTooShort = promptLen < promptMin;
+  const meshyConfigured = configReady && Boolean(config?.meshyConfigured);
+  const showNotConfigured = configReady && config?.meshyConfigured === false;
 
   const start = async () => {
     setBusy(true);
@@ -167,16 +185,20 @@ export function AvatarMeshyPanel({ characterId, onSuccess }: AvatarMeshyPanelPro
         placeholder="z. B. erwachsener Elfenkrieger, stilisierter Look …"
         rows={3}
         maxLength={config?.promptMaxChars ?? 500}
-        disabled={busy || confirming}
+        disabled={busy || confirming || !configReady}
         aria-label="Meshy Prompt"
         data-avatar-meshy-prompt
       />
+      <p className="text-muted-foreground" data-avatar-meshy-prompt-hint>
+        Prompt mind. {promptMin} Zeichen
+        {promptLen > 0 ? ` · ${promptLen}/${promptMin}` : ''}.
+      </p>
       <div className="flex flex-wrap gap-2">
         {!confirming ? (
           <Button
             type="button"
             size="sm"
-            disabled={busy || !config?.meshyConfigured || prompt.trim().length < 8}
+            disabled={busy || !configReady || !meshyConfigured || promptTooShort}
             data-avatar-meshy-start
             onClick={() => setConfirming(true)}
           >
@@ -220,12 +242,17 @@ export function AvatarMeshyPanel({ characterId, onSuccess }: AvatarMeshyPanelPro
         ) : null}
       </div>
       <p className="text-muted-foreground" data-avatar-meshy-message role="status">
-        {STATUS_LABEL[uiStatus]}
-        {job?.progress ? ` · ${job.progress}%` : ''}
-        {job?.errorMessage ? ` — ${job.errorMessage}` : ''}
+        {!configReady
+          ? 'Prüfe Meshy-Konfiguration …'
+          : `${STATUS_LABEL[uiStatus]}${job?.progress ? ` · ${job.progress}%` : ''}${
+              job?.errorMessage ? ` — ${job.errorMessage}` : ''
+            }`}
       </p>
-      {!config?.meshyConfigured ? (
-        <p className="text-amber-700 dark:text-amber-300">
+      {showNotConfigured ? (
+        <p
+          className="text-amber-700 dark:text-amber-300"
+          data-avatar-meshy-not-configured
+        >
           Meshy nicht konfiguriert — bitte API-Key unter KI-Anbieter hinterlegen.
         </p>
       ) : null}

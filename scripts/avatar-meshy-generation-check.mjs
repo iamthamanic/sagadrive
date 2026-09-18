@@ -45,6 +45,12 @@ check(/data-avatar-meshy-status/.test(panel), 'status attr');
 check(/Kosten bestätigen/.test(panel), 'cost confirm');
 check(/sessionStorage/.test(panel), 'reload-stable job id');
 check(/data-avatar-meshy-retry/.test(panel), 'explicit retry');
+check(/configReady/.test(panel), 'config ready gate');
+check(/Prüfe Meshy-Konfiguration/.test(panel), 'loading status copy');
+check(/data-avatar-meshy-not-configured/.test(panel), 'not-configured marker');
+check(/data-avatar-meshy-prompt-hint/.test(panel), 'prompt length hint');
+check(/meshyConfigured === false/.test(panel), 'warn only after config false');
+check(!/!config\?\.meshyConfigured \?/.test(panel), 'no null-as-not-configured false positive');
 check(/AvatarMeshyPanel/.test(editor), 'editor mounts panel');
 
 check(/downloadMeshyGlbBytes/.test(edge), 'SSRF-safe download');
