@@ -22,10 +22,10 @@ export interface AvatarSourceOptionMeta {
 export const AVATAR_SOURCE_OPTIONS: readonly AvatarSourceOptionMeta[] = [
   {
     source: 'sagadrive',
-    titleDe: 'SagaDrive erstellen',
+    titleDe: 'Vorlage anpassen',
     expectationDe: 'voll editierbar',
     summaryDe:
-      'Traits, Morph und Content Pack — Editor-Funktionen folgen der Avatar-Analyse.',
+      'Species-Vorlage wählen, Körperfamilie laden, Traits und Morph im gemeinsamen Editor.',
   },
   {
     source: 'import',

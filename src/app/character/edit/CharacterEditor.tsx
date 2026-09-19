@@ -7,18 +7,27 @@ import { AvatarImportPanel } from '../avatar/AvatarImportPanel';
 import { AvatarMeshyPanel, type MeshyAvatarJobUiState } from '../avatar/AvatarMeshyPanel';
 import { AvatarMeshyGeneratingOverlay } from '../avatar/AvatarMeshyGeneratingOverlay';
 import { AvatarSourceSelector } from '../avatar/AvatarSourceSelector';
+import { AvatarSpeciesTemplatePicker } from '../avatar/AvatarSpeciesTemplatePicker';
 import { AvatarTraitPanels } from '../avatar/AvatarTraitPanels';
 import { BaseBodyMorphFixture } from '../avatar/BaseBodyMorphFixture';
 import { AvatarMorphEditorPanels } from '../avatar/AvatarMorphEditorPanels';
 import { useAvatarComposition } from '../avatar/useAvatarComposition';
 import { useAvatarEditorSurfaces } from '../avatar/useAvatarEditorSurfaces';
-import type { AvatarSource, AvatarTraitGroupId } from '../../../domains/character/avatar';
+import type {
+  AvatarSource,
+  AvatarTraitGroupId,
+  BaseBodySpeciesId,
+  CanonicalBodyFamilyId,
+} from '../../../domains/character/avatar';
 import {
+  applySpeciesTemplateIngress,
   createDefaultAvatarMorphState,
   evaluateAvatarSourceSwitch,
+  isCanonicalBodyFamilyId,
   isMeshyAvatarJobBusy,
   migrateCharacterAvatarDtoToMorph,
   morphToLegacySlider,
+  parseSpeciesTemplatePersistenceId,
   resolveAvatarSource,
   validateAvatarMorphInput,
   withAvatarMorphState,
@@ -347,6 +356,10 @@ export function CharacterEditor() {
   const [avatarMorph, setAvatarMorph] = useState<SagaDriveAvatarMorphStateV1>(() =>
     createDefaultAvatarMorphState(),
   );
+  const [speciesTemplateId, setSpeciesTemplateId] = useState<string | null>(null);
+  const [avatarBodyFamily, setAvatarBodyFamily] = useState<CanonicalBodyFamilyId | null>(null);
+  const [starterWardrobeIds, setStarterWardrobeIds] = useState<readonly string[]>([]);
+  const [templateWarningsDe, setTemplateWarningsDe] = useState<readonly string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -370,7 +383,7 @@ export function CharacterEditor() {
       modelUrl: importedModelUrl,
       source: avatarSource,
     });
-    return withAvatarMorphState(base, {
+    const withMorph = withAvatarMorphState(base, {
       ...avatarMorph,
       colors: {
         ...avatarMorph.colors,
@@ -378,8 +391,18 @@ export function CharacterEditor() {
         skin: skinTone,
       },
     });
+    if (!speciesTemplateId || !avatarBodyFamily) return withMorph;
+    return {
+      ...withMorph,
+      template_id: speciesTemplateId,
+      body_family: avatarBodyFamily,
+      anatomy: 'humanoid' as const,
+      modularity: 'modular-parts' as const,
+      starter_wardrobe: [...starterWardrobeIds],
+    };
   }, [
     accessory,
+    avatarBodyFamily,
     avatarMorph,
     avatarSource,
     characterRace,
@@ -390,8 +413,42 @@ export function CharacterEditor() {
     headStyle,
     importedModelUrl,
     skinTone,
+    speciesTemplateId,
+    starterWardrobeIds,
   ]);
 
+  const selectedTemplateSpeciesId = useMemo((): BaseBodySpeciesId | null => {
+    return parseSpeciesTemplatePersistenceId(speciesTemplateId);
+  }, [speciesTemplateId]);
+
+  const applySpeciesTemplate = (speciesId: BaseBodySpeciesId) => {
+    const seed = applySpeciesTemplateIngress(speciesId);
+    setCharacterRace(speciesId);
+    setAvatarSource('sagadrive');
+    setImportedModelUrl(undefined);
+    setSpeciesTemplateId(seed.templateId);
+    setAvatarBodyFamily(seed.bodyFamily);
+    setStarterWardrobeIds(seed.starterWardrobeIds);
+    setTemplateWarningsDe(seed.warningsDe);
+    setAvatarMorph(seed.morphState);
+    setHeadStyle(seed.traits.head);
+    setEars(seed.traits.ears);
+    setHairStyle(seed.traits.hair);
+    setClothing(seed.traits.clothing);
+    setAccessory(seed.traits.accessory ?? 'none');
+    setHairColor(seed.colors.hair);
+    setSkinTone(seed.colors.skin);
+    setBodySize([morphToLegacySlider(seed.morphState.body.build)]);
+    setHeight([morphToLegacySlider(seed.morphState.body.height)]);
+    setSagaDriveDirty(true);
+    if (seed.warningsDe.length > 0) {
+      toast.message('Vorlage geladen — einige Kleidungsstücke fehlen', {
+        description: seed.warningsDe[0],
+      });
+    } else {
+      toast.success(`Vorlage „${seed.labelDe}“ geladen`);
+    }
+  };
   const avatarComposition = useAvatarComposition(currentAvatar);
   const hasExternalAvatarModel = Boolean(importedModelUrl);
   // External meshes stay pending until structure evidence arrives (fail-closed).
@@ -739,6 +796,42 @@ export function CharacterEditor() {
         ? validateAvatarMorphInput(appearance.avatar.morph).state
         : migrateCharacterAvatarDtoToMorph(appearance.avatar ?? null),
     );
+    const restoredTemplateId =
+      typeof appearance.avatar?.template_id === 'string' ? appearance.avatar.template_id : null;
+    const restoredSpecies = parseSpeciesTemplatePersistenceId(restoredTemplateId);
+    if (restoredSpecies) {
+      setSpeciesTemplateId(restoredTemplateId);
+      setAvatarBodyFamily(
+        isCanonicalBodyFamilyId(appearance.avatar?.body_family)
+          ? appearance.avatar.body_family
+          : applySpeciesTemplateIngress(restoredSpecies).bodyFamily,
+      );
+      if (
+        Array.isArray(appearance.avatar?.starter_wardrobe) &&
+        appearance.avatar.starter_wardrobe.length > 0
+      ) {
+        setStarterWardrobeIds(appearance.avatar.starter_wardrobe);
+      } else {
+        setStarterWardrobeIds(
+          applySpeciesTemplateIngress(restoredSpecies).starterWardrobeIds,
+        );
+      }
+      setTemplateWarningsDe([]);
+    } else if (isCanonicalBodyFamilyId(appearance.avatar?.body_family)) {
+      setSpeciesTemplateId(null);
+      setAvatarBodyFamily(appearance.avatar.body_family);
+      setStarterWardrobeIds(
+        Array.isArray(appearance.avatar?.starter_wardrobe)
+          ? appearance.avatar.starter_wardrobe
+          : [],
+      );
+      setTemplateWarningsDe([]);
+    } else {
+      setSpeciesTemplateId(null);
+      setAvatarBodyFamily(null);
+      setStarterWardrobeIds([]);
+      setTemplateWarningsDe([]);
+    }
     setSavedCharacterId(payload.savedCharacterId);
     setPersistedLevel(payload.persistedLevel);
     // Incomplete drafts reopen with gap highlights on Spezies/Charakter (and sub-tabs).
@@ -1438,6 +1531,14 @@ export function CharacterEditor() {
                 disabled={saving}
                 onSelect={requestAvatarSourceChange}
               />
+              {avatarSource === 'sagadrive' ? (
+                <AvatarSpeciesTemplatePicker
+                  selectedSpeciesId={selectedTemplateSpeciesId}
+                  onSelect={applySpeciesTemplate}
+                  disabled={saving}
+                  warningsDe={templateWarningsDe}
+                />
+              ) : null}
               {avatarSource === 'import' ? (
                 <AvatarImportPanel
                   characterId={savedCharacterId}

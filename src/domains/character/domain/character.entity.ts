@@ -46,6 +46,16 @@ export interface CharacterAvatarDto {
   morph_contract_version?: 'SagaDriveAvatarMorphV1';
   /** Validated morph state — prefer morph-contract helpers over raw writes. */
   morph?: SagaDriveAvatarMorphStateV1;
+  /**
+   * Avatar V2 template ingress (#260) — optional; ignored by legacy readers.
+   * `template_id` e.g. `species-template:dwarf`; `body_family` from template pack.
+   */
+  template_id?: string;
+  body_family?: 'standard' | 'compact' | 'heavy' | 'custom';
+  anatomy?: 'humanoid' | 'non-humanoid' | 'unknown';
+  modularity?: 'modular-parts' | 'limited' | 'none';
+  /** Logical starter wardrobe ids applied as basic outfit (not inventory). */
+  starter_wardrobe?: readonly string[];
 }
 
 export type CharacterGenderReading = 'masculine-read' | 'feminine-read' | 'diverse';

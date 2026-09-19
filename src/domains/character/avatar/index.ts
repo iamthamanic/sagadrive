@@ -593,6 +593,17 @@ export {
   type SpeciesTemplateV1,
 } from './species-template-pack-v1';
 export {
+  DEFAULT_TEMPLATE_BASIC_OUTFIT_IDS,
+  SPECIES_TEMPLATE_INGRESS_CONTRACT_VERSION,
+  applySpeciesTemplateIngress,
+  assertTemplateCreatorFlowInvariants,
+  listTemplateCreatorPickerItems,
+  parseSpeciesTemplatePersistenceId,
+  projectTemplateBasicOutfitVisuals,
+  speciesTemplatePersistenceId,
+  type SpeciesTemplateEditorSeedV1,
+} from './species-template-ingress-v1';
+export {
   STARTER_WARDROBE_CONTRACT_VERSION,
   STARTER_WARDROBE_PACK_VERSION,
   STARTER_WEARABLE_IDS,
