@@ -36,7 +36,7 @@ Entscheidet technisch belastbar, wie ein Import-/Generate-Look auf Standard/Comp
 - External AI transfer documented as non-default (license/self-host)
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 09cfe422dfeefe59242fbe3b242f3731c5874aad
 - Verdict: CLEAR
 
 ## Implementation Notes
