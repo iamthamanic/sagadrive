@@ -1,6 +1,6 @@
 # Composition Gate — provider-agnostic-3d-generation (+ 150MB import + sheet_status gate)
 
-- HEAD_SHA: WORKTREE (uncommitted; base 185a0472506e5dd79fe571c114590ad27ab44f64)
+- HEAD_SHA: 5561d7c92f012b3185d0ee3ac96534d953aaf7ac
 - Date: 2026-09-19
 - Verdict: CLEAR
 
