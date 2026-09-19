@@ -38,8 +38,8 @@ Liefert den ersten kompletten Enduser-Flow auf Avatar V2: Species Template auswÃ
 - Capabilities never derived from source alone (inherit #259)
 
 ## Composition Gate
-- HEAD_SHA: (filled after gate)
-- Verdict: (filled after gate)
+- HEAD_SHA: 9d9e9501d1bb4825abe3a6edd80aabe28fe94b6e
+- Verdict: CLEAR
 
 ## Implementation Notes
 - Domain: `species-template-ingress-v1.ts` â€” `applySpeciesTemplateIngress`, basic outfit projection, invariants

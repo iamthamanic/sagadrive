@@ -4,7 +4,7 @@
 CLEAR
 
 ## HEAD_SHA
-(pending-commit — update after commit to feature tip)
+9d9e9501d1bb4825abe3a6edd80aabe28fe94b6e
 
 ## Business event
 User selects a species template („Vorlage anpassen“) → editor seed (morph/traits/family/outfit) → persisted appearance.avatar → reload hydrate.
