@@ -1,5 +1,9 @@
 # Issue run — #269 avatar-v2-modular-generate-flow
-- claimed: after #268 merge (PR #290 @ 2cf5eae)
 - branch: agent/issue-269-avatar-v2-modular-generate-flow
-- phase: claim + seed acceptance (implementation next)
-- binding: modular-generate-decomposition-spike-v1 handoff for #269
+- PR: https://github.com/iamthamanic/sagadrive/pull/291
+- phase: gates PASS → babysit → merge
+- verify: PASS
+- composition-gate: CLEAR
+- review: ACCEPT
+- ecc-check: READY
+- check: avatar-v2-modular-generate-flow-check PASS

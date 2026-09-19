@@ -33,8 +33,11 @@ check(!/from ['"]react['"]/.test(domain), 'no react');
 check(/runModularGenerateFlow/.test(index), 'barrel');
 check(/AvatarModularGenerateProgress/.test(editor), 'editor progress');
 check(/runModularGenerateFlow/.test(editor), 'editor orchestrates');
+check(/starterWardrobeIds/.test(editor) && /modularGenerateResult\?\.modularity/.test(editor), 'save wardrobe');
 check(/data-avatar-modular-generate-progress/.test(progress), 'progress UI');
 check(/Ziel verstehen|Körper wählen/.test(domain), 'DE stage labels');
+check(/useDegradedApproach/.test(domain), 'degraded path');
+check(/forbidFullModularFromBlob|fullModular/.test(domain), 'blob guard');
 
 const outDir = join(root, 'node_modules/.cache/avatar-v2-modular-generate-flow-check');
 mkdirSync(outDir, { recursive: true });
@@ -65,6 +68,22 @@ const gumo = m.runModularGenerateFlow({
 });
 check(gumo.status === 'degraded-free-form', 'gumo degrade');
 check(gumo.fullModular === false, 'gumo not modular');
+
+const partial = m.runModularGenerateFlow({
+  productMode: 'editable-wardrobe',
+  fixtureId: 'human',
+  failWearables: true,
+});
+check(partial.status === 'partial', 'partial');
+check(partial.fullModular === false, 'partial not full');
+
+const degraded = m.runModularGenerateFlow({
+  productMode: 'editable-wardrobe',
+  fixtureId: 'human',
+  useDegradedApproach: true,
+});
+check(degraded.approachId === 'generate-body-only-catalog-wearables', 'degraded id');
+check(degraded.fullModular === true, 'degraded catalog modular');
 
 check(existsSync(join(root, '.qa/acceptance/avatar-v2-modular-generate-flow.md')), 'acceptance');
 console.log('avatar-v2-modular-generate-flow-check PASS');

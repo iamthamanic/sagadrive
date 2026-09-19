@@ -42,11 +42,15 @@ Vertical Slice: `Mit KI erstellen` → `Editierbar & kleidungsfähig` endet in k
 - Each part validated against Role/Slot/Rig/Fit/GLB contracts
 
 ## Composition Gate
-- HEAD_SHA: b0c80ec513c13c9db5526afc7eee7ffa3fb348b7
-- Verdict: pending
+- HEAD_SHA: WORKTREE
+- Verdict: CLEAR
 
 ## Implementation Notes
 - Binding handoff: `buildModularGenerateHandoffFor269()` / `resolveModularGenerateDecompositionDecision()`
 - Default approach: `vision-parse-library-body-catalog-wearables`
 - Degraded: `generate-body-only-catalog-wearables`
+- Domain: `src/domains/character/avatar/modular-generate-flow-v1.ts`
+- UI: `AvatarModularGenerateProgress` + `CharacterEditor` orchestrates on Meshy success
+- Save/Reload: `starter_wardrobe` + canonical `body_family` without species template
 - Design: `.qa/design/avatar-v2-generate-decomposition-spike.md` + modular-pipeline §6
+- Check: `scripts/avatar-v2-modular-generate-flow-check.mjs`

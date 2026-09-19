@@ -65,6 +65,10 @@ Verbote: neue `src/modules`, `src/components`, `src/features`, generische `servi
   + `modular-generate-decomposition-spike-v1.ts` — Default:
   Vision/Parse → Library Body → Identity Transfer → Katalog-Wearables/Props.
   Bekleideter Blob nie als full modular; ungewöhnliche Anatomie → Freie Form.
+- **Modular Generate Flow (#269):** `modular-generate-flow-v1.ts` +
+  `AvatarModularGenerateProgress` — Vertical Slice Editierbar: Job-Graph aus #268,
+  Starter-Wardrobe/Props, Progress-UI (keine Provider-Interna), Save/Reload über
+  `starter_wardrobe` + Body Family; Partial/Degrade deterministisch.
 - **Custom Creature Original Flow (#266):** `.qa/design/avatar-v2-custom-creature-flow.md` +
   `custom-creature-flow-v1.ts` — Faruk-like Import→Analyze→Original behalten ohne
   Humanoid-Morph-Zwang; UI empfiehlt Original; Conversion = „humanoide Interpretation“.
