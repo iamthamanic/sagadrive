@@ -36,7 +36,7 @@ Ermittelt reproduzierbar, welcher Rigging-Ansatz für Humanoide und stark abweic
 - Provider outputs always re-analyzed (capabilities pending)
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 7ff100fd8ad3f0c10dd576a0a5fdc692db18c320
 - Verdict: CLEAR
 
 ## Implementation Notes
