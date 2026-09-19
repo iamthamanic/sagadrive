@@ -1,6 +1,6 @@
 # Composition Gate — avatar-v2-canonical-body-families
 
-- HEAD_SHA: PLACEHOLDER
+- HEAD_SHA: 00def651fa05709b7c9fc022eb3168a05d683763
 - BASE_SHA: 8cd24dc59c6a053f570c92a0b0b4e7915c00d33f
 - Date: 2026-09-19
 - Verdict: CLEAR
