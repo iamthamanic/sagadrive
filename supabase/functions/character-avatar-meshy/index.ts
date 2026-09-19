@@ -876,6 +876,9 @@ serve(async (request) => {
               });
               if (masterDl.bytes.byteLength <= AVATAR_MESHY_GLB_STORE_MAX_BYTES) {
                 const masterPath = `${userId}/meshy/${crypto.randomUUID()}-master.glb`;
+                // Deno fetch body: copy Uint8Array before body (lesson from #140)
+                const masterPayload = new Uint8Array(masterDl.bytes.byteLength);
+                masterPayload.set(masterDl.bytes);
                 const uploadMaster = await fetch(
                   `${supabaseUrl}/storage/v1/object/${BUCKET}/${masterPath}`,
                   {
@@ -886,7 +889,7 @@ serve(async (request) => {
                       'Content-Type': 'model/gltf-binary',
                       'x-upsert': 'true',
                     },
-                    body: masterDl.bytes,
+                    body: masterPayload,
                   },
                 );
                 if (uploadMaster.ok) {
@@ -1147,6 +1150,9 @@ serve(async (request) => {
 
       const artifactId = crypto.randomUUID();
       const storagePath = `${userId}/meshy/${artifactId}.glb`;
+      // Deno fetch body: copy Uint8Array before body (lesson from #140)
+      const runtimePayload = new Uint8Array(downloaded.bytes.byteLength);
+      runtimePayload.set(downloaded.bytes);
       const uploadRes = await fetch(
         `${supabaseUrl}/storage/v1/object/${BUCKET}/${storagePath}`,
         {
@@ -1157,8 +1163,7 @@ serve(async (request) => {
             'Content-Type': 'model/gltf-binary',
             'x-upsert': 'false',
           },
-          // Avoid extra full-buffer copy (CPU) — Blob accepts Uint8Array views.
-          body: new Blob([downloaded.bytes]),
+          body: runtimePayload,
         },
       );
       if (!uploadRes.ok) {

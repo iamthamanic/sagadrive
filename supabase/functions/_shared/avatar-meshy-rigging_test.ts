@@ -44,25 +44,30 @@ Deno.test('mock rigging provider create + succeed', async () => {
 
 Deno.test('live rigging provider posts input_task_id and parses result', async () => {
   const calls: { url: string; body?: string }[] = [];
-  const fetchImpl: typeof fetch = async (input, init) => {
+  const fetchImpl = ((input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
-    calls.push({ url, body: typeof init?.body === 'string' ? init.body : undefined });
-    if (url.endsWith('/rigging') && init?.method === 'POST') {
-      return new Response(JSON.stringify({ result: 'rig-99' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const rawBody = init && 'body' in init ? init.body : undefined;
+    calls.push({ url, body: typeof rawBody === 'string' ? rawBody : undefined });
+    if (init && 'method' in init && init.method === 'POST' && url.endsWith('/rigging')) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ result: 'rig-99' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
     }
-    return new Response(
-      JSON.stringify({
-        id: 'rig-99',
-        status: 'SUCCEEDED',
-        progress: 100,
-        result: { rigged_character_glb_url: 'https://assets.meshy.ai/r.glb' },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    return Promise.resolve(
+      new Response(
+        JSON.stringify({
+          id: 'rig-99',
+          status: 'SUCCEEDED',
+          progress: 100,
+          result: { rigged_character_glb_url: 'https://assets.meshy.ai/r.glb' },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
     );
-  };
+  }) as typeof fetch;
   const provider = createLiveMeshyRiggingProvider(
     { apiKey: 'k', baseUrl: 'https://api.meshy.ai/openapi/v2' },
     fetchImpl,
