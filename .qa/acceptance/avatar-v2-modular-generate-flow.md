@@ -42,7 +42,7 @@ Vertical Slice: `Mit KI erstellen` → `Editierbar & kleidungsfähig` endet in k
 - Each part validated against Role/Slot/Rig/Fit/GLB contracts
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: b0c80ec513c13c9db5526afc7eee7ffa3fb348b7
 - Verdict: pending
 
 ## Implementation Notes
