@@ -1,5 +1,5 @@
 # Composition Gate — avatar-v2-species-template-pack
-- HEAD_SHA: PLACEHOLDER
+- HEAD_SHA: ffc6fe5d040ec06edc42562ee42a752565777078
 - BASE_SHA: 45a34581378a252f550de48b73e3ae1cb58769d9
 - Date: 2026-09-19
 - Verdict: CLEAR
