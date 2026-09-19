@@ -56,6 +56,6 @@ Macht nicht-humanoide oder stark abweichende Charaktere zu First-Class-Avataren,
 - No UI / no infra / Rig V1 untouched
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 2c8fb8d06476dd467cd68e746551edd2c897c481
 - Verdict: CLEAR
 - See `.qa/runs/composition-gate-avatar-v2-custom-creature-contract.md`

@@ -2,12 +2,12 @@
 
 - Date: 2026-09-20
 - BASE_SHA: 7a4ccd8e805fa9fc14b43c7898f53745919a04e2 (main)
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 2c8fb8d06476dd467cd68e746551edd2c897c481
 - Verdict: **ACCEPT**
 
 ## Prerequisites
 - verify-ticket PASS
-- composition-gate CLEAR (WORKTREE)
+- composition-gate CLEAR (2c8fb8d06476dd467cd68e746551edd2c897c481)
 - test-gate PASS this session
 - No UI → verify-ui N/A
 

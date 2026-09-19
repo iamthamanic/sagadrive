@@ -1,7 +1,7 @@
 # ECC Check — avatar-v2-custom-creature-contract (#264)
 
 - Date: 2026-09-20
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 2c8fb8d06476dd467cd68e746551edd2c897c481
 - Verdict: **READY**
 
 ## Phase A — test-gate
