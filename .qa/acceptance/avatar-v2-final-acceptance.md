@@ -13,5 +13,5 @@ Close Avatar V2: golden journeys + GLB docs + security/perf regression green; no
 - [x] Zero type escape hatches
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: bd0a63468ce6ab5751ef614760ea5b8fd6375422
 - Verdict: CLEAR
