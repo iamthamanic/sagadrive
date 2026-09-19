@@ -399,6 +399,14 @@ function checkAvatarV2StarterWardrobe() {
   });
 }
 
+function checkAvatarV2SkinnedWearableRuntime() {
+  console.log('Avatar V2 skinned wearable runtime (#258): family fit + rebind + masks...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-skinned-wearable-runtime-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -909,6 +917,7 @@ checkAvatarV2AssetAuthoring();
 checkAvatarV2CanonicalBodyFamilies();
 checkAvatarV2SpeciesTemplatePack();
 checkAvatarV2StarterWardrobe();
+checkAvatarV2SkinnedWearableRuntime();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();
