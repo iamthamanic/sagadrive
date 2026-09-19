@@ -1,70 +1,91 @@
 /**
- * AvatarImportPanel — Look-tab CTA to import owner-scoped VRM/GLB models (#5).
+ * AvatarImportPanel — Import Flow v2: Upload → Analyse → Original behalten (#261).
  * Location: src/app/character/avatar/AvatarImportPanel.tsx
  *
- * Early UX checks client-side; authoritative validation runs in import service before storage.
+ * Shows anatomy/modularity/family summary in product language; never ticket/provider jargon.
  * On error, does not clear the previous model URL (caller keeps prior avatar).
  */
 
 import { useRef, useState, type DragEvent, type ChangeEvent } from 'react';
-import { Upload } from 'lucide-react';
+import { ExternalLink, Upload } from 'lucide-react';
 import {
+  AVATAR_IMPORT_GLB_SPEC_HELP_HREF,
+  AVATAR_IMPORT_GLB_SPEC_HELP_LABEL_DE,
   earlyCheckAvatarImportFile,
-  type AvatarImportUiStatus,
+  isImportOriginalFlowStatus,
+  type ImportAnalysisSummaryV1,
+  type ImportOriginalFlowStatus,
+  type ImportOriginalKeepSeedV1,
 } from '../../../domains/character/avatar';
 import {
   avatarImportLimits,
-  importCharacterAvatarModel,
+  keepOriginalImportedAvatar,
+  uploadAndAnalyzeCharacterAvatarModel,
+  type AvatarImportDraftV2,
 } from '../../../infrastructure/character/avatar/character-avatar-import-service';
 import { Button } from '../../../shared/ui/button';
 
 interface AvatarImportPanelProps {
   characterId?: string | null;
-  /** Called only after a confirmed successful import. */
-  onImported: (modelUrl: string) => void;
+  /** Called only after user confirms „Original behalten“. */
+  onKeepOriginal: (seed: ImportOriginalKeepSeedV1) => void;
 }
 
-const STATUS_LABEL: Record<AvatarImportUiStatus, string> = {
+const STATUS_LABEL: Record<ImportOriginalFlowStatus, string> = {
   idle: 'Bereit für Import',
   validating: 'Datei wird geprüft …',
   uploading: 'Upload läuft …',
-  analyzing: 'Für Rig-Analyse vorgemerkt …',
-  success: 'Import erfolgreich',
-  error: 'Import fehlgeschlagen',
-  'unsupported-capabilities': 'Eingeschränkte Fähigkeiten',
+  analyzing: 'Modell wird analysiert …',
+  'ready-humanoid': 'Humanoid erkannt',
+  'ready-custom': 'Eigener Körper',
+  limited: 'Eingeschränkt nutzbar',
+  failed: 'Import fehlgeschlagen',
 };
 
-export function AvatarImportPanel({ characterId, onImported }: AvatarImportPanelProps) {
+function toFlowStatus(value: string): ImportOriginalFlowStatus {
+  return isImportOriginalFlowStatus(value) ? value : 'analyzing';
+}
+
+export function AvatarImportPanel({ characterId, onKeepOriginal }: AvatarImportPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [status, setStatus] = useState<AvatarImportUiStatus>('idle');
+  const [status, setStatus] = useState<ImportOriginalFlowStatus>('idle');
   const [message, setMessage] = useState('VRM oder GLB auswählen — max. 150 MB.');
   const [dragOver, setDragOver] = useState(false);
-  const busy = status === 'validating' || status === 'uploading' || status === 'analyzing';
+  const [draft, setDraft] = useState<AvatarImportDraftV2 | null>(null);
+  const [keeping, setKeeping] = useState(false);
+  const busy =
+    status === 'validating' ||
+    status === 'uploading' ||
+    status === 'analyzing' ||
+    keeping;
   const limits = avatarImportLimits();
+  const summary: ImportAnalysisSummaryV1 | null = draft?.summary ?? null;
+  const showKeep = Boolean(summary?.canKeepOriginal);
 
   const runImport = async (file: File) => {
     const early = earlyCheckAvatarImportFile({ fileName: file.name, byteSize: file.size });
     if (!early.ok) {
-      setStatus('error');
+      setStatus('failed');
       setMessage(early.message ?? 'Datei ungültig.');
+      setDraft(null);
       return;
     }
+    setDraft(null);
     try {
-      const artifact = await importCharacterAvatarModel(file, {
+      const next = await uploadAndAnalyzeCharacterAvatarModel(file, {
         characterId,
         onProgress: (progress) => {
-          setStatus(progress.status);
+          setStatus(toFlowStatus(progress.status));
           setMessage(progress.message);
         },
       });
-      onImported(artifact.modelUrl);
-      if (artifact.rigAnalysisStatus === 'unsupported') {
-        setStatus('unsupported-capabilities');
-        setMessage('Import ok, aber Fähigkeiten sind eingeschränkt. Rig-Analyse folgt.');
-      }
+      setDraft(next);
+      setStatus(next.summary.flowStatus);
+      setMessage(next.summary.detailDe);
     } catch (error) {
-      setStatus('error');
+      setStatus('failed');
       setMessage(error instanceof Error ? error.message : 'Import fehlgeschlagen.');
+      setDraft(null);
     }
   };
 
@@ -81,8 +102,28 @@ export function AvatarImportPanel({ characterId, onImported }: AvatarImportPanel
     if (file) void runImport(file);
   };
 
+  const onKeepClick = async () => {
+    if (!draft || !draft.summary.canKeepOriginal) return;
+    setKeeping(true);
+    try {
+      const seed = await keepOriginalImportedAvatar({
+        draft,
+        characterId,
+      });
+      onKeepOriginal(seed);
+      setMessage('Originalkörper behalten — gemeinsamer Editor ist bereit.');
+    } catch (error) {
+      setStatus('failed');
+      setMessage(
+        error instanceof Error ? error.message : 'Original behalten fehlgeschlagen.',
+      );
+    } finally {
+      setKeeping(false);
+    }
+  };
+
   return (
-    <div className="space-y-3" data-avatar-import-panel>
+    <div className="space-y-3" data-avatar-import-panel data-avatar-import-flow="v2">
       <div
         data-avatar-import-dropzone
         onDragOver={(event) => {
@@ -95,9 +136,10 @@ export function AvatarImportPanel({ characterId, onImported }: AvatarImportPanel
           dragOver ? 'border-primary bg-primary/10' : 'border-border bg-muted/30'
         }`}
       >
-        <p className="text-sm font-medium">3D-Charakter importieren</p>
+        <p className="text-sm font-medium">3D-Modell importieren</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Eigene .vrm / .glb Dateien. Endgültige Freigabe erst nach Server-Prüfung.
+          Eigenes .vrm / .glb hochladen. Nach der Analyse kannst du den Originalkörper behalten —
+          ohne erzwungene Konvertierung.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Button
@@ -107,9 +149,10 @@ export function AvatarImportPanel({ characterId, onImported }: AvatarImportPanel
             onClick={() => inputRef.current?.click()}
             aria-busy={busy}
             data-avatar-import-cta
+            className="min-h-11"
           >
-            <Upload className="mr-2 h-4 w-4" />
-            3D-Charakter importieren
+            <Upload className="mr-2 h-4 w-4" aria-hidden />
+            3D-Modell importieren
           </Button>
           <input
             ref={inputRef}
@@ -118,14 +161,24 @@ export function AvatarImportPanel({ characterId, onImported }: AvatarImportPanel
             className="hidden"
             onChange={onFileChange}
           />
+          <a
+            href={AVATAR_IMPORT_GLB_SPEC_HELP_HREF}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-h-11 items-center gap-1 text-xs text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            data-avatar-import-glb-help
+          >
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            {AVATAR_IMPORT_GLB_SPEC_HELP_LABEL_DE}
+          </a>
         </div>
       </div>
 
       <div
         className={`rounded-md border px-3 py-2 text-xs ${
-          status === 'error'
+          status === 'failed'
             ? 'border-red-400/40 bg-red-500/10 text-red-950 dark:text-red-100'
-            : status === 'success'
+            : showKeep
               ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100'
               : 'border-border bg-background text-muted-foreground'
         }`}
@@ -136,6 +189,74 @@ export function AvatarImportPanel({ characterId, onImported }: AvatarImportPanel
         <span className="font-medium">{STATUS_LABEL[status]}</span>
         <span className="mt-0.5 block">{message}</span>
       </div>
+
+      {summary && summary.flowStatus !== 'failed' ? (
+        <section
+          className="space-y-2 rounded-lg border border-border bg-muted/20 p-3"
+          aria-label="Analyse-Ergebnis"
+          data-avatar-import-analysis-summary
+        >
+          <h3 className="text-sm font-medium">{summary.headlineDe}</h3>
+          <p className="text-xs text-muted-foreground">{summary.detailDe}</p>
+          <dl className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+            <div>
+              <dt className="text-muted-foreground">Anatomie</dt>
+              <dd data-avatar-import-anatomy={summary.anatomy}>{summary.anatomyLabelDe}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Modularität</dt>
+              <dd data-avatar-import-modularity={summary.modularity}>
+                {summary.modularityLabelDe}
+                {summary.modularityKindLabelDe
+                  ? ` · ${summary.modularityKindLabelDe}`
+                  : ''}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Körper-Empfehlung</dt>
+              <dd data-avatar-import-family={summary.recommendedFamily}>
+                {summary.familyLabelDe}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Fähigkeiten</dt>
+              <dd data-avatar-import-capabilities>{summary.capabilitiesLabelDe}</dd>
+            </div>
+          </dl>
+          {summary.limitationsDe.length > 0 ? (
+            <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+              {summary.limitationsDe.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          ) : null}
+          {showKeep ? (
+            <Button
+              type="button"
+              disabled={busy}
+              onClick={() => void onKeepClick()}
+              aria-busy={keeping}
+              data-avatar-import-keep-original
+              className="min-h-11 w-full sm:w-auto"
+            >
+              Original behalten
+            </Button>
+          ) : null}
+        </section>
+      ) : null}
+
+      {status === 'failed' ? (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+          data-avatar-import-retry
+          className="min-h-11"
+        >
+          Andere Datei wählen
+        </Button>
+      ) : null}
     </div>
   );
 }

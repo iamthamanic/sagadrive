@@ -36,15 +36,17 @@ check(/export \{[\s\S]*validateAvatarImportBytes/.test(index), 'barrel exports v
 check(/validateAvatarImportBytes/.test(service), 'service re-validates before upload');
 check(/character-avatars/.test(service), 'uses character-avatars bucket');
 check(/rig_analysis_status: 'pending'/.test(service), 'import always pending for #6');
-check(/is_active: true/.test(service), 'activates confirmed artifact');
+check(/is_active: false/.test(service), 'draft inactive until Original behalten');
+check(/keepOriginalImportedAvatar/.test(service), 'keep activates import');
 check(!/capabilities\s*:/.test(service), 'no client capability write in service');
 
-check(/3D-Charakter importieren/.test(panel), 'CTA label');
+check(/3D-Modell importieren/.test(panel), 'CTA label');
 check(/data-avatar-import-status/.test(panel), 'status test id');
 check(/validating/.test(panel) && /uploading/.test(panel) && /analyzing/.test(panel), 'UI status set');
 check(/onDragOver/.test(panel) && /onDrop/.test(panel), 'drag and drop');
 
 check(/AvatarImportPanel/.test(editor), 'editor mounts import panel');
+check(/onKeepOriginal/.test(editor), 'editor uses keep original');
 check(/importedModelUrl/.test(editor), 'imported model url state');
 check(/modelUrl: importedModelUrl/.test(editor), 'passes model url into avatar dto');
 

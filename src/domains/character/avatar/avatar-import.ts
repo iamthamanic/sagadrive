@@ -36,6 +36,10 @@ export interface AvatarImportArtifact {
   rigAnalysisStatus: AvatarRigAnalysisStatus;
 }
 
+/**
+ * Import UI progress statuses.
+ * V2 ready states live on ImportOriginalFlowStatus; legacy `success` kept for callers.
+ */
 export type AvatarImportUiStatus =
   | 'idle'
   | 'validating'
@@ -43,7 +47,11 @@ export type AvatarImportUiStatus =
   | 'analyzing'
   | 'success'
   | 'error'
-  | 'unsupported-capabilities';
+  | 'unsupported-capabilities'
+  | 'ready-humanoid'
+  | 'ready-custom'
+  | 'limited'
+  | 'failed';
 
 export interface AvatarImportEarlyCheck {
   ok: boolean;

@@ -16,8 +16,13 @@ import { useAvatarEditorSurfaces } from '../avatar/useAvatarEditorSurfaces';
 import type {
   AvatarSource,
   AvatarTraitGroupId,
+  AvatarV2Anatomy,
+  AvatarV2BodyFamily,
+  AvatarV2Modularity,
   BaseBodySpeciesId,
   CanonicalBodyFamilyId,
+  AvatarMorphEvidenceInput,
+  ImportOriginalKeepSeedV1,
 } from '../../../domains/character/avatar';
 import {
   applySpeciesTemplateIngress,
@@ -29,6 +34,7 @@ import {
   morphToLegacySlider,
   parseSpeciesTemplatePersistenceId,
   resolveAvatarSource,
+  morphEvidenceFromImportAnalysis,
   validateAvatarMorphInput,
   withAvatarMorphState,
   type SagaDriveAvatarMorphStateV1,
@@ -360,6 +366,14 @@ export function CharacterEditor() {
   const [avatarBodyFamily, setAvatarBodyFamily] = useState<CanonicalBodyFamilyId | null>(null);
   const [starterWardrobeIds, setStarterWardrobeIds] = useState<readonly string[]>([]);
   const [templateWarningsDe, setTemplateWarningsDe] = useState<readonly string[]>([]);
+  /** Composition axes from Import Flow v2 analysis — never invented client-side. */
+  const [importComposition, setImportComposition] = useState<{
+    anatomy: AvatarV2Anatomy;
+    bodyFamily: AvatarV2BodyFamily;
+    bodyCompatibility: AvatarV2BodyFamily | 'unknown';
+    modularity: AvatarV2Modularity;
+  } | null>(null);
+  const [importMorphEvidence, setImportMorphEvidence] = useState<AvatarMorphEvidenceInput | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -391,6 +405,15 @@ export function CharacterEditor() {
         skin: skinTone,
       },
     });
+    if (avatarSource === 'import' && importComposition) {
+      return {
+        ...withMorph,
+        body_family: importComposition.bodyFamily,
+        body_compatibility: importComposition.bodyCompatibility,
+        anatomy: importComposition.anatomy,
+        modularity: importComposition.modularity,
+      };
+    }
     if (!speciesTemplateId || !avatarBodyFamily) return withMorph;
     return {
       ...withMorph,
@@ -411,11 +434,39 @@ export function CharacterEditor() {
     hairColor,
     hairStyle,
     headStyle,
+    importComposition,
     importedModelUrl,
     skinTone,
     speciesTemplateId,
     starterWardrobeIds,
   ]);
+
+  const applyImportOriginalKeep = (seed: ImportOriginalKeepSeedV1) => {
+    setImportedModelUrl(seed.modelUrl);
+    setAvatarSource('import');
+    setSpeciesTemplateId(null);
+    setStarterWardrobeIds([]);
+    setTemplateWarningsDe([]);
+    setImportComposition({
+      anatomy: seed.anatomy,
+      bodyFamily: seed.bodyFamily,
+      bodyCompatibility: seed.bodyCompatibility,
+      modularity: seed.modularity,
+    });
+    setImportMorphEvidence(
+      morphEvidenceFromImportAnalysis({
+        anatomy: seed.anatomy,
+        modularity: seed.modularity,
+      }),
+    );
+    if (isCanonicalBodyFamilyId(seed.bodyFamily)) {
+      setAvatarBodyFamily(seed.bodyFamily);
+    } else {
+      setAvatarBodyFamily(null);
+    }
+    requestAutoPortraitAfterModel();
+    toast.success('Originalkörper behalten — Editor bereit');
+  };
 
   const selectedTemplateSpeciesId = useMemo((): BaseBodySpeciesId | null => {
     return parseSpeciesTemplatePersistenceId(speciesTemplateId);
@@ -426,6 +477,8 @@ export function CharacterEditor() {
     setCharacterRace(speciesId);
     setAvatarSource('sagadrive');
     setImportedModelUrl(undefined);
+    setImportComposition(null);
+    setImportMorphEvidence(null);
     setSpeciesTemplateId(seed.templateId);
     setAvatarBodyFamily(seed.bodyFamily);
     setStarterWardrobeIds(seed.starterWardrobeIds);
@@ -455,7 +508,9 @@ export function CharacterEditor() {
   const editorSurfaces = useAvatarEditorSurfaces({
     composition: avatarComposition,
     hasExternalModel: hasExternalAvatarModel,
-    inspected: hasExternalAvatarModel ? null : undefined,
+    inspected: hasExternalAvatarModel
+      ? importMorphEvidence
+      : undefined,
   });
   const morphCapabilities = editorSurfaces.morphFlags;
   const sourceCapabilitySummary = editorSurfaces.summaryDe;
@@ -831,6 +886,51 @@ export function CharacterEditor() {
       setAvatarBodyFamily(null);
       setStarterWardrobeIds([]);
       setTemplateWarningsDe([]);
+    }
+    const restoredSource = resolveAvatarSource({
+      source: appearance.avatar?.source,
+      provider: appearance.avatar?.provider,
+      modelUrl: appearance.avatar?.model_url,
+    });
+    if (restoredSource === 'import' && appearance.avatar) {
+      const anatomy =
+        appearance.avatar.anatomy === 'custom-creature' ||
+        appearance.avatar.anatomy === 'humanoid' ||
+        appearance.avatar.anatomy === 'unknown'
+          ? appearance.avatar.anatomy
+          : appearance.avatar.anatomy === 'non-humanoid'
+            ? 'custom-creature'
+            : 'unknown';
+      const modularity =
+        appearance.avatar.modularity === 'modular-parts' ||
+        appearance.avatar.modularity === 'limited' ||
+        appearance.avatar.modularity === 'monolithic'
+          ? appearance.avatar.modularity
+          : appearance.avatar.modularity === 'none'
+            ? 'monolithic'
+            : 'limited';
+      const bodyFamily =
+        appearance.avatar.body_family === 'standard' ||
+        appearance.avatar.body_family === 'compact' ||
+        appearance.avatar.body_family === 'heavy' ||
+        appearance.avatar.body_family === 'custom'
+          ? appearance.avatar.body_family
+          : 'custom';
+      const bodyCompatibility =
+        appearance.avatar.body_compatibility === 'standard' ||
+        appearance.avatar.body_compatibility === 'compact' ||
+        appearance.avatar.body_compatibility === 'heavy' ||
+        appearance.avatar.body_compatibility === 'custom' ||
+        appearance.avatar.body_compatibility === 'unknown'
+          ? appearance.avatar.body_compatibility
+          : bodyFamily === 'custom'
+            ? 'custom'
+            : 'unknown';
+      setImportComposition({ anatomy, bodyFamily, bodyCompatibility, modularity });
+      setImportMorphEvidence({ hasBodyMorphTargets: false, hasFaceMorphTargets: false });
+    } else {
+      setImportComposition(null);
+      setImportMorphEvidence(null);
     }
     setSavedCharacterId(payload.savedCharacterId);
     setPersistedLevel(payload.persistedLevel);
@@ -1542,12 +1642,7 @@ export function CharacterEditor() {
               {avatarSource === 'import' ? (
                 <AvatarImportPanel
                   characterId={savedCharacterId}
-                  onImported={(modelUrl) => {
-                    setImportedModelUrl(modelUrl);
-                    setAvatarSource('import');
-                    requestAutoPortraitAfterModel();
-                    toast.success('3D-Charakter importiert');
-                  }}
+                  onKeepOriginal={applyImportOriginalKeep}
                 />
               ) : null}
               {avatarSource === 'meshy' ? (

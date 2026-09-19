@@ -29,10 +29,10 @@ export const AVATAR_SOURCE_OPTIONS: readonly AvatarSourceOptionMeta[] = [
   },
   {
     source: 'import',
-    titleDe: '3D-Charakter importieren',
+    titleDe: '3D-Modell importieren',
     expectationDe: 'Import',
     summaryDe:
-      'Eigenes VRM/GLB hochladen. Verfügbare Funktionen richten sich nach der Avatar-Analyse.',
+      'Eigenes VRM/GLB hochladen, Analyse prüfen und Originalkörper behalten — Funktionen folgen der Analyse.',
   },
   {
     source: 'meshy',
