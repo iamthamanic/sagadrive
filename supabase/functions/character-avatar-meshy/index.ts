@@ -226,6 +226,13 @@ function jobKeepMaster(job: JsonRecord): boolean {
   return settings?.keepMaster === true;
 }
 
+/** In-flight claim tokens so concurrent polls do not create duplicate paid Meshy tasks. */
+const PIPELINE_CLAIM_PREFIX = 'claim:';
+
+function isPipelineClaimId(id: string): boolean {
+  return id.startsWith(PIPELINE_CLAIM_PREFIX);
+}
+
 function parseGenerationMode(value: unknown): GenerationMode {
   return value === 'image' ? 'image' : 'text';
 }
@@ -798,6 +805,12 @@ serve(async (request) => {
           : '';
 
       if (existingRemeshId) {
+        if (isPipelineClaimId(existingRemeshId)) {
+          return json(200, {
+            status: 'ok',
+            job: { ...current, status: 'rigging', progress: 92, error_message: null },
+          }, request);
+        }
         const remeshProvider = resolveRemeshProvider(apiKey);
         if (!remeshProvider) {
           return json(200, {
@@ -927,40 +940,81 @@ serve(async (request) => {
             }, request);
           }
           try {
-            const remeshCreated = await remeshProvider.createTask({
-              inputTaskId: meshSourceTaskId,
-              targetPolycount: jobRuntimePolycount(current),
-            });
-            await fetch(
-              `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+            const claimId = `${PIPELINE_CLAIM_PREFIX}${crypto.randomUUID()}`;
+            const claimRes = await fetch(
+              `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}&remesh_task_id=is.null`,
               {
                 method: 'PATCH',
                 headers: serviceHeaders,
                 body: JSON.stringify({
                   status: 'rigging',
                   progress: 92,
-                  remesh_task_id: remeshCreated.taskId,
+                  remesh_task_id: claimId,
                   error_message: null,
                   updated_at: new Date().toISOString(),
                 }),
               },
             );
-            return json(200, {
-              status: 'ok',
-              job: {
-                ...current,
-                status: 'rigging',
-                progress: 92,
-                remesh_task_id: remeshCreated.taskId,
-                error_message: null,
-              },
-            }, request);
-          } catch (remeshError) {
+            const claimRows = claimRes.ok ? await claimRes.json() : [];
+            if (!Array.isArray(claimRows) || claimRows.length !== 1) {
+              // Another poll claimed remesh — wait for next poll with their task id.
+              return json(200, {
+                status: 'ok',
+                job: { ...current, status: 'rigging', progress: 92, error_message: null },
+              }, request);
+            }
+            try {
+              const remeshCreated = await remeshProvider.createTask({
+                inputTaskId: meshSourceTaskId,
+                targetPolycount: jobRuntimePolycount(current),
+              });
+              await fetch(
+                `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}&remesh_task_id=eq.${encodeURIComponent(claimId)}`,
+                {
+                  method: 'PATCH',
+                  headers: serviceHeaders,
+                  body: JSON.stringify({
+                    status: 'rigging',
+                    progress: 92,
+                    remesh_task_id: remeshCreated.taskId,
+                    error_message: null,
+                    updated_at: new Date().toISOString(),
+                  }),
+                },
+              );
+              return json(200, {
+                status: 'ok',
+                job: {
+                  ...current,
+                  status: 'rigging',
+                  progress: 92,
+                  remesh_task_id: remeshCreated.taskId,
+                  error_message: null,
+                },
+              }, request);
+            } catch (remeshError) {
+              console.error(
+                'meshy avatar remesh create failed',
+                remeshError instanceof Error ? remeshError.message : 'unknown',
+              );
+              await fetch(
+                `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}&remesh_task_id=eq.${encodeURIComponent(claimId)}`,
+                {
+                  method: 'PATCH',
+                  headers: serviceHeaders,
+                  body: JSON.stringify({
+                    remesh_task_id: null,
+                    updated_at: new Date().toISOString(),
+                  }),
+                },
+              ).catch(() => undefined);
+              // Fall through to Auto-Rig with original provider task — may still succeed.
+            }
+          } catch (claimError) {
             console.error(
-              'meshy avatar remesh create failed',
-              remeshError instanceof Error ? remeshError.message : 'unknown',
+              'meshy avatar remesh claim failed',
+              claimError instanceof Error ? claimError.message : 'unknown',
             );
-            // Fall through to Auto-Rig with original provider task — may still succeed.
           }
         }
       }
@@ -980,6 +1034,12 @@ serve(async (request) => {
 
       let glbDownloadUrl = '';
       if (existingRigId) {
+        if (isPipelineClaimId(existingRigId)) {
+          return json(200, {
+            status: 'ok',
+            job: { ...current, status: 'rigging', progress: 95, error_message: null },
+          }, request);
+        }
         const rigTask = await riggingProvider.getTask(existingRigId);
         if (rigTask.status === 'PENDING' || rigTask.status === 'IN_PROGRESS') {
           const rigProgress = Math.max(95, Math.min(99, rigTask.progress || 95));
@@ -1055,48 +1115,86 @@ serve(async (request) => {
           }, request);
         }
         try {
-          const rigCreated = await riggingProvider.createTask({
-            inputTaskId: meshSourceTaskId,
-            heightMeters: 1.7,
-          });
-          await fetch(
-            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+          const claimId = `${PIPELINE_CLAIM_PREFIX}${crypto.randomUUID()}`;
+          const claimRes = await fetch(
+            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}&rig_task_id=is.null`,
             {
               method: 'PATCH',
               headers: serviceHeaders,
               body: JSON.stringify({
                 status: 'rigging',
                 progress: 95,
-                rig_task_id: rigCreated.taskId,
+                rig_task_id: claimId,
                 error_message: null,
                 updated_at: new Date().toISOString(),
               }),
             },
           );
-          return json(200, {
-            status: 'ok',
-            job: {
-              ...current,
-              status: 'rigging',
-              progress: 95,
-              rig_task_id: rigCreated.taskId,
-              error_message: null,
-            },
-          }, request);
-        } catch (rigError) {
-          const detail = rigError instanceof Error ? rigError.message : 'unbekannt';
-          console.error('meshy avatar auto-rig create failed', detail);
-          await fetch(
-            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
-            {
-              method: 'PATCH',
-              headers: serviceHeaders,
-              body: JSON.stringify({
+          const claimRows = claimRes.ok ? await claimRes.json() : [];
+          if (!Array.isArray(claimRows) || claimRows.length !== 1) {
+            return json(200, {
+              status: 'ok',
+              job: { ...current, status: 'rigging', progress: 95, error_message: null },
+            }, request);
+          }
+          try {
+            const rigCreated = await riggingProvider.createTask({
+              inputTaskId: meshSourceTaskId,
+              heightMeters: 1.7,
+            });
+            await fetch(
+              `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}&rig_task_id=eq.${encodeURIComponent(claimId)}`,
+              {
+                method: 'PATCH',
+                headers: serviceHeaders,
+                body: JSON.stringify({
+                  status: 'rigging',
+                  progress: 95,
+                  rig_task_id: rigCreated.taskId,
+                  error_message: null,
+                  updated_at: new Date().toISOString(),
+                }),
+              },
+            );
+            return json(200, {
+              status: 'ok',
+              job: {
+                ...current,
+                status: 'rigging',
+                progress: 95,
+                rig_task_id: rigCreated.taskId,
+                error_message: null,
+              },
+            }, request);
+          } catch (rigError) {
+            const detail = rigError instanceof Error ? rigError.message : 'unbekannt';
+            console.error('meshy avatar auto-rig create failed', detail);
+            await fetch(
+              `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}&rig_task_id=eq.${encodeURIComponent(claimId)}`,
+              {
+                method: 'PATCH',
+                headers: serviceHeaders,
+                body: JSON.stringify({
+                  status: 'failed',
+                  error_message: publicMeshyFailure('rig'),
+                  rig_task_id: null,
+                  updated_at: new Date().toISOString(),
+                }),
+              },
+            ).catch(() => undefined);
+            return json(200, {
+              status: 'ok',
+              job: {
+                ...current,
                 status: 'failed',
                 error_message: publicMeshyFailure('rig'),
-                updated_at: new Date().toISOString(),
-              }),
-            },
+              },
+            }, request);
+          }
+        } catch (claimError) {
+          console.error(
+            'meshy avatar auto-rig claim failed',
+            claimError instanceof Error ? claimError.message : 'unknown',
           );
           return json(200, {
             status: 'ok',
