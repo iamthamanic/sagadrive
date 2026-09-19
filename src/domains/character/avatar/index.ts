@@ -94,6 +94,19 @@ export {
   type IdentityTransferScoreRow,
 } from './identity-transfer-spike-v1';
 export {
+  BODY_CONVERSION_FLOW_CONTRACT_VERSION,
+  BODY_CONVERSION_TARGET_FAMILIES,
+  assertBodyConversionFlowInvariants,
+  isBodyConversionTargetFamily,
+  listBodyConversionFamilyOptions,
+  planBodyConversion,
+  type BodyConversionFamilyOptionV1,
+  type BodyConversionRequestV1,
+  type BodyConversionResultV1,
+  type BodyConversionStatus,
+  type BodyConversionTargetFamily,
+} from './body-conversion-flow-v1';
+export {
   RIG_CONTRACT_VERSION,
   SAGA_DRIVE_HUMANOID_ANCHORS,
   SAGA_DRIVE_HUMANOID_BONES,

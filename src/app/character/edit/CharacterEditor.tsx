@@ -22,6 +22,7 @@ import type {
   BaseBodySpeciesId,
   CanonicalBodyFamilyId,
   AvatarMorphEvidenceInput,
+  BodyConversionResultV1,
   ImportOriginalKeepSeedV1,
 } from '../../../domains/character/avatar';
 import {
@@ -466,6 +467,39 @@ export function CharacterEditor() {
     }
     requestAutoPortraitAfterModel();
     toast.success('Originalkörper behalten — Editor bereit');
+  };
+
+  const applyBodyConversion = (result: BodyConversionResultV1) => {
+    if (result.status === 'failed') {
+      toast.error(result.limitationsDe[0] ?? 'Conversion fehlgeschlagen — Original unverändert');
+      return;
+    }
+    // Converted artifact uses canonical body — clear external mesh URL.
+    setImportedModelUrl(undefined);
+    setAvatarSource('sagadrive');
+    setSpeciesTemplateId(null);
+    setStarterWardrobeIds([]);
+    setTemplateWarningsDe(result.limitationsDe);
+    setImportComposition(null);
+    setImportMorphEvidence(null);
+    setAvatarBodyFamily(result.targetFamily);
+    setAvatarMorph(result.morphState);
+    setHeadStyle(result.traits.head);
+    setEars(result.traits.ears);
+    setHairStyle(result.traits.hair);
+    setClothing(result.traits.clothing);
+    setAccessory(result.traits.accessory === 'none' ? 'none' : result.traits.accessory);
+    setHairColor(result.colors.hair);
+    setSkinTone(result.colors.skin);
+    setBodySize([morphToLegacySlider(result.morphState.body.build)]);
+    setHeight([morphToLegacySlider(result.morphState.body.height)]);
+    setSagaDriveDirty(true);
+    toast.success(
+      result.status === 'degraded'
+        ? `Übertragen auf ${result.targetFamily} (eingeschränkt)`
+        : `Übertragen auf ${result.targetFamily}`,
+      { description: result.tradeoffCopyDe },
+    );
   };
 
   const selectedTemplateSpeciesId = useMemo((): BaseBodySpeciesId | null => {
@@ -1643,6 +1677,7 @@ export function CharacterEditor() {
                 <AvatarImportPanel
                   characterId={savedCharacterId}
                   onKeepOriginal={applyImportOriginalKeep}
+                  onConverted={applyBodyConversion}
                 />
               ) : null}
               {avatarSource === 'meshy' ? (
