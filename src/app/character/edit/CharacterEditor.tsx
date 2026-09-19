@@ -10,10 +10,11 @@ import { AvatarSourceSelector } from '../avatar/AvatarSourceSelector';
 import { AvatarTraitPanels } from '../avatar/AvatarTraitPanels';
 import { BaseBodyMorphFixture } from '../avatar/BaseBodyMorphFixture';
 import { AvatarMorphEditorPanels } from '../avatar/AvatarMorphEditorPanels';
+import { useAvatarComposition } from '../avatar/useAvatarComposition';
+import { useAvatarEditorSurfaces } from '../avatar/useAvatarEditorSurfaces';
 import type { AvatarSource, AvatarTraitGroupId } from '../../../domains/character/avatar';
 import {
   createDefaultAvatarMorphState,
-  describeAvatarSourceCapabilities,
   evaluateAvatarSourceSwitch,
   isMeshyAvatarJobBusy,
   migrateCharacterAvatarDtoToMorph,
@@ -391,18 +392,22 @@ export function CharacterEditor() {
     skinTone,
   ]);
 
-  const morphCapabilities = avatarSource === 'sagadrive' && !importedModelUrl
-    ? (['morph-body-v1', 'morph-face-v1'] as const)
-    : ([] as const);
-
-  const sourceCapabilitySummary = describeAvatarSourceCapabilities({
-    source: avatarSource,
-    morphBody: avatarSource === 'sagadrive' && !importedModelUrl,
-    morphFace: avatarSource === 'sagadrive' && !importedModelUrl,
-    animation: false,
-    facial: false,
-    wearables: false,
+  const avatarComposition = useAvatarComposition(currentAvatar);
+  const hasExternalAvatarModel = Boolean(importedModelUrl);
+  // External meshes stay pending until structure evidence arrives (fail-closed).
+  const editorSurfaces = useAvatarEditorSurfaces({
+    composition: avatarComposition,
+    hasExternalModel: hasExternalAvatarModel,
+    inspected: hasExternalAvatarModel ? null : undefined,
   });
+  const morphCapabilities = editorSurfaces.morphFlags;
+  const sourceCapabilitySummary = editorSurfaces.summaryDe;
+  const appearanceEditable =
+    editorSurfaces.status !== 'pending' &&
+    (editorSurfaces.surfaces.morphBody ||
+      editorSurfaces.surfaces.morphFace ||
+      editorSurfaces.surfaces.traits ||
+      editorSurfaces.surfaces.colors);
 
   const requestAvatarSourceChange = (next: AvatarSource) => {
     if (next === avatarSource) return;
@@ -1452,7 +1457,7 @@ export function CharacterEditor() {
                     setImportedModelUrl(modelUrl);
                     setAvatarSource('meshy');
                     requestAutoPortraitAfterModel();
-                    toast.success('KI-Charakter materialisiert — Rig-Analyse folgt (#6)');
+                    toast.success('KI-Charakter materialisiert — Strukturanalyse folgt');
                   }}
                 />
               ) : null}
@@ -1773,60 +1778,90 @@ export function CharacterEditor() {
 
                 <TabsContent value="appearance" className="space-y-6">
                   <div className="rounded-lg border border-primary/30 bg-primary/5 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium">Look ist kosmetisch</p><p className="mt-1 text-sm text-muted-foreground">Körperbau, Gesicht, Haare und Kleidung verändern keine Charakterwerte. Spezies und Speziesmerkmale wählst du im Spezies-Tab.</p></div><Badge variant="outline">Keine Werte</Badge></div></div>
-                  {avatarSource !== 'sagadrive' ? (
-                    <p className="text-sm text-muted-foreground" data-avatar-source-appearance-hint>
-                      Morph- und Trait-Editor sind für die Quelle „SagaDrive erstellen“ aktiv. Import/KI nutzen Preview + Rig-Capabilities (#6).
+                  {editorSurfaces.status === 'pending' ? (
+                    <p
+                      className="text-sm text-muted-foreground"
+                      data-avatar-capability-pending
+                      role="status"
+                    >
+                      Avatar-Struktur wird geprüft. Morph- und Trait-Controls erscheinen, sobald die Analyse fertig ist.
                     </p>
                   ) : null}
-                  <AvatarMorphEditorPanels
-                    morph={avatarMorph}
-                    capabilities={morphCapabilities}
-                    disabled={saving || avatarSource !== 'sagadrive'}
-                    onMorphChange={(next) => {
-                      setAvatarMorph(next);
-                      setSagaDriveDirty(true);
-                      setHairColor(next.colors.hair);
-                      setSkinTone(next.colors.skin);
-                      setBodySize([morphToLegacySlider(next.body.build)]);
-                      setHeight([morphToLegacySlider(next.body.height)]);
-                    }}
-                  />
-                  <AvatarTraitPanels
-                    selection={{
-                      head: headStyle,
-                      ears,
-                      hair: hairStyle,
-                      clothing,
-                      accessory,
-                    }}
-                    morph={avatarMorph}
-                    onBaseTraitChange={(groupId: AvatarTraitGroupId, traitId: string) => {
-                      if (avatarSource !== 'sagadrive') return;
-                      setSagaDriveDirty(true);
-                      switch (groupId) {
-                        case 'head':
-                          setHeadStyle(traitId);
-                          break;
-                        case 'ears':
-                          setEars(traitId);
-                          break;
-                        case 'hair':
-                          setHairStyle(traitId);
-                          break;
-                        case 'clothing':
-                          setClothing(traitId);
-                          break;
-                        case 'accessory':
-                          setAccessory(traitId);
-                          break;
-                        default: {
-                          const _exhaustive: never = groupId;
-                          return _exhaustive;
-                        }
+                  {!appearanceEditable && editorSurfaces.status !== 'pending' ? (
+                    <p
+                      className="text-sm text-muted-foreground"
+                      data-avatar-capability-appearance-hint
+                    >
+                      {editorSurfaces.limitations[0] ??
+                        'Für diesen Avatar sind Morph- und Trait-Controls nicht freigeschaltet.'}
+                    </p>
+                  ) : null}
+                  {editorSurfaces.status !== 'pending' ? (
+                    <AvatarMorphEditorPanels
+                      morph={avatarMorph}
+                      capabilities={morphCapabilities}
+                      disabled={
+                        saving ||
+                        (!editorSurfaces.surfaces.morphBody &&
+                          !editorSurfaces.surfaces.morphFace)
                       }
-                    }}
-                  />
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="hairColor">Haarfarbe</Label><div className="flex gap-2"><Input id="hairColor" type="color" value={/^#[0-9a-fA-F]{6}$/.test(hairColor) ? hairColor : '#000000'} onChange={(event) => { setHairColor(event.target.value); setSagaDriveDirty(true); }} className="h-10 w-20" disabled={avatarSource !== 'sagadrive'} /><Input value={hairColor} onChange={(event) => { setHairColor(event.target.value); setSagaDriveDirty(true); }} aria-label="Haarfarbe als Hexwert" disabled={avatarSource !== 'sagadrive'} /></div></div><div className="space-y-2"><Label htmlFor="skinTone">Hautfarbe</Label><div className="flex gap-2"><Input id="skinTone" type="color" value={/^#[0-9a-fA-F]{6}$/.test(skinTone) ? skinTone : '#F5E6D3'} onChange={(event) => { setSkinTone(event.target.value); setSagaDriveDirty(true); }} className="h-10 w-20" disabled={avatarSource !== 'sagadrive'} /><Input value={skinTone} onChange={(event) => { setSkinTone(event.target.value); setSagaDriveDirty(true); }} aria-label="Hautfarbe als Hexwert" disabled={avatarSource !== 'sagadrive'} /></div></div></div>
+                      onMorphChange={(next) => {
+                        if (
+                          !editorSurfaces.surfaces.morphBody &&
+                          !editorSurfaces.surfaces.morphFace
+                        ) {
+                          return;
+                        }
+                        setAvatarMorph(next);
+                        setSagaDriveDirty(true);
+                        setHairColor(next.colors.hair);
+                        setSkinTone(next.colors.skin);
+                        setBodySize([morphToLegacySlider(next.body.build)]);
+                        setHeight([morphToLegacySlider(next.body.height)]);
+                      }}
+                    />
+                  ) : null}
+                  {editorSurfaces.surfaces.traits ? (
+                    <AvatarTraitPanels
+                      selection={{
+                        head: headStyle,
+                        ears,
+                        hair: hairStyle,
+                        clothing,
+                        accessory,
+                      }}
+                      morph={avatarMorph}
+                      onBaseTraitChange={(groupId: AvatarTraitGroupId, traitId: string) => {
+                        if (!editorSurfaces.surfaces.traits) return;
+                        if (groupId === 'clothing' && !editorSurfaces.surfaces.clothing) return;
+                        setSagaDriveDirty(true);
+                        switch (groupId) {
+                          case 'head':
+                            setHeadStyle(traitId);
+                            break;
+                          case 'ears':
+                            setEars(traitId);
+                            break;
+                          case 'hair':
+                            setHairStyle(traitId);
+                            break;
+                          case 'clothing':
+                            setClothing(traitId);
+                            break;
+                          case 'accessory':
+                            setAccessory(traitId);
+                            break;
+                          default: {
+                            const _exhaustive: never = groupId;
+                            return _exhaustive;
+                          }
+                        }
+                      }}
+                    />
+                  ) : null}
+                  {editorSurfaces.surfaces.colors ? (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="hairColor">Haarfarbe</Label><div className="flex gap-2"><Input id="hairColor" type="color" value={/^#[0-9a-fA-F]{6}$/.test(hairColor) ? hairColor : '#000000'} onChange={(event) => { setHairColor(event.target.value); setSagaDriveDirty(true); }} className="h-10 w-20" disabled={saving} /><Input value={hairColor} onChange={(event) => { setHairColor(event.target.value); setSagaDriveDirty(true); }} aria-label="Haarfarbe als Hexwert" disabled={saving} /></div></div><div className="space-y-2"><Label htmlFor="skinTone">Hautfarbe</Label><div className="flex gap-2"><Input id="skinTone" type="color" value={/^#[0-9a-fA-F]{6}$/.test(skinTone) ? skinTone : '#F5E6D3'} onChange={(event) => { setSkinTone(event.target.value); setSagaDriveDirty(true); }} className="h-10 w-20" disabled={saving} /><Input value={skinTone} onChange={(event) => { setSkinTone(event.target.value); setSagaDriveDirty(true); }} aria-label="Hautfarbe als Hexwert" disabled={saving} /></div></div></div>
+                  ) : null}
                 </TabsContent>
 
                 <TabsContent value="inventory">

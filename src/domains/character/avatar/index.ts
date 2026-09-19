@@ -249,6 +249,19 @@ export {
   type AvatarV2Source,
 } from './composition-contract-v2';
 export {
+  AVATAR_EDITOR_SURFACE_IDS,
+  AVATAR_EDITOR_SURFACE_RESOLVER_VERSION,
+  resolveAvatarEditorSurfaces,
+  resolveEditorSurfacesFromAvatarState,
+  resolveMorphEvidenceForComposition,
+  type AvatarEditorCapabilityStatus,
+  type AvatarEditorSurfaceId,
+  type AvatarEditorSurfaceMap,
+  type AvatarEditorSurfaces,
+  type AvatarMorphEvidenceInput,
+  type AvatarMorphEvidenceResolution,
+} from './editor-surface-resolver-v1';
+export {
   MODULAR_AVATAR_GLB_CONTRACT_VERSION,
   MODULAR_AVATAR_GLB_NODE_ROLES,
   MODULAR_AVATAR_GLB_ROLE_SLOT_HINTS,

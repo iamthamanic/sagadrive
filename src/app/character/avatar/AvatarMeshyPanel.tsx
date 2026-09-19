@@ -90,7 +90,7 @@ const STATUS_LABEL: Record<MeshyAvatarJobUiStatus, string> = {
   queued: 'In Warteschlange …',
   generating: 'Generiert …',
   rigging: 'Übernimmt Modell …',
-  analyzing: 'Rig-Analyse (#6) folgt',
+  analyzing: 'Strukturanalyse folgt',
   success: 'Fertig',
   failed: 'Fehlgeschlagen',
   'provider-unavailable': 'Provider nicht verfügbar',
