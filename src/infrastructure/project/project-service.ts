@@ -30,6 +30,7 @@ function isProjectDto(value: unknown): value is ProjectDto {
   if (!isRecord(value)) return false;
   return (
     typeof value.id === 'string' &&
+    typeof value.public_id === 'string' &&
     typeof value.code === 'string' &&
     typeof value.name === 'string' &&
     (typeof value.description === 'string' || value.description === null) &&
@@ -45,16 +46,58 @@ function isProjectDto(value: unknown): value is ProjectDto {
  * Project Service
  * Handles all project-related API calls (campaigns/adventures)
  */
-function isProjectSummaryRow(value: unknown): value is Pick<ProjectDto, 'id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'> {
+function isProjectSummaryRow(
+  value: unknown,
+): value is Pick<ProjectDto, 'id' | 'public_id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'> {
   if (!isRecord(value)) return false;
   return (
     typeof value.id === 'string' &&
+    typeof value.public_id === 'string' &&
     typeof value.code === 'string' &&
     typeof value.name === 'string' &&
     (typeof value.description === 'string' || value.description === null) &&
     typeof value.gm_user_id === 'string' &&
     isProjectStatus(value.status)
   );
+}
+
+function isSessionStatus(value: unknown): value is SessionDto['status'] {
+  return (
+    value === 'scheduled'
+    || value === 'active'
+    || value === 'paused'
+    || value === 'completed'
+    || value === 'cancelled'
+  );
+}
+
+function isSessionDto(value: unknown): value is SessionDto {
+  if (!isRecord(value)) return false;
+  const durationOk =
+    value.duration_minutes === undefined
+    || typeof value.duration_minutes === 'number'
+    || value.duration_minutes === null;
+  return (
+    typeof value.id === 'string'
+    && typeof value.public_id === 'string'
+    && typeof value.project_id === 'string'
+    && typeof value.session_number === 'number'
+    && (typeof value.name === 'string' || value.name === null)
+    && (typeof value.notes === 'string' || value.notes === null)
+    && isSessionStatus(value.status)
+    && (typeof value.started_at === 'string' || value.started_at === null)
+    && (typeof value.ended_at === 'string' || value.ended_at === null)
+    && durationOk
+    && typeof value.created_at === 'string'
+    && typeof value.updated_at === 'string'
+  );
+}
+
+function normalizeSessionDto(value: SessionDto): SessionDto {
+  return {
+    ...value,
+    duration_minutes: value.duration_minutes ?? null,
+  };
 }
 
 class ProjectService {
@@ -93,6 +136,7 @@ class ProjectService {
 
     const mappedSessions: SessionVm[] = sessions.map((session) => ({
       id: session.id,
+      publicId: session.public_id,
       projectId: session.project_id,
       sessionNumber: session.session_number,
       name: session.name,
@@ -113,6 +157,7 @@ class ProjectService {
 
     return {
       id: project.id,
+      publicId: project.public_id,
       code: project.code,
       name: project.name,
       description: project.description,
@@ -198,7 +243,7 @@ class ProjectService {
 
     const { data: gmProjects, error: gmError } = await supabase
       .from(this.tableName)
-      .select('id, code, name, description, gm_user_id, status')
+      .select('id, public_id, code, name, description, gm_user_id, status')
       .eq('gm_user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -208,7 +253,7 @@ class ProjectService {
 
     const { data: memberRecords, error: memberError } = await supabase
       .from(this.membersTableName)
-      .select('projects!inner(id, code, name, description, gm_user_id, status)')
+      .select('projects!inner(id, public_id, code, name, description, gm_user_id, status)')
       .eq('user_id', userId)
       .eq('status', 'active');
 
@@ -216,7 +261,10 @@ class ProjectService {
       console.error('Failed to fetch player projects:', memberError);
     }
 
-    type ProjectSummaryRow = Pick<ProjectDto, 'id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'>;
+    type ProjectSummaryRow = Pick<
+      ProjectDto,
+      'id' | 'public_id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'
+    >;
     const combined = new Map<string, ProjectSummaryRow>();
 
     for (const project of gmProjects ?? []) {
@@ -254,6 +302,7 @@ class ProjectService {
       const project = combined.get(id)!;
       return {
         id: project.id,
+        publicId: project.public_id,
         code: project.code,
         name: project.name,
         description: project.description,
@@ -394,6 +443,78 @@ class ProjectService {
   async leaveProject(projectId: string): Promise<void> {
     const userId = await getAuthenticatedUserId();
     await projectMemberService.leave(projectId, userId);
+  }
+
+  /**
+   * Resolve saga by public id (SA-XXXXX). Auth/RLS still gate the row.
+   */
+  async getProjectByPublicId(publicId: string): Promise<ProjectVm> {
+    const { data: project, error } = await supabase
+      .from(this.tableName)
+      .select('*')
+      .eq('public_id', publicId.trim().toUpperCase())
+      .single();
+
+    if (error || !project || !isProjectDto(project)) {
+      throw new Error('Project not found');
+    }
+
+    return this.getProjectById(project.id);
+  }
+
+  /**
+   * Resolve session by public id, scoped to saga public id (cross-saga → not found).
+   */
+  async getSessionByPublicIds(
+    sagaPublicId: string,
+    sessionPublicId: string,
+  ): Promise<{ project: ProjectVm; session: SessionVm }> {
+    const project = await this.getProjectByPublicId(sagaPublicId);
+    const session = project.sessions.find(
+      (row) => row.publicId === sessionPublicId.trim().toUpperCase(),
+    );
+    if (!session) {
+      throw new Error('Session not found in saga');
+    }
+    return { project, session };
+  }
+
+  /**
+   * Create a project session with concurrency-safe session_number allocation (DB RPC).
+   */
+  async createProjectSession(payload: {
+    projectId: string;
+    name?: string;
+    notes?: string;
+  }): Promise<SessionVm> {
+    const { data, error } = await supabase.rpc('create_project_session', {
+      p_project_id: payload.projectId,
+      p_name: payload.name ?? null,
+      p_notes: payload.notes ?? null,
+    });
+
+    if (error) {
+      throw new Error(`Failed to create session: ${error.message}`);
+    }
+
+    if (!isSessionDto(data)) {
+      throw new Error('Failed to create session: invalid response');
+    }
+
+    const normalized = normalizeSessionDto(data);
+    return {
+      id: normalized.id,
+      publicId: normalized.public_id,
+      projectId: normalized.project_id,
+      sessionNumber: normalized.session_number,
+      name: normalized.name,
+      notes: normalized.notes,
+      status: normalized.status,
+      startedAt: normalized.started_at,
+      endedAt: normalized.ended_at,
+      durationMinutes: normalized.duration_minutes,
+      createdAt: normalized.created_at,
+    };
   }
 }
 

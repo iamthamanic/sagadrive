@@ -15,6 +15,8 @@ import type { SagaDriveProfileDto } from '../../domains/character/domain/sagadri
 
 export interface CharacterDto {
   id: string;
+  /** Immutable public character id (CH-XXXXX). */
+  public_id?: string;
   owner_user_id: string;
   world_id?: string;
   project_id?: string;

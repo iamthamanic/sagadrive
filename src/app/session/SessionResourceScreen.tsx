@@ -1,0 +1,107 @@
+/**
+ * SessionResourceScreen — foundation shell for Saga session lifecycle / live views (#276).
+ * Location: src/app/session/SessionResourceScreen.tsx
+ */
+import { Button } from '../../shared/ui/button';
+import { GamemasterPanel } from './GamemasterPanel';
+import type { LiveViewId, SessionPhaseRouteId } from '../shell';
+
+type SessionResourceScreenProps = {
+  sagaPublicId: string;
+  sessionPublicId: string;
+  phase?: SessionPhaseRouteId;
+  liveView?: LiveViewId;
+  characterPublicId?: string | null;
+  onNavigateHome: () => void;
+};
+
+export function SessionResourceScreen({
+  sagaPublicId,
+  sessionPublicId,
+  phase = 'auto',
+  liveView,
+  characterPublicId,
+  onNavigateHome,
+}: SessionResourceScreenProps) {
+  if (liveView === 'gamemaster') {
+    return (
+      <div className="flex h-full min-h-0 flex-col">
+        <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground">
+          Live Gamemaster ·
+          {' '}
+          {sagaPublicId}
+          {' '}
+          /
+          {' '}
+          {sessionPublicId}
+          {' '}
+          — URL gewährt keine Rechte
+        </div>
+        <div className="min-h-0 flex-1">
+          <GamemasterPanel />
+        </div>
+      </div>
+    );
+  }
+
+  const title = liveView
+    ? liveViewLabel(liveView, characterPublicId)
+    : phaseLabel(phase);
+
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-6">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">Session</p>
+      <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+      <dl className="grid gap-2 text-sm">
+        <div>
+          <dt className="text-muted-foreground">Saga</dt>
+          <dd className="font-mono">{sagaPublicId}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Session</dt>
+          <dd className="font-mono">{sessionPublicId}</dd>
+        </div>
+        {characterPublicId ? (
+          <div>
+            <dt className="text-muted-foreground">Character</dt>
+            <dd className="font-mono">{characterPublicId}</dd>
+          </div>
+        ) : null}
+      </dl>
+      <p className="text-sm text-muted-foreground">
+        Sessionnummer ist die Reihenfolge innerhalb der Saga; die Public ID ist die
+        Resource-Identität. Display zeigt nur freigegebene Daten; Player-URLs sind
+        Routing-Kontext und keine Berechtigung.
+      </p>
+      <Button variant="ghost" className="self-start" onClick={onNavigateHome}>
+        Zurück
+      </Button>
+    </div>
+  );
+}
+
+function phaseLabel(phase: SessionPhaseRouteId): string {
+  switch (phase) {
+    case 'prepare':
+      return 'Session vorbereiten';
+    case 'live':
+      return 'Live-Session';
+    case 'recap':
+      return 'Session-Recap';
+    case 'auto':
+      return 'Session (Statusauflösung)';
+  }
+}
+
+function liveViewLabel(liveView: LiveViewId, characterPublicId?: string | null): string {
+  switch (liveView) {
+    case 'gamemaster':
+      return 'Live · Gamemaster';
+    case 'player':
+      return `Live · Spieler${characterPublicId ? ` (${characterPublicId})` : ''}`;
+    case 'player-resolve':
+      return 'Live · Spieler (Charakter auflösen)';
+    case 'display':
+      return 'Live · Display';
+  }
+}
