@@ -6,9 +6,11 @@ const EVIDENCE_DIR = '.qa/evidence/library-entity-browser';
 
 type StoredProject = {
   id: string;
+  public_id?: string;
   code: string;
   name: string;
   description: string | null;
+  world_id?: string | null;
   gm_user_id: string;
   status: 'active' | 'paused' | 'completed' | 'archived';
   created_at: string;
@@ -30,6 +32,7 @@ const USER_ID = '00000000-0000-4000-8000-000000000001';
 const MOCK_PROJECTS: StoredProject[] = [
   {
     id: 'proj-1',
+    public_id: 'SA-K7M4Q',
     code: 'ABCD12',
     name: 'Das vergessene Königreich',
     description: 'Eine Kampagne um einen versunkenen Thron.',
@@ -41,6 +44,7 @@ const MOCK_PROJECTS: StoredProject[] = [
   },
   {
     id: 'proj-2',
+    public_id: 'SA-X8D4Q',
     code: 'EFGH34',
     name: 'Schatten über Nehren',
     description: null,

@@ -9,8 +9,8 @@
 
 export interface ProjectDto {
   id: string;
-  /** Immutable public saga id (SA-XXXXX). Never a permission secret. */
-  public_id: string;
+  /** Immutable public saga id (SA-XXXXX). Never a permission secret. Empty until migration backfill. */
+  public_id?: string;
   code: string;
   name: string;
   description: string | null;
@@ -40,8 +40,8 @@ export type ProjectSessionStatus =
 
 export interface SessionDto {
   id: string;
-  /** Immutable public session id (SE-XXXXX). */
-  public_id: string;
+  /** Immutable public session id (SE-XXXXX). Empty until migration backfill. */
+  public_id?: string;
   project_id: string;
   /** Immutable order within a saga — not the resource identity. */
   session_number: number;

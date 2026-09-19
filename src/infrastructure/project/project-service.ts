@@ -28,9 +28,13 @@ function isProjectStatus(value: unknown): value is ProjectDto['status'] {
 
 function isProjectDto(value: unknown): value is ProjectDto {
   if (!isRecord(value)) return false;
+  const publicIdOk =
+    typeof value.public_id === 'string'
+    || value.public_id === undefined
+    || value.public_id === null;
   return (
     typeof value.id === 'string' &&
-    typeof value.public_id === 'string' &&
+    publicIdOk &&
     typeof value.code === 'string' &&
     typeof value.name === 'string' &&
     (typeof value.description === 'string' || value.description === null) &&
@@ -48,11 +52,17 @@ function isProjectDto(value: unknown): value is ProjectDto {
  */
 function isProjectSummaryRow(
   value: unknown,
-): value is Pick<ProjectDto, 'id' | 'public_id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'> {
+): value is Pick<ProjectDto, 'id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'> & {
+  public_id?: string | null;
+} {
   if (!isRecord(value)) return false;
+  const publicIdOk =
+    typeof value.public_id === 'string'
+    || value.public_id === undefined
+    || value.public_id === null;
   return (
     typeof value.id === 'string' &&
-    typeof value.public_id === 'string' &&
+    publicIdOk &&
     typeof value.code === 'string' &&
     typeof value.name === 'string' &&
     (typeof value.description === 'string' || value.description === null) &&
@@ -77,9 +87,13 @@ function isSessionDto(value: unknown): value is SessionDto {
     value.duration_minutes === undefined
     || typeof value.duration_minutes === 'number'
     || value.duration_minutes === null;
+  const publicIdOk =
+    typeof value.public_id === 'string'
+    || value.public_id === undefined
+    || value.public_id === null;
   return (
     typeof value.id === 'string'
-    && typeof value.public_id === 'string'
+    && publicIdOk
     && typeof value.project_id === 'string'
     && typeof value.session_number === 'number'
     && (typeof value.name === 'string' || value.name === null)
@@ -136,7 +150,7 @@ class ProjectService {
 
     const mappedSessions: SessionVm[] = sessions.map((session) => ({
       id: session.id,
-      publicId: session.public_id,
+      publicId: typeof session.public_id === 'string' ? session.public_id : '',
       projectId: session.project_id,
       sessionNumber: session.session_number,
       name: session.name,
@@ -144,7 +158,7 @@ class ProjectService {
       status: session.status,
       startedAt: session.started_at,
       endedAt: session.ended_at,
-      durationMinutes: session.duration_minutes,
+      durationMinutes: session.duration_minutes ?? null,
       createdAt: session.created_at,
     }));
 
@@ -157,7 +171,7 @@ class ProjectService {
 
     return {
       id: project.id,
-      publicId: project.public_id,
+      publicId: typeof project.public_id === 'string' ? project.public_id : '',
       code: project.code,
       name: project.name,
       description: project.description,
@@ -263,8 +277,8 @@ class ProjectService {
 
     type ProjectSummaryRow = Pick<
       ProjectDto,
-      'id' | 'public_id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'
-    >;
+      'id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'
+    > & { public_id?: string | null };
     const combined = new Map<string, ProjectSummaryRow>();
 
     for (const project of gmProjects ?? []) {
@@ -302,7 +316,7 @@ class ProjectService {
       const project = combined.get(id)!;
       return {
         id: project.id,
-        publicId: project.public_id,
+        publicId: typeof project.public_id === 'string' ? project.public_id : '',
         code: project.code,
         name: project.name,
         description: project.description,
@@ -504,7 +518,7 @@ class ProjectService {
     const normalized = normalizeSessionDto(data);
     return {
       id: normalized.id,
-      publicId: normalized.public_id,
+      publicId: typeof normalized.public_id === 'string' ? normalized.public_id : '',
       projectId: normalized.project_id,
       sessionNumber: normalized.session_number,
       name: normalized.name,
