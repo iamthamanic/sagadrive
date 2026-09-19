@@ -7,7 +7,11 @@ import { getAuthenticatedUserId } from '../../lib/authenticatedUser';
 import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../lib/networkTimeout';
 import { normalizeCharacterAppearance } from '../../domains/character/use-cases/avatar-presets';
 import type { CreateCharacterDto, UpdateCharacterDto } from '../../domains/character/contracts/character.commands';
-import type { CharacterSummaryVm, CharacterVm } from '../../domains/character/contracts/character.views';
+import type {
+  CharacterSheetStatus,
+  CharacterSummaryVm,
+  CharacterVm,
+} from '../../domains/character/contracts/character.views';
 import { assertValidSagaDriveCharacterPersistence } from '../../domains/character/use-cases/assert-character-persistence';
 import {
   normalizeAttributes,
@@ -24,12 +28,40 @@ import {
 
 const CHARACTER_PORTRAIT_BUCKET = 'character-portraits';
 const CHARACTER_PORTRAIT_MAX_BYTES = 5 * 1024 * 1024;
+/** 7-day signed URL — refresh on next upload/save. */
+const CHARACTER_PORTRAIT_SIGNED_SECONDS = 60 * 60 * 24 * 7;
 const CHARACTER_PORTRAIT_MIME_EXTENSIONS: Readonly<Record<string, string>> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/webp': 'webp',
   'image/gif': 'gif',
 };
+
+async function sniffPortraitMime(file: File): Promise<keyof typeof CHARACTER_PORTRAIT_MIME_EXTENSIONS | null> {
+  const header = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+  if (header.length >= 8
+    && header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4e && header[3] === 0x47) {
+    return 'image/png';
+  }
+  if (header.length >= 3 && header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff) {
+    return 'image/jpeg';
+  }
+  if (header.length >= 6
+    && header[0] === 0x47 && header[1] === 0x49 && header[2] === 0x46
+    && header[3] === 0x38 && (header[4] === 0x37 || header[4] === 0x39) && header[5] === 0x61) {
+    return 'image/gif';
+  }
+  if (header.length >= 12
+    && header[0] === 0x52 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x46
+    && header[8] === 0x57 && header[9] === 0x45 && header[10] === 0x42 && header[11] === 0x50) {
+    return 'image/webp';
+  }
+  return null;
+}
+
+function normalizeSheetStatus(value: unknown): CharacterSheetStatus {
+  return value === 'incomplete' ? 'incomplete' : 'complete';
+}
 
 export class SupabaseCharacterRepository {
   private readonly tableName = 'characters';
@@ -46,6 +78,7 @@ export class SupabaseCharacterRepository {
       rulesetKey,
       dndBackground: rulesetKey === 'dnd-5.5e' && typeof dto.dnd_background === 'string' ? dto.dnd_background : undefined,
       level: dto.level,
+      sheetStatus: normalizeSheetStatus(dto.sheet_status),
       backgroundStory: dto.background_story,
       notes: typeof dto.notes === 'string' ? dto.notes : '',
       personalityTraits: normalizeTextBlocks(dto.personality_traits),
@@ -72,7 +105,7 @@ export class SupabaseCharacterRepository {
     const { data, error } = await raceWithTimeoutReject(
       supabase
         .from(this.tableName)
-        .select('id, name, class, race, level, portrait_url')
+        .select('id, name, class, race, level, portrait_url, sheet_status')
         .eq('owner_user_id', userId)
         .eq('character_type', 'pc')
         .order('created_at', { ascending: false }),
@@ -86,6 +119,7 @@ export class SupabaseCharacterRepository {
       class: typeof row.class === 'string' ? row.class : '',
       race: typeof row.race === 'string' ? row.race : '',
       level: typeof row.level === 'number' ? row.level : 1,
+      sheetStatus: normalizeSheetStatus(row.sheet_status),
       portraitUrl: typeof row.portrait_url === 'string' ? row.portrait_url : undefined,
     }));
   }
@@ -116,7 +150,11 @@ export class SupabaseCharacterRepository {
     const level = payload.level || 1;
     const sagadriveProfile = rulesetKey === 'sagadrive-core' ? normalizeSagaDriveProfile(payload.sagadrive_profile) : null;
     const skills = normalizeSkills(payload.skills);
-    if (sagadriveProfile) assertValidSagaDriveCharacterPersistence(attributes, skills, sagadriveProfile, level);
+    const sheetStatus = normalizeSheetStatus(payload.sheet_status);
+    // Incomplete drafts skip full build asserts; complete sheets stay strict.
+    if (sagadriveProfile && sheetStatus === 'complete') {
+      assertValidSagaDriveCharacterPersistence(attributes, skills, sagadriveProfile, level);
+    }
     const inventoryV2 = payload.inventory_v2
       ? await assertWritableInventoryV2(payload.inventory_v2, null)
       : undefined;
@@ -130,6 +168,7 @@ export class SupabaseCharacterRepository {
       ruleset_key: rulesetKey,
       dnd_background: rulesetKey === 'dnd-5.5e' ? payload.dnd_background ?? null : null,
       level,
+      sheet_status: sheetStatus,
       background_story: payload.background_story,
       notes: payload.notes?.trim() || null,
       personality_traits: payload.personality_traits,
@@ -167,13 +206,17 @@ export class SupabaseCharacterRepository {
         || payload.skills
         || payload.sagadrive_profile
         || typeof payload.level === 'number'
-        || payload.ruleset_key,
+        || payload.ruleset_key
+        || payload.sheet_status,
     );
     if (touchesSagaDriveState) {
       // Loaded exactly once; owner-scoped, so foreign characters stay unreachable.
       const existing = await this.getCharacterById(id);
       const effectiveRuleset = payload.ruleset_key ?? existing.rulesetKey;
-      if (effectiveRuleset === 'sagadrive-core') {
+      const effectiveSheetStatus = payload.sheet_status
+        ? normalizeSheetStatus(payload.sheet_status)
+        : existing.sheetStatus;
+      if (effectiveRuleset === 'sagadrive-core' && effectiveSheetStatus === 'complete') {
         assertValidSagaDriveCharacterPersistence(
           attributes ?? existing.attributes,
           payload.skills ? normalizeSkills(payload.skills) : existing.skills,
@@ -197,6 +240,7 @@ export class SupabaseCharacterRepository {
     const updatePayload = {
       ...safePayload,
       ...rulesetPatch,
+      ...(payload.sheet_status ? { sheet_status: normalizeSheetStatus(payload.sheet_status) } : {}),
       ...(payload.appearance ? { appearance: normalizeCharacterAppearance(payload.appearance) } : {}),
       ...(attributes ? { attributes } : {}),
       ...(payload.skills ? { skills: normalizeSkills(payload.skills) } : {}),
@@ -228,13 +272,24 @@ export class SupabaseCharacterRepository {
 
   async uploadPortrait(file: File): Promise<string> {
     const userId = await getAuthenticatedUserId();
-    const extension = CHARACTER_PORTRAIT_MIME_EXTENSIONS[file.type];
-    if (!extension) throw new Error('Invalid file type. Only PNG, JPEG, WEBP and GIF images are allowed.');
+    const sniffed = await sniffPortraitMime(file);
+    if (!sniffed) {
+      throw new Error('Invalid file type. Only PNG, JPEG, WEBP and GIF images are allowed.');
+    }
+    if (file.type && file.type !== sniffed) {
+      throw new Error('Declared image type does not match file contents.');
+    }
+    const extension = CHARACTER_PORTRAIT_MIME_EXTENSIONS[sniffed];
     if (file.size > CHARACTER_PORTRAIT_MAX_BYTES) throw new Error('File too large. Maximum size is 5MB.');
     const filePath = `${userId}/${crypto.randomUUID()}.${extension}`;
-    const { error: uploadError } = await supabase.storage.from(CHARACTER_PORTRAIT_BUCKET).upload(filePath, file, { contentType: file.type, upsert: false });
+    const { error: uploadError } = await supabase.storage.from(CHARACTER_PORTRAIT_BUCKET).upload(filePath, file, {
+      contentType: sniffed,
+      upsert: false,
+    });
     if (uploadError) throw new Error(`Failed to upload portrait: ${uploadError.message}`);
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage.from(CHARACTER_PORTRAIT_BUCKET).createSignedUrl(filePath, 31_536_000);
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from(CHARACTER_PORTRAIT_BUCKET)
+      .createSignedUrl(filePath, CHARACTER_PORTRAIT_SIGNED_SECONDS);
     if (signedUrlError || !signedUrlData?.signedUrl) {
       throw new Error(signedUrlError ? `Failed to create portrait URL: ${signedUrlError.message}` : 'Failed to create portrait URL');
     }

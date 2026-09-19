@@ -273,7 +273,12 @@ export function Library({
     return (
     <EntityBrowserCard
       title={char.name}
-      meta={`Level ${char.level} · ${char.race} · ${char.class}`}
+      meta={`Level ${char.level} · ${char.race} · ${char.class || '—'}`}
+      badges={
+        char.sheetStatus === 'incomplete'
+          ? [{ label: 'Unvollständig', variant: 'destructive' }]
+          : undefined
+      }
       imageUrl={surface.portraitUrl}
       imageAlt={`Portrait von ${char.name}`}
       imageFallback={char.name}

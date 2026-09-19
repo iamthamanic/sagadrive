@@ -1,10 +1,17 @@
 /**
- * character-avatar-meshy Edge Function — prompt → Meshy text-to-3d → owner storage → #6 pending (#10).
- * MESHY key never leaves the server. Provider success does not set capabilities.
+ * character-avatar-meshy Edge Function — provider-routed avatar 3D generation.
+ * Meshy is the first adapter; settings come from SagaDrive presets/capabilities.
+ * Provider success does not set capabilities (#6). MESHY key never leaves the server.
  * Location: supabase/functions/character-avatar-meshy/index.ts
  */
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { downloadMeshyGlbBytes } from '../_shared/item-model3d-glb.ts';
+import {
+  downloadMeshyGlbBytes,
+  probeMeshyGlbContentLength,
+  AVATAR_MESHY_GLB_MAX_BYTES,
+  AVATAR_MESHY_GLB_SOFT_BYTES,
+  AVATAR_MESHY_GLB_STORE_MAX_BYTES,
+} from '../_shared/item-model3d-glb.ts';
 import {
   isMeshyConfiguredForUser,
   resolveMeshyApiKeyForUser,
@@ -15,18 +22,124 @@ import {
   mapMeshyTextTo3dStatusToJob,
   resolveMeshyTextTo3dConfig,
   type MeshyTextTo3dProvider,
+  type MeshyTextTo3dTask,
 } from '../_shared/avatar-meshy-text-to-3d.ts';
+import {
+  createLiveMeshyImageTo3dProvider,
+  createMockMeshyImageTo3dProvider,
+  resolveMeshyImageTo3dConfig,
+  type MeshyImageTo3dProvider,
+  type MeshyImageTo3dTask,
+} from '../_shared/item-model3d-meshy.ts';
+import {
+  AVATAR_MESHY_REMESH_TARGET_POLYCOUNT,
+  createLiveMeshyRemeshProvider,
+  createMockMeshyRemeshProvider,
+  type MeshyRemeshProvider,
+} from '../_shared/avatar-meshy-remesh.ts';
+import {
+  createLiveMeshyRiggingProvider,
+  createMockMeshyRiggingProvider,
+  type MeshyRiggingProvider,
+} from '../_shared/avatar-meshy-rigging.ts';
 import { consumeAvatarMeshyRateLimit } from '../_shared/avatar-meshy-rate-limit.ts';
+import {
+  buildGenerationSettingsJson,
+  DEFAULT_RECOMMENDED_SETTINGS,
+  mapSettingsToMeshyImageTo3d,
+  parsePresetMeta,
+  parseProviderId,
+  validateGenerationSettings,
+  type Avatar3dGenerationSettings,
+} from '../_shared/avatar-3d-generation.ts';
 
 type JsonRecord = Record<string, unknown>;
+type GenerationMode = 'text' | 'image';
 
 const BUCKET = 'character-avatars';
 const RATE_LIMIT = 2;
 const RATE_WINDOW_SECONDS = 60;
-const SIGNED_URL_SECONDS = 60 * 60 * 24 * 365;
+/** 7 days — shorter bearer window than annual URLs (refresh via poll). */
+const SIGNED_URL_SECONDS = 60 * 60 * 24 * 7;
+const IMAGE_PLACEHOLDER_PROMPT = 'Image-to-3D reference';
+const IMAGE_MAX_BYTES = 4 * 1024 * 1024;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+type PublicMeshyFailure =
+  | 'generate'
+  | 'remesh'
+  | 'rig'
+  | 'download'
+  | 'store'
+  | 'status'
+  | 'unavailable'
+  | 'no_model';
+
+function publicMeshyFailure(kind: PublicMeshyFailure): string {
+  switch (kind) {
+    case 'generate':
+      return 'Meshy-Generierung fehlgeschlagen.';
+    case 'remesh':
+      return 'Modell-Verkleinerung fehlgeschlagen.';
+    case 'rig':
+      return 'Auto-Rig fehlgeschlagen.';
+    case 'download':
+      return 'Modell-Download fehlgeschlagen.';
+    case 'store':
+      return 'Speichern des Modells fehlgeschlagen.';
+    case 'status':
+      return 'Meshy-Status konnte nicht geladen werden.';
+    case 'unavailable':
+      return 'Meshy nicht erreichbar.';
+    case 'no_model':
+      return 'Meshy lieferte keine Modell-URL.';
+  }
+}
+
+async function resolveOwnedCharacterId(
+  characterId: string | null,
+  userId: string,
+  supabaseUrl: string,
+  serviceHeaders: Record<string, string>,
+): Promise<string | null> {
+  if (!characterId || !UUID_RE.test(characterId)) return null;
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/characters?id=eq.${encodeURIComponent(characterId)}&owner_user_id=eq.${encodeURIComponent(userId)}&select=id&limit=1`,
+    { headers: serviceHeaders },
+  );
+  if (!res.ok) return null;
+  const rows: unknown = await res.json();
+  if (!Array.isArray(rows) || rows.length === 0) return null;
+  return characterId;
+}
+
+type AvatarMeshyTask = {
+  status: string;
+  progress: number;
+  model_urls?: { glb?: string };
+  task_error?: { message?: string };
+};
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null;
+}
+
+/**
+ * Defense-in-depth: never sign/serve storage paths outside the caller's folder.
+ * Blocks confused-deputy if a job row's storage_path was tampered via client RLS.
+ */
+function assertOwnerScopedStoragePath(userId: string, storagePath: string): string {
+  const normalized = storagePath.trim().replace(/^\/+/, '');
+  const prefix = `${userId}/`;
+  if (
+    !normalized
+    || normalized.includes('..')
+    || normalized.includes('\\')
+    || !normalized.startsWith(prefix)
+  ) {
+    throw new Error('Ungültiger Storage-Pfad für diesen Account.');
+  }
+  return normalized;
 }
 
 function getCorsHeaders(request: Request): HeadersInit {
@@ -65,6 +178,62 @@ function validatePrompt(prompt: unknown): { ok: true; prompt: string } | { ok: f
   return { ok: true, prompt: normalized };
 }
 
+function validateOptionalTexturePrompt(
+  prompt: unknown,
+): { ok: true; prompt: string } | { ok: false; message: string } {
+  if (prompt === undefined || prompt === null || prompt === '') {
+    return { ok: true, prompt: '' };
+  }
+  if (typeof prompt !== 'string') return { ok: false, message: 'Textur-Prompt ungültig.' };
+  const normalized = prompt.trim().replace(/\s+/g, ' ');
+  if (normalized.length > 500) return { ok: false, message: 'Textur-Prompt zu lang (max. 500 Zeichen).' };
+  return { ok: true, prompt: normalized };
+}
+
+function validateImageDataUri(
+  value: unknown,
+): { ok: true; dataUri: string } | { ok: false; message: string } {
+  if (typeof value !== 'string') return { ok: false, message: 'Bild fehlt.' };
+  const normalized = value.trim();
+  const match = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=\s]+)$/i.exec(normalized);
+  if (!match) return { ok: false, message: 'Bild muss PNG, JPEG oder WebP als Data-URI sein.' };
+  const b64 = match[2]!.replace(/\s+/g, '');
+  const approxBytes = Math.floor((b64.length * 3) / 4);
+  if (approxBytes <= 0) return { ok: false, message: 'Bild ist leer.' };
+  if (approxBytes > IMAGE_MAX_BYTES) {
+    return { ok: false, message: 'Bild zu groß (max. 4 MB).' };
+  }
+  return { ok: true, dataUri: `data:image/${match[1]!.toLowerCase()};base64,${b64}` };
+}
+
+function jobRuntimePolycount(job: JsonRecord): number {
+  const settings = isRecord(job.generation_settings) && isRecord(job.generation_settings.settings)
+    ? job.generation_settings.settings
+    : null;
+  const runtime = settings && typeof settings.runtimePolycount === 'number'
+    ? settings.runtimePolycount
+    : null;
+  if (typeof runtime === 'number' && Number.isFinite(runtime)) {
+    return Math.max(10_000, Math.min(100_000, Math.round(runtime)));
+  }
+  return AVATAR_MESHY_REMESH_TARGET_POLYCOUNT;
+}
+
+function jobKeepMaster(job: JsonRecord): boolean {
+  const settings = isRecord(job.generation_settings) && isRecord(job.generation_settings.settings)
+    ? job.generation_settings.settings
+    : null;
+  return settings?.keepMaster === true;
+}
+
+function parseGenerationMode(value: unknown): GenerationMode {
+  return value === 'image' ? 'image' : 'text';
+}
+
+function jobGenerationMode(job: JsonRecord): GenerationMode {
+  return job.generation_mode === 'image' ? 'image' : 'text';
+}
+
 async function getUserId(request: Request, supabaseUrl: string, anonKey: string): Promise<string | null> {
   const auth = request.headers.get('Authorization');
   if (!auth) return null;
@@ -78,13 +247,66 @@ async function getUserId(request: Request, supabaseUrl: string, anonKey: string)
   return body.id;
 }
 
-function resolveProvider(apiKey: string | null): MeshyTextTo3dProvider | null {
+function resolveTextProvider(apiKey: string | null): MeshyTextTo3dProvider | null {
   if (Deno.env.get('MESHY_AVATAR_USE_MOCK') === '1') {
     return createMockMeshyTextTo3dProvider();
   }
   const config = resolveMeshyTextTo3dConfig(Deno.env, apiKey);
   if (!config) return null;
   return createLiveMeshyTextTo3dProvider(config);
+}
+
+function resolveImageProvider(apiKey: string | null): MeshyImageTo3dProvider | null {
+  if (Deno.env.get('MESHY_AVATAR_USE_MOCK') === '1') {
+    return createMockMeshyImageTo3dProvider();
+  }
+  const config = resolveMeshyImageTo3dConfig(Deno.env, apiKey);
+  if (!config) return null;
+  return createLiveMeshyImageTo3dProvider(config);
+}
+
+function resolveRemeshProvider(apiKey: string | null): MeshyRemeshProvider | null {
+  if (Deno.env.get('MESHY_AVATAR_USE_MOCK') === '1') {
+    return createMockMeshyRemeshProvider();
+  }
+  if (!apiKey?.trim()) return null;
+  const baseUrl = Deno.env.get('MESHY_API_BASE_URL')?.trim()
+    || 'https://api.meshy.ai/openapi/v1';
+  return createLiveMeshyRemeshProvider({ apiKey: apiKey.trim(), baseUrl });
+}
+
+function resolveRiggingProvider(apiKey: string | null): MeshyRiggingProvider | null {
+  if (Deno.env.get('MESHY_AVATAR_USE_MOCK') === '1') {
+    return createMockMeshyRiggingProvider();
+  }
+  if (!apiKey?.trim()) return null;
+  const baseUrl = Deno.env.get('MESHY_API_BASE_URL')?.trim()
+    || 'https://api.meshy.ai/openapi/v1';
+  return createLiveMeshyRiggingProvider({ apiKey: apiKey.trim(), baseUrl });
+}
+
+function toAvatarTask(task: MeshyTextTo3dTask | MeshyImageTo3dTask): AvatarMeshyTask {
+  return {
+    status: task.status,
+    progress: task.progress,
+    model_urls: task.model_urls,
+    task_error: task.task_error,
+  };
+}
+
+async function fetchAvatarMeshyTask(
+  mode: GenerationMode,
+  apiKey: string | null,
+  taskId: string,
+): Promise<AvatarMeshyTask | null> {
+  if (mode === 'image') {
+    const provider = resolveImageProvider(apiKey);
+    if (!provider) return null;
+    return toAvatarTask(await provider.getTask(taskId));
+  }
+  const provider = resolveTextProvider(apiKey);
+  if (!provider) return null;
+  return toAvatarTask(await provider.getTask(taskId));
 }
 
 serve(async (request) => {
@@ -134,22 +356,56 @@ serve(async (request) => {
       meshyConfigured: configured || Deno.env.get('MESHY_AVATAR_USE_MOCK') === '1',
       promptMinChars: 8,
       promptMaxChars: 500,
+      imageMaxBytes: IMAGE_MAX_BYTES,
+      supportsImageTo3d: true,
+      defaultProviderId: 'meshy',
+      defaultPresetId: 'recommended',
+      /** Client loads full capability/preset schema from domain; edge confirms wired ids. */
+      wiredProviderIds: ['meshy'],
       costHintDe:
-        'Externe KI (Meshy). Es entstehen Provider-Kosten. Kein automatischer Paid-Retry bei Fehlern.',
+        'Externe KI. Provider + Preset steuern Qualität. Advanced-Einstellungen sind optional. Kein automatischer Paid-Retry.',
     }, request);
   }
 
   if (action === 'start') {
-    const promptCheck = validatePrompt(payload.prompt);
-    if (!promptCheck.ok) {
-      return json(400, { status: 'error', message: promptCheck.message }, request);
-    }
+    const generationMode = parseGenerationMode(payload.generationMode);
     const clientNonce = typeof payload.clientNonce === 'string' ? payload.clientNonce.trim() : '';
     if (!clientNonce || clientNonce.length > 80) {
       return json(400, { status: 'error', message: 'clientNonce fehlt oder ist ungültig.' }, request);
     }
-    const characterId = typeof payload.characterId === 'string' ? payload.characterId : null;
-    const idempotencyKey = `${userId}|${clientNonce}|${promptCheck.prompt.length}`;
+    const characterIdRaw = typeof payload.characterId === 'string' ? payload.characterId : null;
+    const characterId = await resolveOwnedCharacterId(
+      characterIdRaw,
+      userId,
+      supabaseUrl,
+      serviceHeaders,
+    );
+
+    let jobPrompt: string;
+    let imageDataUri: string | null = null;
+    let texturePrompt = '';
+
+    if (generationMode === 'text') {
+      const promptCheck = validatePrompt(payload.prompt);
+      if (!promptCheck.ok) {
+        return json(400, { status: 'error', message: promptCheck.message }, request);
+      }
+      jobPrompt = promptCheck.prompt;
+    } else {
+      const imageCheck = validateImageDataUri(payload.imageDataUri);
+      if (!imageCheck.ok) {
+        return json(400, { status: 'error', message: imageCheck.message }, request);
+      }
+      const textureCheck = validateOptionalTexturePrompt(payload.texturePrompt ?? payload.prompt);
+      if (!textureCheck.ok) {
+        return json(400, { status: 'error', message: textureCheck.message }, request);
+      }
+      imageDataUri = imageCheck.dataUri;
+      texturePrompt = textureCheck.prompt;
+      jobPrompt = texturePrompt.length >= 8 ? texturePrompt : IMAGE_PLACEHOLDER_PROMPT;
+    }
+
+    const idempotencyKey = `${userId}|${clientNonce}|${generationMode}|${jobPrompt.length}`;
 
     const rate = consumeAvatarMeshyRateLimit({
       userId,
@@ -168,13 +424,6 @@ serve(async (request) => {
       url: supabaseUrl,
       serviceRoleKey,
     });
-    const provider = resolveProvider(apiKey);
-    if (!provider) {
-      return json(200, {
-        status: 'not-configured',
-        message: 'Meshy ist nicht konfiguriert. Bitte API-Key unter KI-Anbieter hinterlegen.',
-      }, request);
-    }
 
     // Idempotent replay
     const existingRes = await fetch(
@@ -189,9 +438,63 @@ serve(async (request) => {
     }
 
     let providerTaskId: string;
+    const providerId = parseProviderId(payload.providerId) ?? 'meshy';
+    if (payload.providerId !== undefined && parseProviderId(payload.providerId) === null) {
+      return json(400, {
+        status: 'error',
+        code: 'unsupported_provider',
+        message: 'Dieser 3D-Provider ist noch nicht angebunden.',
+      }, request);
+    }
+
+    const presetMeta = parsePresetMeta(payload);
+    let generationSettings: Avatar3dGenerationSettings = DEFAULT_RECOMMENDED_SETTINGS;
+    if (payload.settings !== undefined) {
+      const settingsCheck = validateGenerationSettings(payload.settings);
+      if (!settingsCheck.ok) {
+        return json(400, { status: 'error', code: 'validation', message: settingsCheck.message }, request);
+      }
+      generationSettings = settingsCheck.settings;
+    }
+    const meshyMapped = mapSettingsToMeshyImageTo3d(generationSettings);
+
     try {
-      const created = await provider.createTask(promptCheck.prompt);
-      providerTaskId = created.taskId;
+      if (generationMode === 'image') {
+        const provider = resolveImageProvider(apiKey);
+        if (!provider || !imageDataUri) {
+          return json(200, {
+            status: 'not-configured',
+            message: 'Meshy ist nicht konfiguriert. Bitte API-Key unter KI-Anbieter hinterlegen.',
+          }, request);
+        }
+        const created = await provider.createTask({
+          kind: 'image_url',
+          imageUrl: imageDataUri,
+          texturePrompt: texturePrompt || undefined,
+          poseMode: meshyMapped.pose_mode,
+          shouldRemesh: meshyMapped.should_remesh,
+          targetPolycount: meshyMapped.target_polycount,
+          aiModel: meshyMapped.ai_model,
+          modelType: meshyMapped.model_type,
+          textureResolution: meshyMapped.texture_resolution,
+          enablePbr: meshyMapped.enable_pbr,
+          imageEnhancement: meshyMapped.image_enhancement,
+          topology: meshyMapped.topology,
+          ultraMode: meshyMapped.ultra_mode,
+          savePreRemeshedModel: meshyMapped.save_pre_remeshed_model,
+        });
+        providerTaskId = created.taskId;
+      } else {
+        const provider = resolveTextProvider(apiKey);
+        if (!provider) {
+          return json(200, {
+            status: 'not-configured',
+            message: 'Meshy ist nicht konfiguriert. Bitte API-Key unter KI-Anbieter hinterlegen.',
+          }, request);
+        }
+        const created = await provider.createTask(jobPrompt);
+        providerTaskId = created.taskId;
+      }
     } catch (error) {
       console.error('meshy avatar create failed', error instanceof Error ? error.message : 'unknown');
       return json(200, {
@@ -200,12 +503,27 @@ serve(async (request) => {
           id: null,
           status: 'provider_unavailable',
           progress: 0,
-          prompt: promptCheck.prompt,
-          error_message: 'Meshy derzeit nicht erreichbar.',
+          prompt: jobPrompt,
+          generation_mode: generationMode,
+          error_message: publicMeshyFailure('unavailable'),
           rig_analysis_status: 'pending',
         },
       }, request);
     }
+
+    const generationSettingsJson = buildGenerationSettingsJson({
+      providerId,
+      providerModel: generationSettings.modelId,
+      presetId: presetMeta.presetId,
+      presetVersion: presetMeta.presetVersion,
+      presetDirty: presetMeta.presetDirty,
+      settings: generationSettings,
+      sourceMode: generationMode,
+      providerTaskId,
+      mappedProviderParams: generationMode === 'image'
+        ? (meshyMapped as unknown as Record<string, unknown>)
+        : { mode: 'preview' },
+    });
 
     const insertRes = await fetch(`${supabaseUrl}/rest/v1/character_avatar_meshy_jobs`, {
       method: 'POST',
@@ -213,11 +531,17 @@ serve(async (request) => {
       body: JSON.stringify({
         owner_user_id: userId,
         character_id: characterId,
-        prompt: promptCheck.prompt,
+        prompt: jobPrompt,
+        generation_mode: generationMode,
         idempotency_key: idempotencyKey,
         status: 'generating',
         progress: 5,
         provider_task_id: providerTaskId,
+        provider_id: providerId,
+        provider_model: generationSettings.modelId,
+        preset_id: presetMeta.presetId,
+        preset_version: presetMeta.presetVersion,
+        generation_settings: generationSettingsJson,
         rig_analysis_status: 'pending',
       }),
     });
@@ -252,36 +576,59 @@ serve(async (request) => {
       if (job.status !== 'failed' && job.status !== 'provider_unavailable') {
         return json(400, { status: 'error', message: 'Retry nur nach Fehler.' }, request);
       }
-      // Explicit retry only — never auto paid retry. New provider task, same prompt.
-      const apiKey = await resolveMeshyApiKeyForUser(userId, { url: supabaseUrl, serviceRoleKey });
-      const provider = resolveProvider(apiKey);
-      if (!provider) {
-        return json(200, {
-          status: 'not-configured',
-          message: 'Meshy ist nicht konfiguriert.',
-        }, request);
-      }
-      try {
-        const created = await provider.createTask(String(job.prompt ?? ''));
+      // If Meshy already produced a task, resume materialize (no second paid create).
+      if (typeof job.provider_task_id === 'string' && job.provider_task_id.trim()) {
         await fetch(
           `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
           {
             method: 'PATCH',
             headers: serviceHeaders,
             body: JSON.stringify({
-              status: 'generating',
-              progress: 5,
-              provider_task_id: created.taskId,
+              status: 'rigging',
+              progress: 90,
               error_message: null,
               updated_at: new Date().toISOString(),
             }),
           },
         );
-      } catch {
-        return json(200, {
-          status: 'ok',
-          job: { ...job, status: 'provider_unavailable', error_message: 'Meshy nicht erreichbar.' },
-        }, request);
+      } else {
+        // Paid recreate only for text mode (image bytes are not persisted).
+        if (jobGenerationMode(job) === 'image') {
+          return json(400, {
+            status: 'error',
+            message: 'Bild-Job erneut starten: bitte neues Referenzbild hochladen.',
+          }, request);
+        }
+        const apiKey = await resolveMeshyApiKeyForUser(userId, { url: supabaseUrl, serviceRoleKey });
+        const provider = resolveTextProvider(apiKey);
+        if (!provider) {
+          return json(200, {
+            status: 'not-configured',
+            message: 'Meshy ist nicht konfiguriert.',
+          }, request);
+        }
+        try {
+          const created = await provider.createTask(String(job.prompt ?? ''));
+          await fetch(
+            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+            {
+              method: 'PATCH',
+              headers: serviceHeaders,
+              body: JSON.stringify({
+                status: 'generating',
+                progress: 5,
+                provider_task_id: created.taskId,
+                error_message: null,
+                updated_at: new Date().toISOString(),
+              }),
+            },
+          );
+        } catch {
+          return json(200, {
+            status: 'ok',
+            job: { ...job, status: 'provider_unavailable', error_message: publicMeshyFailure('unavailable') },
+          }, request);
+        }
       }
     }
 
@@ -296,8 +643,17 @@ serve(async (request) => {
       : job;
 
     if (current.status === 'succeeded' && typeof current.storage_path === 'string') {
+      let storagePath: string;
+      try {
+        storagePath = assertOwnerScopedStoragePath(userId, current.storage_path);
+      } catch {
+        return json(403, {
+          status: 'error',
+          message: 'Speicherpfad gehört nicht zu diesem Account.',
+        }, request);
+      }
       const signed = await fetch(
-        `${supabaseUrl}/storage/v1/object/sign/${BUCKET}/${current.storage_path}`,
+        `${supabaseUrl}/storage/v1/object/sign/${BUCKET}/${storagePath}`,
         {
           method: 'POST',
           headers: serviceHeaders,
@@ -329,17 +685,25 @@ serve(async (request) => {
     }
 
     const apiKey = await resolveMeshyApiKeyForUser(userId, { url: supabaseUrl, serviceRoleKey });
-    const provider = resolveProvider(apiKey);
-    if (!provider || typeof current.provider_task_id !== 'string') {
+    if (typeof current.provider_task_id !== 'string') {
       return json(200, {
         status: 'ok',
         job: { ...current, status: 'provider_unavailable' },
       }, request);
     }
+    const mode = jobGenerationMode(current);
 
     try {
-      const task = await provider.getTask(current.provider_task_id);
-      const mapped = mapMeshyTextTo3dStatusToJob(task.status);
+      const task = await fetchAvatarMeshyTask(mode, apiKey, current.provider_task_id);
+      if (!task) {
+        return json(200, {
+          status: 'ok',
+          job: { ...current, status: 'provider_unavailable' },
+        }, request);
+      }
+      const mapped = mapMeshyTextTo3dStatusToJob(
+        task.status as 'PENDING' | 'IN_PROGRESS' | 'SUCCEEDED' | 'FAILED' | 'CANCELED',
+      );
       if (mapped === 'generating') {
         await fetch(
           `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
@@ -366,7 +730,7 @@ serve(async (request) => {
             headers: serviceHeaders,
             body: JSON.stringify({
               status: 'failed',
-              error_message: task.task_error?.message ?? 'Meshy-Generierung fehlgeschlagen.',
+              error_message: publicMeshyFailure('generate'),
               updated_at: new Date().toISOString(),
             }),
           },
@@ -376,7 +740,7 @@ serve(async (request) => {
           job: {
             ...current,
             status: 'failed',
-            error_message: task.task_error?.message ?? 'Meshy-Generierung fehlgeschlagen.',
+            error_message: publicMeshyFailure('generate'),
           },
         }, request);
       }
@@ -390,37 +754,399 @@ serve(async (request) => {
             headers: serviceHeaders,
             body: JSON.stringify({
               status: 'failed',
-              error_message: 'Meshy lieferte keine Modell-URL.',
+              error_message: publicMeshyFailure('no_model'),
               updated_at: new Date().toISOString(),
             }),
           },
         );
         return json(200, {
           status: 'ok',
-          job: { ...current, status: 'failed', error_message: 'Meshy lieferte keine Modell-URL.' },
+          job: { ...current, status: 'failed', error_message: publicMeshyFailure('no_model') },
         }, request);
       }
 
-      // Materialize into owner-scoped storage (SSRF-safe download).
-      await fetch(
-        `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
-        {
-          method: 'PATCH',
-          headers: serviceHeaders,
-          body: JSON.stringify({
-            status: 'rigging',
-            progress: 90,
-            updated_at: new Date().toISOString(),
-          }),
-        },
-      );
+      // Split materialize across polls: first mark rigging and return (avoids Edge CPU kill
+      // when download+upload runs in the same isolate turn as a long Meshy wait).
+      if (current.status !== 'rigging') {
+        await fetch(
+          `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+          {
+            method: 'PATCH',
+            headers: serviceHeaders,
+            body: JSON.stringify({
+              status: 'rigging',
+              progress: 90,
+              error_message: null,
+              updated_at: new Date().toISOString(),
+            }),
+          },
+        );
+        return json(200, {
+          status: 'ok',
+          job: { ...current, status: 'rigging', progress: 90, error_message: null },
+        }, request);
+      }
 
-      const downloaded = await downloadMeshyGlbBytes(glbUrl);
+      // Second+ polls: optional remesh → Meshy Auto-Rig → download rigged GLB + upload.
+      let meshSourceTaskId =
+        typeof current.provider_task_id === 'string' && current.provider_task_id.trim()
+          ? current.provider_task_id.trim()
+          : '';
+      const existingRemeshId =
+        typeof current.remesh_task_id === 'string' && current.remesh_task_id.trim()
+          ? current.remesh_task_id.trim()
+          : '';
+
+      if (existingRemeshId) {
+        const remeshProvider = resolveRemeshProvider(apiKey);
+        if (!remeshProvider) {
+          return json(200, {
+            status: 'ok',
+            job: { ...current, status: 'provider_unavailable' },
+          }, request);
+        }
+        const remeshTask = await remeshProvider.getTask(existingRemeshId);
+        if (remeshTask.status === 'PENDING' || remeshTask.status === 'IN_PROGRESS') {
+          const remeshProgress = Math.max(92, Math.min(94, remeshTask.progress || 92));
+          await fetch(
+            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+            {
+              method: 'PATCH',
+              headers: serviceHeaders,
+              body: JSON.stringify({
+                status: 'rigging',
+                progress: remeshProgress,
+                error_message: null,
+                updated_at: new Date().toISOString(),
+              }),
+            },
+          );
+          return json(200, {
+            status: 'ok',
+            job: {
+              ...current,
+              status: 'rigging',
+              progress: remeshProgress,
+              error_message: null,
+            },
+          }, request);
+        }
+        if (remeshTask.status !== 'SUCCEEDED' || !remeshTask.model_urls?.glb) {
+          const remeshFail = remeshTask.task_error?.message ?? 'Remesh fehlgeschlagen.';
+          console.error('meshy avatar remesh failed', remeshFail);
+          await fetch(
+            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+            {
+              method: 'PATCH',
+              headers: serviceHeaders,
+              body: JSON.stringify({
+                status: 'failed',
+                error_message: publicMeshyFailure('remesh'),
+                updated_at: new Date().toISOString(),
+              }),
+            },
+          );
+          return json(200, {
+            status: 'ok',
+            job: {
+              ...current,
+              status: 'failed',
+              error_message: publicMeshyFailure('remesh'),
+            },
+          }, request);
+        }
+        meshSourceTaskId = existingRemeshId;
+      } else {
+        const contentLength = await probeMeshyGlbContentLength(glbUrl).catch(() => null);
+        const keepMaster = jobKeepMaster(current);
+        const oversized =
+          typeof contentLength === 'number' && contentLength > AVATAR_MESHY_GLB_SOFT_BYTES;
+        // Pipeline: high-detail master → remesh to runtime polycount; also remesh oversized GLBs.
+        const needsRemesh = oversized || keepMaster;
+        if (needsRemesh && meshSourceTaskId) {
+          // Persist unoptimized master once before remesh (owner-scoped path).
+          if (
+            keepMaster
+            && (typeof current.master_storage_path !== 'string' || !current.master_storage_path.trim())
+          ) {
+            try {
+              const masterDl = await downloadMeshyGlbBytes(glbUrl, fetch, {
+                maxBytes: AVATAR_MESHY_GLB_MAX_BYTES,
+                timeoutMs: 120_000,
+              });
+              if (masterDl.bytes.byteLength <= AVATAR_MESHY_GLB_STORE_MAX_BYTES) {
+                const masterPath = `${userId}/meshy/${crypto.randomUUID()}-master.glb`;
+                const uploadMaster = await fetch(
+                  `${supabaseUrl}/storage/v1/object/${BUCKET}/${masterPath}`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      Authorization: `Bearer ${serviceRoleKey}`,
+                      apikey: serviceRoleKey,
+                      'Content-Type': 'model/gltf-binary',
+                      'x-upsert': 'true',
+                    },
+                    body: masterDl.bytes,
+                  },
+                );
+                if (uploadMaster.ok) {
+                  await fetch(
+                    `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+                    {
+                      method: 'PATCH',
+                      headers: serviceHeaders,
+                      body: JSON.stringify({
+                        master_storage_path: masterPath,
+                        updated_at: new Date().toISOString(),
+                      }),
+                    },
+                  );
+                } else {
+                  console.error('meshy avatar master upload failed', await uploadMaster.text());
+                }
+              }
+            } catch (masterError) {
+              console.error(
+                'meshy avatar master store failed',
+                masterError instanceof Error ? masterError.message : 'unknown',
+              );
+            }
+          }
+          const remeshProvider = resolveRemeshProvider(apiKey);
+          if (!remeshProvider) {
+            return json(200, {
+              status: 'ok',
+              job: {
+                ...current,
+                status: 'failed',
+                error_message: publicMeshyFailure('remesh'),
+              },
+            }, request);
+          }
+          try {
+            const remeshCreated = await remeshProvider.createTask({
+              inputTaskId: meshSourceTaskId,
+              targetPolycount: jobRuntimePolycount(current),
+            });
+            await fetch(
+              `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+              {
+                method: 'PATCH',
+                headers: serviceHeaders,
+                body: JSON.stringify({
+                  status: 'rigging',
+                  progress: 92,
+                  remesh_task_id: remeshCreated.taskId,
+                  error_message: null,
+                  updated_at: new Date().toISOString(),
+                }),
+              },
+            );
+            return json(200, {
+              status: 'ok',
+              job: {
+                ...current,
+                status: 'rigging',
+                progress: 92,
+                remesh_task_id: remeshCreated.taskId,
+                error_message: null,
+              },
+            }, request);
+          } catch (remeshError) {
+            console.error(
+              'meshy avatar remesh create failed',
+              remeshError instanceof Error ? remeshError.message : 'unknown',
+            );
+            // Fall through to Auto-Rig with original provider task — may still succeed.
+          }
+        }
+      }
+
+      // Auto-Rig (Meshy /openapi/v1/rigging) — required before store; #6 still owns capabilities.
+      const existingRigId =
+        typeof current.rig_task_id === 'string' && current.rig_task_id.trim()
+          ? current.rig_task_id.trim()
+          : '';
+      const riggingProvider = resolveRiggingProvider(apiKey);
+      if (!riggingProvider) {
+        return json(200, {
+          status: 'ok',
+          job: { ...current, status: 'provider_unavailable' },
+        }, request);
+      }
+
+      let glbDownloadUrl = '';
+      if (existingRigId) {
+        const rigTask = await riggingProvider.getTask(existingRigId);
+        if (rigTask.status === 'PENDING' || rigTask.status === 'IN_PROGRESS') {
+          const rigProgress = Math.max(95, Math.min(99, rigTask.progress || 95));
+          await fetch(
+            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+            {
+              method: 'PATCH',
+              headers: serviceHeaders,
+              body: JSON.stringify({
+                status: 'rigging',
+                progress: rigProgress,
+                error_message: null,
+                updated_at: new Date().toISOString(),
+              }),
+            },
+          );
+          return json(200, {
+            status: 'ok',
+            job: {
+              ...current,
+              status: 'rigging',
+              progress: rigProgress,
+              error_message: null,
+            },
+          }, request);
+        }
+        if (rigTask.status !== 'SUCCEEDED' || !rigTask.riggedGlbUrl) {
+          const rigFail = rigTask.task_error?.message ?? 'Auto-Rig fehlgeschlagen.';
+          console.error('meshy avatar auto-rig failed', rigFail);
+          await fetch(
+            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+            {
+              method: 'PATCH',
+              headers: serviceHeaders,
+              body: JSON.stringify({
+                status: 'failed',
+                error_message: publicMeshyFailure('rig'),
+                updated_at: new Date().toISOString(),
+              }),
+            },
+          );
+          return json(200, {
+            status: 'ok',
+            job: {
+              ...current,
+              status: 'failed',
+              error_message: publicMeshyFailure('rig'),
+            },
+          }, request);
+        }
+        glbDownloadUrl = rigTask.riggedGlbUrl;
+      } else {
+        if (!meshSourceTaskId) {
+          await fetch(
+            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+            {
+              method: 'PATCH',
+              headers: serviceHeaders,
+              body: JSON.stringify({
+                status: 'failed',
+                error_message: publicMeshyFailure('rig'),
+                updated_at: new Date().toISOString(),
+              }),
+            },
+          );
+          return json(200, {
+            status: 'ok',
+            job: {
+              ...current,
+              status: 'failed',
+              error_message: publicMeshyFailure('rig'),
+            },
+          }, request);
+        }
+        try {
+          const rigCreated = await riggingProvider.createTask({
+            inputTaskId: meshSourceTaskId,
+            heightMeters: 1.7,
+          });
+          await fetch(
+            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+            {
+              method: 'PATCH',
+              headers: serviceHeaders,
+              body: JSON.stringify({
+                status: 'rigging',
+                progress: 95,
+                rig_task_id: rigCreated.taskId,
+                error_message: null,
+                updated_at: new Date().toISOString(),
+              }),
+            },
+          );
+          return json(200, {
+            status: 'ok',
+            job: {
+              ...current,
+              status: 'rigging',
+              progress: 95,
+              rig_task_id: rigCreated.taskId,
+              error_message: null,
+            },
+          }, request);
+        } catch (rigError) {
+          const detail = rigError instanceof Error ? rigError.message : 'unbekannt';
+          console.error('meshy avatar auto-rig create failed', detail);
+          await fetch(
+            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+            {
+              method: 'PATCH',
+              headers: serviceHeaders,
+              body: JSON.stringify({
+                status: 'failed',
+                error_message: publicMeshyFailure('rig'),
+                updated_at: new Date().toISOString(),
+              }),
+            },
+          );
+          return json(200, {
+            status: 'ok',
+            job: {
+              ...current,
+              status: 'failed',
+              error_message: publicMeshyFailure('rig'),
+            },
+          }, request);
+        }
+      }
+
+      let downloaded: { bytes: Uint8Array };
+      try {
+        downloaded = await downloadMeshyGlbBytes(glbDownloadUrl, fetch, {
+          maxBytes: AVATAR_MESHY_GLB_MAX_BYTES,
+          timeoutMs: 120_000,
+        });
+        if (downloaded.bytes.byteLength > AVATAR_MESHY_GLB_STORE_MAX_BYTES) {
+          throw new Error(
+            `Geriggtes Modell zu groß (${Math.ceil(downloaded.bytes.byteLength / (1024 * 1024))} MB).`,
+          );
+        }
+      } catch (downloadError) {
+        const message = downloadError instanceof Error
+          ? downloadError.message
+          : 'Modell-Download fehlgeschlagen.';
+        console.error('meshy avatar rigged download failed', message);
+
+        await fetch(
+          `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+          {
+            method: 'PATCH',
+            headers: serviceHeaders,
+            body: JSON.stringify({
+              status: 'failed',
+              error_message: publicMeshyFailure('download'),
+              updated_at: new Date().toISOString(),
+            }),
+          },
+        );
+        return json(200, {
+          status: 'ok',
+          job: {
+            ...current,
+            status: 'failed',
+            error_message: publicMeshyFailure('download'),
+          },
+        }, request);
+      }
+
       const artifactId = crypto.randomUUID();
       const storagePath = `${userId}/meshy/${artifactId}.glb`;
-      // Deno fetch body: copy Uint8Array / Blob (lesson from #140)
-      const payload = new Uint8Array(downloaded.bytes.byteLength);
-      payload.set(downloaded.bytes);
       const uploadRes = await fetch(
         `${supabaseUrl}/storage/v1/object/${BUCKET}/${storagePath}`,
         {
@@ -431,7 +1157,8 @@ serve(async (request) => {
             'Content-Type': 'model/gltf-binary',
             'x-upsert': 'false',
           },
-          body: new Blob([payload]),
+          // Avoid extra full-buffer copy (CPU) — Blob accepts Uint8Array views.
+          body: new Blob([downloaded.bytes]),
         },
       );
       if (!uploadRes.ok) {
@@ -444,14 +1171,14 @@ serve(async (request) => {
             headers: serviceHeaders,
             body: JSON.stringify({
               status: 'failed',
-              error_message: 'Speichern des Modells fehlgeschlagen.',
+              error_message: publicMeshyFailure('store'),
               updated_at: new Date().toISOString(),
             }),
           },
         );
         return json(200, {
           status: 'ok',
-          job: { ...current, status: 'failed', error_message: 'Speichern des Modells fehlgeschlagen.' },
+          job: { ...current, status: 'failed', error_message: publicMeshyFailure('store') },
         }, request);
       }
 
@@ -466,6 +1193,7 @@ serve(async (request) => {
             progress: 100,
             storage_path: storagePath,
             rig_analysis_status: 'pending',
+            error_message: null,
             updated_at: new Date().toISOString(),
           }),
         },
@@ -495,6 +1223,7 @@ serve(async (request) => {
           progress: 100,
           storage_path: storagePath,
           rig_analysis_status: 'pending',
+          error_message: null,
         },
         modelUrl,
         rigAnalysisStatus: 'pending',
@@ -506,7 +1235,7 @@ serve(async (request) => {
         job: {
           ...current,
           status: 'provider_unavailable',
-          error_message: 'Meshy-Status konnte nicht geladen werden.',
+          error_message: publicMeshyFailure('status'),
         },
       }, request);
     }

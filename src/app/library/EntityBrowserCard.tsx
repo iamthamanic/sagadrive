@@ -8,6 +8,7 @@
  */
 import { useState, type MouseEvent } from 'react';
 import { ImageOff } from 'lucide-react';
+import { Badge } from '../../shared/ui/badge';
 import { Card, CardContent } from '../../shared/ui/card';
 import {
   ImageLightboxDialog,
@@ -19,6 +20,8 @@ type EntityBrowserCardProps = {
   title: string;
   meta?: string;
   metaChips?: readonly string[];
+  /** Optional status badges (e.g. incomplete character draft). */
+  badges?: readonly { label: string; variant?: 'destructive' | 'secondary' | 'outline' }[];
   imageUrl?: string;
   imageAlt: string;
   imageFallback: string;
@@ -147,6 +150,7 @@ export function EntityBrowserCard({
   title,
   meta,
   metaChips,
+  badges,
   imageUrl,
   imageAlt,
   imageFallback,
@@ -203,7 +207,14 @@ export function EntityBrowserCard({
           <div className="flex items-center gap-3 p-3">
             {thumb}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">{title}</p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <p className="truncate text-sm font-semibold">{title}</p>
+                {badges?.map((badge) => (
+                  <Badge key={badge.label} variant={badge.variant ?? 'secondary'} className="text-[10px]">
+                    {badge.label}
+                  </Badge>
+                ))}
+              </div>
               {meta && <p className="truncate text-xs text-muted-foreground">{meta}</p>}
               {metaChips && metaChips.length > 0 && (
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -247,7 +258,14 @@ export function EntityBrowserCard({
           <div className="flex items-center gap-3">
             {thumb}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold md:text-base">{title}</p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <p className="truncate text-sm font-semibold md:text-base">{title}</p>
+                {badges?.map((badge) => (
+                  <Badge key={badge.label} variant={badge.variant ?? 'secondary'} className="text-[10px]">
+                    {badge.label}
+                  </Badge>
+                ))}
+              </div>
               {meta && <p className="truncate text-xs text-muted-foreground md:text-sm">{meta}</p>}
               {metaChips && metaChips.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">

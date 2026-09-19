@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent
 import { Camera, CheckCircle2, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { AvatarSurfaceViewer } from '../avatar/AvatarSurfaceViewer';
+import type { AvatarPortraitCaptureHandle } from '../avatar/AvatarCanvas';
 import { AvatarImportPanel } from '../avatar/AvatarImportPanel';
-import { AvatarMeshyPanel } from '../avatar/AvatarMeshyPanel';
+import { AvatarMeshyPanel, type MeshyAvatarJobUiState } from '../avatar/AvatarMeshyPanel';
+import { AvatarMeshyGeneratingOverlay } from '../avatar/AvatarMeshyGeneratingOverlay';
 import { AvatarSourceSelector } from '../avatar/AvatarSourceSelector';
 import { AvatarTraitPanels } from '../avatar/AvatarTraitPanels';
 import { BaseBodyMorphFixture } from '../avatar/BaseBodyMorphFixture';
@@ -13,6 +15,7 @@ import {
   createDefaultAvatarMorphState,
   describeAvatarSourceCapabilities,
   evaluateAvatarSourceSwitch,
+  isMeshyAvatarJobBusy,
   migrateCharacterAvatarDtoToMorph,
   morphToLegacySlider,
   resolveAvatarSource,
@@ -139,6 +142,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../../../shared/ui/tool
 import { Separator } from '../../../shared/ui/separator';
 import { Slider } from '../../../shared/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../shared/ui/tabs';
+import { cn } from '../../../shared/ui/utils';
+import type { CharacterSheetStatus } from '../../../domains/character/contracts/character.views';
 
 type ActivityTrackingWindow = Window & { trackActivity?: (description: string) => void };
 type EditorTab = 'info' | 'values' | 'appearance' | 'inventory' | 'settings';
@@ -336,6 +341,7 @@ export function CharacterEditor() {
   const [portraitUrl, setPortraitUrl] = useState('');
   const [importedModelUrl, setImportedModelUrl] = useState<string | undefined>(undefined);
   const [avatarSource, setAvatarSource] = useState<AvatarSource>('sagadrive');
+  const [meshyUi, setMeshyUi] = useState<MeshyAvatarJobUiState | null>(null);
   const [sagaDriveDirty, setSagaDriveDirty] = useState(false);
   const [avatarMorph, setAvatarMorph] = useState<SagaDriveAvatarMorphStateV1>(() =>
     createDefaultAvatarMorphState(),
@@ -344,6 +350,8 @@ export function CharacterEditor() {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarCanvasRef = useRef<HTMLCanvasElement>(null);
+  const portraitCaptureRef = useRef<AvatarPortraitCaptureHandle | null>(null);
+  const pendingAutoPortraitRef = useRef(false);
   const bootstrapAppliedRef = useRef(false);
 
   const currentAvatar = useMemo(() => {
@@ -522,6 +530,34 @@ export function CharacterEditor() {
     return problems;
   };
 
+  const validationProblems = collectValidationProblems();
+  const sheetIsComplete = validationProblems.length === 0
+    && Boolean(characterArchetype)
+    && Boolean(essenceProfile)
+    && Boolean(archetypeTrainingSkill)
+    && isSagaDriveSkillKey(specializationSkill)
+    && Boolean(genderReading)
+    && speciesTraitsComplete;
+  const highlightGaps = validationAttempted;
+  const incompleteMainTabs = new Set(
+    highlightGaps ? validationProblems.map((problem) => problem.tab) : [],
+  );
+  const incompleteValuesSubTabs = new Set<ValuesSubTab>(
+    highlightGaps
+      ? validationProblems
+          .map((problem) => problem.valuesSubTab)
+          .filter((sub): sub is ValuesSubTab => Boolean(sub))
+      : [],
+  );
+  const tabGapClass = (tab: EditorTab) =>
+    incompleteMainTabs.has(tab)
+      ? 'text-destructive data-[state=active]:text-destructive'
+      : undefined;
+  const valuesSubGapClass = (sub: ValuesSubTab) =>
+    incompleteValuesSubTabs.has(sub)
+      ? 'text-destructive data-[state=active]:text-destructive'
+      : undefined;
+
   const buildPresetSnapshot = (): CharacterPresetSnapshot => {
     const sagaDriveProfile: SagaDriveProfileDto = {
       archetype: characterArchetype,
@@ -613,6 +649,7 @@ export function CharacterEditor() {
     bonds?: string[];
     flaws?: string[];
     portraitUrl?: string;
+    sheetStatus?: CharacterSheetStatus;
     successMessage: string;
   }) => {
     const { profile, appearance } = payload;
@@ -699,6 +736,8 @@ export function CharacterEditor() {
     );
     setSavedCharacterId(payload.savedCharacterId);
     setPersistedLevel(payload.persistedLevel);
+    // Incomplete drafts reopen with gap highlights on Spezies/Charakter (and sub-tabs).
+    setValidationAttempted(payload.sheetStatus === 'incomplete');
     clearCharacterEditorBootstrap();
     toast.success(payload.successMessage);
   };
@@ -831,7 +870,10 @@ export function CharacterEditor() {
           bonds: character.bonds,
           flaws: character.flaws,
           portraitUrl: character.portraitUrl,
-          successMessage: `Charakter „${character.name}“ geladen.`,
+          sheetStatus: character.sheetStatus,
+          successMessage: character.sheetStatus === 'incomplete'
+            ? `Charakter „${character.name}“ geladen — unvollständig, offene Tabs sind markiert.`
+            : `Charakter „${character.name}“ geladen.`,
         });
       } catch (error) {
         console.error('Character edit bootstrap failed:', error);
@@ -1026,11 +1068,33 @@ export function CharacterEditor() {
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [connectedAttribute]);
 
-  const uploadPortrait = async (file: File) => {
+  const uploadPortrait = async (file: File, successMessage = 'Portrait gespeichert') => {
     setUploading(true);
-    try { const url = await characterService.uploadPortrait(file); setPortraitUrl(url); toast.success('Portrait gespeichert'); }
-    catch (error) { console.error('Portrait upload error:', error); toast.error(error instanceof Error ? error.message : 'Portrait konnte nicht gespeichert werden'); }
-    finally { setUploading(false); }
+    try {
+      const url = await characterService.uploadPortrait(file);
+      setPortraitUrl(url);
+      toast.success(successMessage);
+    } catch (error) {
+      console.error('Portrait upload error:', error);
+      toast.error(error instanceof Error ? error.message : 'Portrait konnte nicht gespeichert werden');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const captureAndUploadPortrait = async (successMessage: string) => {
+    const api = portraitCaptureRef.current;
+    if (!api?.isReady()) {
+      toast.error('3D-Vorschau ist noch nicht bereit');
+      return;
+    }
+    const blob = await api.capturePortraitBlob();
+    if (!blob) {
+      toast.error('Portrait konnte nicht erzeugt werden');
+      return;
+    }
+    const safeName = characterName.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-') || 'character';
+    await uploadPortrait(new File([blob], `${safeName}-portrait.png`, { type: 'image/png' }), successMessage);
   };
 
   const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -1041,26 +1105,46 @@ export function CharacterEditor() {
   };
 
   const handleGeneratePortrait = async () => {
-    const canvas = avatarCanvasRef.current; if (!canvas) { toast.error('3D-Vorschau ist noch nicht bereit'); return; }
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png', 0.92)); if (!blob) { toast.error('Portrait konnte nicht erzeugt werden'); return; }
-    const safeName = characterName.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-') || 'character';
-    await uploadPortrait(new File([blob], `${safeName}-portrait.png`, { type: 'image/png' }));
+    await captureAndUploadPortrait('Portrait gespeichert');
+  };
+
+  const handleAvatarRuntimeReady = () => {
+    if (!pendingAutoPortraitRef.current) return;
+    pendingAutoPortraitRef.current = false;
+    void captureAndUploadPortrait('Portrait automatisch erzeugt');
+  };
+
+  const requestAutoPortraitAfterModel = () => {
+    pendingAutoPortraitRef.current = true;
   };
 
   const handleSaveCharacter = async () => {
     const problems = collectValidationProblems();
-    const firstProblem = problems[0];
-    if (firstProblem) {
+    const nameOk = Boolean(characterName.trim());
+    if (!nameOk) {
       setValidationAttempted(true);
-      setActiveTab(firstProblem.tab);
-      if (firstProblem.valuesSubTab) setActiveValuesSubTab(firstProblem.valuesSubTab);
-      toast.error(firstProblem.message);
+      setActiveTab('info');
+      toast.error('Mindestens einen Namen vergeben, um zu speichern.');
       return;
     }
-    if (!characterArchetype || !essenceProfile || !archetypeTrainingSkill || !isSagaDriveSkillKey(specializationSkill) || !genderReading || !speciesTraitsComplete) {
+    if (ruleset === 'dnd-5.5e') {
       setValidationAttempted(true);
-      toast.error('Bitte vervollständige Archetyp, Essenz, Spezies, Hintergrund und Fertigkeiten vor dem Speichern.');
+      setActiveTab('info');
+      toast.error('D&D 5.5e ist in diesem Editor noch nicht verfügbar. Wähle SagaDrive Core.');
       return;
+    }
+
+    const isComplete = problems.length === 0
+      && Boolean(characterArchetype)
+      && Boolean(essenceProfile)
+      && Boolean(archetypeTrainingSkill)
+      && isSagaDriveSkillKey(specializationSkill)
+      && Boolean(genderReading)
+      && speciesTraitsComplete;
+    const sheetStatus: CharacterSheetStatus = isComplete ? 'complete' : 'incomplete';
+
+    if (!isComplete) {
+      setValidationAttempted(true);
     }
 
     const sagaDriveProfile: SagaDriveProfileDto = {
@@ -1079,7 +1163,9 @@ export function CharacterEditor() {
         skillPool: selectedBackgroundPool,
         trainedSkills: backgroundSkillPointsToTrainedSkills(backgroundSkillPoints),
         backgroundSkillPoints,
-        specialization: { skill: specializationSkill, name: specializationName.trim(), source: 'background', acquiredAtLevel: 1 },
+        specialization: isSagaDriveSkillKey(specializationSkill)
+          ? { skill: specializationSkill, name: specializationName.trim(), source: 'background', acquiredAtLevel: 1 }
+          : undefined,
         milieuAccess: milieuAccess.trim(),
         contact: contact.trim(),
         complication: complication.trim(),
@@ -1088,7 +1174,7 @@ export function CharacterEditor() {
       archetypeTrainingSkill,
       freeSkillRanks,
       skillAdvances: skillAdvances.length > 0 ? skillAdvances : undefined,
-      specializations,
+      specializations: specializations.length > 0 ? specializations : undefined,
       baseAttributes,
       attributeAdvances,
       presetReleaseMode,
@@ -1101,37 +1187,66 @@ export function CharacterEditor() {
     let avatarForSave = currentAvatar;
     try {
       trackActivity(`Character Editor: Charakter "${characterName}" wird gespeichert`);
-      // Materialize owner-scoped base GLB only on explicit Save (not live morph edits).
-      // Runtime/inventory overlays are never passed — compact avatar is SoT.
-      try {
-        const exportArtifact = await materializeAvatarSaveExport({
-          avatar: currentAvatar,
-          characterId: savedCharacterId,
-          runtimeOverlays: [],
-          sourceModelUrl: resolveAvatarModelUrl(currentAvatar),
-        });
-        avatarForSave = {
-          ...currentAvatar,
-          model_url: exportArtifact.modelUrl,
-          model_format: 'glb',
-        };
-        setImportedModelUrl(exportArtifact.modelUrl);
-      } catch (exportError) {
-        console.error('Avatar save export error:', exportError);
-        setImportedModelUrl(priorModelUrl);
-        toast.error(
-          exportError instanceof Error
-            ? exportError.message
-            : 'Avatar-Export fehlgeschlagen. Entwurf bleibt erhalten.',
-        );
-        return;
+      // Complete saves materialize owner-scoped GLB; incomplete drafts keep current model URL.
+      if (isComplete) {
+        try {
+          const exportArtifact = await materializeAvatarSaveExport({
+            avatar: currentAvatar,
+            characterId: savedCharacterId,
+            runtimeOverlays: [],
+            sourceModelUrl: resolveAvatarModelUrl(currentAvatar),
+          });
+          avatarForSave = {
+            ...currentAvatar,
+            model_url: exportArtifact.modelUrl,
+            model_format: 'glb',
+          };
+          setImportedModelUrl(exportArtifact.modelUrl);
+        } catch (exportError) {
+          console.error('Avatar save export error:', exportError);
+          setImportedModelUrl(priorModelUrl);
+          toast.error(
+            exportError instanceof Error
+              ? exportError.message
+              : 'Avatar-Export fehlgeschlagen. Entwurf bleibt erhalten.',
+          );
+          return;
+        }
       }
 
       const savePayload = {
-        name: characterName.trim(), description: description.trim(), class: characterArchetype, race: characterRace, ruleset_key: ruleset, dnd_background: null as null, level: characterLevel,
-        background_story: backgroundStory.trim() || undefined, notes: notes.trim(), personality_traits: personalityTraits.length > 0 ? personalityTraits : undefined, ideals: ideals.length > 0 ? ideals : undefined, bonds: bonds.length > 0 ? bonds : undefined, flaws: flaws.length > 0 ? flaws : undefined,
-        appearance: { body_size: avatarForSave.body.size, height: avatarForSave.body.height, face_features: avatarForSave.traits.head ?? headStyle, hair_style: avatarForSave.traits.hair ?? hairStyle, hair_color: avatarForSave.colors.hair, skin_tone: avatarForSave.colors.skin, clothing: avatarForSave.traits.clothing ?? clothing, gender_reading: genderReading, avatar: avatarForSave },
-        attributes, skills: finalSkillRanks, sagadrive_profile: sagaDriveProfile, abilities, inventory, inventory_v2: inventoryV2, portrait_url: portraitUrl || undefined,
+        name: characterName.trim(),
+        description: description.trim(),
+        class: characterArchetype ?? '',
+        race: characterRace,
+        ruleset_key: ruleset,
+        dnd_background: null as null,
+        level: characterLevel,
+        sheet_status: sheetStatus,
+        background_story: backgroundStory.trim() || undefined,
+        notes: notes.trim(),
+        personality_traits: personalityTraits.length > 0 ? personalityTraits : undefined,
+        ideals: ideals.length > 0 ? ideals : undefined,
+        bonds: bonds.length > 0 ? bonds : undefined,
+        flaws: flaws.length > 0 ? flaws : undefined,
+        appearance: {
+          body_size: avatarForSave.body.size,
+          height: avatarForSave.body.height,
+          face_features: avatarForSave.traits.head ?? headStyle,
+          hair_style: avatarForSave.traits.hair ?? hairStyle,
+          hair_color: avatarForSave.colors.hair,
+          skin_tone: avatarForSave.colors.skin,
+          clothing: avatarForSave.traits.clothing ?? clothing,
+          gender_reading: genderReading,
+          avatar: avatarForSave,
+        },
+        attributes,
+        skills: finalSkillRanks,
+        sagadrive_profile: sagaDriveProfile,
+        abilities,
+        inventory,
+        inventory_v2: inventoryV2,
+        portrait_url: portraitUrl || undefined,
       };
 
       const previousLevel = persistedLevel ?? characterLevel;
@@ -1141,6 +1256,9 @@ export function CharacterEditor() {
       setSavedCharacterId(savedCharacter.id);
       setPersistedLevel(savedCharacter.level);
       setSagaDriveDirty(false);
+      if (!isComplete) {
+        setValidationAttempted(true);
+      }
       // Round-trip through service normalize so editor state matches persisted base vs advances.
       const resolved = resolveSagaDriveAttributeBuildState(savedCharacter.attributes, savedCharacter.sagaDriveProfile);
       setBaseAttributes(resolved.baseAttributes);
@@ -1149,7 +1267,7 @@ export function CharacterEditor() {
         setPresetReleaseMode(savedCharacter.sagaDriveProfile.presetReleaseMode);
       }
 
-      if (presetReleaseMode === 'auto' && savedCharacter.level > previousLevel) {
+      if (isComplete && presetReleaseMode === 'auto' && savedCharacter.level > previousLevel) {
         const autoReleased = await characterPresetService.maybeAutoReleaseVersion({
           characterId: savedCharacter.id,
           previousLevel,
@@ -1161,12 +1279,14 @@ export function CharacterEditor() {
         } else {
           toast.success('Charakter erfolgreich gespeichert');
         }
-      } else {
+      } else if (isComplete) {
         toast.success('Charakter erfolgreich gespeichert');
+      } else {
+        toast.success('Unvollständig gespeichert — offene Tabs sind rot markiert.');
       }
       trackActivity(`Character Editor: Charakter "${characterName}" gespeichert (ID: ${savedCharacter.id})`);
 
-      if (npcPromotionPlan?.kind === 'compact-to-full') {
+      if (npcPromotionPlan?.kind === 'compact-to-full' && isComplete) {
         try {
           const fullSheet: Record<string, unknown> = {
             ...savePayload,
@@ -1218,6 +1338,11 @@ export function CharacterEditor() {
               <SelectTrigger id="ruleset" size="sm" className="w-[10.5rem] sm:w-52" aria-label="Regelset"><SelectValue /></SelectTrigger>
               <SelectContent>{characterRulesetOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent>
             </Select>
+            {!sheetIsComplete ? (
+              <Badge variant="destructive" data-character-sheet-status="incomplete">
+                Unvollständig
+              </Badge>
+            ) : null}
             <CharacterAssistantButton />
             <Button variant="outline" onClick={() => trackActivity('Character Editor: Vorschau fokussiert')}><Eye className="mr-2 h-4 w-4" />Vorschau</Button>
             <Button onClick={handleSaveCharacter} disabled={saving || uploading} data-avatar-save-export={saving ? 'saving' : 'idle'}><Save className="mr-2 h-4 w-4" />{saving ? 'Speichert...' : 'Speichern'}</Button>
@@ -1268,7 +1393,24 @@ export function CharacterEditor() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="aspect-[4/5] overflow-hidden rounded-lg border border-border bg-[#0B1220] shadow-inner">
+              {meshyUi?.job && isMeshyAvatarJobBusy(meshyUi.job.status) ? (
+                <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-border bg-[#0B1220] shadow-inner">
+                  <AvatarMeshyGeneratingOverlay
+                    fillHost
+                    progress={meshyUi.displayProgress}
+                    pollHealth={meshyUi.pollHealth}
+                    statusLabel={
+                      meshyUi.job.status === 'rigging'
+                        ? 'Modell wird heruntergeladen…'
+                        : meshyUi.job.status === 'queued'
+                          ? 'In Warteschlange…'
+                          : meshyUi.displayProgress >= 95
+                            ? 'Meshy finalisiert…'
+                            : 'Charakter wird erzeugt…'
+                    }
+                  />
+                </div>
+              ) : (
                 <AvatarSurfaceViewer
                   surface="sheet"
                   surfaceRef={{
@@ -1279,10 +1421,12 @@ export function CharacterEditor() {
                   }}
                   avatar={currentAvatar}
                   canvasRef={avatarCanvasRef}
+                  captureApiRef={portraitCaptureRef}
+                  onRuntimeReady={handleAvatarRuntimeReady}
                   size="lg"
-                  className="h-full w-full border-0"
+                  className="w-full border-0"
                 />
-              </div>
+              )}
               <AvatarSourceSelector
                 value={avatarSource}
                 capabilitySummary={sourceCapabilitySummary}
@@ -1295,6 +1439,7 @@ export function CharacterEditor() {
                   onImported={(modelUrl) => {
                     setImportedModelUrl(modelUrl);
                     setAvatarSource('import');
+                    requestAutoPortraitAfterModel();
                     toast.success('3D-Charakter importiert');
                   }}
                 />
@@ -1302,9 +1447,11 @@ export function CharacterEditor() {
               {avatarSource === 'meshy' ? (
                 <AvatarMeshyPanel
                   characterId={savedCharacterId}
+                  onJobChange={setMeshyUi}
                   onSuccess={(modelUrl) => {
                     setImportedModelUrl(modelUrl);
                     setAvatarSource('meshy');
+                    requestAutoPortraitAfterModel();
                     toast.success('KI-Charakter materialisiert — Rig-Analyse folgt (#6)');
                   }}
                 />
@@ -1340,11 +1487,11 @@ export function CharacterEditor() {
             <CardContent className="pt-6">
               <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-5">
-                  <TabsTrigger value="info" className="px-1 py-2 text-xs md:px-2 md:text-sm">Spezies</TabsTrigger>
-                  <TabsTrigger value="values" className="px-1 py-2 text-xs md:px-2 md:text-sm">Charakter</TabsTrigger>
-                  <TabsTrigger value="appearance" className="px-1 py-2 text-xs md:px-2 md:text-sm">Look</TabsTrigger>
-                  <TabsTrigger value="inventory" className="px-1 py-2 text-xs md:px-2 md:text-sm">Inventar</TabsTrigger>
-                  <TabsTrigger value="settings" className="px-1 py-2 text-xs md:px-2 md:text-sm">Einstellungen</TabsTrigger>
+                  <TabsTrigger value="info" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('info'))}>Spezies</TabsTrigger>
+                  <TabsTrigger value="values" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('values'))}>Charakter</TabsTrigger>
+                  <TabsTrigger value="appearance" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('appearance'))}>Look</TabsTrigger>
+                  <TabsTrigger value="inventory" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('inventory'))}>Inventar</TabsTrigger>
+                  <TabsTrigger value="settings" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('settings'))}>Einstellungen</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="info" className="space-y-6">
@@ -1355,31 +1502,31 @@ export function CharacterEditor() {
                 <TabsContent value="values" className="space-y-6">
                   <Tabs value={activeValuesSubTab} onValueChange={handleValuesSubTabChange}>
                     <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-5">
-                      <TabsTrigger value="archetype" className="px-2 py-2 text-xs md:px-3 md:text-sm">
+                      <TabsTrigger value="archetype" className={cn('px-2 py-2 text-xs md:px-3 md:text-sm', valuesSubGapClass('archetype'))}>
                         <span className="inline-flex items-center gap-1.5">
                           Archetype
                           {valuesSubTabComplete.archetype ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
                         </span>
                       </TabsTrigger>
-                      <TabsTrigger value="essenz" className="px-2 py-2 text-xs md:px-3 md:text-sm">
+                      <TabsTrigger value="essenz" className={cn('px-2 py-2 text-xs md:px-3 md:text-sm', valuesSubGapClass('essenz'))}>
                         <span className="inline-flex items-center gap-1.5">
                           Essenz
                           {valuesSubTabComplete.essenz ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
                         </span>
                       </TabsTrigger>
-                      <TabsTrigger value="attributes" className="px-2 py-2 text-xs md:px-3 md:text-sm">
+                      <TabsTrigger value="attributes" className={cn('px-2 py-2 text-xs md:px-3 md:text-sm', valuesSubGapClass('attributes'))}>
                         <span className="inline-flex items-center gap-1.5">
                           Attribute
                           {valuesSubTabComplete.attributes ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
                         </span>
                       </TabsTrigger>
-                      <TabsTrigger value="background" className="px-2 py-2 text-xs md:px-3 md:text-sm">
+                      <TabsTrigger value="background" className={cn('px-2 py-2 text-xs md:px-3 md:text-sm', valuesSubGapClass('background'))}>
                         <span className="inline-flex items-center gap-1.5">
                           Hintergrund
                           {valuesSubTabComplete.background ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
                         </span>
                       </TabsTrigger>
-                      <TabsTrigger value="details" className="px-2 py-2 text-xs md:px-3 md:text-sm">
+                      <TabsTrigger value="details" className={cn('px-2 py-2 text-xs md:px-3 md:text-sm', valuesSubGapClass('details'))}>
                         <span className="inline-flex items-center gap-1.5">
                           Details
                           {valuesSubTabComplete.details ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}

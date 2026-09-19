@@ -59,6 +59,9 @@ export type AvatarRuntimeState =
   | { status: 'ready'; message: string }
   | { status: 'error'; message: string };
 
+/** Quick camera frames for the Character Editor 3D preview. */
+export type AvatarCameraFrameId = 'full' | 'portrait' | 'face' | 'feet';
+
 type RuntimeStateListener = (state: AvatarRuntimeState) => void;
 type RigAnalysisListener = (analysis: AvatarRigAnalysisResult) => void;
 type AnimationStateListener = (state: AvatarAnimationRuntimeState) => void;
@@ -144,6 +147,9 @@ export class CharacterStudioRuntime {
   private readonly rigidEquipmentRuntime: AvatarRigidEquipmentRuntime;
   private readonly skinnedWearableRuntime: AvatarSkinnedWearableRuntime;
   private headBone: THREE.Object3D | null = null;
+  private leftFootBone: THREE.Object3D | null = null;
+  private rightFootBone: THREE.Object3D | null = null;
+  private inspectMode = false;
   private readonly headRestQuaternion = new THREE.Quaternion();
   private readonly headScratchEuler = new THREE.Euler(0, 0, 0, 'YXZ');
   private readonly headScratchQuaternion = new THREE.Quaternion();
@@ -210,11 +216,7 @@ export class CharacterStudioRuntime {
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
-    this.controls.enablePan = false;
-    this.controls.minDistance = 1.4;
-    this.controls.maxDistance = 7;
-    this.controls.minPolarAngle = Math.PI * 0.18;
-    this.controls.maxPolarAngle = Math.PI * 0.72;
+    this.applyOrbitLimits('default');
     this.controls.target.set(0, 1, 0);
     this.controls.update();
 
@@ -275,12 +277,13 @@ export class CharacterStudioRuntime {
       this.currentVrm = vrm;
       this.modelContainer.add(root);
       this.applyAppearance(this.currentAvatar ?? avatar, this.currentManifest ?? manifest);
+      this.setInspectMode(false);
       this.fitCamera();
       this.lastRigAnalysis = analyzeAvatarRigFromObject3D(root, { vrm });
       this.onRigAnalysis?.(this.lastRigAnalysis);
       this.animationRuntime.bind(root, this.lastRigAnalysis);
       this.facialRuntime.bind(vrm);
-      this.bindHeadBone(vrm);
+      this.bindHumanoidBones(vrm);
       this.rigidEquipmentRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.skinnedWearableRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.onStateChange({
@@ -401,10 +404,88 @@ export class CharacterStudioRuntime {
     this.facialRuntime.resetToNeutral();
   }
 
-  /** Portrait capture — same renderer/style path as live preview. */
+  /** True when a model is loaded and can be snapshotted. */
+  isPortraitReady(): boolean {
+    return !this.disposed && Boolean(this.currentRoot);
+  }
+
+  isInspectMode(): boolean {
+    return this.inspectMode;
+  }
+
+  /**
+   * Inspect mode: pan + closer zoom so users can look at face, shoes, etc.
+   * Default mode keeps the locked full-body orbit from launch.
+   */
+  setInspectMode(enabled: boolean): void {
+    if (this.disposed) return;
+    this.inspectMode = enabled;
+    this.applyOrbitLimits(enabled ? 'inspect' : 'default');
+    this.controls.update();
+  }
+
+  /** Jump orbit target to a body region; close frames auto-enable inspect. */
+  applyCameraFrame(frame: AvatarCameraFrameId): void {
+    if (this.disposed || !this.currentRoot) return;
+    if (frame === 'face' || frame === 'feet' || frame === 'portrait') {
+      this.setInspectMode(true);
+    }
+    if (frame === 'full') {
+      this.fitCamera();
+      return;
+    }
+    if (frame === 'portrait') {
+      this.fitPortraitCamera();
+      return;
+    }
+    if (frame === 'face') {
+      this.fitRegionCamera({
+        bandMin: 0.78,
+        bandMax: 1,
+        heightScale: 0.55,
+        preferBone: this.headBone,
+        boneYBias: -0.04,
+      });
+      return;
+    }
+    this.fitRegionCamera({
+      bandMin: 0,
+      bandMax: 0.18,
+      heightScale: 0.5,
+      preferBone: this.leftFootBone ?? this.rightFootBone,
+      boneYBias: 0.06,
+    });
+  }
+
+  /** Exit inspect limits and restore full-body framing. */
+  resetCamera(): void {
+    if (this.disposed) return;
+    this.setInspectMode(false);
+    this.fitCamera();
+  }
+
+  /**
+   * Portrait capture — same renderer/style path as live preview.
+   * Temporarily frames head + upper torso, then restores the live camera.
+   */
   capturePortraitDataUrl(): string {
-    this.renderNow();
-    return capturePortraitFromRenderer(this.renderer);
+    const prevTarget = this.controls.target.clone();
+    const prevPosition = this.camera.position.clone();
+    const prevNear = this.camera.near;
+    const prevFar = this.camera.far;
+    try {
+      this.fitPortraitCamera();
+      this.renderNow();
+      return capturePortraitFromRenderer(this.renderer);
+    } finally {
+      this.controls.target.copy(prevTarget);
+      this.camera.position.copy(prevPosition);
+      this.camera.near = prevNear;
+      this.camera.far = prevFar;
+      this.camera.updateProjectionMatrix();
+      this.controls.update();
+      this.renderNow();
+    }
   }
 
   applyAppearance(avatar: CharacterAvatarDto, manifest: AvatarAssetManifest): void {
@@ -517,6 +598,80 @@ export class CharacterStudioRuntime {
     this.controls.update();
   }
 
+  /**
+   * Frame head + upper torso for portrait snapshots (Meshy/import and manual generate).
+   * Prefers VRM head bone when present; otherwise uses the top ~55% of the model AABB.
+   */
+  private fitPortraitCamera(): void {
+    this.fitRegionCamera({
+      bandMin: 0.45,
+      bandMax: 1,
+      heightScale: 0.72,
+      preferBone: this.headBone,
+      boneYBias: -0.18,
+      minDistance: 0.85,
+    });
+  }
+
+  private fitRegionCamera(options: {
+    bandMin: number;
+    bandMax: number;
+    heightScale: number;
+    preferBone: THREE.Object3D | null;
+    boneYBias: number;
+    minDistance?: number;
+  }): void {
+    if (!this.currentRoot) return;
+    this.modelContainer.updateWorldMatrix(true, true);
+    const bounds = new THREE.Box3().setFromObject(this.modelContainer);
+    if (bounds.isEmpty()) return;
+
+    const size = bounds.getSize(new THREE.Vector3());
+    const fullCenter = bounds.getCenter(new THREE.Vector3());
+    const regionMinY = bounds.min.y + size.y * options.bandMin;
+    const regionMaxY = bounds.min.y + size.y * options.bandMax;
+    const regionHeight = Math.max(0.2, regionMaxY - regionMinY);
+    const center = new THREE.Vector3(fullCenter.x, (regionMinY + regionMaxY) / 2, fullCenter.z);
+
+    if (options.preferBone) {
+      const boneWorld = new THREE.Vector3();
+      options.preferBone.getWorldPosition(boneWorld);
+      center.x = boneWorld.x;
+      center.z = boneWorld.z;
+      center.y = boneWorld.y + regionHeight * options.boneYBias;
+    }
+
+    const verticalFov = THREE.MathUtils.degToRad(this.camera.fov);
+    const distance = Math.max(
+      options.minDistance ?? 0.45,
+      (regionHeight * options.heightScale) / Math.tan(verticalFov / 2),
+    );
+    this.controls.target.copy(center);
+    this.camera.position.set(center.x, center.y + regionHeight * 0.02, center.z + distance);
+    this.camera.near = Math.max(0.01, distance / 100);
+    this.camera.far = Math.max(30, distance * 8);
+    this.camera.updateProjectionMatrix();
+    this.controls.update();
+  }
+
+  private applyOrbitLimits(mode: 'default' | 'inspect'): void {
+    if (mode === 'inspect') {
+      this.controls.enablePan = true;
+      this.controls.screenSpacePanning = true;
+      this.controls.minDistance = 0.35;
+      this.controls.maxDistance = 8;
+      this.controls.minPolarAngle = 0.08;
+      this.controls.maxPolarAngle = Math.PI - 0.08;
+      return;
+    }
+    this.controls.enablePan = false;
+    this.controls.screenSpacePanning = false;
+    this.controls.minDistance = 1.4;
+    this.controls.maxDistance = 7;
+    this.controls.minPolarAngle = Math.PI * 0.18;
+    this.controls.maxPolarAngle = Math.PI * 0.72;
+  }
+
   private resize(): void {
     const canvas = this.renderer.domElement;
     const width = Math.max(1, Math.round(canvas.clientWidth));
@@ -532,8 +687,10 @@ export class CharacterStudioRuntime {
     }
   }
 
-  private bindHeadBone(vrm: VRM | undefined): void {
+  private bindHumanoidBones(vrm: VRM | undefined): void {
     this.headBone = null;
+    this.leftFootBone = null;
+    this.rightFootBone = null;
     const humanoid = vrm?.humanoid as
       | {
           getNormalizedBoneNode?: (name: string) => THREE.Object3D | null;
@@ -541,19 +698,23 @@ export class CharacterStudioRuntime {
         }
       | undefined;
     if (!humanoid) return;
-    const node =
-      humanoid.getNormalizedBoneNode?.('head') ??
-      humanoid.getRawBoneNode?.('head') ??
-      null;
-    if (!node) return;
-    this.headBone = node;
-    this.headRestQuaternion.copy(node.quaternion);
+    const pick = (name: string): THREE.Object3D | null =>
+      humanoid.getNormalizedBoneNode?.(name) ?? humanoid.getRawBoneNode?.(name) ?? null;
+    const head = pick('head');
+    if (head) {
+      this.headBone = head;
+      this.headRestQuaternion.copy(head.quaternion);
+    }
+    this.leftFootBone = pick('leftFoot') ?? pick('leftToes');
+    this.rightFootBone = pick('rightFoot') ?? pick('rightToes');
   }
 
   private removeCurrentModel(): void {
     this.animationRuntime.stopAll();
     this.facialRuntime.resetToNeutral();
     this.headBone = null;
+    this.leftFootBone = null;
+    this.rightFootBone = null;
     this.rigidEquipmentRuntime.bindAvatar(null, null);
     this.skinnedWearableRuntime.bindAvatar(null, null);
     if (!this.currentRoot) return;

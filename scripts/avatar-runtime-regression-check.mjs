@@ -50,7 +50,19 @@ requireMatch(
   /(?:<AvatarCanvas avatar=\{currentAvatar\} canvasRef=\{avatarCanvasRef\} \/>)|(?:AvatarSurfaceViewer[\s\S]*canvasRef=\{avatarCanvasRef\})/,
   'shared live-preview canvas ref',
 );
-requireMatch(editor, /avatarCanvasRef\.current[\s\S]*canvas\.toBlob\(resolve, 'image\/png', 0\.92\)/, 'portrait generation from the same WebGL canvas');
+requireMatch(runtime, /capturePortraitDataUrl\(\)/, 'runtime portrait capture from WebGL renderer');
+requireMatch(runtime, /fitPortraitCamera\(\)/, 'portrait camera frames head + upper torso');
+requireMatch(runtime, /capturePortraitFromRenderer\(this\.renderer\)/, 'portrait uses same renderer path as live preview');
+requireMatch(canvas, /capturePortraitBlob/, 'AvatarCanvas exposes framed portrait blob capture');
+requireMatch(canvas, /capturePortraitDataUrl\(\)/, 'AvatarCanvas portrait capture goes through studio runtime');
+requireMatch(editor, /portraitCaptureRef/, 'CharacterEditor portrait capture handle');
+requireMatch(editor, /captureAndUploadPortrait/, 'CharacterEditor portrait upload shares hochladen path');
+requireMatch(editor, /pendingAutoPortraitRef/, 'auto portrait after Meshy/import when runtime ready');
+requireMatch(runtime, /setInspectMode\(/, 'inspect mode toggles orbit limits');
+requireMatch(runtime, /applyCameraFrame\(/, 'camera frame presets');
+requireMatch(runtime, /fitRegionCamera\(/, 'region framing helper');
+requireMatch(runtime, /applyOrbitLimits\(/, 'default vs inspect orbit limits');
+requireMatch(canvas, /AvatarCameraViewControls/, 'camera view controls UI');
 
 const dependencies = packageJson.dependencies;
 const devDependencies = packageJson.devDependencies;

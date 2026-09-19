@@ -341,6 +341,11 @@ function checkAvatarMeshyGeneration() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Avatar 3D generation (provider-agnostic): presets + Meshy adapter...');
+  execFileSync(process.execPath, ['scripts/avatar-3d-generation-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkAvatarSourceSelector() {

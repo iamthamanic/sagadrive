@@ -39,26 +39,72 @@ function resolveBaseRef() {
   return undefined;
 }
 
+function isSrcTs(path) {
+  return path.startsWith('src/') && extensions.has(extname(path));
+}
+
+function uniquePaths(paths) {
+  return [...new Set(paths.filter(Boolean).filter(isSrcTs))];
+}
+
+/**
+ * Changed TypeScript under src/: committed range vs base **plus** unstaged/untracked worktree.
+ * Avoids skipping gates when working directly on main with only local edits.
+ */
 export function collectChangedTypeScriptFiles() {
+  const paths = [];
+
   const baseRef = resolveBaseRef();
-  if (!baseRef) return [];
+  if (baseRef) {
+    try {
+      const mergeBase = git(['merge-base', 'HEAD', baseRef]);
+      const committed = git([
+        'diff',
+        '--name-only',
+        '--diff-filter=ACMR',
+        `${mergeBase}...HEAD`,
+        '--',
+        'src/**/*.ts',
+        'src/**/*.tsx',
+        'src/*.ts',
+        'src/*.tsx',
+      ]);
+      if (committed) paths.push(...committed.split('\n'));
+    } catch {
+      // ignore merge-base failures; still collect worktree
+    }
+  }
 
-  const mergeBase = git(['merge-base', 'HEAD', baseRef]);
-  const output = git([
-    'diff',
-    '--name-only',
-    '--diff-filter=ACMR',
-    `${mergeBase}...HEAD`,
-    '--',
-    'src/**/*.ts',
-    'src/**/*.tsx',
-    'src/*.ts',
-    'src/*.tsx',
-  ]);
+  try {
+    const unstaged = git([
+      'diff',
+      '--name-only',
+      '--diff-filter=ACMR',
+      'HEAD',
+      '--',
+      'src/**/*.ts',
+      'src/**/*.tsx',
+      'src/*.ts',
+      'src/*.tsx',
+    ]);
+    if (unstaged) paths.push(...unstaged.split('\n'));
+  } catch {
+    // ignore
+  }
 
-  if (!output) return [];
+  try {
+    const untracked = git([
+      'ls-files',
+      '--others',
+      '--exclude-standard',
+      '--',
+      'src/**/*.ts',
+      'src/**/*.tsx',
+    ]);
+    if (untracked) paths.push(...untracked.split('\n'));
+  } catch {
+    // ignore
+  }
 
-  return output
-    .split('\n')
-    .filter((path) => path.startsWith('src/') && extensions.has(extname(path)));
+  return uniquePaths(paths);
 }

@@ -37,7 +37,7 @@ const STATUS_LABEL: Record<AvatarImportUiStatus, string> = {
 export function AvatarImportPanel({ characterId, onImported }: AvatarImportPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<AvatarImportUiStatus>('idle');
-  const [message, setMessage] = useState('VRM oder GLB auswählen — max. 40 MB.');
+  const [message, setMessage] = useState('VRM oder GLB auswählen — max. 150 MB.');
   const [dragOver, setDragOver] = useState(false);
   const busy = status === 'validating' || status === 'uploading' || status === 'analyzing';
   const limits = avatarImportLimits();

@@ -6,7 +6,7 @@
  * Live 3D count is bounded via resolveAvatarSurfaceView.
  */
 
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from 'react';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
 import {
   resolveAvatarSurfaceView,
@@ -14,7 +14,7 @@ import {
   type AvatarSurfaceId,
   type AvatarSurfaceRef,
 } from '../../../domains/character/avatar';
-import { AvatarCanvas } from './AvatarCanvas';
+import { AvatarCanvas, type AvatarPortraitCaptureHandle } from './AvatarCanvas';
 
 interface AvatarSurfaceViewerProps {
   surface: AvatarSurfaceId;
@@ -25,6 +25,8 @@ interface AvatarSurfaceViewerProps {
   live3dCount?: number;
   className?: string;
   canvasRef?: RefObject<HTMLCanvasElement>;
+  captureApiRef?: MutableRefObject<AvatarPortraitCaptureHandle | null>;
+  onRuntimeReady?: () => void;
   /** Portrait/list density — fixed aspect box to avoid layout jump. */
   size?: 'sm' | 'md' | 'lg';
 }
@@ -52,6 +54,8 @@ export function AvatarSurfaceViewer({
   live3dCount = 0,
   className,
   canvasRef,
+  captureApiRef,
+  onRuntimeReady,
   size = 'md',
 }: AvatarSurfaceViewerProps) {
   const [webGlAvailable, setWebGlAvailable] = useState(true);
@@ -74,10 +78,15 @@ export function AvatarSurfaceViewer({
 
   const boxClass = SIZE_CLASS[size];
   const show3d = view.useWebGl && Boolean(avatar);
+  // 3D canvas owns its own aspect + controls below; don't lock the outer box to 4/5
+  // or Animation/Facial panels steal height from the character viewport.
+  const shellClass = show3d
+    ? `relative w-full ${className ?? ''}`
+    : `relative overflow-hidden rounded-lg border border-border bg-[#0B1220] ${boxClass} ${className ?? ''}`;
 
   return (
     <div
-      className={`relative overflow-hidden rounded-lg border border-border bg-[#0B1220] ${boxClass} ${className ?? ''}`}
+      className={shellClass}
       data-avatar-surface={view.surface}
       data-avatar-render-mode={view.mode}
       data-avatar-use-webgl={view.useWebGl ? 'true' : 'false'}
@@ -87,7 +96,9 @@ export function AvatarSurfaceViewer({
         <AvatarCanvas
           avatar={avatar}
           canvasRef={canvasRef}
-          className="relative flex h-full w-full flex-col gap-1 overflow-hidden"
+          captureApiRef={captureApiRef}
+          onRuntimeReady={onRuntimeReady}
+          className="relative flex w-full flex-col gap-2"
         />
       ) : view.portraitUrl && !imageFailed ? (
         <img

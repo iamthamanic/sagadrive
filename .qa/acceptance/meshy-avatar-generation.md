@@ -6,7 +6,7 @@
 User erzeugen per Prompt einen 3D-Charakter mit Meshy (BYOK serverseitig). Ergebnis landet owner-scoped; Capabilities kommen nur aus #6, nie aus Provider-Success.
 
 ## Happy Path
-- [ ] Entry „Mit KI erstellen“ + Prompt + Kostenbestätigung vor Submit
+- [x] Entry „Mit KI erstellen“ + Prompt + Kostenbestätigung vor Submit (Modal mit Credit-Schätzung)
 - [ ] Genau ein Job pro Bestätigung; Idempotency + Rate-Limit
 - [ ] MESHY_API_KEY nur Edge/Server; SSRF-sicherer GLB-Download
 - [ ] Materialisierung in `character-avatars`; `rig_analysis_status` bleibt `pending`
@@ -28,3 +28,4 @@ Out: SkinTokens, Morph-Garantie, Marketplace.
 - Edge: text-to-3d provider, mock via `MESHY_AVATAR_USE_MOCK=1`
 - UI states: idle/confirming/queued/generating/rigging/analyzing/success/failed/provider-unavailable
 - AGENTS.md auto-compact between tickets
+- GLB materialize (028): raise bucket to 100MB; remesh oversized provider GLBs (`remesh_task_id`) so text and image modes both store web-friendly models

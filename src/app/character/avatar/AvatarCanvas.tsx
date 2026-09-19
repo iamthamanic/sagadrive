@@ -2,7 +2,7 @@
  * AvatarCanvas — React canvas host for the CharacterStudio Three.js runtime.
  * Location: src/app/character/avatar/AvatarCanvas.tsx
  */
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from 'react';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
 import type {
   AvatarAnimationActionId,
@@ -12,7 +12,7 @@ import type {
   FacialCanonicalKey,
   MtoonStyleCompatibility,
 } from '../../../domains/character/avatar';
-import { CharacterStudioRuntime, type AvatarRuntimeState } from '../../../infrastructure/character/avatar/character-studio-runtime';
+import { CharacterStudioRuntime, type AvatarRuntimeState, type AvatarCameraFrameId } from '../../../infrastructure/character/avatar/character-studio-runtime';
 import type { AvatarAnimationRuntimeState } from '../../../infrastructure/character/avatar/avatar-animation-runtime';
 import type { AvatarFacialRuntimeState } from '../../../infrastructure/character/avatar/avatar-facial-runtime';
 import { getAvatarAssetManifest, resolveAvatarModelUrl } from '../../../infrastructure/character/avatar/avatar-asset-manifests';
@@ -20,16 +20,37 @@ import { AvatarRigCapabilityPanel } from './AvatarRigCapabilityPanel';
 import { AvatarAnimationPreviewControls } from './AvatarAnimationPreviewControls';
 import { AvatarFacialPreviewControls } from './AvatarFacialPreviewControls';
 import { AvatarFaceTrackingControls } from './AvatarFaceTrackingControls';
+import { AvatarCameraViewControls } from './AvatarCameraViewControls';
 import {
   AvatarFaceTrackingRuntime,
   type FaceTrackingRuntimeState,
 } from '../../../infrastructure/character/avatar/avatar-face-tracking-runtime';
 import type { FaceTrackingStatus } from '../../../domains/character/avatar';
 
+/** Imperative portrait snapshot API for CharacterEditor (manual + auto after Meshy/import). */
+export type AvatarPortraitCaptureHandle = {
+  isReady: () => boolean;
+  capturePortraitBlob: () => Promise<Blob | null>;
+};
+
 interface AvatarCanvasProps {
   avatar: CharacterAvatarDto;
   canvasRef?: RefObject<HTMLCanvasElement>;
+  captureApiRef?: MutableRefObject<AvatarPortraitCaptureHandle | null>;
+  /** Fires when the 3D model reaches ready (after load). Used for auto-portrait. */
+  onRuntimeReady?: () => void;
   className?: string;
+}
+
+async function dataUrlToPngBlob(dataUrl: string): Promise<Blob | null> {
+  try {
+    const response = await fetch(dataUrl);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return blob.type ? blob : new Blob([blob], { type: 'image/png' });
+  } catch {
+    return null;
+  }
 }
 
 const initialState: AvatarRuntimeState = {
@@ -37,10 +58,18 @@ const initialState: AvatarRuntimeState = {
   message: '3D-Runtime wird gestartet …',
 };
 
-export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps) {
+export function AvatarCanvas({
+  avatar,
+  canvasRef,
+  captureApiRef,
+  onRuntimeReady,
+  className,
+}: AvatarCanvasProps) {
   const localRef = useRef<HTMLCanvasElement>(null);
   const targetRef = canvasRef ?? localRef;
   const runtimeRef = useRef<CharacterStudioRuntime>();
+  const onRuntimeReadyRef = useRef(onRuntimeReady);
+  onRuntimeReadyRef.current = onRuntimeReady;
   const [runtimeState, setRuntimeState] = useState<AvatarRuntimeState>(initialState);
   const [rigAnalysis, setRigAnalysis] = useState<AvatarRigAnalysisResult | null>(null);
   const [styleNotice, setStyleNotice] = useState<string | null>(null);
@@ -53,6 +82,8 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
   const [faceTrackingStatus, setFaceTrackingStatus] = useState<FaceTrackingStatus>('idle');
   const [faceTrackingMessage, setFaceTrackingMessage] = useState('Face Tracking aus');
   const [faceTrackingFpsCap, setFaceTrackingFpsCap] = useState(30);
+  const [inspectMode, setInspectMode] = useState(false);
+  const [activeFrame, setActiveFrame] = useState<AvatarCameraFrameId | null>('full');
   const faceTrackingRef = useRef<AvatarFaceTrackingRuntime>();
   const manifest = getAvatarAssetManifest(avatar.preset);
   const modelUrl = resolveAvatarModelUrl(avatar);
@@ -79,9 +110,16 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
       setFaceTrackingFpsCap(state.fpsCap);
     };
 
+    const onStateChange = (state: AvatarRuntimeState) => {
+      setRuntimeState(state);
+      if (state.status === 'ready') {
+        onRuntimeReadyRef.current?.();
+      }
+    };
+
     const runtime = new CharacterStudioRuntime(
       canvas,
-      setRuntimeState,
+      onStateChange,
       setRigAnalysis,
       onAnimation,
       onFacial,
@@ -92,13 +130,30 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
     faceTracking.bindTarget(runtime);
     faceTrackingRef.current = faceTracking;
 
+    if (captureApiRef) {
+      captureApiRef.current = {
+        isReady: () => Boolean(runtimeRef.current?.isPortraitReady()),
+        capturePortraitBlob: async () => {
+          const active = runtimeRef.current;
+          if (!active?.isPortraitReady()) return null;
+          // Let layout/resize settle one frame before snapshot.
+          await new Promise<void>((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+          });
+          if (!runtimeRef.current?.isPortraitReady()) return null;
+          return dataUrlToPngBlob(runtimeRef.current.capturePortraitDataUrl());
+        },
+      };
+    }
+
     return () => {
+      if (captureApiRef) captureApiRef.current = null;
       faceTracking.dispose();
       faceTrackingRef.current = undefined;
       runtime.dispose();
       runtimeRef.current = undefined;
     };
-  }, [targetRef]);
+  }, [targetRef, captureApiRef]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
@@ -127,6 +182,8 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
     }
 
     void runtime.loadModel(modelUrl, avatar, manifest);
+    setInspectMode(false);
+    setActiveFrame('full');
   }, [manifest, modelUrl]);
 
   useEffect(() => {
@@ -140,19 +197,22 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
   }, [avatar, manifest]);
 
   return (
-    <div className={className ?? 'relative flex h-full w-full flex-col gap-2 overflow-hidden'}>
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg bg-[#09111F]">
+    <div className={className ?? 'relative flex w-full flex-col gap-2'}>
+      <div
+        className="relative aspect-[4/5] w-full overflow-hidden rounded-lg border border-border bg-[#09111F] shadow-inner"
+        data-avatar-canvas-viewport="true"
+      >
         <canvas
           ref={targetRef}
-          className="h-full w-full touch-none outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="absolute inset-0 h-full w-full touch-none outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label={`Interaktive echte 3D-Vorschau für ${manifest.displayName}`}
           tabIndex={0}
         />
 
         {runtimeState.status !== 'ready' && (
-          <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 rounded-md border border-white/10 bg-black/45 px-2.5 py-1.5 text-[11px] text-slate-200 backdrop-blur-sm">
+          <div className="pointer-events-none absolute left-3 top-3 z-[1] flex items-center gap-2 rounded-md border border-white/10 bg-black/45 px-2.5 py-1.5 text-[11px] text-slate-200 backdrop-blur-sm">
             <span
-              className={`h-1.5 w-1.5 rounded-full ${
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${
                 runtimeState.status === 'error' ? 'bg-red-400' : 'animate-pulse bg-amber-400'
               }`}
             />
@@ -161,7 +221,7 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
         )}
 
         {runtimeState.status === 'error' && (
-          <div className="pointer-events-none absolute inset-x-4 bottom-4 rounded-lg border border-red-400/30 bg-slate-950/85 p-3 text-center text-xs text-slate-200 backdrop-blur">
+          <div className="pointer-events-none absolute inset-x-4 bottom-4 z-[1] rounded-lg border border-red-400/30 bg-slate-950/85 p-3 text-center text-xs text-slate-200 backdrop-blur">
             Die 3D-Runtime ist aktiv, aber das Modell konnte nicht geladen werden. Hinterlege ein selbst gehostetes Asset über
             <code className="mx-1 text-red-200">VITE_AVATAR_ASSET_BASE_URL</code>
             oder speichere eine gültige VRM/GLB-URL am Avatar.
@@ -170,7 +230,7 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
 
         {styleNotice && runtimeState.status === 'ready' ? (
           <div
-            className="pointer-events-none absolute inset-x-3 bottom-3 rounded-md border border-amber-400/25 bg-slate-950/80 px-2.5 py-1.5 text-[11px] text-amber-100 backdrop-blur"
+            className="pointer-events-none absolute inset-x-3 bottom-3 z-[1] rounded-md border border-amber-400/25 bg-slate-950/80 px-2.5 py-1.5 text-[11px] text-amber-100 backdrop-blur"
             data-testid="avatar-mtoon-style-notice"
             role="status"
           >
@@ -178,6 +238,25 @@ export function AvatarCanvas({ avatar, canvasRef, className }: AvatarCanvasProps
           </div>
         ) : null}
       </div>
+      <AvatarCameraViewControls
+        inspectMode={inspectMode}
+        activeFrame={activeFrame}
+        disabled={runtimeState.status !== 'ready'}
+        onInspectChange={(enabled) => {
+          runtimeRef.current?.setInspectMode(enabled);
+          setInspectMode(enabled);
+        }}
+        onFrame={(frame) => {
+          runtimeRef.current?.applyCameraFrame(frame);
+          setActiveFrame(frame);
+          setInspectMode(runtimeRef.current?.isInspectMode() ?? frame !== 'full');
+        }}
+        onReset={() => {
+          runtimeRef.current?.resetCamera();
+          setInspectMode(false);
+          setActiveFrame('full');
+        }}
+      />
       <AvatarAnimationPreviewControls
         support={animationSupport}
         activeAction={activeAnimation}

@@ -434,6 +434,17 @@ BEGIN
     RAISE EXCEPTION 'Character is not owned by the current user' USING ERRCODE = '42501';
   END IF;
 
+  IF p_character_id IS NOT NULL AND EXISTS (
+    SELECT 1
+    FROM public.characters
+    WHERE id = p_character_id
+      AND owner_user_id = v_user_id
+      AND COALESCE(sheet_status, 'complete') <> 'complete'
+  ) THEN
+    RAISE EXCEPTION 'Unvollständige Charakterbögen können keinem Abenteuer beitreten'
+      USING ERRCODE = '22023';
+  END IF;
+
   INSERT INTO public.project_members (
     project_id,
     user_id,
@@ -482,6 +493,17 @@ BEGIN
       AND character_type = 'pc'
   ) THEN
     RAISE EXCEPTION 'Character is not owned by the current user' USING ERRCODE = '42501';
+  END IF;
+
+  IF p_character_id IS NOT NULL AND EXISTS (
+    SELECT 1
+    FROM public.characters
+    WHERE id = p_character_id
+      AND owner_user_id = v_user_id
+      AND COALESCE(sheet_status, 'complete') <> 'complete'
+  ) THEN
+    RAISE EXCEPTION 'Unvollständige Charakterbögen können keinem Abenteuer zugewiesen werden'
+      USING ERRCODE = '22023';
   END IF;
 
   UPDATE public.project_members

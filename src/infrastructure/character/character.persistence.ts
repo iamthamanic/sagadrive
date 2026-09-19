@@ -56,6 +56,8 @@ export interface CharacterDto {
   inventory_v2?: unknown | null;
   inventory_schema_version?: 1 | 2;
   emotion_profiles: EmotionProfileDto[];
+  /** complete | incomplete — drafts may skip full SagaDrive build asserts. */
+  sheet_status?: 'complete' | 'incomplete';
   is_marketplace_item?: boolean;
   downloads_count?: number;
   rating?: number;

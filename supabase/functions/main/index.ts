@@ -76,7 +76,8 @@ serve(async (req: Request) => {
 
     const worker = await EdgeRuntime.userWorkers.create({
       servicePath,
-      memoryLimitMb: 256,
+      // Avatar Meshy materialize (GLB download/upload) needs headroom; 256MB OOM-kills the container.
+      memoryLimitMb: 512,
       workerTimeoutMs: 5 * 60 * 1000,
       noModuleCache: false,
       importMapPath: '/home/deno/import_map.json',

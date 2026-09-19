@@ -60,6 +60,23 @@ requireMatch(
   'character-only membership update RPC',
 );
 
+const incompleteGate = read('supabase/migrations/032_incomplete_sheet_blocks_adventure_join.sql');
+requireMatch(
+  incompleteGate,
+  /Unvollständige Charakterbögen können keinem Abenteuer beitreten/,
+  '032 join rejects incomplete sheets',
+);
+requireMatch(
+  incompleteGate,
+  /Unvollständige Charakterbögen können keinem Abenteuer zugewiesen werden/,
+  '032 set character rejects incomplete sheets',
+);
+requireMatch(
+  canonicalRls,
+  /Unvollständige Charakterbögen können keinem Abenteuer beitreten/,
+  'canonical RLS join rejects incomplete sheets',
+);
+
 requireMatch(
   migration,
   /DROP POLICY IF EXISTS "Users can update their member record" ON public\.project_members;/i,
@@ -158,6 +175,23 @@ requireMatch(
   projectService,
   /\.eq\('status', 'active'\)/,
   'project listing filters inactive memberships',
+);
+
+const sheetGate = read('supabase/migrations/035_guard_sheet_status_complete.sql');
+requireMatch(
+  sheetGate,
+  /enforce_character_sheet_status_complete/,
+  'sheet_status complete DB gate',
+);
+requireMatch(
+  sheetGate,
+  /Unvollständiger Charakter kann nicht als complete/,
+  'sheet_status gate fails closed',
+);
+requireMatch(
+  read('scripts/apply-migrations.sh'),
+  /035_guard_sheet_status_complete\.sql/,
+  'apply-migrations lists 035',
 );
 
 console.log('Project membership security check passed.');

@@ -39,6 +39,8 @@ check(/sagadrive-base-humanoid-v1\.vrm/.test(catalog), 'allowlisted path');
 check(/evaluateBaseBodyMorphReadiness/.test(catalog), 'readiness helper');
 
 check(/data-testid="base-body-morph-fixture"/.test(fixture), 'fixture test id');
+check(/data-testid="base-body-fixture-toggle"/.test(fixture), 'fixture collapse toggle');
+check(/useState\(false\)/.test(fixture), 'fixture collapsed by default');
 check(/BaseBodyMorphFixture/.test(editor), 'editor mounts fixture in DEV');
 check(/export \{[\s\S]*createSagaDriveBaseBodyManifestV1/.test(index), 'barrel export');
 
