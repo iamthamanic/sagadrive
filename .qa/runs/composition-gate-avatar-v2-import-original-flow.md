@@ -1,6 +1,6 @@
 # composition-gate — avatar-v2-import-original-flow (#261)
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 75bb3d1c5ac61a4f8e68b1516f380032a3fe34ec
 - Date: 2026-09-19
 - Verdict: **CLEAR**
 - Diff stat:

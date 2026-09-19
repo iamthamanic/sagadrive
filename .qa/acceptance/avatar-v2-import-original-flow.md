@@ -40,7 +40,7 @@ Macht sicheren GLB/VRM-Import zu einem vollständigen Avatar-V2-Vertical-Slice: 
 - B-04 / P-04: bestehende 150-MB-/Magic-/Unsafe-URI-Checks bleiben
 
 ## Composition Gate
-- HEAD_SHA: pending-commit
+- HEAD_SHA: 75bb3d1c5ac61a4f8e68b1516f380032a3fe34ec
 - Verdict: CLEAR
 
 ## Implementation Notes
