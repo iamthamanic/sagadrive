@@ -219,6 +219,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-19** — Avatar V2: Composition Contract + kanonisches Design (Source/Anatomy/Family/Modularity/Capabilities orthogonal; Legacy-DTO lesbar) (`feat/avatar-v2-composition-contract`, #249)
 - **2026-09-19** — Avatar Face Tracking: MediaPipe self-host (`public/mediapipe/**`, kein CDN), Desktop/Mobile Quality-Profile, Session/Player an gemeinsame Runtime + Cam-Singleton (#243/#244, `feat/avatar-face-tracking-selfhost-session`)
 - **2026-09-19** — Avatar 3D: provider-agnostische Generation (Meshy-Adapter, Presets Schnell/Empfohlen/Max), Advanced Settings, Master+Runtime-Pipeline; GLB/VRM-Import bis 150 MB; sheet_status-DB-Gate (`feat/provider-agnostic-avatar-3d`)
 - **2026-09-15** — NPC/Kreaturen static SVG icons (19 builtins): Cursor→PNG→VTracer wie Items; `iconKey` → `/assets/npc-creatures/{slug}.svg` (`feat/npc-creature-static-svg-icons`)

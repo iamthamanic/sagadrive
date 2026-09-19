@@ -327,6 +327,14 @@ function checkAvatarFaceTracking() {
   });
 }
 
+function checkAvatarV2CompositionContract() {
+  console.log('Avatar V2 composition contract (#249): orthogonal axes + legacy mapping...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-composition-contract-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -828,6 +836,7 @@ checkAvatarSaveExport();
 checkAvatarAnimationRetarget();
 checkAvatarFacialExpressions();
 checkAvatarFaceTracking();
+checkAvatarV2CompositionContract();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();
