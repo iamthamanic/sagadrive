@@ -42,7 +42,7 @@ check(/data-avatar-source-card/.test(selector), 'card attrs');
 check(/data-avatar-source-capability-summary/.test(selector), 'summary attr');
 check(/AVATAR_SOURCE_OPTIONS/.test(selector), 'uses domain options');
 check(/Vorlage anpassen/.test(domain), 'Vorlage anpassen label in domain');
-check(/3D-Charakter importieren/.test(domain), 'Import label in domain');
+check(/3D-Modell importieren/.test(domain), 'Import label in domain');
 check(/Mit KI erstellen/.test(domain), 'Meshy label in domain');
 
 check(/AvatarSourceSelector/.test(editor), 'editor mounts selector');

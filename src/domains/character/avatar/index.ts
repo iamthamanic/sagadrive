@@ -56,6 +56,21 @@ export {
   type AvatarRigAnalysisStatus,
 } from './avatar-import';
 export {
+  AVATAR_IMPORT_GLB_SPEC_HELP_HREF,
+  AVATAR_IMPORT_GLB_SPEC_HELP_LABEL_DE,
+  IMPORT_ORIGINAL_FLOW_CONTRACT_VERSION,
+  IMPORT_ORIGINAL_FLOW_STATUSES,
+  assertImportOriginalFlowInvariants,
+  buildImportAnalysisSummary,
+  buildImportOriginalKeepSeed,
+  isImportOriginalFlowStatus,
+  morphEvidenceFromImportAnalysis,
+  resolveImportFlowStatusFromAnalysis,
+  type ImportAnalysisSummaryV1,
+  type ImportOriginalFlowStatus,
+  type ImportOriginalKeepSeedV1,
+} from './import-original-flow-v1';
+export {
   RIG_CONTRACT_VERSION,
   SAGA_DRIVE_HUMANOID_ANCHORS,
   SAGA_DRIVE_HUMANOID_BONES,

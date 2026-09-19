@@ -423,6 +423,14 @@ function checkAvatarV2TemplateCreatorFlow() {
   });
 }
 
+function checkAvatarV2ImportOriginalFlow() {
+  console.log('Avatar V2 import original flow (#261): Analyse + Original behalten...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-import-original-flow-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -936,6 +944,7 @@ checkAvatarV2StarterWardrobe();
 checkAvatarV2SkinnedWearableRuntime();
 checkAvatarV2CapabilityEditor();
 checkAvatarV2TemplateCreatorFlow();
+checkAvatarV2ImportOriginalFlow();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();

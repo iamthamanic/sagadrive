@@ -52,8 +52,11 @@ export interface CharacterAvatarDto {
    */
   template_id?: string;
   body_family?: 'standard' | 'compact' | 'heavy' | 'custom';
-  anatomy?: 'humanoid' | 'non-humanoid' | 'unknown';
-  modularity?: 'modular-parts' | 'limited' | 'none';
+  /** V2 anatomy; legacy `non-humanoid` still readable via composition mapper. */
+  anatomy?: 'humanoid' | 'custom-creature' | 'non-humanoid' | 'unknown';
+  body_compatibility?: 'standard' | 'compact' | 'heavy' | 'custom' | 'unknown';
+  /** V2 modularity; legacy `none` maps to monolithic. */
+  modularity?: 'modular-parts' | 'limited' | 'monolithic' | 'none';
   /** Logical starter wardrobe ids applied as basic outfit (not inventory). */
   starter_wardrobe?: readonly string[];
 }

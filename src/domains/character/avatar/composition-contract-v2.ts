@@ -112,7 +112,10 @@ export function parseAvatarV2CompositionFields(input: {
   AvatarV2Composition,
   'anatomy' | 'bodyCompatibility' | 'bodyFamily' | 'modularity' | 'capabilities'
 > {
-  const anatomy = isAvatarV2Anatomy(input.anatomy) ? input.anatomy : 'unknown';
+  // Legacy DTO alias: non-humanoid → custom-creature (never invent capabilities).
+  const anatomyRaw =
+    input.anatomy === 'non-humanoid' ? 'custom-creature' : input.anatomy;
+  const anatomy = isAvatarV2Anatomy(anatomyRaw) ? anatomyRaw : 'unknown';
   const bodyCompatibility = isAvatarV2BodyCompatibility(input.bodyCompatibility)
     ? input.bodyCompatibility
     : 'unknown';
@@ -129,7 +132,9 @@ export function parseAvatarV2CompositionFields(input: {
     bodyFamily = 'custom';
   }
 
-  const modularity = isAvatarV2Modularity(input.modularity) ? input.modularity : 'limited';
+  // Legacy DTO alias: none → monolithic (baked single mesh).
+  const modularityRaw = input.modularity === 'none' ? 'monolithic' : input.modularity;
+  const modularity = isAvatarV2Modularity(modularityRaw) ? modularityRaw : 'limited';
 
   const capabilities: AvatarRigCapabilityFlag[] = [];
   if (Array.isArray(input.capabilities)) {
