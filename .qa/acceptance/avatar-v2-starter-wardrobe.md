@@ -41,7 +41,7 @@ Erste modulare Garderobe: sechs logische Wearables mit Family-Fits (Standard/Com
 - P-04 / secrets: none introduced — out of scope
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 976e4174cf61b19cea131ecad3bd39a86e212513
 - Verdict: CLEAR
 - Proof: .qa/runs/composition-gate-avatar-v2-starter-wardrobe.md
 
