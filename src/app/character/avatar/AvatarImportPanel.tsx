@@ -13,6 +13,7 @@ import {
   AVATAR_IMPORT_GLB_SPEC_HELP_LABEL_DE,
   earlyCheckAvatarImportFile,
   isImportOriginalFlowStatus,
+  type BodyConversionResultV1,
   type ImportAnalysisSummaryV1,
   type ImportOriginalFlowStatus,
   type ImportOriginalKeepSeedV1,
@@ -24,11 +25,14 @@ import {
   type AvatarImportDraftV2,
 } from '../../../infrastructure/character/avatar/character-avatar-import-service';
 import { Button } from '../../../shared/ui/button';
+import { AvatarBodyConversionPanel } from './AvatarBodyConversionPanel';
 
 interface AvatarImportPanelProps {
   characterId?: string | null;
   /** Called only after user confirms „Original behalten“. */
   onKeepOriginal: (seed: ImportOriginalKeepSeedV1) => void;
+  /** Optional conversion onto canonical body family (#263). */
+  onConverted?: (result: BodyConversionResultV1) => void;
 }
 
 const STATUS_LABEL: Record<ImportOriginalFlowStatus, string> = {
@@ -46,7 +50,11 @@ function toFlowStatus(value: string): ImportOriginalFlowStatus {
   return isImportOriginalFlowStatus(value) ? value : 'analyzing';
 }
 
-export function AvatarImportPanel({ characterId, onKeepOriginal }: AvatarImportPanelProps) {
+export function AvatarImportPanel({
+  characterId,
+  onKeepOriginal,
+  onConverted,
+}: AvatarImportPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<ImportOriginalFlowStatus>('idle');
   const [message, setMessage] = useState('VRM oder GLB auswählen — max. 150 MB.');
@@ -241,6 +249,14 @@ export function AvatarImportPanel({ characterId, onKeepOriginal }: AvatarImportP
             >
               Original behalten
             </Button>
+          ) : null}
+          {showKeep && draft && onConverted ? (
+            <AvatarBodyConversionPanel
+              summary={summary}
+              keepSeed={draft.keepSeed}
+              disabled={busy}
+              onConverted={onConverted}
+            />
           ) : null}
         </section>
       ) : null}
