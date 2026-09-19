@@ -175,6 +175,19 @@ export {
   type ModularGenerateStageProgressV1,
 } from './modular-generate-flow-v1';
 export {
+  AVATAR_V2_FINAL_ACCEPTANCE_VERSION,
+  AVATAR_V2_GOLDEN_JOURNEY_IDS,
+  AVATAR_V2_GOLDEN_MATRIX_V1,
+  AVATAR_V2_PERF_BUDGETS_V1,
+  AVATAR_V2_SECURITY_MATRIX_V1,
+  assertAvatarV2FinalAcceptanceInvariants,
+  type AvatarV2GoldenJourneyId,
+  type AvatarV2GoldenJourneyV1,
+  type AvatarV2JourneyKind,
+  type AvatarV2PerfBudgetV1,
+  type AvatarV2SecurityCaseV1,
+} from './final-acceptance-matrix-v1';
+export {
   RIG_CONTRACT_VERSION,
   SAGA_DRIVE_HUMANOID_ANCHORS,
   SAGA_DRIVE_HUMANOID_BONES,
