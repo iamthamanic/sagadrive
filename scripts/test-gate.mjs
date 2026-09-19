@@ -407,6 +407,14 @@ function checkAvatarV2SkinnedWearableRuntime() {
   });
 }
 
+function checkAvatarV2CapabilityEditor() {
+  console.log('Avatar V2 capability editor (#259): surfaces from capabilities not source...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-capability-editor-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -918,6 +926,7 @@ checkAvatarV2CanonicalBodyFamilies();
 checkAvatarV2SpeciesTemplatePack();
 checkAvatarV2StarterWardrobe();
 checkAvatarV2SkinnedWearableRuntime();
+checkAvatarV2CapabilityEditor();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();

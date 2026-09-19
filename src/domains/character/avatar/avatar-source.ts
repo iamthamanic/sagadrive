@@ -1,6 +1,6 @@
 /**
  * Avatar source contract — sagadrive | import | meshy (#14).
- * Pure domain: source is never a capability proof; #6 owns capabilities.
+ * Pure domain: source is never a capability proof; validated analysis owns capabilities.
  * Location: src/domains/character/avatar/avatar-source.ts
  */
 
@@ -24,19 +24,22 @@ export const AVATAR_SOURCE_OPTIONS: readonly AvatarSourceOptionMeta[] = [
     source: 'sagadrive',
     titleDe: 'SagaDrive erstellen',
     expectationDe: 'voll editierbar',
-    summaryDe: 'Traits, Morph und Content Pack — volle Editor-Funktionen solange #6 Morph erlaubt.',
+    summaryDe:
+      'Traits, Morph und Content Pack — Editor-Funktionen folgen der Avatar-Analyse.',
   },
   {
     source: 'import',
     titleDe: '3D-Charakter importieren',
     expectationDe: 'Import',
-    summaryDe: 'Eigenes VRM/GLB hochladen. Funktionen richten sich nach der Rig-Analyse (#6).',
+    summaryDe:
+      'Eigenes VRM/GLB hochladen. Verfügbare Funktionen richten sich nach der Avatar-Analyse.',
   },
   {
     source: 'meshy',
     titleDe: 'Mit KI erstellen',
     expectationDe: 'KI-generiert',
-    summaryDe: 'Prompt an Meshy. Ergebnis wird owner-scoped gespeichert; Capabilities nur aus #6.',
+    summaryDe:
+      'Prompt an den KI-Provider. Ergebnis wird owner-scoped gespeichert; Funktionen folgen der Avatar-Analyse.',
   },
 ] as const;
 

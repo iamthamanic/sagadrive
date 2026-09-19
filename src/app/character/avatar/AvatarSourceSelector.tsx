@@ -2,7 +2,7 @@
  * AvatarSourceSelector — three source cards (SagaDrive / Import / Meshy) for #14.
  * Location: src/app/character/avatar/AvatarSourceSelector.tsx
  *
- * Source is UI origin only; capabilities come from #6, never from the card choice.
+ * Source is UI origin only; capabilities come from validated analysis, never from the card choice.
  */
 
 import {
@@ -30,8 +30,8 @@ export function AvatarSourceSelector({
     capabilitySummary ??
     describeAvatarSourceCapabilities({
       source: value,
-      morphBody: value === 'sagadrive',
-      morphFace: value === 'sagadrive',
+      morphBody: false,
+      morphFace: false,
       animation: false,
       facial: false,
       wearables: false,
