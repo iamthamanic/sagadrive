@@ -26,6 +26,7 @@ import {
 } from '../../../infrastructure/character/avatar/character-avatar-import-service';
 import { Button } from '../../../shared/ui/button';
 import { AvatarBodyConversionPanel } from './AvatarBodyConversionPanel';
+import { AvatarCustomCreatureGuidance } from './AvatarCustomCreatureGuidance';
 
 interface AvatarImportPanelProps {
   characterId?: string | null;
@@ -238,6 +239,7 @@ export function AvatarImportPanel({
               ))}
             </ul>
           ) : null}
+          <AvatarCustomCreatureGuidance summary={summary} />
           {showKeep ? (
             <Button
               type="button"

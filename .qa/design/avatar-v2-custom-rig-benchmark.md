@@ -39,4 +39,4 @@ Hard rules:
 
 ## 5. Product implication for #266
 
-Custom Creature „Original behalten“ uses import-existing / limited path. No hard-stop if Auto-Rig is unsuitable.
+Custom Creature „Original behalten“ uses import-existing / limited path. Auto-Rig explizit optional — no hard-stop if Auto-Rig is unsuitable.

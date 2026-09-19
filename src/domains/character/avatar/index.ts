@@ -107,6 +107,33 @@ export {
   type BodyConversionTargetFamily,
 } from './body-conversion-flow-v1';
 export {
+  CUSTOM_RIG_BENCHMARK_CONTRACT_VERSION,
+  CUSTOM_RIG_BENCHMARK_FIXTURE_IDS,
+  CUSTOM_RIG_BENCHMARK_MATRIX_V1,
+  CUSTOM_RIG_BENCHMARK_PATH_IDS,
+  assertCustomRigBenchmarkInvariants,
+  capabilitiesAfterProviderSuccess,
+  resolveCustomRigBenchmarkDecision,
+  selectRigPathForFixture,
+  type CustomRigBenchmarkCellV1,
+  type CustomRigBenchmarkDecisionV1,
+  type CustomRigBenchmarkFixtureId,
+  type CustomRigBenchmarkPathId,
+  type CustomRigBenchmarkScoreAxis,
+  type CustomRigBenchmarkScoreRow,
+  type CustomRigProfileStrategyV1,
+} from './custom-rig-benchmark-v1';
+export {
+  CUSTOM_CREATURE_FLOW_CONTRACT_VERSION,
+  assertCustomCreatureFlowInvariants,
+  buildCustomCreatureEditorSeed,
+  buildCustomCreatureFlowGuidance,
+  isCustomCreatureImportSummary,
+  runFarukLikeOriginalKeepSlice,
+  type CustomCreatureEditorSeedV1,
+  type CustomCreatureFlowGuidanceV1,
+} from './custom-creature-flow-v1';
+export {
   RIG_CONTRACT_VERSION,
   SAGA_DRIVE_HUMANOID_ANCHORS,
   SAGA_DRIVE_HUMANOID_BONES,

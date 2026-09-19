@@ -454,6 +454,7 @@ export function CharacterEditor() {
       bodyCompatibility: seed.bodyCompatibility,
       modularity: seed.modularity,
     });
+    // Custom creature: never invent morph targets; fail-closed evidence only.
     setImportMorphEvidence(
       morphEvidenceFromImportAnalysis({
         anatomy: seed.anatomy,
@@ -466,7 +467,11 @@ export function CharacterEditor() {
       setAvatarBodyFamily(null);
     }
     requestAutoPortraitAfterModel();
-    toast.success('Originalkörper behalten — Editor bereit');
+    toast.success(
+      seed.anatomy === 'custom-creature'
+        ? 'Eigener Körper behalten — ohne Humanoid-Morph-Zwang'
+        : 'Originalkörper behalten — Editor bereit',
+    );
   };
 
   const applyBodyConversion = (result: BodyConversionResultV1) => {
