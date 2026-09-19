@@ -431,6 +431,14 @@ function checkAvatarV2ImportOriginalFlow() {
   });
 }
 
+function checkAvatarV2IdentityTransferSpike() {
+  console.log('Avatar V2 identity transfer spike (#262): default + degraded conversion plan...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-identity-transfer-spike-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -945,6 +953,7 @@ checkAvatarV2SkinnedWearableRuntime();
 checkAvatarV2CapabilityEditor();
 checkAvatarV2TemplateCreatorFlow();
 checkAvatarV2ImportOriginalFlow();
+checkAvatarV2IdentityTransferSpike();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();

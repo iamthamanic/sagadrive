@@ -64,7 +64,11 @@ Verbote: neue `src/modules`, `src/components`, `src/features`, generische `servi
 - Persistierte Artefakte: owner-scoped, validiert vor Aktivierung.
 - Unsupported/kaputter GLB blockiert den **vorherigen gültigen** Avatar nicht.
 - Wearables: Rigid (Anker) vs Skinned (Family Fit) — bestehende Contracts wiederverwenden; keine zweite Equipment-State-Machine.
-- Conversion Import → Family ist späteres Child (#263); Identity Transfer ist Spike (#262).
+- Conversion Import → Family (#263) folgt der Spike-Entscheidung in
+  `.qa/design/avatar-v2-identity-transfer-spike.md` und
+  `identity-transfer-spike-v1.ts` (Default: Morph-Fitting + Traits/Materials + optionale Texture Projection;
+  Degraded: ohne Bake; AI-assisted nie Default).
+- Identity Transfer Spike: #262 (dieses Binding).
 
 ## 8. UX-Journey (Zielbild)
 
