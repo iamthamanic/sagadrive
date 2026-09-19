@@ -1,0 +1,15 @@
+{
+  "wearableId": "underwear",
+  "familyId": "heavy",
+  "labelDe": "Unterwäsche",
+  "attachment": "skinned",
+  "style": "adult-stylized-mtoon",
+  "forbidChibi": true,
+  "fitAuthorized": true,
+  "notesDe": "Authorized morph extreme golden for Unterwäsche / heavy.",
+  "morphExtreme": "authorized-max",
+  "morphSample": {
+    "height": 0.85,
+    "build": 0.85
+  }
+}

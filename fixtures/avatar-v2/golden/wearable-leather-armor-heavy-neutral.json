@@ -1,0 +1,15 @@
+{
+  "wearableId": "leather-armor",
+  "familyId": "heavy",
+  "labelDe": "Lederrüstung",
+  "attachment": "skinned",
+  "style": "adult-stylized-mtoon",
+  "forbidChibi": true,
+  "fitAuthorized": true,
+  "notesDe": "Neutral morph golden for Lederrüstung / heavy.",
+  "morphExtreme": "neutral",
+  "morphSample": {
+    "height": 0,
+    "build": 0
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "wearableId": "leather-armor",
+  "familyId": "compact",
+  "labelDe": "Lederrüstung",
+  "attachment": "skinned",
+  "style": "adult-stylized-mtoon",
+  "forbidChibi": true,
+  "fitAuthorized": true,
+  "notesDe": "Authorized morph extreme golden for Lederrüstung / compact.",
+  "morphExtreme": "authorized-max",
+  "morphSample": {
+    "height": 0.85,
+    "build": 0.85
+  }
+}

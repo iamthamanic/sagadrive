@@ -391,6 +391,14 @@ function checkAvatarV2SpeciesTemplatePack() {
   });
 }
 
+function checkAvatarV2StarterWardrobe() {
+  console.log('Avatar V2 starter wardrobe (#257): 6 wearables × 3 family fits...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-starter-wardrobe-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -900,6 +908,7 @@ checkAvatarV2BodyProfile();
 checkAvatarV2AssetAuthoring();
 checkAvatarV2CanonicalBodyFamilies();
 checkAvatarV2SpeciesTemplatePack();
+checkAvatarV2StarterWardrobe();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();

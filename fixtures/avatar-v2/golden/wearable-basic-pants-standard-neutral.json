@@ -1,0 +1,15 @@
+{
+  "wearableId": "basic-pants",
+  "familyId": "standard",
+  "labelDe": "Basic Hose",
+  "attachment": "skinned",
+  "style": "adult-stylized-mtoon",
+  "forbidChibi": true,
+  "fitAuthorized": true,
+  "notesDe": "Neutral morph golden for Basic Hose / standard.",
+  "morphExtreme": "neutral",
+  "morphSample": {
+    "height": 0,
+    "build": 0
+  }
+}
