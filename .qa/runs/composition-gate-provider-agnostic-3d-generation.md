@@ -1,6 +1,6 @@
 # Composition Gate — provider-agnostic-3d-generation (+ 150MB import + sheet_status gate)
 
-- HEAD_SHA: 5561d7c92f012b3185d0ee3ac96534d953aaf7ac
+- HEAD_SHA: 662e6e19257939466390f63f15209ff3c2f44a79
 - Date: 2026-09-19
 - Verdict: CLEAR
 
