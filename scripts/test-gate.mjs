@@ -499,6 +499,14 @@ function checkAvatarV2ModularGenerateFlow() {
   });
 }
 
+function checkAvatarV2FinalAcceptance() {
+  console.log('Avatar V2 final acceptance golden matrix (#270)...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-final-acceptance-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -1021,6 +1029,7 @@ checkAvatarV2CustomCreatureFlow();
 checkAvatarV2GenerateUx();
 checkAvatarV2GenerateDecompositionSpike();
 checkAvatarV2ModularGenerateFlow();
+checkAvatarV2FinalAcceptance();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();

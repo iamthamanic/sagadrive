@@ -111,6 +111,9 @@ Verbote: neue `src/modules`, `src/components`, `src/features`, generische `servi
 
 E2E-Matrix deckt ab: Native Template, Import Original, Generate Editierbar, Generate Freie Form, Custom Creature Original, Family Conversion (wo umgesetzt). Details im Abschluss-Ticket.
 
+**Final Acceptance (#270):** `final-acceptance-matrix-v1.ts` + `avatar-v2-final-acceptance-check.mjs`
+— Golden Matrix, Security-Matrix, Perf-Budgets; GLB-Spec `docs/avatar-v2-modular-glb-spec.md`.
+
 ## 11. Relation zu v1
 
 - `.qa/design/avatar-character-creator-v1.md` bleibt historisch; **Produktgrenzen** werden durch dieses Dokument abgelöst.

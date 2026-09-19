@@ -63,3 +63,33 @@ Am glTF-Node (oder Asset-Root) als:
 - Invalid / mismatch: `fixtures/avatar-v2/modular-glb-v1.invalid-*.json`
 
 Geprüft durch `scripts/avatar-v2-modular-glb-contract-check.mjs`.
+
+## Fähigkeiten (Capabilities) — was Creator erwarten dürfen
+
+| Wenn … | Dann … |
+|---------|--------|
+| Nur Mesh, kein Rig | Avatar **anzeigbar**; Animation/Equipment **aus** |
+| Eigenes Rig, keine Humanoid-Bones | **Custom Creature** / Freie Form — Original behalten möglich |
+| Humanoid-Bones + Modular-Extras | Morph/Traits/Kleidung **nach** Strukturanalyse |
+| Provider „success“ | **Keine** Capabilities — erst Analyzer/Revalidation |
+
+Capabilities kommen **nie** aus Dateinamen, Provider-Status oder ungeprüften `extras`.
+
+## Beispiel: minimale Body-Node-Extras
+
+```json
+{
+  "name": "Body_Base",
+  "extras": {
+    "sagadrive": {
+      "contractVersion": "SagaDriveModularAvatarGlbV1",
+      "role": "body",
+      "slot": "body_base",
+      "bodyFamily": "standard",
+      "displayName": "SagaDrive Body"
+    }
+  }
+}
+```
+
+Öffentliche Hilfe im Editor: Link „GLB-Spezifikation“ zeigt auf dieses Dokument.
