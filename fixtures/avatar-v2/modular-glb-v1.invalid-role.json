@@ -1,0 +1,13 @@
+{
+  "nodes": [
+    {
+      "name": "Weird",
+      "extras": {
+        "sagadrive": {
+          "contractVersion": "SagaDriveModularAvatarGlbV1",
+          "role": "dragon-wing"
+        }
+      }
+    }
+  ]
+}

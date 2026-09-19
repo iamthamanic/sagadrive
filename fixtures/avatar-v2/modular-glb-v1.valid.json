@@ -1,0 +1,40 @@
+{
+  "description": "Minimal valid modular GLB metadata fixture (#250)",
+  "nodes": [
+    {
+      "name": "Body_Base",
+      "extras": {
+        "sagadrive": {
+          "contractVersion": "SagaDriveModularAvatarGlbV1",
+          "role": "body",
+          "slot": "body_base",
+          "bodyFamily": "standard",
+          "displayName": "Body Base"
+        }
+      }
+    },
+    {
+      "name": "Wearable_Torso",
+      "extras": {
+        "sagadrive": {
+          "contractVersion": "SagaDriveModularAvatarGlbV1",
+          "role": "wearable",
+          "slot": "torso",
+          "bodyFamily": "standard",
+          "hideRegions": ["torso"]
+        }
+      }
+    },
+    {
+      "name": "Prop_Sword",
+      "extras": {
+        "sagadrive": {
+          "contractVersion": "SagaDriveModularAvatarGlbV1",
+          "role": "prop",
+          "slot": "prop_main",
+          "attachmentAnchor": "rightHand"
+        }
+      }
+    }
+  ]
+}
