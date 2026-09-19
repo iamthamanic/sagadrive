@@ -14,7 +14,7 @@ Provider-neutraler Generate→Select→Normalize→Validate→Publish Workflow m
 - [x] apply-migrations.sh 036–038
 
 ## Composition Gate
-- HEAD_SHA: PLACEHOLDER
+- HEAD_SHA: 32fea6e9603139ef84e65aa5556169ac9a73bf55
 - BASE_SHA: e1a24f8e336952cf78eb58d67354a722857500fd
 - Verdict: CLEAR
 - Proof: .qa/runs/composition-gate-avatar-v2-asset-authoring-pipeline.md
