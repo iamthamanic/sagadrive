@@ -1,6 +1,6 @@
 # Composition Gate — avatar-v2-modular-generate-flow
 
-- HEAD_SHA: WORKTREE (pending commit of check/docs; will restamp after push)
+- HEAD_SHA: d367f70234b7dbce9fa39250184714fa7a6f4d88
 - Date: 2026-09-20
 - Verdict: CLEAR
 
