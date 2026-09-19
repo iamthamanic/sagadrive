@@ -1,0 +1,16 @@
+{
+  "fixtureId": "dwarf",
+  "profileKind": "humanoid",
+  "notesDe": "Golden Zwerg Rig-Profil (#264) — Humanoid ohne VRM, Compact-Skalierung.",
+  "expectFlags": [
+    "static",
+    "rigged",
+    "animated",
+    "humanoid",
+    "head",
+    "facial",
+    "rigid-equipment",
+    "skinned-wearable-ready"
+  ],
+  "forbidFlags": ["custom-wearable", "vrm-ready"]
+}

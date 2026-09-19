@@ -1,0 +1,17 @@
+{
+  "fixtureId": "human",
+  "profileKind": "humanoid",
+  "notesDe": "Golden Humanoid Rig-Profil (#264) — volle Knochen + Facial + VRM.",
+  "expectFlags": [
+    "static",
+    "rigged",
+    "animated",
+    "humanoid",
+    "head",
+    "facial",
+    "rigid-equipment",
+    "vrm-ready",
+    "skinned-wearable-ready"
+  ],
+  "forbidFlags": ["custom-wearable"]
+}

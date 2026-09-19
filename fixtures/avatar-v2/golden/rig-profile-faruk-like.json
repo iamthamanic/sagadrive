@@ -1,0 +1,15 @@
+{
+  "fixtureId": "faruk-like",
+  "profileKind": "custom-creature",
+  "notesDe": "Golden Faruk-artiges Custom Creature (#264) — kein Humanoid, head/back/hips/other, Custom-Animation.",
+  "expectFlags": [
+    "static",
+    "rigged",
+    "animated",
+    "head",
+    "rigid-equipment",
+    "custom-wearable"
+  ],
+  "forbidFlags": ["humanoid", "vrm-ready", "skinned-wearable-ready", "facial"],
+  "semanticAnchors": ["head", "back", "hips", "other"]
+}
