@@ -36,7 +36,7 @@ Source-neutrale, owner-scoped AvatarArtifact-Persistenz für Template / Import /
 - Activate requires materialized + non-failed
 
 ## Composition Gate
-- HEAD_SHA: 17c31a719a3ecaa0662b04270b9ab19007b16607
+- HEAD_SHA: 6905ce89ee2626f01ea8434d36ef672cfab6873b
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-avatar-v2-artifact-pipeline.md`
 

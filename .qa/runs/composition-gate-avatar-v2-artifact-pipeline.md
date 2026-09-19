@@ -1,6 +1,6 @@
 # Composition Gate — avatar-v2-artifact-pipeline
 
-- HEAD_SHA: 5fc526283bb7610740322561ff22aa05b36393bc
+- HEAD_SHA: 6905ce89ee2626f01ea8434d36ef672cfab6873b
 - BASE_SHA: 42010d7c269b3a946662e9e20893d30deac45a67
 - Date: 2026-09-19
 - Verdict: CLEAR
