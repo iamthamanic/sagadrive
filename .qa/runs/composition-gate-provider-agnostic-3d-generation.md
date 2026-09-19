@@ -1,6 +1,7 @@
 # Composition Gate — provider-agnostic-3d-generation (+ 150MB import + sheet_status gate)
 
-- HEAD_SHA: 662e6e19257939466390f63f15209ff3c2f44a79
+- HEAD_SHA: 95dee9ba96b59a78007abd151a7b8821ef8b9132
+- BASE_SHA: 185a0472506e5dd79fe571c114590ad27ab44f64
 - Date: 2026-09-19
 - Verdict: CLEAR
 
@@ -15,10 +16,10 @@ sheet_status: repository asserts → DB trigger 035 → join RPC 032
 ## Simulations
 | Case | Intended | Composed | Result |
 |------|----------|----------|--------|
-| 1 start, N polls | one job row; materialize once | idempotency + owner poll | pass |
-| invalid modelId / settings | no Meshy create | edge 400 validation | pass |
+| N-actors (1 start, N polls) | one job row; materialize once | idempotency + owner poll | pass |
+| Invalid/missing modelId / settings | no Meshy create | edge 400 validation | pass |
+| Two consumers / crash same job poll | one storage write path | owner-scoped materialize | pass |
 | incomplete → complete via PostgREST only | blocked without payloads | trigger 035 | pass |
-| 2 consumers poll same job | one storage write path | owner-scoped materialize | pass |
 
 ## Flags
 | Tag | Severity | Status |
