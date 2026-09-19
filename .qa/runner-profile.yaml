@@ -1,0 +1,18 @@
+# ECC runner profile — SagaDrive
+# Enforces hands-off queue behavior for @ecc-runner-loop.
+
+runMode: loop
+handoffPath: /tmp/ecc-runner-loop-avatar-v2-handoff.md
+
+queue:
+  # Never pause for context / compact / user continue prompts.
+  pauseForContextCompact: false
+  askUserToCompact: false
+  askUserToMerge: false
+  reportOnlyWhen: empty_or_hard_stop
+  afterMerge: claim_next_same_turn
+
+contextContinuity:
+  # After each merge: handoff → auto-compact in-session → next issue.
+  autoContinue: true
+  pausedTrueOnlyFor: needs-human | merge-blocked | retries-exhausted
