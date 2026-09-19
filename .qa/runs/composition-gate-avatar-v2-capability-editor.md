@@ -4,7 +4,7 @@
 CLEAR
 
 ## HEAD_SHA
-a547c9f23a5fd650d4ac1e44d52d59b1acdf06cd
+1c5ce5585f3437f0eb56b26dec0531a81e8b2dad
 
 ## Business event
 Avatar appearance controls visibility for a character draft.
@@ -29,3 +29,4 @@ None (no queue/outbox/webhook).
 
 ## Notes
 Single composed path domain→UI; deterministic check script is the proof harness.
+Proof HEAD_SHA is the feature tip at gate time (1c5ce5585f3437f0eb56b26dec0531a81e8b2dad); docs-only follow-ups may advance tip without re-simulating.

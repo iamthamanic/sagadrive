@@ -17,4 +17,4 @@ READY
 - `.qa/runs/review-ticket-avatar-v2-capability-editor.md`
 
 ## HEAD_SHA
-a547c9f23a5fd650d4ac1e44d52d59b1acdf06cd
+1c5ce5585f3437f0eb56b26dec0531a81e8b2dad
