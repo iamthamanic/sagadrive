@@ -545,12 +545,27 @@ export {
 } from './rigging-provider-contract';
 export {
   SKINNED_WEARABLE_PLAN_VERSION,
+  extractStarterWearableIdFromAssetKey,
   mapFitToSkinnedUiStatus,
   planSkinnedWearableAttaches,
   type SkinnedWearableAttachOp,
   type SkinnedWearablePlan,
   type SkinnedWearableUiStatus,
 } from './skinned-wearable-plan';
+export {
+  BODY_FAMILY_VARIANT_RESOLVER_VERSION,
+  isBodyFamilyVariantReady,
+  resolveBodyFamilyWearableVariant,
+  type BodyFamilyVariantResolveInput,
+  type BodyFamilyVariantResolveResult,
+  type BodyFamilyVariantResolveStatus,
+} from './body-family-variant-resolver-v1';
+export {
+  BODY_REGION_MASK_CONTRACT_VERSION,
+  BodyRegionMaskRegistry,
+  type BodyRegionMaskDelta,
+  type BodyRegionMaskSnapshot,
+} from './body-region-mask-v1';
 
 export {
   SPECIES_DEFAULT_BODY_FAMILY,
