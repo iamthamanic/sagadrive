@@ -1,6 +1,7 @@
 # Composition Gate — avatar-v2-artifact-pipeline
 
-- HEAD_SHA: 17c31a719a3ecaa0662b04270b9ab19007b16607
+- HEAD_SHA: 5fc526283bb7610740322561ff22aa05b36393bc
+- BASE_SHA: 42010d7c269b3a946662e9e20893d30deac45a67
 - Date: 2026-09-19
 - Verdict: CLEAR
 
@@ -13,9 +14,9 @@ Ingress (template|import|generate mapper) → `materializeAvatarArtifact` (domai
 ## Simulations
 | Case | Intended | Composed | Result |
 |------|----------|----------|--------|
-| 1 event, N actors | 1 materialize → 1 row; activate → ≤1 active per (owner,character) | Idempotency returns same row; activate deactivates siblings | pass |
-| invalid / missing | Free URL / foreign owner / failed materialization → no active identity | assertOwnerScopedStoragePath throws; cross-owner get null; activate fails on failed | pass |
-| 2 consumers / crash | Provider retry with same idempotency_key → same artifact identity | Unique index + repo find-or-return; no second active | pass |
+| N-actors | 1 materialize → 1 row; activate → ≤1 active per (owner,character) | Idempotency returns same row; activate deactivates siblings | pass |
+| Invalid/missing | Free URL / foreign owner / failed materialization → no active identity | assertOwnerScopedStoragePath throws; cross-owner get null; activate fails on failed | pass |
+| Two consumers / crash | Provider retry with same idempotency_key → same artifact identity | Unique index + repo find-or-return; no second active | pass |
 
 ## Flags
 | Tag | Severity | Hops | Why local review missed it | Fix |
