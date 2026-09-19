@@ -37,7 +37,7 @@ Optionale Conversion: analysierter Import kann auf Standard/Compact/Heavy übert
 - No client-claimed capabilities
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 8d5f6ee478a3df31655ae486c297fd51dbd01e6a
 - Verdict: CLEAR
 
 ## Implementation Notes
