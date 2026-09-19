@@ -1,0 +1,69 @@
+{
+  "id": "native-modular-humanoid",
+  "byteSize": 12000,
+  "nodeCount": 3,
+  "meshCount": 3,
+  "skinnedMeshCount": 1,
+  "skeletonCount": 1,
+  "boneCount": 18,
+  "morphTargetCount": 4,
+  "humanoidBones": {
+    "hips": "Hips",
+    "spine": "Spine",
+    "chest": "Chest",
+    "neck": "Neck",
+    "head": "Head",
+    "leftUpperArm": "LeftUpperArm",
+    "leftLowerArm": "LeftLowerArm",
+    "leftHand": "LeftHand",
+    "rightUpperArm": "RightUpperArm",
+    "rightLowerArm": "RightLowerArm",
+    "rightHand": "RightHand",
+    "leftUpperLeg": "LeftUpperLeg",
+    "leftLowerLeg": "LeftLowerLeg",
+    "leftFoot": "LeftFoot",
+    "rightUpperLeg": "RightUpperLeg",
+    "rightLowerLeg": "RightLowerLeg",
+    "rightFoot": "RightFoot"
+  },
+  "nodes": [
+    {
+      "name": "Body_Base",
+      "extras": {
+        "sagadrive": {
+          "contractVersion": "SagaDriveModularAvatarGlbV1",
+          "role": "body",
+          "slot": "body_base",
+          "bodyFamily": "standard"
+        }
+      }
+    },
+    {
+      "name": "Hair_A",
+      "extras": {
+        "sagadrive": {
+          "contractVersion": "SagaDriveModularAvatarGlbV1",
+          "role": "trait",
+          "slot": "hair"
+        }
+      }
+    },
+    {
+      "name": "Jacket",
+      "extras": {
+        "sagadrive": {
+          "contractVersion": "SagaDriveModularAvatarGlbV1",
+          "role": "wearable",
+          "slot": "torso"
+        }
+      }
+    }
+  ],
+  "meshes": [
+    { "name": "Body", "primitiveCount": 1, "morphTargetCount": 4, "isSkinned": true },
+    { "name": "Hair", "primitiveCount": 1, "morphTargetCount": 0, "isSkinned": false },
+    { "name": "Jacket", "primitiveCount": 1, "morphTargetCount": 0, "isSkinned": true }
+  ],
+  "truncated": false,
+  "rejectedRemoteUri": false
+}

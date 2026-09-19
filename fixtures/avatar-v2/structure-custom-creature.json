@@ -1,0 +1,24 @@
+{
+  "id": "custom-creature",
+  "byteSize": 9000,
+  "nodeCount": 2,
+  "meshCount": 2,
+  "skinnedMeshCount": 1,
+  "skeletonCount": 1,
+  "boneCount": 8,
+  "morphTargetCount": 0,
+  "humanoidBones": {
+    "hips": "Root",
+    "head": "HeadBone"
+  },
+  "nodes": [
+    { "name": "CreatureBody" },
+    { "name": "Tail" }
+  ],
+  "meshes": [
+    { "name": "Body", "primitiveCount": 1, "morphTargetCount": 0, "isSkinned": true },
+    { "name": "Tail", "primitiveCount": 1, "morphTargetCount": 0, "isSkinned": true }
+  ],
+  "truncated": false,
+  "rejectedRemoteUri": false
+}

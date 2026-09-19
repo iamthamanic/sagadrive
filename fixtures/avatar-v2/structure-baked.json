@@ -1,0 +1,17 @@
+{
+  "id": "baked-single-mesh",
+  "byteSize": 4000,
+  "nodeCount": 1,
+  "meshCount": 1,
+  "skinnedMeshCount": 0,
+  "skeletonCount": 0,
+  "boneCount": 0,
+  "morphTargetCount": 0,
+  "humanoidBones": {},
+  "nodes": [{ "name": "BakedHero" }],
+  "meshes": [
+    { "name": "HeroMesh", "primitiveCount": 1, "morphTargetCount": 0, "isSkinned": false }
+  ],
+  "truncated": false,
+  "rejectedRemoteUri": false
+}

@@ -1,0 +1,31 @@
+{
+  "id": "humanoid-plain",
+  "byteSize": 8000,
+  "nodeCount": 1,
+  "meshCount": 1,
+  "skinnedMeshCount": 1,
+  "skeletonCount": 1,
+  "boneCount": 16,
+  "morphTargetCount": 0,
+  "humanoidBones": {
+    "hips": "hips",
+    "spine": "spine",
+    "chest": "chest",
+    "neck": "neck",
+    "head": "head",
+    "leftUpperArm": "leftUpperArm",
+    "leftHand": "leftHand",
+    "rightUpperArm": "rightUpperArm",
+    "rightHand": "rightHand",
+    "leftUpperLeg": "leftUpperLeg",
+    "leftFoot": "leftFoot",
+    "rightUpperLeg": "rightUpperLeg",
+    "rightFoot": "rightFoot"
+  },
+  "nodes": [{ "name": "AvatarRoot" }],
+  "meshes": [
+    { "name": "Body", "primitiveCount": 1, "morphTargetCount": 0, "isSkinned": true }
+  ],
+  "truncated": false,
+  "rejectedRemoteUri": false
+}

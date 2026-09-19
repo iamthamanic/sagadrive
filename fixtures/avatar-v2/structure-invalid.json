@@ -1,0 +1,16 @@
+{
+  "id": "invalid-parse",
+  "byteSize": 12,
+  "nodeCount": 0,
+  "meshCount": 0,
+  "skinnedMeshCount": 0,
+  "skeletonCount": 0,
+  "boneCount": 0,
+  "morphTargetCount": 0,
+  "humanoidBones": {},
+  "nodes": [],
+  "meshes": [],
+  "truncated": false,
+  "rejectedRemoteUri": false,
+  "parseError": "Nicht lesbares GLB"
+}

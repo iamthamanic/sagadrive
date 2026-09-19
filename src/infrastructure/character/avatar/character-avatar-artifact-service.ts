@@ -20,6 +20,7 @@ import {
   type AvatarArtifactMaterializationStatus,
   type AvatarArtifactV2,
   type AvatarArtifactActivateResult,
+  type AvatarStructureAnalysisResultV2,
 } from '../../../domains/character/avatar';
 import type { AvatarV2Source } from '../../../domains/character/avatar';
 
@@ -322,4 +323,43 @@ export async function materializeArtifactFromTemplate(input: {
     }),
   );
   return createAvatarArtifact(draft);
+}
+
+/**
+ * Persist an authoritative AnalysisResult on an owner-scoped artifact.
+ * Callers must obtain `result` from the server Analyzer (authoritative=true).
+ * Browser sessions cannot escalate analysis_status via RLS/trigger.
+ */
+export async function persistAuthoritativeArtifactAnalysis(input: {
+  artifactId: string;
+  result: AvatarStructureAnalysisResultV2;
+}): Promise<void> {
+  if (!input.result.authoritative) {
+    throw new Error('Nur autoritative Analyse-Ergebnisse dürfen persistiert werden.');
+  }
+  const ownerUserId = await getAuthenticatedUserId();
+  const analysisStatus =
+    input.result.status === 'ready'
+      ? 'ready'
+      : input.result.status === 'limited'
+        ? 'limited'
+        : input.result.status === 'unsupported'
+          ? 'unsupported'
+          : 'failed';
+
+  // Client RLS blocks trusted status writes — this path is intended for
+  // Edge/service_role callers. Authenticated clients will fail closed here.
+  const { error } = await supabase
+    .from('character_avatar_artifacts')
+    .update({
+      analysis_status: analysisStatus,
+      analysis_result: input.result,
+    })
+    .eq('id', input.artifactId)
+    .eq('owner_user_id', ownerUserId)
+    .is('deleted_at', null);
+
+  if (error) {
+    throw new Error(`Analyse-Persistenz fehlgeschlagen: ${error.message}`);
+  }
 }
