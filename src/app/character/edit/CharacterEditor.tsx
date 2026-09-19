@@ -6,6 +6,7 @@ import type { AvatarPortraitCaptureHandle } from '../avatar/AvatarCanvas';
 import { AvatarImportPanel } from '../avatar/AvatarImportPanel';
 import { AvatarMeshyPanel, type MeshyAvatarJobUiState } from '../avatar/AvatarMeshyPanel';
 import { AvatarMeshyGeneratingOverlay } from '../avatar/AvatarMeshyGeneratingOverlay';
+import { AvatarModularGenerateProgress } from '../avatar/AvatarModularGenerateProgress';
 import { AvatarSourceSelector } from '../avatar/AvatarSourceSelector';
 import { AvatarSpeciesTemplatePicker } from '../avatar/AvatarSpeciesTemplatePicker';
 import { AvatarTraitPanels } from '../avatar/AvatarTraitPanels';
@@ -24,6 +25,7 @@ import type {
   AvatarMorphEvidenceInput,
   BodyConversionResultV1,
   ImportOriginalKeepSeedV1,
+  ModularGenerateFlowResultV1,
 } from '../../../domains/character/avatar';
 import {
   applySpeciesTemplateIngress,
@@ -37,6 +39,7 @@ import {
   resolveAvatarSource,
   morphEvidenceFromImportAnalysis,
   buildGenerateEditorSeed,
+  runModularGenerateFlow,
   validateAvatarMorphInput,
   withAvatarMorphState,
   type SagaDriveAvatarMorphStateV1,
@@ -376,6 +379,8 @@ export function CharacterEditor() {
     modularity: AvatarV2Modularity;
   } | null>(null);
   const [importMorphEvidence, setImportMorphEvidence] = useState<AvatarMorphEvidenceInput | null>(null);
+  const [modularGenerateResult, setModularGenerateResult] =
+    useState<ModularGenerateFlowResultV1 | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -416,6 +421,21 @@ export function CharacterEditor() {
         modularity: importComposition.modularity,
       };
     }
+    // Native template OR modular generate (#269): family + wardrobe without requiring species.
+    if (avatarBodyFamily && starterWardrobeIds.length > 0) {
+      return {
+        ...withMorph,
+        ...(speciesTemplateId ? { template_id: speciesTemplateId } : {}),
+        body_family: avatarBodyFamily,
+        body_compatibility: avatarBodyFamily,
+        anatomy: 'humanoid' as const,
+        modularity:
+          modularGenerateResult?.modularity ??
+          importComposition?.modularity ??
+          ('modular-parts' as const),
+        starter_wardrobe: [...starterWardrobeIds],
+      };
+    }
     if (!speciesTemplateId || !avatarBodyFamily) return withMorph;
     return {
       ...withMorph,
@@ -438,6 +458,7 @@ export function CharacterEditor() {
     headStyle,
     importComposition,
     importedModelUrl,
+    modularGenerateResult,
     skinTone,
     speciesTemplateId,
     starterWardrobeIds,
@@ -573,6 +594,7 @@ export function CharacterEditor() {
       if (!ok) return;
     }
     setAvatarSource(next);
+    setModularGenerateResult(null);
     if (next === 'sagadrive') {
       setSagaDriveDirty(false);
     }
@@ -1687,46 +1709,93 @@ export function CharacterEditor() {
                 />
               ) : null}
               {avatarSource === 'meshy' ? (
-                <AvatarMeshyPanel
-                  characterId={savedCharacterId}
-                  onJobChange={setMeshyUi}
-                  onSuccess={({ modelUrl, productMode }) => {
-                    const seed = buildGenerateEditorSeed({
-                      modelUrl,
-                      productMode,
-                      adapterProviderId: 'meshy',
-                    });
-                    setImportedModelUrl(seed.modelUrl);
-                    setAvatarSource('meshy');
-                    setSpeciesTemplateId(null);
-                    setStarterWardrobeIds([]);
-                    setTemplateWarningsDe([...seed.composition.limitationsDe]);
-                    setImportComposition({
-                      anatomy: seed.composition.anatomy,
-                      bodyFamily: seed.composition.bodyFamily,
-                      bodyCompatibility:
-                        seed.composition.bodyCompatibility === 'unknown'
-                          ? 'unknown'
-                          : seed.composition.bodyCompatibility,
-                      modularity: seed.composition.modularity,
-                    });
-                    // Capabilities pending Analyzer — never from provider success.
-                    setImportMorphEvidence({
-                      hasBodyMorphTargets: false,
-                      hasFaceMorphTargets: false,
-                    });
-                    if (isCanonicalBodyFamilyId(seed.composition.bodyFamily)) {
-                      setAvatarBodyFamily(seed.composition.bodyFamily);
-                    } else {
-                      setAvatarBodyFamily(null);
-                    }
-                    requestAutoPortraitAfterModel();
-                    toast.success(
-                      productMode === 'free-form'
-                        ? 'Freie Form materialisiert — Strukturanalyse folgt'
-                        : 'Editierbarer KI-Körper materialisiert — Strukturanalyse folgt',
-                    );
-                  }}
+                <>
+                  <AvatarMeshyPanel
+                    characterId={savedCharacterId}
+                    onJobChange={setMeshyUi}
+                    onSuccess={({ modelUrl, productMode }) => {
+                      const modular = runModularGenerateFlow({
+                        productMode,
+                        modelUrl,
+                        // Humanoid editable path uses controlled human fixture defaults;
+                        // unusual anatomy is detected via force/fixture in domain checks.
+                        fixtureId:
+                          productMode === 'editable-wardrobe' ? 'human' : undefined,
+                      });
+                      setModularGenerateResult(modular);
+
+                      if (modular.status === 'degraded-free-form') {
+                        const seed = buildGenerateEditorSeed({
+                          modelUrl,
+                          productMode: 'free-form',
+                          adapterProviderId: 'meshy',
+                        });
+                        setImportedModelUrl(modelUrl);
+                        setAvatarSource('meshy');
+                        setSpeciesTemplateId(null);
+                        setStarterWardrobeIds([]);
+                        setTemplateWarningsDe([
+                          ...modular.limitationsDe,
+                          ...seed.composition.limitationsDe,
+                        ]);
+                        setImportComposition({
+                          anatomy: 'custom-creature',
+                          bodyFamily: 'custom',
+                          bodyCompatibility: 'custom',
+                          modularity: 'monolithic',
+                        });
+                        setImportMorphEvidence({
+                          hasBodyMorphTargets: false,
+                          hasFaceMorphTargets: false,
+                        });
+                        setAvatarBodyFamily(null);
+                        requestAutoPortraitAfterModel();
+                        toast.success(modular.headlineDe);
+                        return;
+                      }
+
+                      // Editierbar modular: library body path — clear external mesh URL
+                      // when we have a canonical family (catalog body + wardrobe).
+                      if (
+                        modular.fullModular &&
+                        isCanonicalBodyFamilyId(modular.bodyFamily)
+                      ) {
+                        setImportedModelUrl(undefined);
+                        setAvatarSource('sagadrive');
+                        setAvatarBodyFamily(modular.bodyFamily);
+                      } else {
+                        setImportedModelUrl(modelUrl);
+                        setAvatarSource('meshy');
+                        if (isCanonicalBodyFamilyId(modular.bodyFamily)) {
+                          setAvatarBodyFamily(modular.bodyFamily);
+                        } else {
+                          setAvatarBodyFamily(null);
+                        }
+                      }
+                      setSpeciesTemplateId(null);
+                      setStarterWardrobeIds([...modular.starterWardrobeIds]);
+                      setTemplateWarningsDe([...modular.limitationsDe]);
+                      setImportComposition({
+                        anatomy: 'humanoid',
+                        bodyFamily: modular.bodyFamily,
+                        bodyCompatibility: modular.bodyFamily,
+                        modularity: modular.modularity,
+                      });
+                      setImportMorphEvidence({
+                        hasBodyMorphTargets: modular.fullModular,
+                        hasFaceMorphTargets: modular.fullModular,
+                      });
+                      requestAutoPortraitAfterModel();
+                      toast.success(modular.headlineDe);
+                    }}
+                  />
+                </>
+              ) : null}
+              {modularGenerateResult ? (
+                <AvatarModularGenerateProgress
+                  stages={modularGenerateResult.stages}
+                  headlineDe={modularGenerateResult.headlineDe}
+                  detailDe={modularGenerateResult.detailDe}
                 />
               ) : null}
               {import.meta.env.DEV ? <BaseBodyMorphFixture /> : null}

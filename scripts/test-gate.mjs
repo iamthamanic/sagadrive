@@ -491,6 +491,14 @@ function checkAvatarV2GenerateDecompositionSpike() {
   );
 }
 
+function checkAvatarV2ModularGenerateFlow() {
+  console.log('Avatar V2 modular generate Editierbar vertical slice (#269)...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-modular-generate-flow-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -1012,6 +1020,7 @@ checkAvatarV2CustomRigBenchmark();
 checkAvatarV2CustomCreatureFlow();
 checkAvatarV2GenerateUx();
 checkAvatarV2GenerateDecompositionSpike();
+checkAvatarV2ModularGenerateFlow();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();
