@@ -25,23 +25,33 @@ test('meshy status message stays stable while generating (no config remount flic
   });
 
   await page.route('**/functions/v1/ai-provider-credentials', async (route) => {
-    const body = route.request().postDataJSON() as { action?: string } | null;
+    const body = route.request().postDataJSON() as { action?: string; providerId?: string } | null;
+    const meshyProvider = {
+      providerId: 'meshy',
+      displayName: 'Meshy',
+      configured: true,
+      status: 'active',
+      keyHint: '••••e2e',
+      meta: { credits: 1000 },
+    };
     if (body?.action === 'list') {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           status: 'ok',
-          providers: [
-            {
-              providerId: 'meshy',
-              displayName: 'Meshy',
-              configured: true,
-              status: 'active',
-              keyHint: '••••e2e',
-              meta: { credits: 1000 },
-            },
-          ],
+          providers: [meshyProvider],
+        }),
+      });
+      return;
+    }
+    if (body?.action === 'refresh') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          status: 'ok',
+          provider: meshyProvider,
         }),
       });
       return;
