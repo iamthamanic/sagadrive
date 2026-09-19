@@ -13,5 +13,5 @@ Provider-neutraler Generate-Flow mit zwei Produktzielen: kanonisch editierbar/kl
 - [x] Zero type escape hatches
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 5c66c4517c641e9d8cc3294aa4131e82ed238999
 - Verdict: CLEAR
