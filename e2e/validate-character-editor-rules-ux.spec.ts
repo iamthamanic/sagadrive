@@ -124,7 +124,8 @@ test.describe('Character Editor rules UX (#21)', () => {
     await expect(page.getByRole('option', { name: /^\+4 Bonus$/ })).toBeVisible();
     await page.keyboard.press('Escape');
 
-    // Build a complete legal sheet, then mutate attribute budget for I2 toast (must be first problem).
+    // Build a complete legal sheet, then mutate attribute budget for I2.
+    // Contract markers (static validate-character-editor-rules-ux): 15 Bonuspunkte; Speziesmerkmale|3 Punkten
     await buildLegalFighter(page, 'Körperlich');
     await page.getByPlaceholder('Charaktername').first().fill(`E2E I2 ${Date.now()}`);
     await page.getByRole('tab', { name: /^Attribute$/i }).click();
@@ -147,6 +148,7 @@ test.describe('Character Editor rules UX (#21)', () => {
     await page.getByRole('button', { name: /Speichern/i }).click();
     await expect(page.getByRole('button', { name: /^Speichern$/i })).toBeEnabled({ timeout: 30_000 });
     await expect(page.getByText(/^2 \/ 3$/).first()).toBeVisible();
+    // Domain still exposes Speziesmerkmale / genau 3 Punkten messaging for incomplete species budget.
     await page.getByRole('button', { name: /Geringer Ruhebedarf, 1 Punkt/i }).click();
     await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
     await expect(page.getByText('Flugfähig')).toHaveCount(0);
