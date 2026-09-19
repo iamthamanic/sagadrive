@@ -1,0 +1,15 @@
+{
+  "wearableId": "basic-shirt",
+  "familyId": "heavy",
+  "labelDe": "Basic Hemd",
+  "attachment": "skinned",
+  "style": "adult-stylized-mtoon",
+  "forbidChibi": true,
+  "fitAuthorized": true,
+  "notesDe": "Neutral morph golden for Basic Hemd / heavy.",
+  "morphExtreme": "neutral",
+  "morphSample": {
+    "height": 0,
+    "build": 0
+  }
+}

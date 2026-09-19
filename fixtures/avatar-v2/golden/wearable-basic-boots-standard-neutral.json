@@ -1,0 +1,15 @@
+{
+  "wearableId": "basic-boots",
+  "familyId": "standard",
+  "labelDe": "Basic Stiefel",
+  "attachment": "skinned",
+  "style": "adult-stylized-mtoon",
+  "forbidChibi": true,
+  "fitAuthorized": true,
+  "notesDe": "Neutral morph golden for Basic Stiefel / standard.",
+  "morphExtreme": "neutral",
+  "morphSample": {
+    "height": 0,
+    "build": 0
+  }
+}

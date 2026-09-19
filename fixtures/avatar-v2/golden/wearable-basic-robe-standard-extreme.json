@@ -1,0 +1,15 @@
+{
+  "wearableId": "basic-robe",
+  "familyId": "standard",
+  "labelDe": "Basic Robe",
+  "attachment": "skinned",
+  "style": "adult-stylized-mtoon",
+  "forbidChibi": true,
+  "fitAuthorized": true,
+  "notesDe": "Authorized morph extreme golden for Basic Robe / standard.",
+  "morphExtreme": "authorized-max",
+  "morphSample": {
+    "height": 0.85,
+    "build": 0.85
+  }
+}
