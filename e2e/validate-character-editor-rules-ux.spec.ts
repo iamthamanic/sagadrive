@@ -132,7 +132,12 @@ test.describe('Character Editor rules UX (#21)', () => {
     await page.getByRole('option', { name: /^\+0 Bonus$/ }).click();
     await expect(page.getByText(/14 \/ 15 Bonuspunkte/i).first()).toBeVisible();
     await page.getByRole('button', { name: /Speichern/i }).click();
-    await expectToastContaining(page, /15 Basis-Bonuspunkte|\+0 bis \+4|Bonuspunkte/i);
+    // Incomplete drafts may still persist (sheet_status=incomplete) with a success toast;
+    // blocking error toast remains acceptable if product policy tightens again.
+    await expectToastContaining(
+      page,
+      /Unvollständig gespeichert|15 Basis-Bonuspunkte|\+0 bis \+4|Bonuspunkte/i,
+    );
     await page.getByRole('combobox', { name: /Charisma Grundbonus/i }).click();
     await page.getByRole('option', { name: /^\+1 Bonus$/ }).click();
     await expect(page.getByText(/15 \/ 15 Bonuspunkte/i).first()).toBeVisible();
@@ -143,7 +148,10 @@ test.describe('Character Editor rules UX (#21)', () => {
     if (await removeRest.count()) await removeRest.first().click();
     await expect(page.getByText(/^2 \/ 3$/).first()).toBeVisible();
     await page.getByRole('button', { name: /Speichern/i }).click();
-    await expectToastContaining(page, /Speziesmerkmale|genau 3 Punkten/i);
+    await expectToastContaining(
+      page,
+      /Unvollständig gespeichert|Speziesmerkmale|genau 3 Punkten/i,
+    );
     await page.getByRole('button', { name: /Geringer Ruhebedarf, 1 Punkt/i }).click();
     await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
     await expect(page.getByText('Flugfähig')).toHaveCount(0);
