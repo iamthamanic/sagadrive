@@ -24,7 +24,7 @@ Versioniertes BodyProfile + FamilyCompatibilityResult für Standard/Compact/Heav
 - Keine neuen Trust-Grenzen; JSON Persistenz owner-scoped via bestehende Artifact-RLS
 
 ## Composition Gate
-- HEAD_SHA: (filled)
-- BASE_SHA: (filled)
+- HEAD_SHA: 0d41aebedbb11188af55a2c57101f887c8e4dd03
+- BASE_SHA: b62ccc6c1f294ec4cd9e0876fe7a4b49d30bd446
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-avatar-v2-body-family-compatibility.md`
