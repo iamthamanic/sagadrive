@@ -359,6 +359,14 @@ function checkAvatarV2StructureAnalyzer() {
   });
 }
 
+function checkAvatarV2BodyProfile() {
+  console.log('Avatar V2 body profile (#253): standard/compact/heavy compatibility...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-body-profile-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -864,6 +872,7 @@ checkAvatarV2CompositionContract();
 checkAvatarV2ModularGlbContract();
 checkAvatarV2ArtifactPipeline();
 checkAvatarV2StructureAnalyzer();
+checkAvatarV2BodyProfile();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();
