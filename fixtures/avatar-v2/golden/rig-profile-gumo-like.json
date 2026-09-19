@@ -1,0 +1,7 @@
+{
+  "fixtureId": "gumo-like",
+  "profileKind": "custom-creature",
+  "notesDe": "Golden Gumo-like stylized custom (#265) — Auto-Rig unsuitable; prefer import-existing.",
+  "benchmarkDefaultPath": "import-existing-rig",
+  "autoRigOptional": true
+}

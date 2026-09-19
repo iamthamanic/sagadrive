@@ -1,0 +1,7 @@
+{
+  "fixtureId": "alien",
+  "profileKind": "humanoid",
+  "notesDe": "Golden Alien stylized humanoid (#265) — Meshy auto-rig often limited after revalidation.",
+  "benchmarkDefaultPath": "meshy-full-rig",
+  "autoRigOptional": false
+}
