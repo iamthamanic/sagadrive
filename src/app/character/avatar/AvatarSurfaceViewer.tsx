@@ -29,6 +29,8 @@ interface AvatarSurfaceViewerProps {
   onRuntimeReady?: () => void;
   /** Portrait/list density — fixed aspect box to avoid layout jump. */
   size?: 'sm' | 'md' | 'lg';
+  /** Override Face Tracking on 3D surfaces. Default: on for editor/player-panel, off for tiny session strip. */
+  enableFaceTracking?: boolean;
 }
 
 const SIZE_CLASS = {
@@ -57,6 +59,7 @@ export function AvatarSurfaceViewer({
   captureApiRef,
   onRuntimeReady,
   size = 'md',
+  enableFaceTracking,
 }: AvatarSurfaceViewerProps) {
   const [webGlAvailable, setWebGlAvailable] = useState(true);
   const [imageFailed, setImageFailed] = useState(false);
@@ -84,12 +87,18 @@ export function AvatarSurfaceViewer({
     ? `relative w-full ${className ?? ''}`
     : `relative overflow-hidden rounded-lg border border-border bg-[#0B1220] ${boxClass} ${className ?? ''}`;
 
+  const liveSurface = surface === 'player-panel' || surface === 'session';
+  const faceTrackingOn =
+    enableFaceTracking ?? (liveSurface ? size !== 'sm' : true);
+  const controlMode = liveSurface ? 'live' : 'editor';
+
   return (
     <div
       className={shellClass}
       data-avatar-surface={view.surface}
       data-avatar-render-mode={view.mode}
       data-avatar-use-webgl={view.useWebGl ? 'true' : 'false'}
+      data-avatar-face-tracking-bound={show3d && faceTrackingOn ? 'true' : 'false'}
       aria-label={`Avatar ${view.displayName}`}
     >
       {show3d && avatar ? (
@@ -99,6 +108,8 @@ export function AvatarSurfaceViewer({
           captureApiRef={captureApiRef}
           onRuntimeReady={onRuntimeReady}
           className="relative flex w-full flex-col gap-2"
+          controlMode={controlMode}
+          enableFaceTracking={faceTrackingOn}
         />
       ) : view.portraitUrl && !imageFailed ? (
         <img

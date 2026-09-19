@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@jsr/supabase__supabase-js": "^2.49.8",
+    "@mediapipe/tasks-vision": "0.10.14",
     "@pixiv/three-vrm": "3.5.1",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
@@ -64,7 +65,10 @@
   },
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/vendor-mediapipe-face-landmarker.mjs",
     "build": "vite build",
+    "postinstall": "node scripts/vendor-mediapipe-face-landmarker.mjs",
+    "vendor:mediapipe": "node scripts/vendor-mediapipe-face-landmarker.mjs",
     "lint": "node scripts/lint.mjs",
     "typecheck": "node scripts/typecheck.mjs",
     "checks": "npm run lint && npm run typecheck && npm run build",

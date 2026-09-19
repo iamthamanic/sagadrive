@@ -1,6 +1,8 @@
 /**
- * PlayerAvatarPanel — player-panel surface using shared viewer (#9).
+ * PlayerAvatarPanel — player-panel surface using shared viewer (#9 / #244).
  * Location: src/app/character/avatar/PlayerAvatarPanel.tsx
+ *
+ * Live control mode: Face Tracking via shared AvatarFaceTrackingRuntime (same as Editor).
  */
 
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
@@ -21,6 +23,7 @@ export function PlayerAvatarPanel({ surfaceRef, avatar }: PlayerAvatarPanelProps
         surfaceRef={surfaceRef}
         avatar={avatar}
         size="md"
+        enableFaceTracking={Boolean(avatar)}
       />
     </section>
   );

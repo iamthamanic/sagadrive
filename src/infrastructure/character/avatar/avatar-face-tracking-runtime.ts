@@ -1,9 +1,11 @@
 /**
- * avatar-face-tracking-runtime — local MediaPipe/webcam adapter for #12.
+ * avatar-face-tracking-runtime — local MediaPipe/webcam adapter (#12 / #243 / #244).
  * Location: src/infrastructure/character/avatar/avatar-face-tracking-runtime.ts
  *
  * Camera + landmarks stay in-browser. Explicit start only; stop/unmount revokes tracks.
+ * MediaPipe WASM + model are first-party under /mediapipe/** (no CDN at runtime).
  * Detector is injectable so CI can run without MediaPipe WASM.
+ * At most one active tracker app-wide (singleton claim on start).
  */
 
 import {
@@ -12,20 +14,28 @@ import {
   createEmptyFaceTrackingSample,
   faceTrackingStatusLabelDe,
   mapFaceTrackingSample,
-  resolveFaceTrackingFpsCap,
+  resolveFaceTrackingQualityProfile,
   selectPrimaryFaceIndex,
   smoothFaceTrackingDrive,
   type FaceTrackingDrive,
   type FaceTrackingLimits,
+  type FaceTrackingQualityProfile,
   type FaceTrackingSample,
   type FaceTrackingStatus,
 } from '../../../domains/character/avatar/face-tracking-contract';
+
+/** First-party static paths (Vite public/). Never point at CDN/Google at runtime. */
+export const MEDIAPIPE_VISION_WASM_PATH = '/mediapipe/wasm';
+export const MEDIAPIPE_FACE_LANDMARKER_MODEL_PATH =
+  '/mediapipe/models/face_landmarker.task';
 
 export interface FaceTrackingRuntimeState {
   status: FaceTrackingStatus;
   message: string;
   drive: FaceTrackingDrive | null;
   fpsCap: number;
+  qualityProfileId: FaceTrackingQualityProfile['id'];
+  qualityProfileLabelDe: string;
 }
 
 export type FaceTrackingStateListener = (state: FaceTrackingRuntimeState) => void;
@@ -36,7 +46,9 @@ export interface FaceTrackingDetector {
   dispose(): void;
 }
 
-export type FaceTrackingDetectorFactory = () => Promise<FaceTrackingDetector>;
+export type FaceTrackingDetectorFactory = (
+  profile: FaceTrackingQualityProfile,
+) => Promise<FaceTrackingDetector>;
 
 export interface FaceTrackingApplyTarget {
   applyFaceTrackingDrive(drive: FaceTrackingDrive): void;
@@ -48,9 +60,16 @@ function isMobileHint(): boolean {
   return /Mobi|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints ?? 0) > 1;
 }
 
+/** At most one live webcam/detector — Editor vs Session must not dual-claim the cam (#244). */
+let activeFaceTrackingRuntime: AvatarFaceTrackingRuntime | null = null;
+
+export function getActiveFaceTrackingRuntime(): AvatarFaceTrackingRuntime | null {
+  return activeFaceTrackingRuntime;
+}
+
 /**
  * Build a FaceTrackingSample list from MediaPipe-like blendshape/matrix payloads.
- * Kept here so the CDN loader can stay thin.
+ * Kept here so the loader can stay thin.
  */
 export function samplesFromBlendshapeFaces(
   faces: readonly {
@@ -85,53 +104,26 @@ export function samplesFromBlendshapeFaces(
 }
 
 /**
- * Attempt to load MediaPipe Face Landmarker from jsDelivr ESM (lazy, after user start).
+ * Lazy-load MediaPipe Face Landmarker from pinned npm package + first-party assets.
  * Returns null when unavailable — caller maps to `unsupported`.
  */
-export async function createMediaPipeFaceTrackingDetector(): Promise<FaceTrackingDetector | null> {
+export async function createMediaPipeFaceTrackingDetector(
+  profile: FaceTrackingQualityProfile = resolveFaceTrackingQualityProfile({}),
+): Promise<FaceTrackingDetector | null> {
   if (typeof window === 'undefined') return null;
   try {
-    // Dynamic CDN import — only after explicit user start; never at module load.
-    const mediapipeEsmUrl =
-      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm';
-    // Vite/TS cannot resolve CDN URLs at compile time — intentional runtime load.
-    const mod = (await import(
-      /* @vite-ignore */
-      mediapipeEsmUrl
-    )) as {
-      FilesetResolver: {
-        forVisionTasks: (path: string) => Promise<unknown>;
-      };
-      FaceLandmarker: {
-        createFromOptions: (
-          fileset: unknown,
-          options: Record<string, unknown>,
-        ) => Promise<{
-          detectForVideo: (
-            video: HTMLVideoElement,
-            timestamp: number,
-          ) => {
-            faceBlendshapes?: Array<{ categories: Array<{ categoryName: string; score: number }> }>;
-            facialTransformationMatrixes?: Array<{ data: Float32Array | number[] }>;
-          };
-          close?: () => void;
-        }>;
-      };
-    };
-
-    const fileset = await mod.FilesetResolver.forVisionTasks(
-      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm',
-    );
+    // Dynamic import of pinned dependency — only after explicit user start.
+    const mod = await import('@mediapipe/tasks-vision');
+    const fileset = await mod.FilesetResolver.forVisionTasks(MEDIAPIPE_VISION_WASM_PATH);
     const landmarker = await mod.FaceLandmarker.createFromOptions(fileset, {
       baseOptions: {
-        modelAssetPath:
-          'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+        modelAssetPath: MEDIAPIPE_FACE_LANDMARKER_MODEL_PATH,
         delegate: 'GPU',
       },
       runningMode: 'VIDEO',
       numFaces: 1,
-      outputFaceBlendshapes: true,
-      outputFacialTransformationMatrixes: true,
+      outputFaceBlendshapes: profile.outputFaceBlendshapes,
+      outputFacialTransformationMatrixes: profile.outputFacialTransformationMatrixes,
     });
 
     const scoreOf = (
@@ -150,20 +142,21 @@ export async function createMediaPipeFaceTrackingDetector(): Promise<FaceTrackin
         if (shapes.length === 0) return [];
         const faces = shapes.map((shape, index) => {
           const cats = shape.categories;
-          const matrix = result.facialTransformationMatrixes?.[index]?.data;
-          // Approximate yaw/pitch/roll from matrix columns when present.
           let headYaw = 0;
           let headPitch = 0;
           let headRoll = 0;
-          if (matrix && matrix.length >= 11) {
-            const r00 = Number(matrix[0]);
-            const r10 = Number(matrix[1]);
-            const r20 = Number(matrix[2]);
-            const r21 = Number(matrix[6]);
-            const r22 = Number(matrix[10]);
-            headYaw = Math.atan2(r10, r00);
-            headPitch = Math.atan2(-r20, Math.hypot(r21, r22));
-            headRoll = Math.atan2(r21, r22);
+          if (profile.enableHeadPose) {
+            const matrix = result.facialTransformationMatrixes?.[index]?.data;
+            if (matrix && matrix.length >= 11) {
+              const r00 = Number(matrix[0]);
+              const r10 = Number(matrix[1]);
+              const r20 = Number(matrix[2]);
+              const r21 = Number(matrix[6]);
+              const r22 = Number(matrix[10]);
+              headYaw = Math.atan2(r10, r00);
+              headPitch = Math.atan2(-r20, Math.hypot(r21, r22));
+              headRoll = Math.atan2(r21, r22);
+            }
           }
           return {
             presence: 1,
@@ -213,13 +206,14 @@ export class AvatarFaceTrackingRuntime {
   private disposed = false;
   private visibilityHandler: (() => void) | null = null;
   private readonly limits: FaceTrackingLimits;
+  private readonly qualityProfile: FaceTrackingQualityProfile;
   private readonly fpsCap: number;
   private target: FaceTrackingApplyTarget | null = null;
 
   constructor(
     private readonly onStateChange?: FaceTrackingStateListener,
-    private readonly detectorFactory: FaceTrackingDetectorFactory = async () => {
-      const detector = await createMediaPipeFaceTrackingDetector();
+    private readonly detectorFactory: FaceTrackingDetectorFactory = async (profile) => {
+      const detector = await createMediaPipeFaceTrackingDetector(profile);
       if (!detector) {
         throw new Error('unsupported');
       }
@@ -228,11 +222,12 @@ export class AvatarFaceTrackingRuntime {
     limits: FaceTrackingLimits = DEFAULT_FACE_TRACKING_LIMITS,
   ) {
     this.limits = limits;
-    this.fpsCap = resolveFaceTrackingFpsCap({
+    this.qualityProfile = resolveFaceTrackingQualityProfile({
       isMobile: isMobileHint(),
       maxTouchPoints: typeof navigator !== 'undefined' ? navigator.maxTouchPoints : 0,
       limits,
     });
+    this.fpsCap = this.qualityProfile.fpsCap;
     this.emit();
   }
 
@@ -246,7 +241,13 @@ export class AvatarFaceTrackingRuntime {
       message: this.message,
       drive: this.drive,
       fpsCap: this.fpsCap,
+      qualityProfileId: this.qualityProfile.id,
+      qualityProfileLabelDe: this.qualityProfile.labelDe,
     };
+  }
+
+  getQualityProfile(): FaceTrackingQualityProfile {
+    return this.qualityProfile;
   }
 
   /** Explicit user action only — never auto-start on construct/reload. */
@@ -254,8 +255,15 @@ export class AvatarFaceTrackingRuntime {
     if (this.disposed) return;
     if (this.status === 'active' || this.status === 'starting') return;
 
+    // Fail-closed singleton: stop the other surface before claiming the camera (#244).
+    if (activeFaceTrackingRuntime && activeFaceTrackingRuntime !== this) {
+      activeFaceTrackingRuntime.stop();
+    }
+    activeFaceTrackingRuntime = this;
+
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       this.setStatus('unsupported', faceTrackingStatusLabelDe('unsupported'));
+      this.releaseActiveClaim();
       return;
     }
 
@@ -275,21 +283,35 @@ export class AvatarFaceTrackingRuntime {
       const name = error instanceof DOMException ? error.name : '';
       if (name === 'NotAllowedError' || name === 'SecurityError') {
         this.setStatus('denied', faceTrackingStatusLabelDe('denied'));
+        this.releaseActiveClaim();
         return;
       }
       if (name === 'NotFoundError' || name === 'OverconstrainedError') {
         this.setStatus('unsupported', 'Keine Kamera gefunden.');
+        this.releaseActiveClaim();
         return;
       }
       this.setStatus('error', faceTrackingStatusLabelDe('error'));
+      this.releaseActiveClaim();
+      return;
+    }
+
+    if (this.disposed || activeFaceTrackingRuntime !== this) {
+      this.cleanupMedia();
       return;
     }
 
     try {
-      this.detector = await this.detectorFactory();
+      this.detector = await this.detectorFactory(this.qualityProfile);
     } catch {
       this.cleanupMedia();
       this.setStatus('unsupported', faceTrackingStatusLabelDe('unsupported'));
+      this.releaseActiveClaim();
+      return;
+    }
+
+    if (this.disposed || activeFaceTrackingRuntime !== this) {
+      this.cleanupMedia();
       return;
     }
 
@@ -323,6 +345,7 @@ export class AvatarFaceTrackingRuntime {
     this.cleanupMedia();
     this.drive = null;
     this.target?.resetFaceTrackingPose();
+    this.releaseActiveClaim();
     this.setStatus('stopped', faceTrackingStatusLabelDe('stopped'));
   }
 
@@ -333,6 +356,7 @@ export class AvatarFaceTrackingRuntime {
     this.cleanupMedia();
     this.drive = null;
     this.target = null;
+    this.releaseActiveClaim();
     this.setStatus('idle', faceTrackingStatusLabelDe('idle'));
   }
 
@@ -348,6 +372,12 @@ export class AvatarFaceTrackingRuntime {
       this.setStatus('active', faceTrackingStatusLabelDe('active'));
     }
     return this.drive;
+  }
+
+  private releaseActiveClaim(): void {
+    if (activeFaceTrackingRuntime === this) {
+      activeFaceTrackingRuntime = null;
+    }
   }
 
   private loop = (): void => {

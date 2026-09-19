@@ -40,6 +40,13 @@ interface AvatarCanvasProps {
   /** Fires when the 3D model reaches ready (after load). Used for auto-portrait. */
   onRuntimeReady?: () => void;
   className?: string;
+  /**
+   * editor = full preview controls; live = Face Tracking only (Session/Player #244).
+   * Default editor.
+   */
+  controlMode?: 'editor' | 'live';
+  /** When false, skip Face Tracking runtime + UI. Default true. */
+  enableFaceTracking?: boolean;
 }
 
 async function dataUrlToPngBlob(dataUrl: string): Promise<Blob | null> {
@@ -64,6 +71,8 @@ export function AvatarCanvas({
   captureApiRef,
   onRuntimeReady,
   className,
+  controlMode = 'editor',
+  enableFaceTracking = true,
 }: AvatarCanvasProps) {
   const localRef = useRef<HTMLCanvasElement>(null);
   const targetRef = canvasRef ?? localRef;
@@ -82,11 +91,14 @@ export function AvatarCanvas({
   const [faceTrackingStatus, setFaceTrackingStatus] = useState<FaceTrackingStatus>('idle');
   const [faceTrackingMessage, setFaceTrackingMessage] = useState('Face Tracking aus');
   const [faceTrackingFpsCap, setFaceTrackingFpsCap] = useState(30);
+  const [faceTrackingProfileLabel, setFaceTrackingProfileLabel] = useState('Desktop');
   const [inspectMode, setInspectMode] = useState(false);
   const [activeFrame, setActiveFrame] = useState<AvatarCameraFrameId | null>('full');
   const faceTrackingRef = useRef<AvatarFaceTrackingRuntime>();
   const manifest = getAvatarAssetManifest(avatar.preset);
   const modelUrl = resolveAvatarModelUrl(avatar);
+  const showEditorControls = controlMode === 'editor';
+  const showFaceTracking = enableFaceTracking;
 
   useEffect(() => {
     const canvas = targetRef.current;
@@ -108,6 +120,7 @@ export function AvatarCanvas({
       setFaceTrackingStatus(state.status);
       setFaceTrackingMessage(state.message);
       setFaceTrackingFpsCap(state.fpsCap);
+      setFaceTrackingProfileLabel(state.qualityProfileLabelDe);
     };
 
     const onStateChange = (state: AvatarRuntimeState) => {
@@ -126,9 +139,12 @@ export function AvatarCanvas({
     );
     runtimeRef.current = runtime;
 
-    const faceTracking = new AvatarFaceTrackingRuntime(onFaceTracking);
-    faceTracking.bindTarget(runtime);
-    faceTrackingRef.current = faceTracking;
+    let faceTracking: AvatarFaceTrackingRuntime | undefined;
+    if (enableFaceTracking) {
+      faceTracking = new AvatarFaceTrackingRuntime(onFaceTracking);
+      faceTracking.bindTarget(runtime);
+      faceTrackingRef.current = faceTracking;
+    }
 
     if (captureApiRef) {
       captureApiRef.current = {
@@ -148,12 +164,12 @@ export function AvatarCanvas({
 
     return () => {
       if (captureApiRef) captureApiRef.current = null;
-      faceTracking.dispose();
+      faceTracking?.dispose();
       faceTrackingRef.current = undefined;
       runtime.dispose();
       runtimeRef.current = undefined;
     };
-  }, [targetRef, captureApiRef]);
+  }, [targetRef, captureApiRef, enableFaceTracking]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
@@ -238,59 +254,68 @@ export function AvatarCanvas({
           </div>
         ) : null}
       </div>
-      <AvatarCameraViewControls
-        inspectMode={inspectMode}
-        activeFrame={activeFrame}
-        disabled={runtimeState.status !== 'ready'}
-        onInspectChange={(enabled) => {
-          runtimeRef.current?.setInspectMode(enabled);
-          setInspectMode(enabled);
-        }}
-        onFrame={(frame) => {
-          runtimeRef.current?.applyCameraFrame(frame);
-          setActiveFrame(frame);
-          setInspectMode(runtimeRef.current?.isInspectMode() ?? frame !== 'full');
-        }}
-        onReset={() => {
-          runtimeRef.current?.resetCamera();
-          setInspectMode(false);
-          setActiveFrame('full');
-        }}
-      />
-      <AvatarAnimationPreviewControls
-        support={animationSupport}
-        activeAction={activeAnimation}
-        message={animationMessage}
-        disabled={runtimeState.status !== 'ready'}
-        onSelect={(actionId) => {
-          runtimeRef.current?.playAnimation(actionId);
-        }}
-      />
-      <AvatarFacialPreviewControls
-        availability={facialAvailability}
-        activeKey={activeFacialKey}
-        message={facialMessage}
-        disabled={runtimeState.status !== 'ready'}
-        onSet={(key, weight) => {
-          runtimeRef.current?.setFacialWeight(key, weight);
-        }}
-        onReset={() => {
-          runtimeRef.current?.resetFacialToNeutral();
-        }}
-      />
-      <AvatarFaceTrackingControls
-        status={faceTrackingStatus}
-        message={faceTrackingMessage}
-        fpsCap={faceTrackingFpsCap}
-        disabled={runtimeState.status !== 'ready'}
-        onStart={() => {
-          void faceTrackingRef.current?.start();
-        }}
-        onStop={() => {
-          faceTrackingRef.current?.stop();
-        }}
-      />
-      <AvatarRigCapabilityPanel analysis={rigAnalysis} />
+      {showEditorControls ? (
+        <AvatarCameraViewControls
+          inspectMode={inspectMode}
+          activeFrame={activeFrame}
+          disabled={runtimeState.status !== 'ready'}
+          onInspectChange={(enabled) => {
+            runtimeRef.current?.setInspectMode(enabled);
+            setInspectMode(enabled);
+          }}
+          onFrame={(frame) => {
+            runtimeRef.current?.applyCameraFrame(frame);
+            setActiveFrame(frame);
+            setInspectMode(runtimeRef.current?.isInspectMode() ?? frame !== 'full');
+          }}
+          onReset={() => {
+            runtimeRef.current?.resetCamera();
+            setInspectMode(false);
+            setActiveFrame('full');
+          }}
+        />
+      ) : null}
+      {showEditorControls ? (
+        <AvatarAnimationPreviewControls
+          support={animationSupport}
+          activeAction={activeAnimation}
+          message={animationMessage}
+          disabled={runtimeState.status !== 'ready'}
+          onSelect={(actionId) => {
+            runtimeRef.current?.playAnimation(actionId);
+          }}
+        />
+      ) : null}
+      {showEditorControls ? (
+        <AvatarFacialPreviewControls
+          availability={facialAvailability}
+          activeKey={activeFacialKey}
+          message={facialMessage}
+          disabled={runtimeState.status !== 'ready'}
+          onSet={(key, weight) => {
+            runtimeRef.current?.setFacialWeight(key, weight);
+          }}
+          onReset={() => {
+            runtimeRef.current?.resetFacialToNeutral();
+          }}
+        />
+      ) : null}
+      {showFaceTracking ? (
+        <AvatarFaceTrackingControls
+          status={faceTrackingStatus}
+          message={faceTrackingMessage}
+          fpsCap={faceTrackingFpsCap}
+          qualityProfileLabelDe={faceTrackingProfileLabel}
+          disabled={runtimeState.status !== 'ready'}
+          onStart={() => {
+            void faceTrackingRef.current?.start();
+          }}
+          onStop={() => {
+            faceTrackingRef.current?.stop();
+          }}
+        />
+      ) : null}
+      {showEditorControls ? <AvatarRigCapabilityPanel analysis={rigAnalysis} /> : null}
     </div>
   );
 }

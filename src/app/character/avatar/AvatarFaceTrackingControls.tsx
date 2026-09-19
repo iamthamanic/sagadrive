@@ -1,8 +1,9 @@
 /**
- * AvatarFaceTrackingControls — optional local webcam Face Tracking start/stop (#12).
+ * AvatarFaceTrackingControls — optional local webcam Face Tracking start/stop (#12 / #243).
  * Location: src/app/character/avatar/AvatarFaceTrackingControls.tsx
  *
  * Off by default; browser permission only after explicit Start. Privacy copy visible.
+ * Shows active Desktop/Mobile quality profile label.
  */
 
 import type { FaceTrackingStatus } from '../../../domains/character/avatar';
@@ -11,6 +12,7 @@ interface AvatarFaceTrackingControlsProps {
   status: FaceTrackingStatus;
   message: string;
   fpsCap: number;
+  qualityProfileLabelDe: string;
   disabled?: boolean;
   onStart: () => void;
   onStop: () => void;
@@ -20,6 +22,7 @@ export function AvatarFaceTrackingControls({
   status,
   message,
   fpsCap,
+  qualityProfileLabelDe,
   disabled,
   onStart,
   onStop,
@@ -31,6 +34,7 @@ export function AvatarFaceTrackingControls({
     <div
       className="space-y-2 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs"
       data-avatar-face-tracking-status={status}
+      data-avatar-face-tracking-profile={qualityProfileLabelDe}
       role="group"
       aria-label="Avatar Face Tracking"
     >
@@ -64,7 +68,9 @@ export function AvatarFaceTrackingControls({
         {message}
       </p>
       <p className="text-[11px] text-muted-foreground">
-        Lokal im Browser · keine Video-/Landmark-Speicherung · max. {fpsCap} FPS
+        Lokal im Browser · keine Video-/Landmark-Speicherung · Profil{' '}
+        <span data-avatar-face-tracking-profile-label>{qualityProfileLabelDe}</span> · max.{' '}
+        {fpsCap} FPS
       </p>
     </div>
   );
