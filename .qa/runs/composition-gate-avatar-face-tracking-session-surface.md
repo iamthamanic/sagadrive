@@ -1,6 +1,6 @@
 # Composition Gate — avatar-face-tracking-session-surface
 
-- HEAD_SHA: WORKTREE (uncommitted #243/#244 on feat/avatar-face-tracking-selfhost-session; tip 11a0fb2)
+- HEAD_SHA: 5cefd418d32935ecb73738688a3dc1cf03c271a0
 - Date: 2026-09-19
 - Verdict: CLEAR
 

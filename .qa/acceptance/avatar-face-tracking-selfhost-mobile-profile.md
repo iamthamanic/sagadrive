@@ -50,7 +50,7 @@ Face Tracking darf nicht von CDN/Google Storage abhängen und muss auf Smartphon
 - Known limitation: Mobile profile skips facial transformation matrices (eyes/blink/expr only).
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE (base tip 11a0fb2)
+- HEAD_SHA: 5cefd418d32935ecb73738688a3dc1cf03c271a0
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-avatar-face-tracking-selfhost-mobile-profile.md`
 - Skip reason: n/a

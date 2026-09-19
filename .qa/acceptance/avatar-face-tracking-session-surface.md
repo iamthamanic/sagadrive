@@ -50,7 +50,7 @@ Session/Player soll Face Tracking explizit starten/stoppen und dieselbe Runtime/
 - Known limitation: GM uses demo avatar DTO until live session character wiring; strip sm remains portrait-only.
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE (base tip 11a0fb2)
+- HEAD_SHA: 5cefd418d32935ecb73738688a3dc1cf03c271a0
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-avatar-face-tracking-session-surface.md`
 - Skip reason: n/a
