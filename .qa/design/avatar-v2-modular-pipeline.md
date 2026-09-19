@@ -56,8 +56,14 @@ Verbote: neue `src/modules`, `src/components`, `src/features`, generische `servi
 
 - First-class Anatomy `custom-creature`.
 - Keine Garantie für Auto-Rig jeder Tier-/Monster-Anatomie.
-- Ohne Auto-Rig: vorhandenes Rig bzw. begrenzte Capabilities; Avatar bleibt nutzbar wo möglich.
+- Auto-Rig explizit optional: Ohne Auto-Rig vorhandenes Rig bzw. begrenzte Capabilities; Avatar bleibt nutzbar wo möglich.
 - „Original behalten“ ist ein gültiger Pfad (kein Zwang zu Standard/Compact/Heavy).
+- **Custom Rig Benchmark (#265):** `.qa/design/avatar-v2-custom-rig-benchmark.md` +
+  `custom-rig-benchmark-v1.ts` — Default Custom-Pfad `import-existing-rig`; Provider-Erfolg
+  setzt nie Capabilities.
+- **Custom Creature Original Flow (#266):** `.qa/design/avatar-v2-custom-creature-flow.md` +
+  `custom-creature-flow-v1.ts` — Faruk-like Import→Analyze→Original behalten ohne
+  Humanoid-Morph-Zwang; UI empfiehlt Original; Conversion = „humanoide Interpretation“.
 - **Rig/Capability V2 (#264):** `rig-capability-contract-v2.ts` trennt generische
   Skeleton-/Anchor-/Animation-Fähigkeiten vom Humanoid-Profil. Humanoid Rig V1 bleibt
   Compatibility-Adapter. Custom Creatures brauchen keine Standard-Humanoid-Bones;
