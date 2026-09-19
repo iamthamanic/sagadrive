@@ -133,6 +133,25 @@ export {
   type SagaDriveBaseBodyManifestV1,
 } from './base-body-contract';
 export {
+  CANONICAL_BODY_ASSET_IDS,
+  CANONICAL_BODY_FAMILIES_CONTRACT_VERSION,
+  CANONICAL_BODY_FAMILY_IDS,
+  CANONICAL_BODY_REGIONS,
+  LEGACY_BASE_BODY_ASSET_ID,
+  allowlistedCanonicalBodyPaths,
+  assertCanonicalBodyPublishable,
+  createCanonicalBodyFamilyManifest,
+  isCanonicalBodyFamilyId,
+  listCanonicalBodyFamilyManifests,
+  resolveCanonicalBodyFamilyId,
+  toSagaDriveBaseBodyManifest,
+  type CanonicalBodyAssetId,
+  type CanonicalBodyFamilyId,
+  type CanonicalBodyFamilyManifestV1,
+  type CanonicalBodyPublishGateResult,
+  type CanonicalBodyRegion,
+} from './canonical-body-families-v1';
+export {
   MTOON_MATERIAL_CLASSES,
   MTOON_PROFILE_VERSION,
   classifyMtoonMaterialClass,

@@ -40,7 +40,7 @@ export interface AvatarSaveExportPayloadV1 {
   rigContractVersion: typeof RIG_CONTRACT_VERSION;
   mtoonProfileVersion: typeof MTOON_PROFILE_VERSION;
   baseBodyContractVersion: typeof BASE_BODY_CONTRACT_VERSION;
-  baseBodyAssetVersion: typeof BASE_BODY_ASSET_VERSION;
+  baseBodyAssetVersion: string;
   preset: string;
   modelFormat: 'vrm' | 'glb';
   /** Allowlisted catalog path when no imported mesh was copied into the package. */
