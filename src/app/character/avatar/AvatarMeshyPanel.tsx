@@ -34,6 +34,7 @@ import {
   type Avatar3dGenerationSettings,
   type GenerationPresetId,
 } from '../../../domains/character/avatar/generation';
+import type { GenerateProductModeId } from '../../../domains/character/avatar';
 import {
   fetchMeshyAvatarConfig,
   pollMeshyAvatarJob,
@@ -44,6 +45,7 @@ import {
 import { aiProviderCredentialsService } from '../../../infrastructure/ai/ai-provider-credentials-service';
 import type { AiProviderCredentialView } from '../../../domains/ai-providers';
 import { AvatarGenerationAdvancedSettings } from './AvatarGenerationAdvancedSettings';
+import { AvatarGenerateProductModeChooser } from './AvatarGenerateProductModeChooser';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -79,7 +81,10 @@ export interface MeshyAvatarJobUiState {
 
 interface AvatarMeshyPanelProps {
   characterId?: string | null;
-  onSuccess: (modelUrl: string) => void;
+  onSuccess: (result: {
+    modelUrl: string;
+    productMode: GenerateProductModeId;
+  }) => void;
   /** Preview overlay consumer — cleared on unmount. */
   onJobChange?: (state: MeshyAvatarJobUiState | null) => void;
 }
@@ -159,7 +164,10 @@ export function AvatarMeshyPanel({ characterId, onSuccess, onJobChange }: Avatar
     () => defaultPresetForProvider('meshy').settings,
   );
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [productMode, setProductMode] = useState<GenerateProductModeId>('editable-wardrobe');
   const [mode, setMode] = useState<MeshyAvatarGenerationMode>('text');
+  const productModeRef = useRef(productMode);
+  productModeRef.current = productMode;
   const [prompt, setPrompt] = useState('');
   const [texturePrompt, setTexturePrompt] = useState('');
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
@@ -283,7 +291,7 @@ export function AvatarMeshyPanel({ characterId, onSuccess, onJobChange }: Avatar
           applyJobSnapshot(snapshot);
           markPollOk();
           if (snapshot.status === 'success' && snapshot.modelUrl) {
-            onSuccessRef.current(snapshot.modelUrl);
+            onSuccessRef.current({ modelUrl: snapshot.modelUrl, productMode: productModeRef.current });
             storeJobId(null);
             refreshProviderCredits(selectedProviderIdRef.current || 'meshy');
           }
@@ -317,7 +325,7 @@ export function AvatarMeshyPanel({ characterId, onSuccess, onJobChange }: Avatar
           applyJobSnapshot(snapshot);
           markPollOk();
           if (snapshot.status === 'success' && snapshot.modelUrl) {
-            onSuccessRef.current(snapshot.modelUrl);
+            onSuccessRef.current({ modelUrl: snapshot.modelUrl, productMode: productModeRef.current });
             storeJobId(null);
             refreshProviderCredits(selectedProviderIdRef.current || 'meshy');
           }
@@ -451,7 +459,7 @@ export function AvatarMeshyPanel({ characterId, onSuccess, onJobChange }: Avatar
       markPollOk();
       if (snapshot.jobId) storeJobId(snapshot.jobId);
       if (snapshot.status === 'success' && snapshot.modelUrl) {
-        onSuccess(snapshot.modelUrl);
+        onSuccess({ modelUrl: snapshot.modelUrl, productMode: productModeRef.current });
         storeJobId(null);
         refreshProviderCredits(selectedProviderId);
       }
@@ -476,10 +484,19 @@ export function AvatarMeshyPanel({ characterId, onSuccess, onJobChange }: Avatar
       className="space-y-2 rounded-md border border-border bg-muted/20 px-3 py-2 text-xs"
       data-avatar-meshy-status={uiStatus}
       data-avatar-meshy-mode={mode}
+      data-avatar-generate-product-mode={productMode}
       role="region"
       aria-label="Avatar mit KI erstellen"
     >
       <p className="font-medium">Mit KI erstellen</p>
+      <p className="text-muted-foreground">
+        Wähle das Ziel — der Provider ist nur die Technik dahinter.
+      </p>
+      <AvatarGenerateProductModeChooser
+        value={productMode}
+        disabled={busy || confirming}
+        onChange={setProductMode}
+      />
       <div className="space-y-1.5">
         <Label htmlFor="avatar-3d-provider" className="text-xs">
           3D-Provider

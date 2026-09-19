@@ -471,6 +471,14 @@ function checkAvatarV2CustomCreatureFlow() {
   });
 }
 
+function checkAvatarV2GenerateUx() {
+  console.log('Avatar V2 generate UX Editierbar vs Freie Form (#267)...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-generate-ux-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -990,6 +998,7 @@ checkAvatarV2BodyConversionFlow();
 checkAvatarV2CustomCreatureContract();
 checkAvatarV2CustomRigBenchmark();
 checkAvatarV2CustomCreatureFlow();
+checkAvatarV2GenerateUx();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();

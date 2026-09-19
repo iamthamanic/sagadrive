@@ -39,7 +39,7 @@ export const AVATAR_SOURCE_OPTIONS: readonly AvatarSourceOptionMeta[] = [
     titleDe: 'Mit KI erstellen',
     expectationDe: 'KI-generiert',
     summaryDe:
-      'Prompt an den KI-Provider. Ergebnis wird owner-scoped gespeichert; Funktionen folgen der Avatar-Analyse.',
+      'Ziel wählen: Editierbar & kleidungsfähig oder Freie Form. Provider bleibt Technik; Fähigkeiten folgen der Analyse.',
   },
 ] as const;
 
