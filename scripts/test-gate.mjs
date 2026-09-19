@@ -383,6 +383,14 @@ function checkAvatarV2CanonicalBodyFamilies() {
   });
 }
 
+function checkAvatarV2SpeciesTemplatePack() {
+  console.log('Avatar V2 species template pack (#256): seven species on families...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-species-template-pack-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -891,6 +899,7 @@ checkAvatarV2StructureAnalyzer();
 checkAvatarV2BodyProfile();
 checkAvatarV2AssetAuthoring();
 checkAvatarV2CanonicalBodyFamilies();
+checkAvatarV2SpeciesTemplatePack();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();
