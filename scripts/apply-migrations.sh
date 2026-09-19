@@ -50,6 +50,9 @@ migrations=(
   033_character_avatar_generation_settings.sql
   034_character_avatars_150mb.sql
   035_guard_sheet_status_complete.sql
+  036_character_avatar_artifacts.sql
+  037_character_avatar_analysis_result.sql
+  038_character_avatar_body_profile.sql
 )
 
 only="${1:-}"

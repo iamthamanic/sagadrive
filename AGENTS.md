@@ -317,12 +317,20 @@ Auto-compact mid-ticket is **unreliable**. Do **not** wait for the window to har
 
 **After every shipped issue** in a multi-ticket loop (`@ecc-runner-loop`, avatar-order, or any N>1 queue):
 
-1. Update the handoff file (default: `/tmp/ecc-runner-loop-avatar-handoff.md` or the path named in the loop prompt) with: last merged issue/PR/SHA, next issue number + title, `paused: false`.
+1. Update the handoff file (default: `/tmp/ecc-runner-loop-avatar-v2-handoff.md` or the path named in the loop prompt) with: last merged issue/PR/SHA, next issue number + title, `paused: false`.
 2. **Auto-compact in-session:** treat the handoff as the only resume brief — drop prior issue diffs, CI logs, and tool dumps from working memory; do not re-read them.
 3. **Immediately claim the next issue** in the same turn (same session). Do not ask the user to `/compact` between tickets.
 4. Only if the platform hard-fails mid-queue (context exhausted / session swap): leave handoff with `paused: false` and end the turn so `@ecc-runner-loop continue` resumes — still not a user-facing pause.
 
 **Never compact mid-implementation** of the current issue (verify → PR → merge must stay in one context).
+
+**Forbidden (hard stop violations if done):**
+- Asking the user to run `/compact`, `/strategic-compact`, or “bitte continue”
+- Setting `state.json` → `paused: true` because of context size
+- Ending a turn after merge with only a status report while queue issues remain
+- Stopping after one ticket to “wait for merge” when `@ecc-runner-loop` / merge mode is active
+
+**Allowed exit from a turn mid-queue:** platform context hard-fail only — handoff must say `paused: false` and `resume: @ecc-runner-loop continue` (no user decision required).
 
 **Never** treat leftover CI poll / babysit timeouts as blockers; only open PRs and current `main` HEAD matter.
 
