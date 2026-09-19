@@ -77,10 +77,12 @@ export interface BaseBodyProvenance {
 
 export interface SagaDriveBaseBodyManifestV1 {
   contractVersion: typeof BASE_BODY_CONTRACT_VERSION;
-  assetVersion: typeof BASE_BODY_ASSET_VERSION;
+  /** Version string — legacy `sagadrive-base-humanoid-v1.0.0` or family `sd_body_*_v1.0.0`. */
+  assetVersion: string;
   rigVersion: typeof RIG_CONTRACT_VERSION;
   morphContractVersion: typeof MORPH_CONTRACT_VERSION;
-  assetId: 'sagadrive-base-humanoid-v1';
+  /** Legacy `sagadrive-base-humanoid-v1` or canonical `sd_body_{standard|compact|heavy}_v1`. */
+  assetId: string;
   displayNameDe: string;
   /** Allowlisted self-hosted relative path (no remote arbitrary URLs). */
   selfHostedPath: string;

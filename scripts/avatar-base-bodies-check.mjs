@@ -35,7 +35,7 @@ check(/ears/.test(contract) && /horns/.test(contract) && /cybernetics/.test(cont
 check(!/from ['"]three['"]/.test(contract), 'domain has no Three');
 
 check(/isAllowlistedBaseBodyPath/.test(catalog), 'allowlist');
-check(/sagadrive-base-humanoid-v1\.vrm/.test(catalog), 'allowlisted path');
+check(/allowlistedCanonicalBodyPaths|sd_body_standard_v1|sagadrive-base-humanoid-v1/.test(catalog), 'allowlisted paths');
 check(/evaluateBaseBodyMorphReadiness/.test(catalog), 'readiness helper');
 
 check(/data-testid="base-body-morph-fixture"/.test(fixture), 'fixture test id');

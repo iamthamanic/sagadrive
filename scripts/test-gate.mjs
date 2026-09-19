@@ -375,6 +375,14 @@ function checkAvatarV2AssetAuthoring() {
   });
 }
 
+function checkAvatarV2CanonicalBodyFamilies() {
+  console.log('Avatar V2 canonical body families (#255): standard/compact/heavy...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-canonical-body-families-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -882,6 +890,7 @@ checkAvatarV2ArtifactPipeline();
 checkAvatarV2StructureAnalyzer();
 checkAvatarV2BodyProfile();
 checkAvatarV2AssetAuthoring();
+checkAvatarV2CanonicalBodyFamilies();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();
