@@ -36,6 +36,7 @@ import {
   parseSpeciesTemplatePersistenceId,
   resolveAvatarSource,
   morphEvidenceFromImportAnalysis,
+  buildGenerateEditorSeed,
   validateAvatarMorphInput,
   withAvatarMorphState,
   type SagaDriveAvatarMorphStateV1,
@@ -1689,11 +1690,42 @@ export function CharacterEditor() {
                 <AvatarMeshyPanel
                   characterId={savedCharacterId}
                   onJobChange={setMeshyUi}
-                  onSuccess={(modelUrl) => {
-                    setImportedModelUrl(modelUrl);
+                  onSuccess={({ modelUrl, productMode }) => {
+                    const seed = buildGenerateEditorSeed({
+                      modelUrl,
+                      productMode,
+                      adapterProviderId: 'meshy',
+                    });
+                    setImportedModelUrl(seed.modelUrl);
                     setAvatarSource('meshy');
+                    setSpeciesTemplateId(null);
+                    setStarterWardrobeIds([]);
+                    setTemplateWarningsDe([...seed.composition.limitationsDe]);
+                    setImportComposition({
+                      anatomy: seed.composition.anatomy,
+                      bodyFamily: seed.composition.bodyFamily,
+                      bodyCompatibility:
+                        seed.composition.bodyCompatibility === 'unknown'
+                          ? 'unknown'
+                          : seed.composition.bodyCompatibility,
+                      modularity: seed.composition.modularity,
+                    });
+                    // Capabilities pending Analyzer — never from provider success.
+                    setImportMorphEvidence({
+                      hasBodyMorphTargets: false,
+                      hasFaceMorphTargets: false,
+                    });
+                    if (isCanonicalBodyFamilyId(seed.composition.bodyFamily)) {
+                      setAvatarBodyFamily(seed.composition.bodyFamily);
+                    } else {
+                      setAvatarBodyFamily(null);
+                    }
                     requestAutoPortraitAfterModel();
-                    toast.success('KI-Charakter materialisiert — Strukturanalyse folgt');
+                    toast.success(
+                      productMode === 'free-form'
+                        ? 'Freie Form materialisiert — Strukturanalyse folgt'
+                        : 'Editierbarer KI-Körper materialisiert — Strukturanalyse folgt',
+                    );
                   }}
                 />
               ) : null}

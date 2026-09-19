@@ -134,6 +134,21 @@ export {
   type CustomCreatureFlowGuidanceV1,
 } from './custom-creature-flow-v1';
 export {
+  GENERATE_PRODUCT_FLOW_CONTRACT_VERSION,
+  GENERATE_PRODUCT_MODE_IDS,
+  assertGenerateProductFlowInvariants,
+  assertProviderDoesNotDriveCapabilities,
+  buildGenerateEditorSeed,
+  degradeEditableToCustom,
+  isGenerateProductModeId,
+  listGenerateProductModeOptions,
+  resolveGenerateIntentComposition,
+  type GenerateEditorSeedV1,
+  type GenerateProductIntentCompositionV1,
+  type GenerateProductModeId,
+  type GenerateProductModeOptionV1,
+} from './generate-product-flow-v1';
+export {
   RIG_CONTRACT_VERSION,
   SAGA_DRIVE_HUMANOID_ANCHORS,
   SAGA_DRIVE_HUMANOID_BONES,
