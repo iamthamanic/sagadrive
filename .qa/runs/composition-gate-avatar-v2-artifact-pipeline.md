@@ -1,6 +1,6 @@
 # Composition Gate — avatar-v2-artifact-pipeline
 
-- HEAD_SHA: WORKTREE (pre-commit; refresh after commit)
+- HEAD_SHA: 17c31a719a3ecaa0662b04270b9ab19007b16607
 - Date: 2026-09-19
 - Verdict: CLEAR
 
