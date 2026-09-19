@@ -58,6 +58,11 @@ Verbote: neue `src/modules`, `src/components`, `src/features`, generische `servi
 - Keine Garantie für Auto-Rig jeder Tier-/Monster-Anatomie.
 - Ohne Auto-Rig: vorhandenes Rig bzw. begrenzte Capabilities; Avatar bleibt nutzbar wo möglich.
 - „Original behalten“ ist ein gültiger Pfad (kein Zwang zu Standard/Compact/Heavy).
+- **Rig/Capability V2 (#264):** `rig-capability-contract-v2.ts` trennt generische
+  Skeleton-/Anchor-/Animation-Fähigkeiten vom Humanoid-Profil. Humanoid Rig V1 bleibt
+  Compatibility-Adapter. Custom Creatures brauchen keine Standard-Humanoid-Bones;
+  sichere Anchors (`head`/`back`/`hips`/`other`) und Custom-Animation sind evidence-only.
+  Golden Fixtures: Human, Dwarf, Faruk-like.
 
 ## 7. GLB / Wearables / Conversion (Semantik)
 

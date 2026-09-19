@@ -447,6 +447,14 @@ function checkAvatarV2BodyConversionFlow() {
   });
 }
 
+function checkAvatarV2CustomCreatureContract() {
+  console.log('Avatar V2 custom creature rig/capability contract (#264)...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-custom-creature-contract-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -963,6 +971,7 @@ checkAvatarV2TemplateCreatorFlow();
 checkAvatarV2ImportOriginalFlow();
 checkAvatarV2IdentityTransferSpike();
 checkAvatarV2BodyConversionFlow();
+checkAvatarV2CustomCreatureContract();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();
