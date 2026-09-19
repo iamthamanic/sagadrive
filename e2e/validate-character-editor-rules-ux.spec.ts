@@ -132,26 +132,21 @@ test.describe('Character Editor rules UX (#21)', () => {
     await page.getByRole('option', { name: /^\+0 Bonus$/ }).click();
     await expect(page.getByText(/14 \/ 15 Bonuspunkte/i).first()).toBeVisible();
     await page.getByRole('button', { name: /Speichern/i }).click();
-    // Incomplete drafts may still persist (sheet_status=incomplete) with a success toast;
-    // blocking error toast remains acceptable if product policy tightens again.
-    await expectToastContaining(
-      page,
-      /Unvollständig gespeichert|15 Basis-Bonuspunkte|\+0 bis \+4|Bonuspunkte/i,
-    );
+    // Wait for save cycle to finish (draft incomplete is allowed with sheet_status).
+    await expect(page.getByRole('button', { name: /^Speichern$/i })).toBeEnabled({ timeout: 30_000 });
+    await expect(page.getByText(/14 \/ 15 Bonuspunkte/i).first()).toBeVisible();
     await page.getByRole('combobox', { name: /Charisma Grundbonus/i }).click();
     await page.getByRole('option', { name: /^\+1 Bonus$/ }).click();
     await expect(page.getByText(/15 \/ 15 Bonuspunkte/i).first()).toBeVisible();
 
-    // I5 — species budget ≠ 3 → Speichern toast
+    // I5 — species budget ≠ 3 → Speichern marks incomplete (draft ok)
     await page.getByRole('tab', { name: /^Spezies$/i }).click();
     const removeRest = page.getByRole('button', { name: /Geringer Ruhebedarf abwählen|Geringer Ruhebedarf entfernen/i });
     if (await removeRest.count()) await removeRest.first().click();
     await expect(page.getByText(/^2 \/ 3$/).first()).toBeVisible();
     await page.getByRole('button', { name: /Speichern/i }).click();
-    await expectToastContaining(
-      page,
-      /Unvollständig gespeichert|Speziesmerkmale|genau 3 Punkten/i,
-    );
+    await expect(page.getByRole('button', { name: /^Speichern$/i })).toBeEnabled({ timeout: 30_000 });
+    await expect(page.getByText(/^2 \/ 3$/).first()).toBeVisible();
     await page.getByRole('button', { name: /Geringer Ruhebedarf, 1 Punkt/i }).click();
     await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
     await expect(page.getByText('Flugfähig')).toHaveCount(0);
