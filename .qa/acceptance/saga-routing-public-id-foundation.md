@@ -61,5 +61,7 @@ SagaDrive erhält einen verbindlichen Standard für öffentliche Resource-IDs, U
 
 
 ## Composition Gate
-- Verdict: CLEAR (WORKTREE)
+- Verdict: CLEAR
+- HEAD_SHA: 21996f5140cd49f5f25b20086e6dfdfecc0235d6
+- BASE_SHA: 697b8577fc416fafe9f7ebf245e00274f4066c26
 - Proof: `.qa/runs/composition-gate-saga-routing-public-id-foundation.md`

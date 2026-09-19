@@ -1,27 +1,27 @@
 # Composition Gate — saga-routing-public-id-foundation
 
-- HEAD_SHA: WORKTREE
-- Date: 2026-09-19
-- Verdict: **CLEAR**
+- HEAD_SHA: 21996f5140cd49f5f25b20086e6dfdfecc0235d6
+- BASE_SHA: 697b8577fc416fafe9f7ebf245e00274f4066c26
+- Date: 2026-09-20
+- Verdict: CLEAR
 
 ## Event
-Saga/Session/Character resources gain public_id; URLs resolve to screens; session create allocates session_number.
+Saga/Session/Character resources receive immutable public_ids; URLs resolve to screens; session create allocates saga-scoped session_number.
 
 ## Hop chain
-1. DB trigger/RPC assigns `public_id` + `session_number` on insert
-2. Infra resolves by public_id (RLS/auth still gate)
-3. `resolvePathname` maps URL → ResolvedRoute
-4. AppShell renders Saga/Session shells (GM live reuses GamemasterPanel)
+1. DB trigger / `create_project_session` RPC writes `public_id` + `session_number`
+2. Infra resolves by public_id under existing auth/RLS
+3. `resolvePathname` maps untrusted URL segments → `ResolvedRoute`
+4. AppShell renders Saga/Session shells (live gamemaster reuses GamemasterPanel)
 
 ## Simulations
 | Case | Expected | Result |
 |------|----------|--------|
-| N concurrent session creates | distinct session_number via advisory lock RPC | CLEAR (SQL allocate_next_session_number) |
-| Invalid / wrong-prefix public id in URL | not-found | CLEAR (check script) |
-| Session SE under wrong saga SA | not-found at resolve or scoped lookup | CLEAR |
-| Player opens /live/gamemaster | URL alone does not authorize; domain forbid for role none | CLEAR |
-| /live/player without character | player-resolve target | CLEAR |
-| Foreign CH in player URL | authorizeLivePlayerCharacter deny | CLEAR |
+| N-actors | Concurrent session creates get distinct `(project_id, session_number)` via advisory lock | CLEAR |
+| Invalid/missing | Bad prefix/body or missing id → parse fail / not-found; no invent | CLEAR |
+| Two consumers / crash | Router + AppShell share one History pathname SoT; crash mid-nav does not mint permissions | CLEAR |
+| Cross-saga SE under wrong SA | Scoped lookup / not-found | CLEAR |
+| Player hits /live/gamemaster | URL alone does not authorize GM data | CLEAR |
 
-## Notes
-No bulk fan-out / outbox. Public IDs are identifiers only.
+## Flags
+None.
