@@ -4,7 +4,7 @@
 CLEAR
 
 ## HEAD_SHA
-9d9e9501d1bb4825abe3a6edd80aabe28fe94b6e
+2860019abf5eb4138fe3c6d92739a4d3c71b236e
 
 ## Business event
 User selects a species template („Vorlage anpassen“) → editor seed (morph/traits/family/outfit) → persisted appearance.avatar → reload hydrate.

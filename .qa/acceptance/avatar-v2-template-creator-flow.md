@@ -38,7 +38,7 @@ Liefert den ersten kompletten Enduser-Flow auf Avatar V2: Species Template ausw√
 - Capabilities never derived from source alone (inherit #259)
 
 ## Composition Gate
-- HEAD_SHA: 9d9e9501d1bb4825abe3a6edd80aabe28fe94b6e
+- HEAD_SHA: 2860019abf5eb4138fe3c6d92739a4d3c71b236e
 - Verdict: CLEAR
 
 ## Implementation Notes
