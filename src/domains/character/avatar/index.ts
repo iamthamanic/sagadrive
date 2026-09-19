@@ -278,6 +278,26 @@ export {
   type AvatarArtifactV2,
 } from './avatar-artifact-contract-v2';
 export {
+  AVATAR_STRUCTURE_ANALYSIS_BOUNDS,
+  AVATAR_STRUCTURE_ANALYSIS_STATUSES,
+  AVATAR_STRUCTURE_ANALYZER_CONTRACT_VERSION,
+  AVATAR_STRUCTURE_MODULARITY_KINDS,
+  analyzeAvatarStructureFromEvidence,
+  authoritativeAnalyzeAvatarStructure,
+  isAvatarStructureModularityKind,
+  mapStructureModularityToComposition,
+  previewAnalyzeAvatarStructure,
+  sanitizeClientStructureAnalysisClaim,
+  structureAnalysisCompatibleWithComposition,
+  type AvatarStructureAnalysisResultV2,
+  type AvatarStructureAnalysisStatus,
+  type AvatarStructureEvidence,
+  type AvatarStructureMeshEvidence,
+  type AvatarStructureModularityKind,
+  type AvatarStructureNodeEvidence,
+  type AvatarStructureRoleHit,
+} from './avatar-structure-analyzer-v2';
+export {
   DEFAULT_FACE_TRACKING_LIMITS,
   FACE_TRACKING_CONTRACT_VERSION,
   FACE_TRACKING_QUALITY_PROFILES,

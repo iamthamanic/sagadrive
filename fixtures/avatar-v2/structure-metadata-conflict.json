@@ -1,0 +1,29 @@
+{
+  "id": "metadata-vs-geometry",
+  "byteSize": 3000,
+  "nodeCount": 1,
+  "meshCount": 1,
+  "skinnedMeshCount": 0,
+  "skeletonCount": 0,
+  "boneCount": 0,
+  "morphTargetCount": 0,
+  "humanoidBones": {},
+  "nodes": [
+    {
+      "name": "FakeBody",
+      "extras": {
+        "sagadrive": {
+          "contractVersion": "SagaDriveModularAvatarGlbV1",
+          "role": "body",
+          "slot": "body_base",
+          "bodyFamily": "standard"
+        }
+      }
+    }
+  ],
+  "meshes": [
+    { "name": "Static", "primitiveCount": 1, "morphTargetCount": 0, "isSkinned": false }
+  ],
+  "truncated": false,
+  "rejectedRemoteUri": false
+}

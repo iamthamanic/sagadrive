@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@gltf-transform/core": "^4.5.0",
     "@jsr/supabase__supabase-js": "^2.49.8",
     "@mediapipe/tasks-vision": "0.10.14",
     "@pixiv/three-vrm": "3.5.1",
