@@ -1,0 +1,14 @@
+{
+  "nodes": [
+    {
+      "name": "Body_Base",
+      "extras": {
+        "sagadrive": {
+          "contractVersion": "SagaDriveModularAvatarGlbV999",
+          "role": "body",
+          "slot": "body_base"
+        }
+      }
+    }
+  ]
+}

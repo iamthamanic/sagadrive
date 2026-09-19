@@ -335,6 +335,14 @@ function checkAvatarV2CompositionContract() {
   });
 }
 
+function checkAvatarV2ModularGlbContract() {
+  console.log('Avatar V2 modular GLB contract (#250): extras.sagadrive roles/slots...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-modular-glb-contract-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -837,6 +845,7 @@ checkAvatarAnimationRetarget();
 checkAvatarFacialExpressions();
 checkAvatarFaceTracking();
 checkAvatarV2CompositionContract();
+checkAvatarV2ModularGlbContract();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();

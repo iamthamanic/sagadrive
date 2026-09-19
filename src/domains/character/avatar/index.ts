@@ -230,6 +230,24 @@ export {
   type AvatarV2Source,
 } from './composition-contract-v2';
 export {
+  MODULAR_AVATAR_GLB_CONTRACT_VERSION,
+  MODULAR_AVATAR_GLB_NODE_ROLES,
+  MODULAR_AVATAR_GLB_ROLE_SLOT_HINTS,
+  MODULAR_AVATAR_GLB_SLOTS,
+  MODULAR_AVATAR_GLB_STATUSES,
+  isModularAvatarGlbNodeRole,
+  isModularAvatarGlbSlot,
+  parseModularAvatarGlbExtras,
+  validateModularAvatarGlbNodes,
+  type ModularAvatarGlbExtrasV1,
+  type ModularAvatarGlbNodeDescriptor,
+  type ModularAvatarGlbNodeRole,
+  type ModularAvatarGlbSlot,
+  type ModularAvatarGlbStatus,
+  type ModularAvatarGlbValidationIssue,
+  type ModularAvatarGlbValidationResult,
+} from './modular-glb-contract-v1';
+export {
   DEFAULT_FACE_TRACKING_LIMITS,
   FACE_TRACKING_CONTRACT_VERSION,
   FACE_TRACKING_QUALITY_PROFILES,

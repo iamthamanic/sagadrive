@@ -1,0 +1,6 @@
+{
+  "nodes": [
+    { "name": "Body_Base" },
+    { "name": "Mesh_Clothes" }
+  ]
+}
