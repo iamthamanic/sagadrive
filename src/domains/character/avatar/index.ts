@@ -551,3 +551,16 @@ export {
   type SkinnedWearablePlan,
   type SkinnedWearableUiStatus,
 } from './skinned-wearable-plan';
+
+export {
+  SPECIES_DEFAULT_BODY_FAMILY,
+  SPECIES_TEMPLATE_PACK_CONTRACT_VERSION,
+  SPECIES_TEMPLATE_PACK_VERSION,
+  assertSpeciesTemplatePackComplete,
+  createSpeciesTemplateV1,
+  listSpeciesTemplateIds,
+  listSpeciesTemplatePickerItems,
+  listSpeciesTemplatesV1,
+  type SpeciesTemplatePickerItemV1,
+  type SpeciesTemplateV1,
+} from './species-template-pack-v1';
