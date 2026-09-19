@@ -415,6 +415,14 @@ function checkAvatarV2CapabilityEditor() {
   });
 }
 
+function checkAvatarV2TemplateCreatorFlow() {
+  console.log('Avatar V2 template creator flow (#260): Vorlage anpassen vertical slice...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-template-creator-flow-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarContentPack() {
   console.log('Avatar content pack (#217): Fantasy/Sci-Fi curated assets...');
   execFileSync(process.execPath, ['scripts/avatar-content-pack-check.mjs'], {
@@ -927,6 +935,7 @@ checkAvatarV2SpeciesTemplatePack();
 checkAvatarV2StarterWardrobe();
 checkAvatarV2SkinnedWearableRuntime();
 checkAvatarV2CapabilityEditor();
+checkAvatarV2TemplateCreatorFlow();
 checkAvatarContentPack();
 checkAvatarMeshyGeneration();
 checkAvatarSourceSelector();

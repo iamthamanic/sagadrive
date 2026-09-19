@@ -4,6 +4,8 @@
  */
 import type { CharacterAvatarDto, CharacterAvatarFormat } from '../../../domains/character/domain/character.entity';
 import { normalizeAvatarModelUrl, normalizeSafeUrl } from '../../../domains/character/use-cases/avatar-presets';
+import { isCanonicalBodyFamilyId } from '../../../domains/character/avatar/canonical-body-families-v1';
+import { resolveBaseBodyModelUrl } from './base-body-catalog';
 
 export type AvatarAssetRepresentation =
   | { kind: 'species-specific' }
@@ -197,6 +199,13 @@ export function getAvatarAssetManifest(preset: string): AvatarAssetManifest {
 export function resolveAvatarModelUrl(avatar: CharacterAvatarDto): string | undefined {
   const explicitModelUrl = normalizeAvatarModelUrl(avatar.model_url ?? '');
   if (explicitModelUrl) return explicitModelUrl;
+
+  // Avatar V2 template path: prefer canonical body family when no external model.
+  if (isCanonicalBodyFamilyId(avatar.body_family)) {
+    const familyUrl = resolveBaseBodyModelUrl(undefined, avatar.body_family);
+    const normalizedFamily = normalizeAvatarModelUrl(familyUrl ?? '');
+    if (normalizedFamily) return normalizedFamily;
+  }
 
   const manifest = getAvatarAssetManifest(avatar.preset);
   const selfHostedBase = import.meta.env.VITE_AVATAR_ASSET_BASE_URL as string | undefined;
