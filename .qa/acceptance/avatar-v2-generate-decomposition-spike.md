@@ -18,7 +18,7 @@ Reproduzierbare Entscheidung: provider-neutraler Ablauf für editierbare Generat
 - Provider answers never authoritatively set roles/slots/capabilities (encoded in decision + job graph)
 
 ## Composition Gate
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 5cbbc514eedf105be3bed239e136133cb71f3b05
 - Verdict: CLEAR
 
 ## Implementation Notes
