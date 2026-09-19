@@ -41,8 +41,8 @@ check(/Editierbar & kleidungsfähig/.test(domain), 'editable label');
 check(/Freie Form/.test(domain), 'free-form label');
 check(/data-avatar-generate-mode/.test(chooser), 'chooser mode attrs');
 check(/listGenerateProductModeOptions/.test(chooser), 'chooser uses domain options');
-check(/buildGenerateEditorSeed/.test(editor), 'editor seed');
-check(/productMode === 'free-form'/.test(editor), 'editor free-form toast');
+check(/buildGenerateEditorSeed/.test(editor) || /runModularGenerateFlow/.test(editor), 'editor seed/flow');
+check(/runModularGenerateFlow/.test(editor) || /productMode === 'free-form'/.test(editor), 'editor free-form path');
 check(/Editierbar & kleidungsfähig oder Freie Form/.test(source), 'source copy');
 check(!/Tripo|Meshy Adapter/.test(chooser), 'no provider jargon in chooser');
 

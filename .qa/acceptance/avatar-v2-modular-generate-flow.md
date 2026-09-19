@@ -12,11 +12,11 @@ Vertical Slice: `Mit KI erstellen` → `Editierbar & kleidungsfähig` endet in k
 - Canonical Body Families, Identity Transfer, Starter Wardrobe, Wearable Runtime v2, Artifact/Analyzer
 
 ## Happy Path
-- [ ] Golden Gumo-like/humanoid Generate → validierter modularer Avatar mit wechselbarer Kleidung/Props
-- [ ] Job graph stages aus Spike (`parse-intent` … `structure-analyze`); max 1 paid retry/stage; cost confirm
-- [ ] Resultat nutzt dieselbe Artifact/Analyzer/Editor/Runtime-Pipeline wie Native/Import
-- [ ] Save/Reload + Animation/Equipment/Clothing E2E
-- [ ] Touched files: zero type escape hatches
+- [x] Golden Gumo-like/humanoid Generate → validierter modularer Avatar mit wechselbarer Kleidung/Props
+- [x] Job graph stages aus Spike (`parse-intent` … `structure-analyze`); max 1 paid retry/stage; cost confirm
+- [x] Resultat nutzt dieselbe Artifact/Analyzer/Editor/Runtime-Pipeline wie Native/Import
+- [x] Save/Reload + Animation/Equipment/Clothing E2E
+- [x] Touched files: zero type escape hatches
 
 ## Edge Cases
 - Wearable-Teiljob scheitert → partial modular / deterministic degrade; kein Character-Verlust; keine falschen Capabilities

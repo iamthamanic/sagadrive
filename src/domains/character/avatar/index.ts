@@ -166,6 +166,15 @@ export {
   type ModularGenerateScoreRow,
 } from './modular-generate-decomposition-spike-v1';
 export {
+  MODULAR_GENERATE_FLOW_CONTRACT_VERSION,
+  assertModularGenerateFlowInvariants,
+  listModularGenerateProgressLabelsDe,
+  runModularGenerateFlow,
+  type ModularGenerateFlowResultV1,
+  type ModularGenerateFlowStatus,
+  type ModularGenerateStageProgressV1,
+} from './modular-generate-flow-v1';
+export {
   RIG_CONTRACT_VERSION,
   SAGA_DRIVE_HUMANOID_ANCHORS,
   SAGA_DRIVE_HUMANOID_BONES,
