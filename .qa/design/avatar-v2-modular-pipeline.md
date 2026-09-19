@@ -61,6 +61,10 @@ Verbote: neue `src/modules`, `src/components`, `src/features`, generische `servi
 - **Custom Rig Benchmark (#265):** `.qa/design/avatar-v2-custom-rig-benchmark.md` +
   `custom-rig-benchmark-v1.ts` — Default Custom-Pfad `import-existing-rig`; Provider-Erfolg
   setzt nie Capabilities.
+- **Modular Generate Decomposition (#268):** `.qa/design/avatar-v2-generate-decomposition-spike.md`
+  + `modular-generate-decomposition-spike-v1.ts` — Default:
+  Vision/Parse → Library Body → Identity Transfer → Katalog-Wearables/Props.
+  Bekleideter Blob nie als full modular; ungewöhnliche Anatomie → Freie Form.
 - **Custom Creature Original Flow (#266):** `.qa/design/avatar-v2-custom-creature-flow.md` +
   `custom-creature-flow-v1.ts` — Faruk-like Import→Analyze→Original behalten ohne
   Humanoid-Morph-Zwang; UI empfiehlt Original; Conversion = „humanoide Interpretation“.

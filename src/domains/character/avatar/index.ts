@@ -149,6 +149,23 @@ export {
   type GenerateProductModeOptionV1,
 } from './generate-product-flow-v1';
 export {
+  MODULAR_GENERATE_APPROACH_IDS,
+  MODULAR_GENERATE_DECOMPOSITION_MATRIX_V1,
+  MODULAR_GENERATE_DECOMPOSITION_SPIKE_VERSION,
+  MODULAR_GENERATE_GOLDEN_FIXTURE_IDS,
+  assertModularGenerateDecompositionInvariants,
+  buildModularGenerateHandoffFor269,
+  resolveModularGenerateDecompositionDecision,
+  type ModularGenerateApproachId,
+  type ModularGenerateDecompositionDecisionV1,
+  type ModularGenerateGoldenFixtureId,
+  type ModularGenerateJobGraphV1,
+  type ModularGenerateMatrixCellV1,
+  type ModularGenerateRolePlanV1,
+  type ModularGenerateScoreAxis,
+  type ModularGenerateScoreRow,
+} from './modular-generate-decomposition-spike-v1';
+export {
   RIG_CONTRACT_VERSION,
   SAGA_DRIVE_HUMANOID_ANCHORS,
   SAGA_DRIVE_HUMANOID_BONES,
