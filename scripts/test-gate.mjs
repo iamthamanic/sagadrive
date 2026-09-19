@@ -207,6 +207,14 @@ function checkItemRoutingFoundation() {
   });
 }
 
+function checkSagaRoutingPublicIdFoundation() {
+  console.log('Saga routing + Public ID foundation (#276): IDs, deep links, live role rules...');
+  execFileSync(process.execPath, ['scripts/saga-routing-public-id-foundation-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -981,6 +989,7 @@ checkItemWorldCatalogModule();
 checkItemInventoryWorldCatalogWire();
 checkItemEpicAcceptance();
 checkItemRoutingFoundation();
+checkSagaRoutingPublicIdFoundation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();

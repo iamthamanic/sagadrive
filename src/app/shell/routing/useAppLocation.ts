@@ -1,18 +1,27 @@
 /**
- * History API location hook for App shell routing (no react-router dependency).
+ * useAppLocation — History API location hook for App shell routing.
  * Location: src/app/shell/routing/useAppLocation.ts
  */
 import { useEffect, useRef, useState } from 'react';
 import {
   normalizeViewId,
+  pathForCharacterPublic,
   pathForItemCreateType,
   pathForItemDetail,
   pathForNpcCreatureCreate,
   pathForNpcCreatureEdit,
+  pathForSagaList,
+  pathForSagaNew,
+  pathForSagaSection,
+  pathForSessionLive,
+  pathForSessionPhase,
   pathForView,
   resolvePathname,
   routeToShellView,
+  type LiveViewId,
   type ResolvedRoute,
+  type SagaSectionId,
+  type SessionPhaseId,
   type ShellViewId,
 } from './routes';
 
@@ -68,6 +77,22 @@ export function useAppLocation() {
   const createTypeSlug = route.kind === 'item-create' ? route.typeSlug ?? null : null;
   const npcCreatureDefinitionId =
     route.kind === 'npc-creature-edit' ? route.definitionId : null;
+  const sagaPublicId =
+    route.kind === 'saga-section'
+    || route.kind === 'session-phase'
+    || route.kind === 'session-live'
+      ? route.sagaPublicId
+      : null;
+  const sessionPublicId =
+    route.kind === 'session-phase' || route.kind === 'session-live'
+      ? route.sessionPublicId
+      : null;
+  const characterPublicId =
+    route.kind === 'character-public'
+      ? route.characterPublicId
+      : route.kind === 'session-live'
+        ? route.characterPublicId ?? null
+        : null;
 
   const navigateToPath = (nextPath: string, options?: { replace?: boolean }) => {
     if (typeof window === 'undefined') return;
@@ -108,6 +133,49 @@ export function useAppLocation() {
     navigateToPath(pathForNpcCreatureEdit(definitionId), options);
   };
 
+  const navigateToSagaList = (options?: { replace?: boolean }) => {
+    navigateToPath(pathForSagaList(), options);
+  };
+
+  const navigateToSagaNew = (options?: { replace?: boolean }) => {
+    navigateToPath(pathForSagaNew(), options);
+  };
+
+  const navigateToSagaSection = (
+    sagaId: string,
+    section: SagaSectionId = 'overview',
+    options?: { replace?: boolean },
+  ) => {
+    navigateToPath(pathForSagaSection(sagaId, section), options);
+  };
+
+  const navigateToSessionPhase = (
+    sagaId: string,
+    sessionId: string,
+    phase: SessionPhaseId,
+    options?: { replace?: boolean },
+  ) => {
+    navigateToPath(pathForSessionPhase(sagaId, sessionId, phase), options);
+  };
+
+  const navigateToSessionLive = (
+    sagaId: string,
+    sessionId: string,
+    liveView: Exclude<LiveViewId, 'player-resolve'>,
+    characterId?: string,
+    options?: { replace?: boolean },
+  ) => {
+    navigateToPath(pathForSessionLive(sagaId, sessionId, liveView, characterId), options);
+  };
+
+  const navigateToCharacterPublic = (
+    characterId: string,
+    mode: 'view' | 'edit' = 'view',
+    options?: { replace?: boolean },
+  ) => {
+    navigateToPath(pathForCharacterPublic(characterId, mode), options);
+  };
+
   return {
     pathname,
     route,
@@ -115,11 +183,20 @@ export function useAppLocation() {
     itemId,
     createTypeSlug,
     npcCreatureDefinitionId,
+    sagaPublicId,
+    sessionPublicId,
+    characterPublicId,
     navigateToPath,
     navigateToView,
     navigateToItem,
     navigateToItemCreateType,
     navigateToNpcCreatureCreate,
     navigateToNpcCreatureEdit,
+    navigateToSagaList,
+    navigateToSagaNew,
+    navigateToSagaSection,
+    navigateToSessionPhase,
+    navigateToSessionLive,
+    navigateToCharacterPublic,
   };
 }

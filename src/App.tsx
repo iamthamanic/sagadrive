@@ -1,5 +1,5 @@
 /**
- * App — composition root: AuthGate, Layout, History routing (#133), lazy views.
+ * App — composition root: AuthGate, Layout, History routing (#133/#276), lazy views.
  * Location: src/App.tsx
  *
  * App-area imports must go through each area's public barrel (`app/<area>`) or
@@ -13,6 +13,8 @@ import { Dashboard } from './app/dashboard';
 import { Toaster } from './shared/ui/sonner';
 import { NotFoundPlaceholder, ItemWorkbenchScreen } from './app/items';
 import { NpcCreatureCreateScreen, NpcCreatureEditorScreen } from './app/npc-creature';
+import { SagaResourceScreen } from './app/project';
+import { SessionResourceScreen } from './app/session';
 
 const CharacterEditor = lazy(() =>
   import('./app/character/root').then((module) => ({ default: module.CharacterEditor })),
@@ -85,7 +87,17 @@ function AppShell() {
     || currentView === 'item-detail'
     || currentView === 'npc-creature-create'
     || currentView === 'npc-creature-edit'
-      ? 'library'
+    || currentView === 'saga-list'
+    || currentView === 'saga-new'
+    || currentView === 'saga-section'
+    || currentView === 'session-phase'
+    || currentView === 'session-live'
+    || currentView === 'character-public'
+      ? (currentView.startsWith('saga') || currentView.startsWith('session')
+        ? 'dashboard'
+        : currentView === 'character-public'
+          ? 'character-editor'
+          : 'library')
       : currentView;
 
   const renderView = () => {
@@ -94,9 +106,18 @@ function AppShell() {
         return <Dashboard onNavigate={handleNavigate} />;
       case 'character-editor':
         return <CharacterEditorView />;
+      case 'character-public':
+        return <CharacterEditorView />;
       case 'adventure-editor':
-        return <Dashboard onNavigate={handleNavigate} />;
+        // Compatibility route — canonical navigation is /sagas/:sagaPublicId/**
+        return (
+          <SagaResourceScreen
+            mode="list"
+            onNavigateHome={() => handleNavigate('dashboard')}
+          />
+        );
       case 'gamemaster':
+        // Compatibility route — canonical is /sagas/.../live/gamemaster
         return (
           <LazyView>
             <GamemasterPanel />
@@ -178,6 +199,48 @@ function AppShell() {
             onBack={() => handleNavigate('library')}
           />
         );
+      case 'saga-list':
+        return (
+          <SagaResourceScreen
+            mode="list"
+            onNavigateHome={() => handleNavigate('dashboard')}
+          />
+        );
+      case 'saga-new':
+        return (
+          <SagaResourceScreen
+            mode="new"
+            onNavigateHome={() => handleNavigate('dashboard')}
+          />
+        );
+      case 'saga-section':
+        return (
+          <SagaResourceScreen
+            mode="section"
+            sagaPublicId={route.kind === 'saga-section' ? route.sagaPublicId : null}
+            section={route.kind === 'saga-section' ? route.section : 'overview'}
+            onNavigateHome={() => handleNavigate('dashboard')}
+          />
+        );
+      case 'session-phase':
+        return route.kind === 'session-phase' ? (
+          <SessionResourceScreen
+            sagaPublicId={route.sagaPublicId}
+            sessionPublicId={route.sessionPublicId}
+            phase={route.phase}
+            onNavigateHome={() => handleNavigate('dashboard')}
+          />
+        ) : null;
+      case 'session-live':
+        return route.kind === 'session-live' ? (
+          <SessionResourceScreen
+            sagaPublicId={route.sagaPublicId}
+            sessionPublicId={route.sessionPublicId}
+            liveView={route.liveView}
+            characterPublicId={route.characterPublicId}
+            onNavigateHome={() => handleNavigate('dashboard')}
+          />
+        ) : null;
       case 'not-found':
         return (
           <NotFoundPlaceholder

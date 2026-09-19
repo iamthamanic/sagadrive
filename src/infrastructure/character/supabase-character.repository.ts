@@ -71,6 +71,7 @@ export class SupabaseCharacterRepository {
     const inventoryRead = readCharacterInventory(dto);
     return {
       id: dto.id,
+      publicId: typeof dto.public_id === 'string' ? dto.public_id : undefined,
       name: dto.name,
       description: dto.description,
       class: dto.class,
@@ -105,7 +106,7 @@ export class SupabaseCharacterRepository {
     const { data, error } = await raceWithTimeoutReject(
       supabase
         .from(this.tableName)
-        .select('id, name, class, race, level, portrait_url, sheet_status')
+        .select('id, public_id, name, class, race, level, portrait_url, sheet_status')
         .eq('owner_user_id', userId)
         .eq('character_type', 'pc')
         .order('created_at', { ascending: false }),
@@ -115,6 +116,7 @@ export class SupabaseCharacterRepository {
     if (error) throw new Error(`Failed to fetch characters: ${error.message}`);
     return (data ?? []).map((row) => ({
       id: row.id as string,
+      publicId: typeof row.public_id === 'string' ? row.public_id : undefined,
       name: typeof row.name === 'string' ? row.name : '',
       class: typeof row.class === 'string' ? row.class : '',
       race: typeof row.race === 'string' ? row.race : '',
@@ -138,6 +140,19 @@ export class SupabaseCharacterRepository {
   async getCharacterById(id: string): Promise<CharacterVm> {
     const userId = await getAuthenticatedUserId();
     const { data, error } = await supabase.from(this.tableName).select('*').eq('id', id).eq('owner_user_id', userId).single();
+    if (error) throw new Error(`Failed to fetch character: ${error.message}`);
+    if (!data) throw new Error('Character not found');
+    return this.mapToViewModel(data as CharacterDto);
+  }
+
+  async getCharacterByPublicId(publicId: string): Promise<CharacterVm> {
+    const userId = await getAuthenticatedUserId();
+    const { data, error } = await supabase
+      .from(this.tableName)
+      .select('*')
+      .eq('public_id', publicId.trim().toUpperCase())
+      .eq('owner_user_id', userId)
+      .single();
     if (error) throw new Error(`Failed to fetch character: ${error.message}`);
     if (!data) throw new Error('Character not found');
     return this.mapToViewModel(data as CharacterDto);

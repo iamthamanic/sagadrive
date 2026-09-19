@@ -9,6 +9,8 @@
 
 export interface ProjectDto {
   id: string;
+  /** Immutable public saga id (SA-XXXXX). Never a permission secret. Empty until migration backfill. */
+  public_id?: string;
   code: string;
   name: string;
   description: string | null;
@@ -29,13 +31,23 @@ export interface ProjectMemberDto {
   status: 'active' | 'inactive' | 'kicked';
 }
 
+export type ProjectSessionStatus =
+  | 'scheduled'
+  | 'active'
+  | 'paused'
+  | 'completed'
+  | 'cancelled';
+
 export interface SessionDto {
   id: string;
+  /** Immutable public session id (SE-XXXXX). Empty until migration backfill. */
+  public_id?: string;
   project_id: string;
+  /** Immutable order within a saga — not the resource identity. */
   session_number: number;
   name: string | null;
   notes: string | null;
-  status: 'scheduled' | 'active' | 'completed' | 'cancelled';
+  status: ProjectSessionStatus;
   started_at: string | null;
   ended_at: string | null;
   duration_minutes: number | null;
@@ -58,11 +70,12 @@ export interface ProjectMemberVm {
 
 export interface SessionVm {
   id: string;
+  publicId: string;
   projectId: string;
   sessionNumber: number;
   name: string | null;
   notes: string | null;
-  status: 'scheduled' | 'active' | 'completed' | 'cancelled';
+  status: ProjectSessionStatus;
   startedAt: string | null;
   endedAt: string | null;
   durationMinutes: number | null;
@@ -71,6 +84,7 @@ export interface SessionVm {
 
 export interface ProjectVm {
   id: string;
+  publicId: string;
   code: string;
   name: string;
   description: string | null;
@@ -88,6 +102,7 @@ export interface ProjectVm {
 /** Slim list row for Bibliothek/Dashboard — no per-project member/session arrays. */
 export interface ProjectSummaryVm {
   id: string;
+  publicId: string;
   code: string;
   name: string;
   description: string | null;
@@ -114,7 +129,8 @@ export interface JoinProjectDto {
 
 export interface CreateSessionDto {
   project_id: string;
-  session_number: number;
+  /** Optional; when omitted, DB allocates next number concurrency-safe. */
+  session_number?: number;
   name?: string;
   notes?: string;
 }
@@ -123,7 +139,7 @@ export interface UpdateSessionDto {
   id: string;
   name?: string;
   notes?: string;
-  status?: 'scheduled' | 'active' | 'completed' | 'cancelled';
+  status?: ProjectSessionStatus;
   started_at?: string;
   ended_at?: string;
 }

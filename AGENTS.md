@@ -118,7 +118,17 @@ supabase/functions/
    - Dark: `#F59E0B`
    - Hover on primary CTAs and active tabs
    - Hover for secondary, outline and ghost actions
-   - Level, achievement, premium accents
+
+### Public IDs, Saga URLs & Screen vs Modal (#276)
+
+Canonical doc: [`docs/navigation-public-ids.md`](docs/navigation-public-ids.md).
+
+- **Public IDs** (`SA-`/`SE-`/`CH-`/`IT-`/`NPCC-` + reserved `SC-`/`QT-`) are immutable public identifiers — never authorization. Domain contract: `src/domains/resource-id/**`.
+- **Saga/Session deep links** live under `/sagas/:sagaPublicId/...` via History API routing (`src/app/shell/routing`). No React Router.
+- **`session_number`** = order inside a saga; **`SE-XXXXX`** = session identity. Allocate via DB (`create_project_session`).
+- **URL ≠ permission:** `/live/gamemaster` does not grant GM rights; membership/RLS/services do.
+- **Screen vs Modal:** shareable / reload / identity / long task → route; ephemeral in-context action → modal.
+- Compatibility `/gamemaster` and `/adventure-editor` are not a second source of truth.   - Level, achievement, premium accents
 
 3. **Danger**
    - Light: `#EF4444`

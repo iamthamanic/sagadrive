@@ -27,6 +27,10 @@ class CharacterService {
     return supabaseCharacterRepository.getCharacterById(id);
   }
 
+  getCharacterByPublicId(publicId: string): Promise<CharacterVm> {
+    return supabaseCharacterRepository.getCharacterByPublicId(publicId);
+  }
+
   async createCharacter(payload: CreateCharacterDto): Promise<CharacterVm> {
     const created = await supabaseCharacterRepository.createCharacter(payload);
     invalidateCharacterListCaches();

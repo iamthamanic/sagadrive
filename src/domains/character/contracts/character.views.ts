@@ -18,6 +18,8 @@ export type CharacterSheetStatus = 'complete' | 'incomplete';
 
 export interface CharacterVm {
   id: string;
+  /** Immutable public character id (CH-XXXXX); absent only pre-migration rows. */
+  publicId?: string;
   name: string;
   description: string;
   class: string;
@@ -51,6 +53,7 @@ export interface CharacterVm {
 
 export interface CharacterSummaryVm {
   id: string;
+  publicId?: string;
   name: string;
   class: string;
   race: string;
