@@ -38,7 +38,7 @@ Entfernt Source-Gating aus dem CharacterEditor: verfügbare Bearbeitung folgt nu
 - Owner-/asset-Trust-Grenzen unverändert — out of scope (no new persistence)
 
 ## Composition Gate
-- HEAD_SHA: 6ae55e7fcbe548f8a6bf33303fa04f70ac0a4086
+- HEAD_SHA: adcaa2e221e4c6c0e2a9dde8c9b260bf6dbeccce
 - Verdict: CLEAR
 
 ## Implementation Notes
