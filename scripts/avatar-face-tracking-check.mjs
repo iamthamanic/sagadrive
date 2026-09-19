@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
- * avatar-face-tracking-check — deterministic tests for #12 MediaPipe face tracking.
+ * avatar-face-tracking-check — deterministic tests for Face Tracking (#12 / #243 / #244).
  * Location: scripts/avatar-face-tracking-check.mjs
  */
-import { mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 import process from 'node:process';
 import { build } from 'esbuild';
 
@@ -28,6 +29,10 @@ const runtime = read('src/infrastructure/character/avatar/avatar-face-tracking-r
 const studio = read('src/infrastructure/character/avatar/character-studio-runtime.ts');
 const controls = read('src/app/character/avatar/AvatarFaceTrackingControls.tsx');
 const canvas = read('src/app/character/avatar/AvatarCanvas.tsx');
+const surfaceViewer = read('src/app/character/avatar/AvatarSurfaceViewer.tsx');
+const playerPanel = read('src/app/character/avatar/PlayerAvatarPanel.tsx');
+const gmPanel = read('src/app/session/GamemasterPanel.tsx');
+const pkg = JSON.parse(read('package.json'));
 
 check(/FACE_TRACKING_CONTRACT_VERSION/.test(domain), 'contract version');
 check(/mapFaceTrackingSample/.test(domain), 'sample mapper');
@@ -35,12 +40,16 @@ check(/smoothFaceTrackingDrive/.test(domain), 'smoothing');
 check(/selectPrimaryFaceIndex/.test(domain), 'primary face rule');
 check(/assertFaceTrackingDriveLocalOnly/.test(domain), 'privacy assert');
 check(/resolveFaceTrackingFpsCap/.test(domain), 'fps cap');
+check(/resolveFaceTrackingQualityProfile/.test(domain), 'quality profile resolver');
+check(/FACE_TRACKING_QUALITY_PROFILES/.test(domain), 'quality profiles const');
+check(/enableHeadPose/.test(domain), 'mobile head-pose feature cap');
 check(!/from ['"]react['"]/.test(domain), 'domain no React');
 check(!/from ['"]three['"]/.test(domain), 'domain no Three');
 check(!/mediapipe|getUserMedia|HTMLVideoElement/.test(domain), 'domain no MediaPipe/DOM');
 
 check(/export \{[\s\S]*mapFaceTrackingSample/.test(index), 'barrel exports mapper');
 check(/FACE_TRACKING_CONTRACT_VERSION/.test(index), 'barrel exports version');
+check(/resolveFaceTrackingQualityProfile/.test(index), 'barrel exports quality profile');
 
 check(/AvatarFaceTrackingRuntime/.test(runtime), 'runtime class');
 check(/getUserMedia/.test(runtime), 'camera permission path');
@@ -48,8 +57,19 @@ check(/explicit user action|Explicit user action/.test(runtime), 'explicit start
 check(/visibilitychange/.test(runtime), 'tab visibility pause');
 check(/track\.stop/.test(runtime), 'track cleanup');
 check(/createMediaPipeFaceTrackingDetector/.test(runtime), 'mediapipe factory');
+check(/MEDIAPIPE_VISION_WASM_PATH/.test(runtime), 'self-host wasm path const');
+check(/MEDIAPIPE_FACE_LANDMARKER_MODEL_PATH/.test(runtime), 'self-host model path const');
+check(/\/mediapipe\/wasm/.test(runtime), 'wasm path /mediapipe/wasm');
+check(/\/mediapipe\/models\/face_landmarker\.task/.test(runtime), 'model path first-party');
+check(!/cdn\.jsdelivr\.net/.test(runtime), 'no jsdelivr CDN in runtime');
+check(!/storage\.googleapis\.com/.test(runtime), 'no google storage CDN in runtime');
+check(/@mediapipe\/tasks-vision/.test(runtime), 'pinned npm import');
+check(/activeFaceTrackingRuntime/.test(runtime), 'singleton active claim');
+check(/getActiveFaceTrackingRuntime/.test(runtime), 'singleton getter export');
 check(!/localStorage|indexedDB|sessionStorage/.test(runtime), 'no landmark persistence');
 check(!/fetch\([^)]*landmark|analytics|postMessage/.test(runtime), 'no landmark upload heur');
+
+check(pkg.dependencies?.['@mediapipe/tasks-vision'] === '0.10.14', 'pinned mediapipe 0.10.14');
 
 check(/applyFaceTrackingDrive/.test(studio), 'studio applies drive');
 check(/resetFaceTrackingPose/.test(studio), 'studio resets pose');
@@ -61,8 +81,27 @@ check(/data-avatar-face-tracking-start/.test(controls), 'start control');
 check(/data-avatar-face-tracking-stop/.test(controls), 'stop control');
 check(/aria-label="Face Tracking starten"/.test(controls), 'start aria');
 check(/Lokal im Browser/.test(controls), 'privacy copy');
+check(/qualityProfileLabelDe|data-avatar-face-tracking-profile/.test(controls), 'profile label UI');
 check(/AvatarFaceTrackingControls/.test(canvas), 'canvas mounts controls');
-check(/faceTracking\.dispose|faceTrackingRef\.current\?\.dispose|faceTracking\.dispose\(\)/.test(canvas), 'dispose on unmount');
+check(/faceTracking\.dispose|faceTracking\?\.dispose|faceTrackingRef\.current\?\.dispose/.test(canvas), 'dispose on unmount');
+check(/controlMode/.test(canvas), 'editor vs live control mode');
+
+check(/player-panel/.test(surfaceViewer), 'surface viewer knows player-panel');
+check(/data-avatar-face-tracking-bound/.test(surfaceViewer), 'FT bind marker on surface');
+check(/controlMode=\{controlMode\}/.test(surfaceViewer) || /controlMode=\{liveSurface/.test(surfaceViewer) || /controlMode={controlMode}/.test(surfaceViewer), 'surface passes controlMode');
+check(/AvatarFaceTrackingRuntime|enableFaceTracking/.test(playerPanel), 'player panel FT wiring');
+check(/PlayerAvatarPanel/.test(gmPanel), 'GM panel mounts PlayerAvatarPanel');
+
+// Ensure first-party assets exist (vendor from node_modules if needed).
+const vendor = spawnSync(process.execPath, [join(root, 'scripts/vendor-mediapipe-face-landmarker.mjs')], {
+  cwd: root,
+  encoding: 'utf8',
+});
+check(vendor.status === 0, `vendor mediapipe: ${vendor.stderr || vendor.stdout || 'ok'}`);
+const wasmInternal = join(root, 'public/mediapipe/wasm/vision_wasm_internal.wasm');
+const modelPath = join(root, 'public/mediapipe/models/face_landmarker.task');
+check(existsSync(wasmInternal), 'public mediapipe wasm present');
+check(existsSync(modelPath) && statSync(modelPath).size > 100_000, 'public face_landmarker.task present');
 
 // --- bundled domain behavior ---
 const outDir = join(root, 'node_modules/.cache/avatar-face-tracking-check');
@@ -84,6 +123,16 @@ check(ft.selectPrimaryFaceIndex([{ presence: 0.5 }, { presence: 0.5 }]) === 0, '
 
 check(ft.resolveFaceTrackingFpsCap({ isMobile: true }) === 15, 'mobile fps');
 check(ft.resolveFaceTrackingFpsCap({ isMobile: false }) === 30, 'desktop fps');
+
+const mobileProfile = ft.resolveFaceTrackingQualityProfile({ isMobile: true });
+check(mobileProfile.id === 'mobile', 'mobile profile id');
+check(mobileProfile.fpsCap === 15, 'mobile profile fps');
+check(mobileProfile.enableHeadPose === false, 'mobile disables head pose matrices');
+check(mobileProfile.outputFacialTransformationMatrixes === false, 'mobile no matrices');
+
+const desktopProfile = ft.resolveFaceTrackingQualityProfile({ isMobile: false });
+check(desktopProfile.id === 'desktop', 'desktop profile id');
+check(desktopProfile.enableHeadPose === true, 'desktop head pose on');
 
 const active = ft.mapFaceTrackingSample({
   presence: 0.9,

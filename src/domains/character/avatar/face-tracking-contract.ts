@@ -87,8 +87,71 @@ export const DEFAULT_FACE_TRACKING_LIMITS: FaceTrackingLimits = {
   smooth: 0.35,
 };
 
+/** Quality profile id — Desktop vs Mobile feature/FPS caps (#243). */
+export type FaceTrackingQualityProfileId = 'desktop' | 'mobile';
+
+/**
+ * Desktop/Mobile quality profile.
+ * Mobile reduces FPS and skips facial transformation matrices (lighter GPU path).
+ */
+export interface FaceTrackingQualityProfile {
+  id: FaceTrackingQualityProfileId;
+  labelDe: string;
+  fpsCap: number;
+  /** Head pose from transformation matrices. Mobile: false (eyes/blink/expr only). */
+  enableHeadPose: boolean;
+  outputFaceBlendshapes: boolean;
+  outputFacialTransformationMatrixes: boolean;
+}
+
+export const FACE_TRACKING_QUALITY_PROFILES: Readonly<
+  Record<FaceTrackingQualityProfileId, FaceTrackingQualityProfile>
+> = {
+  desktop: {
+    id: 'desktop',
+    labelDe: 'Desktop',
+    fpsCap: DEFAULT_FACE_TRACKING_LIMITS.desktopFps,
+    enableHeadPose: true,
+    outputFaceBlendshapes: true,
+    outputFacialTransformationMatrixes: true,
+  },
+  mobile: {
+    id: 'mobile',
+    labelDe: 'Mobile',
+    fpsCap: DEFAULT_FACE_TRACKING_LIMITS.mobileFps,
+    enableHeadPose: false,
+    outputFaceBlendshapes: true,
+    outputFacialTransformationMatrixes: false,
+  },
+};
+
 export function isFaceTrackingStatus(value: unknown): value is FaceTrackingStatus {
   return typeof value === 'string' && (FACE_TRACKING_STATUSES as readonly string[]).includes(value);
+}
+
+/**
+ * Resolve Desktop vs Mobile quality profile from device hints.
+ * Same rule as FPS cap: mobile UA or maxTouchPoints > 1 → mobile.
+ */
+export function resolveFaceTrackingQualityProfile(input: {
+  isMobile?: boolean;
+  maxTouchPoints?: number;
+  limits?: FaceTrackingLimits;
+}): FaceTrackingQualityProfile {
+  const limits = input.limits ?? DEFAULT_FACE_TRACKING_LIMITS;
+  const useMobile =
+    input.isMobile === true ||
+    (typeof input.maxTouchPoints === 'number' && input.maxTouchPoints > 1);
+  if (useMobile) {
+    return {
+      ...FACE_TRACKING_QUALITY_PROFILES.mobile,
+      fpsCap: limits.mobileFps,
+    };
+  }
+  return {
+    ...FACE_TRACKING_QUALITY_PROFILES.desktop,
+    fpsCap: limits.desktopFps,
+  };
 }
 
 export function clampAngle(value: number, maxAbs: number): number {
@@ -127,12 +190,7 @@ export function resolveFaceTrackingFpsCap(input: {
   maxTouchPoints?: number;
   limits?: FaceTrackingLimits;
 }): number {
-  const limits = input.limits ?? DEFAULT_FACE_TRACKING_LIMITS;
-  if (input.isMobile === true) return limits.mobileFps;
-  if (typeof input.maxTouchPoints === 'number' && input.maxTouchPoints > 1) {
-    return limits.mobileFps;
-  }
-  return limits.desktopFps;
+  return resolveFaceTrackingQualityProfile(input).fpsCap;
 }
 
 export function createEmptyFaceTrackingSample(): FaceTrackingSample {

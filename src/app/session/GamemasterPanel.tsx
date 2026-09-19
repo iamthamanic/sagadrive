@@ -16,6 +16,8 @@ import { useAuth } from '../../lib/auth-context';
 import { useProjectSummaries } from '../project';
 import { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
 import { SessionAvatarStrip } from './SessionAvatarStrip';
+import { PlayerAvatarPanel } from '../character';
+import { createCharacterStudioAvatar } from '../../domains/character/use-cases/avatar-presets';
 
 export function GamemasterPanel() {
   const [storyText, setStoryText] = useState('');
@@ -27,6 +29,20 @@ export function GamemasterPanel() {
   const gmProjects = projects.filter(
     (project) => user !== null && project.gmUserId === user.id,
   );
+  // Demo live avatar for Session Face Tracking surface (#244) — same runtime as Editor.
+  const sessionDemoAvatar = createCharacterStudioAvatar({
+    race: 'human',
+    hairStyle: 'short',
+    clothing: 'casual',
+    hairColor: '#3B2F2F',
+    skinTone: '#F5E6D3',
+    bodySize: 50,
+    height: 50,
+  });
+  const sessionDemoRef = {
+    characterId: 'demo-session-player',
+    displayName: 'Spieler-Avatar (Vorschau)',
+  };
 
   return (
     <div className="w-full h-full overflow-y-auto">
@@ -111,6 +127,8 @@ export function GamemasterPanel() {
               <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
                 <Eye className="w-8 h-8 md:w-12 md:h-12 text-muted-foreground" />
               </div>
+
+              <PlayerAvatarPanel surfaceRef={sessionDemoRef} avatar={sessionDemoAvatar} />
 
               <div className="space-y-2">
                 <p className="text-xs md:text-sm font-medium">Aktuelle Szene</p>

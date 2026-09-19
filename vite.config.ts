@@ -60,6 +60,10 @@
             if (id.includes('node_modules/three') || id.includes('@pixiv/three-vrm')) {
               return 'three-vrm';
             }
+            // Keep MediaPipe out of the critical vendor path — lazy after Face Tracking start (#243).
+            if (id.includes('node_modules/@mediapipe')) {
+              return 'mediapipe-vision';
+            }
             if (id.includes('node_modules')) {
               return 'vendor';
             }

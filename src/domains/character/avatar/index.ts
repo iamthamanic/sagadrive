@@ -208,6 +208,7 @@ export {
 export {
   DEFAULT_FACE_TRACKING_LIMITS,
   FACE_TRACKING_CONTRACT_VERSION,
+  FACE_TRACKING_QUALITY_PROFILES,
   FACE_TRACKING_STATUSES,
   assertFaceTrackingDriveLocalOnly,
   clampAngle,
@@ -217,11 +218,14 @@ export {
   isFaceTrackingStatus,
   mapFaceTrackingSample,
   resolveFaceTrackingFpsCap,
+  resolveFaceTrackingQualityProfile,
   selectPrimaryFaceIndex,
   smoothFaceTrackingDrive,
   type FaceTrackingDrive,
   type FaceTrackingHeadPose,
   type FaceTrackingLimits,
+  type FaceTrackingQualityProfile,
+  type FaceTrackingQualityProfileId,
   type FaceTrackingSample,
   type FaceTrackingStatus,
 } from './face-tracking-contract';

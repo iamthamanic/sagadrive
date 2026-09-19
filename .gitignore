@@ -13,6 +13,10 @@ dist/
 build/
 .vite/
 
+# MediaPipe WASM copied from node_modules by vendor script (#243).
+# Model under public/mediapipe/models/ is committed as first-party artifact.
+public/mediapipe/wasm/
+
 # IDE
 .idea/
 .vscode/
