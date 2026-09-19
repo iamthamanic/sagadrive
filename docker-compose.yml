@@ -144,7 +144,7 @@ services:
       POSTGREST_URL: http://supabase-rest:3000
       PGRST_JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-password}@supabase-db:5432/postgres
-      FILE_SIZE_LIMIT: 52428800
+      FILE_SIZE_LIMIT: 157286400
       STORAGE_BACKEND: file
       FILE_STORAGE_BACKEND_PATH: /var/lib/storage
       TENANT_ID: stub
@@ -181,6 +181,7 @@ services:
   supabase-edge:
     image: supabase/edge-runtime:v1.29.0
     container_name: sagadrive-edge
+    restart: unless-stopped
     command: ["start", "--main-service", "/home/deno/functions/main", "--import-map", "/home/deno/import_map.json", "--port", "9998"]
     environment:
       <<: *supabase-env
@@ -193,7 +194,7 @@ services:
       CHARACTER_AI_BASE_URL: ${CHARACTER_AI_BASE_URL:-}
       CHARACTER_AI_API_KEY: ${CHARACTER_AI_API_KEY:-}
       CHARACTER_AI_RATE_LIMIT_PER_MINUTE: ${CHARACTER_AI_RATE_LIMIT_PER_MINUTE:-6}
-      CHARACTER_AI_ALLOWED_ORIGIN: ${CHARACTER_AI_ALLOWED_ORIGIN:-}
+      CHARACTER_AI_ALLOWED_ORIGIN: ${CHARACTER_AI_ALLOWED_ORIGIN:-http://localhost:3004}
       MESHY_API_KEY: ${MESHY_API_KEY:-}
       MESHY_API_BASE_URL: ${MESHY_API_BASE_URL:-https://api.meshy.ai/openapi/v1}
       MESHY_TEXT_TO_IMAGE_MODEL: ${MESHY_TEXT_TO_IMAGE_MODEL:-nano-banana}

@@ -28,8 +28,16 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export function rewriteBrowserStorageUrl(url: string): string {
   try {
     const parsed = new URL(url);
-    if (parsed.hostname !== 'supabase-kong') return url;
     const publicOrigin = new URL(supabaseUrl).origin;
+    if (parsed.origin === publicOrigin) return url;
+    // Internal Docker / compose hostnames used by Edge when signing storage URLs.
+    const host = parsed.hostname.toLowerCase();
+    const isInternalStorageHost =
+      host === 'supabase-kong' ||
+      host === 'kong' ||
+      host.endsWith('.supabase-kong') ||
+      host === 'host.docker.internal';
+    if (!isInternalStorageHost) return url;
     return `${publicOrigin}${parsed.pathname}${parsed.search}`;
   } catch {
     return url;

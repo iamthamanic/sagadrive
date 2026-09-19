@@ -53,7 +53,8 @@ check(!/fetch\([^)]*landmark|analytics|postMessage/.test(runtime), 'no landmark 
 
 check(/applyFaceTrackingDrive/.test(studio), 'studio applies drive');
 check(/resetFaceTrackingPose/.test(studio), 'studio resets pose');
-check(/bindHeadBone/.test(studio), 'head bone bind');
+check(/bindHumanoidBones/.test(studio), 'humanoid bone bind (head + feet)');
+check(/this\.headBone = head/.test(studio), 'head bone assigned for face tracking');
 check(!/appearance\.avatar\s*=/.test(studio), 'no appearance write from tracking');
 
 check(/data-avatar-face-tracking-start/.test(controls), 'start control');

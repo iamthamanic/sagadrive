@@ -14,6 +14,8 @@ import type {
 import type { SagaDriveProfileDto } from '../domain/sagadrive-profile.entity';
 import type { InventoryState } from '../inventory-v2';
 
+export type CharacterSheetStatus = 'complete' | 'incomplete';
+
 export interface CharacterVm {
   id: string;
   name: string;
@@ -23,6 +25,8 @@ export interface CharacterVm {
   rulesetKey: CharacterRulesetKey;
   dndBackground?: string;
   level: number;
+  /** complete = full build; incomplete = draft with open editor gaps. */
+  sheetStatus: CharacterSheetStatus;
   backgroundStory?: string;
   notes: string;
   personalityTraits: string[];
@@ -51,5 +55,6 @@ export interface CharacterSummaryVm {
   class: string;
   race: string;
   level: number;
+  sheetStatus: CharacterSheetStatus;
   portraitUrl?: string;
 }

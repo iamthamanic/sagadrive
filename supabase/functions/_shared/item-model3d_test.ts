@@ -86,6 +86,32 @@ Deno.test('downloadMeshyGlbBytes accepts meshy host with valid GLB', async () =>
   assertEquals(result.bytes.length, glb.length);
 });
 
+Deno.test('downloadMeshyGlbBytes aborts when streamed body exceeds maxBytes', async () => {
+  const chunk = new Uint8Array([0x67, 0x6c, 0x54, 0x46, 0, 1, 2, 3, 4, 5]);
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(chunk);
+      controller.enqueue(chunk);
+      controller.close();
+    },
+  });
+  const fetchImpl: typeof fetch = () =>
+    Promise.resolve(
+      new Response(stream, {
+        status: 200,
+        headers: { 'Content-Type': 'model/gltf-binary' },
+      }),
+    );
+  await assertRejects(
+    () =>
+      downloadMeshyGlbBytes('https://assets.meshy.ai/big.glb', fetchImpl, {
+        maxBytes: 12,
+      }),
+    Error,
+    'size limit',
+  );
+});
+
 Deno.test('mock Meshy Image-to-3D provider progresses without network', async () => {
   const provider = createMockMeshyImageTo3dProvider();
   const created = await provider.createTask({

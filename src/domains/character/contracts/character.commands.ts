@@ -12,6 +12,7 @@ import type {
 } from '../domain/character.entity';
 import type { SagaDriveProfileDto } from '../domain/sagadrive-profile.entity';
 import type { InventoryState } from '../inventory-v2';
+import type { CharacterSheetStatus } from './character.views';
 
 export interface CreateCharacterDto {
   name: string;
@@ -21,6 +22,8 @@ export interface CreateCharacterDto {
   ruleset_key?: CharacterRulesetKey;
   dnd_background?: string | null;
   level?: number;
+  /** Defaults to complete when omitted (legacy callers). */
+  sheet_status?: CharacterSheetStatus;
   background_story?: string;
   notes?: string;
   personality_traits?: string[];
@@ -45,6 +48,7 @@ export interface UpdateCharacterDto {
   ruleset_key?: CharacterRulesetKey;
   dnd_background?: string | null;
   level?: number;
+  sheet_status?: CharacterSheetStatus;
   background_story?: string;
   notes?: string;
   personality_traits?: string[];

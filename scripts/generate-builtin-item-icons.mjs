@@ -948,5 +948,5 @@ for (const [slug, { label, body }] of Object.entries(ICONS)) {
 console.log(`Wrote ${written} SVGs to ${outDir}`);
 if (written !== 121) {
   console.error(`Expected 121 icons, got ${written}`);
-  process.exit(1);
-}
+    process.exit(1);
+  }

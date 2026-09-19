@@ -22,6 +22,7 @@ test('Look tab exposes 3D character import CTA and status region', async ({ page
   });
 
   await page.getByRole('tab', { name: /^Look$/i }).click();
+  await page.locator('[data-avatar-source-card="import"]').click();
   const panel = page.locator('[data-avatar-import-panel]');
   await expect(panel).toBeVisible();
   await expect(panel.locator('[data-avatar-import-cta]')).toBeVisible();

@@ -24,7 +24,7 @@ import {
 } from './trait-layers';
 
 export const AVATAR_SAVE_EXPORT_VERSION = 'AvatarSaveExportV1' as const;
-export const AVATAR_SAVE_EXPORT_MAX_BYTES = 40 * 1024 * 1024;
+export const AVATAR_SAVE_EXPORT_MAX_BYTES = 150 * 1024 * 1024;
 
 export type AvatarSaveExportUiStatus =
   | 'idle'

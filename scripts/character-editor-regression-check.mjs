@@ -231,7 +231,9 @@ requireMatch(read('src/app/character/edit/CharacterEditor.tsx'), /hydrateEditorF
 requireMatch(read('src/app/library/Library.tsx'), /refreshCharacters\(\{\s*force:\s*true\s*\}\)/, 'library force-refreshes character summaries');
 
 requireMatch(characterRepository, /supabase\.storage[\s\S]*?\.from\(CHARACTER_PORTRAIT_BUCKET\)[\s\S]*?\.upload\(filePath, file/, 'portrait upload through configured Supabase Storage client');
-requireMatch(characterRepository, /createSignedUrl\(filePath, 31_536_000\)/, 'private portrait signed URL creation');
+requireMatch(characterRepository, /createSignedUrl\(filePath, CHARACTER_PORTRAIT_SIGNED_SECONDS\)/, 'private portrait signed URL creation');
+requireMatch(characterRepository, /CHARACTER_PORTRAIT_SIGNED_SECONDS = 60 \* 60 \* 24 \* 7/, 'portrait signed URL uses 7-day TTL');
+requireMatch(characterRepository, /sniffPortraitMime/, 'portrait magic-byte sniff before upload');
 rejectMatch(characterRepository, /https:\/\/\$\{projectId\}\.supabase\.co|make-server-9f6fb44c\/characters\/upload-portrait/, 'portrait upload still uses the fixed hosted make-server endpoint');
 requireMatch(portraitStorageMigration, /INSERT INTO storage\.buckets[\s\S]*?VALUES\s*\(\s*'character-portraits',\s*'character-portraits',\s*false,\s*5242880,/, 'private portrait storage bucket with 5MB limit');
 requireMatch(portraitStorageMigration, /storage\.foldername\(name\)\)\[1\] = auth\.uid\(\)::text/, 'owner-scoped portrait storage policies');

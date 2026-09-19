@@ -38,6 +38,18 @@ migrations=(
   021_npc_creature_definitions.sql
   022_npc_creature_controller_assignments.sql
   023_npc_creature_instances.sql
+  024_character_avatar_import.sql
+  025_character_avatar_export.sql
+  026_character_avatar_meshy_jobs.sql
+  027_character_avatar_meshy_generation_mode.sql
+  028_character_avatar_meshy_glb_budget.sql
+  029_character_sheet_status.sql
+  030_character_avatar_meshy_rig_task.sql
+  031_character_avatar_meshy_jobs_no_client_write.sql
+  032_incomplete_sheet_blocks_adventure_join.sql
+  033_character_avatar_generation_settings.sql
+  034_character_avatars_150mb.sql
+  035_guard_sheet_status_complete.sql
 )
 
 only="${1:-}"

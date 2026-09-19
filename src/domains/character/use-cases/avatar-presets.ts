@@ -136,6 +136,16 @@ export function normalizeHexColor(value: string, fallback: string): string {
   return /^#[0-9a-fA-F]{6}$/.test(value) ? value.toUpperCase() : fallback;
 }
 
+/** Local Supabase/Kong signed URLs are http://localhost — allow loopback only. */
+function isLoopbackHostname(hostname: string): boolean {
+  const host = hostname.trim().toLowerCase();
+  return host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '::1';
+}
+
+/**
+ * Sanitize asset URLs: relative paths, HTTPS remotes, or HTTP loopback (local storage).
+ * Rejects arbitrary http hosts to avoid open redirects / mixed-content surprises in prod.
+ */
 export function normalizeSafeUrl(value: string): string | undefined {
   const trimmed = value.trim();
   if (!trimmed) return undefined;
@@ -143,7 +153,11 @@ export function normalizeSafeUrl(value: string): string | undefined {
 
   try {
     const url = new URL(trimmed);
-    return url.protocol === 'https:' ? url.toString() : undefined;
+    if (url.protocol === 'https:') return url.toString();
+    if (url.protocol === 'http:' && isLoopbackHostname(url.hostname)) {
+      return url.toString();
+    }
+    return undefined;
   } catch {
     return undefined;
   }

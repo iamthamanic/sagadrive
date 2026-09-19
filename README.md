@@ -219,6 +219,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-19** — Avatar 3D: provider-agnostische Generation (Meshy-Adapter, Presets Schnell/Empfohlen/Max), Advanced Settings, Master+Runtime-Pipeline; GLB/VRM-Import bis 150 MB; sheet_status-DB-Gate (`feat/provider-agnostic-avatar-3d`)
 - **2026-09-15** — NPC/Kreaturen static SVG icons (19 builtins): Cursor→PNG→VTracer wie Items; `iconKey` → `/assets/npc-creatures/{slug}.svg` (`feat/npc-creature-static-svg-icons`)
 - **2026-09-14** — NPC Promotion Compact→Full + Controller-Zuweisung über CharacterEditor (`feat/npc-creature-promotion-controller`, #200)
 - **2026-09-14** — World-Modul `npc-creature-catalog`: Pack-Toggles, Includes/Excludes, welt-eigene Figuren ohne Definitionsduplikate (`feat/npc-creature-world-catalog`, #199)
@@ -228,13 +229,6 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-09-10** — Skill `svg-icon-create` + Generator `scripts/generate-builtin-item-icons.mjs` für hand-authored Item-SVGs (`feat/item-static-svg-icons`)
 - **2026-09-09** — Item-Workbench Forge: typed Create-URLs, Visuals-Dropzone mit Auto-Draft, Scroll-Layout, Single-Shell App-Layout (`feat/item-workbench-forge-ux`)
 - **2026-09-06** — Item Epic Abnahme: Docs-Sync (`docs/items.md`), Meta-Gate + Playwright-Hop Library→Workbench→Inventar (`feat/144-item-epic-acceptance`, #144)
-- **2026-09-06** — Bibliothek Items-Tab: List/Grid, Suche/Filter, Core+Standard+Personal+Welt (`feat/138-library-items-browser`, #138)
-- **2026-09-06** — Builtin-Standardpacks: Fantasy/Sci-Fi/Contemporary je 40 Items + Kontext-Packs (`feat/137-builtin-standard-packs`, #137)
-- **2026-09-06** — ItemDefinition-Persistenz: Personal/World CRUD + Fork, Taxonomie-Roundtrip, owner/world aus Auth (`feat/136-item-definition-persistence`, #136)
-- **2026-09-06** — Item-Rules-Kernel: Last/Kosten/Schutz/Traglast/Werkzeug unter `domains/rules/sagadrive/items`; Inventory re-exportiert kompatibel (`feat/135-item-rules-kernel`, #135)
-- **2026-09-06** — Item-Domain: `ItemDefinition` + Taxonomie/Provenienz unter `src/domains/items/**`; Inventory v2 re-exportiert kompatibel (`feat/134-item-domain-taxonomy`, #134)
-- **2026-09-06** — App-Shell History-URL-Routing: `/library`, `/items/create`, `/items/:id` (Platzhalter bis Workbench) (`feat/133-item-routing-foundation`, #133)
-- **2026-09-06** — Inventar Ausrüstung: Paper-Doll inkl. Füße, PNG-Kacheln, gleiche Panel-Höhen; Schnellzugriff-UI entfernt (Domain bleibt) (`feat/inventory-equipment-paper-doll-feet`)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 

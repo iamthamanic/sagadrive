@@ -48,6 +48,12 @@ check(/AvatarImportPanel/.test(editor), 'editor mounts import panel');
 check(/importedModelUrl/.test(editor), 'imported model url state');
 check(/modelUrl: importedModelUrl/.test(editor), 'passes model url into avatar dto');
 
+check(/AVATAR_IMPORT_MAX_BYTES = 150/.test(domain), 'import ceiling 150MB');
+check(/max\. 150 MB/.test(domain), 'import oversize message 150MB');
+check(/max\. 150 MB/.test(panel), 'panel copy 150MB');
+check(/157286400/.test(read('supabase/migrations/034_character_avatars_150mb.sql')), '034 raises bucket to 150MB');
+check(/034_character_avatars_150mb\.sql/.test(read('scripts/apply-migrations.sh')), 'apply-migrations lists 034');
+
 check(/character-avatars/.test(migration), 'bucket migration');
 check(/character_avatar_import_assets/.test(migration), 'assets table');
 check(/rig_analysis_status = 'pending'/.test(migration), 'insert policy forces pending');

@@ -6,7 +6,7 @@
  * Capabilities are never accepted from the client — only `pending` / server-set statuses.
  */
 
-export const AVATAR_IMPORT_MAX_BYTES = 40 * 1024 * 1024;
+export const AVATAR_IMPORT_MAX_BYTES = 150 * 1024 * 1024;
 
 export const AVATAR_IMPORT_ALLOWED_EXTENSIONS = ['vrm', 'glb'] as const;
 export type AvatarImportExtension = (typeof AVATAR_IMPORT_ALLOWED_EXTENSIONS)[number];
@@ -94,7 +94,7 @@ export function earlyCheckAvatarImportFile(input: {
   if (input.byteSize > AVATAR_IMPORT_MAX_BYTES) {
     return {
       ok: false,
-      message: 'Die Datei ist zu groß (max. 40 MB).',
+      message: 'Die Datei ist zu groß (max. 150 MB).',
     };
   }
   return { ok: true, format: formatFromExtension(ext) };

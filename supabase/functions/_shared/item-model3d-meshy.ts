@@ -20,10 +20,27 @@ export interface MeshyImageTo3dProviderConfig {
   model: string;
 }
 
+/** Optional full Meshy Image-to-3D knobs — avatar generation supplies these from the provider adapter. */
+export interface MeshyImageTo3dCreateOptions {
+  texturePrompt?: string;
+  poseMode?: 'a-pose' | 't-pose' | '';
+  /** When true, Meshy remeshes to targetPolycount before returning GLB. */
+  shouldRemesh?: boolean;
+  targetPolycount?: number;
+  aiModel?: string;
+  modelType?: 'standard' | 'smart-topology';
+  textureResolution?: '2k' | '4k' | '8k';
+  enablePbr?: boolean;
+  imageEnhancement?: boolean;
+  topology?: 'triangle' | 'quad';
+  ultraMode?: boolean;
+  savePreRemeshedModel?: boolean;
+}
+
 /** Exactly one image source per create — prefer input_task_id when chaining from text-to-image. */
 export type MeshyImageTo3dCreateInput =
-  | { kind: 'input_task_id'; inputTaskId: string }
-  | { kind: 'image_url'; imageUrl: string };
+  | ({ kind: 'input_task_id'; inputTaskId: string } & MeshyImageTo3dCreateOptions)
+  | ({ kind: 'image_url'; imageUrl: string } & MeshyImageTo3dCreateOptions);
 
 export interface MeshyImageTo3dProvider {
   createTask(input: MeshyImageTo3dCreateInput): Promise<{ taskId: string }>;
@@ -98,15 +115,62 @@ export function createLiveMeshyImageTo3dProvider(
 ): MeshyImageTo3dProvider {
   return {
     async createTask(input: MeshyImageTo3dCreateInput): Promise<{ taskId: string }> {
+      // Defaults keep item-model3d path stable; avatar passes full adapter-mapped options.
+      const textureResolution =
+        input.textureResolution === '4k' || input.textureResolution === '8k' || input.textureResolution === '2k'
+          ? input.textureResolution
+          : '2k';
       const payload: Record<string, unknown> = {
-        ai_model: config.model,
+        ai_model: (input.aiModel?.trim() || config.model),
         should_texture: true,
+        texture_resolution: textureResolution,
         target_formats: ['glb'],
+        enable_pbr: input.enablePbr !== false,
       };
+      if (input.modelType === 'standard' || input.modelType === 'smart-topology') {
+        payload.model_type = input.modelType;
+      }
+      if (input.imageEnhancement === true) {
+        payload.image_enhancement = true;
+      }
+      if (input.ultraMode === true) {
+        payload.ultra_mode = true;
+      }
+      if (input.topology === 'triangle' || input.topology === 'quad') {
+        payload.topology = input.topology;
+      }
+      if (input.savePreRemeshedModel === true) {
+        payload.save_pre_remeshed_model = true;
+      }
       if (input.kind === 'input_task_id') {
         payload.input_task_id = input.inputTaskId;
       } else {
         payload.image_url = input.imageUrl;
+      }
+      const texturePrompt = input.texturePrompt?.trim();
+      if (texturePrompt) {
+        payload.texture_prompt = texturePrompt.slice(0, 800);
+      }
+      if (input.poseMode === 'a-pose' || input.poseMode === 't-pose') {
+        payload.pose_mode = input.poseMode;
+      } else if (input.poseMode === '') {
+        payload.pose_mode = '';
+      }
+      if (input.shouldRemesh === true) {
+        payload.should_remesh = true;
+        const poly = typeof input.targetPolycount === 'number' && Number.isFinite(input.targetPolycount)
+          ? Math.max(100, Math.min(300_000, Math.round(input.targetPolycount)))
+          : 50_000;
+        payload.target_polycount = poly;
+      } else if (input.shouldRemesh === false) {
+        payload.should_remesh = false;
+      }
+      if (
+        input.modelType === 'smart-topology'
+        && typeof input.targetPolycount === 'number'
+        && Number.isFinite(input.targetPolycount)
+      ) {
+        payload.target_polycount = Math.max(100, Math.min(15_000, Math.round(input.targetPolycount)));
       }
 
       const response = await fetchImpl(`${config.baseUrl}/image-to-3d`, {
