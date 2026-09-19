@@ -62,7 +62,7 @@ SagaDrive trennt Provider (Meshy, später Tripo), Modelle, SagaDrive-Presets und
 - Pipeline audit fixes: modelId allowlist, ultra_mode, sheet_status trigger 035, CORS default, face-tracking check, Playwright evidence
 
 ## Composition Gate
-- HEAD_SHA: 2c81bc282271260e07484963849477b646e60389
+- HEAD_SHA: cfc73bddc23d182f47d29b44f7419c5778559c6f
 - BASE_SHA: 185a0472506e5dd79fe571c114590ad27ab44f64
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-provider-agnostic-3d-generation.md`
