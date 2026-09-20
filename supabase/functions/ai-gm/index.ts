@@ -495,10 +495,10 @@ serve(async (req: Request) => {
                   controller.close()
                 }
               }
-            } catch (error) {
+            } catch (error: unknown) {
               controller.enqueue(encoder.encode(JSON.stringify({
                 type: 'error',
-                error: error.message,
+                error: (error instanceof Error ? error.message : String(error)),
               }) + '\n'))
               controller.close()
             }
@@ -537,11 +537,11 @@ serve(async (req: Request) => {
           headers: { ...headers, "Content-Type": "application/json" },
         })
       }
-    } catch (error) {
+    } catch (error: unknown) {
       return new Response(JSON.stringify({
         error: "Internal server error",
-        message: error.message,
-        stack: error.stack,
+        message: (error instanceof Error ? error.message : String(error)),
+        stack: (error instanceof Error ? error.stack : undefined),
       }), {
         status: 500,
         headers: { ...headers, "Content-Type": "application/json" },

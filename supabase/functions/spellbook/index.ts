@@ -65,5 +65,5 @@ serve(async (req: Request) => {
     if (req.method === "POST" && path.match(/^\/spellbook\/[\w-]+\/cast$/)) { const characterId = path.split("/")[2]; const body = await req.json(); const result = await castSpell(characterId, body.spellId, body.level); return new Response(JSON.stringify(result), { headers: { ...headers, "Content-Type": "application/json" } }) }
     if (req.method === "POST" && path.match(/^\/spellbook\/[\w-]+\/restore$/)) { const characterId = path.split("/")[2]; await restoreSpellSlots(characterId); return new Response(JSON.stringify({ success: true }), { headers: { ...headers, "Content-Type": "application/json" } }) }
     return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { ...headers, "Content-Type": "application/json" } })
-  } catch (error) { return new Response(JSON.stringify({ error: "Internal server error", message: error.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }) }
+  } catch (error: unknown) { return new Response(JSON.stringify({ error: "Internal server error", message: (error instanceof Error ? error.message : String(error)) }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }) }
 })

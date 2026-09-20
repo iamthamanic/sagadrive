@@ -198,7 +198,7 @@ async function updateWorld(worldId: string, data: Partial<World>): Promise<World
 // LOCATION OPERATIONS
 // ===========================================
 
-async function addLocation(worldId: string, data: Omit<Location, 'id' | 'discovered'>): Promise<Location> {
+async function addLocation(worldId: string, data: Omit<Location, 'id'> & { discovered?: boolean }): Promise<Location> {
   const world = worlds.get(worldId)
   if (!world) throw new Error("World not found")
   
@@ -568,10 +568,10 @@ serve(async (req: Request) => {
       headers: { ...headers, "Content-Type": "application/json" },
     })
     
-  } catch (error) {
+  } catch (error: unknown) {
     return new Response(JSON.stringify({
       error: "Internal server error",
-      message: error.message,
+      message: (error instanceof Error ? error.message : String(error)),
     }), {
       status: 500,
       headers: { ...headers, "Content-Type": "application/json" },

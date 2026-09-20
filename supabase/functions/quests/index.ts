@@ -40,5 +40,5 @@ serve(async (req: Request) => {
     if (req.method === "POST" && path.match(/^\/quests\/[\w-]+\/complete\/[\w-]+$/)) { const questId = path.split("/")[2]; const objectiveId = path.split("/")[4]; const quest = await completeObjective(questId, objectiveId); return new Response(JSON.stringify(quest), { headers: { ...headers, "Content-Type": "application/json" } }) }
     if (req.method === "POST" && path === "/quests/generate") { const body = await req.json(); const quest = await generateQuest(body.type || 'side', body.level || 1); return new Response(JSON.stringify(quest), { headers: { ...headers, "Content-Type": "application/json" } }) }
     return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { ...headers, "Content-Type": "application/json" } })
-  } catch (error) { return new Response(JSON.stringify({ error: "Internal server error", message: error.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }) }
+  } catch (error: unknown) { return new Response(JSON.stringify({ error: "Internal server error", message: (error instanceof Error ? error.message : String(error)) }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }) }
 })

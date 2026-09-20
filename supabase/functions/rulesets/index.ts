@@ -386,7 +386,7 @@ async function fetchOpen5eSpells(): Promise<Spell[]> {
       classes: spell.dnd_class.split(',').map((c: string) => c.trim().toLowerCase()),
       source: 'Open5e',
     }))
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to fetch Open5e spells:', error)
     return []
   }
@@ -415,7 +415,7 @@ async function fetchOpen5eMonsters(): Promise<Monster[]> {
       actions: [],
       source: 'Open5e',
     }))
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to fetch Open5e monsters:', error)
     return []
   }
@@ -436,7 +436,7 @@ async function fetchOpen5eItems(): Promise<Item[]> {
       description: item.desc || '',
       source: 'Open5e',
     }))
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to fetch Open5e items:', error)
     return []
   }
@@ -701,10 +701,10 @@ serve(async (req: Request) => {
       headers: { ...headers, "Content-Type": "application/json" },
     })
     
-  } catch (error) {
+  } catch (error: unknown) {
     return new Response(JSON.stringify({
       error: "Internal server error",
-      message: error.message,
+      message: (error instanceof Error ? error.message : String(error)),
     }), {
       status: 500,
       headers: { ...headers, "Content-Type": "application/json" },

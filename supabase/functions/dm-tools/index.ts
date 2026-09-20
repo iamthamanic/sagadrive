@@ -76,6 +76,7 @@ interface CombatLogEntry {
   damage?: number
   healing?: number
   details?: string
+  participants?: Array<{ id: string; name: string; initiative: number }>
 }
 
 interface Condition {
@@ -849,10 +850,10 @@ serve(async (req: Request) => {
       headers: { ...headers, "Content-Type": "application/json" },
     })
     
-  } catch (error) {
+  } catch (error: unknown) {
     return new Response(JSON.stringify({
       error: "Internal server error",
-      message: error.message,
+      message: (error instanceof Error ? error.message : String(error)),
     }), {
       status: 500,
       headers: { ...headers, "Content-Type": "application/json" },

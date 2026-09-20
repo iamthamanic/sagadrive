@@ -48,5 +48,5 @@ serve(async (req: Request) => {
     if (req.method === "POST" && path.match(/^\/templates\/[\w-]+\/rate$/)) { const id = path.split("/")[2]; const body = await req.json(); const template = await rateTemplate(id, body.rating); if (!template) return new Response(JSON.stringify({ error: "Template not found" }), { status: 404, headers: { ...headers, "Content-Type": "application/json" } }); return new Response(JSON.stringify(template), { headers: { ...headers, "Content-Type": "application/json" } }) }
     if (req.method === "GET" && path === "/search") { const query = url.searchParams.get('q') || ''; const results = await searchTemplates(query); return new Response(JSON.stringify(results), { headers: { ...headers, "Content-Type": "application/json" } }) }
     return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { ...headers, "Content-Type": "application/json" } })
-  } catch (error) { return new Response(JSON.stringify({ error: "Internal server error", message: error.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }) }
+  } catch (error: unknown) { return new Response(JSON.stringify({ error: "Internal server error", message: (error instanceof Error ? error.message : String(error)) }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }) }
 })
