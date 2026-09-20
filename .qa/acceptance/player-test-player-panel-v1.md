@@ -48,9 +48,9 @@ Spieler sehen ein schlankes Player Panel mit spielrelevantem Character-State (Na
 | n/a | verify via contract gate + unit domain tests; browser optional |
 
 ## Composition Gate
-- Verdict: TBD
+- Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-player-test-player-panel-v1.md`
-- HEAD_SHA: TBD
+- HEAD_SHA: 319e6f5d7255a17ae62be34445261b8af3505c23
 
 ## Implementation Notes
 - Domain: `src/domains/session/contracts/player-panel.ts` (`buildPlayerPanelModel`, connection kinds, inventory/roster projection)
