@@ -23,6 +23,10 @@ import { computeSagaDriveDerivedStats } from '../../rules/sagadrive/derived-stat
 import type { PlaySessionStatus } from './session-lifecycle';
 import type { SessionPresenceEntry, SessionRuntimeState } from './session-runtime';
 import { readLastSharedRoll, type SharedRollResultView } from './shared-rolls';
+import {
+  readSharedScenePresentation,
+  type SharedScenePresentation,
+} from './shared-scene-presentation';
 
 export type PlayerPanelConnectionKind =
   | 'loading'
@@ -85,6 +89,7 @@ export interface PlayerPanelModel {
   conditions: string[];
   roster: PlayerPanelRosterLine[];
   sceneId: string | null;
+  scenePresentation: SharedScenePresentation | null;
   combatActive: boolean;
   sessionStatus: PlaySessionStatus | null;
   connection: PlayerPanelConnectionKind;
@@ -289,6 +294,7 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
       conditions: [],
       roster: runtime ? rosterLines(runtime.roster, input.selfUserId) : [],
       sceneId: runtime?.gameplay.sceneId ?? null,
+      scenePresentation: runtime ? readSharedScenePresentation(runtime.gameplay.shared) : null,
       combatActive: runtime?.gameplay.combatActive ?? false,
       sessionStatus: runtime?.status ?? null,
       connection: connection.kind,
@@ -350,6 +356,7 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
   const conditions = readSharedStringList(shared, ['conditions', 'activeConditions', 'active_conditions']);
   const checkTarget = readSharedNumber(shared, ['checkTarget', 'check_target']);
   const lastRoll = readLastSharedRoll(shared);
+  const scenePresentation = readSharedScenePresentation(shared);
 
   let drive = character.sagaDriveProfile.drive;
   const driveMap = shared.driveByCharacter;
@@ -380,6 +387,7 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
     conditions,
     roster: runtime ? rosterLines(runtime.roster, input.selfUserId) : [],
     sceneId: runtime?.gameplay.sceneId ?? null,
+    scenePresentation,
     combatActive: runtime?.gameplay.combatActive ?? false,
     sessionStatus: runtime?.status ?? null,
     connection: connection.kind,

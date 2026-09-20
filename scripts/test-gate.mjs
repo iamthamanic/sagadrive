@@ -136,6 +136,14 @@ function checkPlayerTestSharedRolls() {
   });
 }
 
+function checkPlayerTestSharedScenePresentation() {
+  console.log('Player-test shared scene presentation (#301): checking presentation contract + GM publish path...');
+  execFileSync(process.execPath, ['scripts/player-test-shared-scene-presentation-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkProjectMembershipSecurity() {
   console.log('Project membership security contract: checking RLS and client write paths...');
   execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], {
@@ -1044,6 +1052,7 @@ checkPlayerTestSessionSecurity();
 checkPlayerTestRealtimeRuntime();
 checkPlayerTestPlayerPanel();
 checkPlayerTestSharedRolls();
+checkPlayerTestSharedScenePresentation();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();
