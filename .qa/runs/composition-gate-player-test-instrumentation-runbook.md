@@ -1,6 +1,6 @@
 # Composition Gate — player-test-instrumentation-runbook
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 0226d19ba3722110cd4ce55b7e2033c186113c85
 - BASE_SHA: 0fdf5200a4eaeb1b6afc12baa7cfd275bdd47c4b
 - Date: 2026-09-20
 - Verdict: **SKIPPED**

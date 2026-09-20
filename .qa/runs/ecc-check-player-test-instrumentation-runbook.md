@@ -1,7 +1,7 @@
 # ecc-check — player-test-instrumentation-runbook (#304)
 
 - Date: 2026-09-20
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 0226d19ba3722110cd4ce55b7e2033c186113c85
 - Verdict: **READY**
 
 ## Phases
