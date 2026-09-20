@@ -488,7 +488,10 @@ check(exportWithEquipOverlay.runtimeOverlays.length === 0, 'equipment not baked 
 
 // ── G · Desktop / tablet / mobile / keyboard structural UX ───────────────────
 section('G · Responsive + keyboard / a11y structural');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const picker = read('src/app/character/avatar/TraitCardPicker.tsx');
 const morphUi = read('src/app/character/avatar/AvatarMorphEditorPanels.tsx');
 const sourceUi = read('src/app/character/avatar/AvatarSourceSelector.tsx');

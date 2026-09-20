@@ -25,7 +25,10 @@ const index = read('src/domains/character/avatar/index.ts');
 const panel = read('src/app/character/avatar/AvatarImportPanel.tsx');
 const guidance = read('src/app/character/avatar/AvatarCustomCreatureGuidance.tsx');
 const conversion = read('src/app/character/avatar/AvatarBodyConversionPanel.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 
 check(/CUSTOM_CREATURE_FLOW_CONTRACT_VERSION/.test(domain), 'contract version');
 check(/runFarukLikeOriginalKeepSlice/.test(domain), 'faruk slice');

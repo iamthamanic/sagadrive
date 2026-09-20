@@ -24,7 +24,10 @@ const domain = read('src/domains/character/avatar/body-conversion-flow-v1.ts');
 const index = read('src/domains/character/avatar/index.ts');
 const panel = read('src/app/character/avatar/AvatarBodyConversionPanel.tsx');
 const importPanel = read('src/app/character/avatar/AvatarImportPanel.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 
 check(/planBodyConversion/.test(domain), 'plan');
 check(/listBodyConversionFamilyOptions/.test(domain), 'options');

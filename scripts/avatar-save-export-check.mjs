@@ -20,7 +20,10 @@ function check(cond, msg) {
 const domain = read('src/domains/character/avatar/avatar-save-export.ts');
 const index = read('src/domains/character/avatar/index.ts');
 const service = read('src/infrastructure/character/avatar/character-avatar-export-service.ts');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const migration = read('supabase/migrations/025_character_avatar_export.sql');
 const traitLayers = read('src/domains/character/avatar/trait-layers.ts');
 

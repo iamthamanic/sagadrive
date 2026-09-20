@@ -21,7 +21,10 @@ const domain = read('src/domains/character/avatar/avatar-import.ts');
 const index = read('src/domains/character/avatar/index.ts');
 const service = read('src/infrastructure/character/avatar/character-avatar-import-service.ts');
 const panel = read('src/app/character/avatar/AvatarImportPanel.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const migration = read('supabase/migrations/024_character_avatar_import.sql');
 
 check(/validateAvatarImportBytes/.test(domain), 'authoritative byte validator');

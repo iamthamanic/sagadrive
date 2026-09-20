@@ -22,7 +22,10 @@ const index = read('src/domains/character/avatar/index.ts');
 const entity = read('src/domains/character/domain/character.entity.ts');
 const presets = read('src/domains/character/use-cases/avatar-presets.ts');
 const selector = read('src/app/character/avatar/AvatarSourceSelector.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 
 check(/AVATAR_SOURCE_CONTRACT_VERSION/.test(domain), 'contract version');
 check(/resolveAvatarSource/.test(domain), 'resolve helper');
