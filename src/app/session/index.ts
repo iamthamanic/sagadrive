@@ -8,3 +8,4 @@ export { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstan
 export { SessionAvatarStrip } from './SessionAvatarStrip';
 export { SessionResourceScreen } from './SessionResourceScreen';
 export { useSessions } from './hooks/useSessions';
+export { useSessionRuntime } from './hooks/useSessionRuntime';

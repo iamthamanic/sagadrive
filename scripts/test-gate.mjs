@@ -112,6 +112,14 @@ function checkPlayerTestSessionSecurity() {
   });
 }
 
+function checkPlayerTestRealtimeRuntime() {
+  console.log('Player-test realtime runtime (#297): checking revision, events, snapshot+subscribe...');
+  execFileSync(process.execPath, ['scripts/player-test-realtime-runtime-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkProjectMembershipSecurity() {
   console.log('Project membership security contract: checking RLS and client write paths...');
   execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], {
@@ -1017,6 +1025,7 @@ checkItemEpicAcceptance();
 checkItemRoutingFoundation();
 checkSagaRoutingPublicIdFoundation();
 checkPlayerTestSessionSecurity();
+checkPlayerTestRealtimeRuntime();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();
