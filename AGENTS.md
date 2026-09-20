@@ -75,6 +75,8 @@ src/
 
 **Boundary enforcement:** `scripts/architecture-boundary-check.mjs` — layer import rules + legacy eradication gate.
 
+**Edge CORS:** Edge Functions MUST use `supabase/functions/_shared/cors.ts` (`corsHeaders` / `handleOptions`). Do not set `Access-Control-Allow-Origin` locally — `scripts/edge-cors-shared-check.mjs` (in `test-gate`) fails on new literals (legacy allowlist only until #306).
+
 ### Backend Functions
 ```
 supabase/functions/

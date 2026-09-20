@@ -806,6 +806,14 @@ function checkArchitectureBoundaries() {
   });
 }
 
+function checkEdgeCorsShared() {
+  console.log('Edge CORS shared helper (#305): _shared/cors + no local Origin literals...');
+  execFileSync(process.execPath, ['scripts/edge-cors-shared-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkItemDomainTaxonomy() {
   console.log('Item domain taxonomy & provenance (#134): ItemDefinition owner, normalize/validate...');
   execFileSync(process.execPath, ['scripts/item-domain-taxonomy-check.mjs'], {
@@ -982,6 +990,7 @@ execFileSync('npm', ['run', 'checks'], {
 
 checkChangedDenoFunctions();
 checkArchitectureBoundaries();
+checkEdgeCorsShared();
 checkItemDomainTaxonomy();
 checkSagaDriveItemRulesKernel();
 checkItemDefinitionPersistence();

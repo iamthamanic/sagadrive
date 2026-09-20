@@ -10,8 +10,19 @@ import {
 } from '../_shared/character-lore-provider.ts';
 import { consumePersistentCharacterLoreRateLimit } from '../_shared/character-lore-rate-limit.ts';
 import { canUseWorldLoreReference } from '../_shared/character-lore-access.ts';
+import {
+  corsHeaders,
+  handleOptions,
+  jsonResponse as sharedJsonResponse,
+  type CorsOptions,
+} from '../_shared/cors.ts';
 
 type JsonRecord = Record<string, unknown>;
+
+const CORS_OPTS: CorsOptions = {
+  methods: 'POST, OPTIONS',
+  envKeys: ['CHARACTER_AI_ALLOWED_ORIGIN'],
+};
 
 interface ParsedRequest {
   context: CharacterLorePromptContext;
@@ -52,53 +63,12 @@ function isRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null;
 }
 
-function isLocalDevOrigin(origin: string): boolean {
-  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
-}
-
-/**
- * CORS fail-closed: never default to `*`.
- * - CHARACTER_AI_ALLOWED_ORIGIN=csv of exact origins, or explicit `*` only when intentionally set
- * - Without config: allow localhost/127.0.0.1 only (local Vite)
- */
 function getCorsHeaders(request: Request): HeadersInit {
-  const configured = Deno.env.get('CHARACTER_AI_ALLOWED_ORIGIN')?.trim() ?? '';
-  const requestOrigin = request.headers.get('Origin');
-  const headers: Record<string, string> = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Content-Type': 'application/json',
-    Vary: 'Origin',
-  };
-
-  if (configured === '*') {
-    headers['Access-Control-Allow-Origin'] = '*';
-    return headers;
-  }
-
-  const allowlist = configured
-    .split(',')
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-
-  if (requestOrigin && allowlist.includes(requestOrigin)) {
-    headers['Access-Control-Allow-Origin'] = requestOrigin;
-    return headers;
-  }
-
-  if (!configured && requestOrigin && isLocalDevOrigin(requestOrigin)) {
-    headers['Access-Control-Allow-Origin'] = requestOrigin;
-    return headers;
-  }
-
-  return headers;
+  return corsHeaders(request, CORS_OPTS);
 }
 
 function jsonResponse(request: Request, body: JsonRecord, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: getCorsHeaders(request),
-  });
+  return sharedJsonResponse(request, body, status, CORS_OPTS);
 }
 
 function readString(record: JsonRecord, key: string, maxLength: number): string {
@@ -401,9 +371,8 @@ async function getAuthorizedReferenceContext(
 }
 
 serve(async (request: Request) => {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: getCorsHeaders(request) });
-  }
+  const optionsResponse = handleOptions(request, CORS_OPTS);
+  if (optionsResponse) return optionsResponse;
   if (request.method !== 'POST') {
     return jsonResponse(request, { status: 'error', message: 'Method not allowed' }, 405);
   }
