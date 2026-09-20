@@ -51,6 +51,10 @@ const overflow = read('src/app/character/inventory/InventoryOverflowSection.tsx'
 const summary = read('src/app/character/inventory/InventorySummaryBar.tsx');
 const labels = read('src/app/character/inventory/inventory-ui-labels.ts');
 const editor = read('src/app/character/edit/CharacterEditor.tsx');
+// #324: inventory cluster extracted into useCharacterInventoryEditor — the editor
+// consumes the hook, so responsibilities live in editor + hook combined.
+const editorInventoryHook = read('src/app/character/edit/useCharacterInventoryEditor.ts');
+const editorWiring = `${editor}\n${editorInventoryHook}`;
 const progressionIndex = read('src/app/character/progression/index.ts');
 const allUi = [panel, grid, actions, catalogDialog, personalForm, overflow, summary, labels].join(
   '\n',
@@ -100,9 +104,9 @@ rejectMatch(allUi, /from\(['"]inventory_item_definitions['"]\)/, 'Kein direktes 
 section('4 · CharacterEditor-Verdrahtung');
 requireMatch(editor, /CharacterInventoryV2Panel/, 'Editor rendert CharacterInventoryV2Panel');
 requireMatch(editor, /inventory_v2:\s*inventoryV2/, 'Save-Payload enthält inventory_v2');
-requireMatch(editor, /inventoryV2/, 'Editor hält inventoryV2 State');
-requireMatch(editor, /createEmptyInventory/, 'Neues Inventar über createEmptyInventory');
-requireMatch(editor, /migrateCharacterInventoryToV2/, 'Migration beim Laden wenn Schema ≠ 2');
+requireMatch(editorWiring, /inventoryV2/, 'Editor hält inventoryV2 State');
+requireMatch(editorWiring, /createEmptyInventory/, 'Neues Inventar über createEmptyInventory');
+requireMatch(editorWiring, /migrateCharacterInventoryToV2/, 'Migration beim Laden wenn Schema ≠ 2');
 requireMatch(editor, /onLoadInfoChange/, 'Sidebar-Last über onLoadInfoChange');
 requireMatch(editor, /getAuthenticatedUserId/, 'userId über Auth');
 requireMatch(progressionIndex, /CharacterInventoryV2Panel/, 'progression barrel exportiert V2 Panel');
