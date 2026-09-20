@@ -57,7 +57,7 @@ Minimaler spielbarer Encounter: starten/beenden, Teilnehmer aus PCs + NPC/Creatu
 ## Composition Gate
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-player-test-combat-encounter-v1.md`
-- HEAD_SHA: PENDING_COMMIT
+- HEAD_SHA: 587508dedc93e585249b83b0f0a1181fa121edec
 
 ## Implementation Notes
 ## Implementation Notes

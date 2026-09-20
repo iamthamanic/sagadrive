@@ -4,7 +4,7 @@
 CLEAR
 
 ## HEAD_SHA
-PENDING_COMMIT
+587508dedc93e585249b83b0f0a1181fa121edec
 
 ## Path
 GM/Player UI → `apply_session_runtime_command` (kind combat|damage|condition)
