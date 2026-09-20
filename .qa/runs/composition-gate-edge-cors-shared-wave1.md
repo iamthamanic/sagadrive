@@ -1,13 +1,32 @@
 # Composition Gate — edge-cors-shared-wave1 (#305)
 
-**Verdict:** SKIPPED  
-**Reason:** Single-hop chore — shared CORS helper + CI check; no producer→consumer / outbox / multi-actor hop chain.  
-**HEAD (at write):** 5c756ac3917321d1da1dda08ded6138719df6329  
-**WORKTREE:** CORS shared module, 5 migrated functions, edge-cors-shared-check, test-gate wire, AGENTS.md rule
+- HEAD_SHA: b488712c59146a2df6d19feee8cbc81763b68c8e
+- BASE_SHA: 212bc7c4b05fb2869037fd29dd2362d7358b4adb
+- Date: 2026-09-20
+- Verdict: SKIPPED
 
-## Scope checked
-- `supabase/functions/_shared/cors.ts`
-- 5 wave-1 Edge Functions
-- `scripts/edge-cors-shared-check.mjs`
-- `scripts/test-gate.mjs`
-- `AGENTS.md`
+## Event
+
+Edge Functions adopt shared CORS headers from `_shared/cors.ts`; CI fails on new local `Access-Control-Allow-Origin` literals (wave-1 migrated functions + legacy allowlist).
+
+## Hop chain
+
+Browser/preflight → Edge Function `handleOptions`/`corsHeaders` (`_shared/cors.ts`) → HTTP response headers (no DB/outbox/multi-consumer hop)
+
+## Simulations
+
+| Case | Intended | Composed | Result |
+|------|----------|----------|--------|
+| N-actors | N/A (no shared event fan-out) | Shared header helper only | n/a |
+| Invalid/missing | Unmatched Origin omit / configured-or-star | `corsHeaders` missingOriginPolicy | n/a |
+| Two consumers / crash | N/A | No dual consumers | n/a |
+
+## Flags
+
+| Tag | Severity | Hops | Why local review missed it | Fix |
+|-----|----------|------|----------------------------|-----|
+| (none) | | | | |
+
+## Skip reason
+
+Single-hop backend chore: CORS header policy only — no producer→consumer persistence, outbox, or multi-actor event chain. Backend zone touched solely for shared Origin/Methods helpers + CI allowlist until #306.
