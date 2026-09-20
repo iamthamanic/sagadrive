@@ -1,3 +1,7 @@
+/**
+ * SessionJoin — Create/join play sessions via server-issued codes (#296).
+ * Location: src/app/session/SessionJoin.tsx
+ */
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Button } from '../../shared/ui/button';
@@ -5,6 +9,7 @@ import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
 import { ArrowLeft, Users, Gamepad2, Copy, Check, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
+import { useProjects } from '../project';
 import { useSessions } from './hooks/useSessions';
 import { toast } from 'sonner';
 
@@ -17,17 +22,25 @@ interface SessionJoinProps {
 export function SessionJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: SessionJoinProps) {
   const [sessionCode, setSessionCode] = useState('');
   const [newSessionName, setNewSessionName] = useState('');
-  const [selectedAdventure, setSelectedAdventure] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState('');
   const [copied, setCopied] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [createdSession, setCreatedSession] = useState<{ id: string; code: string } | null>(null);
 
   const { sessions, createSession, joinSession } = useSessions();
+  const { projects } = useProjects();
+  const gmProjects = projects.filter(
+    (project) => project.status === 'active' || project.status === 'paused',
+  );
 
   const handleCreateSession = async () => {
     if (!newSessionName.trim()) {
       toast.error('Bitte gib einen Session-Namen ein');
+      return;
+    }
+    if (!selectedProjectId) {
+      toast.error('Bitte wähle ein Abenteuer (Projekt) aus');
       return;
     }
 
@@ -35,7 +48,7 @@ export function SessionJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: SessionJoinP
     try {
       const session = await createSession({
         name: newSessionName,
-        adventure_id: selectedAdventure || undefined,
+        project_id: selectedProjectId,
       });
 
       if (session) {
@@ -48,7 +61,8 @@ export function SessionJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: SessionJoinP
         }, 2000);
       }
     } catch (err) {
-      toast.error('Fehler beim Erstellen der Session');
+      const message = err instanceof Error ? err.message : 'Fehler beim Erstellen der Session';
+      toast.error(message);
     } finally {
       setIsCreating(false);
     }
@@ -69,7 +83,8 @@ export function SessionJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: SessionJoinP
         onJoinAsPlayer(session.id, session.code);
       }
     } catch (err) {
-      toast.error('Session nicht gefunden oder Fehler beim Beitreten');
+      const message = err instanceof Error ? err.message : 'Session nicht gefunden oder Fehler beim Beitreten';
+      toast.error(message);
     } finally {
       setIsJoining(false);
     }
@@ -143,22 +158,33 @@ export function SessionJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: SessionJoinP
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="adventure">Abenteuer wählen (optional)</Label>
+                    <Label htmlFor="project">Abenteuer (Projekt) *</Label>
                     <select
-                      id="adventure"
-                      value={selectedAdventure}
-                      onChange={(e) => setSelectedAdventure(e.target.value)}
+                      id="project"
+                      value={selectedProjectId}
+                      onChange={(e) => setSelectedProjectId(e.target.value)}
                       className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm md:text-base"
                       disabled={isCreating}
                     >
-                      <option value="">Neues Abenteuer</option>
+                      <option value="">Projekt wählen</option>
+                      {gmProjects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                          {project.publicId ? ` (${project.publicId})` : ''}
+                        </option>
+                      ))}
                     </select>
+                    {gmProjects.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">
+                        Lege zuerst ein Abenteuer unter Projekte an, um eine Session zu starten.
+                      </p>
+                    ) : null}
                   </div>
 
                   <Button 
                     className="w-full" 
                     onClick={handleCreateSession}
-                    disabled={!newSessionName.trim() || isCreating}
+                    disabled={!newSessionName.trim() || !selectedProjectId || isCreating}
                   >
                     {isCreating ? (
                       <>

@@ -1,11 +1,23 @@
-// Session DTOs
+/**
+ * session.types — Play-session DTOs/VMs for SessionJoin / session-service.
+ * Location: src/domains/session/contracts/session.types.ts
+ * Note: Project saga sessions in domains/project use a separate SessionDto shape.
+ */
+import type { PlaySessionStatus } from './session-lifecycle';
+
+export type { PlaySessionStatus };
+
+/** Raw row shape returned by play-session RPCs / selects (snake_case). */
 export interface SessionDto {
   id: string;
   code: string;
-  name: string;
+  name: string | null;
+  /** Adventure/project binding — maps from `project_id`. */
   adventure_id: string | null;
+  project_id: string | null;
+  public_id?: string | null;
   gm_user_id: string;
-  status: 'waiting' | 'active' | 'paused' | 'completed';
+  status: PlaySessionStatus;
   created_at: string;
   updated_at: string;
   started_at: string | null;
@@ -21,9 +33,10 @@ export interface SessionPlayerDto {
   joined_at: string;
 }
 
-// Create DTOs
 export interface CreateSessionDto {
   name: string;
+  /** Prefer `project_id`; `adventure_id` kept as alias for SessionJoin. */
+  project_id?: string;
   adventure_id?: string;
 }
 
@@ -32,14 +45,15 @@ export interface JoinSessionDto {
   character_id?: string;
 }
 
-// View Models
 export interface SessionVm {
   id: string;
   code: string;
   name: string;
   adventureId: string | null;
+  projectId: string | null;
+  publicId: string | null;
   gmUserId: string;
-  status: 'waiting' | 'active' | 'paused' | 'completed';
+  status: PlaySessionStatus;
   createdAt: Date;
   updatedAt: Date;
   startedAt: Date | null;
