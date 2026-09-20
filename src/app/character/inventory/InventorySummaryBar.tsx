@@ -103,14 +103,16 @@ export function InventorySummaryBar({
               id="character-abstract-resources"
               className="w-28"
               data-character-resources
+              data-resources-value={String(resources)}
               aria-label="Charakter-Ressourcen"
             >
-              <SelectValue />
+              {/* String() so level 0 is visible (raw {0} can collapse in SelectValue). */}
+              <SelectValue placeholder="—">{String(resources)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {ABSTRACT_RESOURCE_LEVELS.map((level) => (
                 <SelectItem key={level} value={String(level)}>
-                  {level}
+                  {String(level)}
                 </SelectItem>
               ))}
             </SelectContent>

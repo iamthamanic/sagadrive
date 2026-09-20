@@ -46,9 +46,23 @@ async function openInventory(page: Page) {
 }
 
 async function setResources(page: Page, level: number) {
-  await page.locator('[data-character-resources]').click();
-  await page.getByRole('option', { name: String(level), exact: true }).click();
-  await expect(page.locator('[data-character-resources]')).toContainText(String(level));
+  const trigger = page.locator('[data-character-resources]');
+  await trigger.click();
+  const listbox = page.getByRole('listbox');
+  await expect(listbox).toBeVisible({ timeout: 5_000 });
+  await listbox.getByRole('option', { name: String(level), exact: true }).click();
+  await expect(trigger).toHaveAttribute('data-resources-value', String(level), {
+    timeout: 10_000,
+  });
+  await expect(trigger).toContainText(String(level), { timeout: 10_000 });
+}
+
+async function closeCatalogIfOpen(page: Page) {
+  const catalog = page.locator('[data-inventory-catalog-dialog]');
+  if (await catalog.isVisible().catch(() => false)) {
+    await page.keyboard.press('Escape').catch(() => undefined);
+    await catalog.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => undefined);
+  }
 }
 
 test.beforeAll(() => {
@@ -63,6 +77,10 @@ test.describe('#32 validate-gear-resources-load', () => {
     await ensureLoggedIn(page);
     await openInventory(page);
 
+    await expect(page.locator('[data-character-resources]')).toHaveAttribute(
+      'data-resources-value',
+      '3',
+    );
     await expect(page.locator('[data-character-resources]')).toContainText('3');
     await expect(page.locator('[data-inventory-load]')).toBeVisible();
     await expect(page.locator('[data-inventory-load-status="ok"]')).toBeVisible();
@@ -72,7 +90,6 @@ test.describe('#32 validate-gear-resources-load', () => {
     });
 
     await setResources(page, 0);
-    await expect(page.locator('[data-character-resources]')).toContainText('0');
     await setResources(page, 3);
 
     await page.getByRole('button', { name: /Gegenstand hinzufügen/i }).first().click();
@@ -96,6 +113,7 @@ test.describe('#32 validate-gear-resources-load', () => {
     }
 
     // Resources 0 → any cost>0 item should open blocked affordability (or free if cost 0).
+    await closeCatalogIfOpen(page);
     await setResources(page, 0);
     await page.getByRole('button', { name: /Gegenstand hinzufügen/i }).first().click();
     await expect(catalog).toBeVisible();
@@ -110,10 +128,16 @@ test.describe('#32 validate-gear-resources-load', () => {
       const kind = await afford.getAttribute('data-affordability-kind');
       if (kind === 'blocked-needs-gift-override') {
         await page.locator('[data-affordability-gift]').click();
-        await expect(page.locator('[data-character-resources]')).toContainText('0');
+        await expect(page.locator('[data-character-resources]')).toHaveAttribute(
+          'data-resources-value',
+          '0',
+        );
       } else if (kind === 'require-purchase-choice') {
         await page.locator('[data-affordability-purchase]').click();
-        await expect(page.locator('[data-character-resources]')).toContainText('0');
+        await expect(page.locator('[data-character-resources]')).toHaveAttribute(
+          'data-resources-value',
+          '0',
+        );
       }
       await page.screenshot({
         path: path.join(EVIDENCE, '03-affordability.png'),
@@ -121,10 +145,14 @@ test.describe('#32 validate-gear-resources-load', () => {
       });
     } else {
       // Cost-0 item: free add, resources unchanged.
-      await expect(page.locator('[data-character-resources]')).toContainText('0');
+      await expect(page.locator('[data-character-resources]')).toHaveAttribute(
+        'data-resources-value',
+        '0',
+      );
     }
 
     // Equal-cost purchase path: set resources to match a selected item cost badge if present.
+    await closeCatalogIfOpen(page);
     await setResources(page, 1);
     await page.getByRole('button', { name: /Gegenstand hinzufügen/i }).first().click();
     await expect(catalog).toBeVisible();
@@ -137,7 +165,10 @@ test.describe('#32 validate-gear-resources-load', () => {
         timeout: 10_000,
       });
       await page.locator('[data-affordability-purchase]').click();
-      await expect(page.locator('[data-character-resources]')).toContainText('0');
+      await expect(page.locator('[data-character-resources]')).toHaveAttribute(
+        'data-resources-value',
+        '0',
+      );
       await page.screenshot({
         path: path.join(EVIDENCE, '04-purchase-minus-one.png'),
         fullPage: true,
@@ -145,6 +176,7 @@ test.describe('#32 validate-gear-resources-load', () => {
     }
 
     // Save / reload resources when Speichern succeeds.
+    await closeCatalogIfOpen(page);
     await setResources(page, 4);
     const saveBtn = page.getByRole('button', { name: /Speichern|Entwurf speichern/i }).first();
     await saveBtn.click();
@@ -155,9 +187,11 @@ test.describe('#32 validate-gear-resources-load', () => {
       const inventarTab = page.getByRole('tab', { name: /Inventar/i });
       if (await inventarTab.isVisible().catch(() => false)) {
         await inventarTab.click();
-        await expect(page.locator('[data-character-resources]')).toContainText('4', {
-          timeout: 15_000,
-        });
+        await expect(page.locator('[data-character-resources]')).toHaveAttribute(
+          'data-resources-value',
+          '4',
+          { timeout: 15_000 },
+        );
       }
     }
 
@@ -196,10 +230,15 @@ test.describe('#32 validate-gear-resources-load', () => {
       return;
     }
 
-    // Soft: add several items; if still under cap, still pass (script covers double-cap math).
+    // Soft: add several items from the already-open catalog (do not re-click
+    // "Gegenstand hinzufügen" while the dialog covers the trigger).
     for (let i = 0; i < 6; i += 1) {
-      await page.getByRole('button', { name: /Gegenstand hinzufügen/i }).first().click();
-      if (!(await catalog.isVisible().catch(() => false))) break;
+      if (!(await catalog.isVisible().catch(() => false))) {
+        const openAdd = page.getByRole('button', { name: /Gegenstand hinzufügen/i }).first();
+        if (!(await openAdd.isVisible().catch(() => false))) break;
+        await openAdd.click();
+        if (!(await catalog.isVisible().catch(() => false))) break;
+      }
       const buttons = catalog.getByRole('button', { name: /^Hinzufügen$/i });
       if ((await buttons.count()) === 0) break;
       await buttons.first().click();
@@ -209,7 +248,11 @@ test.describe('#32 validate-gear-resources-load', () => {
       if (await afford.isVisible().catch(() => false)) {
         await page.locator('[data-affordability-gift]').click();
       }
-      await page.keyboard.press('Escape').catch(() => undefined);
+      // Close catalog if still open so next iteration can re-open cleanly.
+      if (await catalog.isVisible().catch(() => false)) {
+        await page.keyboard.press('Escape').catch(() => undefined);
+        await catalog.waitFor({ state: 'hidden', timeout: 3_000 }).catch(() => undefined);
+      }
     }
 
     await expect(page.locator('[data-inventory-load-status]')).toBeVisible();
