@@ -152,6 +152,14 @@ function checkPlayerTestPreparedAdventureFixture() {
   });
 }
 
+function checkPlayerTestCombatEncounter() {
+  console.log('Player-test combat encounter V1 (#300): checking encounter contract + authoritative combat RPC...');
+  execFileSync(process.execPath, ['scripts/player-test-combat-encounter-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkProjectMembershipSecurity() {
   console.log('Project membership security contract: checking RLS and client write paths...');
   execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], {
@@ -1062,6 +1070,7 @@ checkPlayerTestPlayerPanel();
 checkPlayerTestSharedRolls();
 checkPlayerTestSharedScenePresentation();
 checkPlayerTestPreparedAdventureFixture();
+checkPlayerTestCombatEncounter();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();

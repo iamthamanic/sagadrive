@@ -125,6 +125,13 @@ export function PlayerPanel({
               <p className="text-xs text-muted-foreground">
                 Szene: {model.sceneId ?? '—'}
                 {model.combatActive ? ' · Kampf aktiv' : ''}
+                {model.encounterRound !== null
+                  ? ` · Runde ${model.encounterRound}`
+                  : ''}
+                {model.encounterCurrentName
+                  ? ` · Zug: ${model.encounterCurrentName}`
+                  : ''}
+                {model.encounterIsMyTurn ? ' · Dein Zug' : ''}
                 {model.checkTarget !== null ? ` · Zielwert ${model.checkTarget}` : ''}
               </p>
             </div>

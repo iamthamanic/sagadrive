@@ -1,5 +1,5 @@
 /**
- * GamemasterPanel — Vertical slice GM storytelling controls + NPC instances (#201/#301).
+ * GamemasterPanel — Vertical slice GM storytelling + NPC + combat encounter (#201/#300/#301).
  * Location: src/app/session/GamemasterPanel.tsx
  */
 import { useState } from 'react';
@@ -19,7 +19,9 @@ import { SessionAvatarStrip } from './SessionAvatarStrip';
 import { PlayerAvatarPanel } from '../character';
 import { createCharacterStudioAvatar } from '../../domains/character/use-cases/avatar-presets';
 import { SharedSceneGmControls } from './SharedSceneGmControls';
+import { CombatEncounterGmPanel } from './CombatEncounterGmPanel';
 import { useSharedScenePresentation } from './hooks/useSharedScenePresentation';
+import { useCombatEncounter } from './hooks/useCombatEncounter';
 
 type GamemasterPanelProps = {
   sagaPublicId?: string | null;
@@ -47,6 +49,11 @@ export function GamemasterPanel({
     sagaPublicId: sceneRuntime?.sagaPublicId ?? '',
     sessionPublicId: sceneRuntime?.sessionPublicId ?? '',
   });
+  const combat = useCombatEncounter({
+    sagaPublicId: sceneRuntime?.sagaPublicId ?? '',
+    sessionPublicId: sceneRuntime?.sessionPublicId ?? '',
+  });
+  const activeProjectId = gmProjects[0]?.id ?? null;
   // Demo live avatar for Session Face Tracking surface (#244) — same runtime as Editor.
   const sessionDemoAvatar = createCharacterStudioAvatar({
     race: 'human',
@@ -173,9 +180,12 @@ export function GamemasterPanel({
         <Card>
           <CardContent className="pt-4 md:pt-6">
             <Tabs defaultValue="npcs">
-              <TabsList className="grid w-full grid-cols-5 h-auto">
+              <TabsList className="grid w-full grid-cols-6 h-auto">
                 <TabsTrigger value="npcs" className="text-xs md:text-sm py-2" data-gm-tab-npcs>
                   NPCs
+                </TabsTrigger>
+                <TabsTrigger value="combat" className="text-xs md:text-sm py-2" data-gm-tab-combat>
+                  Kampf
                 </TabsTrigger>
                 <TabsTrigger value="scenes" className="text-xs md:text-sm py-2">Szenen</TabsTrigger>
                 <TabsTrigger value="characters" className="text-xs md:text-sm py-2">Chars</TabsTrigger>
@@ -188,6 +198,37 @@ export function GamemasterPanel({
                   <h4 className="mb-3 text-sm md:text-base">NPCs & Kreaturen im Abenteuer</h4>
                   <AdventureNpcCreatureInstancesPanel gmProjects={gmProjects} />
                 </div>
+              </TabsContent>
+
+              <TabsContent value="combat" className="space-y-3 md:space-y-4">
+                {sceneRuntime ? (
+                  <CombatEncounterGmPanel
+                    projectId={activeProjectId}
+                    roster={combat.roster}
+                    encounter={combat.encounter}
+                    combatActive={combat.combatActive}
+                    isBusy={combat.isBusy || combat.isLoading}
+                    error={combat.error}
+                    onStart={async (participants) =>
+                      combat.runCombat({ action: 'start', participants })
+                    }
+                    onEnd={async () => combat.runCombat({ action: 'end' })}
+                    onNextTurn={async () => combat.runCombat({ action: 'nextTurn' })}
+                    onDamage={async (participantId, amount, mode) =>
+                      combat.applyDamage({ participantId, amount, mode })
+                    }
+                    onCondition={async (participantId, op, condition) =>
+                      combat.applyCondition({ participantId, op, condition })
+                    }
+                    onSpendAction={async (participantId, slot) =>
+                      combat.runCombat({ action: 'spendAction', participantId, slot })
+                    }
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Öffne die Live-Session über die Saga-Route, um den Kampf zu steuern.
+                  </p>
+                )}
               </TabsContent>
 
               <TabsContent value="scenes" className="space-y-3 md:space-y-4">
