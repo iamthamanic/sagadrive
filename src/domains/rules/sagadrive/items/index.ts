@@ -9,3 +9,4 @@ export * from './types';
 export * from './validators';
 export * from './carry-capacity';
 export * from './tool-rules';
+export * from './resource-affordability';

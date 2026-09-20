@@ -39,6 +39,10 @@ import {
 import { InventoryMoveTargetSheet } from './InventoryMoveTargetSheet';
 import { InventoryOverflowSection } from './InventoryOverflowSection';
 import { InventorySummaryBar } from './InventorySummaryBar';
+import {
+  DEFAULT_ABSTRACT_RESOURCE_LEVEL,
+  type AbstractResourceLevel,
+} from '../../../domains/rules/sagadrive/items';
 
 export interface InventoryLoadInfo {
   totalLoad: number;
@@ -52,6 +56,9 @@ export interface CharacterInventoryV2PanelProps {
   characterId: string | null;
   userId: string;
   onLoadInfoChange?: (info: InventoryLoadInfo) => void;
+  /** Character abstract resources 0–5 (#32). */
+  resources?: AbstractResourceLevel;
+  onResourcesChange?: (next: AbstractResourceLevel) => void;
 }
 
 type InteractionMode =
@@ -100,7 +107,14 @@ export function CharacterInventoryV2Panel({
   characterId,
   userId,
   onLoadInfoChange,
+  resources: resourcesProp,
+  onResourcesChange: onResourcesChangeProp,
 }: CharacterInventoryV2PanelProps) {
+  const [localResources, setLocalResources] = useState<AbstractResourceLevel>(
+    DEFAULT_ABSTRACT_RESOURCE_LEVEL,
+  );
+  const resources = resourcesProp ?? localResources;
+  const onResourcesChange = onResourcesChangeProp ?? setLocalResources;
   const [catalog, setCatalog] = useState<CharacterItemCatalog | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogError, setCatalogError] = useState('');
@@ -471,6 +485,8 @@ export function CharacterInventoryV2Panel({
         totalLoad={totalLoad}
         strength={strength}
         overflowCount={state.legacyOverflow.length}
+        resources={resources}
+        onResourcesChange={onResourcesChange}
       />
 
       {isNarrow ? (
@@ -522,6 +538,8 @@ export function CharacterInventoryV2Panel({
         catalog={catalog}
         state={state}
         strength={strength}
+        resources={resources}
+        onResourcesChange={onResourcesChange}
         onApplyResult={apply}
         onRefuse={refuse}
         onCatalogRefresh={refreshCatalog}

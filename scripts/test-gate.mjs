@@ -664,6 +664,14 @@ function checkCharacterEditorRulesUxValidation() {
   });
 }
 
+function checkGearResourcesLoadValidation() {
+  console.log('Gear/resources/load validation (#32): tools, traits, Traglast, affordability...');
+  execFileSync(process.execPath, ['scripts/validate-gear-resources-load.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkDriveMomentumValidation() {
   console.log('Drive/momentum validation (#26): deterministic §2.10–2.12/§16.3 audit...');
   execFileSync(process.execPath, ['scripts/validate-drive-momentum.mjs'], {
@@ -1071,6 +1079,7 @@ checkNoncombatProjectsSocialValidation();
 checkConditionsResistancesValidation();
 checkTravelChaseVehiclesValidation();
 checkCharacterEditorRulesUxValidation();
+checkGearResourcesLoadValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 

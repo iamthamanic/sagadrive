@@ -20,6 +20,11 @@ import {
   normalizeSkills,
   normalizeTextBlocks,
 } from '../../domains/character/use-cases/normalize-character';
+import {
+  createDefaultAbstractResources,
+  parseCharacterAbstractResources,
+  serializeCharacterAbstractResources,
+} from '../../domains/rules/sagadrive/items';
 import type { CharacterDto } from './character.persistence';
 import {
   assertWritableInventoryV2,
@@ -94,6 +99,7 @@ export class SupabaseCharacterRepository {
       inventory: normalizeInventory(dto.inventory),
       inventoryV2: inventoryRead.state,
       inventorySchemaVersion: inventoryRead.authoritativeV2 ? 2 : 1,
+      abstractResources: parseCharacterAbstractResources(dto.resources),
       emotionProfiles: dto.emotion_profiles || [],
       portraitUrl: dto.portrait_url || undefined,
       createdAt: new Date(dto.created_at),
@@ -199,6 +205,9 @@ export class SupabaseCharacterRepository {
       ...(inventoryV2
         ? { inventory_v2: inventoryV2, inventory_schema_version: 2 as const }
         : { inventory_schema_version: 1 as const }),
+      resources: serializeCharacterAbstractResources(
+        payload.abstractResources ?? createDefaultAbstractResources(),
+      ),
       emotion_profiles: [],
       portrait_url: payload.portrait_url || undefined,
     };
@@ -243,6 +252,7 @@ export class SupabaseCharacterRepository {
     const {
       inventory_v2: inventoryV2Patch,
       inventory: inventoryPatch,
+      abstractResources: abstractResourcesPatch,
       // Callers must not flip the marker without a validated inventory_v2 write.
       inventory_schema_version: _ignoredSchemaVersion,
       ...safePayload
@@ -263,6 +273,9 @@ export class SupabaseCharacterRepository {
       ...(inventoryPatch ? { inventory: normalizeInventory(inventoryPatch) } : {}),
       ...(inventoryV2
         ? { inventory_v2: inventoryV2, inventory_schema_version: 2 as const }
+        : {}),
+      ...(abstractResourcesPatch
+        ? { resources: serializeCharacterAbstractResources(abstractResourcesPatch) }
         : {}),
       ...(typeof payload.notes === 'string' ? { notes: payload.notes.trim() || null } : {}),
       updated_at: new Date().toISOString(),

@@ -79,7 +79,7 @@ mustInclude(
 
 mustInclude(
   'src/domains/rules/sagadrive/items/index.ts',
-  ['./types', './validators', './carry-capacity', './tool-rules'],
+  ['./types', './validators', './carry-capacity', './tool-rules', './resource-affordability'],
   'items slice barrel',
 );
 

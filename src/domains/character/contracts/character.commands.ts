@@ -12,6 +12,7 @@ import type {
 } from '../domain/character.entity';
 import type { SagaDriveProfileDto } from '../domain/sagadrive-profile.entity';
 import type { InventoryState } from '../inventory-v2';
+import type { CharacterAbstractResources } from '../../rules/sagadrive/items';
 import type { CharacterSheetStatus } from './character.views';
 
 export interface CreateCharacterDto {
@@ -37,6 +38,8 @@ export interface CreateCharacterDto {
   abilities?: AbilityDto[];
   inventory?: ItemDto[];
   inventory_v2?: InventoryState;
+  /** Abstract resources 0–5; serialized into `characters.resources` JSONB. */
+  abstractResources?: CharacterAbstractResources;
   portrait_url?: string;
 }
 
@@ -63,5 +66,7 @@ export interface UpdateCharacterDto {
   inventory?: ItemDto[];
   /** Writing inventory_v2 always sets schema version 2; the marker is not caller-controlled. */
   inventory_v2?: InventoryState;
+  /** Abstract resources 0–5; serialized into `characters.resources` JSONB. */
+  abstractResources?: CharacterAbstractResources;
   portrait_url?: string;
 }

@@ -58,6 +58,14 @@ import {
   inventoryCarryCapacity,
 } from './inventory-ui-labels';
 import { PersonalItemFormDialog } from './PersonalItemFormDialog';
+import { InventoryAffordabilityDialog } from './InventoryAffordabilityDialog';
+import {
+  applyPurchaseMode,
+  resolveAffordability,
+  type AbstractResourceLevel,
+  type AffordabilityDecision,
+  type PurchaseMode,
+} from '../../../domains/rules/sagadrive/items';
 
 export interface InventoryCatalogDialogProps {
   open: boolean;
@@ -65,6 +73,9 @@ export interface InventoryCatalogDialogProps {
   catalog: CharacterItemCatalog | null;
   state: InventoryState;
   strength: number;
+  /** Character abstract resources 0–5 for affordability (#32). */
+  resources: AbstractResourceLevel;
+  onResourcesChange: (next: AbstractResourceLevel) => void;
   onApplyResult: (next: InventoryState) => void;
   onRefuse: (reason: string) => void;
   onCatalogRefresh: () => void;
@@ -213,6 +224,8 @@ export function InventoryCatalogDialog({
   catalog,
   state,
   strength,
+  resources,
+  onResourcesChange,
   onApplyResult,
   onRefuse,
   onCatalogRefresh,
@@ -228,6 +241,10 @@ export function InventoryCatalogDialog({
   const [quantity, setQuantity] = useState(1);
   const [personalOpen, setPersonalOpen] = useState(false);
   const [editingPersonal, setEditingPersonal] = useState<ItemDefinition | null>(null);
+  const [pendingAffordability, setPendingAffordability] = useState<{
+    decision: AffordabilityDecision;
+    itemName: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -287,18 +304,40 @@ export function InventoryCatalogDialog({
     ? previewAdd(state, catalog.lookup, selected.id, quantity)
     : null;
 
-  const handleAdd = () => {
+  const commitAdd = (mode: PurchaseMode | 'free') => {
     if (!selected || !catalog) return;
     const result = addItems(state, catalog.lookup, selected.id, quantity);
     if (result.ok === false) {
       onRefuse(result.reason);
+      setPendingAffordability(null);
       return;
+    }
+    if (mode === 'purchase' && pendingAffordability) {
+      onResourcesChange(
+        applyPurchaseMode(resources, 'purchase', pendingAffordability.decision),
+      );
     }
     const previewResult = previewAdd(state, catalog.lookup, selected.id, quantity);
     onApplyResult(result.state);
     onHighlightSlots(previewResult.affectedSlots);
+    setPendingAffordability(null);
     setSelected(null);
     onOpenChange(false);
+  };
+
+  const handleAdd = () => {
+    if (!selected || !catalog) return;
+    const normalized = normalizeItemDefinition(selected);
+    const decision = resolveAffordability(normalized.cost, resources);
+    if (decision.kind === 'allow-free') {
+      commitAdd('free');
+      return;
+    }
+    setPendingAffordability({ decision, itemName: normalized.name });
+  };
+
+  const handleAffordabilityConfirm = (mode: PurchaseMode) => {
+    commitAdd(mode);
   };
 
   const tabCount = 2 + (hasWorld ? 1 : 0) + (hasWorld && hasStandard ? 1 : 0);
@@ -550,6 +589,14 @@ export function InventoryCatalogDialog({
         onOpenChange={setPersonalOpen}
         editing={editingPersonal}
         onSaved={onCatalogRefresh}
+      />
+
+      <InventoryAffordabilityDialog
+        open={Boolean(pendingAffordability)}
+        decision={pendingAffordability?.decision ?? null}
+        itemName={pendingAffordability?.itemName ?? ''}
+        onCancel={() => setPendingAffordability(null)}
+        onConfirm={handleAffordabilityConfirm}
       />
     </>
   );
