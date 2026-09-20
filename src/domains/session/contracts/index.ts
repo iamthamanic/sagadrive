@@ -5,3 +5,4 @@
 export * from './session.types';
 export * from './session-lifecycle';
 export * from './session-runtime';
+export * from './player-panel';
