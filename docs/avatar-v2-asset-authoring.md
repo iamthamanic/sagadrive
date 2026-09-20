@@ -18,8 +18,12 @@ Reproduzierbarer Workflow **Generate → Select → Normalize → Validate → P
 
 ## Visuelle Richtung (Golden)
 
-- Adult stylized, SagaDrive MToon
-- Richtung: Palworld × Avatar/Korra — **keine Chibi-Anatomie**
+Kanonisch: [`docs/character-visual-styleguide.md`](character-visual-styleguide.md)
+
+- Adult stylized game look, SagaDrive MToon
+- Richtung: **Palworld × Overwatch, soft-real** (leichte Real-Anatomie, kein Photoreal, kein Chibi)
+- Golden refs: `assets/species-3d/human/golden/human-{male|female}-style-ref.png`
+- Style-Tag: `palworld-overwatch-soft-real` (legacy alias still accepted: `palworld-korra-direction`)
 - Ausgabequalität = technische + visuelle Kriterien in `DEFAULT_ASSET_AUTHORING_GOLDEN_CRITERIA`
 
 ## Manifest Pflichtfelder

@@ -365,6 +365,7 @@ export function CharacterEditor() {
     characterRace,
     characterName,
     onCharacterRaceChange: setCharacterRace,
+    genderReading,
   });
 
   const {
@@ -1285,7 +1286,11 @@ export function CharacterEditor() {
                     pollHealth={meshyUi.pollHealth}
                     statusLabel={
                       meshyUi.job.status === 'rigging'
-                        ? 'Modell wird heruntergeladen…'
+                        ? meshyUi.displayProgress >= 99
+                          ? 'Modell wird gespeichert…'
+                          : meshyUi.displayProgress >= 95
+                            ? 'Skelett wird vorbereitet…'
+                            : 'Modell wird optimiert…'
                         : meshyUi.job.status === 'queued'
                           ? 'In Warteschlange…'
                           : meshyUi.displayProgress >= 95

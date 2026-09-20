@@ -1,0 +1,52 @@
+{
+  "contractVersion": "SagaDriveSpecies3dPilotV1",
+  "speciesId": "human",
+  "labelDe": "Mensch",
+  "bodyFamily": "standard",
+  "styleGuide": "docs/character-visual-styleguide.md",
+  "styleTag": "palworld-overwatch-soft-real",
+  "goldenStyleRefs": {
+    "male": "golden/human-male-style-ref.png",
+    "female": "golden/human-female-style-ref.png"
+  },
+  "productModeNote": "Underwear base from golden soft-real refs (v=softreal2). Retexture used golden image_style to avoid denim drift.",
+  "quality": {
+    "aiModel": "meshy-7",
+    "textureResolution": "8k",
+    "poseMode": "t-pose",
+    "topology": "quad",
+    "targetPolycountRemesh": 40000,
+    "pbr": true,
+    "retexture": true
+  },
+  "variants": {
+    "male": {
+      "refImage": "golden/human-male-style-ref.png",
+      "previewGlb": "human-male-preview.glb",
+      "riggedGlb": "human-male.glb",
+      "publicPath": "/assets/avatars/species/human-male.glb?v=softreal2",
+      "heightMeters": 1.75,
+      "tasks": {
+        "imageTo3d": "01a0bfc9-1844-7387-97bb-6a2283250535",
+        "remesh": "01a0bfca-cf9d-70d0-ba72-634e96e75f12",
+        "retexture": "01a0bfd5-3921-7450-b424-2a66409168d6",
+        "rigging": "01a0bfd8-f70f-755a-b58b-9996f7e7d81d"
+      }
+    },
+    "female": {
+      "refImage": "golden/human-female-style-ref.png",
+      "previewGlb": "human-female-preview.glb",
+      "riggedGlb": "human-female.glb",
+      "publicPath": "/assets/avatars/species/human-female.glb?v=softreal2",
+      "heightMeters": 1.65,
+      "tasks": {
+        "imageTo3d": "01a0bfc9-1849-777e-b152-8b7d437fc7dd",
+        "remesh": "01a0bfca-d164-751e-9ebc-2df9d7fbb404",
+        "retexture": "01a0bfd5-39ce-7510-aaa5-ca620415f1d5",
+        "rigging": "01a0bfd8-f7e8-7478-a6a5-10c9c2e9a731"
+      }
+    }
+  },
+  "createdAt": "2026-09-20",
+  "updatedAt": "2026-09-20Tsoftreal2"
+}

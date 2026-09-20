@@ -219,6 +219,19 @@ function jobKeepMaster(job: JsonRecord): boolean {
   return settings?.keepMaster === true;
 }
 
+/** Soft pipeline checkpoints in generation_settings.pipeline (no extra columns). */
+function jobPipelineFlags(job: JsonRecord): JsonRecord {
+  const gs = isRecord(job.generation_settings) ? job.generation_settings : null;
+  return gs && isRecord(gs.pipeline) ? gs.pipeline : {};
+}
+
+function withPipelineFlag(job: JsonRecord, key: string, value: boolean): JsonRecord {
+  const base = isRecord(job.generation_settings) ? { ...job.generation_settings } : {};
+  const pipeline = isRecord(base.pipeline) ? { ...base.pipeline } : {};
+  pipeline[key] = value;
+  return { ...base, pipeline };
+}
+
 /** In-flight claim tokens so concurrent polls do not create duplicate paid Meshy tasks. */
 const PIPELINE_CLAIM_PREFIX = 'claim:';
 
@@ -786,7 +799,14 @@ serve(async (request) => {
         }, request);
       }
 
-      // Second+ polls: optional remesh → Meshy Auto-Rig → download rigged GLB + upload.
+      // Second+ polls: optional remesh → Meshy Auto-Rig → (later poll) download + upload.
+      // pending_glb_url means Auto-Rig already succeeded — materialize alone this turn.
+      const pendingGlbUrl =
+        typeof current.pending_glb_url === 'string' && current.pending_glb_url.trim()
+          ? current.pending_glb_url.trim()
+          : '';
+      let glbDownloadUrl = pendingGlbUrl;
+
       let meshSourceTaskId =
         typeof current.provider_task_id === 'string' && current.provider_task_id.trim()
           ? current.provider_task_id.trim()
@@ -796,7 +816,7 @@ serve(async (request) => {
           ? current.remesh_task_id.trim()
           : '';
 
-      if (existingRemeshId) {
+      if (!glbDownloadUrl && existingRemeshId) {
         if (isPipelineClaimId(existingRemeshId)) {
           return json(200, {
             status: 'ok',
@@ -861,7 +881,38 @@ serve(async (request) => {
           }, request);
         }
         meshSourceTaskId = existingRemeshId;
-      } else {
+        // Split: remesh getTask success and Auto-Rig create never share one isolate turn.
+        const hasRigAlready =
+          typeof current.rig_task_id === 'string' && current.rig_task_id.trim().length > 0;
+        const remeshAcked = jobPipelineFlags(current).remeshAcked === true;
+        if (!hasRigAlready && !remeshAcked) {
+          const nextSettings = withPipelineFlag(current, 'remeshAcked', true);
+          await fetch(
+            `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+            {
+              method: 'PATCH',
+              headers: serviceHeaders,
+              body: JSON.stringify({
+                status: 'rigging',
+                progress: 94,
+                generation_settings: nextSettings,
+                error_message: null,
+                updated_at: new Date().toISOString(),
+              }),
+            },
+          );
+          return json(200, {
+            status: 'ok',
+            job: {
+              ...current,
+              status: 'rigging',
+              progress: 94,
+              generation_settings: nextSettings,
+              error_message: null,
+            },
+          }, request);
+        }
+      } else if (!glbDownloadUrl) {
         const contentLength = await probeMeshyGlbContentLength(glbUrl).catch(() => null);
         const keepMaster = jobKeepMaster(current);
         const oversized =
@@ -905,10 +956,23 @@ serve(async (request) => {
                       headers: serviceHeaders,
                       body: JSON.stringify({
                         master_storage_path: masterPath,
+                        status: 'rigging',
+                        progress: 91,
                         updated_at: new Date().toISOString(),
                       }),
                     },
                   );
+                  // Split: master upload and remesh create never share one isolate turn.
+                  return json(200, {
+                    status: 'ok',
+                    job: {
+                      ...current,
+                      master_storage_path: masterPath,
+                      status: 'rigging',
+                      progress: 91,
+                      error_message: null,
+                    },
+                  }, request);
                 } else {
                   console.error('meshy avatar master upload failed', await uploadMaster.text());
                 }
@@ -1012,6 +1076,8 @@ serve(async (request) => {
       }
 
       // Auto-Rig (Meshy /openapi/v1/rigging) — required before store; #6 still owns capabilities.
+      // Skip when pending_glb_url already set (download-only turn).
+      if (!glbDownloadUrl) {
       const existingRigId =
         typeof current.rig_task_id === 'string' && current.rig_task_id.trim()
           ? current.rig_task_id.trim()
@@ -1024,7 +1090,6 @@ serve(async (request) => {
         }, request);
       }
 
-      let glbDownloadUrl = '';
       if (existingRigId) {
         if (isPipelineClaimId(existingRigId)) {
           return json(200, {
@@ -1082,7 +1147,31 @@ serve(async (request) => {
             },
           }, request);
         }
-        glbDownloadUrl = rigTask.riggedGlbUrl;
+        // Split: persist CDN URL and return — download+upload on the next poll alone.
+        await fetch(
+          `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+          {
+            method: 'PATCH',
+            headers: serviceHeaders,
+            body: JSON.stringify({
+              status: 'rigging',
+              progress: 99,
+              pending_glb_url: rigTask.riggedGlbUrl,
+              error_message: null,
+              updated_at: new Date().toISOString(),
+            }),
+          },
+        );
+        return json(200, {
+          status: 'ok',
+          job: {
+            ...current,
+            status: 'rigging',
+            progress: 99,
+            pending_glb_url: rigTask.riggedGlbUrl,
+            error_message: null,
+          },
+        }, request);
       } else {
         if (!meshSourceTaskId) {
           await fetch(
@@ -1198,6 +1287,31 @@ serve(async (request) => {
           }, request);
         }
       }
+      } // end !glbDownloadUrl auto-rig
+
+      if (!glbDownloadUrl) {
+        console.error('meshy avatar materialize missing glb url');
+        await fetch(
+          `${supabaseUrl}/rest/v1/character_avatar_meshy_jobs?id=eq.${encodeURIComponent(jobId)}`,
+          {
+            method: 'PATCH',
+            headers: serviceHeaders,
+            body: JSON.stringify({
+              status: 'failed',
+              error_message: publicMeshyFailure('download'),
+              updated_at: new Date().toISOString(),
+            }),
+          },
+        );
+        return json(200, {
+          status: 'ok',
+          job: {
+            ...current,
+            status: 'failed',
+            error_message: publicMeshyFailure('download'),
+          },
+        }, request);
+      }
 
       let downloaded: { bytes: Uint8Array };
       try {
@@ -1287,6 +1401,7 @@ serve(async (request) => {
             status: 'succeeded',
             progress: 100,
             storage_path: storagePath,
+            pending_glb_url: null,
             rig_analysis_status: 'pending',
             error_message: null,
             updated_at: new Date().toISOString(),

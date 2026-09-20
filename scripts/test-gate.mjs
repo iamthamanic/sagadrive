@@ -504,6 +504,14 @@ function checkAvatarV2TemplateCreatorFlow() {
   });
 }
 
+function checkSpeciesTemplateGenderModelPreview() {
+  console.log('Species template gender model preview: Mensch m/w GLB wiring...');
+  execFileSync(process.execPath, ['scripts/species-template-gender-model-preview-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarV2ImportOriginalFlow() {
   console.log('Avatar V2 import original flow (#261): Analyse + Original behalten...');
   execFileSync(process.execPath, ['scripts/avatar-v2-import-original-flow-check.mjs'], {
@@ -1145,6 +1153,7 @@ checkAvatarV2StarterWardrobe();
 checkAvatarV2SkinnedWearableRuntime();
 checkAvatarV2CapabilityEditor();
 checkAvatarV2TemplateCreatorFlow();
+checkSpeciesTemplateGenderModelPreview();
 checkAvatarV2ImportOriginalFlow();
 checkAvatarV2IdentityTransferSpike();
 checkAvatarV2BodyConversionFlow();

@@ -59,3 +59,14 @@ test-results/
 # Docker
 .docker/
 docker-compose.override.yml
+
+# Species 3D exploration boards + Meshy preview intermediates (golden + public GLBs are committed)
+assets/species-3d/**/style-compare/
+assets/species-3d/**/style-compare-v2/
+assets/species-3d/**/*-preview.glb
+assets/species-3d/**/*_textures/
+assets/species-3d/**/*-underwear-ref.png
+assets/species-3d/**/*-ref.png
+!assets/species-3d/**/golden/
+!assets/species-3d/**/golden/**
+assets/species-3d/**/*.glb

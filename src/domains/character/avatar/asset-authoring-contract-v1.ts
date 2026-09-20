@@ -62,6 +62,9 @@ export type AssetAuthoringLicenseKind = (typeof ASSET_AUTHORING_LICENSE_KINDS)[n
 export const ASSET_AUTHORING_STYLE_TAGS = [
   'adult-stylized',
   'mtoon',
+  /** Canonical v1 art direction — see docs/character-visual-styleguide.md */
+  'palworld-overwatch-soft-real',
+  /** Legacy direction tag — still valid; prefer palworld-overwatch-soft-real for new assets. */
   'palworld-korra-direction',
   'no-chibi',
 ] as const;
@@ -216,7 +219,12 @@ export function createAssetAuthoringManifest(input: {
       sourceNote: input.provenance.sourceNote?.trim() || undefined,
     },
     outputChecksum: checksum,
-    styleTags: input.styleTags ?? ['adult-stylized', 'mtoon', 'palworld-korra-direction', 'no-chibi'],
+    styleTags: input.styleTags ?? [
+      'adult-stylized',
+      'mtoon',
+      'palworld-overwatch-soft-real',
+      'no-chibi',
+    ],
     createdAt: input.createdAt ?? new Date().toISOString(),
   };
 }

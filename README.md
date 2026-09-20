@@ -219,6 +219,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-20** — Human species soft-real base (Palworld×Overwatch), gender→GLB preview, MToon toggle, Meshy rigging CPU step-split (`feat/avatar-human-softreal-mtoon-meshy`)
 - **2026-09-19** — Avatar V2: Modular GLB Contract v1 (`extras.sagadrive` Rollen/Slots + Upload-Spec) (`feat/avatar-v2-modular-glb-contract`, #250)
 - **2026-09-19** — Avatar V2: Composition Contract + kanonisches Design (Source/Anatomy/Family/Modularity/Capabilities orthogonal; Legacy-DTO lesbar) (`feat/avatar-v2-composition-contract`, #249)
 - **2026-09-19** — Avatar Face Tracking: MediaPipe self-host (`public/mediapipe/**`, kein CDN), Desktop/Mobile Quality-Profile, Session/Player an gemeinsame Runtime + Cam-Singleton (#243/#244, `feat/avatar-face-tracking-selfhost-session`)
@@ -228,9 +229,6 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-09-14** — World-Modul `npc-creature-catalog`: Pack-Toggles, Includes/Excludes, welt-eigene Figuren ohne Definitionsduplikate (`feat/npc-creature-world-catalog`, #199)
 - **2026-09-14** — NPCs & Kreaturen Quick Create + Statblock-Editor mit Live-Vorschau; Library `+ Neu` / Bearbeiten (`feat/npc-creature-quick-create-editor`, #198)
 - **2026-09-11** — AI Provider BYOK: Settings → AI (Meshy Key, Credits); Prod nur User-Keys; wiederverwendbare Item-Visual-Tools-Hooks (`feat/ai-provider-credentials`)
-- **2026-09-10** — Bibliothek-Tabs: Container-Query + Shell `min-w-0` / overflow-x; Static Item-Icons Cursor→PNG→VTracer (`feat/item-static-svg-icons`)
-- **2026-09-10** — Skill `svg-icon-create` + Generator `scripts/generate-builtin-item-icons.mjs` für hand-authored Item-SVGs (`feat/item-static-svg-icons`)
-- **2026-09-09** — Item-Workbench Forge: typed Create-URLs, Visuals-Dropzone mit Auto-Draft, Scroll-Layout, Single-Shell App-Layout (`feat/item-workbench-forge-ux`)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 
