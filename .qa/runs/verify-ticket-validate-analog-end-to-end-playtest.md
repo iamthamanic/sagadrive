@@ -2,7 +2,7 @@
 
 - Date: 2026-09-20
 - Branch: `issue-31-validate-analog-e2e-playtest`
-- HEAD_SHA: WORKTREE (pre-commit)
+- HEAD_SHA: d745e4d98e98deeb117eadc3140a60a9afee1d04
 
 ## Ergebnis
 **PASS**
