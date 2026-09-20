@@ -1,3 +1,12 @@
+import {
+  corsHeaders,
+  handleOptions,
+  type CorsOptions,
+} from '../_shared/cors.ts';
+
+const CORS_OPTS: CorsOptions = {
+  missingOriginPolicy: 'configured-or-star',
+};
 // Items Function - Item database, equipment management
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
@@ -23,8 +32,9 @@ async function getItem(id: string): Promise<Item | null> { return items.get(id) 
 async function createItem(data: Partial<Item>): Promise<Item> { const id = generateId(); const item: Item = { id, name: data.name || 'Unknown', type: data.type || 'other', rarity: data.rarity || 'common', weight: data.weight || 0, value: data.value || 0, description: data.description || '', properties: data.properties || {}, source: data.source || 'custom' }; items.set(id, item); return item }
 
 serve(async (req: Request) => {
-  const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" }
-  if (req.method === "OPTIONS") return new Response(null, { headers })
+  const headers = corsHeaders(req, CORS_OPTS)
+  const optionsResponse = handleOptions(req, CORS_OPTS);
+  if (optionsResponse) return optionsResponse
   const url = new URL(req.url)
   const path = url.pathname.replace("/functions/v1/items", "")
   try {
@@ -34,5 +44,5 @@ serve(async (req: Request) => {
     if (req.method === "POST" && path === "/items") { const body = await req.json(); const item = await createItem(body); return new Response(JSON.stringify(item), { headers: { ...headers, "Content-Type": "application/json" } }) }
     if (req.method === "POST" && path === "/items/generate") { const types = ['weapon', 'armor', 'potion', 'scroll', 'wondrous']; const rarities = ['common', 'uncommon', 'rare', 'very rare', 'legendary']; const item = await createItem({ name: `Magic ${types[Math.floor(Math.random() * types.length)]}`, type: types[Math.floor(Math.random() * types.length)] as Item['type'], rarity: rarities[Math.floor(Math.random() * rarities.length)] as Item['rarity'], weight: Math.floor(Math.random() * 50), value: Math.floor(Math.random() * 50000) }); return new Response(JSON.stringify(item), { headers: { ...headers, "Content-Type": "application/json" } }) }
     return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { ...headers, "Content-Type": "application/json" } })
-  } catch (error) { return new Response(JSON.stringify({ error: "Internal server error", message: error.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }) }
+  } catch (error: unknown) { return new Response(JSON.stringify({ error: "Internal server error", message: (error instanceof Error ? error.message : String(error)) }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }) }
 })

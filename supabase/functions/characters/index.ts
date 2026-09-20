@@ -1,3 +1,12 @@
+import {
+  corsHeaders,
+  handleOptions,
+  type CorsOptions,
+} from '../_shared/cors.ts';
+
+const CORS_OPTS: CorsOptions = {
+  missingOriginPolicy: 'configured-or-star',
+};
 // ===========================================
 // Characters Function (NEW)
 // Character creation, management, leveling, inventory
@@ -600,15 +609,10 @@ async function importCharacter(data: Character): Promise<Character> {
 // ===========================================
 
 serve(async (req: Request) => {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  }
+  const headers = corsHeaders(req, CORS_OPTS)
   
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers })
-  }
+  const optionsResponse = handleOptions(req, CORS_OPTS)
+  if (optionsResponse) return optionsResponse
   
   const url = new URL(req.url)
   const path = url.pathname.replace("/functions/v1/characters", "")
@@ -830,10 +834,10 @@ serve(async (req: Request) => {
       headers: { ...headers, "Content-Type": "application/json" },
     })
     
-  } catch (error) {
+  } catch (error: unknown) {
     return new Response(JSON.stringify({
       error: "Internal server error",
-      message: error.message,
+      message: (error instanceof Error ? error.message : String(error)),
     }), {
       status: 500,
       headers: { ...headers, "Content-Type": "application/json" },

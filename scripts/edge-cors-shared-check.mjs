@@ -3,9 +3,8 @@
  * edge-cors-shared-check — Edge Functions must use `_shared/cors.ts` (#305/#306).
  * Location: scripts/edge-cors-shared-check.mjs
  *
- * Wave 1 (#305): migrated echo/allowlist functions must import shared CORS and
- * must not set Access-Control-Allow-Origin locally. Remaining functions stay on
- * an explicit legacy allowlist until #306.
+ * Wave 2 (#306): every function `index.ts` except the `main` dispatcher must
+ * import `_shared/cors` and must not set Access-Control-Allow-Origin locally.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -15,33 +14,8 @@ const root = process.cwd();
 const functionsRoot = join(root, 'supabase/functions');
 const sharedCorsPath = join(functionsRoot, '_shared/cors.ts');
 
-/** Functions still allowed to define CORS locally until wave 2 (#306). */
-const LEGACY_CORS_ALLOWLIST = new Set([
-  'ai-gm',
-  'bestiary',
-  'characters',
-  'dm-tools',
-  'export',
-  'items',
-  'lorekeeper',
-  'marketplace',
-  'media',
-  'npcs',
-  'quests',
-  'rulesets',
-  'sessions',
-  'spellbook',
-  'world',
-]);
-
-/** Must be migrated in wave 1 (#305). */
-const WAVE1_MIGRATED = [
-  'ai-provider-credentials',
-  'character-avatar-meshy',
-  'character-lore',
-  'item-model3d',
-  'item-thumbnail',
-];
+/** Dispatcher only — no browser CORS surface. */
+const CORS_EXEMPT = new Set(['main']);
 
 function fail(message) {
   console.error(`edge-cors-shared-check FAIL: ${message}`);
@@ -79,50 +53,25 @@ const dirs = listFunctionDirs();
 const originLiteral = /Access-Control-Allow-Origin/;
 const sharedImport = /_shared\/cors(?:\.ts)?['"]/;
 
-for (const name of WAVE1_MIGRATED) {
-  if (!dirs.includes(name)) fail(`wave1 function missing: ${name}`);
+let migrated = 0;
+for (const name of dirs) {
   const src = readFileSync(join(functionsRoot, name, 'index.ts'), 'utf8');
+  if (CORS_EXEMPT.has(name)) {
+    if (originLiteral.test(src)) {
+      fail(`${name}: exempt dispatcher must not set Access-Control-Allow-Origin`);
+    }
+    continue;
+  }
+
   if (!sharedImport.test(src)) {
     fail(`${name}: must import ../_shared/cors.ts`);
   }
   if (originLiteral.test(src)) {
     fail(`${name}: must not set Access-Control-Allow-Origin locally`);
   }
-  if (LEGACY_CORS_ALLOWLIST.has(name)) {
-    fail(`${name}: must not remain on legacy CORS allowlist`);
-  }
-}
-
-for (const name of dirs) {
-  const src = readFileSync(join(functionsRoot, name, 'index.ts'), 'utf8');
-  const hasOriginLiteral = originLiteral.test(src);
-  const importsShared = sharedImport.test(src);
-
-  if (WAVE1_MIGRATED.includes(name)) continue;
-
-  if (importsShared) {
-    if (hasOriginLiteral) {
-      fail(`${name}: imported shared cors but still has Access-Control-Allow-Origin literal`);
-    }
-    continue;
-  }
-
-  if (hasOriginLiteral) {
-    if (!LEGACY_CORS_ALLOWLIST.has(name)) {
-      fail(
-        `${name}: local Access-Control-Allow-Origin is not on wave1 legacy allowlist — migrate to _shared/cors or update allowlist in #306`,
-      );
-    }
-  }
-  // Functions with no CORS headers at all (e.g. main) are left for wave 2 / follow-up.
-}
-
-for (const legacy of LEGACY_CORS_ALLOWLIST) {
-  if (!dirs.includes(legacy)) {
-    fail(`legacy allowlist entry missing on disk: ${legacy}`);
-  }
+  migrated += 1;
 }
 
 console.log(
-  `edge-cors-shared-check PASS (${WAVE1_MIGRATED.length} migrated, ${LEGACY_CORS_ALLOWLIST.size} legacy until #306)`,
+  `edge-cors-shared-check PASS (${migrated} functions on shared cors; exempt: ${[...CORS_EXEMPT].join(', ')})`,
 );

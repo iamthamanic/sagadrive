@@ -1,3 +1,12 @@
+import {
+  corsHeaders,
+  handleOptions,
+  type CorsOptions,
+} from '../_shared/cors.ts';
+
+const CORS_OPTS: CorsOptions = {
+  missingOriginPolicy: 'configured-or-star',
+};
 // ===========================================
 // Rulesets Function (Extended with Open5e Integration)
 // Rules configuration, lookups, Open5e enrichment
@@ -377,7 +386,7 @@ async function fetchOpen5eSpells(): Promise<Spell[]> {
       classes: spell.dnd_class.split(',').map((c: string) => c.trim().toLowerCase()),
       source: 'Open5e',
     }))
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to fetch Open5e spells:', error)
     return []
   }
@@ -406,7 +415,7 @@ async function fetchOpen5eMonsters(): Promise<Monster[]> {
       actions: [],
       source: 'Open5e',
     }))
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to fetch Open5e monsters:', error)
     return []
   }
@@ -427,7 +436,7 @@ async function fetchOpen5eItems(): Promise<Item[]> {
       description: item.desc || '',
       source: 'Open5e',
     }))
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to fetch Open5e items:', error)
     return []
   }
@@ -555,15 +564,10 @@ async function getItems(rulesetId: string, filter?: { type?: string }): Promise<
 // ===========================================
 
 serve(async (req: Request) => {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  }
+  const headers = corsHeaders(req, CORS_OPTS)
   
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers })
-  }
+  const optionsResponse = handleOptions(req, CORS_OPTS)
+  if (optionsResponse) return optionsResponse
   
   const url = new URL(req.url)
   const path = url.pathname.replace("/functions/v1/rulesets", "")
@@ -697,10 +701,10 @@ serve(async (req: Request) => {
       headers: { ...headers, "Content-Type": "application/json" },
     })
     
-  } catch (error) {
+  } catch (error: unknown) {
     return new Response(JSON.stringify({
       error: "Internal server error",
-      message: error.message,
+      message: (error instanceof Error ? error.message : String(error)),
     }), {
       status: 500,
       headers: { ...headers, "Content-Type": "application/json" },

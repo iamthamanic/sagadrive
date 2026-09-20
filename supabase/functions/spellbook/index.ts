@@ -1,3 +1,12 @@
+import {
+  corsHeaders,
+  handleOptions,
+  type CorsOptions,
+} from '../_shared/cors.ts';
+
+const CORS_OPTS: CorsOptions = {
+  missingOriginPolicy: 'configured-or-star',
+};
 // Spellbook Function - Spell management, casting tracking
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
@@ -39,8 +48,9 @@ async function castSpell(characterId: string, spellId: string, level: number): P
 async function restoreSpellSlots(characterId: string): Promise<void> { const book = await getSpellbook(characterId); book.slotsUsed = {}; spellbooks.set(characterId, book) }
 
 serve(async (req: Request) => {
-  const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" }
-  if (req.method === "OPTIONS") return new Response(null, { headers })
+  const headers = corsHeaders(req, CORS_OPTS)
+  const optionsResponse = handleOptions(req, CORS_OPTS);
+  if (optionsResponse) return optionsResponse
   const url = new URL(req.url)
   const path = url.pathname.replace("/functions/v1/spellbook", "")
   try {
@@ -55,5 +65,5 @@ serve(async (req: Request) => {
     if (req.method === "POST" && path.match(/^\/spellbook\/[\w-]+\/cast$/)) { const characterId = path.split("/")[2]; const body = await req.json(); const result = await castSpell(characterId, body.spellId, body.level); return new Response(JSON.stringify(result), { headers: { ...headers, "Content-Type": "application/json" } }) }
     if (req.method === "POST" && path.match(/^\/spellbook\/[\w-]+\/restore$/)) { const characterId = path.split("/")[2]; await restoreSpellSlots(characterId); return new Response(JSON.stringify({ success: true }), { headers: { ...headers, "Content-Type": "application/json" } }) }
     return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { ...headers, "Content-Type": "application/json" } })
-  } catch (error) { return new Response(JSON.stringify({ error: "Internal server error", message: error.message }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }) }
+  } catch (error: unknown) { return new Response(JSON.stringify({ error: "Internal server error", message: (error instanceof Error ? error.message : String(error)) }), { status: 500, headers: { ...headers, "Content-Type": "application/json" } }) }
 })
