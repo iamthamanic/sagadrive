@@ -11,3 +11,4 @@ export * from './shared-scene-presentation';
 export * from './prepared-adventure-fixture';
 export * from './combat-encounter';
 export * from './multiuser-e2e-security';
+export * from './player-test-instrumentation';

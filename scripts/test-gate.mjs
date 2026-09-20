@@ -168,6 +168,14 @@ function checkPlayerTestMultiuserE2eSecurity() {
   });
 }
 
+function checkPlayerTestInstrumentationRunbook() {
+  console.log('Player-test instrumentation & runbook (#304): Phase 9–10 evidence pack + metrics contract...');
+  execFileSync(process.execPath, ['scripts/player-test-instrumentation-runbook-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkProjectMembershipSecurity() {
   console.log('Project membership security contract: checking RLS and client write paths...');
   execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], {
@@ -1080,6 +1088,7 @@ checkPlayerTestSharedScenePresentation();
 checkPlayerTestPreparedAdventureFixture();
 checkPlayerTestCombatEncounter();
 checkPlayerTestMultiuserE2eSecurity();
+checkPlayerTestInstrumentationRunbook();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();

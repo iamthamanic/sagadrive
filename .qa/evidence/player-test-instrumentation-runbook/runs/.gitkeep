@@ -1,0 +1,7 @@
+# runs/
+
+Filled dogfood / external player-test evidence goes here.
+
+Naming: `<YYYY-MM-DD>-<dogfood|external>-<n>/`
+
+See parent [README.md](../README.md).
