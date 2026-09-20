@@ -1,3 +1,12 @@
+import {
+  corsHeaders,
+  handleOptions,
+  type CorsOptions,
+} from '../_shared/cors.ts';
+
+const CORS_OPTS: CorsOptions = {
+  missingOriginPolicy: 'configured-or-star',
+};
 // Quests Function - Quest management, tracking, generation
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
@@ -17,8 +26,9 @@ async function completeObjective(questId: string, objectiveId: string): Promise<
 async function generateQuest(type: 'main' | 'side' | 'personal', level: number): Promise<Quest> { const templates = { main: [{ name: 'The Dragon\'s Hoard', description: 'Defeat the ancient dragon and reclaim the stolen treasure.', objectives: ['Travel to Dragon\'s Lair', 'Defeat the Dragon', 'Retrieve the Treasure'] }, { name: 'The Dark Lord\'s Return', description: 'Stop the Dark Lord from rising again.', objectives: ['Gather Information', 'Find the Ritual Site', 'Disrupt the Ritual'] }], side: [{ name: 'Lost Heirloom', description: 'A villager has lost a precious family heirloom.', objectives: ['Search the Woods', 'Find the Heirloom', 'Return to Owner'] }, { name: 'Monster Bounty', description: 'A dangerous monster is terrorizing the countryside.', objectives: ['Track the Monster', 'Defeat the Monster', 'Collect the Bounty'] }], personal: [{ name: 'Training Exercise', description: 'Practice your skills to become stronger.', objectives: ['Complete 3 Encounters', 'Reach Level ' + (level + 1) ] }, { name: 'Ancient Knowledge', description: 'Seek out ancient texts to expand your knowledge.', objectives: ['Visit the Library', 'Find the Tome', 'Study the Tome'] }] }; const template = templates[type][Math.floor(Math.random() * templates[type].length)]; return createQuest({ name: template.name, description: template.description, type, objectives: template.objectives.map((desc, i) => ({ id: `obj-${i}`, description: desc, completed: false })), rewards: [{ type: 'xp', amount: level * 100 }, { type: 'gold', amount: level * 10 }] }) }
 
 serve(async (req: Request) => {
-  const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" }
-  if (req.method === "OPTIONS") return new Response(null, { headers })
+  const headers = corsHeaders(req, CORS_OPTS)
+  const optionsResponse = handleOptions(req, CORS_OPTS);
+  if (optionsResponse) return optionsResponse
   const url = new URL(req.url)
   const path = url.pathname.replace("/functions/v1/quests", "")
   try {

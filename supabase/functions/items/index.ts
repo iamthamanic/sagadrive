@@ -1,3 +1,12 @@
+import {
+  corsHeaders,
+  handleOptions,
+  type CorsOptions,
+} from '../_shared/cors.ts';
+
+const CORS_OPTS: CorsOptions = {
+  missingOriginPolicy: 'configured-or-star',
+};
 // Items Function - Item database, equipment management
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
@@ -23,8 +32,9 @@ async function getItem(id: string): Promise<Item | null> { return items.get(id) 
 async function createItem(data: Partial<Item>): Promise<Item> { const id = generateId(); const item: Item = { id, name: data.name || 'Unknown', type: data.type || 'other', rarity: data.rarity || 'common', weight: data.weight || 0, value: data.value || 0, description: data.description || '', properties: data.properties || {}, source: data.source || 'custom' }; items.set(id, item); return item }
 
 serve(async (req: Request) => {
-  const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" }
-  if (req.method === "OPTIONS") return new Response(null, { headers })
+  const headers = corsHeaders(req, CORS_OPTS)
+  const optionsResponse = handleOptions(req, CORS_OPTS);
+  if (optionsResponse) return optionsResponse
   const url = new URL(req.url)
   const path = url.pathname.replace("/functions/v1/items", "")
   try {

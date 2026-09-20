@@ -1,3 +1,12 @@
+import {
+  corsHeaders,
+  handleOptions,
+  type CorsOptions,
+} from '../_shared/cors.ts';
+
+const CORS_OPTS: CorsOptions = {
+  missingOriginPolicy: 'configured-or-star',
+};
 // Media Function - Image/asset management
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
@@ -16,8 +25,9 @@ async function deleteMedia(id: string): Promise<void> { mediaFiles.delete(id) }
 async function updateMediaTags(id: string, tags: string[]): Promise<Media> { const media = mediaFiles.get(id); if (!media) throw new Error("Media not found"); media.tags = tags; mediaFiles.set(id, media); return media }
 
 serve(async (req: Request) => {
-  const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" }
-  if (req.method === "OPTIONS") return new Response(null, { headers })
+  const headers = corsHeaders(req, CORS_OPTS)
+  const optionsResponse = handleOptions(req, CORS_OPTS);
+  if (optionsResponse) return optionsResponse
   const url = new URL(req.url)
   const path = url.pathname.replace("/functions/v1/media", "")
   try {

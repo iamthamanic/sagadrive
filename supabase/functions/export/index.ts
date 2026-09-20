@@ -1,3 +1,13 @@
+import {
+  corsHeaders,
+  handleOptions,
+  type CorsOptions,
+} from '../_shared/cors.ts';
+
+const CORS_OPTS: CorsOptions = {
+  missingOriginPolicy: 'configured-or-star',
+  methods: 'GET, POST, OPTIONS',
+};
 // Export Function - PDF/JSON export
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
@@ -8,8 +18,9 @@ async function exportMarkdown(data: Record<string,any>, type: string): Promise<s
 async function exportPDF(data: Record<string,any>, type: string): Promise<Uint8Array> { const markdown = await exportMarkdown(data, type); const pdfContent = `%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n4 0 obj\n<< /Length ${markdown.length} >>\nstream\nBT\n/F1 12 Tf\n50 700 Td\n(${markdown.replace(/\n/g, ') Tj\n0 -12 Td\n(')}) Tj\nET\nendstream\nendobj\n5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\nxref\n0 6\n0000000000 65535 f\n0000000009 00000 n\n0000000058 00000 n\n0000000115 00000 n\n0000000266 00000 n\n0000000${markdown.length + 300} 00000 n\ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${markdown.length + 400}\n%%EOF`; return new TextEncoder().encode(pdfContent) }
 
 serve(async (req: Request) => {
-  const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" }
-  if (req.method === "OPTIONS") return new Response(null, { headers })
+  const headers = corsHeaders(req, CORS_OPTS)
+  const optionsResponse = handleOptions(req, CORS_OPTS);
+  if (optionsResponse) return optionsResponse
   const url = new URL(req.url)
   const path = url.pathname.replace("/functions/v1/export", "")
   try {

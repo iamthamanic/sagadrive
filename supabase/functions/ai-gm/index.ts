@@ -1,3 +1,14 @@
+import {
+  corsHeaders,
+  handleOptions,
+  type CorsOptions,
+} from '../_shared/cors.ts';
+
+const CORS_OPTS: CorsOptions = {
+  missingOriginPolicy: 'configured-or-star',
+  methods: 'GET, POST, OPTIONS',
+  allowHeaders: 'authorization, x-client-info, apikey, content-type, x-session-id, Content-Type, Authorization, X-Session-Id',
+};
 // ===========================================
 // AI Game Master Function (Extended)
 // Generates narrative, manages world state, NPC context
@@ -393,16 +404,11 @@ function extractCombatInitiated(narrative: string): boolean {
 // ===========================================
 
 serve(async (req: Request) => {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Session-Id",
-  }
+  const headers = corsHeaders(req, CORS_OPTS)
   
   // Handle preflight
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers })
-  }
+  const optionsResponse = handleOptions(req, CORS_OPTS)
+  if (optionsResponse) return optionsResponse
   
   // GET /health - Health check
   if (req.method === "GET" && req.url.endsWith('/health')) {

@@ -1,3 +1,12 @@
+import {
+  corsHeaders,
+  handleOptions,
+  type CorsOptions,
+} from '../_shared/cors.ts';
+
+const CORS_OPTS: CorsOptions = {
+  missingOriginPolicy: 'configured-or-star',
+};
 // Spellbook Function - Spell management, casting tracking
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
@@ -39,8 +48,9 @@ async function castSpell(characterId: string, spellId: string, level: number): P
 async function restoreSpellSlots(characterId: string): Promise<void> { const book = await getSpellbook(characterId); book.slotsUsed = {}; spellbooks.set(characterId, book) }
 
 serve(async (req: Request) => {
-  const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" }
-  if (req.method === "OPTIONS") return new Response(null, { headers })
+  const headers = corsHeaders(req, CORS_OPTS)
+  const optionsResponse = handleOptions(req, CORS_OPTS);
+  if (optionsResponse) return optionsResponse
   const url = new URL(req.url)
   const path = url.pathname.replace("/functions/v1/spellbook", "")
   try {

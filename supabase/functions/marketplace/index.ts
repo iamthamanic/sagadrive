@@ -1,3 +1,12 @@
+import {
+  corsHeaders,
+  handleOptions,
+  type CorsOptions,
+} from '../_shared/cors.ts';
+
+const CORS_OPTS: CorsOptions = {
+  missingOriginPolicy: 'configured-or-star',
+};
 // Marketplace Function - Templates marketplace, sharing
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
@@ -25,8 +34,9 @@ async function rateTemplate(id: string, rating: number): Promise<Template | null
 async function searchTemplates(query: string): Promise<Template[]> { const lowerQuery = query.toLowerCase(); return Array.from(templates.values()).filter(t => t.name.toLowerCase().includes(lowerQuery) || t.description.toLowerCase().includes(lowerQuery) || t.tags.some(tag => tag.toLowerCase().includes(lowerQuery))) }
 
 serve(async (req: Request) => {
-  const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" }
-  if (req.method === "OPTIONS") return new Response(null, { headers })
+  const headers = corsHeaders(req, CORS_OPTS)
+  const optionsResponse = handleOptions(req, CORS_OPTS);
+  if (optionsResponse) return optionsResponse
   const url = new URL(req.url)
   const path = url.pathname.replace("/functions/v1/marketplace", "")
   try {
