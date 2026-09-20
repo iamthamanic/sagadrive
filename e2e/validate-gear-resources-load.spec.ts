@@ -34,7 +34,7 @@ async function createPersonalItem(
   await expect(page.locator('[data-inventory-catalog-dialog]')).toBeVisible();
   await page.getByRole('tab', { name: /Eigene/i }).click();
   await page.getByRole('button', { name: /Eigenen Gegenstand erstellen/i }).click();
-  await page.getByLabel(/^Name/i).fill(opts.name);
+  await page.locator('#personal-name').fill(opts.name);
   await page.locator('#personal-load').click();
   await page.getByRole('option', { name: String(opts.load), exact: true }).click();
   await page.locator('#personal-cost').click();
