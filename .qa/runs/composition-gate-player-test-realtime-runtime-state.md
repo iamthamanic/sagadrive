@@ -1,6 +1,7 @@
 # Composition Gate — player-test-realtime-runtime-state
 
-- HEAD_SHA: a680966fb502bc7b659c5b49eb880efadf6bd137
+- HEAD_SHA: 0180ea1787d8761e1368036391c25cd9c8c6d49b
+- BASE_SHA: a4ce11cb3057e6a70dd2a4e5869d11c7c532faf0
 - Date: 2026-09-20
 - Verdict: CLEAR
 
@@ -16,14 +17,9 @@ Play-session runtime mutation (command / presence / status / join / leave) → a
 ## Simulations
 | Case | Expected | Result |
 |------|----------|--------|
-| N-actors (3 browsers) | Each mutation increments revision once; all refresh to same snapshot | pass — single writer path under row lock; consumers snapshot-only |
-| Invalid / stale revision | Command rejected; no event; client resync | pass — `40001` + StaleRuntimeRevisionError |
-| Concurrent consumers | Multiple subscribers; each refresh independently; no double-apply | pass — idempotency key unique per session |
-| Idempotent retry | Same key returns prior snapshot without second bump | pass — early return on existing event |
-| Non-member | Snapshot/command forbidden | pass — `is_session_participant` |
+| N-actors | Each mutation increments revision once; all clients refresh to same snapshot | CLEAR |
+| Invalid/missing | Wrong expected_revision → SQL 40001 / StaleRuntimeRevisionError; non-member forbidden | CLEAR |
+| Two consumers / crash | Multiple subscribers each snapshot-refresh; idempotency key prevents double-apply on retry | CLEAR |
 
-## Cardinality
-One successful mutating command → exactly one revision increment → exactly one session_events row (unless idempotent replay → zero new rows).
-
-## Notes
-UI panel deferred to later #210 children; composition path is backend + hook adapter only.
+## Flags
+None.

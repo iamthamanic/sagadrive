@@ -50,7 +50,7 @@ Ergänzt den Session-Domainvertrag um autoritativen `SessionRuntimeState` (getre
 ## Composition Gate
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-player-test-realtime-runtime-state.md`
-- HEAD_SHA: a680966fb502bc7b659c5b49eb880efadf6bd137
+- HEAD_SHA: 0180ea1787d8761e1368036391c25cd9c8c6d49b
 
 ## Implementation Notes
 - Domain: `src/domains/session/contracts/session-runtime.ts` (`SessionRuntimeState`, revision helpers, event kinds)
