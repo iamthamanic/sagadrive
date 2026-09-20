@@ -1,7 +1,7 @@
 # ECC Check — combat-create-opportunity (#194)
 
 - Date: 2026-09-20
-- HEAD_SHA: 7ade92ba3d30da167a98e42146aacfc7fb0f0819
+- HEAD_SHA: 8ff021f0eabe5c1a6039b87a0030f956a8516e27
 - Verdict: **READY**
 
 ## Phase A — test-gate

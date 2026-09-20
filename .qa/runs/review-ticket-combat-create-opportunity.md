@@ -2,7 +2,7 @@
 
 - Date: 2026-09-20
 - BASE_SHA: 345c56196a0317773318213cefdaf2ee54c119da (`origin/main`)
-- HEAD_SHA: 7ade92ba3d30da167a98e42146aacfc7fb0f0819
+- HEAD_SHA: 8ff021f0eabe5c1a6039b87a0030f956a8516e27
 - Verdict: **ACCEPT**
 
 ## Summary
@@ -26,7 +26,7 @@ No Critical / Important findings.
 PASS — no escape hatches in touched TS
 
 ## Composition gate
-SKIPPED (same 7ade92ba3d30da167a98e42146aacfc7fb0f0819) — see `.qa/runs/composition-gate-combat-create-opportunity.md`
+SKIPPED (same 8ff021f0eabe5c1a6039b87a0030f956a8516e27) — see `.qa/runs/composition-gate-combat-create-opportunity.md`
 
 ## Prerequisites
 - `@test-gate` PASS this session
