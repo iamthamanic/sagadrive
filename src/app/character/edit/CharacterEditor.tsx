@@ -50,14 +50,8 @@ import {
   RuleHelp,
   type InventoryLoadInfo,
 } from '../progression';
+import type { InventoryState } from '../../../domains/character/inventory-v2';
 import {
-  createEmptyInventory,
-  migrateLegacyInventory,
-  type InventoryState,
-} from '../../../domains/character/inventory-v2';
-import {
-  createDefaultAbstractResources,
-  type AbstractResourceLevel,
   type CharacterAbstractResources,
 } from '../../../domains/rules/sagadrive/items';
 import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
@@ -137,6 +131,10 @@ import { Slider } from '../../../shared/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../shared/ui/tabs';
 import { cn } from '../../../shared/ui/utils';
 import type { CharacterSheetStatus } from '../../../domains/character/contracts/character.views';
+import {
+  resolveLoadedInventoryV2,
+  useCharacterInventoryEditor,
+} from './useCharacterInventoryEditor';
 
 type ActivityTrackingWindow = Window & { trackActivity?: (description: string) => void };
 type EditorTab = 'info' | 'values' | 'appearance' | 'inventory' | 'settings';
@@ -307,15 +305,6 @@ export function CharacterEditor() {
   const [complication, setComplication] = useState('');
   const [communication, setCommunication] = useState('');
   const [selectedSkill, setSelectedSkill] = useState<SagaDriveSkillKey | undefined>();
-  const [inventory, setInventory] = useState<ItemDto[]>([]);
-  const [inventoryV2, setInventoryV2] = useState<InventoryState>(() => createEmptyInventory());
-  const [abstractResources, setAbstractResources] = useState<CharacterAbstractResources>(() =>
-    createDefaultAbstractResources(),
-  );
-  const [inventoryLoadInfo, setInventoryLoadInfo] = useState<InventoryLoadInfo>({
-    totalLoad: 0,
-    occupied: 0,
-  });
   const [editorUserId, setEditorUserId] = useState('');
   const [backgroundStory, setBackgroundStory] = useState('');
   const [personalityTraits, setPersonalityTraits] = useState<string[]>([]);
@@ -378,6 +367,19 @@ export function CharacterEditor() {
     onCharacterRaceChange: setCharacterRace,
   });
 
+  const {
+    inventory,
+    inventoryV2,
+    abstractResources,
+    inventoryLoad,
+    setInventoryLoadInfo,
+    handleInventoryChange,
+    handleResourcesChange,
+    hydrateInventory,
+  } = useCharacterInventoryEditor({
+    onDirty: () => setSagaDriveDirty(true),
+  });
+
   const archetype = characterArchetype ? getSagaDriveArchetype(characterArchetype) : undefined;
   const essence = essenceProfile ? getSagaDriveEssence(essenceProfile) : undefined;
   const baseSpeciesLabel = getCharacterCreationOptionLabel(sagaDriveRaceOptions, characterRace);
@@ -419,7 +421,6 @@ export function CharacterEditor() {
   const speciesTraitsComplete = speciesTraitCost === SAGA_DRIVE_SPECIES_TRAIT_BUDGET
     && speciesTraitInstancesValid
     && (characterRace !== 'alien' || Boolean(speciesProfileName.trim()));
-  const inventoryLoad = inventoryLoadInfo.totalLoad;
   const carryCapacity = 5 + 2 * attributes.strength;
   const overloaded = inventoryLoad > carryCapacity;
   const movement = overloaded ? 6 : 9;
@@ -653,15 +654,11 @@ export function CharacterEditor() {
     setContact(profile.background?.contact ?? '');
     setComplication(profile.background?.complication ?? '');
     setCommunication(profile.background?.communication ?? '');
-    setInventory(payload.inventory ?? []);
-    if (payload.inventoryV2) {
-      setInventoryV2(payload.inventoryV2);
-    } else if (payload.inventory && payload.inventory.length > 0) {
-      setInventoryV2(migrateLegacyInventory(payload.inventory).state);
-    } else {
-      setInventoryV2(createEmptyInventory());
-    }
-    setAbstractResources(payload.abstractResources ?? createDefaultAbstractResources());
+    hydrateInventory({
+      inventory: payload.inventory,
+      inventoryV2: payload.inventoryV2,
+      abstractResources: payload.abstractResources,
+    });
     setBackgroundStory(payload.backgroundStory ?? '');
     setPersonalityTraits(payload.personalityTraits ?? []);
     setIdeals(payload.ideals ?? []);
@@ -783,20 +780,7 @@ export function CharacterEditor() {
     void (async () => {
       try {
         const character = await characterService.getCharacterById(editCharacterId);
-        let inventoryV2State = character.inventoryV2;
-        if (character.inventorySchemaVersion !== 2 && character.id) {
-          try {
-            inventoryV2State = await characterService.migrateCharacterInventoryToV2(character.id);
-          } catch (migrationError) {
-            console.error('Inventory v2 migration failed:', migrationError);
-            toast.error(
-              migrationError instanceof Error
-                ? migrationError.message
-                : 'Inventar-Migration fehlgeschlagen — Fallback auf geladenen Zustand.',
-            );
-            inventoryV2State = character.inventoryV2;
-          }
-        }
+        const inventoryV2State = await resolveLoadedInventoryV2(character);
         hydrateEditorFromPersistedCharacter({
           savedCharacterId: character.id,
           persistedLevel: character.level,
@@ -1733,19 +1717,13 @@ export function CharacterEditor() {
                   {editorUserId ? (
                     <CharacterInventoryV2Panel
                       state={inventoryV2}
-                      onChange={(next) => {
-                        setInventoryV2(next);
-                        setSagaDriveDirty(true);
-                      }}
+                      onChange={handleInventoryChange}
                       strength={attributes.strength}
                       characterId={savedCharacterId}
                       userId={editorUserId}
                       onLoadInfoChange={setInventoryLoadInfo}
                       resources={abstractResources.current}
-                      onResourcesChange={(next: AbstractResourceLevel) => {
-                        setAbstractResources((prev) => ({ ...prev, current: next }));
-                        setSagaDriveDirty(true);
-                      }}
+                      onResourcesChange={handleResourcesChange}
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground">Inventar wird geladen…</p>
