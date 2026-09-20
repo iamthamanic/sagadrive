@@ -1,7 +1,7 @@
 # Verify Ticket — combat-create-opportunity (#194)
 
 - Date: 2026-09-20
-- HEAD: WORKTREE (uncommitted on `issue-194-combat-create-opportunity` from `345c561`)
+- HEAD: 7ade92ba3d30da167a98e42146aacfc7fb0f0819 (uncommitted on `issue-194-combat-create-opportunity` from `345c561`)
 - Verdict: **PASS**
 
 ## Checks (@test-gate)

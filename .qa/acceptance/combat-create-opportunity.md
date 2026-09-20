@@ -48,7 +48,7 @@ SagaDrive erhält mit **„Gelegenheit schaffen“** eine universelle Hauptaktio
 
 ## Composition Gate
 - Verdict: SKIPPED
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 7ade92ba3d30da167a98e42146aacfc7fb0f0819
 - Reason: single-hop pure rules + docs; no producer→consumer business-event path in this slice
 - Proof: `.qa/runs/composition-gate-combat-create-opportunity.md`
 
