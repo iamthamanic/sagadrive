@@ -120,6 +120,14 @@ function checkPlayerTestRealtimeRuntime() {
   });
 }
 
+function checkPlayerTestPlayerPanel() {
+  console.log('Player-test player panel V1 (#298): checking panel domain, wiring, no CharacterEditor...');
+  execFileSync(process.execPath, ['scripts/player-test-player-panel-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkProjectMembershipSecurity() {
   console.log('Project membership security contract: checking RLS and client write paths...');
   execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], {
@@ -1026,6 +1034,7 @@ checkItemRoutingFoundation();
 checkSagaRoutingPublicIdFoundation();
 checkPlayerTestSessionSecurity();
 checkPlayerTestRealtimeRuntime();
+checkPlayerTestPlayerPanel();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();

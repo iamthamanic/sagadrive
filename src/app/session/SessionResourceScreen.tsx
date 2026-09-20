@@ -4,6 +4,7 @@
  */
 import { Button } from '../../shared/ui/button';
 import { GamemasterPanel } from './GamemasterPanel';
+import { PlayerPanel } from './PlayerPanel';
 import type { LiveViewId, SessionPhaseRouteId } from '../shell';
 
 type SessionResourceScreenProps = {
@@ -41,6 +42,17 @@ export function SessionResourceScreen({
           <GamemasterPanel />
         </div>
       </div>
+    );
+  }
+
+  if (liveView === 'player' || liveView === 'player-resolve') {
+    return (
+      <PlayerPanel
+        sagaPublicId={sagaPublicId}
+        sessionPublicId={sessionPublicId}
+        characterPublicId={characterPublicId ?? null}
+        onNavigateHome={onNavigateHome}
+      />
     );
   }
 
