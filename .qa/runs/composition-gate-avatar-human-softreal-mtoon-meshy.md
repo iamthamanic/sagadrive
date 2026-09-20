@@ -1,6 +1,7 @@
 # Composition Gate — avatar-human-softreal-mtoon-meshy
 
-- HEAD_SHA: f5cadab
+- HEAD_SHA: f5cadabc55acab8c0be333a6480d941ff984524b
+- BASE_SHA: b6bd0ce17d5a3e3df24cad693cd2aa66c93c00bd
 - Date: 2026-09-20
 - Verdict: CLEAR
 
@@ -30,7 +31,10 @@
 ## Simulations
 - **N-actors:** One editor session per avatar; no fan-out of mesh URLs.
 - **Invalid/missing:** divers / unset / non-human → no mesh URL. Free remote URLs rejected by normalize.
-- **Two consumers:** Viewer + save both read `appearance.avatar.model_url` / currentAvatar; import wins over template; MToon toggle not written to appearance.
+- **Two consumers / crash:** Viewer + save both read `appearance.avatar.model_url` / currentAvatar; import wins over template; MToon toggle not written to appearance. Edge poll crash mid-rig → `pending_glb_url` persisted, next poll resumes; no duplicate Meshy task spawned.
+
+## Flags
+- None. Migration `045` must be applied before Edge deploy (documented in README deploy notes).
 
 ## Notes
 Golden style: `docs/character-visual-styleguide.md` + `assets/species-3d/human/golden/`.
