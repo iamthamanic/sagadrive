@@ -1,6 +1,6 @@
 # Composition Gate — edge-cors-shared-wave1 (#305)
 
-- HEAD_SHA: b488712c59146a2df6d19feee8cbc81763b68c8e
+- HEAD_SHA: d6c6039330e01decc9af5d128f0c50d4ccc60ad3
 - BASE_SHA: 212bc7c4b05fb2869037fd29dd2362d7358b4adb
 - Date: 2026-09-20
 - Verdict: SKIPPED
