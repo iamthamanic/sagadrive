@@ -27,8 +27,23 @@ import {
 } from '../_shared/item-model3d-meshy.ts';
 import { consumeItemModel3dRateLimit } from '../_shared/item-model3d-rate-limit.ts';
 import { sniffItemThumbnailMime } from '../_shared/item-thumbnail-image.ts';
+import {
+  corsHeaders,
+  handleOptions,
+  jsonResponse as sharedJsonResponse,
+  type CorsOptions,
+} from '../_shared/cors.ts';
 
 type JsonRecord = Record<string, unknown>;
+
+const CORS_OPTS: CorsOptions = {
+  methods: 'POST, OPTIONS',
+  envKeys: [
+    'ITEM_MODEL3D_ALLOWED_ORIGIN',
+    'ITEM_THUMBNAIL_ALLOWED_ORIGIN',
+    'CHARACTER_AI_ALLOWED_ORIGIN',
+  ],
+};
 
 interface SupabaseConfig {
   url: string;
@@ -57,42 +72,12 @@ function isRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null;
 }
 
-function isLocalDevOrigin(origin: string): boolean {
-  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
-}
-
 function getCorsHeaders(request: Request): HeadersInit {
-  const configured = Deno.env.get('ITEM_MODEL3D_ALLOWED_ORIGIN')?.trim()
-    || Deno.env.get('ITEM_THUMBNAIL_ALLOWED_ORIGIN')?.trim()
-    || Deno.env.get('CHARACTER_AI_ALLOWED_ORIGIN')?.trim()
-    || '';
-  const requestOrigin = request.headers.get('Origin');
-  const headers: Record<string, string> = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Content-Type': 'application/json',
-    Vary: 'Origin',
-  };
-
-  if (configured === '*') {
-    headers['Access-Control-Allow-Origin'] = '*';
-    return headers;
-  }
-
-  const allowlist = configured.split(',').map((e) => e.trim()).filter(Boolean);
-  if (requestOrigin && allowlist.includes(requestOrigin)) {
-    headers['Access-Control-Allow-Origin'] = requestOrigin;
-    return headers;
-  }
-  if (!configured && requestOrigin && isLocalDevOrigin(requestOrigin)) {
-    headers['Access-Control-Allow-Origin'] = requestOrigin;
-    return headers;
-  }
-  return headers;
+  return corsHeaders(request, CORS_OPTS);
 }
 
 function jsonResponse(request: Request, body: JsonRecord, status = 200): Response {
-  return new Response(JSON.stringify(body), { status, headers: getCorsHeaders(request) });
+  return sharedJsonResponse(request, body, status, CORS_OPTS);
 }
 
 function getSupabaseConfig(): SupabaseConfig | null {
@@ -408,9 +393,8 @@ async function resolveGenerateInput(
 }
 
 serve(async (request: Request) => {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: getCorsHeaders(request) });
-  }
+  const optionsResponse = handleOptions(request, CORS_OPTS);
+  if (optionsResponse) return optionsResponse;
   if (request.method !== 'POST') {
     return jsonResponse(request, { status: 'error', message: 'Method not allowed' }, 405);
   }

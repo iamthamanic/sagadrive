@@ -52,9 +52,22 @@ import {
   validateGenerationSettings,
   type Avatar3dGenerationSettings,
 } from '../_shared/avatar-3d-generation.ts';
+import {
+  corsHeaders,
+  handleOptions,
+  jsonResponse as sharedJsonResponse,
+  type CorsOptions,
+} from '../_shared/cors.ts';
 
 type JsonRecord = Record<string, unknown>;
 type GenerationMode = 'text' | 'image';
+
+const CORS_OPTS: CorsOptions = {
+  methods: 'POST, OPTIONS',
+  envKeys: ['CHARACTER_AI_ALLOWED_ORIGIN'],
+  allowLocalhostWhenConfigured: true,
+  missingOriginPolicy: 'configured-or-star',
+};
 
 const BUCKET = 'character-avatars';
 const RATE_LIMIT = 2;
@@ -143,31 +156,11 @@ function assertOwnerScopedStoragePath(userId: string, storagePath: string): stri
 }
 
 function getCorsHeaders(request: Request): HeadersInit {
-  const configured = Deno.env.get('CHARACTER_AI_ALLOWED_ORIGIN')?.trim() || '';
-  const requestOrigin = request.headers.get('Origin');
-  const headers: Record<string, string> = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Content-Type': 'application/json',
-    Vary: 'Origin',
-  };
-  if (configured === '*') {
-    headers['Access-Control-Allow-Origin'] = '*';
-  } else if (configured && requestOrigin === configured) {
-    headers['Access-Control-Allow-Origin'] = configured;
-  } else if (requestOrigin && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(requestOrigin)) {
-    headers['Access-Control-Allow-Origin'] = requestOrigin;
-  } else {
-    headers['Access-Control-Allow-Origin'] = configured || '*';
-  }
-  return headers;
+  return corsHeaders(request, CORS_OPTS);
 }
 
 function json(status: number, body: JsonRecord, request: Request): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: getCorsHeaders(request),
-  });
+  return sharedJsonResponse(request, body, status, CORS_OPTS);
 }
 
 function validatePrompt(prompt: unknown): { ok: true; prompt: string } | { ok: false; message: string } {
@@ -317,9 +310,8 @@ async function fetchAvatarMeshyTask(
 }
 
 serve(async (request) => {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: getCorsHeaders(request) });
-  }
+  const optionsResponse = handleOptions(request, CORS_OPTS);
+  if (optionsResponse) return optionsResponse;
   if (request.method !== 'POST') {
     return json(405, { status: 'error', message: 'Nur POST erlaubt.' }, request);
   }
