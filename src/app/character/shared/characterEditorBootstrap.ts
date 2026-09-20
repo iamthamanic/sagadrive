@@ -23,6 +23,13 @@ export type CharacterEditorBootstrap =
   | {
       kind: 'npc-promotion';
       plan: NpcPromotionPlan;
+    }
+  | {
+      /** Lightweight player-test pregen seed (#302) — name/level only. */
+      kind: 'fixture-seed';
+      characterName: string;
+      level: number;
+      classLabel?: string;
     };
 
 let pendingBootstrap: CharacterEditorBootstrap | null = null;

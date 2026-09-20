@@ -15,6 +15,8 @@ export interface ProjectDto {
   name: string;
   description: string | null;
   world_id: string | null;
+  /** SagaDrive world profile binding (inventory/NPC catalogs). */
+  world_profile_id?: string | null;
   gm_user_id: string;
   status: 'active' | 'paused' | 'completed' | 'archived';
   created_at: string;
@@ -89,6 +91,7 @@ export interface ProjectVm {
   name: string;
   description: string | null;
   worldId: string | null;
+  worldProfileId: string | null;
   gmUserId: string;
   status: 'active' | 'paused' | 'completed' | 'archived';
   createdAt: string;
@@ -120,6 +123,8 @@ export interface CreateProjectDto {
   name: string;
   description?: string;
   world_id?: string;
+  /** Bind adventure to an editable world profile (optional). */
+  world_profile_id?: string;
 }
 
 export interface JoinProjectDto {

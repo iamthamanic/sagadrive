@@ -11,15 +11,22 @@ import { ArrowLeft, Users, Gamepad2, Copy, Check, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { useProjects } from '../project';
 import { useSessions } from './hooks/useSessions';
+import { PreparedAdventureFixturePanel } from './PreparedAdventureFixturePanel';
 import { toast } from 'sonner';
 
 interface SessionJoinProps {
   onBack: () => void;
   onJoinAsGM: (sessionId: string) => void;
   onJoinAsPlayer: (sessionId: string, code: string) => void;
+  onNavigateToCharacterEditor?: () => void;
 }
 
-export function SessionJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: SessionJoinProps) {
+export function SessionJoin({
+  onBack,
+  onJoinAsGM,
+  onJoinAsPlayer,
+  onNavigateToCharacterEditor,
+}: SessionJoinProps) {
   const [sessionCode, setSessionCode] = useState('');
   const [newSessionName, setNewSessionName] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState('');
@@ -137,6 +144,7 @@ export function SessionJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: SessionJoinP
           {/* Create Session */}
           <TabsContent value="create" className="space-y-4">
             {!createdSession ? (
+              <>
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base md:text-lg">Neue Session erstellen</CardTitle>
@@ -197,6 +205,11 @@ export function SessionJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: SessionJoinP
                   </Button>
                 </CardContent>
               </Card>
+              <PreparedAdventureFixturePanel
+                initialProjectId={selectedProjectId || null}
+                onNavigateToCharacterEditor={onNavigateToCharacterEditor}
+              />
+              </>
             ) : (
               <Card className="border-primary">
                 <CardHeader className="pb-3">

@@ -13,6 +13,7 @@ function toProjectDtoUpdates(updates: Partial<ProjectVm>): Partial<ProjectDto> {
   if (updates.description !== undefined) dto.description = updates.description;
   if (updates.status !== undefined) dto.status = updates.status;
   if (updates.worldId !== undefined) dto.world_id = updates.worldId;
+  if (updates.worldProfileId !== undefined) dto.world_profile_id = updates.worldProfileId;
   if (updates.code !== undefined) dto.code = updates.code;
   return dto;
 }

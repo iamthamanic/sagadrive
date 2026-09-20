@@ -32,6 +32,10 @@ function isProjectDto(value: unknown): value is ProjectDto {
     typeof value.public_id === 'string'
     || value.public_id === undefined
     || value.public_id === null;
+  const worldProfileOk =
+    value.world_profile_id === undefined
+    || value.world_profile_id === null
+    || typeof value.world_profile_id === 'string';
   return (
     typeof value.id === 'string' &&
     publicIdOk &&
@@ -39,6 +43,7 @@ function isProjectDto(value: unknown): value is ProjectDto {
     typeof value.name === 'string' &&
     (typeof value.description === 'string' || value.description === null) &&
     (typeof value.world_id === 'string' || value.world_id === null) &&
+    worldProfileOk &&
     typeof value.gm_user_id === 'string' &&
     isProjectStatus(value.status) &&
     typeof value.created_at === 'string' &&
@@ -176,6 +181,8 @@ class ProjectService {
       name: project.name,
       description: project.description,
       worldId: project.world_id,
+      worldProfileId:
+        typeof project.world_profile_id === 'string' ? project.world_profile_id : null,
       gmUserId: project.gm_user_id,
       status: project.status,
       createdAt: project.created_at,
@@ -200,6 +207,7 @@ class ProjectService {
       name: payload.name,
       description: payload.description || null,
       world_id: payload.world_id || null,
+      world_profile_id: payload.world_profile_id || null,
       gm_user_id: userId,
       status: 'active',
     };
@@ -435,6 +443,16 @@ class ProjectService {
     }
 
     return this.getProjectById(id);
+  }
+
+  /**
+   * Bind or clear the adventure's world profile (GM; ownership enforced by DB trigger).
+   */
+  async updateProjectWorldProfile(
+    projectId: string,
+    worldProfileId: string | null,
+  ): Promise<ProjectVm> {
+    return this.updateProject(projectId, { world_profile_id: worldProfileId });
   }
 
   /**

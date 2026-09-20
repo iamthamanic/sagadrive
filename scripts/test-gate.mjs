@@ -144,6 +144,14 @@ function checkPlayerTestSharedScenePresentation() {
   });
 }
 
+function checkPlayerTestPreparedAdventureFixture() {
+  console.log('Player-test prepared adventure fixture (#302): checking fixture + SessionJoin + world_profile_id...');
+  execFileSync(process.execPath, ['scripts/player-test-prepared-adventure-fixture-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkProjectMembershipSecurity() {
   console.log('Project membership security contract: checking RLS and client write paths...');
   execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], {
@@ -1053,6 +1061,7 @@ checkPlayerTestRealtimeRuntime();
 checkPlayerTestPlayerPanel();
 checkPlayerTestSharedRolls();
 checkPlayerTestSharedScenePresentation();
+checkPlayerTestPreparedAdventureFixture();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();

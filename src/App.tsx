@@ -28,6 +28,9 @@ const Marketplace = lazy(() =>
 const ProjectJoin = lazy(() =>
   import('./app/project').then((module) => ({ default: module.ProjectJoin })),
 );
+const SessionJoin = lazy(() =>
+  import('./app/session').then((module) => ({ default: module.SessionJoin })),
+);
 const Library = lazy(() =>
   import('./app/library/root').then((module) => ({ default: module.Library })),
 );
@@ -157,6 +160,17 @@ function AppShell() {
             />
           </LazyView>
         );
+      case 'session-join':
+        return (
+          <LazyView>
+            <SessionJoin
+              onBack={() => handleNavigate('dashboard')}
+              onJoinAsGM={() => handleNavigate('gamemaster')}
+              onJoinAsPlayer={() => handleNavigate('gamemaster')}
+              onNavigateToCharacterEditor={() => handleNavigate('character-editor')}
+            />
+          </LazyView>
+        );
       case 'rulesets-test':
         return (
           <LazyView>
@@ -204,6 +218,7 @@ function AppShell() {
           <SagaResourceScreen
             mode="list"
             onNavigateHome={() => handleNavigate('dashboard')}
+            onNavigate={handleNavigate}
           />
         );
       case 'saga-new':
@@ -211,6 +226,7 @@ function AppShell() {
           <SagaResourceScreen
             mode="new"
             onNavigateHome={() => handleNavigate('dashboard')}
+            onNavigate={handleNavigate}
           />
         );
       case 'saga-section':
@@ -220,6 +236,7 @@ function AppShell() {
             sagaPublicId={route.kind === 'saga-section' ? route.sagaPublicId : null}
             section={route.kind === 'saga-section' ? route.section : 'overview'}
             onNavigateHome={() => handleNavigate('dashboard')}
+            onNavigate={handleNavigate}
           />
         );
       case 'session-phase':
