@@ -128,6 +128,14 @@ function checkPlayerTestPlayerPanel() {
   });
 }
 
+function checkPlayerTestSharedRolls() {
+  console.log('Player-test shared rolls (#299): checking rules kernel probe + authoritative roll RPC...');
+  execFileSync(process.execPath, ['scripts/player-test-shared-rolls-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkProjectMembershipSecurity() {
   console.log('Project membership security contract: checking RLS and client write paths...');
   execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], {
@@ -1035,6 +1043,7 @@ checkSagaRoutingPublicIdFoundation();
 checkPlayerTestSessionSecurity();
 checkPlayerTestRealtimeRuntime();
 checkPlayerTestPlayerPanel();
+checkPlayerTestSharedRolls();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();

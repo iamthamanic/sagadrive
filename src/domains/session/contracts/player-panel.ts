@@ -22,6 +22,7 @@ import {
 import { computeSagaDriveDerivedStats } from '../../rules/sagadrive/derived-stats';
 import type { PlaySessionStatus } from './session-lifecycle';
 import type { SessionPresenceEntry, SessionRuntimeState } from './session-runtime';
+import { readLastSharedRoll, type SharedRollResultView } from './shared-rolls';
 
 export type PlayerPanelConnectionKind =
   | 'loading'
@@ -90,6 +91,8 @@ export interface PlayerPanelModel {
   connectionLabel: string;
   connectionDetail: string | null;
   canAttemptCheck: boolean;
+  checkTarget: number | null;
+  lastRoll: SharedRollResultView | null;
 }
 
 export interface BuildPlayerPanelModelInput {
@@ -292,6 +295,8 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
       connectionLabel: copy.label,
       connectionDetail: copy.detail,
       canAttemptCheck: false,
+      checkTarget: null,
+      lastRoll: runtime ? readLastSharedRoll(runtime.gameplay.shared) : null,
     };
   }
 
@@ -343,6 +348,17 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
   const momentumShared = sharedMomentum !== null;
   const momentum = momentumShared ? sharedMomentum : character.sagaDriveProfile.momentum;
   const conditions = readSharedStringList(shared, ['conditions', 'activeConditions', 'active_conditions']);
+  const checkTarget = readSharedNumber(shared, ['checkTarget', 'check_target']);
+  const lastRoll = readLastSharedRoll(shared);
+
+  let drive = character.sagaDriveProfile.drive;
+  const driveMap = shared.driveByCharacter;
+  if (driveMap && typeof driveMap === 'object' && !Array.isArray(driveMap) && character.id) {
+    const overlay = (driveMap as Record<string, unknown>)[character.id];
+    if (typeof overlay === 'number' && Number.isFinite(overlay)) {
+      drive = Math.max(0, Math.min(5, Math.round(overlay)));
+    }
+  }
 
   return {
     characterName: character.name,
@@ -357,7 +373,7 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
     resistances,
     attributes: attributeLines,
     skills,
-    drive: character.sagaDriveProfile.drive,
+    drive,
     momentum,
     momentumShared,
     inventory: inventoryLines(character.inventoryV2),
@@ -370,6 +386,8 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
     connectionLabel: copy.label,
     connectionDetail: copy.detail,
     canAttemptCheck: connection.kind === 'ready' || connection.kind === 'paused',
+    checkTarget,
+    lastRoll,
   };
 }
 
