@@ -3,7 +3,7 @@
 - Date: 2026-09-20
 - Note: Proof covers branch tip at commit-pr time (SHA field = parent+this commit after amend-free ship)
 - BASE_SHA: d3d05cbc6ad73ad77f0b4a43d089aea614c356c7
-- HEAD_SHA: 35f4bf22b451e57d3893e80577efd9866ff06886
+- HEAD_SHA: 5c39559493ba93520f172dc4d7940974a6ef127d
 - Verdict: **PASS**
 
 ## Checks (@test-gate)
