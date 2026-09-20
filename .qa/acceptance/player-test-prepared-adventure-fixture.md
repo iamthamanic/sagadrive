@@ -52,7 +52,7 @@ World Profile → Adventure/Project → Session wiring for Epic #210 player test
 ## Composition Gate
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-player-test-prepared-adventure-fixture.md`
-- HEAD_SHA: 64b5fc4
+- HEAD_SHA: a29d3f4c93d70692b79c240e85bcc02c973a6c4e
 - BASE_SHA: 769e5a1e42c731cb34b679e5f03d52c8ee82767d
 
 ## Implementation Notes

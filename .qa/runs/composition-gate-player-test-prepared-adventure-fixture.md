@@ -5,7 +5,7 @@ CLEAR
 
 ## Scope SHAs
 - BASE_SHA: 769e5a1e42c731cb34b679e5f03d52c8ee82767d
-- HEAD_SHA: 64b5fc4
+- HEAD_SHA: a29d3f4c93d70692b79c240e85bcc02c973a6c4e
 - Feature slug: player-test-prepared-adventure-fixture
 
 ## Hop chain
