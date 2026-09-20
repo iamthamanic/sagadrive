@@ -10,7 +10,7 @@ PASS — `npm run test-gate` (includes shared-scene presentation check)
 PASS — `.qa/runs/verify-ticket-player-test-shared-scene-presentation-v1.md`
 
 ## Phase B2 — composition-gate
-CLEAR — `.qa/runs/composition-gate-player-test-shared-scene-presentation-v1.md` (WORKTREE → stamp after commit)
+CLEAR — `.qa/runs/composition-gate-player-test-shared-scene-presentation-v1.md` (HEAD f9f2964f1b34c3344a32ab1cf4452b6a09b154f6)
 
 ## Phase C — review-ticket
 ACCEPT — `.qa/runs/review-ticket-player-test-shared-scene-presentation-v1.md`

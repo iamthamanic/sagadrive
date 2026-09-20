@@ -1,6 +1,6 @@
 # Composition Gate — player-test-shared-scene-presentation-v1
 
-- HEAD_SHA: WORKTREE (pre-commit; re-stamp after commit)
+- HEAD_SHA: f9f2964f1b34c3344a32ab1cf4452b6a09b154f6
 - Date: 2026-09-20
 - Verdict: CLEAR
 

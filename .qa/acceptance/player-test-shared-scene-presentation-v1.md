@@ -52,7 +52,7 @@ Minimaler gemeinsamer visueller Kontext (kein 3D-World-Builder): aktueller Ort/S
 ## Composition Gate
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-player-test-shared-scene-presentation-v1.md`
-- HEAD_SHA: WORKTREE (re-stamp after commit)
+- HEAD_SHA: f9f2964f1b34c3344a32ab1cf4452b6a09b154f6
 
 ## Implementation Notes
 - Domain: `src/domains/session/contracts/shared-scene-presentation.ts` (schema v1, forged-key strip, http(s) backdrop, opaque sceneRef)
