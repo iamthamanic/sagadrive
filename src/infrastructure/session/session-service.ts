@@ -1,9 +1,10 @@
 /**
- * session-service — Session persistence/API adapter.
+ * session-service — Self-host session persistence via SECURITY DEFINER RPCs.
  * Location: src/infrastructure/session/session-service.ts
+ * Hides: Supabase RPC/table transport for play-session create/join/leave/status.
+ * No Hosted make-server URLs; no client-generated session codes.
  */
 import { supabase } from '../../lib/supabase';
-import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import type {
   SessionDto,
   SessionVm,
@@ -11,39 +12,76 @@ import type {
   JoinSessionDto,
   SessionPlayerDto,
   SessionPlayerVm,
+  PlaySessionStatus,
 } from '../../domains/session/contracts/session.types';
+import {
+  assertPlaySessionStatusTransition,
+  normalizePlaySessionStatus,
+  normalizeSessionJoinCode,
+} from '../../domains/session/contracts/session-lifecycle';
 
-/**
- * Session Service
- * Handles all session-related API calls
- */
+type SessionRow = {
+  id: string;
+  code: string | null;
+  name: string | null;
+  project_id: string | null;
+  public_id?: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  started_at: string | null;
+  ended_at: string | null;
+};
+
 class SessionService {
   private readonly tableName = 'sessions';
   private readonly playersTableName = 'session_players';
 
-  /**
-   * Generate unique 6-character session code
-   */
-  private generateSessionCode(): string {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  private async resolveGmUserId(projectId: string | null): Promise<string> {
+    if (!projectId) return '';
+    const { data, error } = await supabase
+      .from('projects')
+      .select('gm_user_id')
+      .eq('id', projectId)
+      .maybeSingle();
+    if (error || !data) return '';
+    return typeof data.gm_user_id === 'string' ? data.gm_user_id : '';
   }
 
-  /**
-   * Map DTO to View Model
-   */
+  private async mapRowToDto(row: SessionRow): Promise<SessionDto> {
+    const projectId = row.project_id;
+    const gmUserId = await this.resolveGmUserId(projectId);
+    return {
+      id: row.id,
+      code: row.code ?? '',
+      name: row.name,
+      adventure_id: projectId,
+      project_id: projectId,
+      public_id: row.public_id ?? null,
+      gm_user_id: gmUserId,
+      status: normalizePlaySessionStatus(row.status),
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      started_at: row.started_at,
+      ended_at: row.ended_at,
+    };
+  }
+
   private mapToViewModel(dto: SessionDto, players: SessionPlayerDto[] = []): SessionVm {
     return {
       id: dto.id,
       code: dto.code,
-      name: dto.name,
+      name: dto.name ?? '',
       adventureId: dto.adventure_id,
+      projectId: dto.project_id,
+      publicId: dto.public_id ?? null,
       gmUserId: dto.gm_user_id,
       status: dto.status,
       createdAt: new Date(dto.created_at),
       updatedAt: new Date(dto.updated_at),
       startedAt: dto.started_at ? new Date(dto.started_at) : null,
       endedAt: dto.ended_at ? new Date(dto.ended_at) : null,
-      players: players.map(this.mapPlayerToViewModel),
+      players: players.map((p) => this.mapPlayerToViewModel(p)),
     };
   }
 
@@ -58,99 +96,65 @@ class SessionService {
     };
   }
 
-  /**
-   * Create new session (as GM)
-   */
-  async createSession(payload: CreateSessionDto): Promise<SessionVm> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    const code = this.generateSessionCode();
-
-    const sessionData: Partial<SessionDto> = {
-      code,
-      name: payload.name,
-      adventure_id: payload.adventure_id || null,
-      gm_user_id: user.id,
-      status: 'waiting',
-    };
-
+  private async loadPlayers(sessionId: string): Promise<SessionPlayerDto[]> {
     const { data, error } = await supabase
-      .from(this.tableName)
-      .insert(sessionData)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`Failed to create session: ${error.message}`);
-    }
-
-    return this.mapToViewModel(data, []);
-  }
-
-  /**
-   * Join existing session (as player)
-   * Uses server endpoint to find session by code (bypasses RLS)
-   */
-  async joinSession(payload: JoinSessionDto): Promise<SessionVm> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    // 1. Find session by code via server (bypasses RLS)
-    const serverUrl = `https://${projectId}.supabase.co/functions/v1/make-server-9f6fb44c/sessions/find-by-code`;
-    const response = await fetch(serverUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${publicAnonKey}`,
-      },
-      body: JSON.stringify({ code: payload.code.toUpperCase() }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Session nicht gefunden');
-    }
-
-    const { session } = await response.json();
-
-    // 2. Check if already joined
-    const { data: existingPlayer } = await supabase
       .from(this.playersTableName)
       .select('*')
-      .eq('session_id', session.id)
-      .eq('user_id', user.id)
-      .single();
+      .eq('session_id', sessionId);
 
-    if (!existingPlayer) {
-      // 3. Add player to session
-      const { error: joinError } = await supabase
-        .from(this.playersTableName)
-        .insert({
-          session_id: session.id,
-          user_id: user.id,
-          character_id: payload.character_id || null,
-          is_online: true,
-        });
-
-      if (joinError) {
-        throw new Error(`Beitritt fehlgeschlagen: ${joinError.message}`);
-      }
+    if (error) {
+      console.error('Failed to load session players:', error);
+      return [];
     }
-
-    // 4. Fetch session with players
-    return this.getSessionById(session.id);
+    return (data ?? []) as SessionPlayerDto[];
   }
 
-  /**
-   * Get session by ID
-   */
+  async createSession(payload: CreateSessionDto): Promise<SessionVm> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    const projectId = payload.project_id || payload.adventure_id;
+    if (!projectId) {
+      throw new Error('project_id ist erforderlich, um eine Session zu erstellen');
+    }
+
+    const { data, error } = await supabase.rpc('create_play_session', {
+      p_project_id: projectId,
+      p_name: payload.name,
+    });
+
+    if (error || !data) {
+      throw new Error(`Failed to create session: ${error?.message ?? 'unknown'}`);
+    }
+
+    const dto = await this.mapRowToDto(data as SessionRow);
+    return this.mapToViewModel(dto, []);
+  }
+
+  async joinSession(payload: JoinSessionDto): Promise<SessionVm> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    const code = normalizeSessionJoinCode(payload.code);
+
+    const { data, error } = await supabase.rpc('join_session_by_code', {
+      p_code: code,
+      p_character_id: payload.character_id ?? null,
+    });
+
+    if (error || !data) {
+      throw new Error(error?.message || 'Session nicht gefunden');
+    }
+
+    const dto = await this.mapRowToDto(data as SessionRow);
+    const players = await this.loadPlayers(dto.id);
+    return this.mapToViewModel(dto, players);
+  }
+
   async getSessionById(id: string): Promise<SessionVm> {
     const { data: session, error: sessionError } = await supabase
       .from(this.tableName)
@@ -162,37 +166,42 @@ class SessionService {
       throw new Error('Session not found');
     }
 
-    const { data: players } = await supabase
-      .from(this.playersTableName)
-      .select('*')
-      .eq('session_id', id);
-
-    return this.mapToViewModel(session, players || []);
+    const dto = await this.mapRowToDto(session as SessionRow);
+    const players = await this.loadPlayers(id);
+    return this.mapToViewModel(dto, players);
   }
 
-  /**
-   * Get user's active sessions (as GM or Player)
-   */
   async getUserSessions(): Promise<SessionVm[]> {
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) {
       throw new Error('User not authenticated');
     }
 
-    // 1. Get sessions where user is GM (RLS allows this)
-    const { data: gmSessions, error: gmError } = await supabase
-      .from(this.tableName)
-      .select('*')
-      .eq('gm_user_id', user.id)
-      .neq('status', 'completed')
-      .order('created_at', { ascending: false });
+    const { data: gmProjects, error: gmProjectsError } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('gm_user_id', user.id);
 
-    if (gmError) {
-      throw new Error(`Failed to fetch GM sessions: ${gmError.message}`);
+    if (gmProjectsError) {
+      throw new Error(`Failed to fetch GM projects: ${gmProjectsError.message}`);
     }
 
-    // 2. Get player records where user is a player (RLS allows this)
+    const gmProjectIds = (gmProjects ?? []).map((p) => p.id as string);
+
+    let gmSessions: SessionRow[] = [];
+    if (gmProjectIds.length > 0) {
+      const { data, error } = await supabase
+        .from(this.tableName)
+        .select('*')
+        .in('project_id', gmProjectIds)
+        .neq('status', 'completed')
+        .order('created_at', { ascending: false });
+      if (error) {
+        throw new Error(`Failed to fetch GM sessions: ${error.message}`);
+      }
+      gmSessions = (data ?? []) as SessionRow[];
+    }
+
     const { data: playerRecords, error: playerError } = await supabase
       .from(this.playersTableName)
       .select('*, sessions!inner(*)')
@@ -202,86 +211,60 @@ class SessionService {
       console.error('Failed to fetch player sessions:', playerError);
     }
 
-    // 3. Extract sessions from player records and filter out completed ones
-    type PlayerSessionJoinRow = { sessions: SessionDto | SessionDto[] | null };
+    type PlayerSessionJoinRow = { sessions: SessionRow | SessionRow[] | null };
     const playerSessions = ((playerRecords || []) as PlayerSessionJoinRow[])
       .map((record) => record.sessions)
       .flatMap((session) => (Array.isArray(session) ? session : session ? [session] : []))
       .filter((session) => session.status !== 'completed');
 
-    // 4. Combine GM sessions and player sessions (avoid duplicates)
     const allSessionIds = new Set<string>();
-    const combinedSessions: SessionDto[] = [];
-
-    [...(gmSessions || []), ...playerSessions].forEach(session => {
+    const combined: SessionRow[] = [];
+    [...gmSessions, ...playerSessions].forEach((session) => {
       if (!allSessionIds.has(session.id)) {
         allSessionIds.add(session.id);
-        combinedSessions.push(session);
+        combined.push(session);
       }
     });
 
-    // 5. Fetch players for all sessions (GM can see all players in their sessions)
-    const sessionsWithPlayers = await Promise.all(
-      combinedSessions.map(async (session) => {
-        const { data: players } = await supabase
-          .from(this.playersTableName)
-          .select('*')
-          .eq('session_id', session.id);
-        
-        return this.mapToViewModel(session, players || []);
-      })
+    return Promise.all(
+      combined.map(async (session) => {
+        const dto = await this.mapRowToDto(session);
+        const players = await this.loadPlayers(session.id);
+        return this.mapToViewModel(dto, players);
+      }),
     );
-
-    return sessionsWithPlayers;
   }
 
-  /**
-   * Update session status
-   */
   async updateSessionStatus(
     id: string,
-    status: 'waiting' | 'active' | 'paused' | 'completed'
+    status: PlaySessionStatus,
   ): Promise<SessionVm> {
-    const updates: Partial<SessionDto> = {
-      status,
-      updated_at: new Date().toISOString(),
-    };
+    const current = await this.getSessionById(id);
+    assertPlaySessionStatusTransition(current.status, status);
 
-    if (status === 'active') {
-      updates.started_at = new Date().toISOString();
-    } else if (status === 'completed') {
-      updates.ended_at = new Date().toISOString();
+    const { data, error } = await supabase.rpc('set_session_status', {
+      p_session_id: id,
+      p_status: status,
+    });
+
+    if (error || !data) {
+      throw new Error(`Failed to update session: ${error?.message ?? 'unknown'}`);
     }
 
-    const { data, error } = await supabase
-      .from(this.tableName)
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`Failed to update session: ${error.message}`);
-    }
-
-    return this.getSessionById(data.id);
+    const dto = await this.mapRowToDto(data as SessionRow);
+    const players = await this.loadPlayers(id);
+    return this.mapToViewModel(dto, players);
   }
 
-  /**
-   * Leave session
-   */
   async leaveSession(sessionId: string): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) {
       throw new Error('User not authenticated');
     }
 
-    const { error } = await supabase
-      .from(this.playersTableName)
-      .delete()
-      .eq('session_id', sessionId)
-      .eq('user_id', user.id);
+    const { error } = await supabase.rpc('leave_play_session', {
+      p_session_id: sessionId,
+    });
 
     if (error) {
       throw new Error(`Failed to leave session: ${error.message}`);

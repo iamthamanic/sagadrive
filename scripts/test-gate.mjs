@@ -103,6 +103,15 @@ function checkChangedDenoFunctions() {
   console.log('Deno Edge Function tests passed.');
 }
 
+
+function checkPlayerTestSessionSecurity() {
+  console.log('Player-test session security (#296): checking RPCs, no hosted join, lifecycle domain...');
+  execFileSync(process.execPath, ['scripts/player-test-session-security-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkProjectMembershipSecurity() {
   console.log('Project membership security contract: checking RLS and client write paths...');
   execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], {
@@ -998,6 +1007,7 @@ checkItemInventoryWorldCatalogWire();
 checkItemEpicAcceptance();
 checkItemRoutingFoundation();
 checkSagaRoutingPublicIdFoundation();
+checkPlayerTestSessionSecurity();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();
