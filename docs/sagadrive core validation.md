@@ -558,6 +558,8 @@ Erst wenn die relevanten vorherigen Slices erledigt sind.
 
 Mindestens drei vollständige analoge Sitzungen.
 
+**G1-Status (2026-09-20, #31):** Umgesetzt. Deterministische Papier-Play-Engine `scripts/validate-analog-end-to-end-playtest.mjs` — Sessions A/B/C mit Pflichtbeats, ≥2 Weltprofile (Eldenmark Fantasy + Graustadt Gegenwart), Session C mit Drive deaktiviert ohne digitale Ersatzlogik (§16.3), Metrik-Ledger (Regelpausen/Nachschläge/Rechnen/Unklar), Prior-Slice-Aggregation (#19–#30/#32/#33) und evidenzgebundene Core-Vorschlagsliste. 0 Findings; Report: `.qa/runs/validate-analog-end-to-end-playtest-report.md`.
+
 ### Session A
 
 - Character Creation,

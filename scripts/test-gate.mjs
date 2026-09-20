@@ -753,6 +753,14 @@ function checkDriveMomentumValidation() {
   });
 }
 
+function checkAnalogEndToEndPlaytestValidation() {
+  console.log('Analog E2E playtest validation (#31): deterministic Phase G1 paper-play ledger...');
+  execFileSync(process.execPath, ['scripts/validate-analog-end-to-end-playtest.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkPowersEssencesValidation() {
   console.log('Powers/essences validation (#25): deterministic §12 power model audit...');
   execFileSync(process.execPath, ['scripts/validate-powers-essences-ranks.mjs'], {
@@ -1171,6 +1179,7 @@ checkConditionsResistancesValidation();
 checkTravelChaseVehiclesValidation();
 checkCharacterEditorRulesUxValidation();
 checkGearResourcesLoadValidation();
+checkAnalogEndToEndPlaytestValidation();
 scanAddedLinesForSecrets();
 reportDependencyAudit();
 
