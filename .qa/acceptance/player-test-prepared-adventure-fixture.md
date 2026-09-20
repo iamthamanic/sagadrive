@@ -50,10 +50,10 @@ World Profile → Adventure/Project → Session wiring for Epic #210 player test
 | n/a | contract gate; browser optional via @verify-ui |
 
 ## Composition Gate
-- Verdict: pending parent `@composition-gate`
-- Proof: (parent will write)
-- HEAD_SHA: TBD
-- BASE_SHA: 769e5a1
+- Verdict: CLEAR`@composition-gate`
+- Proof: 
+- HEAD_SHA: 880330e202d95a47267eaa7513c9359a8c89fd4d
+- BASE_SHA: 769e5a1e42c731cb34b679e5f03d52c8ee82767d
 
 ## Implementation Notes
 - Domain: `src/domains/session/contracts/prepared-adventure-fixture.ts` — fixture id, fantasy-basic pack, 4 pregens, 4 NPC plan entries (duplicate bandit), beats (explore/social/combat/heal/drive), Voice Discord/Meet note, integrity assert

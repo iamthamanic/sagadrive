@@ -5,7 +5,7 @@ CLEAR
 
 ## Scope SHAs
 - BASE_SHA: 769e5a1e42c731cb34b679e5f03d52c8ee82767d
-- WORKTREE: uncommitted issue-302 (re-stamp HEAD after commit)
+- HEAD_SHA: 880330e202d95a47267eaa7513c9359a8c89fd4d
 - Feature slug: player-test-prepared-adventure-fixture
 
 ## Hop chain
