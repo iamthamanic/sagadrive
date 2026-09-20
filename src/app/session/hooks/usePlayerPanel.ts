@@ -1,5 +1,5 @@
 /**
- * usePlayerPanel — Loads session runtime + character for Player Panel V1 (#298).
+ * usePlayerPanel — Loads session runtime + character for Player Panel V1 (#298/#299).
  * Location: src/app/session/hooks/usePlayerPanel.ts
  */
 import { useEffect, useState } from 'react';
@@ -8,17 +8,23 @@ import {
   type PlayerPanelModel,
 } from '../../../domains/session/contracts/player-panel';
 import type { SagaDriveSkillKey } from '../../../domains/rules/sagadrive/character-creation';
+import type { RollMode } from '../../../domains/session/contracts/shared-rolls';
 import type { CharacterVm } from '../../../domains/character';
 import { characterService } from '../../../infrastructure/character/character-service';
 import { projectService } from '../../../infrastructure/project/project-service';
 import { useAuth } from '../../../lib/auth-context';
 import { useSessionRuntime } from './useSessionRuntime';
 
+export interface RequestCheckOptions {
+  mode?: RollMode;
+  useDrive?: boolean;
+}
+
 export interface UsePlayerPanelResult {
   model: PlayerPanelModel;
   isBootstrapping: boolean;
   resync: () => Promise<void>;
-  requestCheck: (skill: SagaDriveSkillKey) => Promise<boolean>;
+  requestCheck: (skill: SagaDriveSkillKey, options?: RequestCheckOptions) => Promise<boolean>;
 }
 
 export function usePlayerPanel(input: {
@@ -83,8 +89,13 @@ export function usePlayerPanel(input: {
     characterPublicId: input.characterPublicId,
   });
 
-  const requestCheck = async (skill: SagaDriveSkillKey): Promise<boolean> => {
+  const requestCheck = async (
+    skill: SagaDriveSkillKey,
+    options?: RequestCheckOptions,
+  ): Promise<boolean> => {
     if (!model.canAttemptCheck) return false;
+    const mode = options?.mode ?? 'normal';
+    const useDrive = options?.useDrive === true;
     const next = await runtime.applyCommand({
       kind: 'roll',
       payload: {
@@ -92,8 +103,10 @@ export function usePlayerPanel(input: {
         characterPublicId: input.characterPublicId,
         characterId: character?.id ?? null,
         intent: 'standard-check',
+        mode,
+        useDrive,
       },
-      idempotencyKey: `player-check:${input.characterPublicId ?? 'none'}:${skill}:${Date.now()}`,
+      idempotencyKey: `player-check:${input.characterPublicId ?? 'none'}:${skill}:${mode}:${useDrive}:${Date.now()}`,
     });
     return next !== null;
   };
