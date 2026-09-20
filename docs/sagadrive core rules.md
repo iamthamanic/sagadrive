@@ -1140,6 +1140,17 @@ Eine Hauptaktion kann für eine zweite normale Bewegung verwendet werden.
 
 **Verstecken:** Hauptaktion; Heimlichkeit nach den normalen Regeln.
 
+**Gelegenheit schaffen:** Hauptaktion für eine kreative taktische Handlung im direkten Kampf, die nicht bereits durch eine bestehende Kernaktion oder ein Kampfmanöver abgedeckt ist. Bestehende Aktionen und Manöver haben immer Vorrang; „Gelegenheit schaffen“ darf sie nicht umgehen oder mit leichterem Widerstand ersetzen.
+
+Vor dem Wurf benennt der GM den Check bzw. Widerstand und welche klar umrissene Folgehandlung bzw. welche Folgechecks von einer geschaffenen Gelegenheit profitieren können. Fehlt eine plausible taktische Wirkung, findet kein Check statt; reine Flavor-Handlungen erzeugen keinen Bonus.
+
+- Erfolg: Der nächste passende Folgecheck erhält Vorteil.
+- Kritischer Erfolg: Zwei passende Folgechecks erhalten Vorteil.
+- Fehlschlag: Es entsteht keine Gelegenheit.
+- Kritischer Fehlschlag: Die nächste passende Handlung gegen die handelnde Figur erhält Vorteil.
+
+Die Aktion verursacht selbst keinen Schaden, keine erzwungene Bewegung, keinen Aktionsverlust und keinen Zustand. Sie vergibt keine spontanen numerischen Boni oder Abzüge. Im direkten Kampf bleibt Erfolg gegen Preis nach Abschnitt 2.3 untersagt, sofern keine Fähigkeit ausdrücklich etwas anderes erlaubt. Vorteil aus derselben geschaffenen Gelegenheit stapelt nicht mit sich selbst und folgt vollständig den Regeln zu Vorteil und Nachteil (Abschnitt 2.5). Fähigkeiten oder Weltmodule dürfen die Aktion ausdrücklich erweitern, müssen ihre Abweichung aber benennen.
+
 ### 7.5 Gelegenheitsangriffe
 
 Verlässt eine Figur freiwillig die Nahkampfreichweite eines Gegners, kann dieser seine Reaktion für einen Gelegenheitsangriff verwenden.
@@ -2401,6 +2412,7 @@ Die SagaDrive Core Rules gelten als final validiert, wenn:
 
 | Datum | Stand |
 |---|---|
+| 20.09.2026 | §7.4: Universelle Hauptaktion „Gelegenheit schaffen“ ergänzt — kreative taktische Lückenhandlung mit Vorrang bestehender Aktionen/Manöver; Output begrenzt auf benannten Vorteil für Folgechecks (kein Schaden, kein freier Zustand, keine erzwungene Bewegung, kein Aktionsverlust, keine spontanen Zahlen, kein allgemeiner Erfolg gegen Preis). |
 | 27.08.2026 | Speziesmechanik konkretisiert: exakt 3 Speziespunkte verpflichtend, Core-Spezies mit festen Merkmals-Allowlists, Alien als frei benennbares Speziesprofil mit vollständigem verfügbarem Merkmalskatalog, Pflichtdetails für offene Merkmale, `Kletter- oder Schwimmbewegung` in `Erweitertes Klettern` und `Erweitertes Schwimmen` getrennt. Normales Klettern/Schwimmen kostet 2 Meter Bewegung pro Meter; die erweiterten Merkmale reduzieren dies auf 1:1. `Außergewöhnlicher Körperbau` bleibt sichtbar, aber bis zur Definition zulässiger Varianten nicht verfügbar. |
 | 26.08.2026 | Das 20-Stufen-Modell ausdrücklich bestätigt und in fünf benannte Ränge gegliedert: Novize (1–4), Spezialist (5–8), Experte (9–12), Meister (13–16), Legende (17–20). Römische Rangbezeichnungen entfernt, Fähigkeits- und Begegnungsränge angeglichen und direkte Erstellung höherstufiger Figuren mit vollständiger, chronologisch legaler Progression definiert. |
 | 26.08.2026 | Regelentwurf der zuvor offenen Abschnitte 2 bis 18 nach drei Reviewzyklen vollständig als verbindliche Validierungsfassung übernommen. Abschnitt 19 ist jetzt der aktive Arbeitsblock. Zahlenwerte sind verbindliche Playtestwerte, aber noch nicht endgültig empirisch validiert. |

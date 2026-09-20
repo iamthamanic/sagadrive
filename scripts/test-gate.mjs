@@ -911,6 +911,14 @@ function checkSagaDriveItemRulesKernel() {
   });
 }
 
+function checkCombatCreateOpportunity() {
+  console.log('Combat create opportunity (#194): Gelegenheit schaffen kernel + docs...');
+  execFileSync(process.execPath, ['scripts/combat-create-opportunity-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkNpcCreaturePowerFramework() {
   console.log('NPC/creature power framework (#195): benchmarks, profiles, roles...');
   execFileSync(process.execPath, ['scripts/npc-creature-power-framework-check.mjs'], {
@@ -1074,6 +1082,7 @@ checkArchitectureBoundaries();
 checkEdgeCorsShared();
 checkItemDomainTaxonomy();
 checkSagaDriveItemRulesKernel();
+checkCombatCreateOpportunity();
 checkItemDefinitionPersistence();
 checkItemStandardPacks();
 checkItemLibraryBrowser();
