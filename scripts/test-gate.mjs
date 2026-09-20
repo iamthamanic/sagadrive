@@ -160,6 +160,14 @@ function checkPlayerTestCombatEncounter() {
   });
 }
 
+function checkPlayerTestMultiuserE2eSecurity() {
+  console.log('Player-test multi-user E2E + security (#303): Phase 8 checklist + failure classification...');
+  execFileSync(process.execPath, ['scripts/player-test-multiuser-e2e-security-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkProjectMembershipSecurity() {
   console.log('Project membership security contract: checking RLS and client write paths...');
   execFileSync(process.execPath, ['scripts/project-membership-security-check.mjs'], {
@@ -1071,6 +1079,7 @@ checkPlayerTestSharedRolls();
 checkPlayerTestSharedScenePresentation();
 checkPlayerTestPreparedAdventureFixture();
 checkPlayerTestCombatEncounter();
+checkPlayerTestMultiuserE2eSecurity();
 checkProjectMembershipSecurity();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();
