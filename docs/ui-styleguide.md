@@ -4,6 +4,8 @@ Dieses Dokument beschreibt wiederverwendbare UI/UX-Muster aus dem Feature-Branch
 
 **Konvention:** `.qa/` enthält Acceptance- und QA-Artefakte; `docs/` enthält Regeln und Entwickler-Dokumentation. UI-Patterns liegen hier in `docs/ui-styleguide.md`.
 
+**Charakter-3D-/Art-Look (nicht UI):** siehe [`docs/character-visual-styleguide.md`](character-visual-styleguide.md) — Palworld × Overwatch soft-real, Golden-Refs, Generation-Prompts. Dieses UI-Dokument deckt **keinen** Avatar-Mesh-Stil ab.
+
 ---
 
 ## 1. AttributeD20Icon
@@ -333,6 +335,7 @@ import { RuleHelp } from '@/modules/characters/components/RuleHelp';
 
 ## Verwandte Dokumente
 
+- `docs/character-visual-styleguide.md` — **Avatar-/Charakter-Art-Look** (getrennt von diesem UI-Guide)
 - `docs/attribute-bonus-pool-rules-amendment.md` — **SUPERSEDED**; kanonisch: `docs/sagadrive core rules.md` §3.2/§3.3/§3.7
 - `docs/sagadrive-background-competency-rules.md` — Hintergrund-Kompetenzen
 - `.qa/design/background-competency-system.md` — UX-Design Hintergrund

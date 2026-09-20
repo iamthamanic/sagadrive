@@ -21,6 +21,7 @@ import { AvatarAnimationPreviewControls } from './AvatarAnimationPreviewControls
 import { AvatarFacialPreviewControls } from './AvatarFacialPreviewControls';
 import { AvatarFaceTrackingControls } from './AvatarFaceTrackingControls';
 import { AvatarCameraViewControls } from './AvatarCameraViewControls';
+import { AvatarMtoonStyleToggle } from './AvatarMtoonStyleToggle';
 import {
   AvatarFaceTrackingRuntime,
   type FaceTrackingRuntimeState,
@@ -94,6 +95,7 @@ export function AvatarCanvas({
   const [faceTrackingProfileLabel, setFaceTrackingProfileLabel] = useState('Desktop');
   const [inspectMode, setInspectMode] = useState(false);
   const [activeFrame, setActiveFrame] = useState<AvatarCameraFrameId | null>('full');
+  const [mtoonStyleEnabled, setMtoonStyleEnabled] = useState(true);
   const faceTrackingRef = useRef<AvatarFaceTrackingRuntime>();
   const manifest = getAvatarAssetManifest(avatar.preset);
   const modelUrl = resolveAvatarModelUrl(avatar);
@@ -200,6 +202,7 @@ export function AvatarCanvas({
     void runtime.loadModel(modelUrl, avatar, manifest);
     setInspectMode(false);
     setActiveFrame('full');
+    setMtoonStyleEnabled(true);
   }, [manifest, modelUrl]);
 
   useEffect(() => {
@@ -224,6 +227,19 @@ export function AvatarCanvas({
           aria-label={`Interaktive echte 3D-Vorschau für ${manifest.displayName}`}
           tabIndex={0}
         />
+
+        {showEditorControls ? (
+          <AvatarMtoonStyleToggle
+            enabled={mtoonStyleEnabled}
+            disabled={runtimeState.status !== 'ready'}
+            onChange={(enabled) => {
+              runtimeRef.current?.setMtoonStyleEnabled(enabled);
+              setMtoonStyleEnabled(enabled);
+              const compatibility = runtimeRef.current?.getStyleCompatibility();
+              setStyleNotice(compatibility?.noticeDe ?? null);
+            }}
+          />
+        ) : null}
 
         {runtimeState.status !== 'ready' && (
           <div className="pointer-events-none absolute left-3 top-3 z-[1] flex items-center gap-2 rounded-md border border-white/10 bg-black/45 px-2.5 py-1.5 text-[11px] text-slate-200 backdrop-blur-sm">

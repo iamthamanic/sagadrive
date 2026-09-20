@@ -101,7 +101,7 @@ const goodEvidence = {
   humanoidBoneCount: 16,
   morphTargetCount: 20,
   mtoonMaterialHint: true,
-  styleTagsClaimed: ['adult-stylized', 'mtoon', 'palworld-korra-direction', 'no-chibi'],
+  styleTagsClaimed: ['adult-stylized', 'mtoon', 'palworld-overwatch-soft-real', 'no-chibi'],
   byteSize: 1000,
   checksum: 'abc123',
 };

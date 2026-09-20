@@ -39,6 +39,15 @@ function isMtoonMaterial(material: THREE.Material): boolean {
   return material.type === 'MToonMaterial';
 }
 
+/** True when albedo/baseColor map is bound — flat hex tint would crush Meshy/import textures. */
+function materialHasBaseMap(material: THREE.Material): boolean {
+  const record = material as THREE.Material & {
+    map?: THREE.Texture | null;
+    colorMap?: THREE.Texture | null;
+  };
+  return Boolean(record.map || record.colorMap);
+}
+
 function multiplyHex(hex: string, factor: number): THREE.Color {
   const color = new THREE.Color(hex);
   color.multiplyScalar(Math.max(0, Math.min(1, factor)));
@@ -148,10 +157,18 @@ function applyMtoonClassToMaterial(
       outlineColorFactor?: THREE.Color;
       needsUpdate: boolean;
     };
-    if (baseColorHex && mtoon.color) mtoon.color.set(baseColorHex);
+    const preserveMap = materialHasBaseMap(material);
+    if (mtoon.color) {
+      if (preserveMap) {
+        // Keep albedo map visible (Three multiplies color × map).
+        mtoon.color.set('#ffffff');
+      } else if (baseColorHex) {
+        mtoon.color.set(baseColorHex);
+      }
+    }
     if (mtoon.shadeColorFactor && mtoon.color) {
       mtoon.shadeColorFactor.copy(mtoon.color).multiplyScalar(classProfile.shadeColorMultiply);
-    } else if (mtoon.shadeColorFactor && baseColorHex) {
+    } else if (mtoon.shadeColorFactor && baseColorHex && !preserveMap) {
       mtoon.shadeColorFactor.copy(multiplyHex(baseColorHex, classProfile.shadeColorMultiply));
     }
     if (typeof mtoon.shadingToonyFactor === 'number') {
@@ -182,8 +199,13 @@ function applyMtoonClassToMaterial(
   }
 
   // Controlled PBR fallback — no custom shader injection.
-  if ('color' in material && material.color instanceof THREE.Color && baseColorHex) {
-    material.color.set(baseColorHex);
+  const preserveMap = materialHasBaseMap(material);
+  if ('color' in material && material.color instanceof THREE.Color) {
+    if (preserveMap) {
+      material.color.set('#ffffff');
+    } else if (baseColorHex) {
+      material.color.set(baseColorHex);
+    }
   }
   if ('roughness' in material && typeof material.roughness === 'number') {
     material.roughness = classProfile.pbrRoughness;
@@ -234,3 +256,132 @@ export function applyMtoonProfileToModel(input: {
 export function capturePortraitFromRenderer(renderer: THREE.WebGLRenderer): string {
   return renderer.domElement.toDataURL('image/png');
 }
+
+/** Snapshot of style-relevant fields before SagaDrive MToon profile mutates materials. */
+export interface MaterialStyleSnapshot {
+  material: THREE.Material;
+  color?: string;
+  roughness?: number;
+  metalness?: number;
+  shadeColorFactor?: string;
+  shadingToonyFactor?: number;
+  shadingShiftFactor?: number;
+  outlineWidthMode?: string;
+  outlineWidthFactor?: number;
+  parametricRimFresnelPowerFactor?: number;
+}
+
+/**
+ * Capture material style fields after load, before first profile apply.
+ * Used by editor MToon preview toggle to restore raw look.
+ */
+export function captureMaterialStyleSnapshots(root: THREE.Object3D): MaterialStyleSnapshot[] {
+  const snapshots: MaterialStyleSnapshot[] = [];
+  root.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    for (const material of materialsOf(object)) {
+      const record = material as THREE.Material & {
+        color?: THREE.Color;
+        roughness?: number;
+        metalness?: number;
+        shadeColorFactor?: THREE.Color;
+        shadingToonyFactor?: number;
+        shadingShiftFactor?: number;
+        outlineWidthMode?: string;
+        outlineWidthFactor?: number;
+        parametricRimFresnelPowerFactor?: number;
+      };
+      snapshots.push({
+        material,
+        color: record.color instanceof THREE.Color ? `#${record.color.getHexString()}` : undefined,
+        roughness: typeof record.roughness === 'number' ? record.roughness : undefined,
+        metalness: typeof record.metalness === 'number' ? record.metalness : undefined,
+        shadeColorFactor:
+          record.shadeColorFactor instanceof THREE.Color
+            ? `#${record.shadeColorFactor.getHexString()}`
+            : undefined,
+        shadingToonyFactor:
+          typeof record.shadingToonyFactor === 'number' ? record.shadingToonyFactor : undefined,
+        shadingShiftFactor:
+          typeof record.shadingShiftFactor === 'number' ? record.shadingShiftFactor : undefined,
+        outlineWidthMode:
+          typeof record.outlineWidthMode === 'string' ? record.outlineWidthMode : undefined,
+        outlineWidthFactor:
+          typeof record.outlineWidthFactor === 'number' ? record.outlineWidthFactor : undefined,
+        parametricRimFresnelPowerFactor:
+          typeof record.parametricRimFresnelPowerFactor === 'number'
+            ? record.parametricRimFresnelPowerFactor
+            : undefined,
+      });
+    }
+  });
+  return snapshots;
+}
+
+export function restoreMaterialStyleSnapshots(snapshots: readonly MaterialStyleSnapshot[]): void {
+  for (const snap of snapshots) {
+    const material = snap.material;
+    if (!material) continue;
+    const record = material as THREE.Material & {
+      color?: THREE.Color;
+      roughness?: number;
+      metalness?: number;
+      shadeColorFactor?: THREE.Color;
+      shadingToonyFactor?: number;
+      shadingShiftFactor?: number;
+      outlineWidthMode?: string;
+      outlineWidthFactor?: number;
+      parametricRimFresnelPowerFactor?: number;
+      needsUpdate: boolean;
+    };
+    if (snap.color && record.color instanceof THREE.Color) record.color.set(snap.color);
+    if (typeof snap.roughness === 'number' && typeof record.roughness === 'number') {
+      record.roughness = snap.roughness;
+    }
+    if (typeof snap.metalness === 'number' && typeof record.metalness === 'number') {
+      record.metalness = snap.metalness;
+    }
+    if (snap.shadeColorFactor && record.shadeColorFactor instanceof THREE.Color) {
+      record.shadeColorFactor.set(snap.shadeColorFactor);
+    }
+    if (typeof snap.shadingToonyFactor === 'number' && typeof record.shadingToonyFactor === 'number') {
+      record.shadingToonyFactor = snap.shadingToonyFactor;
+    }
+    if (typeof snap.shadingShiftFactor === 'number' && typeof record.shadingShiftFactor === 'number') {
+      record.shadingShiftFactor = snap.shadingShiftFactor;
+    }
+    if (typeof snap.outlineWidthMode === 'string' && typeof record.outlineWidthMode === 'string') {
+      record.outlineWidthMode = snap.outlineWidthMode;
+    }
+    if (typeof snap.outlineWidthFactor === 'number' && typeof record.outlineWidthFactor === 'number') {
+      record.outlineWidthFactor = snap.outlineWidthFactor;
+    }
+    if (
+      typeof snap.parametricRimFresnelPowerFactor === 'number' &&
+      typeof record.parametricRimFresnelPowerFactor === 'number'
+    ) {
+      record.parametricRimFresnelPowerFactor = snap.parametricRimFresnelPowerFactor;
+    }
+    record.needsUpdate = true;
+  }
+}
+
+/** Soft studio lights for raw PBR compare (no toon rim push). */
+export function applyNeutralPreviewLights(scene: THREE.Scene, lights: MtoonStyleLights): void {
+  const bg = '#0B1220';
+  scene.background = new THREE.Color(bg);
+  scene.fog = new THREE.Fog(bg, 14, 32);
+  lights.hemisphere.color.set('#d8e4f8');
+  lights.hemisphere.groundColor.set('#1a2233');
+  lights.hemisphere.intensity = 0.5;
+  lights.key.color.set('#ffffff');
+  lights.key.intensity = 1.05;
+  lights.key.position.set(2.2, 4.2, 2.8);
+  lights.fill.color.set('#c8d4e8');
+  lights.fill.intensity = 0.32;
+  lights.fill.position.set(-2.4, 2.2, 1.6);
+  lights.rim.color.set('#a8b8d0');
+  lights.rim.intensity = 0.12;
+  lights.rim.position.set(-1.2, 2.8, -3.2);
+}
+

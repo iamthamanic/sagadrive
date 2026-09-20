@@ -24,8 +24,12 @@ import {
   applyMtoonProfileToModel,
   applyMtoonProfileToRenderer,
   applyMtoonProfileToScene,
+  applyNeutralPreviewLights,
+  captureMaterialStyleSnapshots,
   capturePortraitFromRenderer,
   createMtoonStyleLights,
+  restoreMaterialStyleSnapshots,
+  type MaterialStyleSnapshot,
   type MtoonStyleLights,
 } from './mtoon-style-applier';
 import {
@@ -142,6 +146,9 @@ export class CharacterStudioRuntime {
     path: 'pbr-fallback',
     noticeDe: null,
   };
+  /** Editor preview: SagaDrive MToon profile on/off. Default on. Not persisted. */
+  private mtoonStyleEnabled = true;
+  private materialStyleSnapshots: MaterialStyleSnapshot[] = [];
   private readonly animationRuntime: AvatarAnimationRuntime;
   private readonly facialRuntime: AvatarFacialRuntime;
   private readonly rigidEquipmentRuntime: AvatarRigidEquipmentRuntime;
@@ -276,6 +283,8 @@ export class CharacterStudioRuntime {
       this.currentRoot = root;
       this.currentVrm = vrm;
       this.modelContainer.add(root);
+      this.mtoonStyleEnabled = true;
+      this.materialStyleSnapshots = captureMaterialStyleSnapshots(root);
       this.applyAppearance(this.currentAvatar ?? avatar, this.currentManifest ?? manifest);
       this.setInspectMode(false);
       this.fitCamera();
@@ -346,6 +355,19 @@ export class CharacterStudioRuntime {
 
   getStyleProfile(): SagaDriveMToonProfileV1 {
     return this.styleProfile;
+  }
+
+  /** Editor-only preview toggle — not written to appearance.avatar. */
+  isMtoonStyleEnabled(): boolean {
+    return this.mtoonStyleEnabled;
+  }
+
+  setMtoonStyleEnabled(enabled: boolean): void {
+    if (this.disposed) return;
+    this.mtoonStyleEnabled = enabled;
+    if (this.currentAvatar && this.currentManifest) {
+      this.applyAppearance(this.currentAvatar, this.currentManifest);
+    }
   }
 
   playAnimation(actionId: AvatarAnimationActionId): boolean {
@@ -522,18 +544,32 @@ export class CharacterStudioRuntime {
       }
     });
 
+    // Always restore load-time baseline before (re)applying profile — keeps toggle + re-tint stable.
+    if (this.materialStyleSnapshots.length > 0) {
+      restoreMaterialStyleSnapshots(this.materialStyleSnapshots);
+    }
+
     const isImportModel = Boolean(avatar.model_url);
-    this.styleCompatibility = applyMtoonProfileToModel({
-      root,
-      profile: this.styleProfile,
-      isImportModel,
-      colors: {
-        skin: avatar.colors.skin,
-        hair: avatar.colors.hair,
-        clothing: clothingColor,
-        eyes: avatar.colors.eyes,
-      },
-    });
+    if (this.mtoonStyleEnabled) {
+      applyMtoonProfileToScene(this.scene, this.styleLights, this.styleProfile);
+      this.styleCompatibility = applyMtoonProfileToModel({
+        root,
+        profile: this.styleProfile,
+        isImportModel,
+        colors: {
+          skin: avatar.colors.skin,
+          hair: avatar.colors.hair,
+          clothing: clothingColor,
+          eyes: avatar.colors.eyes,
+        },
+      });
+    } else {
+      applyNeutralPreviewLights(this.scene, this.styleLights);
+      this.styleCompatibility = {
+        path: 'pbr-fallback',
+        noticeDe: null,
+      };
+    }
   }
 
   renderNow(): void {
@@ -715,6 +751,7 @@ export class CharacterStudioRuntime {
     this.headBone = null;
     this.leftFootBone = null;
     this.rightFootBone = null;
+    this.materialStyleSnapshots = [];
     this.rigidEquipmentRuntime.bindAvatar(null, null);
     this.skinnedWearableRuntime.bindAvatar(null, null);
     if (!this.currentRoot) return;

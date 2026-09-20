@@ -8,7 +8,10 @@ Die bestehende Three.js/VRM/M3-Avatar-Pipeline wird zu einem deterministischen S
 - #157 bleibt reines Epic ohne Order-Label.
 - #12 Face Tracking ist optionaler letzter Queue-Schritt.
 - SagaDrive-eigene Avatare garantieren vollständige Body-/Face-Morph-Editierbarkeit; Import/KI erhalten denselben Runtime-/Rig-/Render-Vertrag, aber Controls nur gemäß erkannter Capabilities.
-- Basismodell: erwachsene, neutrale stylized 3D-Proportionen. Korra-/Palworld-Einfluss wird primär über ein SagaDrive-MToon-Renderprofil umgesetzt, nicht durch einen kompletten Modellstil-Neubau.
+- Basismodell: erwachsene, stylized-game 3D-Proportionen mit leicht realer Anatomie.
+  Kanonischer Look: **Palworld × Overwatch, soft-real** — siehe `docs/character-visual-styleguide.md`
+  und Golden-Refs `assets/species-3d/human/golden/`. MToon bleibt das Runtime-Renderprofil;
+  Mesh-/Ref-Stil folgt dem Character Visual Styleguide (nicht mehr „nur Korra-via-Shader“).
 - V1 bleibt bei zweibeinigen Humanoiden; keine Centauren, vier Arme, Schlangenkörper oder komplett abweichende Skelette.
 - Kein eigener Shader in V1, kein Blender-im-Browser, kein universelles Auto-Fitting beliebiger Meshes.
 

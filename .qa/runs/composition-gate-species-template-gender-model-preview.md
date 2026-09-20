@@ -1,0 +1,26 @@
+# Composition Gate — species-template-gender-model-preview
+
+- HEAD_SHA: f5cadabc55acab8c0be333a6480d941ff984524b
+- BASE_SHA: b6bd0ce17d5a3e3df24cad693cd2aa66c93c00bd
+- Date: 2026-09-20
+- Verdict: CLEAR
+
+## Event
+User selects Vorlage species template + Geschlecht → one allowlisted preview model URL for the sheet viewer (or none).
+
+## Hop chain
+1. `genderReading` + `speciesTemplateId` (editor state)
+2. `resolveSpeciesTemplateModelUrl` (domain, allowlisted paths only)
+3. `createCharacterStudioAvatar.model_url` / `currentAvatar`
+4. `AvatarSurfaceViewer` surfaceRef.modelUrl → WebGL or initials fallback
+
+## Simulations
+- **N-actors:** One editor session → one model URL. No fan-out.
+- **Invalid/missing:** divers / unset / non-human → `undefined` (fail closed). No invented remote URL.
+- **Two consumers / crash:** Viewer + save appearance both read `currentAvatar.model_url` (same field). Import `importedModelUrl` wins over template. Viewer load failure → initials fallback, no state write.
+
+## Flags
+- None.
+
+## Notes
+Single source of truth for template mesh path is `species-template-models-v1.ts`. Pilot assets only for `human`.

@@ -43,6 +43,7 @@ import {
   morphToLegacySlider,
   parseSpeciesTemplatePersistenceId,
   resolveAvatarSource,
+  resolveSpeciesTemplateModelUrl,
   morphEvidenceFromImportAnalysis,
   buildGenerateEditorSeed,
   runModularGenerateFlow,
@@ -55,7 +56,7 @@ import {
   getAvatarRacePreset,
   normalizeSafeUrl,
 } from '../../../domains/character/use-cases/avatar-presets';
-import type { CharacterAppearanceDto } from '../../../domains/character';
+import type { CharacterAppearanceDto, CharacterGenderReading } from '../../../domains/character';
 import { characterService } from '../../../infrastructure/character/character-service';
 
 type ImportCompositionState = {
@@ -69,6 +70,8 @@ export type UseCharacterAvatarEditorArgs = {
   characterRace: string;
   characterName: string;
   onCharacterRaceChange: (race: string) => void;
+  /** Sheet Geschlecht — drives template preview mesh (m/w); divers → no mesh. */
+  genderReading?: CharacterGenderReading;
 };
 
 export type CharacterAvatarEditorApi = {
@@ -139,6 +142,7 @@ export function useCharacterAvatarEditor({
   characterRace,
   characterName,
   onCharacterRaceChange,
+  genderReading,
 }: UseCharacterAvatarEditorArgs): CharacterAvatarEditorApi {
   const initialPreset = getAvatarRacePreset('human');
   const [bodySize, setBodySize] = useState([initialPreset.bodySize]);
@@ -175,7 +179,18 @@ export function useCharacterAvatarEditor({
   const portraitCaptureRef = useRef<AvatarPortraitCaptureHandle | null>(null);
   const pendingAutoPortraitRef = useRef(false);
 
+  const selectedTemplateSpeciesId = useMemo((): BaseBodySpeciesId | null => {
+    return parseSpeciesTemplatePersistenceId(speciesTemplateId);
+  }, [speciesTemplateId]);
+
   const currentAvatar = useMemo(() => {
+    const templatePreviewUrl =
+      avatarSource === 'sagadrive'
+        ? resolveSpeciesTemplateModelUrl({
+            speciesId: selectedTemplateSpeciesId,
+            genderReading,
+          })
+        : undefined;
     const base = createCharacterStudioAvatar({
       race: characterRace,
       head: headStyle,
@@ -187,7 +202,7 @@ export function useCharacterAvatarEditor({
       skinTone,
       bodySize: morphToLegacySlider(avatarMorph.body.build),
       height: morphToLegacySlider(avatarMorph.body.height),
-      modelUrl: importedModelUrl,
+      modelUrl: importedModelUrl ?? templatePreviewUrl,
       source: avatarSource,
     });
     const withMorph = withAvatarMorphState(base, {
@@ -239,12 +254,14 @@ export function useCharacterAvatarEditor({
     characterRace,
     clothing,
     ears,
+    genderReading,
     hairColor,
     hairStyle,
     headStyle,
     importComposition,
     importedModelUrl,
     modularGenerateResult,
+    selectedTemplateSpeciesId,
     skinTone,
     speciesTemplateId,
     starterWardrobeIds,
@@ -318,10 +335,6 @@ export function useCharacterAvatarEditor({
       { description: result.tradeoffCopyDe },
     );
   };
-
-  const selectedTemplateSpeciesId = useMemo((): BaseBodySpeciesId | null => {
-    return parseSpeciesTemplatePersistenceId(speciesTemplateId);
-  }, [speciesTemplateId]);
 
   const applySpeciesTemplate = (speciesId: BaseBodySpeciesId) => {
     const seed = applySpeciesTemplateIngress(speciesId);

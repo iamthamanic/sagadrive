@@ -22,7 +22,7 @@ const HEALTH_COPY: Record<MeshyAvatarPollHealth, string> = {
   idle: 'Warte auf Status …',
   connected: 'Verbindung aktiv',
   waiting: 'Antwort verzögert …',
-  offline: 'Keine Verbindung — versuche erneut …',
+  offline: 'KI-Worker unterbrochen — versuche erneut …',
 };
 
 /**

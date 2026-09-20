@@ -204,6 +204,12 @@ check(/probeMeshyGlbContentLength/.test(read('supabase/functions/_shared/item-mo
 check(/avatar-meshy-remesh/.test(edge), 'remesh adapter wired');
 check(/shouldRemesh: meshyMapped\.should_remesh/.test(edge), 'image-to-3d remesh from mapped settings');
 check(/remesh_task_id/.test(edge), 'poll tracks remesh_task_id');
+check(/pending_glb_url/.test(edge), 'poll persists pending_glb_url before download');
+check(/remeshAcked/.test(edge), 'poll splits remesh success from Auto-Rig create');
+check(/045_character_avatar_meshy_pending_glb\.sql/.test(applyMigrations), 'apply-migrations registers 045');
+check(/pending_glb_url/.test(read('supabase/migrations/045_character_avatar_meshy_pending_glb.sql')), '045 pending_glb_url column');
+check(/KI-Worker unterbrochen/.test(read('src/app/character/avatar/AvatarMeshyGeneratingOverlay.tsx')), 'offline copy distinguishes worker interrupt');
+check(/Modell wird gespeichert/.test(editor), 'rigging 99% storage label');
 check(/normalizeMeshyRemeshBaseUrl/.test(read('supabase/functions/_shared/avatar-meshy-remesh.ts')), 'remesh base forces v1');
 check(/028_character_avatar_meshy_glb_budget\.sql/.test(applyMigrations), 'apply-migrations registers 028');
 check(/AVATAR_MESHY_GLB_STORE_MAX_BYTES = 150/.test(read('supabase/functions/_shared/item-model3d-glb.ts')), 'avatar store ceiling 150MB');

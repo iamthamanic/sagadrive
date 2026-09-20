@@ -764,6 +764,13 @@ export {
   type SpeciesTemplateEditorSeedV1,
 } from './species-template-ingress-v1';
 export {
+  SPECIES_TEMPLATE_MODELS_CONTRACT_VERSION,
+  SPECIES_TEMPLATE_MODEL_PUBLIC_BASE,
+  isBaseBodySpeciesId,
+  listSpeciesTemplateModelPaths,
+  resolveSpeciesTemplateModelUrl,
+} from './species-template-models-v1';
+export {
   STARTER_WARDROBE_CONTRACT_VERSION,
   STARTER_WARDROBE_PACK_VERSION,
   STARTER_WEARABLE_IDS,
