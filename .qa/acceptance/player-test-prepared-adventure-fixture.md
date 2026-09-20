@@ -50,9 +50,9 @@ World Profile → Adventure/Project → Session wiring for Epic #210 player test
 | n/a | contract gate; browser optional via @verify-ui |
 
 ## Composition Gate
-- Verdict: CLEAR`@composition-gate`
-- Proof: 
-- HEAD_SHA: 880330e202d95a47267eaa7513c9359a8c89fd4d
+- Verdict: CLEAR
+- Proof: `.qa/runs/composition-gate-player-test-prepared-adventure-fixture.md`
+- HEAD_SHA: 64b5fc4
 - BASE_SHA: 769e5a1e42c731cb34b679e5f03d52c8ee82767d
 
 ## Implementation Notes
