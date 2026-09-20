@@ -27,6 +27,12 @@ import {
   readSharedScenePresentation,
   type SharedScenePresentation,
 } from './shared-scene-presentation';
+import {
+  currentEncounterActor,
+  findPcParticipantByCharacterId,
+  readEncounterState,
+  type EncounterState,
+} from './combat-encounter';
 
 export type PlayerPanelConnectionKind =
   | 'loading'
@@ -91,6 +97,10 @@ export interface PlayerPanelModel {
   sceneId: string | null;
   scenePresentation: SharedScenePresentation | null;
   combatActive: boolean;
+  encounter: EncounterState | null;
+  encounterIsMyTurn: boolean;
+  encounterRound: number | null;
+  encounterCurrentName: string | null;
   sessionStatus: PlaySessionStatus | null;
   connection: PlayerPanelConnectionKind;
   connectionLabel: string;
@@ -296,6 +306,10 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
       sceneId: runtime?.gameplay.sceneId ?? null,
       scenePresentation: runtime ? readSharedScenePresentation(runtime.gameplay.shared) : null,
       combatActive: runtime?.gameplay.combatActive ?? false,
+      encounter: runtime ? readEncounterState(runtime.gameplay.shared) : null,
+      encounterIsMyTurn: false,
+      encounterRound: null,
+      encounterCurrentName: null,
       sessionStatus: runtime?.status ?? null,
       connection: connection.kind,
       connectionLabel: copy.label,
@@ -320,8 +334,30 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
   const healthStat = derived.find((entry) => entry.key === 'health');
   const defenseStat = derived.find((entry) => entry.key === 'defense');
   const hpMax = Number.parseInt(healthStat?.displayValue ?? '0', 10) || 0;
-  const overlayHp = readSharedNumber(shared, ['hpCurrent', 'hp_current', 'currentHp']);
-  const hpCurrent = overlayHp !== null ? Math.max(0, Math.min(hpMax || overlayHp, overlayHp)) : hpMax;
+  const encounter = readEncounterState(shared);
+  const selfParticipant =
+    encounter && character.id
+      ? findPcParticipantByCharacterId(encounter, character.id)
+      : null;
+  const overlayHp = selfParticipant
+    ? selfParticipant.hpCurrent
+    : readSharedNumber(shared, ['hpCurrent', 'hp_current', 'currentHp']);
+  const overlayHpFromMap =
+    !selfParticipant && character.id && shared.hpByCharacter
+      && typeof shared.hpByCharacter === 'object'
+      && !Array.isArray(shared.hpByCharacter)
+      ? readSharedNumber(shared.hpByCharacter as Record<string, unknown>, [character.id])
+      : null;
+  const resolvedOverlay =
+    selfParticipant !== null
+      ? selfParticipant.hpCurrent
+      : overlayHpFromMap !== null
+        ? overlayHpFromMap
+        : overlayHp;
+  const hpCurrent =
+    resolvedOverlay !== null
+      ? Math.max(0, Math.min(hpMax || resolvedOverlay, resolvedOverlay))
+      : hpMax;
   const defense = Number.parseInt(defenseStat?.displayValue ?? '0', 10) || 0;
 
   const resistanceKeys = [
@@ -353,10 +389,31 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
   const sharedMomentum = readSharedNumber(shared, ['momentum', 'sharedMomentum', 'shared_momentum']);
   const momentumShared = sharedMomentum !== null;
   const momentum = momentumShared ? sharedMomentum : character.sagaDriveProfile.momentum;
-  const conditions = readSharedStringList(shared, ['conditions', 'activeConditions', 'active_conditions']);
+  const conditionsFromMap =
+    character.id
+    && shared.conditionsByCharacter
+    && typeof shared.conditionsByCharacter === 'object'
+    && !Array.isArray(shared.conditionsByCharacter)
+      ? readSharedStringList(
+          shared.conditionsByCharacter as Record<string, unknown>,
+          [character.id],
+        )
+      : [];
+  const conditions = selfParticipant
+    ? [...selfParticipant.conditions]
+    : conditionsFromMap.length > 0
+      ? conditionsFromMap
+      : readSharedStringList(shared, ['conditions', 'activeConditions', 'active_conditions']);
   const checkTarget = readSharedNumber(shared, ['checkTarget', 'check_target']);
   const lastRoll = readLastSharedRoll(shared);
   const scenePresentation = readSharedScenePresentation(shared);
+  const currentActor = encounter ? currentEncounterActor(encounter) : null;
+  const encounterIsMyTurn = Boolean(
+    selfParticipant
+    && currentActor
+    && selfParticipant.id === currentActor.id
+    && encounter?.status === 'active',
+  );
 
   let drive = character.sagaDriveProfile.drive;
   const driveMap = shared.driveByCharacter;
@@ -389,6 +446,10 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
     sceneId: runtime?.gameplay.sceneId ?? null,
     scenePresentation,
     combatActive: runtime?.gameplay.combatActive ?? false,
+    encounter,
+    encounterIsMyTurn,
+    encounterRound: encounter?.status === 'active' ? encounter.round : null,
+    encounterCurrentName: currentActor?.name ?? null,
     sessionStatus: runtime?.status ?? null,
     connection: connection.kind,
     connectionLabel: copy.label,
