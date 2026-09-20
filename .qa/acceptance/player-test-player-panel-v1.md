@@ -50,7 +50,7 @@ Spieler sehen ein schlankes Player Panel mit spielrelevantem Character-State (Na
 ## Composition Gate
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-player-test-player-panel-v1.md`
-- HEAD_SHA: 319e6f5d7255a17ae62be34445261b8af3505c23
+- HEAD_SHA: ba89bf48116e0b0772382b403c2047430aa7cc5a
 
 ## Implementation Notes
 - Domain: `src/domains/session/contracts/player-panel.ts` (`buildPlayerPanelModel`, connection kinds, inventory/roster projection)
