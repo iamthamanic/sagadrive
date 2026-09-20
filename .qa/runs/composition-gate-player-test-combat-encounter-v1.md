@@ -4,7 +4,7 @@
 CLEAR
 
 ## HEAD_SHA
-587508dedc93e585249b83b0f0a1181fa121edec
+f11fe140234ff0d32083e2de872c2532f02c2c2b
 
 ## Path
 GM/Player UI → `apply_session_runtime_command` (kind combat|damage|condition)
