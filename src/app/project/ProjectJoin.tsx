@@ -10,6 +10,7 @@ import { Label } from '../../shared/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Plus, LogIn, Copy, Check, ArrowLeft } from 'lucide-react';
 import { useProjects } from './hooks/useProjects';
+import { useWorldProfiles } from '../world';
 import { toast } from 'sonner';
 
 interface ProjectJoinProps {
@@ -20,8 +21,10 @@ interface ProjectJoinProps {
 
 export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinProps) {
   const { projects, createProject, joinProject } = useProjects();
+  const { worlds, isLoading: worldsLoading } = useWorldProfiles({ enabled: true });
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
+  const [worldProfileId, setWorldProfileId] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
@@ -38,6 +41,7 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
       const newProject = await createProject({
         name: projectName,
         description: projectDescription || undefined,
+        world_profile_id: worldProfileId || undefined,
       });
       
       toast.success(`Projekt erstellt! Code: ${newProject.code}`, {
@@ -46,6 +50,7 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
       });
       setProjectName('');
       setProjectDescription('');
+      setWorldProfileId('');
       
       // Go back to dashboard to see the new project
       setTimeout(() => {
@@ -171,6 +176,27 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
                     value={projectDescription}
                     onChange={(e) => setProjectDescription(e.target.value)}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="world-profile">Weltprofil (optional)</Label>
+                  <select
+                    id="world-profile"
+                    value={worldProfileId}
+                    onChange={(e) => setWorldProfileId(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    disabled={isCreating || worldsLoading}
+                    data-project-world-profile
+                  >
+                    <option value="">Kein Weltprofil</option>
+                    {worlds.map((world) => (
+                      <option key={world.id} value={world.id}>
+                        {world.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    Bindet Kataloge (Items/NSCs) an dieses Abenteuer. Für den Player-Test empfohlen.
+                  </p>
                 </div>
                 <Button
                   onClick={handleCreateProject}

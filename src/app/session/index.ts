@@ -4,6 +4,7 @@
  */
 export { GamemasterPanel } from './GamemasterPanel';
 export { SessionJoin } from './SessionJoin';
+export { PreparedAdventureFixturePanel } from './PreparedAdventureFixturePanel';
 export { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
 export { SessionAvatarStrip } from './SessionAvatarStrip';
 export { SessionResourceScreen } from './SessionResourceScreen';

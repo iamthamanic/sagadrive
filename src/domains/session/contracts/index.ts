@@ -8,3 +8,4 @@ export * from './session-runtime';
 export * from './player-panel';
 export * from './shared-rolls';
 export * from './shared-scene-presentation';
+export * from './prepared-adventure-fixture';

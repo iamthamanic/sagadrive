@@ -733,6 +733,19 @@ export function CharacterEditor() {
       return;
     }
 
+    if (bootstrap?.kind === 'fixture-seed') {
+      bootstrapAppliedRef.current = true;
+      setCharacterName(bootstrap.characterName);
+      setCharacterLevel(bootstrap.level);
+      clearCharacterEditorBootstrap();
+      toast.success(
+        bootstrap.classLabel
+          ? `Player-Test-Pregen: ${bootstrap.characterName} (${bootstrap.classLabel}, Stufe ${bootstrap.level})`
+          : `Player-Test-Pregen: ${bootstrap.characterName} (Stufe ${bootstrap.level})`,
+      );
+      return;
+    }
+
     if (bootstrap?.kind === 'npc-promotion') {
       bootstrapAppliedRef.current = true;
       const { plan } = bootstrap;

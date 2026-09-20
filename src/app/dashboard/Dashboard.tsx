@@ -95,6 +95,22 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
             <Card 
               className="cursor-pointer hover:bg-accent/10 hover:border-accent/40 transition-all" 
+              onClick={() => onNavigate('session-join')}
+              data-dashboard-session-start
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <Users className="w-5 h-5" />
+                  Session starten
+                </CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Spielsession erstellen oder mit Code beitreten
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card 
+              className="cursor-pointer hover:bg-accent/10 hover:border-accent/40 transition-all" 
               onClick={() => onNavigate('marketplace')}
             >
               <CardHeader>

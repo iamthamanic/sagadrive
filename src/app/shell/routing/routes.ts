@@ -19,6 +19,7 @@ export type ShellViewId =
   | 'library'
   | 'profile'
   | 'join'
+  | 'session-join'
   | 'rulesets-test'
   | 'item-create'
   | 'item-detail'
@@ -119,6 +120,7 @@ const VIEW_PATHS: Record<
   marketplace: '/marketplace',
   profile: '/profile',
   join: '/join',
+  'session-join': '/session-join',
   'rulesets-test': '/rulesets-test',
 };
 
@@ -128,6 +130,7 @@ const VIEW_ALIASES: Record<
   keyof typeof VIEW_PATHS | 'item-create' | 'npc-creature-create' | 'saga-list'
 > = {
   'project-join': 'join',
+  'session-start': 'session-join',
   home: 'dashboard',
   sagas: 'saga-list',
 };
