@@ -20,7 +20,10 @@ function check(cond, msg) {
 const contract = read('src/domains/character/avatar/base-body-contract.ts');
 const catalog = read('src/infrastructure/character/avatar/base-body-catalog.ts');
 const fixture = read('src/app/character/avatar/BaseBodyMorphFixture.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const index = read('src/domains/character/avatar/index.ts');
 const morph = read('src/domains/character/avatar/morph-contract.ts');
 

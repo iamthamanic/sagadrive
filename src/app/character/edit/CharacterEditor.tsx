@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, CheckCircle2, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { AvatarSurfaceViewer } from '../avatar/AvatarSurfaceViewer';
-import type { AvatarPortraitCaptureHandle } from '../avatar/AvatarCanvas';
 import { AvatarImportPanel } from '../avatar/AvatarImportPanel';
-import { AvatarMeshyPanel, type MeshyAvatarJobUiState } from '../avatar/AvatarMeshyPanel';
+import { AvatarMeshyPanel } from '../avatar/AvatarMeshyPanel';
 import { AvatarMeshyGeneratingOverlay } from '../avatar/AvatarMeshyGeneratingOverlay';
 import { AvatarModularGenerateProgress } from '../avatar/AvatarModularGenerateProgress';
 import { AvatarSourceSelector } from '../avatar/AvatarSourceSelector';
@@ -12,39 +11,8 @@ import { AvatarSpeciesTemplatePicker } from '../avatar/AvatarSpeciesTemplatePick
 import { AvatarTraitPanels } from '../avatar/AvatarTraitPanels';
 import { BaseBodyMorphFixture } from '../avatar/BaseBodyMorphFixture';
 import { AvatarMorphEditorPanels } from '../avatar/AvatarMorphEditorPanels';
-import { useAvatarComposition } from '../avatar/useAvatarComposition';
-import { useAvatarEditorSurfaces } from '../avatar/useAvatarEditorSurfaces';
-import type {
-  AvatarSource,
-  AvatarTraitGroupId,
-  AvatarV2Anatomy,
-  AvatarV2BodyFamily,
-  AvatarV2Modularity,
-  BaseBodySpeciesId,
-  CanonicalBodyFamilyId,
-  AvatarMorphEvidenceInput,
-  BodyConversionResultV1,
-  ImportOriginalKeepSeedV1,
-  ModularGenerateFlowResultV1,
-} from '../../../domains/character/avatar';
-import {
-  applySpeciesTemplateIngress,
-  createDefaultAvatarMorphState,
-  evaluateAvatarSourceSwitch,
-  isCanonicalBodyFamilyId,
-  isMeshyAvatarJobBusy,
-  migrateCharacterAvatarDtoToMorph,
-  morphToLegacySlider,
-  parseSpeciesTemplatePersistenceId,
-  resolveAvatarSource,
-  morphEvidenceFromImportAnalysis,
-  buildGenerateEditorSeed,
-  runModularGenerateFlow,
-  validateAvatarMorphInput,
-  withAvatarMorphState,
-  type SagaDriveAvatarMorphStateV1,
-} from '../../../domains/character/avatar';
-import { createCharacterStudioAvatar, getAvatarRacePreset } from '../../../domains/character/use-cases/avatar-presets';
+import { isMeshyAvatarJobBusy } from '../../../domains/character/avatar';
+import { useCharacterAvatarEditor } from './useCharacterAvatarEditor';
 import { characterService } from '../../../infrastructure/character/character-service';
 import { materializeAvatarSaveExport } from '../../../infrastructure/character/avatar/character-avatar-export-service';
 import { resolveAvatarModelUrl } from '../../../infrastructure/character/avatar/avatar-asset-manifests';
@@ -97,7 +65,6 @@ import { takeCharacterEditorBootstrap, clearCharacterEditorBootstrap } from '../
 import type { NpcPromotionPlan } from '../../../domains/npc-creature';
 import { promoteNpcCreatureCompactToFull } from '../../../infrastructure/npc-creature/npc-creature-service';
 import { assertValidSnapshot, characterPresetService } from '../../../infrastructure/character/character-preset-service';
-import { normalizeSafeUrl } from '../../../domains/character/use-cases/avatar-presets';
 import type { CharacterPresetReleaseMode, CharacterPresetSnapshot } from '../../../domains/character/contracts/character-preset.types';
 import { buildSagaDriveDerivedStatCards } from './map-derived-stat-cards';
 import { getSagaDriveBackgroundTemplate } from '../../../domains/rules/sagadrive/background-templates';
@@ -323,17 +290,6 @@ export function CharacterEditor() {
   const [speciesBodyDescription, setSpeciesBodyDescription] = useState('');
   const [presetReleaseMode, setPresetReleaseMode] = useState<CharacterPresetReleaseMode>('manual');
 
-  const initialPreset = getAvatarRacePreset('human');
-  const [bodySize, setBodySize] = useState([initialPreset.bodySize]);
-  const [height, setHeight] = useState([initialPreset.height]);
-  const [headStyle, setHeadStyle] = useState(initialPreset.head);
-  const [ears, setEars] = useState(initialPreset.ears);
-  const [hairStyle, setHairStyle] = useState(initialPreset.hair);
-  const [hairColor, setHairColor] = useState(initialPreset.hairColor);
-  const [skinTone, setSkinTone] = useState(initialPreset.skinTone);
-  const [clothing, setClothing] = useState(initialPreset.clothing);
-  const [accessory, setAccessory] = useState(initialPreset.accessory ?? 'none');
-
   const [baseAttributes, setBaseAttributes] = useState<CharacterAttributesDto>(INITIAL_ATTRIBUTES);
   const [attributeAdvances, setAttributeAdvances] = useState<SagaDriveAttributeAdvances>({});
   const [freeSkillRanks, setFreeSkillRanks] = useState(createEmptySagaDriveSkillRanks);
@@ -367,246 +323,60 @@ export function CharacterEditor() {
   const [bonds, setBonds] = useState<string[]>([]);
   const [flaws, setFlaws] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
-  const [portraitUrl, setPortraitUrl] = useState('');
-  const [importedModelUrl, setImportedModelUrl] = useState<string | undefined>(undefined);
-  const [avatarSource, setAvatarSource] = useState<AvatarSource>('sagadrive');
-  const [meshyUi, setMeshyUi] = useState<MeshyAvatarJobUiState | null>(null);
-  const [sagaDriveDirty, setSagaDriveDirty] = useState(false);
-  const [avatarMorph, setAvatarMorph] = useState<SagaDriveAvatarMorphStateV1>(() =>
-    createDefaultAvatarMorphState(),
-  );
-  const [speciesTemplateId, setSpeciesTemplateId] = useState<string | null>(null);
-  const [avatarBodyFamily, setAvatarBodyFamily] = useState<CanonicalBodyFamilyId | null>(null);
-  const [starterWardrobeIds, setStarterWardrobeIds] = useState<readonly string[]>([]);
-  const [templateWarningsDe, setTemplateWarningsDe] = useState<readonly string[]>([]);
-  /** Composition axes from Import Flow v2 analysis — never invented client-side. */
-  const [importComposition, setImportComposition] = useState<{
-    anatomy: AvatarV2Anatomy;
-    bodyFamily: AvatarV2BodyFamily;
-    bodyCompatibility: AvatarV2BodyFamily | 'unknown';
-    modularity: AvatarV2Modularity;
-  } | null>(null);
-  const [importMorphEvidence, setImportMorphEvidence] = useState<AvatarMorphEvidenceInput | null>(null);
-  const [modularGenerateResult, setModularGenerateResult] =
-    useState<ModularGenerateFlowResultV1 | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const avatarCanvasRef = useRef<HTMLCanvasElement>(null);
-  const portraitCaptureRef = useRef<AvatarPortraitCaptureHandle | null>(null);
-  const pendingAutoPortraitRef = useRef(false);
   const bootstrapAppliedRef = useRef(false);
 
-  const currentAvatar = useMemo(() => {
-    const base = createCharacterStudioAvatar({
-      race: characterRace,
-      head: headStyle,
-      ears,
-      hairStyle,
-      clothing,
-      accessory: accessory === 'none' ? undefined : accessory,
-      hairColor,
-      skinTone,
-      bodySize: morphToLegacySlider(avatarMorph.body.build),
-      height: morphToLegacySlider(avatarMorph.body.height),
-      modelUrl: importedModelUrl,
-      source: avatarSource,
-    });
-    const withMorph = withAvatarMorphState(base, {
-      ...avatarMorph,
-      colors: {
-        ...avatarMorph.colors,
-        hair: hairColor,
-        skin: skinTone,
-      },
-    });
-    if (avatarSource === 'import' && importComposition) {
-      return {
-        ...withMorph,
-        body_family: importComposition.bodyFamily,
-        body_compatibility: importComposition.bodyCompatibility,
-        anatomy: importComposition.anatomy,
-        modularity: importComposition.modularity,
-      };
-    }
-    // Native template OR modular generate (#269): family + wardrobe without requiring species.
-    if (avatarBodyFamily && starterWardrobeIds.length > 0) {
-      return {
-        ...withMorph,
-        ...(speciesTemplateId ? { template_id: speciesTemplateId } : {}),
-        body_family: avatarBodyFamily,
-        body_compatibility: avatarBodyFamily,
-        anatomy: 'humanoid' as const,
-        modularity:
-          modularGenerateResult?.modularity ??
-          importComposition?.modularity ??
-          ('modular-parts' as const),
-        starter_wardrobe: [...starterWardrobeIds],
-      };
-    }
-    if (!speciesTemplateId || !avatarBodyFamily) return withMorph;
-    return {
-      ...withMorph,
-      template_id: speciesTemplateId,
-      body_family: avatarBodyFamily,
-      anatomy: 'humanoid' as const,
-      modularity: 'modular-parts' as const,
-      starter_wardrobe: [...starterWardrobeIds],
-    };
-  }, [
-    accessory,
-    avatarBodyFamily,
-    avatarMorph,
-    avatarSource,
-    characterRace,
-    clothing,
-    ears,
-    hairColor,
-    hairStyle,
+  const {
     headStyle,
-    importComposition,
-    importedModelUrl,
-    modularGenerateResult,
+    ears,
+    hairStyle,
+    hairColor,
     skinTone,
+    clothing,
+    accessory,
+    portraitUrl,
+    importedModelUrl,
+    setImportedModelUrl,
+    avatarSource,
+    meshyUi,
+    setMeshyUi,
+    setSagaDriveDirty,
+    avatarMorph,
     speciesTemplateId,
     starterWardrobeIds,
-  ]);
-
-  const applyImportOriginalKeep = (seed: ImportOriginalKeepSeedV1) => {
-    setImportedModelUrl(seed.modelUrl);
-    setAvatarSource('import');
-    setSpeciesTemplateId(null);
-    setStarterWardrobeIds([]);
-    setTemplateWarningsDe([]);
-    setImportComposition({
-      anatomy: seed.anatomy,
-      bodyFamily: seed.bodyFamily,
-      bodyCompatibility: seed.bodyCompatibility,
-      modularity: seed.modularity,
-    });
-    // Custom creature: never invent morph targets; fail-closed evidence only.
-    setImportMorphEvidence(
-      morphEvidenceFromImportAnalysis({
-        anatomy: seed.anatomy,
-        modularity: seed.modularity,
-      }),
-    );
-    if (isCanonicalBodyFamilyId(seed.bodyFamily)) {
-      setAvatarBodyFamily(seed.bodyFamily);
-    } else {
-      setAvatarBodyFamily(null);
-    }
-    requestAutoPortraitAfterModel();
-    toast.success(
-      seed.anatomy === 'custom-creature'
-        ? 'Eigener Körper behalten — ohne Humanoid-Morph-Zwang'
-        : 'Originalkörper behalten — Editor bereit',
-    );
-  };
-
-  const applyBodyConversion = (result: BodyConversionResultV1) => {
-    if (result.status === 'failed') {
-      toast.error(result.limitationsDe[0] ?? 'Conversion fehlgeschlagen — Original unverändert');
-      return;
-    }
-    // Converted artifact uses canonical body — clear external mesh URL.
-    setImportedModelUrl(undefined);
-    setAvatarSource('sagadrive');
-    setSpeciesTemplateId(null);
-    setStarterWardrobeIds([]);
-    setTemplateWarningsDe(result.limitationsDe);
-    setImportComposition(null);
-    setImportMorphEvidence(null);
-    setAvatarBodyFamily(result.targetFamily);
-    setAvatarMorph(result.morphState);
-    setHeadStyle(result.traits.head);
-    setEars(result.traits.ears);
-    setHairStyle(result.traits.hair);
-    setClothing(result.traits.clothing);
-    setAccessory(result.traits.accessory === 'none' ? 'none' : result.traits.accessory);
-    setHairColor(result.colors.hair);
-    setSkinTone(result.colors.skin);
-    setBodySize([morphToLegacySlider(result.morphState.body.build)]);
-    setHeight([morphToLegacySlider(result.morphState.body.height)]);
-    setSagaDriveDirty(true);
-    toast.success(
-      result.status === 'degraded'
-        ? `Übertragen auf ${result.targetFamily} (eingeschränkt)`
-        : `Übertragen auf ${result.targetFamily}`,
-      { description: result.tradeoffCopyDe },
-    );
-  };
-
-  const selectedTemplateSpeciesId = useMemo((): BaseBodySpeciesId | null => {
-    return parseSpeciesTemplatePersistenceId(speciesTemplateId);
-  }, [speciesTemplateId]);
-
-  const applySpeciesTemplate = (speciesId: BaseBodySpeciesId) => {
-    const seed = applySpeciesTemplateIngress(speciesId);
-    setCharacterRace(speciesId);
-    setAvatarSource('sagadrive');
-    setImportedModelUrl(undefined);
-    setImportComposition(null);
-    setImportMorphEvidence(null);
-    setSpeciesTemplateId(seed.templateId);
-    setAvatarBodyFamily(seed.bodyFamily);
-    setStarterWardrobeIds(seed.starterWardrobeIds);
-    setTemplateWarningsDe(seed.warningsDe);
-    setAvatarMorph(seed.morphState);
-    setHeadStyle(seed.traits.head);
-    setEars(seed.traits.ears);
-    setHairStyle(seed.traits.hair);
-    setClothing(seed.traits.clothing);
-    setAccessory(seed.traits.accessory ?? 'none');
-    setHairColor(seed.colors.hair);
-    setSkinTone(seed.colors.skin);
-    setBodySize([morphToLegacySlider(seed.morphState.body.build)]);
-    setHeight([morphToLegacySlider(seed.morphState.body.height)]);
-    setSagaDriveDirty(true);
-    if (seed.warningsDe.length > 0) {
-      toast.message('Vorlage geladen — einige Kleidungsstücke fehlen', {
-        description: seed.warningsDe[0],
-      });
-    } else {
-      toast.success(`Vorlage „${seed.labelDe}“ geladen`);
-    }
-  };
-  const avatarComposition = useAvatarComposition(currentAvatar);
-  const hasExternalAvatarModel = Boolean(importedModelUrl);
-  // External meshes stay pending until structure evidence arrives (fail-closed).
-  const editorSurfaces = useAvatarEditorSurfaces({
-    composition: avatarComposition,
-    hasExternalModel: hasExternalAvatarModel,
-    inspected: hasExternalAvatarModel
-      ? importMorphEvidence
-      : undefined,
+    templateWarningsDe,
+    importComposition,
+    modularGenerateResult,
+    uploading,
+    fileInputRef,
+    avatarCanvasRef,
+    portraitCaptureRef,
+    currentAvatar,
+    editorSurfaces,
+    morphCapabilities,
+    sourceCapabilitySummary,
+    appearanceEditable,
+    selectedTemplateSpeciesId,
+    applyImportOriginalKeep,
+    applyBodyConversion,
+    applySpeciesTemplate,
+    applyAppearancePreset,
+    requestAvatarSourceChange,
+    handleMeshySuccess,
+    handleMorphChange,
+    handleBaseTraitChange,
+    setHairColorDirty,
+    setSkinToneDirty,
+    hydrateAvatarFromAppearance,
+    handleImageUpload,
+    handleGeneratePortrait,
+    handleAvatarRuntimeReady,
+    handleRemoveImage,
+  } = useCharacterAvatarEditor({
+    characterRace,
+    characterName,
+    onCharacterRaceChange: setCharacterRace,
   });
-  const morphCapabilities = editorSurfaces.morphFlags;
-  const sourceCapabilitySummary = editorSurfaces.summaryDe;
-  const appearanceEditable =
-    editorSurfaces.status !== 'pending' &&
-    (editorSurfaces.surfaces.morphBody ||
-      editorSurfaces.surfaces.morphFace ||
-      editorSurfaces.surfaces.traits ||
-      editorSurfaces.surfaces.colors);
-
-  const requestAvatarSourceChange = (next: AvatarSource) => {
-    if (next === avatarSource) return;
-    const decision = evaluateAvatarSourceSwitch({
-      from: avatarSource,
-      to: next,
-      dirtySagaDrive: sagaDriveDirty,
-    });
-    if (decision.needsConfirm) {
-      const ok = window.confirm(decision.messageDe ?? 'Avatar-Quelle wechseln?');
-      if (!ok) return;
-    }
-    setAvatarSource(next);
-    setModularGenerateResult(null);
-    if (next === 'sagadrive') {
-      setSagaDriveDirty(false);
-    }
-  };
 
   const archetype = characterArchetype ? getSagaDriveArchetype(characterArchetype) : undefined;
   const essence = essenceProfile ? getSagaDriveEssence(essenceProfile) : undefined;
@@ -898,112 +668,8 @@ export function CharacterEditor() {
     setBonds(payload.bonds ?? []);
     setFlaws(payload.flaws ?? []);
     setNotes(payload.notes ?? '');
-    setPortraitUrl(payload.portraitUrl ? (normalizeSafeUrl(payload.portraitUrl) ?? '') : '');
     setPresetReleaseMode(profile.presetReleaseMode === 'auto' ? 'auto' : 'manual');
-    setBodySize([appearance.body_size ?? 50]);
-    setHeight([appearance.height ?? 50]);
-    setHeadStyle(appearance.face_features || appearance.avatar?.traits.head || 'human-balanced');
-    setEars(appearance.avatar?.traits.ears || 'round');
-    setHairStyle(appearance.hair_style || appearance.avatar?.traits.hair || 'short');
-    setHairColor(appearance.hair_color || appearance.avatar?.colors.hair || '#3f2a1d');
-    setSkinTone(appearance.skin_tone || appearance.avatar?.colors.skin || '#c58c6a');
-    setClothing(appearance.clothing || appearance.avatar?.traits.clothing || 'casual');
-    setAccessory(appearance.avatar?.traits.accessory ?? 'none');
-    setImportedModelUrl(appearance.avatar?.model_url);
-    setAvatarSource(
-      resolveAvatarSource({
-        source: appearance.avatar?.source,
-        provider: appearance.avatar?.provider,
-        modelUrl: appearance.avatar?.model_url,
-      }),
-    );
-    setSagaDriveDirty(false);
-    setAvatarMorph(
-      appearance.avatar?.morph
-        ? validateAvatarMorphInput(appearance.avatar.morph).state
-        : migrateCharacterAvatarDtoToMorph(appearance.avatar ?? null),
-    );
-    const restoredTemplateId =
-      typeof appearance.avatar?.template_id === 'string' ? appearance.avatar.template_id : null;
-    const restoredSpecies = parseSpeciesTemplatePersistenceId(restoredTemplateId);
-    if (restoredSpecies) {
-      setSpeciesTemplateId(restoredTemplateId);
-      setAvatarBodyFamily(
-        isCanonicalBodyFamilyId(appearance.avatar?.body_family)
-          ? appearance.avatar.body_family
-          : applySpeciesTemplateIngress(restoredSpecies).bodyFamily,
-      );
-      if (
-        Array.isArray(appearance.avatar?.starter_wardrobe) &&
-        appearance.avatar.starter_wardrobe.length > 0
-      ) {
-        setStarterWardrobeIds(appearance.avatar.starter_wardrobe);
-      } else {
-        setStarterWardrobeIds(
-          applySpeciesTemplateIngress(restoredSpecies).starterWardrobeIds,
-        );
-      }
-      setTemplateWarningsDe([]);
-    } else if (isCanonicalBodyFamilyId(appearance.avatar?.body_family)) {
-      setSpeciesTemplateId(null);
-      setAvatarBodyFamily(appearance.avatar.body_family);
-      setStarterWardrobeIds(
-        Array.isArray(appearance.avatar?.starter_wardrobe)
-          ? appearance.avatar.starter_wardrobe
-          : [],
-      );
-      setTemplateWarningsDe([]);
-    } else {
-      setSpeciesTemplateId(null);
-      setAvatarBodyFamily(null);
-      setStarterWardrobeIds([]);
-      setTemplateWarningsDe([]);
-    }
-    const restoredSource = resolveAvatarSource({
-      source: appearance.avatar?.source,
-      provider: appearance.avatar?.provider,
-      modelUrl: appearance.avatar?.model_url,
-    });
-    if (restoredSource === 'import' && appearance.avatar) {
-      const anatomy =
-        appearance.avatar.anatomy === 'custom-creature' ||
-        appearance.avatar.anatomy === 'humanoid' ||
-        appearance.avatar.anatomy === 'unknown'
-          ? appearance.avatar.anatomy
-          : appearance.avatar.anatomy === 'non-humanoid'
-            ? 'custom-creature'
-            : 'unknown';
-      const modularity =
-        appearance.avatar.modularity === 'modular-parts' ||
-        appearance.avatar.modularity === 'limited' ||
-        appearance.avatar.modularity === 'monolithic'
-          ? appearance.avatar.modularity
-          : appearance.avatar.modularity === 'none'
-            ? 'monolithic'
-            : 'limited';
-      const bodyFamily =
-        appearance.avatar.body_family === 'standard' ||
-        appearance.avatar.body_family === 'compact' ||
-        appearance.avatar.body_family === 'heavy' ||
-        appearance.avatar.body_family === 'custom'
-          ? appearance.avatar.body_family
-          : 'custom';
-      const bodyCompatibility =
-        appearance.avatar.body_compatibility === 'standard' ||
-        appearance.avatar.body_compatibility === 'compact' ||
-        appearance.avatar.body_compatibility === 'heavy' ||
-        appearance.avatar.body_compatibility === 'custom' ||
-        appearance.avatar.body_compatibility === 'unknown'
-          ? appearance.avatar.body_compatibility
-          : bodyFamily === 'custom'
-            ? 'custom'
-            : 'unknown';
-      setImportComposition({ anatomy, bodyFamily, bodyCompatibility, modularity });
-      setImportMorphEvidence({ hasBodyMorphTargets: false, hasFaceMorphTargets: false });
-    } else {
-      setImportComposition(null);
-      setImportMorphEvidence(null);
-    }
+    hydrateAvatarFromAppearance(appearance, payload.portraitUrl);
     setSavedCharacterId(payload.savedCharacterId);
     setPersistedLevel(payload.persistedLevel);
     // Incomplete drafts reopen with gap highlights on Spezies/Charakter (and sub-tabs).
@@ -1172,11 +838,11 @@ export function CharacterEditor() {
   const rulesetLabel = getCharacterCreationOptionLabel(characterRulesetOptions, ruleset);
 
   const applyRacePreset = (race: string, resetTraits = false) => {
-    const preset = getAvatarRacePreset(race);
     const allowed = new Set(getSagaDriveSpeciesTraitKeysForRace(race));
     const retainedInstances = resetTraits ? [] : retainSpeciesTraitInstancesForRace(speciesTraitInstances, allowed);
     setSpeciesTraitInstances(retainedInstances);
-    setCharacterRace(race); setBodySize([preset.bodySize]); setHeight([preset.height]); setHeadStyle(preset.head); setEars(preset.ears); setHairStyle(preset.hair); setHairColor(preset.hairColor); setSkinTone(preset.skinTone); setClothing(preset.clothing); setAccessory(preset.accessory ?? 'none');
+    setCharacterRace(race);
+    applyAppearancePreset(race);
   };
 
   const resetBackgroundMechanics = () => {
@@ -1338,56 +1004,6 @@ export function CharacterEditor() {
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [connectedAttribute]);
-
-  const uploadPortrait = async (file: File, successMessage = 'Portrait gespeichert') => {
-    setUploading(true);
-    try {
-      const url = await characterService.uploadPortrait(file);
-      setPortraitUrl(url);
-      toast.success(successMessage);
-    } catch (error) {
-      console.error('Portrait upload error:', error);
-      toast.error(error instanceof Error ? error.message : 'Portrait konnte nicht gespeichert werden');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const captureAndUploadPortrait = async (successMessage: string) => {
-    const api = portraitCaptureRef.current;
-    if (!api?.isReady()) {
-      toast.error('3D-Vorschau ist noch nicht bereit');
-      return;
-    }
-    const blob = await api.capturePortraitBlob();
-    if (!blob) {
-      toast.error('Portrait konnte nicht erzeugt werden');
-      return;
-    }
-    const safeName = characterName.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-') || 'character';
-    await uploadPortrait(new File([blob], `${safeName}-portrait.png`, { type: 'image/png' }), successMessage);
-  };
-
-  const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]; if (!file) return;
-    if (!file.type.startsWith('image/')) { toast.error('Bitte wähle eine Bilddatei aus'); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error('Bild ist zu groß. Maximum 5 MB'); return; }
-    await uploadPortrait(file);
-  };
-
-  const handleGeneratePortrait = async () => {
-    await captureAndUploadPortrait('Portrait gespeichert');
-  };
-
-  const handleAvatarRuntimeReady = () => {
-    if (!pendingAutoPortraitRef.current) return;
-    pendingAutoPortraitRef.current = false;
-    void captureAndUploadPortrait('Portrait automatisch erzeugt');
-  };
-
-  const requestAutoPortraitAfterModel = () => {
-    pendingAutoPortraitRef.current = true;
-  };
 
   const handleSaveCharacter = async () => {
     const problems = collectValidationProblems();
@@ -1587,7 +1203,6 @@ export function CharacterEditor() {
     }
   };
 
-  const handleRemoveImage = (event: MouseEvent) => { event.stopPropagation(); setPortraitUrl(''); if (fileInputRef.current) fileInputRef.current.value = ''; };
   const handleTabChange = (value: string) => {
     if (!isEditorTab(value)) return;
     setActiveTab(value);
@@ -1725,81 +1340,7 @@ export function CharacterEditor() {
                   <AvatarMeshyPanel
                     characterId={savedCharacterId}
                     onJobChange={setMeshyUi}
-                    onSuccess={({ modelUrl, productMode }) => {
-                      const modular = runModularGenerateFlow({
-                        productMode,
-                        modelUrl,
-                        // Humanoid editable path uses controlled human fixture defaults;
-                        // unusual anatomy is detected via force/fixture in domain checks.
-                        fixtureId:
-                          productMode === 'editable-wardrobe' ? 'human' : undefined,
-                      });
-                      setModularGenerateResult(modular);
-
-                      if (modular.status === 'degraded-free-form') {
-                        const seed = buildGenerateEditorSeed({
-                          modelUrl,
-                          productMode: 'free-form',
-                          adapterProviderId: 'meshy',
-                        });
-                        setImportedModelUrl(modelUrl);
-                        setAvatarSource('meshy');
-                        setSpeciesTemplateId(null);
-                        setStarterWardrobeIds([]);
-                        setTemplateWarningsDe([
-                          ...modular.limitationsDe,
-                          ...seed.composition.limitationsDe,
-                        ]);
-                        setImportComposition({
-                          anatomy: 'custom-creature',
-                          bodyFamily: 'custom',
-                          bodyCompatibility: 'custom',
-                          modularity: 'monolithic',
-                        });
-                        setImportMorphEvidence({
-                          hasBodyMorphTargets: false,
-                          hasFaceMorphTargets: false,
-                        });
-                        setAvatarBodyFamily(null);
-                        requestAutoPortraitAfterModel();
-                        toast.success(modular.headlineDe);
-                        return;
-                      }
-
-                      // Editierbar modular: library body path — clear external mesh URL
-                      // when we have a canonical family (catalog body + wardrobe).
-                      if (
-                        modular.fullModular &&
-                        isCanonicalBodyFamilyId(modular.bodyFamily)
-                      ) {
-                        setImportedModelUrl(undefined);
-                        setAvatarSource('sagadrive');
-                        setAvatarBodyFamily(modular.bodyFamily);
-                      } else {
-                        setImportedModelUrl(modelUrl);
-                        setAvatarSource('meshy');
-                        if (isCanonicalBodyFamilyId(modular.bodyFamily)) {
-                          setAvatarBodyFamily(modular.bodyFamily);
-                        } else {
-                          setAvatarBodyFamily(null);
-                        }
-                      }
-                      setSpeciesTemplateId(null);
-                      setStarterWardrobeIds([...modular.starterWardrobeIds]);
-                      setTemplateWarningsDe([...modular.limitationsDe]);
-                      setImportComposition({
-                        anatomy: 'humanoid',
-                        bodyFamily: modular.bodyFamily,
-                        bodyCompatibility: modular.bodyFamily,
-                        modularity: modular.modularity,
-                      });
-                      setImportMorphEvidence({
-                        hasBodyMorphTargets: modular.fullModular,
-                        hasFaceMorphTargets: modular.fullModular,
-                      });
-                      requestAutoPortraitAfterModel();
-                      toast.success(modular.headlineDe);
-                    }}
+                    onSuccess={handleMeshySuccess}
                   />
                 </>
               ) : null}
@@ -2154,20 +1695,7 @@ export function CharacterEditor() {
                         (!editorSurfaces.surfaces.morphBody &&
                           !editorSurfaces.surfaces.morphFace)
                       }
-                      onMorphChange={(next) => {
-                        if (
-                          !editorSurfaces.surfaces.morphBody &&
-                          !editorSurfaces.surfaces.morphFace
-                        ) {
-                          return;
-                        }
-                        setAvatarMorph(next);
-                        setSagaDriveDirty(true);
-                        setHairColor(next.colors.hair);
-                        setSkinTone(next.colors.skin);
-                        setBodySize([morphToLegacySlider(next.body.build)]);
-                        setHeight([morphToLegacySlider(next.body.height)]);
-                      }}
+                      onMorphChange={handleMorphChange}
                     />
                   ) : null}
                   {editorSurfaces.surfaces.traits ? (
@@ -2180,36 +1708,11 @@ export function CharacterEditor() {
                         accessory,
                       }}
                       morph={avatarMorph}
-                      onBaseTraitChange={(groupId: AvatarTraitGroupId, traitId: string) => {
-                        if (!editorSurfaces.surfaces.traits) return;
-                        if (groupId === 'clothing' && !editorSurfaces.surfaces.clothing) return;
-                        setSagaDriveDirty(true);
-                        switch (groupId) {
-                          case 'head':
-                            setHeadStyle(traitId);
-                            break;
-                          case 'ears':
-                            setEars(traitId);
-                            break;
-                          case 'hair':
-                            setHairStyle(traitId);
-                            break;
-                          case 'clothing':
-                            setClothing(traitId);
-                            break;
-                          case 'accessory':
-                            setAccessory(traitId);
-                            break;
-                          default: {
-                            const _exhaustive: never = groupId;
-                            return _exhaustive;
-                          }
-                        }
-                      }}
+                      onBaseTraitChange={handleBaseTraitChange}
                     />
                   ) : null}
                   {editorSurfaces.surfaces.colors ? (
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="hairColor">Haarfarbe</Label><div className="flex gap-2"><Input id="hairColor" type="color" value={/^#[0-9a-fA-F]{6}$/.test(hairColor) ? hairColor : '#000000'} onChange={(event) => { setHairColor(event.target.value); setSagaDriveDirty(true); }} className="h-10 w-20" disabled={saving} /><Input value={hairColor} onChange={(event) => { setHairColor(event.target.value); setSagaDriveDirty(true); }} aria-label="Haarfarbe als Hexwert" disabled={saving} /></div></div><div className="space-y-2"><Label htmlFor="skinTone">Hautfarbe</Label><div className="flex gap-2"><Input id="skinTone" type="color" value={/^#[0-9a-fA-F]{6}$/.test(skinTone) ? skinTone : '#F5E6D3'} onChange={(event) => { setSkinTone(event.target.value); setSagaDriveDirty(true); }} className="h-10 w-20" disabled={saving} /><Input value={skinTone} onChange={(event) => { setSkinTone(event.target.value); setSagaDriveDirty(true); }} aria-label="Hautfarbe als Hexwert" disabled={saving} /></div></div></div>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2"><div className="space-y-2"><Label htmlFor="hairColor">Haarfarbe</Label><div className="flex gap-2"><Input id="hairColor" type="color" value={/^#[0-9a-fA-F]{6}$/.test(hairColor) ? hairColor : '#000000'} onChange={(event) => { setHairColorDirty(event.target.value); }} className="h-10 w-20" disabled={saving} /><Input value={hairColor} onChange={(event) => { setHairColorDirty(event.target.value); }} aria-label="Haarfarbe als Hexwert" disabled={saving} /></div></div><div className="space-y-2"><Label htmlFor="skinTone">Hautfarbe</Label><div className="flex gap-2"><Input id="skinTone" type="color" value={/^#[0-9a-fA-F]{6}$/.test(skinTone) ? skinTone : '#F5E6D3'} onChange={(event) => { setSkinToneDirty(event.target.value); }} className="h-10 w-20" disabled={saving} /><Input value={skinTone} onChange={(event) => { setSkinToneDirty(event.target.value); }} aria-label="Hautfarbe als Hexwert" disabled={saving} /></div></div></div>
                   ) : null}
                 </TabsContent>
 

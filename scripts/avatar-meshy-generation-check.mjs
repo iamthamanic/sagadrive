@@ -21,7 +21,10 @@ const domain = read('src/domains/character/avatar/meshy-avatar-job.ts');
 const index = read('src/domains/character/avatar/index.ts');
 const service = read('src/infrastructure/character/avatar/character-avatar-meshy-service.ts');
 const panel = read('src/app/character/avatar/AvatarMeshyPanel.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const edge = read('supabase/functions/character-avatar-meshy/index.ts');
 const provider = read('supabase/functions/_shared/avatar-meshy-text-to-3d.ts');
 const migration = read('supabase/migrations/026_character_avatar_meshy_jobs.sql');

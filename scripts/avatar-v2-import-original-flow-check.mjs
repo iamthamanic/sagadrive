@@ -26,7 +26,10 @@ const flow = read('src/domains/character/avatar/import-original-flow-v1.ts');
 const index = read('src/domains/character/avatar/index.ts');
 const service = read('src/infrastructure/character/avatar/character-avatar-import-service.ts');
 const panel = read('src/app/character/avatar/AvatarImportPanel.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const source = read('src/domains/character/avatar/avatar-source.ts');
 const entity = read('src/domains/character/domain/character.entity.ts');
 const composition = read('src/domains/character/avatar/composition-contract-v2.ts');

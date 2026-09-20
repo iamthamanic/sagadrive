@@ -27,7 +27,10 @@ const index = read('src/domains/character/avatar/index.ts');
 const source = read('src/domains/character/avatar/avatar-source.ts');
 const entity = read('src/domains/character/domain/character.entity.ts');
 const picker = read('src/app/character/avatar/AvatarSpeciesTemplatePicker.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const manifests = read('src/infrastructure/character/avatar/avatar-asset-manifests.ts');
 
 check(/applySpeciesTemplateIngress/.test(ingress), 'ingress apply');

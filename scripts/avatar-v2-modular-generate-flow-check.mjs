@@ -22,7 +22,10 @@ function check(cond, msg) {
 
 const domain = read('src/domains/character/avatar/modular-generate-flow-v1.ts');
 const index = read('src/domains/character/avatar/index.ts');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const progress = read('src/app/character/avatar/AvatarModularGenerateProgress.tsx');
 
 check(/MODULAR_GENERATE_FLOW_CONTRACT_VERSION/.test(domain), 'contract');

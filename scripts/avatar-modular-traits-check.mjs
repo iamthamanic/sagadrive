@@ -24,7 +24,10 @@ const allowlist = read('src/infrastructure/character/avatar/trait-asset-allowlis
 const runtime = read('src/infrastructure/character/avatar/character-studio-runtime.ts');
 const panels = read('src/app/character/avatar/AvatarTraitPanels.tsx');
 const picker = read('src/app/character/avatar/TraitCardPicker.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const presets = read('src/domains/character/use-cases/avatar-presets.ts');
 
 check(/AVATAR_TRAIT_GROUP_IDS/.test(layers), 'trait group ids');

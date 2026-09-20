@@ -25,7 +25,10 @@ const player = read('src/app/character/avatar/PlayerAvatarPanel.tsx');
 const session = read('src/app/session/SessionAvatarStrip.tsx');
 const gm = read('src/app/session/GamemasterPanel.tsx');
 const library = read('src/app/library/Library.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const charBarrel = read('src/app/character/index.ts');
 
 check(/SHARED_AVATAR_SURFACE_CONTRACT_VERSION/.test(domain), 'contract');

@@ -18,7 +18,10 @@ function check(cond, msg) {
 }
 
 const panels = read('src/app/character/avatar/AvatarMorphEditorPanels.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const runtime = read('src/infrastructure/character/avatar/character-studio-runtime.ts');
 const canvas = read('src/app/character/avatar/AvatarCanvas.tsx');
 const morph = read('src/domains/character/avatar/morph-contract.ts');

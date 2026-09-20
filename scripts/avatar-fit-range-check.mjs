@@ -21,6 +21,10 @@ const contract = read('src/domains/character/avatar/fit-range-contract.ts');
 const notice = read('src/app/character/avatar/AvatarFitRangeNotice.tsx');
 const panels = read('src/app/character/avatar/AvatarTraitPanels.tsx');
 const index = read('src/domains/character/avatar/index.ts');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 
 check(/FIT_RANGE_CONTRACT_VERSION/.test(contract), 'fit contract version');
 check(/resolveAvatarFitCompatibility/.test(contract), 'resolver');
@@ -29,7 +33,7 @@ check(/allowClamp/.test(contract), 'clamp flag');
 check(!/from ['"]three['"]/.test(contract), 'domain no Three');
 check(/data-testid="avatar-fit-range-notice"/.test(notice), 'notice UI');
 check(/resolveAvatarFitCompatibility/.test(panels), 'panels consume fit');
-check(/morph=\{avatarMorph\}/.test(read('src/app/character/edit/CharacterEditor.tsx')), 'editor passes morph');
+check(/morph=\{avatarMorph\}/.test(editor), 'editor passes morph');
 check(/export \{[\s\S]*resolveAvatarFitCompatibility/.test(index), 'barrel');
 
 // pure replica

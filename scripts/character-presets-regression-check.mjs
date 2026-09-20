@@ -28,7 +28,10 @@ const types = read('src/domains/character/contracts/character-preset.types.ts');
 const service = read('src/infrastructure/character/character-preset-service.ts');
 const panel = read('src/app/character/progression/CharacterPresetPanel.tsx');
 const dialog = read('src/app/character/creation/CreateCharacterEntryDialog.tsx');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const library = read('src/app/library/Library.tsx');
 const dashboard = read('src/app/dashboard/Dashboard.tsx');
 const characterTypes = read('src/domains/character/domain/sagadrive-profile.entity.ts');

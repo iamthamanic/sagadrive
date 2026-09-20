@@ -24,7 +24,10 @@ function check(cond, msg) {
 
 const domain = read('src/domains/character/avatar/editor-surface-resolver-v1.ts');
 const index = read('src/domains/character/avatar/index.ts');
-const editor = read('src/app/character/edit/CharacterEditor.tsx');
+const editor = [
+  read('src/app/character/edit/CharacterEditor.tsx'),
+  read('src/app/character/edit/useCharacterAvatarEditor.ts'),
+].join('\n');
 const source = read('src/domains/character/avatar/avatar-source.ts');
 const hookComp = read('src/app/character/avatar/useAvatarComposition.ts');
 const hookSurf = read('src/app/character/avatar/useAvatarEditorSurfaces.ts');
