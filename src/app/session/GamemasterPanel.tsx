@@ -1,5 +1,5 @@
 /**
- * GamemasterPanel — Vertical slice GM storytelling controls + NPC instances (#201).
+ * GamemasterPanel — Vertical slice GM storytelling controls + NPC instances (#201/#301).
  * Location: src/app/session/GamemasterPanel.tsx
  */
 import { useState } from 'react';
@@ -11,15 +11,25 @@ import { Slider } from '../../shared/ui/slider';
 import { Switch } from '../../shared/ui/switch';
 import { Label } from '../../shared/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
-import { Wand2, Eye, ImagePlus, Volume2 } from 'lucide-react';
+import { Wand2, Eye, Volume2 } from 'lucide-react';
 import { useAuth } from '../../lib/auth-context';
 import { useProjectSummaries } from '../project';
 import { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
 import { SessionAvatarStrip } from './SessionAvatarStrip';
 import { PlayerAvatarPanel } from '../character';
 import { createCharacterStudioAvatar } from '../../domains/character/use-cases/avatar-presets';
+import { SharedSceneGmControls } from './SharedSceneGmControls';
+import { useSharedScenePresentation } from './hooks/useSharedScenePresentation';
 
-export function GamemasterPanel() {
+type GamemasterPanelProps = {
+  sagaPublicId?: string | null;
+  sessionPublicId?: string | null;
+};
+
+export function GamemasterPanel({
+  sagaPublicId = null,
+  sessionPublicId = null,
+}: GamemasterPanelProps) {
   const [storyText, setStoryText] = useState('');
   const [autoMode, setAutoMode] = useState(true);
   const [detailLevel, setDetailLevel] = useState([70]);
@@ -29,6 +39,14 @@ export function GamemasterPanel() {
   const gmProjects = projects.filter(
     (project) => user !== null && project.gmUserId === user.id,
   );
+  const sceneRuntime =
+    sagaPublicId && sessionPublicId
+      ? { sagaPublicId, sessionPublicId }
+      : null;
+  const sharedScene = useSharedScenePresentation({
+    sagaPublicId: sceneRuntime?.sagaPublicId ?? '',
+    sessionPublicId: sceneRuntime?.sessionPublicId ?? '',
+  });
   // Demo live avatar for Session Face Tracking surface (#244) — same runtime as Editor.
   const sessionDemoAvatar = createCharacterStudioAvatar({
     race: 'human',
@@ -173,22 +191,22 @@ export function GamemasterPanel() {
               </TabsContent>
 
               <TabsContent value="scenes" className="space-y-3 md:space-y-4">
-                <div>
-                  <h4 className="mb-3 text-sm md:text-base">Szenen-Bibliothek</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
-                    {['Wald', 'Schloss', 'Stadt', 'Höhle', 'Taverne', 'Tempel'].map((scene) => (
-                      <Button
-                        key={scene}
-                        variant="outline"
-                        className="h-16 md:h-20 flex-col gap-1 md:flex-row md:gap-2"
-                        size="sm"
-                      >
-                        <ImagePlus className="w-4 h-4" />
-                        <span className="text-xs md:text-sm">{scene}</span>
-                      </Button>
-                    ))}
+                {sceneRuntime ? (
+                  <SharedSceneGmControls
+                    presentation={sharedScene.presentation}
+                    isBusy={sharedScene.isPublishing || sharedScene.isLoading}
+                    error={sharedScene.error}
+                    onPublish={sharedScene.publishScene}
+                  />
+                ) : (
+                  <div>
+                    <h4 className="mb-3 text-sm md:text-base">Szenen-Bibliothek</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Öffne die Live-Session über die Saga-Route, um die gemeinsame Szene zu
+                      steuern.
+                    </p>
                   </div>
-                </div>
+                )}
               </TabsContent>
 
               <TabsContent value="characters" className="space-y-3 md:space-y-4">

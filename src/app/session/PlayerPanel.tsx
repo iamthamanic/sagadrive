@@ -13,6 +13,7 @@ import { Button } from '../../shared/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { usePlayerPanel } from './hooks/usePlayerPanel';
 import { PlayerPanelStatusBanner } from './PlayerPanelStatusBanner';
+import { SharedScenePresentationView } from './SharedScenePresentationView';
 
 type PlayerPanelProps = {
   sagaPublicId: string;
@@ -94,6 +95,12 @@ export function PlayerPanel({
             onResync={() => {
               void resync();
             }}
+          />
+
+          <SharedScenePresentationView
+            presentation={model.scenePresentation}
+            sceneIdFallback={model.sceneId}
+            compact
           />
 
           <header className="flex flex-wrap items-start gap-4">
