@@ -87,6 +87,11 @@ import {
   migrateLegacyInventory,
   type InventoryState,
 } from '../../../domains/character/inventory-v2';
+import {
+  createDefaultAbstractResources,
+  type AbstractResourceLevel,
+  type CharacterAbstractResources,
+} from '../../../domains/rules/sagadrive/items';
 import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
 import { takeCharacterEditorBootstrap, clearCharacterEditorBootstrap } from '../shared/characterEditorBootstrap';
 import type { NpcPromotionPlan } from '../../../domains/npc-creature';
@@ -348,6 +353,9 @@ export function CharacterEditor() {
   const [selectedSkill, setSelectedSkill] = useState<SagaDriveSkillKey | undefined>();
   const [inventory, setInventory] = useState<ItemDto[]>([]);
   const [inventoryV2, setInventoryV2] = useState<InventoryState>(() => createEmptyInventory());
+  const [abstractResources, setAbstractResources] = useState<CharacterAbstractResources>(() =>
+    createDefaultAbstractResources(),
+  );
   const [inventoryLoadInfo, setInventoryLoadInfo] = useState<InventoryLoadInfo>({
     totalLoad: 0,
     occupied: 0,
@@ -821,6 +829,7 @@ export function CharacterEditor() {
     inventory?: ItemDto[];
     inventoryV2?: InventoryState;
     inventorySchemaVersion?: 1 | 2;
+    abstractResources?: CharacterAbstractResources;
     backgroundStory?: string;
     notes?: string;
     personalityTraits?: string[];
@@ -882,6 +891,7 @@ export function CharacterEditor() {
     } else {
       setInventoryV2(createEmptyInventory());
     }
+    setAbstractResources(payload.abstractResources ?? createDefaultAbstractResources());
     setBackgroundStory(payload.backgroundStory ?? '');
     setPersonalityTraits(payload.personalityTraits ?? []);
     setIdeals(payload.ideals ?? []);
@@ -1123,6 +1133,7 @@ export function CharacterEditor() {
           inventory: character.inventory,
           inventoryV2: inventoryV2State,
           inventorySchemaVersion: character.inventorySchemaVersion,
+          abstractResources: character.abstractResources,
           backgroundStory: character.backgroundStory,
           notes: character.notes,
           personalityTraits: character.personalityTraits,
@@ -1506,6 +1517,7 @@ export function CharacterEditor() {
         abilities,
         inventory,
         inventory_v2: inventoryV2,
+        abstractResources,
         portrait_url: portraitUrl || undefined,
       };
 
@@ -2205,11 +2217,19 @@ export function CharacterEditor() {
                   {editorUserId ? (
                     <CharacterInventoryV2Panel
                       state={inventoryV2}
-                      onChange={setInventoryV2}
+                      onChange={(next) => {
+                        setInventoryV2(next);
+                        setSagaDriveDirty(true);
+                      }}
                       strength={attributes.strength}
                       characterId={savedCharacterId}
                       userId={editorUserId}
                       onLoadInfoChange={setInventoryLoadInfo}
+                      resources={abstractResources.current}
+                      onResourcesChange={(next: AbstractResourceLevel) => {
+                        setAbstractResources((prev) => ({ ...prev, current: next }));
+                        setSagaDriveDirty(true);
+                      }}
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground">Inventar wird geladen…</p>

@@ -13,6 +13,7 @@ import type {
 } from '../domain/character.entity';
 import type { SagaDriveProfileDto } from '../domain/sagadrive-profile.entity';
 import type { InventoryState } from '../inventory-v2';
+import type { CharacterAbstractResources } from '../../rules/sagadrive/items';
 
 export type CharacterSheetStatus = 'complete' | 'incomplete';
 
@@ -45,6 +46,11 @@ export interface CharacterVm {
   /** Authoritative Inventory v2 state (migrated in memory when still on schema 1). */
   inventoryV2: InventoryState;
   inventorySchemaVersion: 1 | 2;
+  /**
+   * Abstract resources 0–5 (§10.3 / #32). Default current=3.
+   * Optional `base` reserved for later dual UI — no rewrite required.
+   */
+  abstractResources: CharacterAbstractResources;
   emotionProfiles: EmotionProfileDto[];
   portraitUrl?: string;
   createdAt: Date;

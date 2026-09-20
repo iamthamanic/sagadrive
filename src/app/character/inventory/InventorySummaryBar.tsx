@@ -1,12 +1,24 @@
 /**
- * InventorySummaryBar — sticky summary for Inventory v2 (#110/#113):
- * occupied slots, total load / capacity, overload badges, overflow warning.
+ * InventorySummaryBar — sticky summary for Inventory v2 (#110/#113/#32):
+ * occupied slots, total load / capacity, abstract resources 0–5, overload badges.
  * Remains visible on both mobile Inventar and Ausrüstung segments.
  * Location: src/app/character/inventory/InventorySummaryBar.tsx
  */
 import { Badge } from '../../../shared/ui/badge';
+import { Label } from '../../../shared/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../shared/ui/select';
 import { RuleHelp } from '../shared/RuleHelp';
 import { BASE_SLOT_COUNT } from '../../../domains/character/inventory-v2';
+import {
+  ABSTRACT_RESOURCE_LEVELS,
+  type AbstractResourceLevel,
+} from '../../../domains/rules/sagadrive/items';
 import { inventoryCarryCapacity } from './inventory-ui-labels';
 
 export interface InventorySummaryBarProps {
@@ -14,6 +26,9 @@ export interface InventorySummaryBarProps {
   totalLoad: number;
   strength: number;
   overflowCount: number;
+  /** Character abstract resources 0–5 (§10.3 / #32). */
+  resources: AbstractResourceLevel;
+  onResourcesChange: (next: AbstractResourceLevel) => void;
 }
 
 export function InventorySummaryBar({
@@ -21,6 +36,8 @@ export function InventorySummaryBar({
   totalLoad,
   strength,
   overflowCount,
+  resources,
+  onResourcesChange,
 }: InventorySummaryBarProps) {
   const capacity = inventoryCarryCapacity(strength);
   const overloaded = totalLoad > capacity;
@@ -28,14 +45,17 @@ export function InventorySummaryBar({
   const loadPercent = capacity > 0 ? Math.min(100, Math.round((totalLoad / capacity) * 100)) : 100;
 
   return (
-    <div className="sticky top-0 z-10 space-y-3 rounded-lg border border-border bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <div
+      className="sticky top-0 z-10 space-y-3 rounded-lg border border-border bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+      data-inventory-summary-bar
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-medium">
             Inventar {occupiedSlots} / {BASE_SLOT_COUNT}
           </p>
           <div className="mt-1 flex items-center gap-1">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground" data-inventory-load>
               Last {totalLoad} / {capacity}
             </p>
             <RuleHelp label="Traglast">
@@ -47,12 +67,55 @@ export function InventorySummaryBar({
           </div>
         </div>
         {immobile ? (
-          <Badge variant="destructive">Zu schwer</Badge>
+          <Badge variant="destructive" data-inventory-load-status="immobile">
+            Zu schwer
+          </Badge>
         ) : overloaded ? (
-          <Badge variant="destructive">Überladen</Badge>
+          <Badge variant="destructive" data-inventory-load-status="overloaded">
+            Überladen
+          </Badge>
         ) : (
-          <Badge variant="outline">Tragbar</Badge>
+          <Badge variant="outline" data-inventory-load-status="ok">
+            Tragbar
+          </Badge>
         )}
+      </div>
+
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <Label htmlFor="character-abstract-resources" className="text-sm">
+              Ressourcen
+            </Label>
+            <RuleHelp label="Ressourcen">
+              Abstraktes Ressourcenmodell 0–5 (§10.3). Gegenstände haben Kosten 0–5. Kauf mit
+              Kosten gleich Ressourcen senkt die Zahl vorübergehend um 1; Geschenk/Quest ändert
+              sie nicht. Keine Währung in diesem Editor.
+            </RuleHelp>
+          </div>
+          <Select
+            value={String(resources)}
+            onValueChange={(value) =>
+              onResourcesChange(Number.parseInt(value, 10) as AbstractResourceLevel)
+            }
+          >
+            <SelectTrigger
+              id="character-abstract-resources"
+              className="w-28"
+              data-character-resources
+              aria-label="Charakter-Ressourcen"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ABSTRACT_RESOURCE_LEVELS.map((level) => (
+                <SelectItem key={level} value={String(level)}>
+                  {level}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -67,12 +130,12 @@ export function InventorySummaryBar({
       </div>
 
       {overloaded && !immobile && (
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-destructive" data-inventory-overload-hint>
           Über Traglast: Bewegung −3 m und Nachteil auf Athletik und Akrobatik.
         </p>
       )}
       {immobile && (
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-destructive" data-inventory-immobile-hint>
           Mehr als doppelte Traglast: normale längere Bewegung ist nicht möglich.
         </p>
       )}
