@@ -21,3 +21,6 @@ Missing `qtmesh` → explicit error / bootstrap; no silent Blender/Faceit fallba
 - `node scripts/liveact-face-authoring-qtmesh-check.mjs` OK (fake CLI, no network)
 - `node scripts/liveact-face-asset-check.mjs --profile core-v1` OK on published m5-face1 (~94MB sparse morphs)
 - `species-template-models-v1.ts` points at m5-face1
+
+## SHA
+a92856931ac96e50bdfd1ee3596ddeb1f968b947
