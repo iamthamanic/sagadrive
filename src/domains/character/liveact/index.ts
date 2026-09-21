@@ -68,6 +68,21 @@ export {
 } from './liveact-channel-target-aliases';
 
 export {
+  LIVEACT_FACE_ASSET_CONTRACT_VERSION,
+  LIVEACT_FACE_ASSET_CORE_V1_CHANNELS,
+  LIVEACT_FACE_ASSET_FULL_V1_CHANNELS,
+  LIVEACT_FACE_ASSET_GAZE_MORPH_CHANNELS,
+  LIVEACT_FACE_ASSET_EXCLUDED_FROM_V1,
+  liveActFaceAssetRequiredChannels,
+  isLiveActFaceAssetV1Channel,
+  checkLiveActFaceAssetProfile,
+  type LiveActFaceAssetProfileId,
+  type LiveActFaceAssetGazeMode,
+  type LiveActFaceAssetInventory,
+  type LiveActFaceAssetProfileCheckResult,
+} from './liveact-face-asset-contract';
+
+export {
   LIVEACT_FACE_DIAGNOSTICS_VERSION,
   createEmptyLiveActFaceDiagnosticsFrame,
   assertLiveActFaceDiagnosticsLocalOnly,

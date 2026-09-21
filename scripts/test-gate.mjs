@@ -448,6 +448,14 @@ function checkLiveActCapabilityOwnership() {
   });
 }
 
+function checkLiveActFaceAssetContract() {
+  console.log('LiveAct face asset contract (#382): core-v1 / full-v1 / gazeMode...');
+  execFileSync(process.execPath, ['scripts/liveact-face-asset-contract-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActRigDebug() {
   console.log('LiveAct rig debug (#333): SkeletonHelper + capability inspector...');
   execFileSync(process.execPath, ['scripts/liveact-rig-debug-check.mjs'], {
@@ -1210,6 +1218,7 @@ checkLiveActViewportUi();
 checkLiveActFaceDiagnostics();
 checkLiveActAvatarOutput();
 checkLiveActCapabilityOwnership();
+checkLiveActFaceAssetContract();
 checkLiveActRigDebug();
 checkLiveActSurfaceMigration();
 checkLiveActHardening();
