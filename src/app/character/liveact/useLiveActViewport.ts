@@ -103,6 +103,9 @@ export function useLiveActViewport({
     useState<LiveActEngineState['calibrationStatus']>('idle');
   const [calibrationMessage, setCalibrationMessage] = useState('');
   const [hasNeutralBaseline, setHasNeutralBaseline] = useState(false);
+  const selectedDeviceRef = useRef(selectedDeviceId);
+  selectedDeviceRef.current = selectedDeviceId;
+  const skipDeviceSwitchAfterStartRef = useRef(false);
 
   useEffect(() => {
     if (!runtimeReady) {
@@ -191,7 +194,8 @@ export function useLiveActViewport({
     let trackingHeld = false;
     acquireSharedLiveActTracking();
     trackingHeld = true;
-    void engine.start().then(async () => {
+    skipDeviceSwitchAfterStartRef.current = true;
+    void engine.start(selectedDeviceRef.current).then(async () => {
       if (cancelled) return;
       try {
         if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -216,6 +220,17 @@ export function useLiveActViewport({
       }
     };
   }, [trackingEnabled, runtimeReady]);
+
+  useEffect(() => {
+    if (!trackingEnabled || !runtimeReady) return;
+    if (skipDeviceSwitchAfterStartRef.current) {
+      skipDeviceSwitchAfterStartRef.current = false;
+      return;
+    }
+    const engine = engineRef.current;
+    if (!engine) return;
+    void engine.switchCameraDevice(selectedDeviceRef.current);
+  }, [selectedDeviceId, trackingEnabled, runtimeReady]);
 
   useEffect(() => {
     if (runtimeReady) return;

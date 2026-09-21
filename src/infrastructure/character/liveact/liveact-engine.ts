@@ -22,6 +22,8 @@ import {
   pushLiveActCalibrationSample,
   resolveLiveActQualityProfile,
   selectPrimaryLiveActFaceIndex,
+  shouldDropLiveActInferenceTick,
+  shouldThrottleLiveActUiStatus,
   smoothLiveActFrame,
   type LiveActCalibrationAccumulator,
   type LiveActFaceDiagnosticsFrameV1,
@@ -57,6 +59,8 @@ export interface LiveActEngineState {
   calibrationStatus: LiveActCalibrationStatus;
   calibrationMessage: string;
   hasNeutralBaseline: boolean;
+  /** Inference ticks dropped due to in-flight backpressure (UI-throttled metric). */
+  droppedInferenceFrames: number;
 }
 
 export type LiveActStatusListener = (state: LiveActEngineState) => void;
@@ -101,6 +105,14 @@ export class LiveActEngine {
   private calibrationResolve: ((result: LiveActCalibrationResult) => void) | null = null;
   private calibrationStatus: LiveActCalibrationStatus = 'idle';
   private calibrationMessage = '';
+  private startGeneration = 0;
+  private inferenceInFlight = 0;
+  private droppedInferenceFrames = 0;
+  private lastStatusEmitMs = 0;
+  private pendingStatusCoalesce = false;
+  private statusCoalesceTimer: ReturnType<typeof setTimeout> | null = null;
+  private preferredDeviceId: string | undefined;
+  private deviceChangeHandler: (() => void) | null = null;
 
   constructor(
     private readonly sourceFactory: LiveActFaceSourceFactory = async (profile) => {
@@ -119,7 +131,7 @@ export class LiveActEngine {
       limits,
     });
     this.fpsCap = this.qualityProfile.fpsCap;
-    this.emitStatus();
+    this.emitStatus(true);
   }
 
   bindOutput(output: LiveActAvatarOutput | null): void {
@@ -160,7 +172,23 @@ export class LiveActEngine {
       calibrationStatus: this.calibrationStatus,
       calibrationMessage: this.calibrationMessage,
       hasNeutralBaseline: this.neutralBaseline !== null,
+      droppedInferenceFrames: this.droppedInferenceFrames,
     };
+  }
+
+  /** Switch active camera device without releasing the global claim. */
+  async switchCameraDevice(deviceId: string | undefined): Promise<void> {
+    if (this.disposed) return;
+    const sameDevice =
+      deviceId === this.preferredDeviceId &&
+      Boolean(this.stream?.getVideoTracks().some((track) => track.readyState === 'live'));
+    if (sameDevice) return;
+    this.preferredDeviceId = deviceId;
+    if (this.status !== 'active' && this.status !== 'lost' && this.status !== 'paused') {
+      return;
+    }
+    const gen = this.startGeneration;
+    await this.reopenCameraStream(gen);
   }
 
   getQualityProfile(): LiveActQualityProfile {
@@ -206,9 +234,15 @@ export class LiveActEngine {
   }
 
   /** Explicit user action only — never auto-start on construct/reload. */
-  async start(): Promise<void> {
+  async start(deviceId?: string): Promise<void> {
     if (this.disposed) return;
     if (this.status === 'active' || this.status === 'starting') return;
+
+    if (typeof deviceId === 'string' && deviceId.length > 0) {
+      this.preferredDeviceId = deviceId;
+    }
+
+    const generation = ++this.startGeneration;
 
     if (activeLiveActEngine && activeLiveActEngine !== this) {
       activeLiveActEngine.stop();
@@ -225,16 +259,11 @@ export class LiveActEngine {
     this.setStatus('starting', liveActStatusLabelDe('starting'));
 
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: 'user',
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          frameRate: { ideal: this.fpsCap, max: this.fpsCap },
-        },
-      });
+      this.stream = await this.openCameraStream();
     } catch (error) {
+      if (generation !== this.startGeneration) {
+        return;
+      }
       const name = error instanceof DOMException ? error.name : '';
       if (name === 'NotAllowedError' || name === 'SecurityError') {
         this.setStatus('denied', liveActStatusLabelDe('denied'));
@@ -251,7 +280,7 @@ export class LiveActEngine {
       return;
     }
 
-    if (this.disposed || activeLiveActEngine !== this) {
+    if (this.disposed || activeLiveActEngine !== this || generation !== this.startGeneration) {
       this.cleanupMedia();
       return;
     }
@@ -265,7 +294,11 @@ export class LiveActEngine {
       return;
     }
 
-    if (this.disposed || activeLiveActEngine !== this) {
+    if (
+      this.disposed ||
+      activeLiveActEngine !== this ||
+      generation !== this.startGeneration
+    ) {
       this.cleanupMedia();
       return;
     }
@@ -277,25 +310,22 @@ export class LiveActEngine {
     this.video.srcObject = this.stream;
     await this.video.play().catch(() => undefined);
 
-    this.visibilityHandler = () => {
-      if (typeof document === 'undefined') return;
-      if (document.visibilityState === 'hidden') {
-        if (this.status === 'active') {
-          this.setStatus('paused', liveActStatusLabelDe('paused'));
-        }
-      } else if (this.status === 'paused') {
-        this.setStatus('active', liveActStatusLabelDe('active'));
-      }
-    };
-    document.addEventListener('visibilitychange', this.visibilityHandler);
+    if (generation !== this.startGeneration) {
+      this.cleanupMedia();
+      return;
+    }
+
+    this.attachRuntimeListeners();
 
     this.setStatus('active', liveActStatusLabelDe('active'));
     this.lastFrameAt = 0;
+    this.droppedInferenceFrames = 0;
     this.loop();
   }
 
   stop(): void {
     if (this.disposed) return;
+    this.startGeneration += 1;
     this.cancelCalibration('LiveAct gestoppt.');
     this.cancelLoop();
     this.cleanupMedia();
@@ -308,6 +338,7 @@ export class LiveActEngine {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.startGeneration += 1;
     this.cancelCalibration('LiveAct beendet.');
     this.neutralBaseline = null;
     this.cancelLoop();
@@ -348,6 +379,13 @@ export class LiveActEngine {
     if (now - this.lastFrameAt < minDelta) return;
     this.lastFrameAt = now;
 
+    if (shouldDropLiveActInferenceTick(this.inferenceInFlight)) {
+      this.droppedInferenceFrames += 1;
+      this.scheduleCoalescedStatusEmit();
+      return;
+    }
+
+    this.inferenceInFlight += 1;
     let detect;
     try {
       detect = source.detect(video, now);
@@ -356,6 +394,8 @@ export class LiveActEngine {
       this.setStatus('error', liveActStatusLabelDe('error'));
       this.stop();
       return;
+    } finally {
+      this.inferenceInFlight = Math.max(0, this.inferenceInFlight - 1);
     }
 
     const primary = selectPrimaryLiveActFaceIndex(detect.samples);
@@ -413,10 +453,91 @@ export class LiveActEngine {
     } else if (this.status === 'lost') {
       this.setStatus('active', liveActStatusLabelDe('active'));
     } else {
-      this.emitStatus();
+      this.emitStatus(false);
     }
 
     return frame;
+  }
+
+  private async openCameraStream(): Promise<MediaStream> {
+    const videoConstraints: MediaTrackConstraints = {
+      facingMode: 'user',
+      width: { ideal: 640 },
+      height: { ideal: 480 },
+      frameRate: { ideal: this.fpsCap, max: this.fpsCap },
+    };
+    if (this.preferredDeviceId) {
+      videoConstraints.deviceId = { exact: this.preferredDeviceId };
+      delete videoConstraints.facingMode;
+    }
+    return navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: videoConstraints,
+    });
+  }
+
+  private async reopenCameraStream(generation: number): Promise<void> {
+    this.cleanupStreamOnly();
+    if (generation !== this.startGeneration || this.disposed) return;
+    try {
+      this.stream = await this.openCameraStream();
+    } catch {
+      this.setStatus('unsupported', 'Kamera nicht verfügbar.');
+      this.stop();
+      return;
+    }
+    if (generation !== this.startGeneration || this.disposed) {
+      this.cleanupStreamOnly();
+      return;
+    }
+    this.video = document.createElement('video');
+    this.video.muted = true;
+    this.video.playsInline = true;
+    this.video.autoplay = true;
+    this.video.srcObject = this.stream;
+    await this.video.play().catch(() => undefined);
+    if (generation !== this.startGeneration) {
+      this.cleanupStreamOnly();
+    }
+  }
+
+  private attachRuntimeListeners(): void {
+    if (typeof document !== 'undefined' && !this.visibilityHandler) {
+      this.visibilityHandler = () => {
+        if (typeof document === 'undefined') return;
+        if (document.visibilityState === 'hidden') {
+          if (this.status === 'active') {
+            this.setStatus('paused', liveActStatusLabelDe('paused'));
+          }
+        } else if (this.status === 'paused') {
+          this.setStatus('active', liveActStatusLabelDe('active'));
+        }
+      };
+      document.addEventListener('visibilitychange', this.visibilityHandler);
+    }
+    if (typeof navigator !== 'undefined' && navigator.mediaDevices && !this.deviceChangeHandler) {
+      this.deviceChangeHandler = () => {
+        if (this.status !== 'active' && this.status !== 'lost' && this.status !== 'paused') {
+          return;
+        }
+        void this.switchCameraDevice(this.preferredDeviceId);
+      };
+      navigator.mediaDevices.addEventListener('devicechange', this.deviceChangeHandler);
+    }
+  }
+
+  private cleanupStreamOnly(): void {
+    if (this.video) {
+      this.video.pause();
+      this.video.srcObject = null;
+      this.video = null;
+    }
+    if (this.stream) {
+      for (const track of this.stream.getTracks()) {
+        track.stop();
+      }
+      this.stream = null;
+    }
   }
 
   private tickCalibration(sample: LiveActSourceSample): void {
@@ -453,7 +574,7 @@ export class LiveActEngine {
     this.calibrationResolve = null;
     this.setCalibrationUi('success', 'Neutral-Kalibrierung gespeichert (nur diese Sitzung).');
     resolve?.({ ok: true, messageDe: 'Neutral-Kalibrierung gespeichert.' });
-    this.emitStatus();
+    this.emitStatus(true);
   }
 
   private failCalibration(messageDe: string): void {
@@ -462,7 +583,7 @@ export class LiveActEngine {
     this.calibrationResolve = null;
     this.setCalibrationUi('failed', messageDe);
     resolve?.({ ok: false, messageDe });
-    this.emitStatus();
+    this.emitStatus(true);
   }
 
   private cancelCalibration(messageDe: string): void {
@@ -487,9 +608,18 @@ export class LiveActEngine {
   }
 
   private cleanupMedia(): void {
+    if (this.statusCoalesceTimer !== null) {
+      clearTimeout(this.statusCoalesceTimer);
+      this.statusCoalesceTimer = null;
+    }
+    this.pendingStatusCoalesce = false;
     if (this.visibilityHandler && typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.visibilityHandler);
       this.visibilityHandler = null;
+    }
+    if (this.deviceChangeHandler && typeof navigator !== 'undefined' && navigator.mediaDevices) {
+      navigator.mediaDevices.removeEventListener('devicechange', this.deviceChangeHandler);
+      this.deviceChangeHandler = null;
     }
     try {
       this.source?.dispose();
@@ -497,26 +627,34 @@ export class LiveActEngine {
       // ignore
     }
     this.source = null;
-    if (this.video) {
-      this.video.pause();
-      this.video.srcObject = null;
-      this.video = null;
-    }
-    if (this.stream) {
-      for (const track of this.stream.getTracks()) {
-        track.stop();
-      }
-      this.stream = null;
-    }
+    this.cleanupStreamOnly();
+    this.inferenceInFlight = 0;
   }
 
   private setStatus(status: LiveActStatus, message: string): void {
     this.status = status;
     this.message = message;
-    this.emitStatus();
+    this.emitStatus(true);
   }
 
-  private emitStatus(): void {
+  private scheduleCoalescedStatusEmit(): void {
+    if (this.pendingStatusCoalesce || this.statusCoalesceTimer !== null) return;
+    this.pendingStatusCoalesce = true;
+    const delay = Math.max(50, 1000 / 5);
+    this.statusCoalesceTimer = setTimeout(() => {
+      this.statusCoalesceTimer = null;
+      this.pendingStatusCoalesce = false;
+      this.emitStatus(false);
+    }, delay);
+  }
+
+  private emitStatus(force: boolean): void {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (!force && shouldThrottleLiveActUiStatus(this.lastStatusEmitMs, now)) {
+      this.scheduleCoalescedStatusEmit();
+      return;
+    }
+    this.lastStatusEmitMs = now;
     const state = this.getState();
     for (const listener of this.statusListeners) {
       listener(state);
