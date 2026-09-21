@@ -30,9 +30,9 @@ check(/resolveSpeciesTemplateModelUrl/.test(domain), 'resolver export');
 check(/SPECIES_TEMPLATE_MODEL_PUBLIC_BASE/.test(domain), 'public base constant');
 check(/diverse/.test(domain), 'diverse fails closed');
 check(
-  /human-male-quality-20260921-m5\.glb/.test(domain) &&
+  /human-male-quality-20260921-m5-face1\.glb/.test(domain) &&
     /human-female-quality-20260921-f5\.glb/.test(domain),
-  'human gender paths m5/f5',
+  'human gender paths m5-face1/f5',
 );
 check(!/HUMAN_MALE_PREVIEW_VERSIONS/.test(domain), 'no male version picker catalog');
 check(!/quality-m4|quality-m3|softreal2\.glb/.test(domain), 'no rollback paths in domain');
@@ -42,8 +42,12 @@ check(/resolveSpeciesTemplateModelUrl/.test(hook), 'hook resolves template model
 check(/importedModelUrl \?\? templatePreviewUrl/.test(hook), 'import wins over template');
 check(/genderReading,/.test(editor), 'editor passes genderReading');
 check(
+  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb')),
+  'public human-male quality m5-face1 GLB exists',
+);
+check(
   existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5.glb')),
-  'public human-male quality m5 GLB exists',
+  'baseline human-male quality m5 GLB retained',
 );
 check(
   existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5.glb')),
@@ -59,7 +63,7 @@ check(
 );
 
 const MESH = {
-  'masculine-read': '/assets/avatars/species/human-male-quality-20260921-m5.glb?v=quality5',
+  'masculine-read': '/assets/avatars/species/human-male-quality-20260921-m5-face1.glb?v=quality5-face1',
   'feminine-read': '/assets/avatars/species/human-female-quality-20260921-f5.glb?v=quality5',
 };
 function resolveReplica(speciesId, genderReading) {
@@ -73,7 +77,7 @@ function resolveReplica(speciesId, genderReading) {
   if (!pathWithoutQuery.endsWith('.glb') && !pathWithoutQuery.endsWith('.vrm')) return undefined;
   return path;
 }
-check(resolveReplica('human', 'masculine-read')?.includes('human-male-quality-20260921-m5.glb'), 'male path');
+check(resolveReplica('human', 'masculine-read')?.includes('human-male-quality-20260921-m5-face1.glb'), 'male path');
 check(resolveReplica('human', 'feminine-read')?.includes('human-female-quality-20260921-f5.glb'), 'female path');
 check(resolveReplica('human', 'masculine-read')?.includes('?v='), 'cache-bust query preserved');
 check(resolveReplica('human', 'diverse') === undefined, 'diverse no mesh');

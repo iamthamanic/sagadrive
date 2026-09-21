@@ -9,8 +9,8 @@
     "male": "style-compare/B-semireal-male.png",
     "female": "style-compare/B-semireal-female.png"
   },
-  "productModeNote": "Active only: male m5 + female f5. No editor rollback picker.",
-  "activeMalePublic": "/assets/avatars/species/human-male-quality-20260921-m5.glb?v=quality5",
+  "productModeNote": "Active only: male m5-face1 (LiveAct core-v1) + female f5. No editor rollback picker.",
+  "activeMalePublic": "/assets/avatars/species/human-male-quality-20260921-m5-face1.glb?v=quality5-face1",
   "activeFemalePublic": "/assets/avatars/species/human-female-quality-20260921-f5.glb?v=quality5",
   "quality": {
     "aiModel": "meshy-7",
@@ -22,17 +22,27 @@
     "remesh": false,
     "retexture": false,
     "authoringDoc": "assets/species-3d/AUTHORING-PIPELINE.md",
+    "faceAuthoringDoc": "assets/species-3d/FACE-AUTHORING-THIRD-PARTY.md",
     "mtoonDefaultForGlb": false
   },
   "variants": {
     "male": {
       "refImage": "style-compare/B-semireal-male.png",
       "runDir": "runs/quality-20260921-m5",
-      "publicPath": "/assets/avatars/species/human-male-quality-20260921-m5.glb?v=quality5",
+      "faceRunDir": "runs/quality-20260921-m5-face1",
+      "publicPath": "/assets/avatars/species/human-male-quality-20260921-m5-face1.glb?v=quality5-face1",
+      "baselinePublicPath": "/assets/avatars/species/human-male-quality-20260921-m5.glb?v=quality5",
       "heightMeters": 1.75,
       "trianglesFinal": 215832,
-      "bytesFinal": 86172992,
-      "mapsFinal": ["baseColor", "metallicRoughness", "normal"],
+      "bytesFinal": 98049320,
+      "mapsFinal": [
+        "baseColor",
+        "metallicRoughness",
+        "normal"
+      ],
+      "faceAuthoringProvider": "qtmesh-facerig",
+      "faceProfile": "core-v1",
+      "gazeMode": "none",
       "tasks": {
         "imageTo3d": "01a0c345-3912-7124-9bab-5fded4349ed6",
         "rigging": "01a0c34a-289b-7156-bb4e-d079ae30bdaf"
@@ -50,7 +60,11 @@
       "heightMeters": 1.65,
       "trianglesFinal": 214973,
       "bytesFinal": 90360696,
-      "mapsFinal": ["baseColor", "metallicRoughness", "normal"],
+      "mapsFinal": [
+        "baseColor",
+        "metallicRoughness",
+        "normal"
+      ],
       "tasks": {
         "imageTo3d": "01a0c3ae-03a2-775e-9d22-6973f5b46c7a",
         "rigging": "01a0c3b5-8d03-70e5-aa8f-0b09a6982627"
@@ -63,5 +77,5 @@
     }
   },
   "createdAt": "2026-09-20",
-  "updatedAt": "2026-09-21Tm5-only"
+  "updatedAt": "2026-09-21Tm5-face1"
 }
