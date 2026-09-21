@@ -4,6 +4,9 @@
  */
 
 export type { LiveActAvatarOutput } from './liveact-avatar-output';
+export { createLiveActAvatarOutput } from './liveact-avatar-output';
+export { VrmLiveActAvatarOutput } from './vrm-liveact-avatar-output';
+export { GltfLiveActAvatarOutput } from './gltf-liveact-avatar-output';
 export {
   LiveActEngine,
   getActiveLiveActEngine,

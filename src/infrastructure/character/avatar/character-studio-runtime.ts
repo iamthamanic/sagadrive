@@ -48,6 +48,11 @@ import {
 } from './avatar-facial-runtime';
 import type { FacialCanonicalKey } from '../../../domains/character/avatar/facial-contract';
 import type { FaceTrackingDrive } from '../../../domains/character/avatar/face-tracking-contract';
+import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
+import {
+  createLiveActAvatarOutput,
+  type LiveActAvatarOutput,
+} from '../liveact/liveact-avatar-output';
 import type { AvatarEquipmentVisual } from '../../../domains/character/avatar';
 import {
   AvatarRigidEquipmentRuntime,
@@ -161,6 +166,7 @@ export class CharacterStudioRuntime {
   private readonly headScratchEuler = new THREE.Euler(0, 0, 0, 'YXZ');
   private readonly headScratchQuaternion = new THREE.Quaternion();
   private readonly eyeLookTarget = new THREE.Vector3();
+  private liveActAvatarOutput: LiveActAvatarOutput | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -292,7 +298,8 @@ export class CharacterStudioRuntime {
       this.onRigAnalysis?.(this.lastRigAnalysis);
       this.animationRuntime.bind(root, this.lastRigAnalysis);
       this.facialRuntime.bind(vrm);
-      this.bindHumanoidBones(vrm);
+      this.bindHumanoidBones(vrm, this.lastRigAnalysis);
+      this.rebuildLiveActAvatarOutput();
       this.rigidEquipmentRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.skinnedWearableRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.onStateChange({
@@ -394,6 +401,15 @@ export class CharacterStudioRuntime {
     return this.facialRuntime;
   }
 
+  /** LiveAct output adapter for the loaded model; null until ready. */
+  getLiveActAvatarOutput(): LiveActAvatarOutput | null {
+    return this.liveActAvatarOutput;
+  }
+
+  getLiveActCapabilities(): LiveActCapabilitiesV1 | null {
+    return this.liveActAvatarOutput?.getCapabilities() ?? null;
+  }
+
   /**
    * Apply local face-tracking drive (#12) onto head bone + facial weights.
    * Ephemeral only — never written into appearance.avatar.
@@ -414,9 +430,11 @@ export class CharacterStudioRuntime {
       );
       lookAt.lookAt(this.eyeLookTarget);
     }
+    const batch: Partial<Record<FacialCanonicalKey, number>> = {};
     for (const [key, weight] of Object.entries(drive.facialWeights)) {
-      this.facialRuntime.setWeight(key as FacialCanonicalKey, weight ?? 0);
+      batch[key as FacialCanonicalKey] = weight ?? 0;
     }
+    this.facialRuntime.applyWeightsBatch(batch);
   }
 
   resetFaceTrackingPose(): void {
@@ -424,6 +442,10 @@ export class CharacterStudioRuntime {
       this.headBone.quaternion.copy(this.headRestQuaternion);
     }
     this.facialRuntime.resetToNeutral();
+  }
+
+  resetLiveActPose(): void {
+    this.liveActAvatarOutput?.resetLiveActPose();
   }
 
   /** True when a model is loaded and can be snapshotted. */
@@ -723,7 +745,10 @@ export class CharacterStudioRuntime {
     }
   }
 
-  private bindHumanoidBones(vrm: VRM | undefined): void {
+  private bindHumanoidBones(
+    vrm: VRM | undefined,
+    rigAnalysis: AvatarRigAnalysisResult | undefined,
+  ): void {
     this.headBone = null;
     this.leftFootBone = null;
     this.rightFootBone = null;
@@ -733,21 +758,49 @@ export class CharacterStudioRuntime {
           getRawBoneNode?: (name: string) => THREE.Object3D | null;
         }
       | undefined;
-    if (!humanoid) return;
-    const pick = (name: string): THREE.Object3D | null =>
-      humanoid.getNormalizedBoneNode?.(name) ?? humanoid.getRawBoneNode?.(name) ?? null;
-    const head = pick('head');
-    if (head) {
-      this.headBone = head;
-      this.headRestQuaternion.copy(head.quaternion);
+    if (humanoid) {
+      const pick = (name: string): THREE.Object3D | null =>
+        humanoid.getNormalizedBoneNode?.(name) ?? humanoid.getRawBoneNode?.(name) ?? null;
+      const head = pick('head');
+      if (head) {
+        this.headBone = head;
+        this.headRestQuaternion.copy(head.quaternion);
+      }
+      this.leftFootBone = pick('leftFoot') ?? pick('leftToes');
+      this.rightFootBone = pick('rightFoot') ?? pick('rightToes');
+      return;
     }
-    this.leftFootBone = pick('leftFoot') ?? pick('leftToes');
-    this.rightFootBone = pick('rightFoot') ?? pick('rightToes');
+
+    const headBoneName = rigAnalysis?.rig.bones.head;
+    if (headBoneName && this.currentRoot) {
+      const head = this.currentRoot.getObjectByName(headBoneName);
+      if (head) {
+        this.headBone = head;
+        this.headRestQuaternion.copy(head.quaternion);
+      }
+    }
+  }
+
+  private rebuildLiveActAvatarOutput(): void {
+    this.liveActAvatarOutput?.dispose();
+    this.liveActAvatarOutput = null;
+    if (!this.currentRoot) return;
+    this.liveActAvatarOutput = createLiveActAvatarOutput({
+      root: this.currentRoot,
+      vrm: this.currentVrm,
+      headBone: this.headBone,
+      headRestQuaternion: this.headRestQuaternion,
+      headScratchEuler: this.headScratchEuler,
+      headScratchQuaternion: this.headScratchQuaternion,
+      eyeLookTarget: this.eyeLookTarget,
+    });
   }
 
   private removeCurrentModel(): void {
     this.animationRuntime.stopAll();
     this.facialRuntime.resetToNeutral();
+    this.liveActAvatarOutput?.dispose();
+    this.liveActAvatarOutput = null;
     this.headBone = null;
     this.leftFootBone = null;
     this.rightFootBone = null;
@@ -772,6 +825,8 @@ export class CharacterStudioRuntime {
     this.facialRuntime.dispose();
     this.rigidEquipmentRuntime.dispose();
     this.skinnedWearableRuntime.dispose();
+    this.liveActAvatarOutput?.dispose();
+    this.liveActAvatarOutput = null;
     this.traitLifecycle.dispose();
     this.runtimeOverlays = [];
     this.headBone = null;

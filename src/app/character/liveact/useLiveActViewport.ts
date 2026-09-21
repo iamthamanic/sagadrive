@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import {
   liveActStatusLabelDe,
+  type LiveActCapabilitiesV1,
   type LiveActFaceDiagnosticsFrameV1,
   type LiveActStatus,
 } from '../../../domains/character/liveact';
@@ -26,6 +27,8 @@ export interface UseLiveActViewportOptions {
   /** When false, Tracking cannot start and must not prompt for camera. */
   runtimeReady: boolean;
   enabled?: boolean;
+  /** Avatar capability matrix from loaded model (LiveAct output). */
+  getLiveActCapabilities?: () => LiveActCapabilitiesV1 | null;
 }
 
 export interface UseLiveActViewportResult {
@@ -53,13 +56,17 @@ export interface UseLiveActViewportResult {
   canCalibrate: boolean;
   calibrateNeutral: () => Promise<void>;
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
+  engineRef: RefObject<LiveActEngine | null>;
 }
 
 export function useLiveActViewport({
   runtimeReady,
   enabled = true,
+  getLiveActCapabilities,
 }: UseLiveActViewportOptions): UseLiveActViewportResult {
   const engineRef = useRef<LiveActEngine | null>(null);
+  const getCapsRef = useRef(getLiveActCapabilities);
+  getCapsRef.current = getLiveActCapabilities;
   const diagnosticsRef = useRef<LiveActFaceDiagnosticsFrameV1 | null>(null);
   const [trackingEnabled, setTrackingEnabledState] = useState(false);
   const [cameraPreviewEnabled, setCameraPreviewEnabled] = useState(true);
@@ -94,19 +101,28 @@ export function useLiveActViewport({
       const active =
         state.status === 'active' || state.status === 'lost' || state.status === 'paused';
       setFaceDetected(Boolean(active && frame && !frame.trackingLost));
-      setHeadConnected(Boolean(active && frame && !frame.trackingLost));
-      setEyesConnected(
-        Boolean(
-          active &&
-            frame &&
-            !frame.trackingLost &&
-            (Math.abs(frame.eyeLeft.x) + Math.abs(frame.eyeLeft.y) > 0.01 ||
-              Math.abs(frame.eyeRight.x) + Math.abs(frame.eyeRight.y) > 0.01 ||
-              frame.face.eyeBlinkLeft > 0.01 ||
-              frame.face.eyeBlinkRight > 0.01),
-        ),
-      );
-      setMouthLimited(true);
+      const caps = getCapsRef.current?.();
+      if (caps) {
+        setHeadConnected(Boolean(active && caps.avatarBones.head));
+        setEyesConnected(
+          Boolean(active && (caps.avatarBones.leftEye || caps.avatarBones.rightEye)),
+        );
+        setMouthLimited(caps.activeFaceChannelCount < 4);
+      } else {
+        setHeadConnected(Boolean(active && frame && !frame.trackingLost));
+        setEyesConnected(
+          Boolean(
+            active &&
+              frame &&
+              !frame.trackingLost &&
+              (Math.abs(frame.eyeLeft.x) + Math.abs(frame.eyeLeft.y) > 0.01 ||
+                Math.abs(frame.eyeRight.x) + Math.abs(frame.eyeRight.y) > 0.01 ||
+                frame.face.eyeBlinkLeft > 0.01 ||
+                frame.face.eyeBlinkRight > 0.01),
+          ),
+        );
+        setMouthLimited(true);
+      }
     });
     const unsubDiagnostics = engine.subscribeDiagnostics((frame) => {
       diagnosticsRef.current = frame;
@@ -211,5 +227,6 @@ export function useLiveActViewport({
     canCalibrate,
     calibrateNeutral,
     diagnosticsRef,
+    engineRef,
   };
 }

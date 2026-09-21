@@ -53,6 +53,12 @@ export {
 } from './liveact-capabilities';
 
 export {
+  LIVEACT_CHANNEL_TARGET_ALIASES,
+  resolveLiveActChannelTargets,
+  type LiveActChannelTargetResolution,
+} from './liveact-channel-target-aliases';
+
+export {
   LIVEACT_FACE_DIAGNOSTICS_VERSION,
   createEmptyLiveActFaceDiagnosticsFrame,
   assertLiveActFaceDiagnosticsLocalOnly,

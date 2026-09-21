@@ -432,6 +432,14 @@ function checkLiveActFaceDiagnostics() {
   });
 }
 
+function checkLiveActAvatarOutput() {
+  console.log('LiveAct avatar output (#332): VRM/GLB atomic frame apply...');
+  execFileSync(process.execPath, ['scripts/liveact-avatar-output-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarV2CompositionContract() {
   console.log('Avatar V2 composition contract (#249): orthogonal axes + legacy mapping...');
   execFileSync(process.execPath, ['scripts/avatar-v2-composition-contract-check.mjs'], {
@@ -1168,6 +1176,7 @@ checkAvatarFaceTracking();
 checkLiveActCore();
 checkLiveActViewportUi();
 checkLiveActFaceDiagnostics();
+checkLiveActAvatarOutput();
 checkAvatarV2CompositionContract();
 checkAvatarV2ModularGlbContract();
 checkAvatarV2ArtifactPipeline();

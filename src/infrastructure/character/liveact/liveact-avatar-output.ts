@@ -1,17 +1,54 @@
 /**
- * LiveAct avatar output port — apply atomic frames to a character runtime (#329).
+ * LiveAct avatar output port + factory (#329, #332).
  * Location: src/infrastructure/character/liveact/liveact-avatar-output.ts
  *
- * Concrete VRM/GLB adapters land in LiveAct 4/7. This file is the typed port only.
+ * Concrete VRM/GLB adapters apply atomic LiveActFrameV1 without exclusive facial-layer wipes.
  */
 
-import type { LiveActFrameV1 } from '../../../domains/character/liveact';
+import * as THREE from 'three';
+import type { VRM } from '@pixiv/three-vrm';
+import type {
+  LiveActCapabilitiesV1,
+  LiveActFrameV1,
+} from '../../../domains/character/liveact';
+import { GltfLiveActAvatarOutput } from './gltf-liveact-avatar-output';
+import { VrmLiveActAvatarOutput } from './vrm-liveact-avatar-output';
 
-/**
- * Consumer of LiveAct frames (CharacterStudioRuntime or future adapters).
- * Implementations must apply the full frame atomically — not per exclusive expression key.
- */
 export interface LiveActAvatarOutput {
   applyLiveActFrame(frame: LiveActFrameV1): void;
   resetLiveActPose(): void;
+  getCapabilities(): LiveActCapabilitiesV1;
+  dispose(): void;
+}
+
+export interface CreateLiveActAvatarOutputInput {
+  root: THREE.Object3D;
+  vrm: VRM | undefined;
+  headBone: THREE.Object3D | null;
+  headRestQuaternion: THREE.Quaternion;
+  headScratchEuler: THREE.Euler;
+  headScratchQuaternion: THREE.Quaternion;
+  eyeLookTarget: THREE.Vector3;
+}
+
+export function createLiveActAvatarOutput(
+  input: CreateLiveActAvatarOutputInput,
+): LiveActAvatarOutput | null {
+  if (input.vrm) {
+    return new VrmLiveActAvatarOutput({
+      vrm: input.vrm,
+      headBone: input.headBone,
+      headRestQuaternion: input.headRestQuaternion,
+      eyeLookTarget: input.eyeLookTarget,
+      headScratchEuler: input.headScratchEuler,
+      headScratchQuaternion: input.headScratchQuaternion,
+    });
+  }
+  return new GltfLiveActAvatarOutput({
+    root: input.root,
+    headBone: input.headBone,
+    headRestQuaternion: input.headRestQuaternion,
+    headScratchEuler: input.headScratchEuler,
+    headScratchQuaternion: input.headScratchQuaternion,
+  });
 }
