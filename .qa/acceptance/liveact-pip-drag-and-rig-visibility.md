@@ -6,5 +6,5 @@ Viewport UX polish after LiveAct ship: draggable camera PiP (default bottom-left
 ## Composition Gate
 
 - Verdict: SKIPPED
-- HEAD_SHA: WORKTREE (see `.qa/runs/composition-gate-liveact-pip-drag-and-rig-visibility.md`)
+- HEAD_SHA: 0551a71f87387be53e3d9efa74bf7a66ba764b2e
 - Reason: single-hop editor/local overlay + offline scripts; no cross-hop business event path

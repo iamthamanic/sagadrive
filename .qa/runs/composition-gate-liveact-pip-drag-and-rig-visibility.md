@@ -1,6 +1,6 @@
 # Composition Gate — liveact-pip-drag-and-rig-visibility
 
-- HEAD_SHA: WORKTREE (pre-commit; staged LiveAct PiP/rig/capability + species-authoring scripts)
+- HEAD_SHA: 0551a71f87387be53e3d9efa74bf7a66ba764b2e
 - Date: 2026-09-21
 - Verdict: SKIPPED
 
