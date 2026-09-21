@@ -8,7 +8,9 @@
 
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import {
+  composeLiveActCapabilities,
   liveActStatusLabelDe,
+  type LiveActAvatarCapabilities,
   type LiveActCapabilitiesV1,
   type LiveActFaceDiagnosticsFrameV1,
   type LiveActStatus,
@@ -30,8 +32,8 @@ export interface UseLiveActViewportOptions {
   /** When false, Tracking cannot start and must not prompt for camera. */
   runtimeReady: boolean;
   enabled?: boolean;
-  /** Avatar capability matrix from loaded model (LiveAct output). */
-  getLiveActCapabilities?: () => LiveActCapabilitiesV1 | null;
+  /** Avatar-only capability matrix from loaded model (#381). */
+  getLiveActAvatarCapabilities?: () => LiveActAvatarCapabilities | null;
   /** Whether the loaded avatar exposes a real skeleton (SkinnedMesh). */
   getBonesAvailable?: () => boolean;
   /** Bump when the studio runtime loads or swaps models. */
@@ -66,6 +68,8 @@ export interface UseLiveActViewportResult {
   hasNeutralBaseline: boolean;
   canCalibrate: boolean;
   calibrateNeutral: () => Promise<void>;
+  /** Composed Input×Avatar matrix for Capability Inspector (#381). */
+  composedCapabilities: LiveActCapabilitiesV1 | null;
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
   engineRef: RefObject<LiveActEngine | null>;
 }
@@ -73,13 +77,13 @@ export interface UseLiveActViewportResult {
 export function useLiveActViewport({
   runtimeReady,
   enabled = true,
-  getLiveActCapabilities,
+  getLiveActAvatarCapabilities,
   getBonesAvailable,
   modelRevision = 0,
 }: UseLiveActViewportOptions): UseLiveActViewportResult {
   const engineRef = useRef<LiveActEngine | null>(null);
-  const getCapsRef = useRef(getLiveActCapabilities);
-  getCapsRef.current = getLiveActCapabilities;
+  const getAvatarCapsRef = useRef(getLiveActAvatarCapabilities);
+  getAvatarCapsRef.current = getLiveActAvatarCapabilities;
   const getBonesRef = useRef(getBonesAvailable);
   getBonesRef.current = getBonesAvailable;
   const diagnosticsRef = useRef<LiveActFaceDiagnosticsFrameV1 | null>(null);
@@ -103,6 +107,9 @@ export function useLiveActViewport({
     useState<LiveActEngineState['calibrationStatus']>('idle');
   const [calibrationMessage, setCalibrationMessage] = useState('');
   const [hasNeutralBaseline, setHasNeutralBaseline] = useState(false);
+  const [composedCapabilities, setComposedCapabilities] = useState<LiveActCapabilitiesV1 | null>(
+    null,
+  );
   const selectedDeviceRef = useRef(selectedDeviceId);
   selectedDeviceRef.current = selectedDeviceId;
   const skipDeviceSwitchAfterStartRef = useRef(false);
@@ -127,9 +134,23 @@ export function useLiveActViewport({
   }, [bonesAvailable]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      setComposedCapabilities(null);
+      return;
+    }
     const engine = acquireSharedLiveActEngine();
     engineRef.current = engine;
+    const refreshComposed = () => {
+      const avatarCaps = getAvatarCapsRef.current?.() ?? null;
+      if (!avatarCaps) {
+        setComposedCapabilities(null);
+        return;
+      }
+      setComposedCapabilities(
+        composeLiveActCapabilities(engine.getInputCapabilities(), avatarCaps),
+      );
+    };
+    refreshComposed();
     const unsubStatus = engine.subscribeStatus((state: LiveActEngineState) => {
       setStatus(state.status);
       setMessage(state.message);
@@ -143,7 +164,11 @@ export function useLiveActViewport({
       const active =
         state.status === 'active' || state.status === 'lost' || state.status === 'paused';
       setFaceDetected(Boolean(active && frame && !frame.trackingLost));
-      const caps = getCapsRef.current?.();
+      const avatarCaps = getAvatarCapsRef.current?.();
+      const caps: LiveActCapabilitiesV1 | null = avatarCaps
+        ? composeLiveActCapabilities(engine.getInputCapabilities(), avatarCaps)
+        : null;
+      setComposedCapabilities(caps);
       if (caps) {
         setHeadConnected(Boolean(active && caps.avatarBones.head));
         setEyesConnected(
@@ -176,8 +201,22 @@ export function useLiveActViewport({
       engineRef.current = null;
       diagnosticsRef.current = null;
       setPreviewVideo(null);
+      setComposedCapabilities(null);
     };
   }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled || !runtimeReady) return;
+    const engine = engineRef.current;
+    const avatarCaps = getAvatarCapsRef.current?.() ?? null;
+    if (!engine || !avatarCaps) {
+      setComposedCapabilities(null);
+      return;
+    }
+    setComposedCapabilities(
+      composeLiveActCapabilities(engine.getInputCapabilities(), avatarCaps),
+    );
+  }, [runtimeReady, enabled, modelRevision]);
 
   useEffect(() => {
     if (!trackingEnabled) {
@@ -286,6 +325,7 @@ export function useLiveActViewport({
     hasNeutralBaseline,
     canCalibrate,
     calibrateNeutral,
+    composedCapabilities,
     diagnosticsRef,
     engineRef,
   };

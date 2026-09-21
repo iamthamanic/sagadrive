@@ -8,8 +8,8 @@ import type { VRM } from '@pixiv/three-vrm';
 import {
   LIVEACT_FACE_CHANNELS,
   clampLiveActChannel,
-  createLiveActCapabilities,
-  type LiveActCapabilitiesV1,
+  createLiveActAvatarCapabilities,
+  type LiveActAvatarCapabilities,
   type LiveActFaceChannelId,
   type LiveActFrameV1,
 } from '../../../domains/character/liveact';
@@ -55,26 +55,24 @@ export interface VrmLiveActAvatarOutputDeps {
 
 export class VrmLiveActAvatarOutput implements LiveActAvatarOutput {
   private readonly resolved: Readonly<Partial<Record<LiveActFaceChannelId, string>>>;
-  private readonly capabilities: LiveActCapabilitiesV1;
+  private readonly avatarCapabilities: LiveActAvatarCapabilities;
   private disposed = false;
 
   constructor(private readonly deps: VrmLiveActAvatarOutputDeps) {
     const present = listVrmExpressionNames(deps.vrm);
     const resolution = resolveLiveActChannelTargets(present);
     this.resolved = resolution.resolvedNames;
-    this.capabilities = createLiveActCapabilities({
-      face: true,
-      headPose: Boolean(deps.headBone),
-      eyeGaze: Boolean(deps.vrm.lookAt),
+    const hasLookAt = Boolean(deps.vrm.lookAt);
+    this.avatarCapabilities = createLiveActAvatarCapabilities({
       headBone: Boolean(deps.headBone),
-      leftEyeBone: Boolean(deps.vrm.lookAt),
-      rightEyeBone: Boolean(deps.vrm.lookAt),
+      leftEyeBone: hasLookAt,
+      rightEyeBone: hasLookAt,
       avatarFace: resolution.faceSupport,
     });
   }
 
-  getCapabilities(): LiveActCapabilitiesV1 {
-    return this.capabilities;
+  getAvatarCapabilities(): LiveActAvatarCapabilities {
+    return this.avatarCapabilities;
   }
 
   applyLiveActFrame(frame: LiveActFrameV1): void {

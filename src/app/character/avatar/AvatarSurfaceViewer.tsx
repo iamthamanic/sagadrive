@@ -120,18 +120,15 @@ export function AvatarSurfaceViewer({
   const liveAct = useLiveActViewport({
     runtimeReady: runtimeReady && show3d,
     enabled: liveActEnabled,
-    getLiveActCapabilities: () => studioRuntimeRef.current?.getLiveActCapabilities() ?? null,
+    getLiveActAvatarCapabilities: () =>
+      studioRuntimeRef.current?.getLiveActAvatarCapabilities() ?? null,
     getBonesAvailable: () => studioRuntimeRef.current?.hasLiveActSkeleton() ?? false,
     modelRevision: modelEpoch,
   });
 
   useEffect(() => {
-    if (!runtimeReady) {
-      setLiveActCapabilities(null);
-      return;
-    }
-    setLiveActCapabilities(studioRuntimeRef.current?.getLiveActCapabilities() ?? null);
-  }, [runtimeReady, modelEpoch]);
+    setLiveActCapabilities(liveAct.composedCapabilities);
+  }, [liveAct.composedCapabilities]);
 
   useEffect(() => {
     if (!isEditorSurface || !runtimeReady) {

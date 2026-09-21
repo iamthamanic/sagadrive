@@ -45,10 +45,14 @@ export {
 export {
   LIVEACT_CAPABILITIES_VERSION,
   createEmptyLiveActAvatarFaceSupport,
+  createLiveActInputCapabilities,
+  createLiveActAvatarCapabilities,
+  composeLiveActCapabilities,
   createLiveActCapabilities,
   type LiveActInputCapabilities,
   type LiveActAvatarBoneCapabilities,
   type LiveActAvatarFaceChannelSupport,
+  type LiveActAvatarCapabilities,
   type LiveActCapabilitiesV1,
 } from './liveact-capabilities';
 

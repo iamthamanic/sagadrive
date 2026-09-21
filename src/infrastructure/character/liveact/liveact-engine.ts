@@ -15,6 +15,7 @@ import {
   createEmptyLiveActFaceDiagnosticsFrame,
   createEmptyLiveActSourceSample,
   createLiveActCalibrationAccumulator,
+  createLiveActInputCapabilities,
   createNeutralLiveActFrame,
   finalizeLiveActCalibration,
   liveActStatusLabelDe,
@@ -28,6 +29,7 @@ import {
   type LiveActCalibrationAccumulator,
   type LiveActFaceDiagnosticsFrameV1,
   type LiveActFrameV1,
+  type LiveActInputCapabilities,
   type LiveActLimits,
   type LiveActNeutralBaselineV1,
   type LiveActQualityProfile,
@@ -193,6 +195,18 @@ export class LiveActEngine {
 
   getQualityProfile(): LiveActQualityProfile {
     return this.qualityProfile;
+  }
+
+  /**
+   * Engine/face-source input support only (#381) — never derived from avatar mesh.
+   * Available before tracking starts (quality profile); face always true for MediaPipe Face.
+   */
+  getInputCapabilities(): LiveActInputCapabilities {
+    return createLiveActInputCapabilities({
+      face: true,
+      headPose: this.qualityProfile.enableHeadPose,
+      eyeGaze: true,
+    });
   }
 
   /** Preview video element while tracking (engine remains stream owner). */

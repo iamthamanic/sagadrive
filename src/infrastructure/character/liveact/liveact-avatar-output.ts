@@ -8,7 +8,7 @@
 import * as THREE from 'three';
 import type { VRM } from '@pixiv/three-vrm';
 import type {
-  LiveActCapabilitiesV1,
+  LiveActAvatarCapabilities,
   LiveActFrameV1,
 } from '../../../domains/character/liveact';
 import { GltfLiveActAvatarOutput } from './gltf-liveact-avatar-output';
@@ -17,7 +17,8 @@ import { VrmLiveActAvatarOutput } from './vrm-liveact-avatar-output';
 export interface LiveActAvatarOutput {
   applyLiveActFrame(frame: LiveActFrameV1): void;
   resetLiveActPose(): void;
-  getCapabilities(): LiveActCapabilitiesV1;
+  /** Asset/bone/morph support only — never camera/input flags (#381). */
+  getAvatarCapabilities(): LiveActAvatarCapabilities;
   dispose(): void;
 }
 

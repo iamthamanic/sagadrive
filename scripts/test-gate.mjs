@@ -440,6 +440,14 @@ function checkLiveActAvatarOutput() {
   });
 }
 
+function checkLiveActCapabilityOwnership() {
+  console.log('LiveAct capability ownership (#381): Input vs Avatar compose...');
+  execFileSync(process.execPath, ['scripts/liveact-capability-ownership-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActRigDebug() {
   console.log('LiveAct rig debug (#333): SkeletonHelper + capability inspector...');
   execFileSync(process.execPath, ['scripts/liveact-rig-debug-check.mjs'], {
@@ -1201,6 +1209,7 @@ checkLiveActCore();
 checkLiveActViewportUi();
 checkLiveActFaceDiagnostics();
 checkLiveActAvatarOutput();
+checkLiveActCapabilityOwnership();
 checkLiveActRigDebug();
 checkLiveActSurfaceMigration();
 checkLiveActHardening();

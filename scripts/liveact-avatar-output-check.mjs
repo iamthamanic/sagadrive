@@ -40,16 +40,17 @@ check(/resolveLiveActChannelTargets/.test(aliases), 'channel target resolver');
 check(!/from ['"]three['"]/.test(aliases), 'alias domain pure');
 
 check(/createLiveActAvatarOutput/.test(output), 'output factory');
-check(/getCapabilities/.test(output), 'output capabilities');
+check(/getAvatarCapabilities/.test(output), 'output avatar capabilities');
 check(/VrmLiveActAvatarOutput/.test(output), 'VRM adapter wired');
 check(/GltfLiveActAvatarOutput/.test(output), 'GLB adapter wired');
 
 check(/expressionManager\.setValue/.test(vrmOut), 'VRM atomic expression apply');
-check(/createLiveActCapabilities/.test(vrmOut), 'VRM capability matrix');
+check(/createLiveActAvatarCapabilities/.test(vrmOut), 'VRM avatar capability matrix');
 check(!/applyFacialLayerUpdate/.test(vrmOut), 'VRM output no exclusive layer wipe');
 
 check(/buildLiveActMorphTargetIndex/.test(gltfOut), 'GLB morph index');
 check(/resolveLiveActChannelTargets/.test(gltfOut), 'GLB uses alias table');
+check(/createLiveActAvatarCapabilities/.test(gltfOut), 'GLB avatar capability matrix');
 check(/rig-analyzer/.test(gltfOut) === false, 'GLB no second rig scanner file');
 
 check(/morphTargetDictionary/.test(morphIndex), 'morph dictionary traversal');
@@ -59,13 +60,16 @@ check(/applyFacialLayerUpdate/.test(facial), 'preview setWeight layer rules rema
 
 check(/rebuildLiveActAvatarOutput/.test(studio), 'studio rebuilds output on load');
 check(/getLiveActAvatarOutput/.test(studio), 'studio exposes output');
+check(/getLiveActAvatarCapabilities/.test(studio), 'studio exposes avatar capabilities');
 check(/applyWeightsBatch/.test(studio), 'legacy face tracking uses batch');
 check(!/facialRuntime\.setWeight\(key as FacialCanonicalKey/.test(studio), 'no per-key LiveAct loop');
 
 check(/engineRef/.test(hook), 'hook exposes engine ref');
-check(/getLiveActCapabilities/.test(hook), 'hook reads capability matrix');
+check(/getLiveActAvatarCapabilities/.test(hook), 'hook reads avatar capability matrix');
+check(/composeLiveActCapabilities/.test(hook), 'hook composes capabilities');
 
 check(/bindOutput/.test(surface), 'surface binds LiveAct output');
+check(/composedCapabilities/.test(surface), 'surface uses composedCapabilities');
 check(/studioRuntimeRef/.test(surface) && /studioRuntimeRef/.test(canvas), 'runtime ref wiring');
 
 check(/liveact-channel-target-aliases/.test(domainIndex), 'barrel exports aliases');

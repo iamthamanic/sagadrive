@@ -7,8 +7,8 @@ import * as THREE from 'three';
 import {
   LIVEACT_FACE_CHANNELS,
   clampLiveActChannel,
-  createLiveActCapabilities,
-  type LiveActCapabilitiesV1,
+  createLiveActAvatarCapabilities,
+  type LiveActAvatarCapabilities,
   type LiveActFaceChannelId,
   type LiveActFrameV1,
 } from '../../../domains/character/liveact';
@@ -38,7 +38,7 @@ export interface GltfLiveActAvatarOutputDeps {
 export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
   private readonly morphIndex: LiveActMorphTargetIndex;
   private readonly resolved: Readonly<Partial<Record<LiveActFaceChannelId, string>>>;
-  private readonly capabilities: LiveActCapabilitiesV1;
+  private readonly avatarCapabilities: LiveActAvatarCapabilities;
   private readonly leftEyeBone: THREE.Object3D | null;
   private readonly rightEyeBone: THREE.Object3D | null;
   private readonly leftEyeRest = new THREE.Quaternion();
@@ -57,10 +57,7 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
     if (this.leftEyeBone) this.leftEyeRest.copy(this.leftEyeBone.quaternion);
     if (this.rightEyeBone) this.rightEyeRest.copy(this.rightEyeBone.quaternion);
 
-    this.capabilities = createLiveActCapabilities({
-      face: true,
-      headPose: Boolean(deps.headBone),
-      eyeGaze: Boolean(this.leftEyeBone || this.rightEyeBone),
+    this.avatarCapabilities = createLiveActAvatarCapabilities({
       headBone: Boolean(deps.headBone),
       leftEyeBone: Boolean(this.leftEyeBone),
       rightEyeBone: Boolean(this.rightEyeBone),
@@ -68,8 +65,8 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
     });
   }
 
-  getCapabilities(): LiveActCapabilitiesV1 {
-    return this.capabilities;
+  getAvatarCapabilities(): LiveActAvatarCapabilities {
+    return this.avatarCapabilities;
   }
 
   applyLiveActFrame(frame: LiveActFrameV1): void {

@@ -48,7 +48,7 @@ import {
 } from './avatar-facial-runtime';
 import type { FacialCanonicalKey } from '../../../domains/character/avatar/facial-contract';
 import type { FaceTrackingDrive } from '../../../domains/character/avatar/face-tracking-contract';
-import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
+import type { LiveActAvatarCapabilities } from '../../../domains/character/liveact';
 import {
   createLiveActAvatarOutput,
   type LiveActAvatarOutput,
@@ -415,8 +415,9 @@ export class CharacterStudioRuntime {
     return this.liveActAvatarOutput;
   }
 
-  getLiveActCapabilities(): LiveActCapabilitiesV1 | null {
-    return this.liveActAvatarOutput?.getCapabilities() ?? null;
+  /** Asset/bone/morph inventory only — compose with engine input in app (#381). */
+  getLiveActAvatarCapabilities(): LiveActAvatarCapabilities | null {
+    return this.liveActAvatarOutput?.getAvatarCapabilities() ?? null;
   }
 
   /** True when the loaded model exposes a skinned skeleton for debug overlay. */
