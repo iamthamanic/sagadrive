@@ -16,6 +16,7 @@ import {
 } from '../../../domains/character/avatar';
 import { AvatarCanvas, type AvatarPortraitCaptureHandle } from './AvatarCanvas';
 import { LiveActViewportControls, useLiveActViewport } from '../liveact';
+import type { CharacterStudioRuntime } from '../../../infrastructure/character/avatar/character-studio-runtime';
 
 interface AvatarSurfaceViewerProps {
   surface: AvatarSurfaceId;
@@ -67,6 +68,8 @@ export function AvatarSurfaceViewer({
   const [runtimeReady, setRuntimeReady] = useState(false);
   const [mtoonEnabled, setMtoonEnabled] = useState(true);
   const mtoonHandlerRef = useRef<((enabled: boolean) => void) | null>(null);
+  const studioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
+  const [modelEpoch, setModelEpoch] = useState(0);
   const checkedRef = useRef(false);
 
   const handleMtoonState = useRef(
@@ -107,7 +110,28 @@ export function AvatarSurfaceViewer({
   const liveAct = useLiveActViewport({
     runtimeReady: isEditorSurface && runtimeReady && show3d,
     enabled: isEditorSurface,
+    getLiveActCapabilities: () => studioRuntimeRef.current?.getLiveActCapabilities() ?? null,
   });
+
+  useEffect(() => {
+    const engine = liveAct.engineRef.current;
+    if (!engine || !isEditorSurface) return;
+    if (!liveAct.trackingEnabled || !runtimeReady) {
+      engine.bindOutput(null);
+      return;
+    }
+    const output = studioRuntimeRef.current?.getLiveActAvatarOutput() ?? null;
+    engine.bindOutput(output);
+    return () => {
+      engine.bindOutput(null);
+    };
+  }, [
+    isEditorSurface,
+    liveAct.trackingEnabled,
+    runtimeReady,
+    modelEpoch,
+    liveAct.engineRef,
+  ]);
 
   useEffect(() => {
     if (show3d) return;
@@ -117,6 +141,7 @@ export function AvatarSurfaceViewer({
 
   const handleRuntimeReady = () => {
     setRuntimeReady(true);
+    setModelEpoch((value) => value + 1);
     onRuntimeReady?.();
   };
 
@@ -143,6 +168,7 @@ export function AvatarSurfaceViewer({
             hideEditorFaceTrackingBar={isEditorSurface}
             hideMtoonToggle={isEditorSurface}
             onMtoonState={handleMtoonState}
+            studioRuntimeRef={studioRuntimeRef}
           />
           {isEditorSurface ? (
             <div

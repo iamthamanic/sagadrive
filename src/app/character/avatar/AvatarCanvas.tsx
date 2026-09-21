@@ -54,6 +54,8 @@ interface AvatarCanvasProps {
   hideMtoonToggle?: boolean;
   /** Notify Surface chrome of MToon state + apply callback. */
   onMtoonState?: (enabled: boolean, apply: (enabled: boolean) => void) => void;
+  /** Imperative access to CharacterStudioRuntime (LiveAct bind). */
+  studioRuntimeRef?: MutableRefObject<CharacterStudioRuntime | null>;
 }
 
 async function dataUrlToPngBlob(dataUrl: string): Promise<Blob | null> {
@@ -83,6 +85,7 @@ export function AvatarCanvas({
   hideEditorFaceTrackingBar = false,
   hideMtoonToggle = false,
   onMtoonState,
+  studioRuntimeRef,
 }: AvatarCanvasProps) {
   const localRef = useRef<HTMLCanvasElement>(null);
   const targetRef = canvasRef ?? localRef;
@@ -150,6 +153,7 @@ export function AvatarCanvas({
       onFacial,
     );
     runtimeRef.current = runtime;
+    if (studioRuntimeRef) studioRuntimeRef.current = runtime;
 
     let faceTracking: AvatarFaceTrackingRuntime | undefined;
     if (enableFaceTracking) {
@@ -180,8 +184,9 @@ export function AvatarCanvas({
       faceTrackingRef.current = undefined;
       runtime.dispose();
       runtimeRef.current = undefined;
+      if (studioRuntimeRef) studioRuntimeRef.current = null;
     };
-  }, [targetRef, captureApiRef, enableFaceTracking]);
+  }, [targetRef, captureApiRef, enableFaceTracking, studioRuntimeRef]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;

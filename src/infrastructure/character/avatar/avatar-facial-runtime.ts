@@ -133,6 +133,24 @@ export class AvatarFacialRuntime {
     return true;
   }
 
+  /**
+   * LiveAct / performance capture — merge multiple weights without exclusive sibling nulling.
+   * Manual preview controls keep using setWeight + applyFacialLayerUpdate.
+   */
+  applyWeightsBatch(updates: Readonly<Partial<Record<FacialCanonicalKey, number>>>): void {
+    if (this.disposed) return;
+    const next: Partial<Record<FacialCanonicalKey, number>> = { ...this.weights };
+    for (const key of FACIAL_CANONICAL_KEYS) {
+      const raw = updates[key];
+      if (typeof raw !== 'number') continue;
+      if (!this.availability.available.includes(key)) continue;
+      next[key] = clampFacialWeight(raw);
+    }
+    this.weights = next;
+    this.applyAllWeights();
+    this.emit('Facial: LiveAct-Batch angewendet.');
+  }
+
   /** Reset to Neutral; clears blink + visemes; no stuck weights. */
   resetToNeutral(): void {
     this.weights = createNeutralFacialWeights();
