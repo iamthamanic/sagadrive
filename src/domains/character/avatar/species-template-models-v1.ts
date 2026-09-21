@@ -5,7 +5,7 @@
  * Pure domain: no React. Only fixed relative /assets paths (never free client URLs).
  * Divers / unset gender → no mesh. Missing species assets fail closed (undefined).
  *
- * Human active bases: quality-20260921 m5-face1 (male, LiveAct core-v1) / f5 (female).
+ * Human active bases: quality-20260921 m5-face1 / f5-face1 (LiveAct core-v1).
  * No rollback picker.
  */
 import type { CharacterGenderReading } from '../domain/character.entity';
@@ -26,7 +26,7 @@ const SPECIES_GENDER_MESH: Readonly<
 > = {
   human: {
     'masculine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-male-quality-20260921-m5-face1.glb?v=quality5-face1`,
-    'feminine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-female-quality-20260921-f5.glb?v=quality5`,
+    'feminine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-female-quality-20260921-f5-face1.glb?v=quality5-face1`,
   },
 };
 

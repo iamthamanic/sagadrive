@@ -1,0 +1,27 @@
+{
+  "provider": "qtmesh-facerig",
+  "repository": "fernandotonon/QtMeshEditor",
+  "commit": "8720dc91bd7426908b9218673fbd74d544dd908c",
+  "license": "MIT",
+  "bin": ".cache/sagadrive-tools/qtmesh/bin/qtmesh",
+  "binSource": "cache",
+  "argv": [
+    "facerig",
+    "public/assets/avatars/species/human-female-quality-20260921-f5.glb",
+    "-o",
+    "assets/species-3d/human/runs/quality-20260921-f5-face1/human-female-quality-20260921-f5-face1.glb",
+    "--json",
+    "--max-residual",
+    "12"
+  ],
+  "exitCode": 0,
+  "report": {
+    "fit_max_residual_pct": 7.213395704997727,
+    "fit_mean_residual_pct": 0.13608960524897168,
+    "output": "human-female-quality-20260921-f5-face1.glb",
+    "shapes_attached": 51,
+    "user_vertex_count": 147707
+  },
+  "stdoutTail": "{\n    \"fit_max_residual_pct\": 7.213395704997727,\n    \"fit_mean_residual_pct\": 0.13608960524897168,\n    \"output\": \"human-female-quality-20260921-f5-face1.glb\",\n    \"shapes_attached\": 51,\n    \"user_vertex_count\": 147707\n}\n\n",
+  "stderrTail": ""
+}

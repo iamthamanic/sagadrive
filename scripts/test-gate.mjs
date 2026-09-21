@@ -488,6 +488,14 @@ function checkLiveActFacePipelineDocs() {
   });
 }
 
+function checkLiveActFaceHumanRepro() {
+  console.log('LiveAct face human repro (#387): m5+f5 core-v1 public assets...');
+  execFileSync(process.execPath, ['scripts/liveact-face-human-repro-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActRigDebug() {
   console.log('LiveAct rig debug (#333): SkeletonHelper + capability inspector...');
   execFileSync(process.execPath, ['scripts/liveact-rig-debug-check.mjs'], {
@@ -1255,6 +1263,7 @@ checkLiveActFaceAssetValidator();
 checkLiveActFaceAuthoringQtmesh();
 checkLiveActRetargetProfile();
 checkLiveActFacePipelineDocs();
+checkLiveActFaceHumanRepro();
 checkLiveActRigDebug();
 checkLiveActSurfaceMigration();
 checkLiveActHardening();

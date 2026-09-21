@@ -1,0 +1,127 @@
+{
+  "runId": "quality-20260921-f5-face1",
+  "createdAt": "2026-09-21T18:23:35.884Z",
+  "faceAuthoringProvider": "qtmesh-facerig",
+  "qtmesh": {
+    "repository": "fernandotonon/QtMeshEditor",
+    "commit": "8720dc91bd7426908b9218673fbd74d544dd908c",
+    "license": "MIT",
+    "bin": ".cache/sagadrive-tools/qtmesh/bin/qtmesh",
+    "binSource": "cache",
+    "install": {
+      "tool": "qtmesh",
+      "repository": "fernandotonon/QtMeshEditor",
+      "pinnedCommit": "8720dc91bd7426908b9218673fbd74d544dd908c",
+      "pinnedCommitNote": "native mesh.extras.targetNames (fix #1045)",
+      "binaryRelease": "3.40.0",
+      "binaryReleaseNote": "first published macOS release after pinned commit; includes targetNames fix",
+      "license": "MIT",
+      "faceTemplate": {
+        "provider": "ICT-FaceKit",
+        "license": "MIT"
+      },
+      "installedAt": "2026-09-21"
+    }
+  },
+  "faceTemplate": {
+    "provider": "ICT-FaceKit",
+    "license": "MIT",
+    "checksum": "f84b22e895dd1edafaf4b93165597b7e51c644fb8a27bbc121df9b84b8e74f4d"
+  },
+  "input": {
+    "path": "public/assets/avatars/species/human-female-quality-20260921-f5.glb",
+    "checksum": "ca1d79b37c94d0aa3acab339afee3c36ed6af781fc7bca3a2a22b2a9e8071c8d",
+    "bytes": 90360696
+  },
+  "output": {
+    "path": "assets/species-3d/human/runs/quality-20260921-f5-face1/human-female-quality-20260921-f5-face1.glb",
+    "checksum": "e04b02cf810b2f4c7ce489925d6284f3337818c1e51a5bb025bd471aa0fb6b48",
+    "bytes": 99957764
+  },
+  "faceRig": {
+    "shapeCount": 51,
+    "fitResidual": 7.213395704997727,
+    "gazeMode": "none",
+    "coreProfile": "core-v1",
+    "fullProfile": "measured",
+    "targetNamesSample": [
+      "browDownLeft",
+      "browDownRight",
+      "browInnerUp",
+      "browOuterUpLeft",
+      "browOuterUpRight",
+      "cheekPuff",
+      "cheekSquintLeft",
+      "cheekSquintRight",
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
+      "eyeLookDownLeft",
+      "eyeLookDownRight"
+    ],
+    "canonicalize": {
+      "textureCount": 4,
+      "morphCount": 51,
+      "ibmCellsFixed": 2,
+      "sparseMorphTargets": 46
+    }
+  },
+  "validation": {
+    "khronos": {
+      "pass": true,
+      "numErrors": 0,
+      "numWarnings": 4
+    },
+    "sagaDrive": {
+      "pass": true,
+      "errors": [],
+      "missingRequired": [],
+      "emptyMorphs": [
+        "cheekSquintRight",
+        "eyeLookInLeft",
+        "eyeLookOutLeft",
+        "mouthLowerDownLeft",
+        "mouthPressLeft"
+      ],
+      "preservationErrors": []
+    },
+    "ok": true,
+    "profile": "core-v1",
+    "inventoryPath": "face-inventory.json",
+    "qtmeshReportPath": "qtmesh-report.json"
+  },
+  "beforeAfter": {
+    "bytes": {
+      "before": 90360696,
+      "after": 99957764
+    },
+    "triangles": {
+      "before": 214973,
+      "after": 214973
+    },
+    "morphs": {
+      "before": 0,
+      "after": 51
+    },
+    "skins": {
+      "before": 1,
+      "after": 1
+    },
+    "bones": {
+      "before": 24,
+      "after": 24
+    },
+    "materials": {
+      "before": 1,
+      "after": 1
+    },
+    "textures": {
+      "before": 4,
+      "after": 4
+    }
+  },
+  "published": {
+    "publicPath": "/assets/avatars/species/human-female-quality-20260921-f5-face1.glb?v=quality5-face1",
+    "checksum": "e04b02cf810b2f4c7ce489925d6284f3337818c1e51a5bb025bd471aa0fb6b48",
+    "bytes": 99957764
+  }
+}
