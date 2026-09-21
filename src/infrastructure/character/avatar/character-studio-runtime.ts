@@ -53,6 +53,10 @@ import {
   createLiveActAvatarOutput,
   type LiveActAvatarOutput,
 } from '../liveact/liveact-avatar-output';
+import {
+  createLiveActRigDebugController,
+  type LiveActRigDebugController,
+} from '../liveact/liveact-rig-debug';
 import type { AvatarEquipmentVisual } from '../../../domains/character/avatar';
 import {
   AvatarRigidEquipmentRuntime,
@@ -167,6 +171,7 @@ export class CharacterStudioRuntime {
   private readonly headScratchQuaternion = new THREE.Quaternion();
   private readonly eyeLookTarget = new THREE.Vector3();
   private liveActAvatarOutput: LiveActAvatarOutput | null = null;
+  private readonly liveActRigDebug: LiveActRigDebugController;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -195,6 +200,7 @@ export class CharacterStudioRuntime {
 
     this.modelContainer.add(this.overlaysGroup);
     this.scene.add(this.modelContainer);
+    this.liveActRigDebug = createLiveActRigDebugController(this.scene);
     this.traitLifecycle = createTraitLifecycleThreeAdapter(this.overlaysGroup);
 
     this.styleLights = createMtoonStyleLights(this.styleProfile);
@@ -300,6 +306,7 @@ export class CharacterStudioRuntime {
       this.facialRuntime.bind(vrm);
       this.bindHumanoidBones(vrm, this.lastRigAnalysis);
       this.rebuildLiveActAvatarOutput();
+      this.liveActRigDebug.bindModelRoot(root);
       this.rigidEquipmentRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.skinnedWearableRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.onStateChange({
@@ -408,6 +415,17 @@ export class CharacterStudioRuntime {
 
   getLiveActCapabilities(): LiveActCapabilitiesV1 | null {
     return this.liveActAvatarOutput?.getCapabilities() ?? null;
+  }
+
+  /** True when the loaded model exposes a skinned skeleton for debug overlay. */
+  hasLiveActSkeleton(): boolean {
+    return this.liveActRigDebug.hasSkeleton();
+  }
+
+  /** Ephemeral viewport debug — not persisted (#333). */
+  setLiveActRigDebugEnabled(enabled: boolean): void {
+    if (this.disposed) return;
+    this.liveActRigDebug.setEnabled(enabled);
   }
 
   /**
@@ -519,8 +537,10 @@ export class CharacterStudioRuntime {
     const prevFar = this.camera.far;
     try {
       this.fitPortraitCamera();
-      this.renderNow();
-      return capturePortraitFromRenderer(this.renderer);
+      return this.liveActRigDebug.runWithoutHelper(() => {
+        this.renderNow();
+        return capturePortraitFromRenderer(this.renderer);
+      });
     } finally {
       this.controls.target.copy(prevTarget);
       this.camera.position.copy(prevPosition);
@@ -799,6 +819,7 @@ export class CharacterStudioRuntime {
   private removeCurrentModel(): void {
     this.animationRuntime.stopAll();
     this.facialRuntime.resetToNeutral();
+    this.liveActRigDebug.bindModelRoot(null);
     this.liveActAvatarOutput?.dispose();
     this.liveActAvatarOutput = null;
     this.headBone = null;
@@ -827,6 +848,7 @@ export class CharacterStudioRuntime {
     this.skinnedWearableRuntime.dispose();
     this.liveActAvatarOutput?.dispose();
     this.liveActAvatarOutput = null;
+    this.liveActRigDebug.dispose();
     this.traitLifecycle.dispose();
     this.runtimeOverlays = [];
     this.headBone = null;

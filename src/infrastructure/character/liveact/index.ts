@@ -30,3 +30,7 @@ export {
   type LiveActFaceSource,
   type LiveActFaceSourceFactory,
 } from './mediapipe-face-source';
+export {
+  createLiveActRigDebugController,
+  type LiveActRigDebugController,
+} from './liveact-rig-debug';

@@ -440,6 +440,14 @@ function checkLiveActAvatarOutput() {
   });
 }
 
+function checkLiveActRigDebug() {
+  console.log('LiveAct rig debug (#333): SkeletonHelper + capability inspector...');
+  execFileSync(process.execPath, ['scripts/liveact-rig-debug-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarV2CompositionContract() {
   console.log('Avatar V2 composition contract (#249): orthogonal axes + legacy mapping...');
   execFileSync(process.execPath, ['scripts/avatar-v2-composition-contract-check.mjs'], {
@@ -1177,6 +1185,7 @@ checkLiveActCore();
 checkLiveActViewportUi();
 checkLiveActFaceDiagnostics();
 checkLiveActAvatarOutput();
+checkLiveActRigDebug();
 checkAvatarV2CompositionContract();
 checkAvatarV2ModularGlbContract();
 checkAvatarV2ArtifactPipeline();

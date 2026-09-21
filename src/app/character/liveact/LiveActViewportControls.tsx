@@ -5,6 +5,7 @@
  * Composes AvatarPreviewSettings + LiveActCameraPreview for AvatarSurfaceViewer.
  */
 
+import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
 import { AvatarPreviewSettings } from '../avatar/AvatarPreviewSettings';
 import { LiveActCameraPreview } from './LiveActCameraPreview';
 import type { UseLiveActViewportResult } from './useLiveActViewport';
@@ -14,6 +15,7 @@ interface LiveActViewportControlsProps {
   mtoonEnabled: boolean;
   onMtoonChange: (enabled: boolean) => void;
   liveAct: UseLiveActViewportResult;
+  capabilities: LiveActCapabilitiesV1 | null;
 }
 
 export function LiveActViewportControls({
@@ -21,7 +23,13 @@ export function LiveActViewportControls({
   mtoonEnabled,
   onMtoonChange,
   liveAct,
+  capabilities,
 }: LiveActViewportControlsProps) {
+  const inputLive =
+    runtimeReady &&
+    liveAct.trackingEnabled &&
+    liveAct.faceDetected &&
+    (liveAct.status === 'active' || liveAct.status === 'lost');
   const showPip =
     liveAct.trackingEnabled &&
     liveAct.cameraPreviewEnabled &&
@@ -41,7 +49,10 @@ export function LiveActViewportControls({
         faceOverlayEnabled={liveAct.faceOverlayEnabled}
         onFaceOverlayChange={liveAct.setFaceOverlayEnabled}
         bonesEnabled={liveAct.bonesEnabled}
+        bonesAvailable={liveAct.bonesAvailable}
         onBonesChange={liveAct.setBonesEnabled}
+        capabilities={capabilities}
+        inputLive={inputLive}
         devices={liveAct.devices}
         selectedDeviceId={liveAct.selectedDeviceId}
         onDeviceChange={liveAct.setSelectedDeviceId}

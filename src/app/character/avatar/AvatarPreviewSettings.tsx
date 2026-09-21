@@ -11,7 +11,11 @@ import { Settings } from 'lucide-react';
 import { Button } from '../../../shared/ui/button';
 import { Switch } from '../../../shared/ui/switch';
 import type { LiveActCameraDeviceOption } from '../liveact/useLiveActViewport';
-import type { LiveActStatus } from '../../../domains/character/liveact';
+import type {
+  LiveActCapabilitiesV1,
+  LiveActStatus,
+} from '../../../domains/character/liveact';
+import { LiveActCapabilityInspector } from '../liveact/LiveActCapabilityInspector';
 
 interface AvatarPreviewSettingsProps {
   /** False = no 3D runtime — actions disabled, gear still openable. */
@@ -25,7 +29,10 @@ interface AvatarPreviewSettingsProps {
   faceOverlayEnabled: boolean;
   onFaceOverlayChange: (enabled: boolean) => void;
   bonesEnabled: boolean;
+  bonesAvailable: boolean;
   onBonesChange: (enabled: boolean) => void;
+  capabilities: LiveActCapabilitiesV1 | null;
+  inputLive: boolean;
   devices: readonly LiveActCameraDeviceOption[];
   selectedDeviceId: string | undefined;
   onDeviceChange: (deviceId: string | undefined) => void;
@@ -52,7 +59,10 @@ export function AvatarPreviewSettings({
   faceOverlayEnabled,
   onFaceOverlayChange,
   bonesEnabled,
+  bonesAvailable,
   onBonesChange,
+  capabilities,
+  inputLive,
   devices,
   selectedDeviceId,
   onDeviceChange,
@@ -221,17 +231,38 @@ export function AvatarPreviewSettings({
               />
             </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5 opacity-80">
+            <div
+              className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5"
+              data-testid="liveact-bones-row"
+            >
               <div className="min-w-0">
                 <p className="text-xs text-slate-100">Character Bones</p>
-                <p className="text-[10px] text-slate-400">Bald (5/7)</p>
+                <p className="text-[10px] text-slate-400">
+                  {bonesAvailable
+                    ? 'Skelett des geladenen Modells'
+                    : 'Kein Skelett im Modell'}
+                </p>
               </div>
               <Switch
                 checked={bonesEnabled}
-                disabled
+                disabled={actionsDisabled || !bonesAvailable}
                 onCheckedChange={onBonesChange}
-                aria-label="Character Bones (noch nicht verfügbar)"
+                aria-label={
+                  bonesAvailable
+                    ? 'Character Bones umschalten'
+                    : 'Character Bones (kein Skelett)'
+                }
                 data-testid="liveact-bones-toggle"
+              />
+            </div>
+
+            <div className="mt-2 border-t border-white/10 pt-2">
+              <p className="px-1 pb-1 text-[11px] font-medium text-slate-300">
+                Capability Inspector
+              </p>
+              <LiveActCapabilityInspector
+                capabilities={capabilities}
+                inputLive={inputLive}
               />
             </div>
 

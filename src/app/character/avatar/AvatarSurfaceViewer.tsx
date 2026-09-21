@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from 'react';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
+import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
 import {
   resolveAvatarSurfaceView,
   type AvatarRenderMode,
@@ -70,6 +71,9 @@ export function AvatarSurfaceViewer({
   const mtoonHandlerRef = useRef<((enabled: boolean) => void) | null>(null);
   const studioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
   const [modelEpoch, setModelEpoch] = useState(0);
+  const [liveActCapabilities, setLiveActCapabilities] = useState<LiveActCapabilitiesV1 | null>(
+    null,
+  );
   const checkedRef = useRef(false);
 
   const handleMtoonState = useRef(
@@ -111,7 +115,33 @@ export function AvatarSurfaceViewer({
     runtimeReady: isEditorSurface && runtimeReady && show3d,
     enabled: isEditorSurface,
     getLiveActCapabilities: () => studioRuntimeRef.current?.getLiveActCapabilities() ?? null,
+    getBonesAvailable: () => studioRuntimeRef.current?.hasLiveActSkeleton() ?? false,
+    modelRevision: modelEpoch,
   });
+
+  useEffect(() => {
+    if (!runtimeReady) {
+      setLiveActCapabilities(null);
+      return;
+    }
+    setLiveActCapabilities(studioRuntimeRef.current?.getLiveActCapabilities() ?? null);
+  }, [runtimeReady, modelEpoch]);
+
+  useEffect(() => {
+    if (!isEditorSurface || !runtimeReady) {
+      studioRuntimeRef.current?.setLiveActRigDebugEnabled(false);
+      return;
+    }
+    studioRuntimeRef.current?.setLiveActRigDebugEnabled(
+      liveAct.bonesEnabled && liveAct.bonesAvailable,
+    );
+  }, [
+    isEditorSurface,
+    runtimeReady,
+    modelEpoch,
+    liveAct.bonesEnabled,
+    liveAct.bonesAvailable,
+  ]);
 
   useEffect(() => {
     const engine = liveAct.engineRef.current;
@@ -184,6 +214,7 @@ export function AvatarSurfaceViewer({
                     setMtoonEnabled(enabled);
                   }}
                   liveAct={liveAct}
+                  capabilities={liveActCapabilities}
                 />
               </div>
             </div>
@@ -212,6 +243,7 @@ export function AvatarSurfaceViewer({
               mtoonEnabled={mtoonEnabled}
               onMtoonChange={setMtoonEnabled}
               liveAct={liveAct}
+              capabilities={null}
             />
           ) : null}
         </div>
