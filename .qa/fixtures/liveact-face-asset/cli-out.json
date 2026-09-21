@@ -1,0 +1,62 @@
+{
+  "version": "SagaDriveLiveActFaceInventoryV1",
+  "input": "face-core-ok.glb",
+  "baselineFile": "baseline-body.glb",
+  "profile": "core-v1",
+  "profileOk": true,
+  "khronos": {
+    "pass": true,
+    "numErrors": 0,
+    "numWarnings": 0
+  },
+  "sagaDrive": {
+    "pass": true,
+    "errors": [],
+    "missingRequired": [],
+    "emptyMorphs": [],
+    "preservationErrors": []
+  },
+  "supportedChannels": [
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "jawOpen",
+    "mouthFrownLeft",
+    "mouthFrownRight",
+    "mouthPucker",
+    "mouthShrugLower",
+    "mouthShrugUpper",
+    "mouthSmileLeft",
+    "mouthSmileRight"
+  ],
+  "presentChannels": [
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "jawOpen",
+    "mouthFrownLeft",
+    "mouthFrownRight",
+    "mouthPucker",
+    "mouthShrugLower",
+    "mouthShrugUpper",
+    "mouthSmileLeft",
+    "mouthSmileRight"
+  ],
+  "gazeMode": "none",
+  "morphCount": 10,
+  "usableMorphCount": 10,
+  "byteCount": 3864,
+  "meshCount": 1,
+  "skinCount": 1,
+  "materialCount": 1,
+  "textureCount": 0,
+  "skeletonJointCount": 1,
+  "triangleCount": 1,
+  "baselineStats": {
+    "meshCount": 1,
+    "skinCount": 1,
+    "materialCount": 1,
+    "textureCount": 0,
+    "skeletonJointCount": 1,
+    "triangleCount": 1,
+    "byteCount": 916
+  }
+}

@@ -456,6 +456,14 @@ function checkLiveActFaceAssetContract() {
   });
 }
 
+function checkLiveActFaceAssetValidator() {
+  console.log('LiveAct face asset validator (#383): Khronos + SagaDrive gate...');
+  execFileSync(process.execPath, ['scripts/liveact-face-asset-validator-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActRigDebug() {
   console.log('LiveAct rig debug (#333): SkeletonHelper + capability inspector...');
   execFileSync(process.execPath, ['scripts/liveact-rig-debug-check.mjs'], {
@@ -1219,6 +1227,7 @@ checkLiveActFaceDiagnostics();
 checkLiveActAvatarOutput();
 checkLiveActCapabilityOwnership();
 checkLiveActFaceAssetContract();
+checkLiveActFaceAssetValidator();
 checkLiveActRigDebug();
 checkLiveActSurfaceMigration();
 checkLiveActHardening();
