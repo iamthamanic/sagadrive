@@ -48,3 +48,7 @@ VRM/GLB. Eine pure-domain Compose-Funktion liefert das öffentliche Inspector-Re
 ## Composition Gate
 
 See `.qa/runs/composition-gate-liveact-capability-ownership.md`
+
+- Verdict: SKIPPED
+- HEAD_SHA: 4c58b6e4c32060abc7e203930f3d2b21970cf950
+- HEAD_SHA: 4c58b6e4c32060abc7e203930f3d2b21970cf950
