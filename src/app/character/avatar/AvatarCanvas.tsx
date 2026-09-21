@@ -19,14 +19,8 @@ import { getAvatarAssetManifest, resolveAvatarModelUrl } from '../../../infrastr
 import { AvatarRigCapabilityPanel } from './AvatarRigCapabilityPanel';
 import { AvatarAnimationPreviewControls } from './AvatarAnimationPreviewControls';
 import { AvatarFacialPreviewControls } from './AvatarFacialPreviewControls';
-import { AvatarFaceTrackingControls } from './AvatarFaceTrackingControls';
 import { AvatarCameraViewControls } from './AvatarCameraViewControls';
 import { AvatarMtoonStyleToggle } from './AvatarMtoonStyleToggle';
-import {
-  AvatarFaceTrackingRuntime,
-  type FaceTrackingRuntimeState,
-} from '../../../infrastructure/character/avatar/avatar-face-tracking-runtime';
-import type { FaceTrackingStatus } from '../../../domains/character/avatar';
 
 /** Imperative portrait snapshot API for CharacterEditor (manual + auto after Meshy/import). */
 export type AvatarPortraitCaptureHandle = {
@@ -42,11 +36,11 @@ interface AvatarCanvasProps {
   onRuntimeReady?: () => void;
   className?: string;
   /**
-   * editor = full preview controls; live = Face Tracking only (Session/Player #244).
+   * editor = full preview controls; live = compact chrome only (Session/Player #244 / #334 LiveAct).
    * Default editor.
    */
   controlMode?: 'editor' | 'live';
-  /** When false, skip Face Tracking runtime + UI. Default true. */
+  /** @deprecated LiveAct owns tracking via AvatarSurfaceViewer (#334). Kept for API compat. */
   enableFaceTracking?: boolean;
   /** Editor Surface hosts LiveAct gear (#330) — hide legacy bar under canvas. */
   hideEditorFaceTrackingBar?: boolean;
@@ -81,7 +75,7 @@ export function AvatarCanvas({
   onRuntimeReady,
   className,
   controlMode = 'editor',
-  enableFaceTracking = true,
+  enableFaceTracking: _enableFaceTracking = false,
   hideEditorFaceTrackingBar = false,
   hideMtoonToggle = false,
   onMtoonState,
@@ -101,18 +95,12 @@ export function AvatarCanvas({
   const [facialAvailability, setFacialAvailability] = useState<FacialAvailability | null>(null);
   const [activeFacialKey, setActiveFacialKey] = useState<FacialCanonicalKey | null>(null);
   const [facialMessage, setFacialMessage] = useState<string | undefined>(undefined);
-  const [faceTrackingStatus, setFaceTrackingStatus] = useState<FaceTrackingStatus>('idle');
-  const [faceTrackingMessage, setFaceTrackingMessage] = useState('Face Tracking aus');
-  const [faceTrackingFpsCap, setFaceTrackingFpsCap] = useState(30);
-  const [faceTrackingProfileLabel, setFaceTrackingProfileLabel] = useState('Desktop');
   const [inspectMode, setInspectMode] = useState(false);
   const [activeFrame, setActiveFrame] = useState<AvatarCameraFrameId | null>('full');
   const [mtoonStyleEnabled, setMtoonStyleEnabled] = useState(true);
-  const faceTrackingRef = useRef<AvatarFaceTrackingRuntime>();
   const manifest = getAvatarAssetManifest(avatar.preset);
   const modelUrl = resolveAvatarModelUrl(avatar);
   const showEditorControls = controlMode === 'editor';
-  const showFaceTracking = enableFaceTracking && !(showEditorControls && hideEditorFaceTrackingBar);
   const showMtoonToggle = showEditorControls && !hideMtoonToggle;
 
   useEffect(() => {
@@ -131,13 +119,6 @@ export function AvatarCanvas({
       setActiveFacialKey((top?.[0] as FacialCanonicalKey | undefined) ?? 'neutral');
       setFacialMessage(state.message);
     };
-    const onFaceTracking = (state: FaceTrackingRuntimeState) => {
-      setFaceTrackingStatus(state.status);
-      setFaceTrackingMessage(state.message);
-      setFaceTrackingFpsCap(state.fpsCap);
-      setFaceTrackingProfileLabel(state.qualityProfileLabelDe);
-    };
-
     const onStateChange = (state: AvatarRuntimeState) => {
       setRuntimeState(state);
       if (state.status === 'ready') {
@@ -154,13 +135,6 @@ export function AvatarCanvas({
     );
     runtimeRef.current = runtime;
     if (studioRuntimeRef) studioRuntimeRef.current = runtime;
-
-    let faceTracking: AvatarFaceTrackingRuntime | undefined;
-    if (enableFaceTracking) {
-      faceTracking = new AvatarFaceTrackingRuntime(onFaceTracking);
-      faceTracking.bindTarget(runtime);
-      faceTrackingRef.current = faceTracking;
-    }
 
     if (captureApiRef) {
       captureApiRef.current = {
@@ -180,13 +154,11 @@ export function AvatarCanvas({
 
     return () => {
       if (captureApiRef) captureApiRef.current = null;
-      faceTracking?.dispose();
-      faceTrackingRef.current = undefined;
       runtime.dispose();
       runtimeRef.current = undefined;
       if (studioRuntimeRef) studioRuntimeRef.current = null;
     };
-  }, [targetRef, captureApiRef, enableFaceTracking, studioRuntimeRef]);
+  }, [targetRef, captureApiRef, studioRuntimeRef]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
@@ -338,21 +310,6 @@ export function AvatarCanvas({
           }}
           onReset={() => {
             runtimeRef.current?.resetFacialToNeutral();
-          }}
-        />
-      ) : null}
-      {showFaceTracking ? (
-        <AvatarFaceTrackingControls
-          status={faceTrackingStatus}
-          message={faceTrackingMessage}
-          fpsCap={faceTrackingFpsCap}
-          qualityProfileLabelDe={faceTrackingProfileLabel}
-          disabled={runtimeState.status !== 'ready'}
-          onStart={() => {
-            void faceTrackingRef.current?.start();
-          }}
-          onStop={() => {
-            faceTrackingRef.current?.stop();
           }}
         />
       ) : null}

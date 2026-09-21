@@ -47,7 +47,7 @@ check(/aspect-\[4\/3\]/.test(pip), 'pip 4:3');
 check(/liveact-camera-pip/.test(pip), 'pip test id');
 check(/hideEditorFaceTrackingBar/.test(canvas), 'editor hides FT bar');
 check(/hideMtoonToggle/.test(canvas), 'editor hides mtoon button');
-check(/LiveActEngine/.test(hook), 'hook binds LiveActEngine');
+check(/acquireSharedLiveActEngine/.test(hook), 'hook binds shared LiveActEngine');
 check(/audio/.test(read('src/infrastructure/character/liveact/liveact-engine.ts')), 'engine audio false path exists');
 check(!/useLiveActViewport|LiveActEngine|trackingEnabled/.test(editor), 'no LiveAct state in CharacterEditor');
 check(/LiveActViewportControls/.test(controls), 'controls compose settings+pip');
