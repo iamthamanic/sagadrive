@@ -2,7 +2,7 @@
  * LiveAct Face Asset contract — provider-neutral profiles for Runtime GLBs (#382).
  * Location: src/domains/character/liveact/liveact-face-asset-contract.ts
  *
- * Describes what a loaded avatar must expose as Face-Asset — never Faceit/Blender/Meshy tooling.
+ * Describes what a loaded avatar must expose as Face-Asset — never DCC tooling as runtime.
  * Pure domain: no React / Three / MediaPipe.
  */
 
