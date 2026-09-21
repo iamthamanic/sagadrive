@@ -48,6 +48,12 @@ interface AvatarCanvasProps {
   controlMode?: 'editor' | 'live';
   /** When false, skip Face Tracking runtime + UI. Default true. */
   enableFaceTracking?: boolean;
+  /** Editor Surface hosts LiveAct gear (#330) — hide legacy bar under canvas. */
+  hideEditorFaceTrackingBar?: boolean;
+  /** Editor Surface hosts MToon in viewport gear (#330). */
+  hideMtoonToggle?: boolean;
+  /** Notify Surface chrome of MToon state + apply callback. */
+  onMtoonState?: (enabled: boolean, apply: (enabled: boolean) => void) => void;
 }
 
 async function dataUrlToPngBlob(dataUrl: string): Promise<Blob | null> {
@@ -74,6 +80,9 @@ export function AvatarCanvas({
   className,
   controlMode = 'editor',
   enableFaceTracking = true,
+  hideEditorFaceTrackingBar = false,
+  hideMtoonToggle = false,
+  onMtoonState,
 }: AvatarCanvasProps) {
   const localRef = useRef<HTMLCanvasElement>(null);
   const targetRef = canvasRef ?? localRef;
@@ -100,7 +109,8 @@ export function AvatarCanvas({
   const manifest = getAvatarAssetManifest(avatar.preset);
   const modelUrl = resolveAvatarModelUrl(avatar);
   const showEditorControls = controlMode === 'editor';
-  const showFaceTracking = enableFaceTracking;
+  const showFaceTracking = enableFaceTracking && !(showEditorControls && hideEditorFaceTrackingBar);
+  const showMtoonToggle = showEditorControls && !hideMtoonToggle;
 
   useEffect(() => {
     const canvas = targetRef.current;
@@ -215,6 +225,16 @@ export function AvatarCanvas({
     setStyleNotice(compatibility?.noticeDe ?? null);
   }, [avatar, manifest]);
 
+  useEffect(() => {
+    const apply = (enabled: boolean) => {
+      runtimeRef.current?.setMtoonStyleEnabled(enabled);
+      setMtoonStyleEnabled(enabled);
+      const compatibility = runtimeRef.current?.getStyleCompatibility();
+      setStyleNotice(compatibility?.noticeDe ?? null);
+    };
+    onMtoonState?.(mtoonStyleEnabled, apply);
+  }, [mtoonStyleEnabled, onMtoonState, runtimeState.status]);
+
   return (
     <div className={className ?? 'relative flex w-full flex-col gap-2'}>
       <div
@@ -228,7 +248,7 @@ export function AvatarCanvas({
           tabIndex={0}
         />
 
-        {showEditorControls ? (
+        {showMtoonToggle ? (
           <AvatarMtoonStyleToggle
             enabled={mtoonStyleEnabled}
             disabled={runtimeState.status !== 'ready'}

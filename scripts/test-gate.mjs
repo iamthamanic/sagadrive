@@ -416,6 +416,14 @@ function checkLiveActCore() {
   });
 }
 
+function checkLiveActViewportUi() {
+  console.log('LiveAct viewport UI (#330): permanent gear + camera PiP...');
+  execFileSync(process.execPath, ['scripts/liveact-viewport-ui-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarV2CompositionContract() {
   console.log('Avatar V2 composition contract (#249): orthogonal axes + legacy mapping...');
   execFileSync(process.execPath, ['scripts/avatar-v2-composition-contract-check.mjs'], {
@@ -1150,6 +1158,7 @@ checkAvatarAnimationRetarget();
 checkAvatarFacialExpressions();
 checkAvatarFaceTracking();
 checkLiveActCore();
+checkLiveActViewportUi();
 checkAvatarV2CompositionContract();
 checkAvatarV2ModularGlbContract();
 checkAvatarV2ArtifactPipeline();
