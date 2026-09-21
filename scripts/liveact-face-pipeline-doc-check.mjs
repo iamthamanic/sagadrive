@@ -32,9 +32,8 @@ check(/QtMeshEditor FaceRig|qtmesh-facerig/.test(pipeline), 'qtmesh primary in p
 check(/liveact-face-authoring-qtmesh\.mjs/.test(pipeline) || /FACE-AUTHORING\.md/.test(pipeline), 'face doc link');
 check(/deprecated[\s\S]*Faceit/i.test(pipeline), 'Faceit listed under deprecated');
 check(/primary Face Authoring Adapter V1/i.test(pipeline) || /QtMeshEditor FaceRig is the \*\*primary/i.test(pipeline), 'qtmesh called primary');
-// Active recipe sections must not prescribe Faceit/Blender bake as the how-to
-const beforeDeprecated = pipeline.split(/## 8\. Explicitly deprecated/)[0] || pipeline;
-check(!/Shape-Key bake|temporary Faceit control rig|Blender \+ Faceit/i.test(beforeDeprecated), 'no Faceit bake recipe in active sections');
+// Active how-to must not instruct Faceit bake as a step (negation lists are OK).
+check(!/1\.\s*\*\*Faceit|→\s*Faceit|Bake expressions to Shape Keys/i.test(pipeline), 'no Faceit bake how-to steps');
 
 check(/8720dc91bd7426908b9218673fbd74d544dd908c/.test(face), 'pinned commit documented');
 check(/liveact-face-asset-check\.mjs/.test(face), 'validator referenced');
