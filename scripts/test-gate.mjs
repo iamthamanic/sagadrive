@@ -464,6 +464,14 @@ function checkLiveActFaceAssetValidator() {
   });
 }
 
+function checkLiveActFaceAuthoringQtmesh() {
+  console.log('LiveAct face authoring qtmesh adapter (#384): fake CLI + report gates...');
+  execFileSync(process.execPath, ['scripts/liveact-face-authoring-qtmesh-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActRigDebug() {
   console.log('LiveAct rig debug (#333): SkeletonHelper + capability inspector...');
   execFileSync(process.execPath, ['scripts/liveact-rig-debug-check.mjs'], {
@@ -1228,6 +1236,7 @@ checkLiveActAvatarOutput();
 checkLiveActCapabilityOwnership();
 checkLiveActFaceAssetContract();
 checkLiveActFaceAssetValidator();
+checkLiveActFaceAuthoringQtmesh();
 checkLiveActRigDebug();
 checkLiveActSurfaceMigration();
 checkLiveActHardening();

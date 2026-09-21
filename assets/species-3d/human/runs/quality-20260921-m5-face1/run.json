@@ -1,0 +1,124 @@
+{
+  "runId": "quality-20260921-m5-face1",
+  "createdAt": "2026-09-21T17:31:58.047Z",
+  "faceAuthoringProvider": "qtmesh-facerig",
+  "qtmesh": {
+    "repository": "fernandotonon/QtMeshEditor",
+    "commit": "8720dc91bd7426908b9218673fbd74d544dd908c",
+    "license": "MIT",
+    "bin": null,
+    "binSource": null,
+    "install": {
+      "tool": "qtmesh",
+      "repository": "fernandotonon/QtMeshEditor",
+      "pinnedCommit": "8720dc91bd7426908b9218673fbd74d544dd908c",
+      "pinnedCommitNote": "native mesh.extras.targetNames (fix #1045)",
+      "binaryRelease": "3.40.0",
+      "binaryReleaseNote": "first published macOS release after pinned commit; includes targetNames fix",
+      "license": "MIT",
+      "faceTemplate": {
+        "provider": "ICT-FaceKit",
+        "license": "MIT"
+      },
+      "installedAt": "2026-09-21"
+    }
+  },
+  "faceTemplate": {
+    "provider": "ICT-FaceKit",
+    "license": "MIT",
+    "checksum": "f84b22e895dd1edafaf4b93165597b7e51c644fb8a27bbc121df9b84b8e74f4d"
+  },
+  "input": {
+    "path": "public/assets/avatars/species/human-male-quality-20260921-m5.glb",
+    "checksum": "42a511f272e7a25e6cde980e33f0b1faf20dcc03607191422425e4bae88f0b1f",
+    "bytes": 86172992
+  },
+  "output": {
+    "path": "assets/species-3d/human/runs/quality-20260921-m5-face1/human-male-quality-20260921-m5-face1.glb",
+    "checksum": "f1f3f0db50dddf8998029f4eb4f0a65494f976d19ab427ebed3e70273eddbba9",
+    "bytes": 98049320
+  },
+  "faceRig": {
+    "shapeCount": 51,
+    "fitResidual": null,
+    "gazeMode": "none",
+    "coreProfile": "core-v1",
+    "fullProfile": "measured",
+    "targetNamesSample": [
+      "browDownLeft",
+      "browDownRight",
+      "browInnerUp",
+      "browOuterUpLeft",
+      "browOuterUpRight",
+      "cheekPuff",
+      "cheekSquintLeft",
+      "cheekSquintRight",
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
+      "eyeLookDownLeft",
+      "eyeLookDownRight"
+    ],
+    "canonicalize": {
+      "textureCount": 4,
+      "morphCount": 51,
+      "ibmCellsFixed": 0,
+      "sparseMorphTargets": 44
+    }
+  },
+  "validation": {
+    "khronos": {
+      "pass": true,
+      "numErrors": 0,
+      "numWarnings": 4
+    },
+    "sagaDrive": {
+      "pass": true,
+      "errors": [],
+      "missingRequired": [],
+      "emptyMorphs": [
+        "eyeLookInLeft",
+        "eyeLookInRight",
+        "eyeLookOutLeft",
+        "eyeLookOutRight",
+        "eyeSquintRight",
+        "mouthLowerDownLeft",
+        "mouthLowerDownRight"
+      ],
+      "preservationErrors": []
+    },
+    "ok": true,
+    "profile": "core-v1",
+    "inventoryPath": "face-inventory.json",
+    "qtmeshReportPath": "qtmesh-report.json"
+  },
+  "beforeAfter": {
+    "bytes": {
+      "before": 86172992,
+      "after": 98049320
+    },
+    "triangles": {
+      "before": 215832,
+      "after": 215832
+    },
+    "morphs": {
+      "before": 0,
+      "after": 51
+    },
+    "skins": {
+      "before": 1,
+      "after": 1
+    },
+    "bones": {
+      "before": 24,
+      "after": 24
+    },
+    "materials": {
+      "before": 1,
+      "after": 1
+    },
+    "textures": {
+      "before": 4,
+      "after": 4
+    }
+  }
+}
