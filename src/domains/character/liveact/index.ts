@@ -51,3 +51,24 @@ export {
   type LiveActAvatarFaceChannelSupport,
   type LiveActCapabilitiesV1,
 } from './liveact-capabilities';
+
+export {
+  LIVEACT_FACE_DIAGNOSTICS_VERSION,
+  createEmptyLiveActFaceDiagnosticsFrame,
+  assertLiveActFaceDiagnosticsLocalOnly,
+  type LiveActFaceLandmark2d,
+  type LiveActFaceDiagnosticsContours,
+  type LiveActFaceDiagnosticsFrameV1,
+} from './liveact-face-diagnostics';
+
+export {
+  LIVEACT_CALIBRATION_FRAME_TARGET,
+  LIVEACT_CALIBRATION_TIMEOUT_MS,
+  createLiveActCalibrationAccumulator,
+  isValidLiveActCalibrationSample,
+  pushLiveActCalibrationSample,
+  finalizeLiveActCalibration,
+  applyLiveActNeutralBaseline,
+  type LiveActNeutralBaselineV1,
+  type LiveActCalibrationAccumulator,
+} from './liveact-calibration';

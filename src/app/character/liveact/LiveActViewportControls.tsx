@@ -51,11 +51,19 @@ export function LiveActViewportControls({
         headConnected={liveAct.headConnected}
         eyesConnected={liveAct.eyesConnected}
         mouthLimited={liveAct.mouthLimited}
+        canCalibrate={liveAct.canCalibrate}
+        onCalibrate={() => {
+          void liveAct.calibrateNeutral();
+        }}
+        calibrationMessage={liveAct.calibrationMessage}
+        hasNeutralBaseline={liveAct.hasNeutralBaseline}
       />
       <LiveActCameraPreview
         video={liveAct.previewVideo}
         status={liveAct.status}
         visible={showPip}
+        faceOverlayEnabled={liveAct.faceOverlayEnabled}
+        diagnosticsRef={liveAct.diagnosticsRef}
       />
     </>
   );

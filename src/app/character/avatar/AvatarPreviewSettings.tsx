@@ -1,5 +1,5 @@
 /**
- * AvatarPreviewSettings — permanent viewport gear: Darstellung + LiveAct (#330).
+ * AvatarPreviewSettings — permanent viewport gear: Darstellung + LiveAct (#330, #331).
  * Location: src/app/character/avatar/AvatarPreviewSettings.tsx
  *
  * Always openable in editor Surface chrome (even fallback „CH“).
@@ -35,6 +35,10 @@ interface AvatarPreviewSettingsProps {
   headConnected: boolean;
   eyesConnected: boolean;
   mouthLimited: boolean;
+  canCalibrate: boolean;
+  onCalibrate: () => void;
+  calibrationMessage: string;
+  hasNeutralBaseline: boolean;
 }
 
 export function AvatarPreviewSettings({
@@ -58,6 +62,10 @@ export function AvatarPreviewSettings({
   headConnected,
   eyesConnected,
   mouthLimited,
+  canCalibrate,
+  onCalibrate,
+  calibrationMessage,
+  hasNeutralBaseline,
 }: AvatarPreviewSettingsProps) {
   const [open, setOpen] = useState(false);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -199,16 +207,16 @@ export function AvatarPreviewSettings({
               />
             </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5 opacity-80">
+            <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
               <div className="min-w-0">
                 <p className="text-xs text-slate-100">Face Overlay</p>
-                <p className="text-[10px] text-slate-400">Bald (3/7)</p>
+                <p className="text-[10px] text-slate-400">Landmarks über PiP (lokal)</p>
               </div>
               <Switch
                 checked={faceOverlayEnabled}
-                disabled
+                disabled={actionsDisabled || !trackingEnabled}
                 onCheckedChange={onFaceOverlayChange}
-                aria-label="Face Overlay (noch nicht verfügbar)"
+                aria-label="Face Overlay umschalten"
                 data-testid="liveact-face-overlay-toggle"
               />
             </div>
@@ -231,13 +239,26 @@ export function AvatarPreviewSettings({
               type="button"
               size="sm"
               variant="outline"
-              disabled
+              disabled={actionsDisabled || !canCalibrate}
               className="mt-1 h-8 w-full border-white/15 text-xs"
               data-testid="liveact-calibrate"
-              title="Kalibrierung folgt in LiveAct 3/7"
+              title={
+                canCalibrate
+                  ? 'Neutrale Gesichtspose für diese Sitzung speichern'
+                  : 'Kalibrieren erfordert aktives Tracking'
+              }
+              onClick={onCalibrate}
             >
               Kalibrieren
             </Button>
+            {calibrationMessage ? (
+              <p className="mt-1 px-1 text-[10px] text-slate-400" role="status">
+                {calibrationMessage}
+              </p>
+            ) : null}
+            {hasNeutralBaseline ? (
+              <p className="px-1 text-[10px] text-emerald-400/90">Neutral-Baseline aktiv (ephemeral)</p>
+            ) : null}
           </div>
 
           <div className="mt-2 border-t border-white/10 pt-2" data-testid="liveact-status-block">

@@ -4,6 +4,7 @@
  */
 
 export { LiveActCameraPreview } from './LiveActCameraPreview';
+export { LiveActFaceOverlay } from './LiveActFaceOverlay';
 export { LiveActViewportControls } from './LiveActViewportControls';
 export {
   useLiveActViewport,

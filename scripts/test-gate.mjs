@@ -424,6 +424,14 @@ function checkLiveActViewportUi() {
   });
 }
 
+function checkLiveActFaceDiagnostics() {
+  console.log('LiveAct face diagnostics (#331): overlay + neutral calibration...');
+  execFileSync(process.execPath, ['scripts/liveact-face-diagnostics-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarV2CompositionContract() {
   console.log('Avatar V2 composition contract (#249): orthogonal axes + legacy mapping...');
   execFileSync(process.execPath, ['scripts/avatar-v2-composition-contract-check.mjs'], {
@@ -1159,6 +1167,7 @@ checkAvatarFacialExpressions();
 checkAvatarFaceTracking();
 checkLiveActCore();
 checkLiveActViewportUi();
+checkLiveActFaceDiagnostics();
 checkAvatarV2CompositionContract();
 checkAvatarV2ModularGlbContract();
 checkAvatarV2ArtifactPipeline();
