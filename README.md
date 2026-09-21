@@ -219,6 +219,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-21** — LiveAct: Kameravorschau verschiebbar (Default unten links), Bones-Debug sichtbar durch Mesh, GLB Capability Input-Flags; Species-Authoring-Scripts (`feat/liveact-pip-drag-and-rig-visibility`)
 - **2026-09-20** — Human species soft-real base (Palworld×Overwatch), gender→GLB preview, MToon toggle, Meshy rigging CPU step-split (`feat/avatar-human-softreal-mtoon-meshy`)
 - **2026-09-19** — Avatar V2: Modular GLB Contract v1 (`extras.sagadrive` Rollen/Slots + Upload-Spec) (`feat/avatar-v2-modular-glb-contract`, #250)
 - **2026-09-19** — Avatar V2: Composition Contract + kanonisches Design (Source/Anatomy/Family/Modularity/Capabilities orthogonal; Legacy-DTO lesbar) (`feat/avatar-v2-composition-contract`, #249)
@@ -228,7 +229,6 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-09-14** — NPC Promotion Compact→Full + Controller-Zuweisung über CharacterEditor (`feat/npc-creature-promotion-controller`, #200)
 - **2026-09-14** — World-Modul `npc-creature-catalog`: Pack-Toggles, Includes/Excludes, welt-eigene Figuren ohne Definitionsduplikate (`feat/npc-creature-world-catalog`, #199)
 - **2026-09-14** — NPCs & Kreaturen Quick Create + Statblock-Editor mit Live-Vorschau; Library `+ Neu` / Bearbeiten (`feat/npc-creature-quick-create-editor`, #198)
-- **2026-09-11** — AI Provider BYOK: Settings → AI (Meshy Key, Credits); Prod nur User-Keys; wiederverwendbare Item-Visual-Tools-Hooks (`feat/ai-provider-credentials`)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 
