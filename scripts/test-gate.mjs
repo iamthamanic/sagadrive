@@ -456,6 +456,14 @@ function checkLiveActSurfaceMigration() {
   });
 }
 
+function checkLiveActHardening() {
+  console.log('LiveAct hardening (#335): backpressure, privacy, races, E2E contract...');
+  execFileSync(process.execPath, ['scripts/liveact-hardening-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarV2CompositionContract() {
   console.log('Avatar V2 composition contract (#249): orthogonal axes + legacy mapping...');
   execFileSync(process.execPath, ['scripts/avatar-v2-composition-contract-check.mjs'], {
@@ -1195,6 +1203,7 @@ checkLiveActFaceDiagnostics();
 checkLiveActAvatarOutput();
 checkLiveActRigDebug();
 checkLiveActSurfaceMigration();
+checkLiveActHardening();
 checkAvatarV2CompositionContract();
 checkAvatarV2ModularGlbContract();
 checkAvatarV2ArtifactPipeline();

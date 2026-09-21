@@ -83,3 +83,11 @@ export {
   type LiveActNeutralBaselineV1,
   type LiveActCalibrationAccumulator,
 } from './liveact-calibration';
+
+export {
+  LIVEACT_UI_STATUS_MAX_HZ,
+  LIVEACT_INFERENCE_MAX_IN_FLIGHT,
+  liveActUiStatusMinIntervalMs,
+  shouldThrottleLiveActUiStatus,
+  shouldDropLiveActInferenceTick,
+} from './liveact-runtime-policy';
