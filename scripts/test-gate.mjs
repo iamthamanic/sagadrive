@@ -408,6 +408,14 @@ function checkAvatarFaceTracking() {
   });
 }
 
+function checkLiveActCore() {
+  console.log('LiveAct core (#329): provider-neutral contract + engine...');
+  execFileSync(process.execPath, ['scripts/liveact-core-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarV2CompositionContract() {
   console.log('Avatar V2 composition contract (#249): orthogonal axes + legacy mapping...');
   execFileSync(process.execPath, ['scripts/avatar-v2-composition-contract-check.mjs'], {
@@ -1141,6 +1149,7 @@ checkAvatarSaveExport();
 checkAvatarAnimationRetarget();
 checkAvatarFacialExpressions();
 checkAvatarFaceTracking();
+checkLiveActCore();
 checkAvatarV2CompositionContract();
 checkAvatarV2ModularGlbContract();
 checkAvatarV2ArtifactPipeline();

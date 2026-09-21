@@ -23,11 +23,17 @@ import {
   type FaceTrackingSample,
   type FaceTrackingStatus,
 } from '../../../domains/character/avatar/face-tracking-contract';
+import {
+  MEDIAPIPE_FACE_LANDMARKER_MODEL_PATH,
+  MEDIAPIPE_VISION_WASM_PATH,
+} from '../liveact/mediapipe-face-source';
+import {
+  claimLiveActCamera,
+  releaseLiveActCamera,
+} from '../liveact/liveact-camera-claim';
 
-/** First-party static paths (Vite public/). Never point at CDN/Google at runtime. */
-export const MEDIAPIPE_VISION_WASM_PATH = '/mediapipe/wasm';
-export const MEDIAPIPE_FACE_LANDMARKER_MODEL_PATH =
-  '/mediapipe/models/face_landmarker.task';
+/** Re-export shared first-party MediaPipe paths (owned by LiveAct source). */
+export { MEDIAPIPE_VISION_WASM_PATH, MEDIAPIPE_FACE_LANDMARKER_MODEL_PATH };
 
 export interface FaceTrackingRuntimeState {
   status: FaceTrackingStatus;
@@ -255,10 +261,11 @@ export class AvatarFaceTrackingRuntime {
     if (this.disposed) return;
     if (this.status === 'active' || this.status === 'starting') return;
 
-    // Fail-closed singleton: stop the other surface before claiming the camera (#244).
+    // Fail-closed singleton: stop the other surface before claiming the camera (#244 / #329).
     if (activeFaceTrackingRuntime && activeFaceTrackingRuntime !== this) {
       activeFaceTrackingRuntime.stop();
     }
+    claimLiveActCamera(this);
     activeFaceTrackingRuntime = this;
 
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
@@ -378,6 +385,7 @@ export class AvatarFaceTrackingRuntime {
     if (activeFaceTrackingRuntime === this) {
       activeFaceTrackingRuntime = null;
     }
+    releaseLiveActCamera(this);
   }
 
   private loop = (): void => {
