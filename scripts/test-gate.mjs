@@ -472,6 +472,14 @@ function checkLiveActFaceAuthoringQtmesh() {
   });
 }
 
+function checkLiveActRetargetProfile() {
+  console.log('LiveAct retarget profile (#385): gain/deadZone domain + engine wiring...');
+  execFileSync(process.execPath, ['scripts/liveact-retarget-profile-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActRigDebug() {
   console.log('LiveAct rig debug (#333): SkeletonHelper + capability inspector...');
   execFileSync(process.execPath, ['scripts/liveact-rig-debug-check.mjs'], {
@@ -1237,6 +1245,7 @@ checkLiveActCapabilityOwnership();
 checkLiveActFaceAssetContract();
 checkLiveActFaceAssetValidator();
 checkLiveActFaceAuthoringQtmesh();
+checkLiveActRetargetProfile();
 checkLiveActRigDebug();
 checkLiveActSurfaceMigration();
 checkLiveActHardening();
