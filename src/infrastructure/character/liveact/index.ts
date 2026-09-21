@@ -11,6 +11,9 @@ export {
   type LiveActEngineState,
   type LiveActStatusListener,
   type LiveActFrameListener,
+  type LiveActDiagnosticsListener,
+  type LiveActCalibrationResult,
+  type LiveActCalibrationStatus,
 } from './liveact-engine';
 export {
   claimLiveActCamera,

@@ -1,5 +1,5 @@
 /**
- * LiveActEngine — local webcam/MediaPipe performance-capture core (#329).
+ * LiveActEngine — local webcam/MediaPipe performance-capture core (#329, #331).
  * Location: src/infrastructure/character/liveact/liveact-engine.ts
  *
  * Wraps the shared MediaPipe face source. At most one active camera/detector.
@@ -8,16 +8,26 @@
 
 import {
   DEFAULT_LIVEACT_LIMITS,
+  LIVEACT_CALIBRATION_FRAME_TARGET,
+  LIVEACT_CALIBRATION_TIMEOUT_MS,
+  applyLiveActNeutralBaseline,
   assertLiveActFrameLocalOnly,
+  createEmptyLiveActFaceDiagnosticsFrame,
   createEmptyLiveActSourceSample,
+  createLiveActCalibrationAccumulator,
   createNeutralLiveActFrame,
+  finalizeLiveActCalibration,
   liveActStatusLabelDe,
   mapLiveActSourceSample,
+  pushLiveActCalibrationSample,
   resolveLiveActQualityProfile,
   selectPrimaryLiveActFaceIndex,
   smoothLiveActFrame,
+  type LiveActCalibrationAccumulator,
+  type LiveActFaceDiagnosticsFrameV1,
   type LiveActFrameV1,
   type LiveActLimits,
+  type LiveActNeutralBaselineV1,
   type LiveActQualityProfile,
   type LiveActSourceSample,
   type LiveActStatus,
@@ -30,6 +40,13 @@ import {
 } from './mediapipe-face-source';
 import { claimLiveActCamera, releaseLiveActCamera } from './liveact-camera-claim';
 
+export type LiveActCalibrationStatus = 'idle' | 'running' | 'success' | 'failed';
+
+export interface LiveActCalibrationResult {
+  ok: boolean;
+  messageDe: string;
+}
+
 export interface LiveActEngineState {
   status: LiveActStatus;
   message: string;
@@ -37,10 +54,14 @@ export interface LiveActEngineState {
   fpsCap: number;
   qualityProfileId: LiveActQualityProfile['id'];
   qualityProfileLabelDe: string;
+  calibrationStatus: LiveActCalibrationStatus;
+  calibrationMessage: string;
+  hasNeutralBaseline: boolean;
 }
 
 export type LiveActStatusListener = (state: LiveActEngineState) => void;
 export type LiveActFrameListener = (frame: LiveActFrameV1) => void;
+export type LiveActDiagnosticsListener = (frame: LiveActFaceDiagnosticsFrameV1) => void;
 
 function isMobileHint(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -72,6 +93,14 @@ export class LiveActEngine {
   private output: LiveActAvatarOutput | null = null;
   private readonly statusListeners = new Set<LiveActStatusListener>();
   private readonly frameListeners = new Set<LiveActFrameListener>();
+  private readonly diagnosticsListeners = new Set<LiveActDiagnosticsListener>();
+  private neutralBaseline: LiveActNeutralBaselineV1 | null = null;
+  private calibrating = false;
+  private calibrationAccumulator: LiveActCalibrationAccumulator = createLiveActCalibrationAccumulator();
+  private calibrationStartedAtMs = 0;
+  private calibrationResolve: ((result: LiveActCalibrationResult) => void) | null = null;
+  private calibrationStatus: LiveActCalibrationStatus = 'idle';
+  private calibrationMessage = '';
 
   constructor(
     private readonly sourceFactory: LiveActFaceSourceFactory = async (profile) => {
@@ -113,6 +142,13 @@ export class LiveActEngine {
     };
   }
 
+  subscribeDiagnostics(listener: LiveActDiagnosticsListener): () => void {
+    this.diagnosticsListeners.add(listener);
+    return () => {
+      this.diagnosticsListeners.delete(listener);
+    };
+  }
+
   getState(): LiveActEngineState {
     return {
       status: this.status,
@@ -121,6 +157,9 @@ export class LiveActEngine {
       fpsCap: this.fpsCap,
       qualityProfileId: this.qualityProfile.id,
       qualityProfileLabelDe: this.qualityProfile.labelDe,
+      calibrationStatus: this.calibrationStatus,
+      calibrationMessage: this.calibrationMessage,
+      hasNeutralBaseline: this.neutralBaseline !== null,
     };
   }
 
@@ -131,6 +170,39 @@ export class LiveActEngine {
   /** Preview video element while tracking (engine remains stream owner). */
   getPreviewVideo(): HTMLVideoElement | null {
     return this.video;
+  }
+
+  /**
+   * Collect 30 valid face frames within 2s; on failure the previous baseline is kept.
+   */
+  calibrate(): Promise<LiveActCalibrationResult> {
+    if (this.disposed) {
+      return Promise.resolve({
+        ok: false,
+        messageDe: 'LiveAct ist nicht verfügbar.',
+      });
+    }
+    if (this.status !== 'active' && this.status !== 'lost') {
+      return Promise.resolve({
+        ok: false,
+        messageDe: 'Kalibrierung erfordert aktives Tracking.',
+      });
+    }
+    if (this.calibrating) {
+      return Promise.resolve({
+        ok: false,
+        messageDe: 'Kalibrierung läuft bereits.',
+      });
+    }
+
+    return new Promise((resolve) => {
+      this.calibrating = true;
+      this.calibrationAccumulator = createLiveActCalibrationAccumulator();
+      this.calibrationStartedAtMs =
+        typeof performance !== 'undefined' ? performance.now() : Date.now();
+      this.calibrationResolve = resolve;
+      this.setCalibrationUi('running', 'Neutral halten — Kalibrierung läuft …');
+    });
   }
 
   /** Explicit user action only — never auto-start on construct/reload. */
@@ -224,6 +296,7 @@ export class LiveActEngine {
 
   stop(): void {
     if (this.disposed) return;
+    this.cancelCalibration('LiveAct gestoppt.');
     this.cancelLoop();
     this.cleanupMedia();
     this.frame = null;
@@ -235,34 +308,23 @@ export class LiveActEngine {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.cancelCalibration('LiveAct beendet.');
+    this.neutralBaseline = null;
     this.cancelLoop();
     this.cleanupMedia();
     this.frame = null;
     this.output = null;
     this.statusListeners.clear();
     this.frameListeners.clear();
+    this.diagnosticsListeners.clear();
     this.releaseActiveClaim();
     this.setStatus('idle', liveActStatusLabelDe('idle'));
+    this.setCalibrationUi('idle', '');
   }
 
   /** Test helper: push one sample through map/smooth without camera. */
   ingestSampleForTests(sample: LiveActSourceSample, timestampMs = 0): LiveActFrameV1 {
-    this.sequence += 1;
-    const mapped = mapLiveActSourceSample(sample, {
-      timestampMs,
-      sequence: this.sequence,
-      limits: this.limits,
-    });
-    this.frame = smoothLiveActFrame(this.frame, mapped, this.limits.smooth);
-    assertLiveActFrameLocalOnly(this.frame);
-    this.output?.applyLiveActFrame(this.frame);
-    this.emitFrame(this.frame);
-    if (mapped.trackingLost) {
-      this.setStatus('lost', liveActStatusLabelDe('lost'));
-    } else if (this.status === 'lost' || this.status === 'active' || this.status === 'idle') {
-      this.setStatus('active', liveActStatusLabelDe('active'));
-    }
-    return this.frame;
+    return this.processSample(sample, timestampMs, null);
   }
 
   private releaseActiveClaim(): void {
@@ -286,9 +348,9 @@ export class LiveActEngine {
     if (now - this.lastFrameAt < minDelta) return;
     this.lastFrameAt = now;
 
-    let faces: LiveActSourceSample[] = [];
+    let detect;
     try {
-      faces = source.detect(video, now);
+      detect = source.detect(video, now);
     } catch (error) {
       console.warn('[liveact] detect failed', error);
       this.setStatus('error', liveActStatusLabelDe('error'));
@@ -296,22 +358,55 @@ export class LiveActEngine {
       return;
     }
 
-    const primary = selectPrimaryLiveActFaceIndex(faces);
+    const primary = selectPrimaryLiveActFaceIndex(detect.samples);
     const sample =
       primary >= 0
-        ? { ...faces[primary], faceIndex: primary, faceCount: faces.length }
+        ? { ...detect.samples[primary], faceIndex: primary, faceCount: detect.samples.length }
         : createEmptyLiveActSourceSample();
 
+    const diagnosticsRaw =
+      primary >= 0 && detect.diagnostics[primary]
+        ? detect.diagnostics[primary]
+        : createEmptyLiveActFaceDiagnosticsFrame({ timestampMs: now, sequence: this.sequence + 1 });
+
+    this.processSample(sample, now, diagnosticsRaw);
+  };
+
+  private processSample(
+    sample: LiveActSourceSample,
+    timestampMs: number,
+    diagnosticsSeed: LiveActFaceDiagnosticsFrameV1 | null,
+  ): LiveActFrameV1 {
     this.sequence += 1;
     const mapped = mapLiveActSourceSample(sample, {
-      timestampMs: now,
+      timestampMs,
       sequence: this.sequence,
       limits: this.limits,
     });
-    this.frame = smoothLiveActFrame(this.frame, mapped, this.limits.smooth);
-    assertLiveActFrameLocalOnly(this.frame);
-    this.output?.applyLiveActFrame(this.frame);
-    this.emitFrame(this.frame);
+
+    this.tickCalibration(sample);
+
+    let frame = smoothLiveActFrame(this.frame, mapped, this.limits.smooth);
+    frame = applyLiveActNeutralBaseline(frame, this.neutralBaseline, this.limits);
+    assertLiveActFrameLocalOnly(frame);
+    this.frame = frame;
+    this.output?.applyLiveActFrame(frame);
+    this.emitFrame(frame);
+
+    const diagnostics: LiveActFaceDiagnosticsFrameV1 = diagnosticsSeed
+      ? {
+          ...diagnosticsSeed,
+          timestampMs,
+          sequence: this.sequence,
+          trackingLost: mapped.trackingLost,
+          faceIndex: sample.faceIndex,
+          faceCount: sample.faceCount,
+        }
+      : createEmptyLiveActFaceDiagnosticsFrame({
+          timestampMs,
+          sequence: this.sequence,
+        });
+    this.emitDiagnostics(diagnostics);
 
     if (mapped.trackingLost) {
       if (this.status !== 'lost') this.setStatus('lost', liveActStatusLabelDe('lost'));
@@ -320,7 +415,69 @@ export class LiveActEngine {
     } else {
       this.emitStatus();
     }
-  };
+
+    return frame;
+  }
+
+  private tickCalibration(sample: LiveActSourceSample): void {
+    if (!this.calibrating) return;
+
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (now - this.calibrationStartedAtMs > LIVEACT_CALIBRATION_TIMEOUT_MS) {
+      this.failCalibration('Kalibrierung fehlgeschlagen — zu wenig gültige Frames.');
+      return;
+    }
+
+    const pushed = pushLiveActCalibrationSample(this.calibrationAccumulator, sample, {
+      headPoseSupported: this.qualityProfile.enableHeadPose,
+      limits: this.limits,
+    });
+    if (!pushed) {
+      this.failCalibration('Gesicht verloren — Kalibrierung abgebrochen.');
+      return;
+    }
+    if (this.calibrationAccumulator.count >= LIVEACT_CALIBRATION_FRAME_TARGET) {
+      this.completeCalibration();
+    }
+  }
+
+  private completeCalibration(): void {
+    const next = finalizeLiveActCalibration(this.calibrationAccumulator);
+    if (!next) {
+      this.failCalibration('Kalibrierung fehlgeschlagen.');
+      return;
+    }
+    this.neutralBaseline = next;
+    this.calibrating = false;
+    const resolve = this.calibrationResolve;
+    this.calibrationResolve = null;
+    this.setCalibrationUi('success', 'Neutral-Kalibrierung gespeichert (nur diese Sitzung).');
+    resolve?.({ ok: true, messageDe: 'Neutral-Kalibrierung gespeichert.' });
+    this.emitStatus();
+  }
+
+  private failCalibration(messageDe: string): void {
+    this.calibrating = false;
+    const resolve = this.calibrationResolve;
+    this.calibrationResolve = null;
+    this.setCalibrationUi('failed', messageDe);
+    resolve?.({ ok: false, messageDe });
+    this.emitStatus();
+  }
+
+  private cancelCalibration(messageDe: string): void {
+    if (!this.calibrating) return;
+    this.calibrating = false;
+    const resolve = this.calibrationResolve;
+    this.calibrationResolve = null;
+    this.setCalibrationUi('idle', messageDe);
+    resolve?.({ ok: false, messageDe });
+  }
+
+  private setCalibrationUi(status: LiveActCalibrationStatus, message: string): void {
+    this.calibrationStatus = status;
+    this.calibrationMessage = message;
+  }
 
   private cancelLoop(): void {
     if (this.raf) {
@@ -368,6 +525,12 @@ export class LiveActEngine {
 
   private emitFrame(frame: LiveActFrameV1): void {
     for (const listener of this.frameListeners) {
+      listener(frame);
+    }
+  }
+
+  private emitDiagnostics(frame: LiveActFaceDiagnosticsFrameV1): void {
+    for (const listener of this.diagnosticsListeners) {
       listener(frame);
     }
   }

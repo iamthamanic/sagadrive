@@ -5,16 +5,28 @@
  * Engine remains MediaStream owner; this only mirrors via srcObject. Not draggable.
  */
 
-import { useEffect, useRef } from 'react';
-import type { LiveActStatus } from '../../../domains/character/liveact';
+import { useEffect, useRef, type RefObject } from 'react';
+import type {
+  LiveActFaceDiagnosticsFrameV1,
+  LiveActStatus,
+} from '../../../domains/character/liveact';
+import { LiveActFaceOverlay } from './LiveActFaceOverlay';
 
 interface LiveActCameraPreviewProps {
   video: HTMLVideoElement | null;
   status: LiveActStatus;
   visible: boolean;
+  faceOverlayEnabled: boolean;
+  diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
 }
 
-export function LiveActCameraPreview({ video, status, visible }: LiveActCameraPreviewProps) {
+export function LiveActCameraPreview({
+  video,
+  status,
+  visible,
+  faceOverlayEnabled,
+  diagnosticsRef,
+}: LiveActCameraPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -52,6 +64,7 @@ export function LiveActCameraPreview({ video, status, visible }: LiveActCameraPr
         playsInline
         autoPlay
       />
+      <LiveActFaceOverlay enabled={faceOverlayEnabled} diagnosticsRef={diagnosticsRef} />
       <div className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded bg-black/55 px-1.5 py-0.5 text-[10px] text-slate-100">
         <span
           className={`h-1.5 w-1.5 rounded-full ${

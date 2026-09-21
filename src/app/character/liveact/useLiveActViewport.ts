@@ -1,14 +1,15 @@
 /**
- * useLiveActViewport — ephemeral LiveAct viewport UI state (#330).
+ * useLiveActViewport — ephemeral LiveAct viewport UI state (#330, #331).
  * Location: src/app/character/liveact/useLiveActViewport.ts
  *
  * Owns Tracking/PiP toggles and binds LiveActEngine. No CharacterEditor state.
  * Per-frame updates stay off React — only status/preview refs change slowly.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import {
   liveActStatusLabelDe,
+  type LiveActFaceDiagnosticsFrameV1,
   type LiveActStatus,
 } from '../../../domains/character/liveact';
 import {
@@ -46,6 +47,12 @@ export interface UseLiveActViewportResult {
   headConnected: boolean;
   eyesConnected: boolean;
   mouthLimited: boolean;
+  calibrationStatus: LiveActEngineState['calibrationStatus'];
+  calibrationMessage: string;
+  hasNeutralBaseline: boolean;
+  canCalibrate: boolean;
+  calibrateNeutral: () => Promise<void>;
+  diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
 }
 
 export function useLiveActViewport({
@@ -53,6 +60,7 @@ export function useLiveActViewport({
   enabled = true,
 }: UseLiveActViewportOptions): UseLiveActViewportResult {
   const engineRef = useRef<LiveActEngine | null>(null);
+  const diagnosticsRef = useRef<LiveActFaceDiagnosticsFrameV1 | null>(null);
   const [trackingEnabled, setTrackingEnabledState] = useState(false);
   const [cameraPreviewEnabled, setCameraPreviewEnabled] = useState(true);
   const [faceOverlayEnabled, setFaceOverlayEnabled] = useState(false);
@@ -66,15 +74,22 @@ export function useLiveActViewport({
   const [headConnected, setHeadConnected] = useState(false);
   const [eyesConnected, setEyesConnected] = useState(false);
   const [mouthLimited, setMouthLimited] = useState(true);
+  const [calibrationStatus, setCalibrationStatus] =
+    useState<LiveActEngineState['calibrationStatus']>('idle');
+  const [calibrationMessage, setCalibrationMessage] = useState('');
+  const [hasNeutralBaseline, setHasNeutralBaseline] = useState(false);
 
   useEffect(() => {
     if (!enabled) return;
     const engine = new LiveActEngine();
     engineRef.current = engine;
-    const unsub = engine.subscribeStatus((state: LiveActEngineState) => {
+    const unsubStatus = engine.subscribeStatus((state: LiveActEngineState) => {
       setStatus(state.status);
       setMessage(state.message);
       setPreviewVideo(engine.getPreviewVideo());
+      setCalibrationStatus(state.calibrationStatus);
+      setCalibrationMessage(state.calibrationMessage);
+      setHasNeutralBaseline(state.hasNeutralBaseline);
       const frame = state.frame;
       const active =
         state.status === 'active' || state.status === 'lost' || state.status === 'paused';
@@ -91,13 +106,17 @@ export function useLiveActViewport({
               frame.face.eyeBlinkRight > 0.01),
         ),
       );
-      // Mouth/facial capability reporting stays conservative until 4/7 output.
       setMouthLimited(true);
     });
+    const unsubDiagnostics = engine.subscribeDiagnostics((frame) => {
+      diagnosticsRef.current = frame;
+    });
     return () => {
-      unsub();
+      unsubStatus();
+      unsubDiagnostics();
       engine.dispose();
       engineRef.current = null;
+      diagnosticsRef.current = null;
       setPreviewVideo(null);
     };
   }, [enabled]);
@@ -154,6 +173,19 @@ export function useLiveActViewport({
     }
   };
 
+  const canCalibrate =
+    runtimeReady &&
+    trackingEnabled &&
+    (status === 'active' || status === 'lost') &&
+    calibrationStatus !== 'running';
+
+  const calibrateNeutral = useCallback(async () => {
+    if (!canCalibrate) return;
+    const engine = engineRef.current;
+    if (!engine) return;
+    await engine.calibrate();
+  }, [canCalibrate]);
+
   return {
     trackingEnabled,
     setTrackingEnabled,
@@ -173,5 +205,11 @@ export function useLiveActViewport({
     headConnected,
     eyesConnected,
     mouthLimited,
+    calibrationStatus,
+    calibrationMessage,
+    hasNeutralBaseline,
+    canCalibrate,
+    calibrateNeutral,
+    diagnosticsRef,
   };
 }

@@ -1,9 +1,9 @@
 /**
- * MediaPipe Face source for LiveAct — shared WASM/model paths (#329).
+ * MediaPipe Face source for LiveAct — shared WASM/model paths (#329, #331).
  * Location: src/infrastructure/character/liveact/mediapipe-face-source.ts
  *
  * Single first-party MediaPipe asset path; no CDN. Emits LiveActSourceSample
- * with full 52 face channels. Legacy Face Tracking imports these path consts.
+ * with full 52 face channels plus separate local-only diagnostics landmarks.
  */
 
 import {
@@ -11,17 +11,24 @@ import {
   resolveLiveActQualityProfile,
   type LiveActFaceChannelId,
   type LiveActFaceChannelPartial,
+  type LiveActFaceDiagnosticsFrameV1,
   type LiveActQualityProfile,
   type LiveActSourceSample,
 } from '../../../domains/character/liveact';
+import { mapMediaPipeLandmarksToLiveActDiagnostics } from './liveact-face-diagnostics';
 
 /** First-party static paths (Vite public/). Never point at CDN/Google at runtime. */
 export const MEDIAPIPE_VISION_WASM_PATH = '/mediapipe/wasm';
 export const MEDIAPIPE_FACE_LANDMARKER_MODEL_PATH =
   '/mediapipe/models/face_landmarker.task';
 
+export interface LiveActFaceDetectResult {
+  samples: LiveActSourceSample[];
+  diagnostics: LiveActFaceDiagnosticsFrameV1[];
+}
+
 export interface LiveActFaceSource {
-  detect(video: HTMLVideoElement, timestampMs: number): LiveActSourceSample[];
+  detect(video: HTMLVideoElement, timestampMs: number): LiveActFaceDetectResult;
   dispose(): void;
 }
 
@@ -75,12 +82,24 @@ export async function createMediaPipeLiveActFaceSource(
       outputFacialTransformationMatrixes: profile.outputFacialTransformationMatrixes,
     });
 
+    const connections = {
+      faceOval: mod.FaceLandmarker.FACE_LANDMARKS_FACE_OVAL,
+      lips: mod.FaceLandmarker.FACE_LANDMARKS_LIPS,
+      leftEye: mod.FaceLandmarker.FACE_LANDMARKS_LEFT_EYE,
+      rightEye: mod.FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE,
+      leftEyebrow: mod.FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW,
+      rightEyebrow: mod.FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW,
+    };
+
     return {
       detect(video, timestampMs) {
         const result = landmarker.detectForVideo(video, timestampMs);
         const shapes = result.faceBlendshapes ?? [];
-        if (shapes.length === 0) return [];
-        return shapes.map((shape, index) => {
+        const rawLandmarks = result.faceLandmarks ?? [];
+        if (shapes.length === 0) {
+          return { samples: [], diagnostics: [] };
+        }
+        const samples = shapes.map((shape, index) => {
           const cats = shape.categories;
           let headYaw = 0;
           let headPitch = 0;
@@ -112,6 +131,20 @@ export async function createMediaPipeLiveActFaceSource(
             faceCount: shapes.length,
           } satisfies LiveActSourceSample;
         });
+
+        const diagnostics = shapes.map((_, index) =>
+          mapMediaPipeLandmarksToLiveActDiagnostics({
+            landmarks: rawLandmarks[index],
+            connections,
+            timestampMs,
+            sequence: 0,
+            faceIndex: index,
+            faceCount: shapes.length,
+            trackingLost: false,
+          }),
+        );
+
+        return { samples, diagnostics };
       },
       dispose() {
         try {
