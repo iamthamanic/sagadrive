@@ -29,6 +29,10 @@ export interface UseLiveActViewportOptions {
   enabled?: boolean;
   /** Avatar capability matrix from loaded model (LiveAct output). */
   getLiveActCapabilities?: () => LiveActCapabilitiesV1 | null;
+  /** Whether the loaded avatar exposes a real skeleton (SkinnedMesh). */
+  getBonesAvailable?: () => boolean;
+  /** Bump when the studio runtime loads or swaps models. */
+  modelRevision?: number;
 }
 
 export interface UseLiveActViewportResult {
@@ -40,6 +44,8 @@ export interface UseLiveActViewportResult {
   setFaceOverlayEnabled: (enabled: boolean) => void;
   bonesEnabled: boolean;
   setBonesEnabled: (enabled: boolean) => void;
+  /** Loaded model has a skinned skeleton for Character Bones overlay. */
+  bonesAvailable: boolean;
   status: LiveActStatus;
   message: string;
   previewVideo: HTMLVideoElement | null;
@@ -63,15 +69,20 @@ export function useLiveActViewport({
   runtimeReady,
   enabled = true,
   getLiveActCapabilities,
+  getBonesAvailable,
+  modelRevision = 0,
 }: UseLiveActViewportOptions): UseLiveActViewportResult {
   const engineRef = useRef<LiveActEngine | null>(null);
   const getCapsRef = useRef(getLiveActCapabilities);
   getCapsRef.current = getLiveActCapabilities;
+  const getBonesRef = useRef(getBonesAvailable);
+  getBonesRef.current = getBonesAvailable;
   const diagnosticsRef = useRef<LiveActFaceDiagnosticsFrameV1 | null>(null);
   const [trackingEnabled, setTrackingEnabledState] = useState(false);
   const [cameraPreviewEnabled, setCameraPreviewEnabled] = useState(true);
   const [faceOverlayEnabled, setFaceOverlayEnabled] = useState(false);
-  const [bonesEnabled, setBonesEnabled] = useState(false);
+  const [bonesEnabled, setBonesEnabledState] = useState(false);
+  const [bonesAvailable, setBonesAvailable] = useState(false);
   const [status, setStatus] = useState<LiveActStatus>('idle');
   const [message, setMessage] = useState(liveActStatusLabelDe('idle'));
   const [previewVideo, setPreviewVideo] = useState<HTMLVideoElement | null>(null);
@@ -85,6 +96,25 @@ export function useLiveActViewport({
     useState<LiveActEngineState['calibrationStatus']>('idle');
   const [calibrationMessage, setCalibrationMessage] = useState('');
   const [hasNeutralBaseline, setHasNeutralBaseline] = useState(false);
+
+  useEffect(() => {
+    if (!runtimeReady) {
+      setBonesAvailable(false);
+      setBonesEnabledState(false);
+      return;
+    }
+    setBonesAvailable(getBonesRef.current?.() ?? false);
+  }, [runtimeReady, enabled, modelRevision]);
+
+  const setBonesEnabled = (next: boolean) => {
+    if (next && !bonesAvailable) return;
+    setBonesEnabledState(next);
+  };
+
+  useEffect(() => {
+    if (bonesAvailable) return;
+    setBonesEnabledState(false);
+  }, [bonesAvailable]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -211,6 +241,7 @@ export function useLiveActViewport({
     setFaceOverlayEnabled,
     bonesEnabled,
     setBonesEnabled,
+    bonesAvailable,
     status,
     message,
     previewVideo,

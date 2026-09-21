@@ -53,6 +53,11 @@ export {
 } from './liveact-capabilities';
 
 export {
+  buildLiveActCapabilityInspectorRows,
+  type LiveActCapabilityInspectorRow,
+} from './liveact-capability-inspector';
+
+export {
   LIVEACT_CHANNEL_TARGET_ALIASES,
   resolveLiveActChannelTargets,
   type LiveActChannelTargetResolution,
