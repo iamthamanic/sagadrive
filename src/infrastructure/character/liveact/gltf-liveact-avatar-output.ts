@@ -58,6 +58,9 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
     if (this.rightEyeBone) this.rightEyeRest.copy(this.rightEyeBone.quaternion);
 
     this.capabilities = createLiveActCapabilities({
+      face: true,
+      headPose: Boolean(deps.headBone),
+      eyeGaze: Boolean(this.leftEyeBone || this.rightEyeBone),
       headBone: Boolean(deps.headBone),
       leftEyeBone: Boolean(this.leftEyeBone),
       rightEyeBone: Boolean(this.rightEyeBone),
