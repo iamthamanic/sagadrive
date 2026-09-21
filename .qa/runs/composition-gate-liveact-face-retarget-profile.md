@@ -17,3 +17,6 @@ Bad profile → identity (normalize drops non-finite / invalid ranges).
 
 ## Proof
 - `node scripts/liveact-retarget-profile-check.mjs` OK
+
+## SHA
+7860a44678af3815785dc99d0cfece4e4f2996ca
