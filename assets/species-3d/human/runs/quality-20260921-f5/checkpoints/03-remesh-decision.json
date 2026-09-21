@@ -1,0 +1,5 @@
+{
+  "remesh": false,
+  "reason": "master triangles 264458 <= 300000 face limit",
+  "prerigSource": "master/human-female-master.glb"
+}

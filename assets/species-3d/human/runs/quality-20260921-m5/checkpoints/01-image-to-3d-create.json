@@ -1,0 +1,10 @@
+{
+  "task_id": "01a0c345-3912-7124-9bab-5fded4349ed6",
+  "ai_model": "meshy-7",
+  "ultra_mode": true,
+  "texture_resolution": "8k",
+  "enable_pbr": true,
+  "pose_mode": "t-pose",
+  "should_texture": true,
+  "file": "B-semireal-male.png"
+}

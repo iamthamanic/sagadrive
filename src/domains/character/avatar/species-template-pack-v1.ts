@@ -85,7 +85,7 @@ export function createSpeciesTemplateV1(speciesId: BaseBodySpeciesId): SpeciesTe
 function lookSummaryFor(id: BaseBodySpeciesId): string {
   switch (id) {
     case 'human':
-      return 'Erwachsener Mensch, Palworld×Overwatch soft-real, Underwear-Base, MToon.';
+      return 'Erwachsener Mensch, Semi-real B Underwear-Base, PBR (MToon optional).';
     case 'elf':
       return 'Schlanker Elf mit spitzen Ohren, adult stylized, keine Chibi-Proportionen.';
     case 'dwarf':

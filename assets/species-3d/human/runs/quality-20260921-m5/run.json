@@ -1,0 +1,41 @@
+{
+  "runId": "quality-20260921-m5",
+  "createdAt": "2026-09-21T09:20:00.000Z",
+  "finishedAt": "2026-09-21T09:28:00.000Z",
+  "step": "integrated",
+  "nextStep": "viewer_manual_compare",
+  "goal": "Compare-only: single-image max quality (ultra+8k+PBR+t-pose) from B-semireal-male.png — does NOT replace m4",
+  "styleRef": "assets/species-3d/human/style-compare/B-semireal-male.png",
+  "pipeline": {
+    "mode": "single-image",
+    "ai_model": "meshy-7",
+    "ultra_mode": true,
+    "texture_resolution": "8k",
+    "enable_pbr": true,
+    "pose_mode": "t-pose",
+    "remesh": false,
+    "remeshReason": "master 242364 tris <= 300000; preserve mesh quality"
+  },
+  "tasks": {
+    "imageTo3d": {
+      "id": "01a0c345-3912-7124-9bab-5fded4349ed6",
+      "model": "meshy-7",
+      "ultra_mode": true,
+      "geometry_resolution": "2k",
+      "texture_resolution": "8k",
+      "credits": 40
+    },
+    "rigging": {
+      "id": "01a0c34a-289b-7156-bb4e-d079ae30bdaf",
+      "height_meters": 1.75,
+      "credits": 5
+    }
+  },
+  "public": "/assets/avatars/species/human-male-quality-20260921-m5.glb?v=quality5",
+  "trianglesFinal": 215832,
+  "bytesFinal": 86172992,
+  "creditsTotal": 45,
+  "replacesActive": true,
+  "activeRemains": null,
+  "promotedAt": "2026-09-21Tm5-default"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "01a0c345-3912-7124-9bab-5fded4349ed6",
+  "type": "image-to-3d",
+  "status": "SUCCEEDED",
+  "ultra_mode": true,
+  "geometry_resolution": "2k",
+  "texture_resolution": "8k",
+  "hd_texture": true,
+  "consumed_credits": 40,
+  "triangles_local": 242364
+}

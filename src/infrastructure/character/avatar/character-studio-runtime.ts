@@ -155,8 +155,8 @@ export class CharacterStudioRuntime {
     path: 'pbr-fallback',
     noticeDe: null,
   };
-  /** Editor preview: SagaDrive MToon profile on/off. Default on. Not persisted. */
-  private mtoonStyleEnabled = true;
+  /** Editor preview: SagaDrive MToon profile on/off. Default off until loadModel sets VRM vs GLB. Not persisted. */
+  private mtoonStyleEnabled = false;
   private materialStyleSnapshots: MaterialStyleSnapshot[] = [];
   private readonly animationRuntime: AvatarAnimationRuntime;
   private readonly facialRuntime: AvatarFacialRuntime;
@@ -295,7 +295,9 @@ export class CharacterStudioRuntime {
       this.currentRoot = root;
       this.currentVrm = vrm;
       this.modelContainer.add(root);
-      this.mtoonStyleEnabled = true;
+      // VRM ships MToon materials — enable profile by default.
+      // Meshy/species GLBs are PBR: start with style off so authored maps/factors stay intact.
+      this.mtoonStyleEnabled = Boolean(vrm);
       this.materialStyleSnapshots = captureMaterialStyleSnapshots(root);
       this.applyAppearance(this.currentAvatar ?? avatar, this.currentManifest ?? manifest);
       this.setInspectMode(false);

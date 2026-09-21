@@ -1,0 +1,9 @@
+{
+  "task_id": "01a0c3ae-03a2-775e-9d22-6973f5b46c7a",
+  "ai_model": "meshy-7",
+  "ultra_mode": true,
+  "texture_resolution": "8k",
+  "enable_pbr": true,
+  "pose_mode": "t-pose",
+  "file": "B-semireal-female.png"
+}
