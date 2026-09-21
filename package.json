@@ -61,6 +61,7 @@
     "@types/react-dom": "^18.3.7",
     "@types/three": "0.183.1",
     "@vitejs/plugin-react": "^4.7.0",
+    "gltf-validator": "^2.0.0-dev.3.10",
     "tailwindcss": "4.1.12",
     "vite": "6.3.5"
   },
