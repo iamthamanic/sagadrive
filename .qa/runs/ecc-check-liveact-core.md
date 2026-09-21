@@ -1,7 +1,7 @@
 # ECC Check — liveact-core (#329)
 
 - Date: 2026-09-21
-- HEAD_SHA: 0fc87a99fb048cf2279baf78f396b4f8a3f7b938
+- HEAD_SHA: 951aed7721924a3293b1410a76798dc21587e30f
 - Verdict: **READY**
 
 ## Phase A — test-gate

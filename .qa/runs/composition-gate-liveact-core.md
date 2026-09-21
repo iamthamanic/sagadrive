@@ -1,6 +1,6 @@
 # Composition Gate — liveact-core (#329)
 
-- HEAD_SHA: 0fc87a99fb048cf2279baf78f396b4f8a3f7b938
+- HEAD_SHA: 951aed7721924a3293b1410a76798dc21587e30f
 - BASE_SHA: cdb84a424a387d562d84258802d741aadfcad678
 - Verdict: CLEAR
 
