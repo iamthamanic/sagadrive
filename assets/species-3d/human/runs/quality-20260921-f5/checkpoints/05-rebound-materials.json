@@ -1,0 +1,27 @@
+{
+  "path": "assets/species-3d/human/runs/quality-20260921-f5/runtime/human-female-rigged-pbr.glb",
+  "bytes": 90360696,
+  "triangles": 214973,
+  "images": 4,
+  "textures": 3,
+  "materials": [
+    {
+      "index": 0,
+      "name": "Material_1",
+      "baseColorTexture": 0,
+      "metallicRoughnessTexture": 2,
+      "normalTexture": 1,
+      "occlusionTexture": null,
+      "emissiveTexture": null,
+      "extensions": []
+    }
+  ],
+  "meshes": [
+    {
+      "name": "char1",
+      "primitives": 1
+    }
+  ],
+  "skins": 1,
+  "animations": 1
+}

@@ -1,0 +1,30 @@
+{
+  "path": "assets/species-3d/human/runs/quality-20260921-m5/runtime/human-male-rigged.glb",
+  "bytes": 57091572,
+  "triangles": 215832,
+  "images": 1,
+  "textures": 2,
+  "materials": [
+    {
+      "index": 0,
+      "name": "Material_1",
+      "baseColorTexture": 1,
+      "metallicRoughnessTexture": null,
+      "normalTexture": null,
+      "occlusionTexture": null,
+      "emissiveTexture": 0,
+      "extensions": [
+        "KHR_materials_specular",
+        "KHR_materials_ior"
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "char1",
+      "primitives": 1
+    }
+  ],
+  "skins": 1,
+  "animations": 1
+}

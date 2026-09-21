@@ -1,0 +1,39 @@
+{
+  "runId": "quality-20260921-f5",
+  "createdAt": "2026-09-21T11:15:00.000Z",
+  "finishedAt": "2026-09-21T11:26:00.000Z",
+  "step": "integrated",
+  "nextStep": "viewer_manual_check",
+  "goal": "Female Semi-real B base via AUTHORING-PIPELINE (single ultra+8k+PBR+t-pose)",
+  "styleRef": "assets/species-3d/human/style-compare/B-semireal-female.png",
+  "pipeline": {
+    "mode": "single-image",
+    "ai_model": "meshy-7",
+    "ultra_mode": true,
+    "texture_resolution": "8k",
+    "enable_pbr": true,
+    "pose_mode": "t-pose",
+    "remesh": false,
+    "remeshReason": "master 264458 tris <= 300000"
+  },
+  "tasks": {
+    "imageTo3d": {
+      "id": "01a0c3ae-03a2-775e-9d22-6973f5b46c7a",
+      "model": "meshy-7",
+      "ultra_mode": true,
+      "geometry_resolution": "2k",
+      "texture_resolution": "8k",
+      "credits": 40
+    },
+    "rigging": {
+      "id": "01a0c3b5-8d03-70e5-aa8f-0b09a6982627",
+      "height_meters": 1.65,
+      "credits": 5
+    }
+  },
+  "public": "/assets/avatars/species/human-female-quality-20260921-f5.glb?v=quality5",
+  "trianglesFinal": 214973,
+  "bytesFinal": 90360696,
+  "creditsTotal": 45,
+  "replacesActive": true
+}

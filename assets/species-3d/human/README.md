@@ -1,20 +1,11 @@
-# Human species 3D pilot — soft-real underwear base (v=softreal1)
+# Human species 3D — quality m5 / f5
 
-## Canonical style
-**Palworld × Overwatch, soft-real** — `docs/character-visual-styleguide.md`  
-Golden refs: `golden/human-{male|female}-style-ref.png`
+Active public meshes (only):
 
-## Pipeline (2026-09-20)
-Golden PNG → Meshy-7 i2-3d (tex) → remesh quad 40k → retexture 8k → rig → public GLB.
+| Gender | Path |
+|--------|------|
+| Male | `/assets/avatars/species/human-male-quality-20260921-m5.glb?v=quality5` |
+| Female | `/assets/avatars/species/human-female-quality-20260921-f5.glb?v=quality5` |
 
-| File | Role |
-|------|------|
-| `golden/human-*-style-ref.png` | Style + generation input |
-| `human-*-preview.glb` | Retextured pre-rig (~20 MB) |
-| `human-male.glb` / `human-female.glb` | Rigged runtime (~23 / ~21 MB) |
-| `provenance.json` | Task IDs |
-
-Served at `/assets/avatars/species/human-{male\|female}.glb?v=softreal1`
-
-## Review
-Hard-reload editor. Vorlage → Mensch → Geschlecht m/w.
+Wired via `resolveSpeciesTemplateModelUrl` for „M gelesen“ / „W gelesen“.
+No editor mesh-version picker / no softreal rollback in product path.

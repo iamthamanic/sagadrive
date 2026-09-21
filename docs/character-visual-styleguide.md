@@ -32,10 +32,10 @@ Source board (exploration): `assets/species-3d/human/style-compare-v2/mix-palow-
 
 ### Runtime meshes (pilot)
 
-Public allowlisted GLBs (regenerated from golden, `?v=softreal1`):
+Public allowlisted GLBs (quality m5/f5 only):
 
-- `/assets/avatars/species/human-male.glb`
-- `/assets/avatars/species/human-female.glb`
+- `/assets/avatars/species/human-male-quality-20260921-m5.glb?v=quality5`
+- `/assets/avatars/species/human-female-quality-20260921-f5.glb?v=quality5`
 
 Provenance: `assets/species-3d/human/provenance.json`
 

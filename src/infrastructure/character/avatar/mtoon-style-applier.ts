@@ -199,6 +199,8 @@ function applyMtoonClassToMaterial(
   }
 
   // Controlled PBR fallback — no custom shader injection.
+  // When albedo/MR maps are present, preserve authored factors (Meshy/species PBR).
+  // Only tint + override roughness/metalness for unmapped placeholder materials.
   const preserveMap = materialHasBaseMap(material);
   if ('color' in material && material.color instanceof THREE.Color) {
     if (preserveMap) {
@@ -207,11 +209,13 @@ function applyMtoonClassToMaterial(
       material.color.set(baseColorHex);
     }
   }
-  if ('roughness' in material && typeof material.roughness === 'number') {
-    material.roughness = classProfile.pbrRoughness;
-  }
-  if ('metalness' in material && typeof material.metalness === 'number') {
-    material.metalness = classProfile.pbrMetalness;
+  if (!preserveMap) {
+    if ('roughness' in material && typeof material.roughness === 'number') {
+      material.roughness = classProfile.pbrRoughness;
+    }
+    if ('metalness' in material && typeof material.metalness === 'number') {
+      material.metalness = classProfile.pbrMetalness;
+    }
   }
   material.needsUpdate = true;
 }
@@ -366,22 +370,22 @@ export function restoreMaterialStyleSnapshots(snapshots: readonly MaterialStyleS
   }
 }
 
-/** Soft studio lights for raw PBR compare (no toon rim push). */
+/** Soft studio lights for raw PBR compare (warm key, low cool rim — skin reads less plastic). */
 export function applyNeutralPreviewLights(scene: THREE.Scene, lights: MtoonStyleLights): void {
-  const bg = '#0B1220';
+  const bg = '#10141c';
   scene.background = new THREE.Color(bg);
-  scene.fog = new THREE.Fog(bg, 14, 32);
-  lights.hemisphere.color.set('#d8e4f8');
-  lights.hemisphere.groundColor.set('#1a2233');
-  lights.hemisphere.intensity = 0.5;
-  lights.key.color.set('#ffffff');
-  lights.key.intensity = 1.05;
-  lights.key.position.set(2.2, 4.2, 2.8);
-  lights.fill.color.set('#c8d4e8');
-  lights.fill.intensity = 0.32;
-  lights.fill.position.set(-2.4, 2.2, 1.6);
-  lights.rim.color.set('#a8b8d0');
-  lights.rim.intensity = 0.12;
-  lights.rim.position.set(-1.2, 2.8, -3.2);
+  scene.fog = new THREE.Fog(bg, 16, 36);
+  lights.hemisphere.color.set('#e8eef6');
+  lights.hemisphere.groundColor.set('#1c222c');
+  lights.hemisphere.intensity = 0.42;
+  lights.key.color.set('#fff6ea');
+  lights.key.intensity = 0.95;
+  lights.key.position.set(2.0, 3.8, 2.6);
+  lights.fill.color.set('#d5dde8');
+  lights.fill.intensity = 0.28;
+  lights.fill.position.set(-2.2, 2.0, 1.8);
+  lights.rim.color.set('#c8d0dc');
+  lights.rim.intensity = 0.08;
+  lights.rim.position.set(-1.0, 2.6, -3.0);
 }
 

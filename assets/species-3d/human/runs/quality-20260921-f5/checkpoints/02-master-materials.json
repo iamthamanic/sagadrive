@@ -1,0 +1,28 @@
+{
+  "path": "assets/species-3d/human/runs/quality-20260921-f5/master/human-female-master.glb",
+  "bytes": 38384612,
+  "triangles": 264458,
+  "images": 3,
+  "textures": 3,
+  "materials": [
+    {
+      "index": 0,
+      "name": null,
+      "baseColorTexture": 0,
+      "metallicRoughnessTexture": 1,
+      "metallicFactor": 1,
+      "roughnessFactor": 1,
+      "normalTexture": 2,
+      "occlusionTexture": null,
+      "emissiveTexture": null,
+      "extensions": []
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": 1
+    }
+  ],
+  "skins": 0,
+  "animations": 0
+}
