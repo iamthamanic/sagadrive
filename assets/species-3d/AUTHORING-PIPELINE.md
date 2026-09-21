@@ -1,10 +1,37 @@
-# Species 3D — Canonical authoring pipeline (v1)
+# Species 3D — Canonical authoring pipeline (v1.1)
 
-**Status:** Binding for every new species / gender base (Mensch, Elf, Zwerg, …)  
+**Status:** Binding for every new LiveAct-capable humanoid species / gender base  
 **Style:** Semi-real B — `docs/character-visual-styleguide.md`  
-**Proven pilot:** `human/runs/quality-20260921-m5/` (look winner; Meshy single ultra+8k)
+**Body pilot:** `human/runs/quality-20260921-m5/`  
+**Face pilot:** `human/runs/quality-20260921-m5-face1/` (`faceAuthoringProvider: qtmesh-facerig`)
 
-This is the recipe that produced the preferred male look. Reuse it for female, elf, dwarf, etc. — only the **style-ref image** and species silhouette change.
+Body recipe from v1 is unchanged. **v1.1 adds the mandatory Face Pass** before LiveAct publish.
+
+---
+
+## Canonical order
+
+```text
+Generate
+→ Select
+→ Body Rig
+→ PBR canonicalisation
+→ QtMeshEditor FaceRig
+    → head isolation
+    → ICT-FaceKit fit
+    → NRICP
+    → deformation transfer
+    → ARKit-style morph targets
+→ SagaDrive channel normalization (aliases / profiles)
+→ Khronos validation
+→ SagaDrive face validation (`scripts/liveact-face-asset-check.mjs`)
+→ visual/combination QA
+→ publish
+→ ledger
+```
+
+QtMeshEditor FaceRig is the **primary Face Authoring Adapter V1** (offline MIT tooling).  
+Future providers (Meshy/Tripo facial rig, …) are allowed only if their output passes the same `SagaDriveLiveActFaceAssetV1` contract + validator — no domain fork.
 
 ---
 
@@ -44,46 +71,67 @@ Credits (order of magnitude): ~40 for ultra+8k textured mesh (confirm before run
 | Master faces **> ~300k** | Remesh to **≤ 280–300k** (never down to ~100k “for fun”) |
 | Need height only | Prefer `height_meters` on rig / resize — not aggressive remesh |
 
-Remesh is for limits/perf, not for “better look”. Aggressive remesh is what caused the clay look on older human runs.
+Remesh is for limits/perf, not for “better look”.
 
 ---
 
-## 4. Rig + materials
+## 4. Rig + PBR
 
 1. **Meshy auto-rig** on the (unremeshed or lightly remeshed) master.  
 2. **PBR rebind** from pre-rig master → rigged GLB (`scripts/species-authoring-rebind-pbr-maps.mjs`).  
 3. Clear Meshy emissive glow if present (script does this).  
-4. Publish under `public/assets/avatars/species/{species}-{gender}-….glb` + ledger under `assets/species-3d/{species}/runs/…`.
+4. Keep this GLB as the **pre-face baseline** (do not overwrite until face PASS).
 
-Body auto-rig ≠ facial blendshapes. Live face expressions are a **separate** track.
+Body auto-rig ≠ facial blendshapes.
 
 ---
 
-## 5. Runtime / product notes
+## 5. Face Pass (required for LiveAct publish)
+
+See **`assets/species-3d/FACE-AUTHORING.md`**.
+
+Summary:
+
+1. Run `scripts/liveact-face-authoring-qtmesh.mjs` (optional `--bootstrap`) on the full skinned baseline GLB.  
+2. Adapter canonicalizes Assimp export (PBR restore, IBM fix, sparse morph pack).  
+3. Validate with `scripts/liveact-face-asset-check.mjs --profile core-v1` against the pre-face baseline.  
+4. Only on PASS: publish public GLB + update `species-template-models-v1.ts` + provenance / run ledger.
+
+**Not** part of the normal path: Blender, Faceit, manual head cut, temporary face skeleton, Shape-Key bake via Faceit.
+
+---
+
+## 6. Runtime / product notes
 
 - Editor: **MToon off** for these PBR GLBs (authored maps are source of truth).  
-- File size: 8k + high poly can be ~80 MB — ok for quality bases; optional later downscale of albedo for shipping if needed.  
-- Wire allowlisted path in `species-template-models-v1.ts` (+ preview versions if comparing).
+- Face size grows with morph targets; sparse packing keeps shipping under host limits when possible.  
+- Wire allowlisted path in `species-template-models-v1.ts`.  
+- Retarget tuning (if any) uses `LiveActRetargetProfileV1` — never magic numbers in GLB adapters.
 
 ---
 
-## 6. Checklist (copy per species run)
+## 7. Checklist (copy per species run)
 
-- [ ] Semi-real B style-ref approved (same finish as human B)  
+- [ ] Semi-real B style-ref approved  
 - [ ] Single-image meshy-7 + ultra + 8k + PBR + t-pose  
 - [ ] Remesh skipped unless >300k  
-- [ ] Rig + PBR rebind  
-- [ ] `run.json` + material dumps in `runs/…`  
+- [ ] Rig + PBR rebind → baseline GLB  
+- [ ] QtMesh FaceRig face pass + `#383` validator `core-v1` PASS  
+- [ ] `run.json` + `face-inventory.json` + `qtmesh-report.json` in face run dir  
 - [ ] Public GLB + template wiring  
-- [ ] Viewer check: MToon aus, look matches style-ref  
+- [ ] Viewer: Core channels + Head; MToon aus; look matches style-ref  
 
 ---
 
-## 7. Explicitly deprecated for new bases
+## 8. Explicitly deprecated for new bases
 
-- Multiview-first as default (use only to fix side/back)  
+- Multiview-first as default  
 - Remesh-to-~100k as default  
 - Soft-real / Palworld×Overwatch prompt forks as primary look  
 - Shipping Meshy-rig GLB **without** PBR rebind  
+- **Blender / Faceit as primary face authoring**  
+- Manual head isolation / custom facial AI in the SagaDrive repo  
 
-Reference ledger: `human/runs/quality-20260921-m5/run.json`
+Reference ledgers:  
+- Body: `human/runs/quality-20260921-m5/run.json`  
+- Face: `human/runs/quality-20260921-m5-face1/run.json`

@@ -480,6 +480,14 @@ function checkLiveActRetargetProfile() {
   });
 }
 
+function checkLiveActFacePipelineDocs() {
+  console.log('LiveAct face pipeline docs (#386): AUTHORING v1.1 + FACE-AUTHORING...');
+  execFileSync(process.execPath, ['scripts/liveact-face-pipeline-doc-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActRigDebug() {
   console.log('LiveAct rig debug (#333): SkeletonHelper + capability inspector...');
   execFileSync(process.execPath, ['scripts/liveact-rig-debug-check.mjs'], {
@@ -1246,6 +1254,7 @@ checkLiveActFaceAssetContract();
 checkLiveActFaceAssetValidator();
 checkLiveActFaceAuthoringQtmesh();
 checkLiveActRetargetProfile();
+checkLiveActFacePipelineDocs();
 checkLiveActRigDebug();
 checkLiveActSurfaceMigration();
 checkLiveActHardening();
