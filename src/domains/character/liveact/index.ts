@@ -83,6 +83,18 @@ export {
 } from './liveact-face-asset-contract';
 
 export {
+  LIVEACT_RETARGET_PROFILE_VERSION,
+  IDENTITY_CHANNEL_RETARGET,
+  DEFAULT_LIVEACT_RETARGET_PROFILE,
+  createIdentityLiveActRetargetProfile,
+  normalizeLiveActRetargetProfile,
+  retargetLiveActChannel,
+  applyLiveActRetargetProfile,
+  type LiveActChannelRetargetV1,
+  type LiveActRetargetProfileV1,
+} from './liveact-retarget-profile';
+
+export {
   LIVEACT_FACE_DIAGNOSTICS_VERSION,
   createEmptyLiveActFaceDiagnosticsFrame,
   assertLiveActFaceDiagnosticsLocalOnly,

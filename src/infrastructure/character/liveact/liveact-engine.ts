@@ -12,6 +12,8 @@ import {
   LIVEACT_CALIBRATION_TIMEOUT_MS,
   applyLiveActNeutralBaseline,
   assertLiveActFrameLocalOnly,
+  applyLiveActRetargetProfile,
+  DEFAULT_LIVEACT_RETARGET_PROFILE,
   createEmptyLiveActFaceDiagnosticsFrame,
   createEmptyLiveActSourceSample,
   createLiveActCalibrationAccumulator,
@@ -33,6 +35,7 @@ import {
   type LiveActLimits,
   type LiveActNeutralBaselineV1,
   type LiveActQualityProfile,
+  type LiveActRetargetProfileV1,
   type LiveActSourceSample,
   type LiveActStatus,
 } from '../../../domains/character/liveact';
@@ -115,6 +118,7 @@ export class LiveActEngine {
   private statusCoalesceTimer: ReturnType<typeof setTimeout> | null = null;
   private preferredDeviceId: string | undefined;
   private deviceChangeHandler: (() => void) | null = null;
+  private retargetProfile: LiveActRetargetProfileV1 = DEFAULT_LIVEACT_RETARGET_PROFILE;
 
   constructor(
     private readonly sourceFactory: LiveActFaceSourceFactory = async (profile) => {
@@ -138,6 +142,11 @@ export class LiveActEngine {
 
   bindOutput(output: LiveActAvatarOutput | null): void {
     this.output = output;
+  }
+
+  /** First-party retarget profile (identity by default; no filename-based selection). */
+  setRetargetProfile(profile: LiveActRetargetProfileV1 | null | undefined): void {
+    this.retargetProfile = profile ?? DEFAULT_LIVEACT_RETARGET_PROFILE;
   }
 
   subscribeStatus(listener: LiveActStatusListener): () => void {
@@ -444,7 +453,8 @@ export class LiveActEngine {
     frame = applyLiveActNeutralBaseline(frame, this.neutralBaseline, this.limits);
     assertLiveActFrameLocalOnly(frame);
     this.frame = frame;
-    this.output?.applyLiveActFrame(frame);
+    const outputFrame = applyLiveActRetargetProfile(frame, this.retargetProfile);
+    this.output?.applyLiveActFrame(outputFrame);
     this.emitFrame(frame);
 
     const diagnostics: LiveActFaceDiagnosticsFrameV1 = diagnosticsSeed
