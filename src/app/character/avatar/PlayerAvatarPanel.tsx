@@ -2,7 +2,7 @@
  * PlayerAvatarPanel — player-panel surface using shared viewer (#9 / #244).
  * Location: src/app/character/avatar/PlayerAvatarPanel.tsx
  *
- * Live control mode: Face Tracking via shared AvatarFaceTrackingRuntime (same as Editor).
+ * Live control mode: compact LiveAct via shared LiveActEngine (#334).
  */
 
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';

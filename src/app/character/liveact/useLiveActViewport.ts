@@ -13,10 +13,13 @@ import {
   type LiveActFaceDiagnosticsFrameV1,
   type LiveActStatus,
 } from '../../../domains/character/liveact';
+import type { LiveActEngine, LiveActEngineState } from '../../../infrastructure/character/liveact';
 import {
-  LiveActEngine,
-  type LiveActEngineState,
-} from '../../../infrastructure/character/liveact';
+  acquireSharedLiveActEngine,
+  acquireSharedLiveActTracking,
+  releaseSharedLiveActEngine,
+  releaseSharedLiveActTracking,
+} from './liveact-engine-singleton';
 
 export interface LiveActCameraDeviceOption {
   deviceId: string;
@@ -48,6 +51,8 @@ export interface UseLiveActViewportResult {
   bonesAvailable: boolean;
   status: LiveActStatus;
   message: string;
+  fpsCap: number;
+  qualityProfileLabelDe: string;
   previewVideo: HTMLVideoElement | null;
   devices: readonly LiveActCameraDeviceOption[];
   selectedDeviceId: string | undefined;
@@ -85,6 +90,8 @@ export function useLiveActViewport({
   const [bonesAvailable, setBonesAvailable] = useState(false);
   const [status, setStatus] = useState<LiveActStatus>('idle');
   const [message, setMessage] = useState(liveActStatusLabelDe('idle'));
+  const [fpsCap, setFpsCap] = useState(30);
+  const [qualityProfileLabelDe, setQualityProfileLabelDe] = useState('Desktop');
   const [previewVideo, setPreviewVideo] = useState<HTMLVideoElement | null>(null);
   const [devices, setDevices] = useState<LiveActCameraDeviceOption[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(undefined);
@@ -118,11 +125,13 @@ export function useLiveActViewport({
 
   useEffect(() => {
     if (!enabled) return;
-    const engine = new LiveActEngine();
+    const engine = acquireSharedLiveActEngine();
     engineRef.current = engine;
     const unsubStatus = engine.subscribeStatus((state: LiveActEngineState) => {
       setStatus(state.status);
       setMessage(state.message);
+      setFpsCap(state.fpsCap);
+      setQualityProfileLabelDe(state.qualityProfileLabelDe);
       setPreviewVideo(engine.getPreviewVideo());
       setCalibrationStatus(state.calibrationStatus);
       setCalibrationMessage(state.calibrationMessage);
@@ -160,7 +169,7 @@ export function useLiveActViewport({
     return () => {
       unsubStatus();
       unsubDiagnostics();
-      engine.dispose();
+      releaseSharedLiveActEngine();
       engineRef.current = null;
       diagnosticsRef.current = null;
       setPreviewVideo(null);
@@ -169,7 +178,6 @@ export function useLiveActViewport({
 
   useEffect(() => {
     if (!trackingEnabled) {
-      engineRef.current?.stop();
       setPreviewVideo(null);
       return;
     }
@@ -180,6 +188,9 @@ export function useLiveActViewport({
     const engine = engineRef.current;
     if (!engine) return;
     let cancelled = false;
+    let trackingHeld = false;
+    acquireSharedLiveActTracking();
+    trackingHeld = true;
     void engine.start().then(async () => {
       if (cancelled) return;
       try {
@@ -199,7 +210,10 @@ export function useLiveActViewport({
     });
     return () => {
       cancelled = true;
-      engine.stop();
+      if (trackingHeld) {
+        releaseSharedLiveActTracking();
+        trackingHeld = false;
+      }
     };
   }, [trackingEnabled, runtimeReady]);
 
@@ -207,14 +221,12 @@ export function useLiveActViewport({
     if (runtimeReady) return;
     if (!trackingEnabled) return;
     setTrackingEnabledState(false);
-    engineRef.current?.stop();
   }, [runtimeReady, trackingEnabled]);
 
   const setTrackingEnabled = (next: boolean) => {
     if (next && !runtimeReady) return;
     setTrackingEnabledState(next);
     if (!next) {
-      engineRef.current?.stop();
       setPreviewVideo(null);
     }
   };
@@ -244,6 +256,8 @@ export function useLiveActViewport({
     bonesAvailable,
     status,
     message,
+    fpsCap,
+    qualityProfileLabelDe,
     previewVideo,
     devices,
     selectedDeviceId,

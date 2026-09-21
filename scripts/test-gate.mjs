@@ -448,6 +448,14 @@ function checkLiveActRigDebug() {
   });
 }
 
+function checkLiveActSurfaceMigration() {
+  console.log('LiveAct surface migration (#334): editor/player/session shared engine...');
+  execFileSync(process.execPath, ['scripts/liveact-surface-migration-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkAvatarV2CompositionContract() {
   console.log('Avatar V2 composition contract (#249): orthogonal axes + legacy mapping...');
   execFileSync(process.execPath, ['scripts/avatar-v2-composition-contract-check.mjs'], {
@@ -1186,6 +1194,7 @@ checkLiveActViewportUi();
 checkLiveActFaceDiagnostics();
 checkLiveActAvatarOutput();
 checkLiveActRigDebug();
+checkLiveActSurfaceMigration();
 checkAvatarV2CompositionContract();
 checkAvatarV2ModularGlbContract();
 checkAvatarV2ArtifactPipeline();

@@ -5,7 +5,12 @@
 
 export { LiveActCameraPreview } from './LiveActCameraPreview';
 export { LiveActFaceOverlay } from './LiveActFaceOverlay';
+export { LiveActSurfaceControls } from './LiveActSurfaceControls';
 export { LiveActViewportControls } from './LiveActViewportControls';
+export {
+  acquireSharedLiveActEngine,
+  getSharedLiveActEngine,
+} from './liveact-engine-singleton';
 export {
   useLiveActViewport,
   type LiveActCameraDeviceOption,

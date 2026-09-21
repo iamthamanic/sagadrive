@@ -3,7 +3,7 @@
  * Location: src/infrastructure/character/liveact/liveact-engine.ts
  *
  * Wraps the shared MediaPipe face source. At most one active camera/detector.
- * Legacy AvatarFaceTrackingRuntime remains a compatibility consumer path.
+ * Legacy AvatarFaceTrackingRuntime is compatibility-only (no productive canvas consumer).
  */
 
 import {

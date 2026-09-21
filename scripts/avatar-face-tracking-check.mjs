@@ -28,6 +28,7 @@ const index = read('src/domains/character/avatar/index.ts');
 const runtime = read('src/infrastructure/character/avatar/avatar-face-tracking-runtime.ts');
 const studio = read('src/infrastructure/character/avatar/character-studio-runtime.ts');
 const controls = read('src/app/character/avatar/AvatarFaceTrackingControls.tsx');
+const liveSurfaceControls = read('src/app/character/liveact/LiveActSurfaceControls.tsx');
 const canvas = read('src/app/character/avatar/AvatarCanvas.tsx');
 const surfaceViewer = read('src/app/character/avatar/AvatarSurfaceViewer.tsx');
 const playerPanel = read('src/app/character/avatar/PlayerAvatarPanel.tsx');
@@ -84,14 +85,16 @@ check(/data-avatar-face-tracking-stop/.test(controls), 'stop control');
 check(/aria-label="Face Tracking starten"/.test(controls), 'start aria');
 check(/Lokal im Browser/.test(controls), 'privacy copy');
 check(/qualityProfileLabelDe|data-avatar-face-tracking-profile/.test(controls), 'profile label UI');
-check(/AvatarFaceTrackingControls/.test(canvas), 'canvas mounts controls');
-check(/faceTracking\.dispose|faceTracking\?\.dispose|faceTrackingRef\.current\?\.dispose/.test(canvas), 'dispose on unmount');
+check(!/AvatarFaceTrackingRuntime/.test(canvas), 'canvas no legacy runtime (#334)');
+check(/LiveActSurfaceControls|useLiveActViewport/.test(read('src/app/character/avatar/AvatarSurfaceViewer.tsx')), 'surface owns LiveAct UI');
+check(/data-avatar-face-tracking-start/.test(liveSurfaceControls), 'live surface start control');
 check(/controlMode/.test(canvas), 'editor vs live control mode');
 
 check(/player-panel/.test(surfaceViewer), 'surface viewer knows player-panel');
 check(/data-avatar-face-tracking-bound/.test(surfaceViewer), 'FT bind marker on surface');
 check(/controlMode=\{controlMode\}/.test(surfaceViewer) || /controlMode=\{liveSurface/.test(surfaceViewer) || /controlMode={controlMode}/.test(surfaceViewer), 'surface passes controlMode');
-check(/AvatarFaceTrackingRuntime|enableFaceTracking/.test(playerPanel), 'player panel FT wiring');
+check(/AvatarSurfaceViewer/.test(playerPanel), 'player panel shared surface');
+check(/enableFaceTracking/.test(playerPanel), 'player panel FT policy prop');
 check(/PlayerAvatarPanel/.test(gmPanel), 'GM panel mounts PlayerAvatarPanel');
 
 // Ensure first-party assets exist (vendor from node_modules if needed).

@@ -6,6 +6,7 @@
  * MediaPipe WASM + model are first-party under /mediapipe/** (no CDN at runtime).
  * Detector is injectable so CI can run without MediaPipe WASM.
  * At most one active tracker app-wide (singleton claim on start).
+ * Compatibility-only after #334 — productive surfaces use LiveActEngine instead.
  */
 
 import {

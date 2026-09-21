@@ -3,7 +3,7 @@
  * Location: src/app/character/avatar/AvatarSurfaceViewer.tsx
  *
  * Editor Surface owns permanent viewport gear chrome (also on fallback „CH“).
- * LiveAct state lives in useLiveActViewport — not CharacterEditor.
+ * LiveAct state lives in useLiveActViewport — not CharacterEditor (#334: all surfaces).
  */
 
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from 'react';
@@ -16,7 +16,11 @@ import {
   type AvatarSurfaceRef,
 } from '../../../domains/character/avatar';
 import { AvatarCanvas, type AvatarPortraitCaptureHandle } from './AvatarCanvas';
-import { LiveActViewportControls, useLiveActViewport } from '../liveact';
+import {
+  LiveActSurfaceControls,
+  LiveActViewportControls,
+  useLiveActViewport,
+} from '../liveact';
 import type { CharacterStudioRuntime } from '../../../infrastructure/character/avatar/character-studio-runtime';
 
 interface AvatarSurfaceViewerProps {
@@ -111,9 +115,11 @@ export function AvatarSurfaceViewer({
     ? `relative w-full ${className ?? ''}`
     : `relative overflow-hidden rounded-lg border border-border bg-[#0B1220] ${boxClass} ${className ?? ''}`;
 
+  const liveActEnabled = show3d && (isEditorSurface || (liveSurface && faceTrackingOn));
+
   const liveAct = useLiveActViewport({
-    runtimeReady: isEditorSurface && runtimeReady && show3d,
-    enabled: isEditorSurface,
+    runtimeReady: runtimeReady && show3d,
+    enabled: liveActEnabled,
     getLiveActCapabilities: () => studioRuntimeRef.current?.getLiveActCapabilities() ?? null,
     getBonesAvailable: () => studioRuntimeRef.current?.hasLiveActSkeleton() ?? false,
     modelRevision: modelEpoch,
@@ -145,7 +151,7 @@ export function AvatarSurfaceViewer({
 
   useEffect(() => {
     const engine = liveAct.engineRef.current;
-    if (!engine || !isEditorSurface) return;
+    if (!engine || !liveActEnabled) return;
     if (!liveAct.trackingEnabled || !runtimeReady) {
       engine.bindOutput(null);
       return;
@@ -156,7 +162,7 @@ export function AvatarSurfaceViewer({
       engine.bindOutput(null);
     };
   }, [
-    isEditorSurface,
+    liveActEnabled,
     liveAct.trackingEnabled,
     runtimeReady,
     modelEpoch,
@@ -194,7 +200,7 @@ export function AvatarSurfaceViewer({
             onRuntimeReady={handleRuntimeReady}
             className="relative flex w-full flex-col gap-2"
             controlMode={controlMode}
-            enableFaceTracking={faceTrackingOn}
+            enableFaceTracking={false}
             hideEditorFaceTrackingBar={isEditorSurface}
             hideMtoonToggle={isEditorSurface}
             onMtoonState={handleMtoonState}
@@ -218,6 +224,9 @@ export function AvatarSurfaceViewer({
                 />
               </div>
             </div>
+          ) : null}
+          {liveSurface && faceTrackingOn ? (
+            <LiveActSurfaceControls liveAct={liveAct} disabled={!runtimeReady} />
           ) : null}
         </div>
       ) : (
