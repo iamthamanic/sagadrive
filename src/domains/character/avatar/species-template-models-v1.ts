@@ -1,12 +1,12 @@
 /**
- * Species template preview models — allowlisted first-party GLB paths by species + gender.
+ * Species template preview models — allowlisted first-party mesh paths by species + gender.
  * Location: src/domains/character/avatar/species-template-models-v1.ts
  *
  * Pure domain: no React. Only fixed relative /assets paths (never free client URLs).
  * Divers / unset gender → no mesh. Missing species assets fail closed (undefined).
  *
- * Human active bases: quality-20260921 m5-face1 / f5-face1 (LiveAct core-v1).
- * No rollback picker.
+ * Human active bases: quality-20260921 m5-face1 / f5-face1 as VRM 1.0 primary (#405).
+ * Generic GLB remains published as fallback/source; no rollback picker.
  */
 import type { CharacterGenderReading } from '../domain/character.entity';
 import type { BaseBodySpeciesId } from './base-body-contract';
@@ -15,7 +15,7 @@ import { listSpeciesTemplateIds } from './species-template-pack-v1';
 export const SPECIES_TEMPLATE_MODELS_CONTRACT_VERSION =
   'SagaDriveSpeciesTemplateModelsV1' as const;
 
-/** Public Vite base for pilot species GLBs. */
+/** Public Vite base for pilot species meshes (VRM primary / GLB fallback). */
 export const SPECIES_TEMPLATE_MODEL_PUBLIC_BASE = '/assets/avatars/species' as const;
 
 type GenderMeshKey = 'masculine-read' | 'feminine-read';
@@ -25,8 +25,8 @@ const SPECIES_GENDER_MESH: Readonly<
   Partial<Record<BaseBodySpeciesId, Readonly<Record<GenderMeshKey, string>>>>
 > = {
   human: {
-    'masculine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-male-quality-20260921-m5-face1.glb?v=quality5-face1-tex2k`,
-    'feminine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-female-quality-20260921-f5-face1.glb?v=quality5-face1-tex2k`,
+    'masculine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-male-quality-20260921-m5-face1.vrm?v=quality5-face1-vrm1`,
+    'feminine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-female-quality-20260921-f5-face1.vrm?v=quality5-face1-vrm1`,
   },
 };
 
