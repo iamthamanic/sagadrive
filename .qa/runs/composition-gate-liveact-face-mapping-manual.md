@@ -1,6 +1,6 @@
 # Composition Gate — liveact-face-mapping-manual
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 68b2e54b3e742023b4c20e2f41909c4fd5fea6d0
 - Date: 2026-09-22
 - Verdict: SKIPPED
 
