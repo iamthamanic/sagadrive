@@ -45,12 +45,12 @@ check(
 const pairs = [
   {
     id: 'm5',
-    glb: 'assets/species-3d/human/runs/quality-20260921-m5-face2/human-male-quality-20260921-m5-face1.glb',
+    glb: 'public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb',
     anchors: 'assets/species-3d/human/runs/quality-20260921-m5-face2/face-anchors.json',
   },
   {
     id: 'f5',
-    glb: 'assets/species-3d/human/runs/quality-20260921-f5-face2/human-female-quality-20260921-f5-face1.glb',
+    glb: 'public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb',
     anchors: 'assets/species-3d/human/runs/quality-20260921-f5-face2/face-anchors.json',
   },
 ];
