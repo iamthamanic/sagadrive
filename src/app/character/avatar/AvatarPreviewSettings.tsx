@@ -6,16 +6,18 @@
  * LiveAct/MToon actions stay disabled without 3D runtime — no camera prompt.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Settings } from 'lucide-react';
 import { Button } from '../../../shared/ui/button';
 import { Switch } from '../../../shared/ui/switch';
 import type { LiveActCameraDeviceOption } from '../liveact/useLiveActViewport';
 import type {
   LiveActCapabilitiesV1,
+  LiveActDiagnosticsV2Snapshot,
   LiveActStatus,
 } from '../../../domains/character/liveact';
 import { LiveActCapabilityInspector } from '../liveact/LiveActCapabilityInspector';
+import { LiveActDiagnosticsChannelTable } from '../liveact/LiveActDiagnosticsChannelTable';
 
 interface AvatarPreviewSettingsProps {
   /** False = no 3D runtime — actions disabled, gear still openable. */
@@ -37,6 +39,8 @@ interface AvatarPreviewSettingsProps {
   onBonesChange: (enabled: boolean) => void;
   capabilities: LiveActCapabilitiesV1 | null;
   inputLive: boolean;
+  /** Diagnostics V2 ref for RAW→APPLIED channel table (#403). */
+  diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
   devices: readonly LiveActCameraDeviceOption[];
   selectedDeviceId: string | undefined;
   onDeviceChange: (deviceId: string | undefined) => void;
@@ -70,6 +74,7 @@ export function AvatarPreviewSettings({
   onBonesChange,
   capabilities,
   inputLive,
+  diagnosticsV2Ref,
   devices,
   selectedDeviceId,
   onDeviceChange,
@@ -295,6 +300,16 @@ export function AvatarPreviewSettings({
               <LiveActCapabilityInspector
                 capabilities={capabilities}
                 inputLive={inputLive}
+              />
+            </div>
+
+            <div className="mt-2 border-t border-white/10 pt-2">
+              <p className="px-1 pb-1 text-[11px] font-medium text-slate-300">
+                Channel Trace (RAW→APPLIED)
+              </p>
+              <LiveActDiagnosticsChannelTable
+                diagnosticsV2Ref={diagnosticsV2Ref}
+                active={open && trackingEnabled}
               />
             </div>
 

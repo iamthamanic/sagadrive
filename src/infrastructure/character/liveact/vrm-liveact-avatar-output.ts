@@ -1,5 +1,5 @@
 /**
- * VRM LiveAct avatar output — head, LookAt, ARKit expressions (#332, #397).
+ * VRM LiveAct avatar output — head, LookAt, ARKit expressions (#332, #397, #403).
  * Location: src/infrastructure/character/liveact/vrm-liveact-avatar-output.ts
  */
 
@@ -11,10 +11,15 @@ import {
   clampLiveActChannel,
   createLiveActAvatarCapabilities,
   createUnavailableLiveActAppliedValues,
+  isLiveActEyeLookFaceChannel,
+  liveActGazePathSkipsEyeLookMorphs,
+  liveActGazePathUsesPoseDriver,
+  resolveLiveActGazeDrivePath,
   type LiveActAvatarCapabilities,
   type LiveActDiagnosticsV2AppliedValues,
   type LiveActFaceChannelId,
   type LiveActFrameV1,
+  type LiveActGazeDrivePath,
 } from '../../../domains/character/liveact';
 import { resolveLiveActChannelTargets } from '../../../domains/character/liveact/liveact-channel-target-aliases';
 import type { LiveActAvatarOutput } from './liveact-avatar-output';
@@ -61,6 +66,7 @@ export class VrmLiveActAvatarOutput implements LiveActAvatarOutput {
   private readonly faceSupported: ReadonlySet<LiveActFaceChannelId>;
   private readonly avatarCapabilities: LiveActAvatarCapabilities;
   private readonly hasLookAt: boolean;
+  private readonly gazePath: LiveActGazeDrivePath;
   private disposed = false;
   private applied: LiveActDiagnosticsV2AppliedValues = createUnavailableLiveActAppliedValues();
 
@@ -68,10 +74,23 @@ export class VrmLiveActAvatarOutput implements LiveActAvatarOutput {
     const present = listVrmExpressionNames(deps.vrm);
     const resolution = resolveLiveActChannelTargets(present);
     this.resolved = resolution.resolvedNames;
-    this.faceSupported = new Set(
-      LIVEACT_FACE_CHANNELS.filter((id) => Boolean(this.resolved[id])),
-    );
     this.hasLookAt = Boolean(deps.vrm.lookAt);
+    const hasEyeLookMorphs = LIVEACT_FACE_CHANNELS.some(
+      (id) => isLiveActEyeLookFaceChannel(id) && Boolean(this.resolved[id]),
+    );
+    this.gazePath = resolveLiveActGazeDrivePath({
+      hasEyeBones: false,
+      hasLookAt: this.hasLookAt,
+      hasEyeLookMorphs,
+    });
+    const skipEyeLook = liveActGazePathSkipsEyeLookMorphs(this.gazePath);
+    this.faceSupported = new Set(
+      LIVEACT_FACE_CHANNELS.filter((id) => {
+        if (!this.resolved[id]) return false;
+        if (skipEyeLook && isLiveActEyeLookFaceChannel(id)) return false;
+        return true;
+      }),
+    );
     this.avatarCapabilities = createLiveActAvatarCapabilities({
       headBone: Boolean(deps.headBone),
       leftEyeBone: this.hasLookAt,
@@ -102,19 +121,33 @@ export class VrmLiveActAvatarOutput implements LiveActAvatarOutput {
       this.deps.headScratchEuler,
       this.deps.headScratchQuaternion,
     );
-    applyLiveActVrmEyeLookAt(
-      this.deps.vrm,
-      this.deps.eyeLookTarget,
-      frame.eyeLeft,
-      frame.eyeRight,
-    );
+    const usePoseGaze = liveActGazePathUsesPoseDriver(this.gazePath);
+    if (usePoseGaze && this.hasLookAt) {
+      applyLiveActVrmEyeLookAt(
+        this.deps.vrm,
+        this.deps.eyeLookTarget,
+        frame.eyeLeft,
+        frame.eyeRight,
+      );
+    } else {
+      this.deps.vrm.lookAt?.reset?.();
+    }
 
+    const skipEyeLook = liveActGazePathSkipsEyeLookMorphs(this.gazePath);
     const manager = this.deps.vrm.expressionManager;
     const faceApplied: Partial<Record<LiveActFaceChannelId, number>> = {};
     if (manager) {
       for (const id of LIVEACT_FACE_CHANNELS) {
         const name = this.resolved[id];
         if (!name) continue;
+        if (skipEyeLook && isLiveActEyeLookFaceChannel(id)) {
+          try {
+            manager.setValue(name, 0);
+          } catch {
+            // fail-soft
+          }
+          continue;
+        }
         const weight = clampLiveActChannel(frame.face[id]);
         try {
           manager.setValue(name, weight);
@@ -127,8 +160,8 @@ export class VrmLiveActAvatarOutput implements LiveActAvatarOutput {
 
     this.applied = buildLiveActAppliedValuesFromFace({
       headSupported: Boolean(this.deps.headBone),
-      eyeLeftSupported: this.hasLookAt,
-      eyeRightSupported: this.hasLookAt,
+      eyeLeftSupported: usePoseGaze && this.hasLookAt,
+      eyeRightSupported: usePoseGaze && this.hasLookAt,
       faceSupported: this.faceSupported,
       face: faceApplied,
       head: frame.head,
@@ -166,10 +199,11 @@ export class VrmLiveActAvatarOutput implements LiveActAvatarOutput {
     for (const id of this.faceSupported) {
       face[id] = id === '_neutral' ? 1 : 0;
     }
+    const usePoseGaze = liveActGazePathUsesPoseDriver(this.gazePath);
     this.applied = buildLiveActAppliedValuesFromFace({
       headSupported: Boolean(this.deps.headBone),
-      eyeLeftSupported: this.hasLookAt,
-      eyeRightSupported: this.hasLookAt,
+      eyeLeftSupported: usePoseGaze && this.hasLookAt,
+      eyeRightSupported: usePoseGaze && this.hasLookAt,
       faceSupported: this.faceSupported,
       face,
       head: { yaw: 0, pitch: 0, roll: 0 },

@@ -34,3 +34,7 @@ export {
   createLiveActRigDebugController,
   type LiveActRigDebugController,
 } from './liveact-rig-debug';
+export {
+  resolveLiveActRetargetProfile,
+  type LiveActRetargetProfileSelectionInput,
+} from './liveact-retarget-profile-registry';

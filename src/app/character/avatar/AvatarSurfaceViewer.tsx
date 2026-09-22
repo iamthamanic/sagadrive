@@ -15,6 +15,7 @@ import {
   type AvatarSurfaceId,
   type AvatarSurfaceRef,
 } from '../../../domains/character/avatar';
+import { resolveLiveActRetargetProfile } from '../../../infrastructure/character/liveact';
 import { AvatarCanvas, type AvatarPortraitCaptureHandle } from './AvatarCanvas';
 import {
   LiveActSurfaceControls,
@@ -192,6 +193,11 @@ export function AvatarSurfaceViewer({
     }
     const output = studioRuntimeRef.current?.getLiveActAvatarOutput() ?? null;
     engine.bindOutput(output);
+    engine.setRetargetProfile(
+      resolveLiveActRetargetProfile({
+        avatarCapabilities: output?.getAvatarCapabilities() ?? null,
+      }),
+    );
     return () => {
       engine.bindOutput(null);
     };
