@@ -1,0 +1,3 @@
+#!/bin/sh
+echo '{"ok":false,"error":"not a humanoid face"}'
+exit 7

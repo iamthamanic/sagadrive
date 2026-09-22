@@ -3,25 +3,37 @@
   "repository": "fernandotonon/QtMeshEditor",
   "commit": "8720dc91bd7426908b9218673fbd74d544dd908c",
   "license": "MIT",
-  "bin": ".cache/sagadrive-tools/qtmesh/bin/qtmesh",
+  "bin": "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive/.cache/sagadrive-tools/qtmesh/bin/qtmesh",
   "binSource": "cache",
   "argv": [
     "facerig",
-    "public/assets/avatars/species/human-female-quality-20260921-f5.glb",
+    "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive/public/assets/avatars/species/human-female-quality-20260921-f5.glb",
     "-o",
-    "assets/species-3d/human/runs/quality-20260921-f5-face1/human-female-quality-20260921-f5-face1.glb",
+    "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive/assets/species-3d/human/runs/quality-20260921-f5-face2/human-female-quality-20260921-f5-face2.glb",
     "--json",
     "--max-residual",
-    "12"
+    "8"
   ],
   "exitCode": 0,
-  "report": {
-    "fit_max_residual_pct": 7.213395704997727,
-    "fit_mean_residual_pct": 0.13608960524897168,
-    "output": "human-female-quality-20260921-f5-face1.glb",
-    "shapes_attached": 51,
-    "user_vertex_count": 147707
+  "landmarkAnchoring": {
+    "available": true,
+    "used": true,
+    "landmarkCount": 13,
+    "residual": null,
+    "tmplOk": null,
+    "userOk": null,
+    "evidence": [
+      "[sim] markers=13 anchors=13",
+      "seedConfident=1"
+    ],
+    "onnxModelPath": "/Users/halteverbotsocialmacpro/Library/Application Support/QtMeshEditor/QtMeshEditor/ai_models/facerig/face_landmarks.onnx",
+    "onnxPresent": true,
+    "onnxDownloadedThisRun": false
   },
-  "stdoutTail": "{\n    \"fit_max_residual_pct\": 7.213395704997727,\n    \"fit_mean_residual_pct\": 0.13608960524897168,\n    \"output\": \"human-female-quality-20260921-f5-face1.glb\",\n    \"shapes_attached\": 51,\n    \"user_vertex_count\": 147707\n}\n\n",
-  "stderrTail": ""
+  "report": {
+    "raw": "{\n    \"fit_max_residual_pct\": 1.2859923725902342,\n    \"fit_mean_residual_pct\": 0.04391793064178499,\n    \"output\": \"human-female-quality-20260921-f5-face2.glb\",\n    \"shapes_attached\": 51,\n    \"user_vertex_count\": 147707\n}\n\n\n[sim] submesh handle=1 verts=147707 inHeadMask=68417\n[facerig] detect view=front mode=shaded ok=1 conf=0.04 logit=-3.2\n[facerig] detect view=back mode=shaded ok=1 conf=1.00 logit=19.8\n[facerig] detect view=left mode=shaded ok=1 conf=0.04 logit=-3.2\n[facerig] detect view=right mode=shaded ok=1 conf=0.86 logit=1.8\n[facerig] facing from SHADED detection (logit=19.8)\n[facerig] detect view=front mode=shaded ok=1 conf=0.00 logit=-8.0\n[facerig] detect view=back mode=shaded ok=1 conf=1.00 logit=14.1\n[facerig] detect view=left mode=shaded ok=1 conf=0.00 logit=-6.1\n[facerig] detect view=right mode=shaded ok=1 conf=0.01 logit=-5.0\n[facerig] facing from SHADED detection (logit=14.1)\n[facerig] seed: ulm.ok=1 conf=1.00 13/13 detected, constellation residual 0.061 -> trusted\n[facerig] seed outlier 'Forehead' dev=0.005 (median 0.003) -> consensus\n[sim] markers=13 anchors=13 seedConfident=1\n[sim] surfdist 'Nose tip' = 0.0110848\n[sim] surfdist 'Chin' = 0.0111\n[sim] surfdist 'Right eye outer' = 0.0163883\n[sim] surfdist 'Left eye outer' = 0.0153015\n[sim] surfdist 'Right eye inner' = 0.0239796\n[sim] surfdist 'Left eye inner' = 0.0233813\n[sim] surfdist 'Right mouth corner' = 0.00838714\n[sim] surfdist 'Left mouth corner' = 0.00793111\n[sim] surfdist 'Upper lip' = 0.0030235\n[sim] surfdist 'Lower lip' = 0.00460012\n[sim] surfdist 'Right brow' = 0.00656468\n[sim] surfdist 'Left brow' = 0.00664414\n[sim] surfdist 'Forehead' = 0.00465332\n[sim] marker 'Nose tip' tmplX=0  (character-RIGHT side)\n[sim] marker 'Chin' tmplX=0  (character-RIGHT side)\n[sim] marker 'Right eye outer' tmplX=4.85396  (character-RIGHT side)\n[sim] marker 'Left eye outer' tmplX=-4.85396  (character-LEFT side)\n[sim] marker 'Right eye inner' tmplX=1.99773  (character-RIGHT side)\n[sim] marker 'Left eye inner' tmplX=-1.99773  (character-LEFT side)\n[sim] marker 'Right mouth corner' tmplX=2.42686  (character-RIGHT side)\n[sim] marker 'Left mouth corner' tmplX=-2.42686  (character-LEFT side)\n[sim] marker 'Upper lip' tmplX=-0.188159  (character-LEFT side)\n[sim] marker 'Lower lip' tmplX=0  (character-RIGHT side)\n[sim] marker 'Right brow' tmplX=4.58004  (character-RIGHT side)\n[sim] marker 'Left brow' tmplX=-4.58004  (character-LEFT side)\n[sim] marker 'Forehead' tmplX=0  (character-RIGHT side)\n[sim] diag: tmpl=47.5202 warped=0.437713 head=0.442902\n[sim] fit mean=0.0439179% max=1.28599%\n[sim] browInnerUp: nonZero=66295 maxDisp=0.00393594\n[sim] eyeBlinkLeft: nonZero=66263 maxDisp=0.00422667\n[sim] jawOpen: nonZero=68417 maxDisp=0.0270418\n[sim] mouthSmileLeft: nonZero=68404 maxDisp=0.00870063",
+    "parseError": true
+  },
+  "stdoutTail": "{\n    \"fit_max_residual_pct\": 1.2859923725902342,\n    \"fit_mean_residual_pct\": 0.04391793064178499,\n    \"output\": \"human-female-quality-20260921-f5-face2.glb\",\n    \"shapes_attached\": 51,\n    \"user_vertex_count\": 147707\n}\n\n",
+  "stderrTail": "1\n[facerig] detect view=right mode=shaded ok=1 conf=0.01 logit=-5.0\n[facerig] facing from SHADED detection (logit=14.1)\n[facerig] seed: ulm.ok=1 conf=1.00 13/13 detected, constellation residual 0.061 -> trusted\n[facerig] seed outlier 'Forehead' dev=0.005 (median 0.003) -> consensus\n[sim] markers=13 anchors=13 seedConfident=1\n[sim] surfdist 'Nose tip' = 0.0110848\n[sim] surfdist 'Chin' = 0.0111\n[sim] surfdist 'Right eye outer' = 0.0163883\n[sim] surfdist 'Left eye outer' = 0.0153015\n[sim] surfdist 'Right eye inner' = 0.0239796\n[sim] surfdist 'Left eye inner' = 0.0233813\n[sim] surfdist 'Right mouth corner' = 0.00838714\n[sim] surfdist 'Left mouth corner' = 0.00793111\n[sim] surfdist 'Upper lip' = 0.0030235\n[sim] surfdist 'Lower lip' = 0.00460012\n[sim] surfdist 'Right brow' = 0.00656468\n[sim] surfdist 'Left brow' = 0.00664414\n[sim] surfdist 'Forehead' = 0.00465332\n[sim] marker 'Nose tip' tmplX=0  (character-RIGHT side)\n[sim] marker 'Chin' tmplX=0  (character-RIGHT side)\n[sim] marker 'Right eye outer' tmplX=4.85396  (character-RIGHT side)\n[sim] marker 'Left eye outer' tmplX=-4.85396  (character-LEFT side)\n[sim] marker 'Right eye inner' tmplX=1.99773  (character-RIGHT side)\n[sim] marker 'Left eye inner' tmplX=-1.99773  (character-LEFT side)\n[sim] marker 'Right mouth corner' tmplX=2.42686  (character-RIGHT side)\n[sim] marker 'Left mouth corner' tmplX=-2.42686  (character-LEFT side)\n[sim] marker 'Upper lip' tmplX=-0.188159  (character-LEFT side)\n[sim] marker 'Lower lip' tmplX=0  (character-RIGHT side)\n[sim] marker 'Right brow' tmplX=4.58004  (character-RIGHT side)\n[sim] marker 'Left brow' tmplX=-4.58004  (character-LEFT side)\n[sim] marker 'Forehead' tmplX=0  (character-RIGHT side)\n[sim] diag: tmpl=47.5202 warped=0.437713 head=0.442902\n[sim] fit mean=0.0439179% max=1.28599%\n[sim] browInnerUp: nonZero=66295 maxDisp=0.00393594\n[sim] eyeBlinkLeft: nonZero=66263 maxDisp=0.00422667\n[sim] jawOpen: nonZero=68417 maxDisp=0.0270418\n[sim] mouthSmileLeft: nonZero=68404 maxDisp=0.00870063\n"
 }

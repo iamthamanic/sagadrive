@@ -61,7 +61,7 @@ Per run, emit `face-anchors.json` beside the face GLB (semantic mouth/eye/brow/n
 - Example fixture: `.qa/fixtures/liveact-face-anchors-v1/face-anchors.json`
 - Production path: `assets/species-3d/<species>/runs/<run-id>/face-anchors.json` (reference checksum in `run.json` when present)
 
-m5/f5 runs may stub an empty anchors file until QtMesh extraction lands; domain/runtime stay provider-neutral.
+Author `face-anchors.json` per run with `liveact-face-anchor-author.mjs` (morph-seeded heuristics on the published GLB). Validate with `liveact-face-asset-check.mjs --anchors …` (Semantic QA V2, #401).
 
 ---
 

@@ -1,0 +1,22 @@
+{
+  "provider": "qtmesh-facerig",
+  "repository": "fernandotonon/QtMeshEditor",
+  "commit": "8720dc91bd7426908b9218673fbd74d544dd908c",
+  "license": "MIT",
+  "bin": "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive/.qa/fixtures/liveact-face-authoring-qtmesh/fake-qtmesh-fail",
+  "binSource": "flag",
+  "argv": [
+    "facerig",
+    "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive/.qa/fixtures/liveact-face-authoring-qtmesh/input.glb",
+    "-o",
+    "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive/.qa/fixtures/liveact-face-authoring-qtmesh/run-fail/out.glb",
+    "--json"
+  ],
+  "exitCode": 7,
+  "report": {
+    "ok": false,
+    "error": "not a humanoid face"
+  },
+  "stdoutTail": "{\"ok\":false,\"error\":\"not a humanoid face\"}\n",
+  "stderrTail": ""
+}

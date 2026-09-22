@@ -1,0 +1,215 @@
+{
+  "contractVersion": "SagaDriveFaceAnchorsV1",
+  "anchors": {
+    "mouthUpper": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 92690,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "mouthLower": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 92712,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "mouthCornerLeft": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 124709,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "mouthCornerRight": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 92172,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "eyeLeftInner": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 134863,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeLeftOuter": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 151253,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeLeftUpper": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 151574,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "eyeLeftLower": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 125205,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeRightInner": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 106606,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "eyeRightOuter": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 84103,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeRightUpper": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 98798,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "eyeRightLower": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 93794,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "browLeftInner": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 106440,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "browLeftOuter": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 134891,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "browLeftCenter": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 134858,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "browRightInner": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 117087,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "browRightOuter": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 106587,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "browRightCenter": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 106463,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "noseTip": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 93722,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "chin": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 120658,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "forehead": {
+      "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 82389,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    }
+  }
+}

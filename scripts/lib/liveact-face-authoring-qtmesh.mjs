@@ -284,7 +284,16 @@ export async function runQtmeshFaceAuthoring(opts) {
       maxBuffer: 64 * 1024 * 1024,
       timeout: opts.timeoutMs ?? 30 * 60 * 1000,
       cwd: root,
-      env: { ...process.env, ...(opts.env || {}), QTMESH_NO_TELEMETRY: '1' },
+      env: {
+        ...process.env,
+        ...(opts.env || {}),
+        QTMESH_NO_TELEMETRY: '1',
+        QTMESH_FACERIG_DEBUG: process.env.QTMESH_FACERIG_DEBUG || opts.env?.QTMESH_FACERIG_DEBUG || '1',
+        QTMESH_FACERIG_MARKER_SIM:
+          process.env.QTMESH_FACERIG_MARKER_SIM ??
+          opts.env?.QTMESH_FACERIG_MARKER_SIM ??
+          '2',
+      },
     });
     stdout = String(result.stdout || '');
     stderr = String(result.stderr || '');
