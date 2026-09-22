@@ -58,5 +58,15 @@
     "skeletonJointCount": 1,
     "triangleCount": 1,
     "byteCount": 916
+  },
+  "semanticQa": {
+    "contractVersion": "SagaDriveLiveActFaceSemanticQaV1",
+    "profileVersion": "liveact-face-semantic-profile-v1",
+    "pass": true,
+    "skipped": true,
+    "skipReason": "no_anchors_manifest",
+    "channels": {},
+    "combinations": {},
+    "violations": []
   }
 }
