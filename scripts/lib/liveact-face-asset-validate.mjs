@@ -7,6 +7,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 import { validateBytes } from 'gltf-validator';
+import {
+  semanticQaSkippedResult,
+  validateLiveActFaceSemanticQa,
+} from './liveact-face-semantic-validate.mjs';
 
 export const FACE_INVENTORY_VERSION = 'SagaDriveLiveActFaceInventoryV1';
 
@@ -185,7 +189,7 @@ function khronosOk(report) {
 }
 
 /**
- * @param {{ inputPath: string, baselinePath: string, profile: 'core-v1'|'full-v1', outPath?: string }} opts
+ * @param {{ inputPath: string, baselinePath: string, profile: 'core-v1'|'full-v1', outPath?: string, anchorsPath?: string }} opts
  */
 export async function validateLiveActFaceAsset(opts) {
   const inputBytes = readFileSync(opts.inputPath);
@@ -230,6 +234,7 @@ export async function validateLiveActFaceAsset(opts) {
       skeletonJointCount: 0,
       triangleCount: 0,
       baselineStats: null,
+      semanticQa: semanticQaSkippedResult('glb_parse_failed'),
     };
     if (opts.outPath) writeFileSync(opts.outPath, JSON.stringify(inventory, null, 2));
     return { ok: false, inventory };
@@ -265,7 +270,24 @@ export async function validateLiveActFaceAsset(opts) {
   }
   sagaErrors.push(...preservationErrors);
 
-  const sagaPass = sagaErrors.length === 0;
+  const structuralPass = sagaErrors.length === 0;
+
+  let semanticQa;
+  if (opts.anchorsPath) {
+    semanticQa = await validateLiveActFaceSemanticQa(document, {
+      profile: opts.profile,
+      anchorsPath: opts.anchorsPath,
+      usableChannels: usableNames,
+    });
+  } else {
+    semanticQa = semanticQaSkippedResult('no_anchors_manifest');
+  }
+
+  const semanticBlocks = !semanticQa.skipped && semanticQa.pass === false;
+  if (semanticBlocks) {
+    sagaErrors.push('semantic_qa_failed');
+  }
+  const sagaPass = structuralPass && !semanticBlocks;
 
   const inventory = {
     version: FACE_INVENTORY_VERSION,
@@ -301,6 +323,7 @@ export async function validateLiveActFaceAsset(opts) {
       ...baseSnap,
       byteCount: baselineBytes.byteLength,
     },
+    semanticQa,
   };
 
   if (opts.outPath) writeFileSync(opts.outPath, JSON.stringify(inventory, null, 2));
@@ -308,17 +331,18 @@ export async function validateLiveActFaceAsset(opts) {
 }
 
 export function parseFaceAssetCheckArgs(argv) {
-  const args = { input: null, baseline: null, profile: 'core-v1', out: null };
+  const args = { input: null, baseline: null, profile: 'core-v1', out: null, anchors: null };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--input') args.input = argv[++i];
     else if (a === '--baseline') args.baseline = argv[++i];
     else if (a === '--profile') args.profile = argv[++i];
     else if (a === '--out') args.out = argv[++i];
+    else if (a === '--anchors') args.anchors = argv[++i];
   }
   if (!args.input || !args.baseline) {
     throw new Error(
-      'Usage: --input <glb> --baseline <glb> --profile <core-v1|full-v1> --out <json>',
+      'Usage: --input <glb> --baseline <glb> --profile <core-v1|full-v1> [--anchors <face-anchors.json>] --out <json>',
     );
   }
   if (args.profile !== 'core-v1' && args.profile !== 'full-v1') {

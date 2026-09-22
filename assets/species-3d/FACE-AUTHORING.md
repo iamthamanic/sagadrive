@@ -4,7 +4,7 @@
 **Licenses / notices:** `FACE-AUTHORING-THIRD-PARTY.md`  
 **Pinned upstream:** `fernandotonon/QtMeshEditor` @ `8720dc91bd7426908b9218673fbd74d544dd908c`  
 **SagaDrive contract:** `SagaDriveLiveActFaceAssetV1` (`core-v1` / `full-v1`) — #382  
-**Validator:** `scripts/liveact-face-asset-check.mjs` — #383  
+**Validator:** `scripts/liveact-face-asset-check.mjs` — #383 (+ semantic V2 #401 with `--anchors`)  
 
 QtMeshEditor is **not** a runtime dependency. Domain code must not name QtMeshEditor / ICT-FaceKit / Blender / Faceit.
 
@@ -74,7 +74,7 @@ Minimum in `run.json`:
 - `faceTemplate.provider` / `license` / `checksum`
 - `input` / `output` path + checksum
 - `faceRig.shapeCount` / `fitResidual` / `gazeMode` / profiles
-- `validation` Khronos + SagaDrive
+- `validation` Khronos + SagaDrive (+ `semanticQa` when `face-anchors.json` present)
 - `beforeAfter` bytes/triangles/morphs/skins/bones/materials/textures
 
 Example: `human/runs/quality-20260921-m5-face1/`.

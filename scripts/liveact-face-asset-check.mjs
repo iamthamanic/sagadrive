@@ -21,15 +21,23 @@ async function main() {
       baselinePath: args.baseline,
       profile: args.profile,
       outPath: args.out || undefined,
+      anchorsPath: args.anchors || undefined,
     });
     if (!result.ok) {
+      const semanticHint =
+        result.inventory.semanticQa?.violations?.length > 0
+          ? ` semantic=${result.inventory.semanticQa.violations.slice(0, 3).join(';')}`
+          : '';
       console.error(
-        `liveact-face-asset-check FAIL: ${result.inventory.sagaDrive.errors.join(', ')}`,
+        `liveact-face-asset-check FAIL: ${result.inventory.sagaDrive.errors.join(', ')}${semanticHint}`,
       );
       process.exit(1);
     }
+    const semanticStatus = result.inventory.semanticQa?.skipped
+      ? 'semantic=skipped'
+      : `semantic=pass`;
     console.log(
-      `liveact-face-asset-check OK profile=${args.profile} channels=${result.inventory.usableMorphCount}`,
+      `liveact-face-asset-check OK profile=${args.profile} channels=${result.inventory.usableMorphCount} ${semanticStatus}`,
     );
   } catch (err) {
     console.error(`liveact-face-asset-check FAIL: ${err instanceof Error ? err.message : err}`);
