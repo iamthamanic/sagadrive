@@ -1,0 +1,20 @@
+{
+  "version": "SagaDriveLiveActFaceInventoryV1",
+  "input": "minimal-humanoid-face.glb",
+  "profile": "core-v1",
+  "profileOk": true,
+  "structuralPass": true,
+  "gazeMode": "bones",
+  "presentChannels": [
+    "jawOpen",
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "eyeLookUpLeft"
+  ],
+  "supportedChannels": [
+    "jawOpen",
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "eyeLookUpLeft"
+  ]
+}
