@@ -66,6 +66,7 @@ export function LiveActViewportControls({
         onBonesChange={liveAct.setBonesEnabled}
         capabilities={capabilities}
         inputLive={inputLive}
+        diagnosticsV2Ref={liveAct.diagnosticsV2Ref}
         devices={liveAct.devices}
         selectedDeviceId={liveAct.selectedDeviceId}
         onDeviceChange={liveAct.setSelectedDeviceId}

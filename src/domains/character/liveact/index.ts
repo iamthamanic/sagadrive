@@ -95,6 +95,16 @@ export {
 } from './liveact-retarget-profile';
 
 export {
+  LIVEACT_EYE_LOOK_FACE_CHANNELS,
+  isLiveActEyeLookFaceChannel,
+  resolveLiveActGazeDrivePath,
+  liveActGazePathSkipsEyeLookMorphs,
+  liveActGazePathUsesPoseDriver,
+  type LiveActEyeLookFaceChannelId,
+  type LiveActGazeDrivePath,
+} from './liveact-gaze-path';
+
+export {
   LIVEACT_FACE_DIAGNOSTICS_VERSION,
   createEmptyLiveActFaceDiagnosticsFrame,
   assertLiveActFaceDiagnosticsLocalOnly,

@@ -1,5 +1,5 @@
 /**
- * Generic GLB LiveAct avatar output — rig bones + morph targets (#332, #397).
+ * Generic GLB LiveAct avatar output — rig bones + morph targets (#332, #397, #403).
  * Location: src/infrastructure/character/liveact/gltf-liveact-avatar-output.ts
  */
 
@@ -10,10 +10,15 @@ import {
   clampLiveActChannel,
   createLiveActAvatarCapabilities,
   createUnavailableLiveActAppliedValues,
+  isLiveActEyeLookFaceChannel,
+  liveActGazePathSkipsEyeLookMorphs,
+  liveActGazePathUsesPoseDriver,
+  resolveLiveActGazeDrivePath,
   type LiveActAvatarCapabilities,
   type LiveActDiagnosticsV2AppliedValues,
   type LiveActFaceChannelId,
   type LiveActFrameV1,
+  type LiveActGazeDrivePath,
 } from '../../../domains/character/liveact';
 import { resolveLiveActChannelTargets } from '../../../domains/character/liveact/liveact-channel-target-aliases';
 import type { LiveActAvatarOutput } from './liveact-avatar-output';
@@ -47,6 +52,7 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
   private readonly rightEyeBone: THREE.Object3D | null;
   private readonly leftEyeRest = new THREE.Quaternion();
   private readonly rightEyeRest = new THREE.Quaternion();
+  private readonly gazePath: LiveActGazeDrivePath;
   private disposed = false;
   private applied: LiveActDiagnosticsV2AppliedValues = createUnavailableLiveActAppliedValues();
 
@@ -55,15 +61,29 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
     const present = listLiveActMorphTargetNames(this.morphIndex);
     const resolution = resolveLiveActChannelTargets(present);
     this.resolved = resolution.resolvedNames;
-    this.faceSupported = new Set(
-      LIVEACT_FACE_CHANNELS.filter((id) => Boolean(this.resolved[id])),
-    );
 
     const eyes = resolveLiveActEyeBones(deps.root);
     this.leftEyeBone = eyes.left;
     this.rightEyeBone = eyes.right;
     if (this.leftEyeBone) this.leftEyeRest.copy(this.leftEyeBone.quaternion);
     if (this.rightEyeBone) this.rightEyeRest.copy(this.rightEyeBone.quaternion);
+
+    const hasEyeLookMorphs = LIVEACT_FACE_CHANNELS.some(
+      (id) => isLiveActEyeLookFaceChannel(id) && Boolean(this.resolved[id]),
+    );
+    this.gazePath = resolveLiveActGazeDrivePath({
+      hasEyeBones: Boolean(this.leftEyeBone && this.rightEyeBone),
+      hasLookAt: false,
+      hasEyeLookMorphs,
+    });
+    const skipEyeLook = liveActGazePathSkipsEyeLookMorphs(this.gazePath);
+    this.faceSupported = new Set(
+      LIVEACT_FACE_CHANNELS.filter((id) => {
+        if (!this.resolved[id]) return false;
+        if (skipEyeLook && isLiveActEyeLookFaceChannel(id)) return false;
+        return true;
+      }),
+    );
 
     this.avatarCapabilities = createLiveActAvatarCapabilities({
       headBone: Boolean(deps.headBone),
@@ -95,21 +115,44 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
       this.deps.headScratchEuler,
       this.deps.headScratchQuaternion,
     );
-    applyLiveActEyeBoneGaze(
-      this.leftEyeBone,
-      this.rightEyeBone,
-      this.leftEyeRest,
-      this.rightEyeRest,
-      frame.eyeLeft,
-      frame.eyeRight,
-      this.deps.headScratchEuler,
-      this.deps.headScratchQuaternion,
-    );
+    const usePoseGaze = liveActGazePathUsesPoseDriver(this.gazePath);
+    if (usePoseGaze) {
+      applyLiveActEyeBoneGaze(
+        this.leftEyeBone,
+        this.rightEyeBone,
+        this.leftEyeRest,
+        this.rightEyeRest,
+        frame.eyeLeft,
+        frame.eyeRight,
+        this.deps.headScratchEuler,
+        this.deps.headScratchQuaternion,
+      );
+    } else {
+      resetLiveActEyeBoneGaze(
+        this.leftEyeBone,
+        this.rightEyeBone,
+        this.leftEyeRest,
+        this.rightEyeRest,
+      );
+    }
 
+    const skipEyeLook = liveActGazePathSkipsEyeLookMorphs(this.gazePath);
     const faceApplied: Partial<Record<LiveActFaceChannelId, number>> = {};
     for (const id of LIVEACT_FACE_CHANNELS) {
       const targetName = this.resolved[id];
       if (!targetName) continue;
+      if (skipEyeLook && isLiveActEyeLookFaceChannel(id)) {
+        // Keep morphs at neutral when bones own gaze (#403 exclusivity).
+        const bindings = this.morphIndex.get(targetName);
+        if (bindings?.length) {
+          for (const binding of bindings) {
+            const influences = binding.mesh.morphTargetInfluences;
+            if (!influences) continue;
+            influences[binding.index] = 0;
+          }
+        }
+        continue;
+      }
       const bindings = this.morphIndex.get(targetName);
       if (!bindings?.length) continue;
       const weight = clampLiveActChannel(frame.face[id]);
@@ -123,8 +166,8 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
 
     this.applied = buildLiveActAppliedValuesFromFace({
       headSupported: Boolean(this.deps.headBone),
-      eyeLeftSupported: Boolean(this.leftEyeBone),
-      eyeRightSupported: Boolean(this.rightEyeBone),
+      eyeLeftSupported: usePoseGaze && Boolean(this.leftEyeBone),
+      eyeRightSupported: usePoseGaze && Boolean(this.rightEyeBone),
       faceSupported: this.faceSupported,
       face: faceApplied,
       head: frame.head,
@@ -168,10 +211,11 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
     for (const id of this.faceSupported) {
       face[id] = id === '_neutral' ? 1 : 0;
     }
+    const usePoseGaze = liveActGazePathUsesPoseDriver(this.gazePath);
     this.applied = buildLiveActAppliedValuesFromFace({
       headSupported: Boolean(this.deps.headBone),
-      eyeLeftSupported: Boolean(this.leftEyeBone),
-      eyeRightSupported: Boolean(this.rightEyeBone),
+      eyeLeftSupported: usePoseGaze && Boolean(this.leftEyeBone),
+      eyeRightSupported: usePoseGaze && Boolean(this.rightEyeBone),
       faceSupported: this.faceSupported,
       face,
       head: { yaw: 0, pitch: 0, roll: 0 },

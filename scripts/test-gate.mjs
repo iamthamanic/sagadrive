@@ -520,6 +520,14 @@ function checkLiveActRetargetProfile() {
   });
 }
 
+function checkLiveActFacialFidelityV2() {
+  console.log('LiveAct facial fidelity V2 (#403): exclusive gaze + channel table...');
+  execFileSync(process.execPath, ['scripts/liveact-facial-fidelity-v2-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFacePipelineDocs() {
   console.log('LiveAct face pipeline docs (#386): AUTHORING v1.1 + FACE-AUTHORING...');
   execFileSync(process.execPath, ['scripts/liveact-face-pipeline-doc-check.mjs'], {
@@ -1307,6 +1315,7 @@ checkLiveActFaceAssetValidator();
 checkLiveActFaceSemanticValidator();
 checkLiveActFaceAuthoringQtmesh();
 checkLiveActRetargetProfile();
+checkLiveActFacialFidelityV2();
 checkLiveActFacePipelineDocs();
 checkLiveActFaceHumanRepro();
 checkLiveActRigDebug();
