@@ -432,6 +432,14 @@ function checkLiveActFaceDiagnostics() {
   });
 }
 
+function checkLiveActDiagnosticsV2() {
+  console.log('LiveAct diagnostics V2 (#397): RAW→APPLIED stage trace...');
+  execFileSync(process.execPath, ['scripts/liveact-diagnostics-v2-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActAvatarOutput() {
   console.log('LiveAct avatar output (#332): VRM/GLB atomic frame apply...');
   execFileSync(process.execPath, ['scripts/liveact-avatar-output-check.mjs'], {
@@ -1256,6 +1264,7 @@ checkAvatarFaceTracking();
 checkLiveActCore();
 checkLiveActViewportUi();
 checkLiveActFaceDiagnostics();
+checkLiveActDiagnosticsV2();
 checkLiveActAvatarOutput();
 checkLiveActCapabilityOwnership();
 checkLiveActFaceAssetContract();

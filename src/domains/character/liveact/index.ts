@@ -104,6 +104,27 @@ export {
 } from './liveact-face-diagnostics';
 
 export {
+  LIVEACT_DIAGNOSTICS_V2_VERSION,
+  LIVEACT_DIAGNOSTICS_V2_STAGES,
+  LIVEACT_DIAGNOSTICS_V2_SIGNAL_KEYS,
+  snapshotLiveActDiagnosticsV2FromSample,
+  snapshotLiveActDiagnosticsV2FromFrame,
+  createUnavailableLiveActAppliedValues,
+  createNeutralLiveActAppliedValues,
+  buildLiveActAppliedValuesFromFace,
+  createLiveActDiagnosticsV2Snapshot,
+  assertLiveActDiagnosticsV2LocalOnly,
+  liveActFaceChannelsToPartial,
+  type LiveActDiagnosticsV2StageId,
+  type LiveActDiagnosticsV2SignalKey,
+  type LiveActAppliedSignalStatus,
+  type LiveActAppliedSignalV1,
+  type LiveActDiagnosticsV2StageValues,
+  type LiveActDiagnosticsV2AppliedValues,
+  type LiveActDiagnosticsV2Snapshot,
+} from './liveact-diagnostics-v2';
+
+export {
   LIVEACT_CALIBRATION_FRAME_TARGET,
   LIVEACT_CALIBRATION_TIMEOUT_MS,
   createLiveActCalibrationAccumulator,
