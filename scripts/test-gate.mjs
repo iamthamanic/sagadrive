@@ -536,6 +536,14 @@ function checkAvatarVrmPack() {
   });
 }
 
+function checkLiveActFaceFidelityE2E() {
+  console.log('LiveAct face fidelity E2E (#406): aggregate VRM runtime gate...');
+  execFileSync(process.execPath, ['scripts/liveact-face-fidelity-e2e-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFacePipelineDocs() {
   console.log('LiveAct face pipeline docs (#386): AUTHORING v1.1 + FACE-AUTHORING...');
   execFileSync(process.execPath, ['scripts/liveact-face-pipeline-doc-check.mjs'], {
@@ -1325,6 +1333,7 @@ checkLiveActFaceAuthoringQtmesh();
 checkLiveActRetargetProfile();
 checkLiveActFacialFidelityV2();
 checkAvatarVrmPack();
+checkLiveActFaceFidelityE2E();
 checkLiveActFacePipelineDocs();
 checkLiveActFaceHumanRepro();
 checkLiveActRigDebug();
