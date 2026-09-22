@@ -132,6 +132,7 @@ export {
 
 export {
   LIVEACT_FACE_METRIC_LANDMARK_INDICES,
+  buildLiveActFaceLandmarksFromAnchorScreenPoints,
   computeLiveActFaceMetrics,
   formatLiveActMetric,
   liveActRadiansToDegrees,

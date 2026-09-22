@@ -8,6 +8,7 @@
 import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
 import { AvatarPreviewSettings } from '../avatar/AvatarPreviewSettings';
 import { LiveActCameraPreview } from './LiveActCameraPreview';
+import { LiveActCharacterFaceOverlay } from './LiveActCharacterFaceOverlay';
 import type { UseLiveActViewportResult } from './useLiveActViewport';
 
 interface LiveActViewportControlsProps {
@@ -16,6 +17,7 @@ interface LiveActViewportControlsProps {
   onMtoonChange: (enabled: boolean) => void;
   liveAct: UseLiveActViewportResult;
   capabilities: LiveActCapabilitiesV1 | null;
+  characterFaceMappingAvailable: boolean;
 }
 
 export function LiveActViewportControls({
@@ -24,7 +26,10 @@ export function LiveActViewportControls({
   onMtoonChange,
   liveAct,
   capabilities,
+  characterFaceMappingAvailable,
 }: LiveActViewportControlsProps) {
+  const characterOverlayOn =
+    liveAct.faceOverlayEnabled && runtimeReady && characterFaceMappingAvailable;
   const inputLive =
     runtimeReady &&
     liveAct.trackingEnabled &&
@@ -38,6 +43,11 @@ export function LiveActViewportControls({
 
   return (
     <>
+      <LiveActCharacterFaceOverlay
+        enabled={characterOverlayOn}
+        metricsEnabled={liveAct.metricsEnabled}
+        debugHandleRef={liveAct.characterFaceDebugHandleRef}
+      />
       <AvatarPreviewSettings
         runtimeReady={runtimeReady}
         mtoonEnabled={mtoonEnabled}
@@ -48,6 +58,7 @@ export function LiveActViewportControls({
         onCameraPreviewChange={liveAct.setCameraPreviewEnabled}
         faceOverlayEnabled={liveAct.faceOverlayEnabled}
         onFaceOverlayChange={liveAct.setFaceOverlayEnabled}
+        characterFaceMappingAvailable={characterFaceMappingAvailable}
         metricsEnabled={liveAct.metricsEnabled}
         onMetricsChange={liveAct.setMetricsEnabled}
         bonesEnabled={liveAct.bonesEnabled}

@@ -78,6 +78,7 @@ export function AvatarSurfaceViewer({
   const [liveActCapabilities, setLiveActCapabilities] = useState<LiveActCapabilitiesV1 | null>(
     null,
   );
+  const [characterFaceMappingAvailable, setCharacterFaceMappingAvailable] = useState(false);
   const checkedRef = useRef(false);
 
   const handleMtoonState = useRef(
@@ -144,6 +145,42 @@ export function AvatarSurfaceViewer({
     modelEpoch,
     liveAct.bonesEnabled,
     liveAct.bonesAvailable,
+  ]);
+
+  useEffect(() => {
+    const runtime = studioRuntimeRef.current;
+    if (!runtimeReady || !runtime) {
+      setCharacterFaceMappingAvailable(false);
+      liveAct.characterFaceDebugHandleRef.current = null;
+      studioRuntimeRef.current?.setLiveActCharacterFaceDebugEnabled(false);
+      return;
+    }
+    const syncMapping = (): void => {
+      liveAct.characterFaceDebugHandleRef.current = runtime.getLiveActCharacterFaceDebugHandle();
+      setCharacterFaceMappingAvailable(runtime.hasLiveActCharacterFaceMapping());
+    };
+    syncMapping();
+    const timer = window.setTimeout(syncMapping, 900);
+    return () => window.clearTimeout(timer);
+  }, [runtimeReady, modelEpoch, liveAct.characterFaceDebugHandleRef]);
+
+  useEffect(() => {
+    if (!isEditorSurface || !runtimeReady) {
+      studioRuntimeRef.current?.setLiveActCharacterFaceDebugEnabled(false);
+      return;
+    }
+    const enabled =
+      liveAct.faceOverlayEnabled &&
+      characterFaceMappingAvailable &&
+      liveAct.trackingEnabled;
+    studioRuntimeRef.current?.setLiveActCharacterFaceDebugEnabled(enabled);
+  }, [
+    isEditorSurface,
+    runtimeReady,
+    modelEpoch,
+    liveAct.faceOverlayEnabled,
+    liveAct.trackingEnabled,
+    characterFaceMappingAvailable,
   ]);
 
   useEffect(() => {
@@ -218,6 +255,7 @@ export function AvatarSurfaceViewer({
                   }}
                   liveAct={liveAct}
                   capabilities={liveActCapabilities}
+                  characterFaceMappingAvailable={characterFaceMappingAvailable}
                 />
               </div>
             </div>
@@ -250,6 +288,7 @@ export function AvatarSurfaceViewer({
               onMtoonChange={setMtoonEnabled}
               liveAct={liveAct}
               capabilities={null}
+              characterFaceMappingAvailable={false}
             />
           ) : null}
         </div>

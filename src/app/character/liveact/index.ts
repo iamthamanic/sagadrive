@@ -5,6 +5,7 @@
 
 export { LiveActCameraPreview } from './LiveActCameraPreview';
 export { LiveActFaceOverlay } from './LiveActFaceOverlay';
+export { LiveActCharacterFaceOverlay } from './LiveActCharacterFaceOverlay';
 export { LiveActSurfaceControls } from './LiveActSurfaceControls';
 export { LiveActViewportControls } from './LiveActViewportControls';
 export {

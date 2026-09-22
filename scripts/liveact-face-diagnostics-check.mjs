@@ -65,7 +65,7 @@ check(/subscribeDiagnostics/.test(hook), 'hook binds diagnostics ref');
 check(/calibrateNeutral/.test(hook), 'hook exposes calibrate');
 check(/canCalibrate/.test(hook), 'hook calibrate guard');
 
-check(/Landmarks über PiP/.test(settings), 'face overlay enabled copy DE');
+check(/Kamera-PiP \+ Character-Mesh/.test(settings), 'face overlay enabled copy DE');
 check(/liveact-calibrate/.test(settings), 'calibrate control');
 check(!/Bald \(3\/7\)/.test(settings), 'face overlay no longer stub');
 
