@@ -48,6 +48,8 @@ export interface UseLiveActViewportResult {
   setCameraPreviewEnabled: (enabled: boolean) => void;
   faceOverlayEnabled: boolean;
   setFaceOverlayEnabled: (enabled: boolean) => void;
+  metricsEnabled: boolean;
+  setMetricsEnabled: (enabled: boolean) => void;
   bonesEnabled: boolean;
   setBonesEnabled: (enabled: boolean) => void;
   /** Loaded model has a skinned skeleton for Character Bones overlay. */
@@ -94,6 +96,8 @@ export function useLiveActViewport({
   const [trackingEnabled, setTrackingEnabledState] = useState(false);
   const [cameraPreviewEnabled, setCameraPreviewEnabled] = useState(true);
   const [faceOverlayEnabled, setFaceOverlayEnabled] = useState(false);
+  /** Session-local; initial true; independent of face overlay (#398). */
+  const [metricsEnabled, setMetricsEnabled] = useState(true);
   const [bonesEnabled, setBonesEnabledState] = useState(false);
   const [bonesAvailable, setBonesAvailable] = useState(false);
   const [status, setStatus] = useState<LiveActStatus>('idle');
@@ -314,6 +318,8 @@ export function useLiveActViewport({
     setCameraPreviewEnabled,
     faceOverlayEnabled,
     setFaceOverlayEnabled,
+    metricsEnabled,
+    setMetricsEnabled,
     bonesEnabled,
     setBonesEnabled,
     bonesAvailable,

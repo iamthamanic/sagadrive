@@ -48,6 +48,8 @@ export function LiveActViewportControls({
         onCameraPreviewChange={liveAct.setCameraPreviewEnabled}
         faceOverlayEnabled={liveAct.faceOverlayEnabled}
         onFaceOverlayChange={liveAct.setFaceOverlayEnabled}
+        metricsEnabled={liveAct.metricsEnabled}
+        onMetricsChange={liveAct.setMetricsEnabled}
         bonesEnabled={liveAct.bonesEnabled}
         bonesAvailable={liveAct.bonesAvailable}
         onBonesChange={liveAct.setBonesEnabled}
@@ -74,7 +76,9 @@ export function LiveActViewportControls({
         status={liveAct.status}
         visible={showPip}
         faceOverlayEnabled={liveAct.faceOverlayEnabled}
+        metricsEnabled={liveAct.metricsEnabled}
         diagnosticsRef={liveAct.diagnosticsRef}
+        diagnosticsV2Ref={liveAct.diagnosticsV2Ref}
       />
     </>
   );

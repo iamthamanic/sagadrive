@@ -35,10 +35,12 @@ test('Character Editor LiveAct gear toggles with fake camera', async ({ page }) 
   const trackingToggle = page.getByTestId('liveact-tracking-toggle');
   const pipToggle = page.getByTestId('liveact-camera-preview-toggle');
   const faceOverlayToggle = page.getByTestId('liveact-face-overlay-toggle');
+  const metricsToggle = page.getByTestId('liveact-face-metrics-toggle');
   const bonesToggle = page.getByTestId('liveact-bones-toggle');
   await expect(trackingToggle).toBeVisible();
   await expect(pipToggle).toBeVisible();
   await expect(faceOverlayToggle).toBeVisible();
+  await expect(metricsToggle).toBeVisible();
   await expect(bonesToggle).toBeVisible();
   await expect(page.getByTestId('liveact-calibrate')).toBeVisible();
 
@@ -64,6 +66,9 @@ test('Character Editor LiveAct gear toggles with fake camera', async ({ page }) 
   await trackingToggle.click();
 
   await faceOverlayToggle.click();
+  await expect(metricsToggle).toBeEnabled();
+  await metricsToggle.click();
+  await metricsToggle.click();
   await pipToggle.click();
   await pipToggle.click();
 
