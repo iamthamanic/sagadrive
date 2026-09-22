@@ -1,6 +1,6 @@
 # Composition Gate — liveact-face-anchor-ground-truth
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 0c475b2a0ddbe6b2c64db824fa7f3c07073c493a
 - Date: 2026-09-22
 - Verdict: SKIPPED
 
