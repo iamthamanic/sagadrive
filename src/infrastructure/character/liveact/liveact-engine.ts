@@ -14,11 +14,14 @@ import {
   assertLiveActFrameLocalOnly,
   applyLiveActRetargetProfile,
   DEFAULT_LIVEACT_RETARGET_PROFILE,
+  assertLiveActDiagnosticsV2LocalOnly,
   createEmptyLiveActFaceDiagnosticsFrame,
   createEmptyLiveActSourceSample,
   createLiveActCalibrationAccumulator,
+  createLiveActDiagnosticsV2Snapshot,
   createLiveActInputCapabilities,
   createNeutralLiveActFrame,
+  createUnavailableLiveActAppliedValues,
   finalizeLiveActCalibration,
   liveActStatusLabelDe,
   mapLiveActSourceSample,
@@ -28,7 +31,10 @@ import {
   shouldDropLiveActInferenceTick,
   shouldThrottleLiveActUiStatus,
   smoothLiveActFrame,
+  snapshotLiveActDiagnosticsV2FromFrame,
+  snapshotLiveActDiagnosticsV2FromSample,
   type LiveActCalibrationAccumulator,
+  type LiveActDiagnosticsV2Snapshot,
   type LiveActFaceDiagnosticsFrameV1,
   type LiveActFrameV1,
   type LiveActInputCapabilities,
@@ -71,6 +77,7 @@ export interface LiveActEngineState {
 export type LiveActStatusListener = (state: LiveActEngineState) => void;
 export type LiveActFrameListener = (frame: LiveActFrameV1) => void;
 export type LiveActDiagnosticsListener = (frame: LiveActFaceDiagnosticsFrameV1) => void;
+export type LiveActDiagnosticsV2Listener = (snapshot: LiveActDiagnosticsV2Snapshot) => void;
 
 function isMobileHint(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -103,6 +110,8 @@ export class LiveActEngine {
   private readonly statusListeners = new Set<LiveActStatusListener>();
   private readonly frameListeners = new Set<LiveActFrameListener>();
   private readonly diagnosticsListeners = new Set<LiveActDiagnosticsListener>();
+  private readonly diagnosticsV2Listeners = new Set<LiveActDiagnosticsV2Listener>();
+  private diagnosticsV2: LiveActDiagnosticsV2Snapshot | null = null;
   private neutralBaseline: LiveActNeutralBaselineV1 | null = null;
   private calibrating = false;
   private calibrationAccumulator: LiveActCalibrationAccumulator = createLiveActCalibrationAccumulator();
@@ -142,6 +151,10 @@ export class LiveActEngine {
 
   bindOutput(output: LiveActAvatarOutput | null): void {
     this.output = output;
+    // Model swap must not leak prior applied values into the next adapter generation.
+    if (!output) {
+      this.diagnosticsV2 = null;
+    }
   }
 
   /** First-party retarget profile (identity by default; no filename-based selection). */
@@ -170,6 +183,19 @@ export class LiveActEngine {
     return () => {
       this.diagnosticsListeners.delete(listener);
     };
+  }
+
+  /** Diagnostics V2 stage trace (#397) — ref-friendly; no hot-path React state. */
+  subscribeDiagnosticsV2(listener: LiveActDiagnosticsV2Listener): () => void {
+    this.diagnosticsV2Listeners.add(listener);
+    if (this.diagnosticsV2) listener(this.diagnosticsV2);
+    return () => {
+      this.diagnosticsV2Listeners.delete(listener);
+    };
+  }
+
+  getDiagnosticsV2(): LiveActDiagnosticsV2Snapshot | null {
+    return this.diagnosticsV2;
   }
 
   getState(): LiveActEngineState {
@@ -353,6 +379,7 @@ export class LiveActEngine {
     this.cancelLoop();
     this.cleanupMedia();
     this.frame = null;
+    this.diagnosticsV2 = null;
     this.output?.resetLiveActPose();
     this.releaseActiveClaim();
     this.setStatus('stopped', liveActStatusLabelDe('stopped'));
@@ -367,10 +394,12 @@ export class LiveActEngine {
     this.cancelLoop();
     this.cleanupMedia();
     this.frame = null;
+    this.diagnosticsV2 = null;
     this.output = null;
     this.statusListeners.clear();
     this.frameListeners.clear();
     this.diagnosticsListeners.clear();
+    this.diagnosticsV2Listeners.clear();
     this.releaseActiveClaim();
     this.setStatus('idle', liveActStatusLabelDe('idle'));
     this.setCalibrationUi('idle', '');
@@ -449,13 +478,32 @@ export class LiveActEngine {
 
     this.tickCalibration(sample);
 
-    let frame = smoothLiveActFrame(this.frame, mapped, this.limits.smooth);
-    frame = applyLiveActNeutralBaseline(frame, this.neutralBaseline, this.limits);
-    assertLiveActFrameLocalOnly(frame);
-    this.frame = frame;
-    const outputFrame = applyLiveActRetargetProfile(frame, this.retargetProfile);
-    this.output?.applyLiveActFrame(outputFrame);
-    this.emitFrame(frame);
+    const smoothed = smoothLiveActFrame(this.frame, mapped, this.limits.smooth);
+    const calibrated = applyLiveActNeutralBaseline(smoothed, this.neutralBaseline, this.limits);
+    assertLiveActFrameLocalOnly(calibrated);
+    this.frame = calibrated;
+    const retargeted = applyLiveActRetargetProfile(calibrated, this.retargetProfile);
+    this.output?.applyLiveActFrame(retargeted);
+    this.emitFrame(calibrated);
+
+    const applied = this.output
+      ? this.output.getAppliedDiagnostics()
+      : createUnavailableLiveActAppliedValues();
+
+    const diagnosticsV2 = createLiveActDiagnosticsV2Snapshot({
+      timestampMs,
+      sequence: this.sequence,
+      trackingLost: mapped.trackingLost,
+      raw: snapshotLiveActDiagnosticsV2FromSample(sample),
+      mapped: snapshotLiveActDiagnosticsV2FromFrame(mapped),
+      smoothed: snapshotLiveActDiagnosticsV2FromFrame(smoothed),
+      calibrated: snapshotLiveActDiagnosticsV2FromFrame(calibrated),
+      retargeted: snapshotLiveActDiagnosticsV2FromFrame(retargeted),
+      applied,
+    });
+    assertLiveActDiagnosticsV2LocalOnly(diagnosticsV2);
+    this.diagnosticsV2 = diagnosticsV2;
+    this.emitDiagnosticsV2(diagnosticsV2);
 
     const diagnostics: LiveActFaceDiagnosticsFrameV1 = diagnosticsSeed
       ? {
@@ -480,7 +528,7 @@ export class LiveActEngine {
       this.emitStatus(false);
     }
 
-    return frame;
+    return calibrated;
   }
 
   private async openCameraStream(): Promise<MediaStream> {
@@ -694,6 +742,12 @@ export class LiveActEngine {
   private emitDiagnostics(frame: LiveActFaceDiagnosticsFrameV1): void {
     for (const listener of this.diagnosticsListeners) {
       listener(frame);
+    }
+  }
+
+  private emitDiagnosticsV2(snapshot: LiveActDiagnosticsV2Snapshot): void {
+    for (const listener of this.diagnosticsV2Listeners) {
+      listener(snapshot);
     }
   }
 }

@@ -12,6 +12,7 @@ import {
   liveActStatusLabelDe,
   type LiveActAvatarCapabilities,
   type LiveActCapabilitiesV1,
+  type LiveActDiagnosticsV2Snapshot,
   type LiveActFaceDiagnosticsFrameV1,
   type LiveActStatus,
 } from '../../../domains/character/liveact';
@@ -71,6 +72,8 @@ export interface UseLiveActViewportResult {
   /** Composed Input×Avatar matrix for Capability Inspector (#381). */
   composedCapabilities: LiveActCapabilitiesV1 | null;
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
+  /** Diagnostics V2 stage trace (#397) — ref only, never React state per frame. */
+  diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
   engineRef: RefObject<LiveActEngine | null>;
 }
 
@@ -87,6 +90,7 @@ export function useLiveActViewport({
   const getBonesRef = useRef(getBonesAvailable);
   getBonesRef.current = getBonesAvailable;
   const diagnosticsRef = useRef<LiveActFaceDiagnosticsFrameV1 | null>(null);
+  const diagnosticsV2Ref = useRef<LiveActDiagnosticsV2Snapshot | null>(null);
   const [trackingEnabled, setTrackingEnabledState] = useState(false);
   const [cameraPreviewEnabled, setCameraPreviewEnabled] = useState(true);
   const [faceOverlayEnabled, setFaceOverlayEnabled] = useState(false);
@@ -194,12 +198,17 @@ export function useLiveActViewport({
     const unsubDiagnostics = engine.subscribeDiagnostics((frame) => {
       diagnosticsRef.current = frame;
     });
+    const unsubDiagnosticsV2 = engine.subscribeDiagnosticsV2((snapshot) => {
+      diagnosticsV2Ref.current = snapshot;
+    });
     return () => {
       unsubStatus();
       unsubDiagnostics();
+      unsubDiagnosticsV2();
       releaseSharedLiveActEngine();
       engineRef.current = null;
       diagnosticsRef.current = null;
+      diagnosticsV2Ref.current = null;
       setPreviewVideo(null);
       setComposedCapabilities(null);
     };
@@ -327,6 +336,7 @@ export function useLiveActViewport({
     calibrateNeutral,
     composedCapabilities,
     diagnosticsRef,
+    diagnosticsV2Ref,
     engineRef,
   };
 }

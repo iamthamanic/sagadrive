@@ -1,14 +1,16 @@
 /**
- * LiveAct avatar output port + factory (#329, #332).
+ * LiveAct avatar output port + factory (#329, #332, #397).
  * Location: src/infrastructure/character/liveact/liveact-avatar-output.ts
  *
  * Concrete VRM/GLB adapters apply atomic LiveActFrameV1 without exclusive facial-layer wipes.
+ * Diagnostics V2 reads APPLIED via getAppliedDiagnostics().
  */
 
 import * as THREE from 'three';
 import type { VRM } from '@pixiv/three-vrm';
 import type {
   LiveActAvatarCapabilities,
+  LiveActDiagnosticsV2AppliedValues,
   LiveActFrameV1,
 } from '../../../domains/character/liveact';
 import { GltfLiveActAvatarOutput } from './gltf-liveact-avatar-output';
@@ -19,6 +21,11 @@ export interface LiveActAvatarOutput {
   resetLiveActPose(): void;
   /** Asset/bone/morph support only — never camera/input flags (#381). */
   getAvatarCapabilities(): LiveActAvatarCapabilities;
+  /**
+   * Read-only APPLIED stage for Diagnostics V2 (#397).
+   * Reflects values actually written by the last apply/reset — not desired retarget.
+   */
+  getAppliedDiagnostics(): LiveActDiagnosticsV2AppliedValues;
   dispose(): void;
 }
 

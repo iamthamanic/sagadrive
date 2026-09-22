@@ -1,14 +1,17 @@
 /**
- * Generic GLB LiveAct avatar output — rig bones + morph targets (#332).
+ * Generic GLB LiveAct avatar output — rig bones + morph targets (#332, #397).
  * Location: src/infrastructure/character/liveact/gltf-liveact-avatar-output.ts
  */
 
 import * as THREE from 'three';
 import {
   LIVEACT_FACE_CHANNELS,
+  buildLiveActAppliedValuesFromFace,
   clampLiveActChannel,
   createLiveActAvatarCapabilities,
+  createUnavailableLiveActAppliedValues,
   type LiveActAvatarCapabilities,
+  type LiveActDiagnosticsV2AppliedValues,
   type LiveActFaceChannelId,
   type LiveActFrameV1,
 } from '../../../domains/character/liveact';
@@ -38,18 +41,23 @@ export interface GltfLiveActAvatarOutputDeps {
 export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
   private readonly morphIndex: LiveActMorphTargetIndex;
   private readonly resolved: Readonly<Partial<Record<LiveActFaceChannelId, string>>>;
+  private readonly faceSupported: ReadonlySet<LiveActFaceChannelId>;
   private readonly avatarCapabilities: LiveActAvatarCapabilities;
   private readonly leftEyeBone: THREE.Object3D | null;
   private readonly rightEyeBone: THREE.Object3D | null;
   private readonly leftEyeRest = new THREE.Quaternion();
   private readonly rightEyeRest = new THREE.Quaternion();
   private disposed = false;
+  private applied: LiveActDiagnosticsV2AppliedValues = createUnavailableLiveActAppliedValues();
 
   constructor(private readonly deps: GltfLiveActAvatarOutputDeps) {
     this.morphIndex = buildLiveActMorphTargetIndex(deps.root);
     const present = listLiveActMorphTargetNames(this.morphIndex);
     const resolution = resolveLiveActChannelTargets(present);
     this.resolved = resolution.resolvedNames;
+    this.faceSupported = new Set(
+      LIVEACT_FACE_CHANNELS.filter((id) => Boolean(this.resolved[id])),
+    );
 
     const eyes = resolveLiveActEyeBones(deps.root);
     this.leftEyeBone = eyes.left;
@@ -63,10 +71,15 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
       rightEyeBone: Boolean(this.rightEyeBone),
       avatarFace: resolution.faceSupport,
     });
+    this.recordNeutralApplied();
   }
 
   getAvatarCapabilities(): LiveActAvatarCapabilities {
     return this.avatarCapabilities;
+  }
+
+  getAppliedDiagnostics(): LiveActDiagnosticsV2AppliedValues {
+    return this.applied;
   }
 
   applyLiveActFrame(frame: LiveActFrameV1): void {
@@ -93,6 +106,7 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
       this.deps.headScratchQuaternion,
     );
 
+    const faceApplied: Partial<Record<LiveActFaceChannelId, number>> = {};
     for (const id of LIVEACT_FACE_CHANNELS) {
       const targetName = this.resolved[id];
       if (!targetName) continue;
@@ -104,7 +118,20 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
         if (!influences) continue;
         influences[binding.index] = weight;
       }
+      faceApplied[id] = weight;
     }
+
+    this.applied = buildLiveActAppliedValuesFromFace({
+      headSupported: Boolean(this.deps.headBone),
+      eyeLeftSupported: Boolean(this.leftEyeBone),
+      eyeRightSupported: Boolean(this.rightEyeBone),
+      faceSupported: this.faceSupported,
+      face: faceApplied,
+      head: frame.head,
+      eyeLeft: frame.eyeLeft,
+      eyeRight: frame.eyeRight,
+      mode: 'driven',
+    });
   }
 
   resetLiveActPose(): void {
@@ -127,10 +154,30 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
         influences[binding.index] = neutral;
       }
     }
+    this.recordNeutralApplied();
   }
 
   dispose(): void {
     this.disposed = true;
     this.resetLiveActPose();
+    this.applied = createUnavailableLiveActAppliedValues();
+  }
+
+  private recordNeutralApplied(): void {
+    const face: Partial<Record<LiveActFaceChannelId, number>> = {};
+    for (const id of this.faceSupported) {
+      face[id] = id === '_neutral' ? 1 : 0;
+    }
+    this.applied = buildLiveActAppliedValuesFromFace({
+      headSupported: Boolean(this.deps.headBone),
+      eyeLeftSupported: Boolean(this.leftEyeBone),
+      eyeRightSupported: Boolean(this.rightEyeBone),
+      faceSupported: this.faceSupported,
+      face,
+      head: { yaw: 0, pitch: 0, roll: 0 },
+      eyeLeft: { x: 0, y: 0 },
+      eyeRight: { x: 0, y: 0 },
+      mode: 'neutral',
+    });
   }
 }
