@@ -54,6 +54,9 @@ interface AvatarPreviewSettingsProps {
   onCalibrate: () => void;
   calibrationMessage: string;
   hasNeutralBaseline: boolean;
+  /** Face Setup authoring session open (#420). */
+  faceMappingOpen?: boolean;
+  onOpenFaceMapping?: () => void;
 }
 
 export function AvatarPreviewSettings({
@@ -88,6 +91,8 @@ export function AvatarPreviewSettings({
   onCalibrate,
   calibrationMessage,
   hasNeutralBaseline,
+  faceMappingOpen = false,
+  onOpenFaceMapping,
 }: AvatarPreviewSettingsProps) {
   const [open, setOpen] = useState(false);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -291,6 +296,26 @@ export function AvatarPreviewSettings({
                 }
                 data-testid="liveact-bones-toggle"
               />
+            </div>
+
+            <div className="mt-2 border-t border-white/10 pt-2" data-testid="face-setup-section">
+              <p className="px-1 pb-1 text-[11px] font-medium text-slate-300">Face Setup</p>
+              <p className="px-1 pb-1.5 text-[10px] text-slate-400">
+                Manuelles Mesh-Mapping der 21 Face-Anchors (session-lokal).
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                className="mx-1 mb-1 h-8 w-[calc(100%-0.5rem)] bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground"
+                disabled={actionsDisabled || faceMappingOpen || !onOpenFaceMapping}
+                onClick={() => {
+                  onOpenFaceMapping?.();
+                  setOpen(false);
+                }}
+                data-testid="face-mapping-open"
+              >
+                Face Mapping öffnen
+              </Button>
             </div>
 
             <div className="mt-2 border-t border-white/10 pt-2">

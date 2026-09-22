@@ -71,6 +71,8 @@ export interface LiveActCharacterFaceDebugHandle {
 export interface LiveActCharacterFaceDebugController {
   bindModelRoot(root: THREE.Object3D | null): void;
   bindManifest(manifest: SagaDriveFaceAnchorsManifestV1 | null): void;
+  /** Currently bound manifest (session-local; may be null). */
+  getManifest(): SagaDriveFaceAnchorsManifestV1 | null;
   setEnabled(enabled: boolean): void;
   isEnabled(): boolean;
   isMappingAvailable(): boolean;
@@ -294,6 +296,9 @@ export function createLiveActCharacterFaceDebugController(deps: {
     },
     bindManifest(next) {
       manifest = next;
+    },
+    getManifest() {
+      return manifest;
     },
     setEnabled(next) {
       enabled = next;

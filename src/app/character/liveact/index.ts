@@ -8,6 +8,8 @@ export { LiveActFaceOverlay } from './LiveActFaceOverlay';
 export { LiveActCharacterFaceOverlay } from './LiveActCharacterFaceOverlay';
 export { LiveActSurfaceControls } from './LiveActSurfaceControls';
 export { LiveActViewportControls } from './LiveActViewportControls';
+export { FaceMappingAuthoringPanel } from './FaceMappingAuthoringPanel';
+export { FaceMappingMarkerLayer } from './FaceMappingMarkerLayer';
 export {
   acquireSharedLiveActEngine,
   getSharedLiveActEngine,

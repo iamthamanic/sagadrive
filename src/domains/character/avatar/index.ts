@@ -768,6 +768,27 @@ export {
   type FaceMappingAuthoringValidationResult,
   type SagaDriveFaceMappingAuthoringV1,
 } from './face-mapping-authoring-contract';
+export {
+  FACE_MAPPING_ANCHOR_LABEL_DE,
+  FACE_MAPPING_DRAFT_CONTRACT_VERSION,
+  FACE_MAPPING_MARKER_GROUP_DEFS,
+  FACE_MAPPING_MARKER_GROUPS,
+  FACE_MAPPING_MARKER_STATUSES,
+  clearFaceMappingDraftBinding,
+  createEmptyFaceMappingDraft,
+  faceMappingDraftToManifest,
+  resetFaceMappingDraft,
+  resolveFaceMappingMarkerStatus,
+  selectFaceMappingAnchor,
+  setFaceMappingDraftBinding,
+  validateFaceMappingDraft,
+  type FaceMappingDraftAnchors,
+  type FaceMappingDraftValidationResult,
+  type FaceMappingMarkerGroupId,
+  type FaceMappingMarkerGroupV1,
+  type FaceMappingMarkerStatus,
+  type SagaDriveFaceMappingDraftV1,
+} from './face-mapping-draft-v1';
 
 export {
   SPECIES_DEFAULT_BODY_FAMILY,
