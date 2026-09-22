@@ -1,0 +1,73 @@
+{
+  "contractVersion": "SagaDriveFaceAnchorAnatomyQaV1",
+  "profileVersion": "liveact-face-anchor-anatomy-profile-v1",
+  "pass": true,
+  "violations": [],
+  "checks": {
+    "vertical_forehead_above_browL": {
+      "gap": 0.084,
+      "min": 0.02
+    },
+    "vertical_forehead_above_browR": {
+      "gap": 0.103,
+      "min": 0.02
+    },
+    "vertical_browL_above_eyeUpperL": {
+      "gap": 0.0754,
+      "min": 0.01
+    },
+    "vertical_browR_above_eyeUpperR": {
+      "gap": 0.0652,
+      "min": 0.01
+    },
+    "vertical_eyeL_aperture": {
+      "gap": 0.0993,
+      "min": 0.004
+    },
+    "vertical_eyeR_aperture": {
+      "gap": 0.0832,
+      "min": 0.004
+    },
+    "vertical_nose_above_mouth": {
+      "gap": 0.043,
+      "min": 0.01
+    },
+    "vertical_mouth_aperture": {
+      "gap": 0.1316,
+      "min": 0.001
+    },
+    "vertical_mouth_above_chin": {
+      "gap": 0.4291,
+      "min": 0.01
+    },
+    "eyeUpper_near_forehead": {
+      "left": 0.2268,
+      "right": 0.2019,
+      "max": 0.045
+    },
+    "brow_inner_separation": {
+      "value": 0.6168,
+      "min": 0.04
+    },
+    "brow_center_lateral": {
+      "left": 0.396,
+      "right": 0.3536,
+      "min": 0.06
+    },
+    "mouth_near_nose_ratio": {
+      "value": 0.1696,
+      "max": 0.85
+    }
+  },
+  "metrics": {
+    "faceH": 0.35802,
+    "faceW": 0.11483,
+    "mouthGap": 0.7968,
+    "eyeOpenL": 1.0421,
+    "eyeOpenR": 0.9957,
+    "browLiftL": 1.2648,
+    "browLiftR": 1.24,
+    "eyeSymRel": 0.0445,
+    "browSymRel": 0.0197
+  }
+}

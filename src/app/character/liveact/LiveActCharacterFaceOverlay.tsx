@@ -3,10 +3,14 @@
  * Location: src/app/character/liveact/LiveActCharacterFaceOverlay.tsx
  *
  * Samples deformed SagaDriveFaceAnchorsV1 via CharacterStudioRuntime handle; rAF only.
+ * Geometry metrics + key APPLIED channels (not a 1:1 webcam ratio comparison).
  */
 
 import { useEffect, useRef, type RefObject } from 'react';
-import { formatLiveActMetric } from '../../../domains/character/liveact';
+import {
+  formatLiveActMetric,
+  type LiveActDiagnosticsV2Snapshot,
+} from '../../../domains/character/liveact';
 import type { LiveActCharacterFaceDebugHandle } from '../../../infrastructure/character/avatar/character-studio-runtime';
 import type { LiveActCharacterFaceDebugContours } from '../../../infrastructure/character/liveact/liveact-character-face-debug';
 
@@ -14,6 +18,7 @@ interface LiveActCharacterFaceOverlayProps {
   enabled: boolean;
   metricsEnabled: boolean;
   debugHandleRef: RefObject<LiveActCharacterFaceDebugHandle | null>;
+  diagnosticsV2Ref?: RefObject<LiveActDiagnosticsV2Snapshot | null>;
 }
 
 function drawPolyline(
@@ -57,7 +62,7 @@ function drawMetricsHud(
   const pad = 4;
   const lineH = 11;
   const boxH = pad * 2 + lines.length * lineH;
-  const boxW = Math.min(width - 8, 196);
+  const boxW = Math.min(width - 8, 210);
   ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
   ctx.fillRect(4, 4, boxW, boxH);
   ctx.fillStyle = 'rgba(226, 232, 240, 0.95)';
@@ -68,10 +73,21 @@ function drawMetricsHud(
   }
 }
 
+function appliedValue(
+  diagnosticsV2: LiveActDiagnosticsV2Snapshot | null,
+  key: 'face.jawOpen' | 'face.eyeBlinkLeft' | 'face.eyeBlinkRight' | 'face.browInnerUp',
+): number | null {
+  const signal = diagnosticsV2?.stages.applied?.[key];
+  if (!signal || signal.status === 'unavailable') return null;
+  if (typeof signal.value !== 'number' || !Number.isFinite(signal.value)) return null;
+  return signal.value;
+}
+
 export function LiveActCharacterFaceOverlay({
   enabled,
   metricsEnabled,
   debugHandleRef,
+  diagnosticsV2Ref,
 }: LiveActCharacterFaceOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef(0);
@@ -123,7 +139,7 @@ export function LiveActCharacterFaceOverlay({
         if (!m.available) {
           lines.push('Character metrics: —');
         } else {
-          lines.push('Character (mesh anchors)');
+          lines.push('Character geometry');
           const bbox = m.bbox;
           lines.push(
             bbox
@@ -137,6 +153,15 @@ export function LiveActCharacterFaceOverlay({
           lines.push(
             `browLift L ${formatLiveActMetric(m.browLiftLeft)}  R ${formatLiveActMetric(m.browLiftRight)}`,
           );
+          const d2 = diagnosticsV2Ref?.current ?? null;
+          const jaw = appliedValue(d2, 'face.jawOpen');
+          const blinkL = appliedValue(d2, 'face.eyeBlinkLeft');
+          const blinkR = appliedValue(d2, 'face.eyeBlinkRight');
+          const brow = appliedValue(d2, 'face.browInnerUp');
+          lines.push('Applied');
+          lines.push(`jawOpen ${jaw == null ? '—' : jaw.toFixed(2)}`);
+          lines.push(`blinkL ${blinkL == null ? '—' : blinkL.toFixed(2)}  blinkR ${blinkR == null ? '—' : blinkR.toFixed(2)}`);
+          lines.push(`browInnerUp ${brow == null ? '—' : brow.toFixed(2)}`);
         }
         drawMetricsHud(ctx, lines, width);
       }
@@ -147,7 +172,7 @@ export function LiveActCharacterFaceOverlay({
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
     };
-  }, [enabled, metricsEnabled, debugHandleRef]);
+  }, [enabled, metricsEnabled, debugHandleRef, diagnosticsV2Ref]);
 
   if (!enabled) return null;
 

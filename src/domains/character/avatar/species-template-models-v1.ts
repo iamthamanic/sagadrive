@@ -5,7 +5,7 @@
  * Pure domain: no React. Only fixed relative /assets paths (never free client URLs).
  * Divers / unset gender → no mesh. Missing species assets fail closed (undefined).
  *
- * Human active bases: quality-20260921 m5-face1 / f5-face1 as VRM 1.0 primary (#405).
+ * Human active bases: quality-20260921 m5/f5 face2 anatomic anchors; VRM 1.0 primary (#405/face2).
  * Generic GLB remains published as fallback/source; no rollback picker.
  */
 import type { CharacterGenderReading } from '../domain/character.entity';
@@ -25,8 +25,8 @@ const SPECIES_GENDER_MESH: Readonly<
   Partial<Record<BaseBodySpeciesId, Readonly<Record<GenderMeshKey, string>>>>
 > = {
   human: {
-    'masculine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-male-quality-20260921-m5-face1.vrm?v=quality5-face1-vrm1b`,
-    'feminine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-female-quality-20260921-f5-face1.vrm?v=quality5-face1-vrm1b`,
+    'masculine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-male-quality-20260921-m5-face1.vrm?v=quality5-face2-vrm2`,
+    'feminine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-female-quality-20260921-f5-face1.vrm?v=quality5-face2-vrm2`,
   },
 };
 

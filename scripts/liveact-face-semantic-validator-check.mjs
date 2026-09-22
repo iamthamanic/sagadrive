@@ -33,30 +33,31 @@ const profileLib = readFileSync(join(root, 'scripts/lib/liveact-face-semantic-pr
 check(/liveact-face-semantic-validator-check/.test(gate), 'test-gate wiring');
 check(/validateLiveActFaceSemanticQa/.test(assetLib), 'asset validate orchestrates semantic');
 check(/semanticQa/.test(assetLib), 'inventory semanticQa field');
-check(/SEMANTIC_THRESHOLDS_V1/.test(profileLib), 'versioned thresholds');
+check(/blocked_by_invalid_face_anchors|faceAnchorAnatomyQa|validateFaceAnchorAnatomy/.test(semanticLib), 'anatomy gate before semantic');
+check(/SagaDriveLiveActFaceSemanticQaV2/.test(profileLib), 'semantic contract V2');
 check(!/m5-face|f5-face|human-male/i.test(profileLib), 'no filename thresholds in profile');
 
-/** Anchor reference positions for fixture mesh (model space). */
+/** Anchor reference positions for fixture mesh (model space, +X = character left). */
 const ANCHOR_POS = {
   mouthUpper: [0, -0.25, 0.15],
   mouthLower: [0, -0.45, 0.12],
-  mouthCornerLeft: [-0.35, -0.42, 0.18],
-  mouthCornerRight: [0.35, -0.42, 0.18],
-  eyeLeftInner: [-0.25, 0.42, 0.28],
-  eyeLeftOuter: [-0.72, 0.4, 0.22],
-  eyeLeftUpper: [-0.48, 0.52, 0.26],
-  eyeLeftLower: [-0.48, 0.32, 0.24],
-  eyeRightInner: [0.25, 0.42, 0.28],
-  eyeRightOuter: [0.72, 0.4, 0.22],
-  eyeRightUpper: [0.48, 0.52, 0.26],
-  eyeRightLower: [0.48, 0.32, 0.24],
-  browLeftInner: [-0.22, 0.72, 0.12],
-  browLeftOuter: [-0.72, 0.74, 0.08],
-  browLeftCenter: [-0.48, 0.76, 0.1],
-  browRightInner: [0.22, 0.72, 0.12],
-  browRightOuter: [0.72, 0.74, 0.08],
-  browRightCenter: [0.48, 0.76, 0.1],
-  noseTip: [0, 0.48, 0.92],
+  mouthCornerLeft: [0.35, -0.42, 0.18],
+  mouthCornerRight: [-0.35, -0.42, 0.18],
+  eyeLeftInner: [0.25, 0.42, 0.28],
+  eyeLeftOuter: [0.72, 0.4, 0.22],
+  eyeLeftUpper: [0.48, 0.52, 0.26],
+  eyeLeftLower: [0.48, 0.32, 0.24],
+  eyeRightInner: [-0.25, 0.42, 0.28],
+  eyeRightOuter: [-0.72, 0.4, 0.22],
+  eyeRightUpper: [-0.48, 0.52, 0.26],
+  eyeRightLower: [-0.48, 0.32, 0.24],
+  browLeftInner: [0.22, 0.72, 0.12],
+  browLeftOuter: [0.72, 0.74, 0.08],
+  browLeftCenter: [0.48, 0.76, 0.1],
+  browRightInner: [-0.22, 0.72, 0.12],
+  browRightOuter: [-0.72, 0.74, 0.08],
+  browRightCenter: [-0.48, 0.76, 0.1],
+  noseTip: [0, 0.05, 0.92],
   chin: [0, -1.05, 0.02],
   forehead: [0, 1.15, 0.02],
 };
@@ -128,6 +129,9 @@ async function buildSemanticFixtureGlb(opts = {}) {
   if (opts.eyeBlinkLeftWrongSide) {
     bump('eyeBlinkLeft', 'eyeRightUpper', [0, -0.12, 0]);
     bump('eyeBlinkLeft', 'eyeRightLower', [0, 0.12, 0]);
+  } else {
+    bump('eyeBlinkLeft', 'eyeLeftUpper', [0, -0.06, 0]);
+    bump('eyeBlinkLeft', 'eyeLeftLower', [0, 0.06, 0]);
   }
   bump('mouthSmileRight', 'mouthCornerRight', [0, 0.08, 0.04]);
   bump('mouthSmileRight', 'mouthUpper', [0, 0.03, 0.01]);
@@ -139,8 +143,6 @@ async function buildSemanticFixtureGlb(opts = {}) {
   bump('mouthShrugLower', 'mouthLower', [0, -0.09, 0]);
   bump('mouthShrugLower', 'chin', [0, -0.08, 0]);
   bump('mouthShrugLower', 'mouthUpper', [0, -0.04, 0]);
-  bump('eyeBlinkLeft', 'eyeLeftUpper', [0, -0.06, 0]);
-  bump('eyeBlinkLeft', 'eyeLeftLower', [0, 0.06, 0]);
   bump('eyeBlinkRight', 'eyeRightUpper', [0, -0.06, 0]);
   bump('eyeBlinkRight', 'eyeRightLower', [0, 0.06, 0]);
 

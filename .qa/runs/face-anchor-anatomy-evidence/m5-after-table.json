@@ -1,0 +1,164 @@
+{
+  "id": "m5",
+  "metrics": {
+    "faceH": 0.35802,
+    "faceW": 0.11483,
+    "mouthGap": 0.7968,
+    "eyeOpenL": 1.0421,
+    "eyeOpenR": 0.9957,
+    "browLiftL": 1.2648,
+    "browLiftR": 1.24,
+    "eyeSymRel": 0.0445,
+    "browSymRel": 0.0197
+  },
+  "rows": [
+    {
+      "anchor": "forehead",
+      "x": -0.00694,
+      "y": 1.69322,
+      "z": 0.07033,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "browLeftInner",
+      "x": 0.0338,
+      "y": 1.66251,
+      "z": 0.06815,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "browLeftCenter",
+      "x": 0.04264,
+      "y": 1.66315,
+      "z": 0.06159,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "browLeftOuter",
+      "x": 0.05101,
+      "y": 1.65387,
+      "z": 0.05591,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "browRightInner",
+      "x": -0.0366,
+      "y": 1.65482,
+      "z": 0.06862,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "browRightCenter",
+      "x": -0.04344,
+      "y": 1.65633,
+      "z": 0.06272,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "browRightOuter",
+      "x": -0.05102,
+      "y": 1.65131,
+      "z": 0.05726,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "eyeLeftInner",
+      "x": 0.02894,
+      "y": 1.61282,
+      "z": 0.07051,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "eyeLeftOuter",
+      "x": 0.0575,
+      "y": 1.62562,
+      "z": 0.05542,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "eyeLeftUpper",
+      "x": 0.05052,
+      "y": 1.63616,
+      "z": 0.06458,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "eyeLeftLower",
+      "x": 0.04365,
+      "y": 1.60061,
+      "z": 0.06458,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "eyeRightInner",
+      "x": -0.03304,
+      "y": 1.61167,
+      "z": 0.07026,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "eyeRightOuter",
+      "x": -0.05733,
+      "y": 1.62401,
+      "z": 0.05531,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "eyeRightUpper",
+      "x": -0.04687,
+      "y": 1.63298,
+      "z": 0.06891,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "eyeRightLower",
+      "x": -0.03883,
+      "y": 1.6032,
+      "z": 0.06649,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "noseTip",
+      "x": -0.00284,
+      "y": 1.55132,
+      "z": 0.08954,
+      "side": "center"
+    },
+    {
+      "anchor": "mouthUpper",
+      "x": -0.00086,
+      "y": 1.53594,
+      "z": 0.08493,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "mouthLower",
+      "x": -0.00452,
+      "y": 1.48881,
+      "z": 0.04989,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "mouthCornerLeft",
+      "x": 0.03698,
+      "y": 1.5147,
+      "z": 0.06068,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "mouthCornerRight",
+      "x": -0.03687,
+      "y": 1.51528,
+      "z": 0.06097,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "chin",
+      "x": -0.00192,
+      "y": 1.3352,
+      "z": 0.06978,
+      "side": "left(+X)"
+    }
+  ],
+  "pass": true
+}

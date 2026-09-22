@@ -3,9 +3,10 @@
  * Location: src/app/character/liveact/LiveActPipMetricsPanel.tsx
  *
  * Polls diagnostics refs via rAF while visible; keeps numbers off the camera image.
+ * Updates DOM text via ref (no setState per tracking frame).
  */
 
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 import {
   computeLiveActFaceMetrics,
   formatLiveActMetric,
@@ -18,17 +19,14 @@ interface LiveActPipMetricsPanelProps {
   active: boolean;
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
   diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
-}
-
-interface PipMetricsLines {
-  lines: string[];
-  lost: boolean;
+  hasNeutralBaseline?: boolean;
 }
 
 function buildLines(
   frame: LiveActFaceDiagnosticsFrameV1 | null,
   diagnosticsV2: LiveActDiagnosticsV2Snapshot | null,
-): PipMetricsLines {
+  hasNeutralBaseline: boolean,
+): { lines: string[]; lost: boolean } {
   if (!frame || frame.trackingLost) {
     return { lines: ['Metrics: LOST'], lost: true };
   }
@@ -41,6 +39,7 @@ function buildLines(
   const roll = diagnosticsV2?.stages.calibrated['head.roll'];
   const bbox = metrics.bbox;
   const lines: string[] = [
+    hasNeutralBaseline ? 'cal: ON' : 'cal: OFF (run Neutral)',
     bbox
       ? `bbox ${bbox.minX.toFixed(2)}–${bbox.maxX.toFixed(2)} × ${bbox.minY.toFixed(2)}–${bbox.maxY.toFixed(2)}`
       : 'bbox —',
@@ -67,19 +66,46 @@ export function LiveActPipMetricsPanel({
   active,
   diagnosticsRef,
   diagnosticsV2Ref,
+  hasNeutralBaseline = false,
 }: LiveActPipMetricsPanelProps) {
-  const [view, setView] = useState<PipMetricsLines>({ lines: ['Metrics: —'], lost: false });
+  const listRef = useRef<HTMLUListElement>(null);
   const rafRef = useRef(0);
 
   useEffect(() => {
     if (!active) {
-      setView({ lines: ['Metrics: —'], lost: false });
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+      const list = listRef.current;
+      if (list) list.replaceChildren();
       return;
     }
     let cancelled = false;
     const tick = () => {
       if (cancelled) return;
-      setView(buildLines(diagnosticsRef.current, diagnosticsV2Ref.current));
+      const { lines, lost } = buildLines(
+        diagnosticsRef.current,
+        diagnosticsV2Ref.current,
+        hasNeutralBaseline,
+      );
+      const list = listRef.current;
+      if (list) {
+        list.className = `space-y-0.5 font-mono ${lost ? 'text-amber-300' : 'text-slate-100'}`;
+        while (list.childElementCount > lines.length) {
+          list.removeChild(list.lastChild!);
+        }
+        for (let i = 0; i < lines.length; i += 1) {
+          let li = list.children[i] as HTMLLIElement | undefined;
+          if (!li) {
+            li = document.createElement('li');
+            li.className = 'truncate';
+            list.appendChild(li);
+          }
+          if (li.textContent !== lines[i]) {
+            li.textContent = lines[i];
+            li.title = lines[i];
+          }
+        }
+      }
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -87,7 +113,7 @@ export function LiveActPipMetricsPanel({
       cancelled = true;
       cancelAnimationFrame(rafRef.current);
     };
-  }, [active, diagnosticsRef, diagnosticsV2Ref]);
+  }, [active, diagnosticsRef, diagnosticsV2Ref, hasNeutralBaseline]);
 
   if (!active) return null;
 
@@ -97,13 +123,7 @@ export function LiveActPipMetricsPanel({
       data-testid="liveact-pip-metrics-panel"
       aria-hidden
     >
-      <ul className={`space-y-0.5 font-mono ${view.lost ? 'text-amber-300' : 'text-slate-100'}`}>
-        {view.lines.map((line) => (
-          <li key={line} className="truncate" title={line}>
-            {line}
-          </li>
-        ))}
-      </ul>
+      <ul ref={listRef} className="space-y-0.5 font-mono text-slate-100" />
     </div>
   );
 }

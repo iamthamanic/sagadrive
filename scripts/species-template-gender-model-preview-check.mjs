@@ -38,7 +38,7 @@ check(
     /human-female-quality-20260921-f5-face1\.vrm/.test(domain),
   'human gender paths m5-face1/f5-face1 VRM primary',
 );
-check(!/\.glb\?v=quality5-face1-vrm1b/.test(domain), 'primary resolver is not GLB');
+check(!/\.glb\?v=quality5-face2-vrm2/.test(domain), 'primary resolver is not GLB');
 check(!/HUMAN_MALE_PREVIEW_VERSIONS/.test(domain), 'no male version picker catalog');
 check(!/quality-m4|quality-m3|softreal2\.glb/.test(domain), 'no rollback paths in domain');
 check(/resolveSpeciesTemplateModelUrl/.test(barrel), 'barrel exports resolver');
@@ -98,9 +98,9 @@ check(/VRMLoaderPlugin/.test(studio), 'studio uses existing VRMLoaderPlugin');
 
 const MESH = {
   'masculine-read':
-    '/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm?v=quality5-face1-vrm1b',
+    '/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm?v=quality5-face2-vrm2',
   'feminine-read':
-    '/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm?v=quality5-face1-vrm1b',
+    '/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm?v=quality5-face2-vrm2',
 };
 function resolveReplica(speciesId, genderReading) {
   if (!speciesId) return undefined;

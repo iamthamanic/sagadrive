@@ -46,7 +46,11 @@ check(/buildLiveActFaceLandmarksFromAnchorScreenPoints/.test(metrics), 'anchor l
 
 check(/LiveActCharacterFaceOverlay/.test(controls), 'controls compose character overlay');
 check(/characterFaceMappingAvailable/.test(controls), 'controls mapping gate');
-check(!/useState\(/.test(overlay), 'overlay no useState');
+check(/Character geometry/.test(overlay), 'geometry HUD label');
+check(/Applied/.test(overlay), 'applied HUD section');
+check(/face\.jawOpen/.test(overlay), 'applied jawOpen');
+check(/diagnosticsV2Ref/.test(controls), 'controls pass diagnostics to character overlay');
+check(/cal: OFF|hasNeutralBaseline/.test(read('src/app/character/liveact/LiveActPipMetricsPanel.tsx')), 'cal status in PiP metrics');
 check(/characterFaceDebugHandleRef/.test(surface), 'surface binds handle ref');
 check(/liveact-character-face-mapping-unavailable/.test(settings), 'settings capability hint');
 check(/liveact-pip-metrics-panel|LiveActPipMetricsPanel/.test(read('src/app/character/liveact/LiveActCameraPreview.tsx')), 'PiP hosts side metrics panel');

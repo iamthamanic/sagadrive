@@ -23,17 +23,17 @@ const pairs = [
     id: 'm5',
     publicGlb: 'public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb',
     baseline: 'public/assets/avatars/species/human-male-quality-20260921-m5.glb',
-    runJson: 'assets/species-3d/human/runs/quality-20260921-m5-face1/run.json',
-    anchors: 'assets/species-3d/human/runs/quality-20260921-m5-face1/face-anchors.json',
-    inventory: 'assets/species-3d/human/runs/quality-20260921-m5-face1/face-inventory.json',
+    runJson: 'assets/species-3d/human/runs/quality-20260921-m5-face2/run.json',
+    anchors: 'assets/species-3d/human/runs/quality-20260921-m5-face2/face-anchors.json',
+    inventory: 'assets/species-3d/human/runs/quality-20260921-m5-face2/face-inventory.json',
   },
   {
     id: 'f5',
     publicGlb: 'public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb',
     baseline: 'public/assets/avatars/species/human-female-quality-20260921-f5.glb',
-    runJson: 'assets/species-3d/human/runs/quality-20260921-f5-face1/run.json',
-    anchors: 'assets/species-3d/human/runs/quality-20260921-f5-face1/face-anchors.json',
-    inventory: 'assets/species-3d/human/runs/quality-20260921-f5-face1/face-inventory.json',
+    runJson: 'assets/species-3d/human/runs/quality-20260921-f5-face2/run.json',
+    anchors: 'assets/species-3d/human/runs/quality-20260921-f5-face2/face-anchors.json',
+    inventory: 'assets/species-3d/human/runs/quality-20260921-f5-face2/face-inventory.json',
   },
 ];
 
@@ -68,8 +68,16 @@ for (const p of pairs) {
   check(result.inventory.structuralPass === true, `${p.id} structural gate`);
   check(result.inventory.semanticQa?.skipped !== true, `${p.id} semantic QA ran with anchors`);
   check(
+    result.inventory.faceAnchorAnatomyQa?.pass === true,
+    `${p.id} face anchor anatomy PASS`,
+  );
+  check(
     result.inventory.semanticQa?.pass === true,
     `${p.id} semantic QA V2 pass (${(result.inventory.semanticQa?.violations || []).slice(0, 4).join('; ')})`,
+  );
+  check(
+    result.inventory.semanticQa?.contractVersion === 'SagaDriveLiveActFaceSemanticQaV2',
+    `${p.id} semantic contract V2`,
   );
   console.log(`liveact-face-human-repro-check: ${p.id} semantic QA V2 pass`);
 }

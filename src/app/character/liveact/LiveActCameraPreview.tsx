@@ -24,6 +24,7 @@ interface LiveActCameraPreviewProps {
   metricsEnabled: boolean;
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
   diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
+  hasNeutralBaseline?: boolean;
 }
 
 interface PipPos {
@@ -58,6 +59,7 @@ export function LiveActCameraPreview({
   metricsEnabled,
   diagnosticsRef,
   diagnosticsV2Ref,
+  hasNeutralBaseline = false,
 }: LiveActCameraPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -208,6 +210,7 @@ export function LiveActCameraPreview({
         active={showMetrics}
         diagnosticsRef={diagnosticsRef}
         diagnosticsV2Ref={diagnosticsV2Ref}
+        hasNeutralBaseline={hasNeutralBaseline}
       />
     </div>
   );

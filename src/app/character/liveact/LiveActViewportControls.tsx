@@ -47,6 +47,7 @@ export function LiveActViewportControls({
         enabled={characterOverlayOn}
         metricsEnabled={liveAct.metricsEnabled}
         debugHandleRef={liveAct.characterFaceDebugHandleRef}
+        diagnosticsV2Ref={liveAct.diagnosticsV2Ref}
       />
       <AvatarPreviewSettings
         runtimeReady={runtimeReady}
@@ -91,6 +92,7 @@ export function LiveActViewportControls({
         metricsEnabled={liveAct.metricsEnabled}
         diagnosticsRef={liveAct.diagnosticsRef}
         diagnosticsV2Ref={liveAct.diagnosticsV2Ref}
+        hasNeutralBaseline={liveAct.hasNeutralBaseline}
       />
     </>
   );

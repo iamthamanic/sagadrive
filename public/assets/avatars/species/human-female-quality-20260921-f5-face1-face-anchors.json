@@ -4,17 +4,17 @@
     "mouthUpper": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 83639,
+      "triangleIndex": 83936,
       "barycentric": {
-        "u": 1,
-        "v": 0,
+        "u": 0,
+        "v": 1,
         "w": 0
       }
     },
     "mouthLower": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 83691,
+      "triangleIndex": 95707,
       "barycentric": {
         "u": 1,
         "v": 0,
@@ -24,7 +24,7 @@
     "mouthCornerLeft": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 122757,
+      "triangleIndex": 125731,
       "barycentric": {
         "u": 0,
         "v": 1,
@@ -34,17 +34,17 @@
     "mouthCornerRight": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 84691,
+      "triangleIndex": 95821,
       "barycentric": {
-        "u": 1,
+        "u": 0,
         "v": 0,
-        "w": 0
+        "w": 1
       }
     },
     "eyeLeftInner": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 130978,
+      "triangleIndex": 122081,
       "barycentric": {
         "u": 0,
         "v": 0,
@@ -54,17 +54,17 @@
     "eyeLeftOuter": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 185127,
+      "triangleIndex": 128443,
       "barycentric": {
-        "u": 1,
+        "u": 0,
         "v": 0,
-        "w": 0
+        "w": 1
       }
     },
     "eyeLeftUpper": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 132444,
+      "triangleIndex": 128606,
       "barycentric": {
         "u": 0,
         "v": 0,
@@ -74,67 +74,67 @@
     "eyeLeftLower": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 122034,
-      "barycentric": {
-        "u": 0,
-        "v": 1,
-        "w": 0
-      }
-    },
-    "eyeRightInner": {
-      "nodeIdentity": "human-female-quality-20260921-f5_mesh",
-      "primitiveIndex": 0,
-      "triangleIndex": 82461,
-      "barycentric": {
-        "u": 0,
-        "v": 1,
-        "w": 0
-      }
-    },
-    "eyeRightOuter": {
-      "nodeIdentity": "human-female-quality-20260921-f5_mesh",
-      "primitiveIndex": 0,
-      "triangleIndex": 68577,
-      "barycentric": {
-        "u": 0,
-        "v": 1,
-        "w": 0
-      }
-    },
-    "eyeRightUpper": {
-      "nodeIdentity": "human-female-quality-20260921-f5_mesh",
-      "primitiveIndex": 0,
-      "triangleIndex": 100777,
-      "barycentric": {
-        "u": 0,
-        "v": 1,
-        "w": 0
-      }
-    },
-    "eyeRightLower": {
-      "nodeIdentity": "human-female-quality-20260921-f5_mesh",
-      "primitiveIndex": 0,
-      "triangleIndex": 83181,
+      "triangleIndex": 122379,
       "barycentric": {
         "u": 0,
         "v": 0,
         "w": 1
       }
     },
-    "browLeftInner": {
+    "eyeRightInner": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 82384,
+      "triangleIndex": 82082,
       "barycentric": {
         "u": 1,
         "v": 0,
         "w": 0
       }
     },
+    "eyeRightOuter": {
+      "nodeIdentity": "human-female-quality-20260921-f5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 81993,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "eyeRightUpper": {
+      "nodeIdentity": "human-female-quality-20260921-f5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 83239,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeRightLower": {
+      "nodeIdentity": "human-female-quality-20260921-f5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 84049,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "browLeftInner": {
+      "nodeIdentity": "human-female-quality-20260921-f5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 128515,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
     "browLeftOuter": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 128523,
+      "triangleIndex": 128500,
       "barycentric": {
         "u": 0,
         "v": 0,
@@ -144,70 +144,70 @@
     "browLeftCenter": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 123289,
+      "triangleIndex": 128508,
       "barycentric": {
-        "u": 1,
+        "u": 0,
         "v": 0,
-        "w": 0
+        "w": 1
       }
     },
     "browRightInner": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 83509,
+      "triangleIndex": 82479,
       "barycentric": {
-        "u": 0,
-        "v": 1,
+        "u": 1,
+        "v": 0,
         "w": 0
       }
     },
     "browRightOuter": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 82476,
+      "triangleIndex": 83011,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "browRightCenter": {
+      "nodeIdentity": "human-female-quality-20260921-f5_mesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 83022,
       "barycentric": {
         "u": 0,
         "v": 1,
         "w": 0
       }
     },
-    "browRightCenter": {
-      "nodeIdentity": "human-female-quality-20260921-f5_mesh",
-      "primitiveIndex": 0,
-      "triangleIndex": 82709,
-      "barycentric": {
-        "u": 0,
-        "v": 0,
-        "w": 1
-      }
-    },
     "noseTip": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 83584,
+      "triangleIndex": 83795,
       "barycentric": {
         "u": 0,
-        "v": 0,
-        "w": 1
+        "v": 1,
+        "w": 0
       }
     },
     "chin": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 78142,
+      "triangleIndex": 76275,
       "barycentric": {
         "u": 0,
-        "v": 0,
-        "w": 1
+        "v": 1,
+        "w": 0
       }
     },
     "forehead": {
       "nodeIdentity": "human-female-quality-20260921-f5_mesh",
       "primitiveIndex": 0,
-      "triangleIndex": 129415,
+      "triangleIndex": 82621,
       "barycentric": {
-        "u": 1,
-        "v": 0,
+        "u": 0,
+        "v": 1,
         "w": 0
       }
     }
