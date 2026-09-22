@@ -448,6 +448,14 @@ function checkLiveActFaceAnchorsV1() {
   });
 }
 
+function checkLiveActFaceMappingAuthoring() {
+  console.log('LiveAct face mapping authoring (#419): sidecar cache-bust + provenance...');
+  execFileSync(process.execPath, ['scripts/liveact-face-mapping-authoring-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceAnchorAnatomy() {
   console.log('LiveAct face anchor anatomy QA: SagaDriveFaceAnchorAnatomyQaV1...');
   execFileSync(process.execPath, ['scripts/liveact-face-anchor-anatomy-check.mjs'], {
@@ -1330,6 +1338,7 @@ checkLiveActViewportUi();
 checkLiveActFaceDiagnostics();
 checkLiveActDiagnosticsV2();
 checkLiveActFaceAnchorsV1();
+checkLiveActFaceMappingAuthoring();
 checkLiveActFaceAnchorAnatomy();
 checkLiveActCameraOverlayMetrics();
 checkLiveActCharacterFaceOverlay();

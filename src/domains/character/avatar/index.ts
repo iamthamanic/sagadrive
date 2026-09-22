@@ -755,6 +755,19 @@ export {
   type SagaDriveFaceAnchorTriangleBinding,
   type SagaDriveFaceAnchorsManifestV1,
 } from './face-anchor-contract';
+export {
+  FACE_MAPPING_AUTHORING_CONTRACT_VERSION,
+  FACE_MAPPING_AUTHORING_SOURCES,
+  createAutoUnreviewedFaceMappingAuthoring,
+  isFaceMappingAuthoringSource,
+  isReviewedFaceMappingGroundTruth,
+  validateFaceMappingAuthoringV1,
+  type FaceMappingAuthoringAssetFingerprintV1,
+  type FaceMappingAuthoringSource,
+  type FaceMappingAuthoringValidationIssue,
+  type FaceMappingAuthoringValidationResult,
+  type SagaDriveFaceMappingAuthoringV1,
+} from './face-mapping-authoring-contract';
 
 export {
   SPECIES_DEFAULT_BODY_FAMILY,
