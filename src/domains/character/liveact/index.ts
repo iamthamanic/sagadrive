@@ -125,6 +125,20 @@ export {
 } from './liveact-diagnostics-v2';
 
 export {
+  computeLiveActObjectCoverTransform,
+  projectLiveActLandmarkToCanvas,
+  type LiveActVideoViewportTransform,
+} from './liveact-video-viewport-transform';
+
+export {
+  LIVEACT_FACE_METRIC_LANDMARK_INDICES,
+  computeLiveActFaceMetrics,
+  formatLiveActMetric,
+  liveActRadiansToDegrees,
+  type LiveActFaceMetricsV1,
+} from './liveact-face-metrics';
+
+export {
   LIVEACT_CALIBRATION_FRAME_TARGET,
   LIVEACT_CALIBRATION_TIMEOUT_MS,
   createLiveActCalibrationAccumulator,

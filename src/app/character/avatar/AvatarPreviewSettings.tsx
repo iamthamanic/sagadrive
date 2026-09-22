@@ -28,6 +28,8 @@ interface AvatarPreviewSettingsProps {
   onCameraPreviewChange: (enabled: boolean) => void;
   faceOverlayEnabled: boolean;
   onFaceOverlayChange: (enabled: boolean) => void;
+  metricsEnabled: boolean;
+  onMetricsChange: (enabled: boolean) => void;
   bonesEnabled: boolean;
   bonesAvailable: boolean;
   onBonesChange: (enabled: boolean) => void;
@@ -58,6 +60,8 @@ export function AvatarPreviewSettings({
   onCameraPreviewChange,
   faceOverlayEnabled,
   onFaceOverlayChange,
+  metricsEnabled,
+  onMetricsChange,
   bonesEnabled,
   bonesAvailable,
   onBonesChange,
@@ -228,6 +232,20 @@ export function AvatarPreviewSettings({
                 onCheckedChange={onFaceOverlayChange}
                 aria-label="Face Overlay umschalten"
                 data-testid="liveact-face-overlay-toggle"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
+              <div className="min-w-0">
+                <p className="text-xs text-slate-100">Metrics</p>
+                <p className="text-[10px] text-slate-400">Werte im PiP-Overlay</p>
+              </div>
+              <Switch
+                checked={metricsEnabled}
+                disabled={actionsDisabled || !trackingEnabled}
+                onCheckedChange={onMetricsChange}
+                aria-label="Face Metrics umschalten"
+                data-testid="liveact-face-metrics-toggle"
               />
             </div>
 

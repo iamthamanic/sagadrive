@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
 import type {
+  LiveActDiagnosticsV2Snapshot,
   LiveActFaceDiagnosticsFrameV1,
   LiveActStatus,
 } from '../../../domains/character/liveact';
@@ -18,7 +19,9 @@ interface LiveActCameraPreviewProps {
   status: LiveActStatus;
   visible: boolean;
   faceOverlayEnabled: boolean;
+  metricsEnabled: boolean;
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
+  diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
 }
 
 interface PipPos {
@@ -50,7 +53,9 @@ export function LiveActCameraPreview({
   status,
   visible,
   faceOverlayEnabled,
+  metricsEnabled,
   diagnosticsRef,
+  diagnosticsV2Ref,
 }: LiveActCameraPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -179,7 +184,13 @@ export function LiveActCameraPreview({
         playsInline
         autoPlay
       />
-      <LiveActFaceOverlay enabled={faceOverlayEnabled} diagnosticsRef={diagnosticsRef} />
+      <LiveActFaceOverlay
+        enabled={faceOverlayEnabled}
+        metricsEnabled={faceOverlayEnabled && metricsEnabled}
+        diagnosticsRef={diagnosticsRef}
+        diagnosticsV2Ref={diagnosticsV2Ref}
+        videoRef={videoRef}
+      />
       <div className="pointer-events-none absolute left-1.5 top-1.5 flex items-center gap-1 rounded bg-black/55 px-1.5 py-0.5 text-[10px] text-slate-100">
         <span
           className={`h-1.5 w-1.5 rounded-full ${

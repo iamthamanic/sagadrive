@@ -440,6 +440,14 @@ function checkLiveActDiagnosticsV2() {
   });
 }
 
+function checkLiveActCameraOverlayMetrics() {
+  console.log('LiveAct camera overlay metrics (#398): object-cover + HUD...');
+  execFileSync(process.execPath, ['scripts/liveact-camera-overlay-metrics-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActAvatarOutput() {
   console.log('LiveAct avatar output (#332): VRM/GLB atomic frame apply...');
   execFileSync(process.execPath, ['scripts/liveact-avatar-output-check.mjs'], {
@@ -1265,6 +1273,7 @@ checkLiveActCore();
 checkLiveActViewportUi();
 checkLiveActFaceDiagnostics();
 checkLiveActDiagnosticsV2();
+checkLiveActCameraOverlayMetrics();
 checkLiveActAvatarOutput();
 checkLiveActCapabilityOwnership();
 checkLiveActFaceAssetContract();
