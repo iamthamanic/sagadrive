@@ -114,10 +114,12 @@
     }
   },
   "shippedAs": {
-    "publicPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb",
-    "cacheBust": "quality5-face1-tex2k",
-    "bytes": 31168980,
-    "checksum": "134f5137019ec5b26abd977459bd510b763f080c111da3d6ab4f92cb3aaa33ff",
-    "publishNote": "Public textures resized to max 2048px (gltf-transform resize) for GitHub soft 100MB limit; mesh/morph topology unchanged from authoring output."
+    "publicPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm",
+    "cacheBust": "quality5-face1-vrm1",
+    "bytes": 31174780,
+    "checksum": "94d4c147de2ec5f7180ffbd7e9c7f294d05647b460c430a41240fc66aba05c01",
+    "publishNote": "VRM 1.0 primary via avatar-vrm-pack; GLB retained as generic fallback/source.",
+    "publicGlbFallback": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb",
+    "format": "vrm-1.0"
   }
 }

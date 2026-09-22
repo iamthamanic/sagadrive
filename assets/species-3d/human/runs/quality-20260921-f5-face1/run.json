@@ -108,10 +108,12 @@
     }
   },
   "shippedAs": {
-    "publicPath": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb",
-    "cacheBust": "quality5-face1-tex2k",
-    "bytes": 38402848,
-    "checksum": "a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c",
-    "publishNote": "Public textures resized to max 2048px (gltf-transform resize) for GitHub soft 100MB limit; mesh/morph topology unchanged from authoring output."
+    "publicPath": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm",
+    "cacheBust": "quality5-face1-vrm1",
+    "bytes": 38408648,
+    "checksum": "50f63bb1e5a3d2c734db0708142af30ee0662db6821bed2ae12b858bf7793181",
+    "publishNote": "VRM 1.0 primary via avatar-vrm-pack; GLB retained as generic fallback/source.",
+    "publicGlbFallback": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb",
+    "format": "vrm-1.0"
   }
 }
