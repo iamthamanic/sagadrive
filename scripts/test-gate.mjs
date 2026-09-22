@@ -528,6 +528,14 @@ function checkLiveActFacialFidelityV2() {
   });
 }
 
+function checkAvatarVrmPack() {
+  console.log('Avatar VRM pack (#404): deterministic VRM 1.0 packaging...');
+  execFileSync(process.execPath, ['scripts/avatar-vrm-pack-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFacePipelineDocs() {
   console.log('LiveAct face pipeline docs (#386): AUTHORING v1.1 + FACE-AUTHORING...');
   execFileSync(process.execPath, ['scripts/liveact-face-pipeline-doc-check.mjs'], {
@@ -1316,6 +1324,7 @@ checkLiveActFaceSemanticValidator();
 checkLiveActFaceAuthoringQtmesh();
 checkLiveActRetargetProfile();
 checkLiveActFacialFidelityV2();
+checkAvatarVrmPack();
 checkLiveActFacePipelineDocs();
 checkLiveActFaceHumanRepro();
 checkLiveActRigDebug();
