@@ -67,8 +67,8 @@ check(
 );
 
 const MESH = {
-  'masculine-read': '/assets/avatars/species/human-male-quality-20260921-m5-face1.glb?v=quality5-face1',
-  'feminine-read': '/assets/avatars/species/human-female-quality-20260921-f5-face1.glb?v=quality5-face1',
+  'masculine-read': '/assets/avatars/species/human-male-quality-20260921-m5-face1.glb?v=quality5-face1-tex2k',
+  'feminine-read': '/assets/avatars/species/human-female-quality-20260921-f5-face1.glb?v=quality5-face1-tex2k',
 };
 function resolveReplica(speciesId, genderReading) {
   if (!speciesId) return undefined;

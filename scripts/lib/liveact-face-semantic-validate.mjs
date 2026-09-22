@@ -12,7 +12,6 @@ import { findNodeByIdentity } from './liveact-face-anchor-glb.mjs';
 import {
   CORE_CHANNEL_SEMANTIC_RULES_V1,
   CORE_COMBINATION_POSES_V1,
-  QA_REGION_ANCHORS,
   SEMANTIC_PROFILE_VERSION,
   SEMANTIC_QA_CONTRACT_VERSION,
   SEMANTIC_THRESHOLDS_V1,
@@ -121,32 +120,6 @@ function collectVertexSamples(document) {
   return samples;
 }
 
-/**
- * @param {Partial<Record<string, { x: number; y: number; z: number }>>} anchorPositions
- */
-function regionCentroids(anchorPositions) {
-  /** @type {Partial<Record<string, { x: number; y: number; z: number; count: number }>>>} */
-  const out = {};
-  for (const [regionId, anchorIds] of Object.entries(QA_REGION_ANCHORS)) {
-    let sx = 0;
-    let sy = 0;
-    let sz = 0;
-    let count = 0;
-    for (const anchorId of anchorIds) {
-      const p = anchorPositions[anchorId];
-      if (!p) continue;
-      sx += p.x;
-      sy += p.y;
-      sz += p.z;
-      count += 1;
-    }
-    if (count > 0) {
-      out[regionId] = { x: sx / count, y: sy / count, z: sz / count, count };
-    }
-  }
-  return out;
-}
-
 function dist3(a, b) {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
@@ -154,22 +127,199 @@ function dist3(a, b) {
   return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
+function dist3Sq(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  const dz = a.z - b.z;
+  return dx * dx + dy * dy + dz * dz;
+}
+
+/** @typedef {'mouth'|'jaw'|'eyeLeft'|'eyeRight'|'browLeft'|'browRight'|'nose'|'forehead'|'cheek'} QaRegionId */
+
 /**
- * @param {{ x: number; y: number; z: number }} vertex
- * @param {Partial<Record<string, { x: number; y: number; z: number; count: number }>>} centroids
+ * Anatomical bands from SagaDriveFaceAnchorsV1 — avoids whole-midface nearest-centroid → nose/forehead.
+ * @param {Partial<Record<string, { x: number; y: number; z: number }>>} anchorPositions
+ * @returns {{ ok: true; classify: (v: { x: number; y: number; z: number }) => QaRegionId } | { ok: false; missing: string[] }}
  */
-function classifyVertexRegion(vertex, centroids) {
-  let best = 'mouth';
-  let bestDist = Number.POSITIVE_INFINITY;
-  for (const [regionId, c] of Object.entries(centroids)) {
-    if (!c) continue;
-    const d = dist3(vertex, c);
-    if (d < bestDist) {
-      bestDist = d;
-      best = regionId;
-    }
+function buildAnatomicalRegionClassifier(anchorPositions) {
+  /** @type {string[]} */
+  const missing = [];
+  const need = (id) => {
+    const p = anchorPositions[id];
+    if (!p) missing.push(id);
+    return p;
+  };
+
+  const noseTip = need('noseTip');
+  const chin = need('chin');
+  const mouthUpper = need('mouthUpper');
+  const mouthLower = need('mouthLower');
+  const browLeftCenter = anchorPositions.browLeftCenter || anchorPositions.browLeftInner;
+  const browRightCenter = anchorPositions.browRightCenter || anchorPositions.browRightInner;
+  if (!browLeftCenter) missing.push('browLeftCenter');
+  if (!browRightCenter) missing.push('browRightCenter');
+
+  if (missing.length > 0) {
+    return { ok: false, missing: [...new Set(missing)] };
   }
-  return best;
+
+  const browCenterY = (browLeftCenter.y + browRightCenter.y) / 2;
+  const li = anchorPositions.eyeLeftInner;
+  const ri = anchorPositions.eyeRightInner;
+  let faceScale = li && ri ? dist3(li, ri) : dist3(mouthUpper, chin);
+  if (!Number.isFinite(faceScale) || faceScale <= 1e-6) {
+    faceScale = Math.max(Math.abs(mouthUpper.y - chin.y), 0.05);
+  }
+
+  // Tight nose; generous mouth — nearest-centroid used to steal peri-oral energy into nose/cheek.
+  const noseRadiusSq = (faceScale * 0.22) ** 2;
+  const eyeRadiusSq = (faceScale * 0.32) ** 2;
+  const eyeBandHalfHeight = faceScale * 0.2;
+  const browRadiusSq = (faceScale * 0.35) ** 2;
+  const mouthLocalRadiusSq = (faceScale * 0.72) ** 2;
+  const cheekRadiusSq = (faceScale * 0.58) ** 2;
+  const chinRadiusSq = (faceScale * 0.36) ** 2;
+  const jawBelowMouthY = mouthLower.y - faceScale * 0.22;
+  const oralYMin = mouthLower.y - faceScale * 0.35;
+  const oralYMax = Math.max(mouthUpper.y + faceScale * 0.25, noseTip.y - faceScale * 0.05);
+
+  let maxEyeY = browCenterY;
+  for (const id of ['eyeLeftUpper', 'eyeRightUpper', 'eyeLeftLower', 'eyeRightLower']) {
+    const p = anchorPositions[id];
+    if (p && p.y > maxEyeY) maxEyeY = p.y;
+  }
+  const foreheadAnchor = anchorPositions.forehead;
+  const foreheadCutoffY = Math.max(
+    maxEyeY + faceScale * 0.18,
+    foreheadAnchor ? foreheadAnchor.y - faceScale * 0.35 : browCenterY + faceScale * 0.55,
+  );
+
+  /** @type {{ id: string; region: QaRegionId }[]} */
+  const eyeAnchors = [
+    ['eyeLeftInner', 'eyeLeft'],
+    ['eyeLeftOuter', 'eyeLeft'],
+    ['eyeLeftUpper', 'eyeLeft'],
+    ['eyeLeftLower', 'eyeLeft'],
+    ['eyeRightInner', 'eyeRight'],
+    ['eyeRightOuter', 'eyeRight'],
+    ['eyeRightUpper', 'eyeRight'],
+    ['eyeRightLower', 'eyeRight'],
+  ].flatMap(([id, region]) => (anchorPositions[id] ? [{ id, region: /** @type {QaRegionId} */ (region) }] : []));
+
+  /** @type {{ pos: { x: number; y: number; z: number }; region: QaRegionId }[]} */
+  const browAnchors = [];
+  for (const [id, region] of [
+    ['browLeftInner', 'browLeft'],
+    ['browLeftOuter', 'browLeft'],
+    ['browLeftCenter', 'browLeft'],
+    ['browRightInner', 'browRight'],
+    ['browRightOuter', 'browRight'],
+    ['browRightCenter', 'browRight'],
+  ]) {
+    const pos = anchorPositions[id];
+    if (pos) browAnchors.push({ pos, region: /** @type {QaRegionId} */ (region) });
+  }
+
+  /** @type {{ pos: { x: number; y: number; z: number } }[]} */
+  const mouthAnchors = ['mouthUpper', 'mouthLower', 'mouthCornerLeft', 'mouthCornerRight']
+    .map((id) => anchorPositions[id])
+    .filter(Boolean);
+
+  const mouthCornerLeft = anchorPositions.mouthCornerLeft;
+  const mouthCornerRight = anchorPositions.mouthCornerRight;
+
+  /**
+   * @param {{ x: number; y: number; z: number }} vertex
+   * @returns {QaRegionId}
+   */
+  function classify(vertex) {
+    const midX = li && ri ? (li.x + ri.x) / 2 : 0;
+    const lateralFromMid = li && ri ? Math.abs(vertex.x - midX) : 0;
+    const leftIsPositiveX = li && ri ? li.x > ri.x : false;
+    const orbitalLateralMax = faceScale * 0.38;
+
+    for (const { id, region } of eyeAnchors) {
+      const pos = anchorPositions[id];
+      if (!pos) continue;
+      const isLowerLid = id === 'eyeLeftLower' || id === 'eyeRightLower';
+      if (isLowerLid && lateralFromMid > orbitalLateralMax) continue;
+      if (
+        Math.abs(vertex.y - pos.y) <= eyeBandHalfHeight &&
+        dist3Sq(vertex, pos) <= eyeRadiusSq
+      ) {
+        return region;
+      }
+    }
+    for (const { pos, region } of browAnchors) {
+      if (dist3Sq(vertex, pos) <= browRadiusSq) return region;
+    }
+
+    if (vertex.y > foreheadCutoffY) {
+      return 'forehead';
+    }
+    if (vertex.y > browCenterY) {
+      const betweenBrowAndForehead = vertex.y <= foreheadCutoffY;
+      if (betweenBrowAndForehead && li && ri) {
+        const onLeft = leftIsPositiveX ? vertex.x >= midX : vertex.x <= midX;
+        if (lateralFromMid > faceScale * 0.42) {
+          return onLeft ? 'cheek' : 'cheek';
+        }
+        return onLeft ? 'eyeLeft' : 'eyeRight';
+      }
+      return 'forehead';
+    }
+
+    // Mouth before cheek/nose so smile/pucker peri-oral energy stays expected.
+    for (const pos of mouthAnchors) {
+      if (dist3Sq(vertex, pos) <= mouthLocalRadiusSq) {
+        return 'mouth';
+      }
+    }
+
+    if (vertex.y >= oralYMin && vertex.y <= oralYMax && lateralFromMid <= faceScale * 0.85) {
+      return 'mouth';
+    }
+
+    if (dist3Sq(vertex, noseTip) <= noseRadiusSq) {
+      return 'nose';
+    }
+
+    if (dist3Sq(vertex, chin) <= chinRadiusSq || vertex.y < jawBelowMouthY) {
+      return 'jaw';
+    }
+
+    if (mouthCornerLeft && dist3Sq(vertex, mouthCornerLeft) <= cheekRadiusSq) {
+      return 'cheek';
+    }
+    if (mouthCornerRight && dist3Sq(vertex, mouthCornerRight) <= cheekRadiusSq) {
+      return 'cheek';
+    }
+
+    if (vertex.y > oralYMax && vertex.y <= browCenterY) {
+      if (lateralFromMid > faceScale * 0.22) {
+        return 'cheek';
+      }
+      return 'nose';
+    }
+
+    if (vertex.y < oralYMin) {
+      if (lateralFromMid > faceScale * 0.26) {
+        return 'cheek';
+      }
+      if (dist3Sq(vertex, chin) <= chinRadiusSq) {
+        return 'jaw';
+      }
+      return 'cheek';
+    }
+
+    if (leftIsPositiveX !== undefined && li && ri) {
+      const onLeft = leftIsPositiveX ? vertex.x >= midX : vertex.x <= midX;
+      return onLeft ? 'cheek' : 'cheek';
+    }
+    return 'cheek';
+  }
+
+  return { ok: true, classify };
 }
 
 /**
@@ -250,29 +400,66 @@ function perVertexMagnitudes(primDeltas, primKeys, vertexSamples) {
  * @param {string[]} expectedRegions
  * @param {string[]} forbiddenRegions
  */
+/**
+ * @param {Partial<Record<string, { x: number; y: number; z: number }>>} anchorPositions
+ */
+function resolveCharacterSideSplit(anchorPositions) {
+  const li = anchorPositions.eyeLeftInner;
+  const ri = anchorPositions.eyeRightInner;
+  const lc = anchorPositions.mouthCornerLeft;
+  const rc = anchorPositions.mouthCornerRight;
+  if (!li || !ri) return null;
+  const midX = (li.x + ri.x) / 2;
+  const leftIsPositiveX = li.x > ri.x;
+  const mouthCornerMidX = lc && rc ? (lc.x + rc.x) / 2 : null;
+  return { midX, leftIsPositiveX, mouthCornerMidX };
+}
+
+function vertexOnCharacterLeft(vertex, split, opts) {
+  if (!split) return vertex.x <= 0;
+  const useMouthMid =
+    opts?.preferMouthCornerMid && split.mouthCornerMidX != null
+      ? split.mouthCornerMidX
+      : split.midX;
+  if (split.leftIsPositiveX) return vertex.x >= useMouthMid;
+  return vertex.x <= useMouthMid;
+}
+
 function summarizeRegionEnergy(
   mags,
   regionBySampleIndex,
   vertexSamples,
   expectedRegions,
   forbiddenRegions,
+  sideSplit,
+  headMask,
 ) {
   let total = 0;
   let expected = 0;
   let forbidden = 0;
   let left = 0;
   let right = 0;
-  const midX =
-    vertexSamples.reduce((s, v) => s + v.x, 0) / Math.max(vertexSamples.length, 1);
+  let leftExpected = 0;
+  let rightExpected = 0;
   for (let i = 0; i < mags.length; i += 1) {
+    if (headMask && headMask[i] === false) continue;
     const e = mags[i];
     if (e <= SEMANTIC_THRESHOLDS_V1.noiseFloor) continue;
     total += e;
     const region = regionBySampleIndex[i];
     if (expectedRegions.includes(region)) expected += e;
     if (forbiddenRegions.includes(region)) forbidden += e;
-    if (vertexSamples[i].x <= midX) left += e;
+    let onLeft = vertexOnCharacterLeft(vertexSamples[i], sideSplit);
+    if (onLeft) left += e;
     else right += e;
+    if (expectedRegions.includes(region)) {
+      const mouthSide =
+        region === 'mouth' || region === 'cheek'
+          ? vertexOnCharacterLeft(vertexSamples[i], sideSplit, { preferMouthCornerMid: true })
+          : onLeft;
+      if (mouthSide) leftExpected += e;
+      else rightExpected += e;
+    }
   }
   return {
     totalEnergy: total,
@@ -282,6 +469,8 @@ function summarizeRegionEnergy(
     forbiddenRatio: total > 0 ? forbidden / total : 0,
     leftEnergy: left,
     rightEnergy: right,
+    leftExpectedEnergy: leftExpected,
+    rightExpectedEnergy: rightExpected,
   };
 }
 
@@ -306,10 +495,12 @@ function evaluateChannelRule(rule, summary) {
     );
   }
   if (rule.side === 'left') {
+    const leftE = summary.leftExpectedEnergy ?? summary.leftEnergy;
+    const rightE = summary.rightExpectedEnergy ?? summary.rightEnergy;
     const ratio =
-      summary.rightEnergy > SEMANTIC_THRESHOLDS_V1.noiseFloor
-        ? summary.leftEnergy / summary.rightEnergy
-        : summary.leftEnergy > SEMANTIC_THRESHOLDS_V1.minTotalEnergy
+      rightE > SEMANTIC_THRESHOLDS_V1.noiseFloor
+        ? leftE / rightE
+        : leftE > SEMANTIC_THRESHOLDS_V1.minTotalEnergy
           ? Number.POSITIVE_INFINITY
           : 0;
     if (ratio < SEMANTIC_THRESHOLDS_V1.minSideDominanceRatio) {
@@ -319,10 +510,12 @@ function evaluateChannelRule(rule, summary) {
     }
   }
   if (rule.side === 'right') {
+    const leftE = summary.leftExpectedEnergy ?? summary.leftEnergy;
+    const rightE = summary.rightExpectedEnergy ?? summary.rightEnergy;
     const ratio =
-      summary.leftEnergy > SEMANTIC_THRESHOLDS_V1.noiseFloor
-        ? summary.rightEnergy / summary.leftEnergy
-        : summary.rightEnergy > SEMANTIC_THRESHOLDS_V1.minTotalEnergy
+      leftE > SEMANTIC_THRESHOLDS_V1.noiseFloor
+        ? rightE / leftE
+        : rightE > SEMANTIC_THRESHOLDS_V1.minTotalEnergy
           ? Number.POSITIVE_INFINITY
           : 0;
     if (ratio < SEMANTIC_THRESHOLDS_V1.minSideDominanceRatio) {
@@ -381,7 +574,6 @@ export async function validateLiveActFaceSemanticQa(document, opts) {
   }
 
   const anchorPositions = resolveAnchorPositions(document, envelope.anchors);
-  const centroids = regionCentroids(anchorPositions);
   const vertexSamples = collectVertexSamples(document);
   if (vertexSamples.length === 0) {
     return {
@@ -395,7 +587,29 @@ export async function validateLiveActFaceSemanticQa(document, opts) {
     };
   }
 
-  const regionBySampleIndex = vertexSamples.map((v) => classifyVertexRegion(v, centroids));
+  const regionModel = buildAnatomicalRegionClassifier(anchorPositions);
+  if (!regionModel.ok) {
+    return {
+      contractVersion: SEMANTIC_QA_CONTRACT_VERSION,
+      profileVersion: SEMANTIC_PROFILE_VERSION,
+      pass: false,
+      skipped: false,
+      channels: {},
+      combinations: {},
+      violations: regionModel.missing.map((id) => `region_model_missing_anchor:${id}`),
+    };
+  }
+  const classifyVertexRegion = regionModel.classify;
+
+  const sampleMinY = vertexSamples.reduce((min, v) => Math.min(min, v.y), Number.POSITIVE_INFINITY);
+  const sampleMaxY = vertexSamples.reduce((max, v) => Math.max(max, v.y), Number.NEGATIVE_INFINITY);
+  const headYMin = sampleMaxY - 0.45;
+  const applyHeadMask = sampleMinY < 0.25 && sampleMaxY > 1.35;
+  const headMask = vertexSamples.map((v) => (applyHeadMask ? v.y >= headYMin : true));
+  const regionBySampleIndex = vertexSamples.map((v, i) =>
+    headMask[i] ? classifyVertexRegion(v) : 'jaw',
+  );
+  const sideSplit = resolveCharacterSideSplit(anchorPositions);
   const { byChannel, primKeys } = collectMorphDeltasByName(document);
 
   /** @type {Record<string, unknown>} */
@@ -422,12 +636,18 @@ export async function validateLiveActFaceSemanticQa(document, opts) {
       continue;
     }
     const mags = perVertexMagnitudes(primDeltas, primKeys, vertexSamples);
+    const channelRegionBySampleIndex = vertexSamples.map((v, i) => {
+      if (headMask[i] === false) return 'jaw';
+      return classifyVertexRegion(v);
+    });
     const summary = summarizeRegionEnergy(
       mags,
-      regionBySampleIndex,
+      channelRegionBySampleIndex,
       vertexSamples,
       rule.expectedRegions,
       rule.forbiddenRegions,
+      sideSplit,
+      headMask,
     );
     const channelViolations = evaluateChannelRule(rule, summary);
     channels[channelId] = {
@@ -477,6 +697,7 @@ export async function validateLiveActFaceSemanticQa(document, opts) {
     const mags = perVertexMagnitudes(combined, primKeys, vertexSamples);
     let maxForbiddenDisp = 0;
     for (let i = 0; i < mags.length; i += 1) {
+      if (headMask[i] === false) continue;
       const region = regionBySampleIndex[i];
       if (!combo.forbiddenRegions.includes(region)) continue;
       const disp = Math.sqrt(mags[i]);

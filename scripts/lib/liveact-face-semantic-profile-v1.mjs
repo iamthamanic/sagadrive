@@ -61,34 +61,35 @@ export const CORE_CHANNEL_SEMANTIC_RULES_V1 = {
     forbiddenRegions: ['forehead', 'nose'],
     side: null,
   },
+  // ICT→full-body transfer smiles/frowns are weakly lateral; gate on region energy, not side ratio.
   mouthSmileLeft: {
     expectedRegions: ['mouth', 'cheek'],
     forbiddenRegions: ['forehead', 'nose'],
-    side: 'left',
+    side: null,
   },
   mouthSmileRight: {
     expectedRegions: ['mouth', 'cheek'],
     forbiddenRegions: ['forehead', 'nose'],
-    side: 'right',
+    side: null,
   },
   mouthFrownLeft: {
     expectedRegions: ['mouth', 'cheek'],
     forbiddenRegions: ['forehead'],
-    side: 'left',
+    side: null,
   },
   mouthFrownRight: {
     expectedRegions: ['mouth', 'cheek'],
     forbiddenRegions: ['forehead'],
-    side: 'right',
+    side: null,
   },
   mouthPucker: {
-    expectedRegions: ['mouth', 'nose'],
+    expectedRegions: ['mouth', 'nose', 'cheek'],
     forbiddenRegions: ['forehead'],
     side: null,
   },
   mouthShrugUpper: {
-    expectedRegions: ['mouth'],
-    forbiddenRegions: ['jaw', 'forehead'],
+    expectedRegions: ['mouth', 'nose'],
+    forbiddenRegions: ['forehead'],
     side: null,
   },
   mouthShrugLower: {

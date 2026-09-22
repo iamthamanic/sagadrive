@@ -1,32 +1,32 @@
 {
   "runId": "quality-20260921-m5-face1",
-  "createdAt": "2026-09-21T17:31:58.047Z",
+  "createdAt": "2026-09-22T07:12:03.469Z",
   "faceAuthoringProvider": "qtmesh-facerig",
   "qtmesh": {
     "repository": "fernandotonon/QtMeshEditor",
     "commit": "8720dc91bd7426908b9218673fbd74d544dd908c",
     "license": "MIT",
-    "bin": null,
-    "binSource": null,
+    "bin": ".cache/sagadrive-tools/qtmesh/bin/qtmesh",
+    "binSource": "cache",
     "install": {
       "tool": "qtmesh",
       "repository": "fernandotonon/QtMeshEditor",
       "pinnedCommit": "8720dc91bd7426908b9218673fbd74d544dd908c",
-      "pinnedCommitNote": "native mesh.extras.targetNames (fix #1045)",
-      "binaryRelease": "3.40.0",
-      "binaryReleaseNote": "first published macOS release after pinned commit; includes targetNames fix",
+      "pinnedCommitNote": "native mesh.extras.targetNames (fix #1045); runtime binary upgraded for FaceRig fixes",
+      "binaryRelease": "3.41.1",
+      "binaryReleaseNote": "includes FaceRig surface-orientation resample #1066 + lipsync multi-submesh morph fix",
       "license": "MIT",
       "faceTemplate": {
         "provider": "ICT-FaceKit",
         "license": "MIT"
       },
-      "installedAt": "2026-09-21"
+      "installedAt": "2026-09-22"
     }
   },
   "faceTemplate": {
     "provider": "ICT-FaceKit",
     "license": "MIT",
-    "checksum": "f84b22e895dd1edafaf4b93165597b7e51c644fb8a27bbc121df9b84b8e74f4d"
+    "checksum": null
   },
   "input": {
     "path": "public/assets/avatars/species/human-male-quality-20260921-m5.glb",
@@ -35,13 +35,14 @@
   },
   "output": {
     "path": "assets/species-3d/human/runs/quality-20260921-m5-face1/human-male-quality-20260921-m5-face1.glb",
-    "checksum": "f1f3f0db50dddf8998029f4eb4f0a65494f976d19ab427ebed3e70273eddbba9",
-    "bytes": 98049320
+    "checksum": "53d7be5c5eba0862597e0142c527494fc1a5ad0175d8ce6f30af331172221aab",
+    "bytes": 100195628
   },
   "faceRig": {
     "shapeCount": 51,
-    "fitResidual": null,
-    "gazeMode": "none",
+    "fitResidual": 0.9189788049869712,
+    "fitMeanResidual": 0.04263562461085925,
+    "gazeMode": "morphs",
     "coreProfile": "core-v1",
     "fullProfile": "measured",
     "targetNamesSample": [
@@ -61,9 +62,29 @@
     "canonicalize": {
       "textureCount": 4,
       "morphCount": 51,
-      "ibmCellsFixed": 0,
-      "sparseMorphTargets": 44
-    }
+      "sparseMorphTargets": 51
+    },
+    "landmarkAnchoring": {
+      "available": null,
+      "used": null,
+      "landmarkCount": null,
+      "residual": null,
+      "tmplOk": null,
+      "userOk": null,
+      "evidence": [
+        "[facerig] seed: \u2026 constellation residual 0.241 -> using proportional defaults",
+        "[sim] markers=13 anchors=13 seedConfident=0",
+        "[sim] fit mean=0.04263562461085925% max=0.9189788049869712%"
+      ],
+      "path": "QTMESH_FACERIG_MARKER_SIM=2",
+      "markerCount": 13,
+      "seedConstellationResidual": 0.241,
+      "seedTrusted": false,
+      "proportionalDefaults": true,
+      "onnxPresent": true,
+      "qtmeshBinaryRelease": "3.41.1"
+    },
+    "authoringPath": "marker-sim-2-proportional-defaults"
   },
   "validation": {
     "khronos": {
@@ -75,50 +96,28 @@
       "pass": true,
       "errors": [],
       "missingRequired": [],
-      "emptyMorphs": [
-        "eyeLookInLeft",
-        "eyeLookInRight",
-        "eyeLookOutLeft",
-        "eyeLookOutRight",
-        "eyeSquintRight",
-        "mouthLowerDownLeft",
-        "mouthLowerDownRight"
-      ],
+      "emptyMorphs": [],
+      "degenerateSupportMorphs": [],
+      "spikeOutlierMorphs": [],
       "preservationErrors": []
     },
     "ok": true,
     "profile": "core-v1",
     "inventoryPath": "face-inventory.json",
-    "qtmeshReportPath": "qtmesh-report.json"
-  },
-  "beforeAfter": {
-    "bytes": {
-      "before": 86172992,
-      "after": 98049320
-    },
-    "triangles": {
-      "before": 215832,
-      "after": 215832
-    },
-    "morphs": {
-      "before": 0,
-      "after": 51
-    },
-    "skins": {
-      "before": 1,
-      "after": 1
-    },
-    "bones": {
-      "before": 24,
-      "after": 24
-    },
-    "materials": {
-      "before": 1,
-      "after": 1
-    },
-    "textures": {
-      "before": 4,
-      "after": 4
+    "qtmeshReportPath": "qtmesh-report.json",
+    "notes": "QtMesh 3.41.1 + MARKER_SIM=2 (13 proportional anchors). MediaPipe 478 constellation residual 0.318/0.241 cleared; marker path yields fit max 0.92% and core-v1 PASS; public ship tex\u22642048 for GitHub size.",
+    "semanticQa": {
+      "pass": true,
+      "profileVersion": "liveact-face-semantic-profile-v1",
+      "contractVersion": "SagaDriveLiveActFaceSemanticQaV1",
+      "violationCount": 0
     }
+  },
+  "shippedAs": {
+    "publicPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb",
+    "cacheBust": "quality5-face1-tex2k",
+    "bytes": 31168980,
+    "checksum": "134f5137019ec5b26abd977459bd510b763f080c111da3d6ab4f92cb3aaa33ff",
+    "publishNote": "Public textures resized to max 2048px (gltf-transform resize) for GitHub soft 100MB limit; mesh/morph topology unchanged from authoring output."
   }
 }

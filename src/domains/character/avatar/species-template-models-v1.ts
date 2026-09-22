@@ -25,8 +25,8 @@ const SPECIES_GENDER_MESH: Readonly<
   Partial<Record<BaseBodySpeciesId, Readonly<Record<GenderMeshKey, string>>>>
 > = {
   human: {
-    'masculine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-male-quality-20260921-m5-face1.glb?v=quality5-face1`,
-    'feminine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-female-quality-20260921-f5-face1.glb?v=quality5-face1`,
+    'masculine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-male-quality-20260921-m5-face1.glb?v=quality5-face1-tex2k`,
+    'feminine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-female-quality-20260921-f5-face1.glb?v=quality5-face1-tex2k`,
   },
 };
 

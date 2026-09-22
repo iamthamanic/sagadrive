@@ -5,23 +5,48 @@
   "license": "MIT",
   "bin": ".cache/sagadrive-tools/qtmesh/bin/qtmesh",
   "binSource": "cache",
+  "binaryRelease": "3.41.1",
   "argv": [
     "facerig",
     "public/assets/avatars/species/human-male-quality-20260921-m5.glb",
     "-o",
-    "assets/species-3d/human/runs/quality-20260921-m5-face1/human-male-quality-20260921-m5-face1.glb",
+    "…/m5-face2.glb",
     "--json",
     "--max-residual",
-    "12"
+    "8"
   ],
+  "env": {
+    "QTMESH_FACERIG_DEBUG": "1",
+    "QTMESH_FACERIG_MARKER_SIM": "2"
+  },
   "exitCode": 0,
+  "landmarkAnchoring": {
+    "available": null,
+    "used": null,
+    "landmarkCount": null,
+    "residual": null,
+    "tmplOk": null,
+    "userOk": null,
+    "evidence": [
+      "[facerig] seed: … constellation residual 0.241 -> using proportional defaults",
+      "[sim] markers=13 anchors=13 seedConfident=0",
+      "[sim] fit mean=0.04263562461085925% max=0.9189788049869712%"
+    ],
+    "path": "QTMESH_FACERIG_MARKER_SIM=2",
+    "markerCount": 13,
+    "seedConstellationResidual": 0.241,
+    "seedTrusted": false,
+    "proportionalDefaults": true,
+    "onnxPresent": true,
+    "qtmeshBinaryRelease": "3.41.1"
+  },
   "report": {
-    "fit_max_residual_pct": 9.692208813640878,
-    "fit_mean_residual_pct": 0.15599420020560384,
-    "output": "human-male-quality-20260921-m5-face1.glb",
+    "fit_max_residual_pct": 0.9189788049869712,
+    "fit_mean_residual_pct": 0.04263562461085925,
+    "output": "A2h-341-sim2.glb",
     "shapes_attached": 51,
     "user_vertex_count": 133002
   },
-  "stdoutTail": "{\n    \"fit_max_residual_pct\": 9.692208813640878,\n    \"fit_mean_residual_pct\": 0.15599420020560384,\n    \"output\": \"human-male-quality-20260921-m5-face1.glb\",\n    \"shapes_attached\": 51,\n    \"user_vertex_count\": 133002\n}\n\n",
-  "stderrTail": ""
+  "stdoutTail": "{\n    \"fit_max_residual_pct\": 0.9189788049869712,\n    \"fit_mean_residual_pct\": 0.04263562461085925,\n    \"output\": \"A2h-341-sim2.glb\",\n    \"shapes_attached\": 51,\n    \"user_vertex_count\": 133002\n}\n\n",
+  "stderrTail": "g] feet dir: d=(-0.005,0.096) len=0.096 min=0.009\n[facerig] facing from FEET dir local=(-0.05,0,1.00)\n[facerig] seed: ulm.ok=1 conf=0.97 13/13 detected, constellation residual 0.241 -> using proportional defaults\n[facerig] defaults: faceDirValid=1 dir=(-0.05,0.00,1.00) yaw=0\n[sim] markers=13 anchors=13 seedConfident=0\n[sim] surfdist 'Nose tip' = 0.0185755\n[sim] surfdist 'Chin' = 0.0368848\n[sim] surfdist 'Right eye outer' = 0.00731085\n[sim] surfdist 'Left eye outer' = 0.00728843\n[sim] surfdist 'Right eye inner' = 0.0126549\n[sim] surfdist 'Left eye inner' = 0.0125967\n[sim] surfdist 'Right mouth corner' = 0.00265723\n[sim] surfdist 'Left mouth corner' = 0.00173788\n[sim] surfdist 'Upper lip' = 0.00436029\n[sim] surfdist 'Lower lip' = 0.00650779\n[sim] surfdist 'Right brow' = 0.00400709\n[sim] surfdist 'Left brow' = 0.00520352\n[sim] surfdist 'Forehead' = 0.00736454\n[sim] marker 'Nose tip' tmplX=0  (character-RIGHT side)\n[sim] marker 'Chin' tmplX=0  (character-RIGHT side)\n[sim] marker 'Right eye outer' tmplX=4.85396  (character-RIGHT side)\n[sim] marker 'Left eye outer' tmplX=-4.85396  (character-LEFT side)\n[sim] marker 'Right eye inner' tmplX=1.99773  (character-RIGHT side)\n[sim] marker 'Left eye inner' tmplX=-1.99773  (character-LEFT side)\n[sim] marker 'Right mouth corner' tmplX=2.42686  (character-RIGHT side)\n[sim] marker 'Left mouth corner' tmplX=-2.42686  (character-LEFT side)\n[sim] marker 'Upper lip' tmplX=-0.188159  (character-LEFT side)\n[sim] marker 'Lower lip' tmplX=0  (character-RIGHT side)\n[sim] marker 'Right brow' tmplX=4.58004  (character-RIGHT side)\n[sim] marker 'Left brow' tmplX=-4.58004  (character-LEFT side)\n[sim] marker 'Forehead' tmplX=0  (character-RIGHT side)\n[sim] diag: tmpl=47.5202 warped=0.431121 head=0.439695\n[sim] fit mean=0.0426356% max=0.918979%\n[sim] browInnerUp: nonZero=41906 maxDisp=0.00270092\n[sim] eyeBlinkLeft: nonZero=41964 maxDisp=0.00361134\n[sim] jawOpen: nonZero=46887 maxDisp=0.0278057\n[sim] mouthSmileLeft: nonZero=46724 maxDisp=0.00775173\n"
 }

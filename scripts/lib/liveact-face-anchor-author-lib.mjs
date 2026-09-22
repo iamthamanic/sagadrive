@@ -10,6 +10,7 @@ import {
   SAGA_DRIVE_FACE_ANCHOR_IDS,
 } from './liveact-face-anchor-ids.mjs';
 import { findNodeByIdentity, listMeshedNodeIdentities } from './liveact-face-anchor-glb.mjs';
+import { authorHeuristicFaceAnchorsManifest } from './liveact-face-anchor-heuristic.mjs';
 
 const CENTROID = { u: 1 / 3, v: 1 / 3, w: 1 / 3 };
 
@@ -55,9 +56,18 @@ export async function authorFaceAnchorsFromGlb(opts) {
   const io = new NodeIO();
   const document = await io.readBinary(new Uint8Array(readFileSync(opts.inputPath)));
 
-  const manifest = opts.bootstrap
-    ? bootstrapMinimalFaceAnchorsManifest(document, { nodeIdentity: opts.nodeIdentity })
-    : bootstrapMinimalFaceAnchorsManifest(document, { nodeIdentity: opts.nodeIdentity });
+  let manifest;
+  if (opts.bootstrap) {
+    manifest = bootstrapMinimalFaceAnchorsManifest(document, { nodeIdentity: opts.nodeIdentity });
+  } else {
+    const authored = authorHeuristicFaceAnchorsManifest(document, {
+      nodeIdentity: opts.nodeIdentity,
+    });
+    manifest = {
+      contractVersion: FACE_ANCHORS_CONTRACT_VERSION,
+      anchors: authored.anchors,
+    };
+  }
 
   writeFileSync(opts.outputPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
   return manifest;

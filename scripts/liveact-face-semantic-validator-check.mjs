@@ -125,6 +125,10 @@ async function buildSemanticFixtureGlb(opts = {}) {
     bump('mouthSmileLeft', 'mouthCornerLeft', [0, 0.08, 0.04]);
     bump('mouthSmileLeft', 'mouthUpper', [0, 0.03, 0.01]);
   }
+  if (opts.eyeBlinkLeftWrongSide) {
+    bump('eyeBlinkLeft', 'eyeRightUpper', [0, -0.12, 0]);
+    bump('eyeBlinkLeft', 'eyeRightLower', [0, 0.12, 0]);
+  }
   bump('mouthSmileRight', 'mouthCornerRight', [0, 0.08, 0.04]);
   bump('mouthSmileRight', 'mouthUpper', [0, 0.03, 0.01]);
   bump('mouthFrownLeft', 'mouthCornerLeft', [0, -0.07, -0.02]);
@@ -253,16 +257,16 @@ check(failResult.ok === false, 'leaky jawOpen fails overall');
 check(failResult.inventory.sagaDrive.errors.includes('semantic_qa_failed'), 'semantic error surfaced');
 check(failResult.inventory.semanticQa?.channels?.jawOpen?.pass === false, 'jawOpen semantic fail');
 
-const wrongSidePath = join(fixtureDir, 'face-semantic-smile-wrong-side.glb');
-writeFileSync(wrongSidePath, await buildSemanticFixtureGlb({ smileLeftWrongSide: true }));
+const wrongSidePath = join(fixtureDir, 'face-semantic-blink-wrong-side.glb');
+writeFileSync(wrongSidePath, await buildSemanticFixtureGlb({ eyeBlinkLeftWrongSide: true }));
 const wrongSide = await validateLiveActFaceAsset({
   inputPath: wrongSidePath,
   baselinePath,
   profile: 'core-v1',
   anchorsPath,
 });
-check(wrongSide.ok === false, 'asymmetric smile fail');
-check(wrongSide.inventory.semanticQa?.channels?.mouthSmileLeft?.pass === false, 'smileLeft fail detail');
+check(wrongSide.ok === false, 'asymmetric blink fail');
+check(wrongSide.inventory.semanticQa?.channels?.eyeBlinkLeft?.pass === false, 'blinkLeft fail detail');
 
 execFileSync(
   process.execPath,

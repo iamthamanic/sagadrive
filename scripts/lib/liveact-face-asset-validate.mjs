@@ -295,6 +295,7 @@ export async function validateLiveActFaceAsset(opts) {
     baselineFile: basename(opts.baselinePath),
     profile: opts.profile,
     profileOk: missingRequired.length === 0,
+    structuralPass,
     khronos: {
       pass: khronosPass,
       numErrors: khronosReport.issues?.numErrors ?? 0,
