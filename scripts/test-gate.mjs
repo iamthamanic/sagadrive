@@ -440,6 +440,14 @@ function checkLiveActDiagnosticsV2() {
   });
 }
 
+function checkLiveActFaceAnchorsV1() {
+  console.log('LiveAct face anchors V1 (#399): SagaDriveFaceAnchorsV1 mesh bindings...');
+  execFileSync(process.execPath, ['scripts/liveact-face-anchors-v1-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActCameraOverlayMetrics() {
   console.log('LiveAct camera overlay metrics (#398): object-cover + HUD...');
   execFileSync(process.execPath, ['scripts/liveact-camera-overlay-metrics-check.mjs'], {
@@ -1273,6 +1281,7 @@ checkLiveActCore();
 checkLiveActViewportUi();
 checkLiveActFaceDiagnostics();
 checkLiveActDiagnosticsV2();
+checkLiveActFaceAnchorsV1();
 checkLiveActCameraOverlayMetrics();
 checkLiveActAvatarOutput();
 checkLiveActCapabilityOwnership();

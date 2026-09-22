@@ -739,6 +739,22 @@ export {
   type BodyRegionMaskDelta,
   type BodyRegionMaskSnapshot,
 } from './body-region-mask-v1';
+export {
+  FACE_ANCHORS_CONTRACT_VERSION,
+  SAGA_DRIVE_FACE_ANCHOR_IDS,
+  isSagaDriveFaceAnchorId,
+  parseFaceAnchorsManifestV1,
+  stableFaceAnchorsManifestJson,
+  validateFaceAnchorBarycentric,
+  validateFaceAnchorTriangleBinding,
+  validateFaceAnchorsManifestV1,
+  type SagaDriveFaceAnchorBarycentric,
+  type SagaDriveFaceAnchorBindingValidationIssue,
+  type SagaDriveFaceAnchorBindingValidationResult,
+  type SagaDriveFaceAnchorId,
+  type SagaDriveFaceAnchorTriangleBinding,
+  type SagaDriveFaceAnchorsManifestV1,
+} from './face-anchor-contract';
 
 export {
   SPECIES_DEFAULT_BODY_FAMILY,

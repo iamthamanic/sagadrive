@@ -52,6 +52,19 @@ Pass the **full** skinned baseline GLB. Do not pre-cut the head in SagaDrive.
 
 ---
 
+## Face anchors (SagaDriveFaceAnchorsV1)
+
+Per run, emit `face-anchors.json` beside the face GLB (semantic mouth/eye/brow/nose/chin/forehead mesh bindings).
+
+- Author: `scripts/liveact-face-anchor-author.mjs` (+ `scripts/lib/liveact-face-anchor-*.mjs`)
+- Validate: `scripts/liveact-face-anchors-v1-check.mjs` / `scripts/lib/liveact-face-anchor-validate.mjs`
+- Example fixture: `.qa/fixtures/liveact-face-anchors-v1/face-anchors.json`
+- Production path: `assets/species-3d/<species>/runs/<run-id>/face-anchors.json` (reference checksum in `run.json` when present)
+
+m5/f5 runs may stub an empty anchors file until QtMesh extraction lands; domain/runtime stay provider-neutral.
+
+---
+
 ## Run ledger fields
 
 Minimum in `run.json`:
