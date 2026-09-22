@@ -109,10 +109,10 @@
   },
   "shippedAs": {
     "publicPath": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm",
-    "cacheBust": "quality5-face1-vrm1",
-    "bytes": 38408648,
-    "checksum": "50f63bb1e5a3d2c734db0708142af30ee0662db6821bed2ae12b858bf7793181",
-    "publishNote": "VRM 1.0 primary via avatar-vrm-pack; GLB retained as generic fallback/source.",
+    "cacheBust": "quality5-face1-vrm1b",
+    "bytes": 38408828,
+    "checksum": "e14be89deadca02a4b800ff66749ff746497d54c52be4b1230bd089197d0effe",
+    "publishNote": "VRM primary; face-anchors sidecar published beside model; blink dual-named preset+custom.",
     "publicGlbFallback": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb",
     "format": "vrm-1.0"
   }

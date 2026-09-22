@@ -75,7 +75,7 @@ export function LiveActDiagnosticsChannelTable({
         <span className="text-right">Ret</span>
         <span className="text-right">App</span>
       </div>
-      <ul className="max-h-48 space-y-0.5 overflow-y-auto px-1 text-[10px] text-slate-300">
+      <ul className="max-h-32 space-y-0.5 overflow-y-auto px-1 text-[10px] text-slate-300">
         {LIVEACT_DIAGNOSTICS_V2_SIGNAL_KEYS.map((key) => {
           const raw = snapshot.stages.raw[key];
           const ret = snapshot.stages.retargeted[key];

@@ -37,6 +37,8 @@ check(/evaluateFaceAnchorsManifest/.test(debug), 'debug evaluates anchors');
 check(/computeLiveActFaceMetrics/.test(debug), 'debug uses shared metrics');
 check(!/billboard|headBone/i.test(debug), 'no billboard/head-bone heuristic');
 check(/resolveFaceAnchorsManifestUrlFromModelUrl/.test(manifestUrl), 'manifest URL resolver');
+check(/listFaceAnchorsManifestUrlCandidates/.test(manifestUrl), 'stem + fallback candidates');
+check(/-face-anchors\.json/.test(manifestUrl), 'model-stem sidecar naming');
 check(/getLiveActCharacterFaceDebugHandle/.test(studio), 'runtime debug handle');
 check(/setLiveActCharacterFaceDebugEnabled/.test(studio), 'runtime debug toggle');
 check(/runWithoutSampling/.test(studio), 'portrait suppresses sampling');
@@ -47,6 +49,8 @@ check(/characterFaceMappingAvailable/.test(controls), 'controls mapping gate');
 check(!/useState\(/.test(overlay), 'overlay no useState');
 check(/characterFaceDebugHandleRef/.test(surface), 'surface binds handle ref');
 check(/liveact-character-face-mapping-unavailable/.test(settings), 'settings capability hint');
+check(/liveact-pip-metrics-panel|LiveActPipMetricsPanel/.test(read('src/app/character/liveact/LiveActCameraPreview.tsx')), 'PiP hosts side metrics panel');
+check(/liveact-pip-metrics-panel/.test(read('src/app/character/liveact/LiveActPipMetricsPanel.tsx')), 'pip metrics panel component');
 check(/checkLiveActCharacterFaceOverlay/.test(gate), 'test-gate wiring');
 check(/SagaDriveFaceAnchorsV1|face-anchors/.test(acceptance), 'acceptance mentions anchors');
 

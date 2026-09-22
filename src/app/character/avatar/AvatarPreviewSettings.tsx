@@ -257,7 +257,7 @@ export function AvatarPreviewSettings({
             <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
               <div className="min-w-0">
                 <p className="text-xs text-slate-100">Metrics</p>
-                <p className="text-[10px] text-slate-400">HUD in PiP + Character-Viewport</p>
+                <p className="text-[10px] text-slate-400">Neben PiP + Character-Viewport</p>
               </div>
               <Switch
                 checked={metricsEnabled}

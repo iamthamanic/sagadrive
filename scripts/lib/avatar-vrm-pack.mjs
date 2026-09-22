@@ -256,6 +256,8 @@ export function buildVrmExpressions(json, presentChannels, gazeMode) {
     const presetName = LIVEACT_TO_VRM_PRESET[id];
     if (presetName) {
       preset[presetName] = expression;
+      // Keep LiveAct channel id as custom so runtime can resolve either name.
+      custom[id] = expression;
     } else {
       custom[id] = expression;
     }

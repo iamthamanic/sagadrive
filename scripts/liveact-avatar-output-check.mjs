@@ -117,6 +117,11 @@ const resolution = ft.resolveLiveActChannelTargets([
 ]);
 check(resolution.faceSupport.eyeBlinkLeft === true, 'blink L supported');
 check(resolution.faceSupport.eyeBlinkRight === true, 'blink R supported');
+
+const vrmPresetResolution = ft.resolveLiveActChannelTargets(['blinkLeft', 'blinkRight', 'jawOpen']);
+check(vrmPresetResolution.faceSupport.eyeBlinkLeft === true, 'VRM blinkLeft aliases to eyeBlinkLeft');
+check(vrmPresetResolution.faceSupport.eyeBlinkRight === true, 'VRM blinkRight aliases to eyeBlinkRight');
+check(vrmPresetResolution.resolvedNames.eyeBlinkLeft === 'blinkLeft', 'resolved blinkLeft name');
 check(resolution.faceSupport.mouthSmileLeft === true, 'smile L supported');
 check(resolution.faceSupport.mouthSmileRight === true, 'smile R asymmetric channels');
 check(resolution.faceSupport.jawOpen === true, 'jawOpen supported');

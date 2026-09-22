@@ -34,8 +34,8 @@ Source board (exploration): `assets/species-3d/human/style-compare-v2/mix-palow-
 
 Public allowlisted GLBs (quality m5/f5 only):
 
-- `/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm?v=quality5-face1-vrm1`
-- `/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm?v=quality5-face1-vrm1`
+- `/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm?v=quality5-face1-vrm1b`
+- `/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm?v=quality5-face1-vrm1b`
 
 Provenance: `assets/species-3d/human/provenance.json`
 

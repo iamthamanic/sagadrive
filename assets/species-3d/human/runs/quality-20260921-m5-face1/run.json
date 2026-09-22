@@ -115,10 +115,10 @@
   },
   "shippedAs": {
     "publicPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm",
-    "cacheBust": "quality5-face1-vrm1",
-    "bytes": 31174780,
-    "checksum": "94d4c147de2ec5f7180ffbd7e9c7f294d05647b460c430a41240fc66aba05c01",
-    "publishNote": "VRM 1.0 primary via avatar-vrm-pack; GLB retained as generic fallback/source.",
+    "cacheBust": "quality5-face1-vrm1b",
+    "bytes": 31174960,
+    "checksum": "3c0258b7d0dfedfe628f6fef9029c5c4c24309b647df11f67256d453a2c9f964",
+    "publishNote": "VRM primary; face-anchors sidecar published beside model; blink dual-named preset+custom.",
     "publicGlbFallback": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb",
     "format": "vrm-1.0"
   }

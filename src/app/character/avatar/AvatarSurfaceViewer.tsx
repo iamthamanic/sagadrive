@@ -161,8 +161,14 @@ export function AvatarSurfaceViewer({
       setCharacterFaceMappingAvailable(runtime.hasLiveActCharacterFaceMapping());
     };
     syncMapping();
-    const timer = window.setTimeout(syncMapping, 900);
-    return () => window.clearTimeout(timer);
+    const t1 = window.setTimeout(syncMapping, 400);
+    const t2 = window.setTimeout(syncMapping, 1200);
+    const t3 = window.setTimeout(syncMapping, 2500);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+    };
   }, [runtimeReady, modelEpoch, liveAct.characterFaceDebugHandleRef]);
 
   useEffect(() => {
