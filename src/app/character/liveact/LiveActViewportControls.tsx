@@ -1,12 +1,29 @@
 /**
- * LiveActViewportControls — editor viewport chrome host for LiveAct gear + PiP (#330).
+ * LiveActViewportControls — editor viewport chrome host for LiveAct gear + PiP (#330/#420).
  * Location: src/app/character/liveact/LiveActViewportControls.tsx
  *
- * Composes AvatarPreviewSettings + LiveActCameraPreview for AvatarSurfaceViewer.
+ * Composes AvatarPreviewSettings + LiveActCameraPreview + Face Mapping authoring for AvatarSurfaceViewer.
  */
 
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
+import type {
+  SagaDriveFaceAnchorId,
+  SagaDriveFaceAnchorTriangleBinding,
+} from '../../../domains/character/avatar/face-anchor-contract';
+import {
+  clearFaceMappingDraftBinding,
+  createEmptyFaceMappingDraft,
+  faceMappingDraftToManifest,
+  resetFaceMappingDraft,
+  selectFaceMappingAnchor,
+  setFaceMappingDraftBinding,
+  type SagaDriveFaceMappingDraftV1,
+} from '../../../domains/character/avatar/face-mapping-draft-v1';
+import type { CharacterStudioRuntime } from '../../../infrastructure/character/avatar/character-studio-runtime';
 import { AvatarPreviewSettings } from '../avatar/AvatarPreviewSettings';
+import { FaceMappingAuthoringPanel } from './FaceMappingAuthoringPanel';
+import { FaceMappingMarkerLayer } from './FaceMappingMarkerLayer';
 import { LiveActCameraPreview } from './LiveActCameraPreview';
 import { LiveActCharacterFaceOverlay } from './LiveActCharacterFaceOverlay';
 import type { UseLiveActViewportResult } from './useLiveActViewport';
@@ -18,6 +35,7 @@ interface LiveActViewportControlsProps {
   liveAct: UseLiveActViewportResult;
   capabilities: LiveActCapabilitiesV1 | null;
   characterFaceMappingAvailable: boolean;
+  studioRuntimeRef?: RefObject<CharacterStudioRuntime | null>;
 }
 
 export function LiveActViewportControls({
@@ -27,19 +45,76 @@ export function LiveActViewportControls({
   liveAct,
   capabilities,
   characterFaceMappingAvailable,
+  studioRuntimeRef,
 }: LiveActViewportControlsProps) {
+  const [faceMappingOpen, setFaceMappingOpen] = useState(false);
+  const [draft, setDraft] = useState<SagaDriveFaceMappingDraftV1 | null>(null);
+  const [missMessage, setMissMessage] = useState<string | null>(null);
+  const draftRef = useRef<SagaDriveFaceMappingDraftV1 | null>(null);
+  draftRef.current = draft;
+
   const characterOverlayOn =
-    liveAct.faceOverlayEnabled && runtimeReady && characterFaceMappingAvailable;
+    !faceMappingOpen &&
+    liveAct.faceOverlayEnabled &&
+    runtimeReady &&
+    characterFaceMappingAvailable;
   const inputLive =
     runtimeReady &&
     liveAct.trackingEnabled &&
     liveAct.faceDetected &&
     (liveAct.status === 'active' || liveAct.status === 'lost');
   const showPip =
+    !faceMappingOpen &&
     liveAct.trackingEnabled &&
     liveAct.cameraPreviewEnabled &&
     Boolean(liveAct.previewVideo) &&
     runtimeReady;
+
+  const closeFaceMapping = useCallback(() => {
+    studioRuntimeRef?.current?.setFaceMappingAuthoringActive(false);
+    setFaceMappingOpen(false);
+    setDraft(null);
+    setMissMessage(null);
+  }, [studioRuntimeRef]);
+
+  const openFaceMapping = useCallback(() => {
+    const runtime = studioRuntimeRef?.current;
+    if (!runtime || !runtimeReady) return;
+    liveAct.setTrackingEnabled(false);
+    liveAct.setFaceOverlayEnabled(false);
+    liveAct.setBonesEnabled(false);
+    runtime.setFaceMappingAuthoringActive(true);
+    const baseline = runtime.getFaceAnchorsManifest();
+    const next = createEmptyFaceMappingDraft(baseline);
+    setDraft(next);
+    setMissMessage(null);
+    setFaceMappingOpen(true);
+  }, [liveAct, runtimeReady, studioRuntimeRef]);
+
+  useEffect(() => {
+    if (!faceMappingOpen) return;
+    if (!runtimeReady) {
+      closeFaceMapping();
+    }
+  }, [closeFaceMapping, faceMappingOpen, runtimeReady]);
+
+  useEffect(() => {
+    return () => {
+      studioRuntimeRef?.current?.setFaceMappingAuthoringActive(false);
+    };
+  }, [studioRuntimeRef]);
+
+  const onBindingPlaced = useCallback(
+    (anchorId: SagaDriveFaceAnchorId, binding: SagaDriveFaceAnchorTriangleBinding | null) => {
+      if (!binding) {
+        setMissMessage('Kein Treffer auf der Character-Oberfläche — erneut tippen.');
+        return;
+      }
+      setMissMessage(null);
+      setDraft((prev) => (prev ? setFaceMappingDraftBinding(prev, anchorId, binding) : prev));
+    },
+    [],
+  );
 
   return (
     <>
@@ -49,6 +124,42 @@ export function LiveActViewportControls({
         debugHandleRef={liveAct.characterFaceDebugHandleRef}
         diagnosticsV2Ref={liveAct.diagnosticsV2Ref}
       />
+      {studioRuntimeRef ? (
+        <FaceMappingMarkerLayer
+          active={faceMappingOpen}
+          draftRef={draftRef}
+          studioRuntimeRef={studioRuntimeRef}
+          onBindingPlaced={onBindingPlaced}
+        />
+      ) : null}
+      {faceMappingOpen && draft ? (
+        <FaceMappingAuthoringPanel
+          draft={draft}
+          missMessage={missMessage}
+          onSelect={(id) => {
+            setMissMessage(null);
+            setDraft((prev) => (prev ? selectFaceMappingAnchor(prev, id) : prev));
+          }}
+          onClearSelected={() => {
+            setDraft((prev) => {
+              if (!prev?.selectedAnchorId) return prev;
+              return clearFaceMappingDraftBinding(prev, prev.selectedAnchorId);
+            });
+          }}
+          onReset={() => {
+            setMissMessage(null);
+            setDraft((prev) => (prev ? resetFaceMappingDraft(prev) : prev));
+          }}
+          onCancel={closeFaceMapping}
+          onApply={() => {
+            const runtime = studioRuntimeRef?.current;
+            if (!runtime || !draft) return;
+            const manifest = faceMappingDraftToManifest(draft);
+            runtime.bindFaceAnchorsManifestSession(manifest);
+            closeFaceMapping();
+          }}
+        />
+      ) : null}
       <AvatarPreviewSettings
         runtimeReady={runtimeReady}
         mtoonEnabled={mtoonEnabled}
@@ -83,6 +194,8 @@ export function LiveActViewportControls({
         }}
         calibrationMessage={liveAct.calibrationMessage}
         hasNeutralBaseline={liveAct.hasNeutralBaseline}
+        faceMappingOpen={faceMappingOpen}
+        onOpenFaceMapping={openFaceMapping}
       />
       <LiveActCameraPreview
         video={liveAct.previewVideo}

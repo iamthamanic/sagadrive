@@ -64,8 +64,20 @@ import {
   type LiveActCharacterFaceDebugHandle,
 } from '../liveact/liveact-character-face-debug';
 import { listFaceAnchorsManifestUrlCandidates } from '../liveact/face-anchors-manifest-url';
+import type {
+  SagaDriveFaceAnchorTriangleBinding,
+  SagaDriveFaceAnchorsManifestV1,
+} from '../../../domains/character/avatar/face-anchor-contract';
+import {
+  buildFaceAnchorNodeIndex,
+  evaluateFaceAnchorWorldPosition,
+} from './face-anchor-runtime';
+import {
+  raycastFaceMappingPointer,
+  type FaceMappingRaycastHitV1,
+} from './face-mapping-raycast';
 
-export type { LiveActCharacterFaceDebugHandle };
+export type { LiveActCharacterFaceDebugHandle, FaceMappingRaycastHitV1 };
 import type { AvatarEquipmentVisual } from '../../../domains/character/avatar';
 import {
   AvatarRigidEquipmentRuntime,
@@ -183,6 +195,9 @@ export class CharacterStudioRuntime {
   private readonly liveActRigDebug: LiveActRigDebugController;
   private readonly liveActCharacterFaceDebug: LiveActCharacterFaceDebugController;
   private faceAnchorManifestLoadToken = 0;
+  /** When true, LiveAct drive application is suppressed for Face Setup (#420). */
+  private faceMappingAuthoringActive = false;
+  private readonly faceMappingProjectScratch = new THREE.Vector3();
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -435,6 +450,7 @@ export class CharacterStudioRuntime {
 
   /** LiveAct output adapter for the loaded model; null until ready. */
   getLiveActAvatarOutput(): LiveActAvatarOutput | null {
+    if (this.faceMappingAuthoringActive) return null;
     return this.liveActAvatarOutput;
   }
 
@@ -470,12 +486,99 @@ export class CharacterStudioRuntime {
     return this.liveActCharacterFaceDebug.getHandle();
   }
 
+  /** Bound SagaDriveFaceAnchorsV1 for the current model (may be null). */
+  getFaceAnchorsManifest(): SagaDriveFaceAnchorsManifestV1 | null {
+    return this.liveActCharacterFaceDebug.getManifest();
+  }
+
+  /**
+   * Session-local rebind for Face Mapping „Übernehmen“ — does not write disk/network.
+   */
+  bindFaceAnchorsManifestSession(manifest: SagaDriveFaceAnchorsManifestV1 | null): void {
+    if (this.disposed) return;
+    this.liveActCharacterFaceDebug.bindManifest(manifest);
+  }
+
+  /** Face Setup authoring mode: neutralize pose and suppress LiveAct drive. */
+  setFaceMappingAuthoringActive(active: boolean): void {
+    if (this.disposed) return;
+    this.faceMappingAuthoringActive = active;
+    if (active) {
+      this.resetLiveActPose();
+      this.resetFaceTrackingPose();
+      this.setLiveActCharacterFaceDebugEnabled(false);
+      this.setLiveActRigDebugEnabled(false);
+      this.applyCameraFrame('face');
+    }
+  }
+
+  isFaceMappingAuthoringActive(): boolean {
+    return this.faceMappingAuthoringActive;
+  }
+
+  /**
+   * Raycast canvas-local pointer to a triangle binding on allowlisted avatar meshes.
+   */
+  raycastFaceMappingAtCanvas(canvasX: number, canvasY: number): FaceMappingRaycastHitV1 | null {
+    if (this.disposed || !this.currentRoot) return null;
+    const canvas = this.renderer.domElement;
+    const width = Math.max(1, Math.round(canvas.clientWidth));
+    const height = Math.max(1, Math.round(canvas.clientHeight));
+    return raycastFaceMappingPointer({
+      camera: this.camera,
+      root: this.currentRoot,
+      canvasWidth: width,
+      canvasHeight: height,
+      canvasX,
+      canvasY,
+    });
+  }
+
+  /** Project world point to canvas CSS pixels (null if behind camera). */
+  projectWorldToFaceMappingCanvas(
+    x: number,
+    y: number,
+    z: number,
+  ): { x: number; y: number } | null {
+    if (this.disposed) return null;
+    const canvas = this.renderer.domElement;
+    const width = Math.max(1, Math.round(canvas.clientWidth));
+    const height = Math.max(1, Math.round(canvas.clientHeight));
+    this.faceMappingProjectScratch.set(x, y, z).project(this.camera);
+    if (
+      !Number.isFinite(this.faceMappingProjectScratch.x) ||
+      !Number.isFinite(this.faceMappingProjectScratch.y)
+    ) {
+      return null;
+    }
+    if (this.faceMappingProjectScratch.z > 1) return null;
+    return {
+      x: (this.faceMappingProjectScratch.x * 0.5 + 0.5) * width,
+      y: (-this.faceMappingProjectScratch.y * 0.5 + 0.5) * height,
+    };
+  }
+
+  /** Evaluate a draft binding to world coordinates (null if unavailable). */
+  evaluateFaceMappingBindingWorld(
+    binding: SagaDriveFaceAnchorTriangleBinding,
+  ): { x: number; y: number; z: number } | null {
+    if (this.disposed || !this.currentRoot) return null;
+    const index = buildFaceAnchorNodeIndex(this.currentRoot);
+    const result = evaluateFaceAnchorWorldPosition(index, 'noseTip', binding);
+    if (result.status !== 'available') return null;
+    return { x: result.x, y: result.y, z: result.z };
+  }
+
+  getFaceMappingCanvasElement(): HTMLCanvasElement {
+    return this.renderer.domElement;
+  }
+
   /**
    * Apply local face-tracking drive (#12) onto head bone + facial weights.
    * Ephemeral only — never written into appearance.avatar.
    */
   applyFaceTrackingDrive(drive: FaceTrackingDrive): void {
-    if (this.disposed) return;
+    if (this.disposed || this.faceMappingAuthoringActive) return;
     if (this.headBone) {
       this.headScratchEuler.set(drive.head.pitch, drive.head.yaw, drive.head.roll, 'YXZ');
       this.headScratchQuaternion.setFromEuler(this.headScratchEuler);

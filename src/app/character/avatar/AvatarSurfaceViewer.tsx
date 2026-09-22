@@ -268,6 +268,7 @@ export function AvatarSurfaceViewer({
                   liveAct={liveAct}
                   capabilities={liveActCapabilities}
                   characterFaceMappingAvailable={characterFaceMappingAvailable}
+                  studioRuntimeRef={studioRuntimeRef}
                 />
               </div>
             </div>

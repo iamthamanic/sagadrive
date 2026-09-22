@@ -1,0 +1,10 @@
+{
+  "nodeIdentity": "HeadMesh",
+  "primitiveIndex": 0,
+  "triangleIndex": 0,
+  "barycentric": {
+    "u": 0.29999999999999993,
+    "v": 0.3,
+    "w": 0.4
+  }
+}
