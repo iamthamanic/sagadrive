@@ -28,6 +28,8 @@ interface AvatarPreviewSettingsProps {
   onCameraPreviewChange: (enabled: boolean) => void;
   faceOverlayEnabled: boolean;
   onFaceOverlayChange: (enabled: boolean) => void;
+  /** Loaded model exposes SagaDriveFaceAnchorsV1 sidecar (#400). */
+  characterFaceMappingAvailable: boolean;
   metricsEnabled: boolean;
   onMetricsChange: (enabled: boolean) => void;
   bonesEnabled: boolean;
@@ -60,6 +62,7 @@ export function AvatarPreviewSettings({
   onCameraPreviewChange,
   faceOverlayEnabled,
   onFaceOverlayChange,
+  characterFaceMappingAvailable,
   metricsEnabled,
   onMetricsChange,
   bonesEnabled,
@@ -224,7 +227,9 @@ export function AvatarPreviewSettings({
             <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
               <div className="min-w-0">
                 <p className="text-xs text-slate-100">Face Overlay</p>
-                <p className="text-[10px] text-slate-400">Landmarks über PiP (lokal)</p>
+                <p className="text-[10px] text-slate-400">
+                  Kamera-PiP + Character-Mesh (lokal)
+                </p>
               </div>
               <Switch
                 checked={faceOverlayEnabled}
@@ -235,10 +240,19 @@ export function AvatarPreviewSettings({
               />
             </div>
 
+            {!characterFaceMappingAvailable && runtimeReady ? (
+              <p
+                className="px-1 pb-1 text-[10px] text-amber-200/90"
+                data-testid="liveact-character-face-mapping-unavailable"
+              >
+                Character Face Mapping nicht verfügbar (kein face-anchors.json am Modell).
+              </p>
+            ) : null}
+
             <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
               <div className="min-w-0">
                 <p className="text-xs text-slate-100">Metrics</p>
-                <p className="text-[10px] text-slate-400">Werte im PiP-Overlay</p>
+                <p className="text-[10px] text-slate-400">HUD in PiP + Character-Viewport</p>
               </div>
               <Switch
                 checked={metricsEnabled}

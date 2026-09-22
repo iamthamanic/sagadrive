@@ -6,7 +6,14 @@
  * Per-frame updates stay off React — only status/preview refs change slowly.
  */
 
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MutableRefObject,
+  type RefObject,
+} from 'react';
 import {
   composeLiveActCapabilities,
   liveActStatusLabelDe,
@@ -16,6 +23,7 @@ import {
   type LiveActFaceDiagnosticsFrameV1,
   type LiveActStatus,
 } from '../../../domains/character/liveact';
+import type { LiveActCharacterFaceDebugHandle } from '../../../infrastructure/character/avatar/character-studio-runtime';
 import type { LiveActEngine, LiveActEngineState } from '../../../infrastructure/character/liveact';
 import {
   acquireSharedLiveActEngine,
@@ -76,6 +84,8 @@ export interface UseLiveActViewportResult {
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
   /** Diagnostics V2 stage trace (#397) — ref only, never React state per frame. */
   diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
+  /** Character mesh face debug handle — set by AvatarSurfaceViewer when runtime ready (#400). */
+  characterFaceDebugHandleRef: MutableRefObject<LiveActCharacterFaceDebugHandle | null>;
   engineRef: RefObject<LiveActEngine | null>;
 }
 
@@ -93,6 +103,7 @@ export function useLiveActViewport({
   getBonesRef.current = getBonesAvailable;
   const diagnosticsRef = useRef<LiveActFaceDiagnosticsFrameV1 | null>(null);
   const diagnosticsV2Ref = useRef<LiveActDiagnosticsV2Snapshot | null>(null);
+  const characterFaceDebugHandleRef = useRef<LiveActCharacterFaceDebugHandle | null>(null);
   const [trackingEnabled, setTrackingEnabledState] = useState(false);
   const [cameraPreviewEnabled, setCameraPreviewEnabled] = useState(true);
   const [faceOverlayEnabled, setFaceOverlayEnabled] = useState(false);
@@ -343,6 +354,7 @@ export function useLiveActViewport({
     composedCapabilities,
     diagnosticsRef,
     diagnosticsV2Ref,
+    characterFaceDebugHandleRef,
     engineRef,
   };
 }

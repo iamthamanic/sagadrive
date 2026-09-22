@@ -5,6 +5,7 @@
  * Distances are dimensionless ratios (not raw pixels). MediaPipe Face Landmarker indices.
  */
 
+import type { SagaDriveFaceAnchorId } from '../avatar/face-anchor-contract';
 import type { LiveActFaceLandmark2d } from './liveact-face-diagnostics';
 
 /** Canonical MediaPipe Face Landmarker indices for metric pairs. */
@@ -58,6 +59,44 @@ function ratio(numer: number, denom: number): number | null {
 
 function mid(a: LiveActFaceLandmark2d, b: LiveActFaceLandmark2d): LiveActFaceLandmark2d {
   return { x: (a.x + b.x) * 0.5, y: (a.y + b.y) * 0.5 };
+}
+
+/** Maps deformed mesh anchor ids → MediaPipe landmark slots for shared metric math (#400). */
+const FACE_ANCHOR_TO_LANDMARK_INDEX: Partial<Record<SagaDriveFaceAnchorId, number>> = {
+  mouthUpper: LIVEACT_FACE_METRIC_LANDMARK_INDICES.upperLip,
+  mouthLower: LIVEACT_FACE_METRIC_LANDMARK_INDICES.lowerLip,
+  mouthCornerLeft: LIVEACT_FACE_METRIC_LANDMARK_INDICES.mouthLeft,
+  mouthCornerRight: LIVEACT_FACE_METRIC_LANDMARK_INDICES.mouthRight,
+  eyeLeftUpper: LIVEACT_FACE_METRIC_LANDMARK_INDICES.leftUpperLid,
+  eyeLeftLower: LIVEACT_FACE_METRIC_LANDMARK_INDICES.leftLowerLid,
+  eyeLeftInner: LIVEACT_FACE_METRIC_LANDMARK_INDICES.leftEyeInner,
+  eyeLeftOuter: LIVEACT_FACE_METRIC_LANDMARK_INDICES.leftEyeOuter,
+  eyeRightUpper: LIVEACT_FACE_METRIC_LANDMARK_INDICES.rightUpperLid,
+  eyeRightLower: LIVEACT_FACE_METRIC_LANDMARK_INDICES.rightLowerLid,
+  eyeRightInner: LIVEACT_FACE_METRIC_LANDMARK_INDICES.rightEyeInner,
+  eyeRightOuter: LIVEACT_FACE_METRIC_LANDMARK_INDICES.rightEyeOuter,
+  browLeftCenter: LIVEACT_FACE_METRIC_LANDMARK_INDICES.leftBrow,
+  browRightCenter: LIVEACT_FACE_METRIC_LANDMARK_INDICES.rightBrow,
+};
+
+/**
+ * Build a sparse 478-point landmark buffer from normalized character anchor positions.
+ * Reuses {@link computeLiveActFaceMetrics} — same ratios as camera overlay (#398).
+ */
+export function buildLiveActFaceLandmarksFromAnchorScreenPoints(
+  points: Readonly<Partial<Record<SagaDriveFaceAnchorId, LiveActFaceLandmark2d>>>,
+): readonly LiveActFaceLandmark2d[] {
+  const landmarks: LiveActFaceLandmark2d[] = Array.from({ length: 478 }, () => ({
+    x: Number.NaN,
+    y: Number.NaN,
+  }));
+  for (const [anchorId, landmarkIndex] of Object.entries(FACE_ANCHOR_TO_LANDMARK_INDEX)) {
+    if (landmarkIndex == null) continue;
+    const p = points[anchorId as SagaDriveFaceAnchorId];
+    if (!p) continue;
+    landmarks[landmarkIndex] = { x: p.x, y: p.y };
+  }
+  return landmarks;
 }
 
 export function computeLiveActFaceMetrics(
@@ -116,6 +155,7 @@ export function computeLiveActFaceMetrics(
   let minY = 1;
   let maxY = 0;
   for (const p of landmarks) {
+    if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
     if (p.x < minX) minX = p.x;
     if (p.x > maxX) maxX = p.x;
     if (p.y < minY) minY = p.y;

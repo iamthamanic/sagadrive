@@ -456,6 +456,14 @@ function checkLiveActCameraOverlayMetrics() {
   });
 }
 
+function checkLiveActCharacterFaceOverlay() {
+  console.log('LiveAct character face overlay (#400): deformed mesh anchors...');
+  execFileSync(process.execPath, ['scripts/liveact-character-face-overlay-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActAvatarOutput() {
   console.log('LiveAct avatar output (#332): VRM/GLB atomic frame apply...');
   execFileSync(process.execPath, ['scripts/liveact-avatar-output-check.mjs'], {
@@ -1283,6 +1291,7 @@ checkLiveActFaceDiagnostics();
 checkLiveActDiagnosticsV2();
 checkLiveActFaceAnchorsV1();
 checkLiveActCameraOverlayMetrics();
+checkLiveActCharacterFaceOverlay();
 checkLiveActAvatarOutput();
 checkLiveActCapabilityOwnership();
 checkLiveActFaceAssetContract();

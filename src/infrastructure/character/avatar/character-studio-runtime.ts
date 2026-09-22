@@ -7,6 +7,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { VRM, VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 import {
+  parseFaceAnchorsManifestV1,
   resolveEffectiveTraits,
   type AvatarRigAnalysisResult,
   type BaseTraitSelection,
@@ -57,6 +58,14 @@ import {
   createLiveActRigDebugController,
   type LiveActRigDebugController,
 } from '../liveact/liveact-rig-debug';
+import {
+  createLiveActCharacterFaceDebugController,
+  type LiveActCharacterFaceDebugController,
+  type LiveActCharacterFaceDebugHandle,
+} from '../liveact/liveact-character-face-debug';
+import { resolveFaceAnchorsManifestUrlFromModelUrl } from '../liveact/face-anchors-manifest-url';
+
+export type { LiveActCharacterFaceDebugHandle };
 import type { AvatarEquipmentVisual } from '../../../domains/character/avatar';
 import {
   AvatarRigidEquipmentRuntime,
@@ -172,6 +181,8 @@ export class CharacterStudioRuntime {
   private readonly eyeLookTarget = new THREE.Vector3();
   private liveActAvatarOutput: LiveActAvatarOutput | null = null;
   private readonly liveActRigDebug: LiveActRigDebugController;
+  private readonly liveActCharacterFaceDebug: LiveActCharacterFaceDebugController;
+  private faceAnchorManifestLoadToken = 0;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -201,6 +212,16 @@ export class CharacterStudioRuntime {
     this.modelContainer.add(this.overlaysGroup);
     this.scene.add(this.modelContainer);
     this.liveActRigDebug = createLiveActRigDebugController(this.scene);
+    this.liveActCharacterFaceDebug = createLiveActCharacterFaceDebugController({
+      camera: this.camera,
+      getCanvasSize: () => {
+        const canvas = this.renderer.domElement;
+        return {
+          width: Math.max(1, Math.round(canvas.clientWidth)),
+          height: Math.max(1, Math.round(canvas.clientHeight)),
+        };
+      },
+    });
     this.traitLifecycle = createTraitLifecycleThreeAdapter(this.overlaysGroup);
 
     this.styleLights = createMtoonStyleLights(this.styleProfile);
@@ -309,6 +330,8 @@ export class CharacterStudioRuntime {
       this.bindHumanoidBones(vrm, this.lastRigAnalysis);
       this.rebuildLiveActAvatarOutput();
       this.liveActRigDebug.bindModelRoot(root);
+      this.liveActCharacterFaceDebug.bindModelRoot(root);
+      void this.loadFaceAnchorsManifestForModel(safeUrl);
       this.rigidEquipmentRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.skinnedWearableRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.onStateChange({
@@ -431,6 +454,22 @@ export class CharacterStudioRuntime {
     this.liveActRigDebug.setEnabled(enabled);
   }
 
+  /** Deformed mesh face anchor overlay — not persisted (#400). */
+  setLiveActCharacterFaceDebugEnabled(enabled: boolean): void {
+    if (this.disposed) return;
+    this.liveActCharacterFaceDebug.setEnabled(enabled);
+  }
+
+  /** True when face-anchors.json loaded and bound for the current model. */
+  hasLiveActCharacterFaceMapping(): boolean {
+    return this.liveActCharacterFaceDebug.isMappingAvailable();
+  }
+
+  /** Read-only handle for app-layer canvas overlay (no Three.js leaks). */
+  getLiveActCharacterFaceDebugHandle(): LiveActCharacterFaceDebugHandle {
+    return this.liveActCharacterFaceDebug.getHandle();
+  }
+
   /**
    * Apply local face-tracking drive (#12) onto head bone + facial weights.
    * Ephemeral only — never written into appearance.avatar.
@@ -540,10 +579,12 @@ export class CharacterStudioRuntime {
     const prevFar = this.camera.far;
     try {
       this.fitPortraitCamera();
-      return this.liveActRigDebug.runWithoutHelper(() => {
-        this.renderNow();
-        return capturePortraitFromRenderer(this.renderer);
-      });
+      return this.liveActCharacterFaceDebug.runWithoutSampling(() =>
+        this.liveActRigDebug.runWithoutHelper(() => {
+          this.renderNow();
+          return capturePortraitFromRenderer(this.renderer);
+        }),
+      );
     } finally {
       this.controls.target.copy(prevTarget);
       this.camera.position.copy(prevPosition);
@@ -768,6 +809,25 @@ export class CharacterStudioRuntime {
     }
   }
 
+  private async loadFaceAnchorsManifestForModel(modelUrl: string): Promise<void> {
+    const token = ++this.faceAnchorManifestLoadToken;
+    this.liveActCharacterFaceDebug.bindManifest(null);
+    const manifestUrl = resolveFaceAnchorsManifestUrlFromModelUrl(modelUrl);
+    if (!manifestUrl) return;
+    try {
+      const response = await fetch(manifestUrl);
+      if (!response.ok || token !== this.faceAnchorManifestLoadToken) return;
+      const payload: unknown = await response.json();
+      if (token !== this.faceAnchorManifestLoadToken) return;
+      const parsed = parseFaceAnchorsManifestV1(payload);
+      if (parsed.ok) {
+        this.liveActCharacterFaceDebug.bindManifest(parsed.manifest);
+      }
+    } catch {
+      // Mapping stays unavailable — overlay remains hidden (#400).
+    }
+  }
+
   private bindHumanoidBones(
     vrm: VRM | undefined,
     rigAnalysis: AvatarRigAnalysisResult | undefined,
@@ -823,6 +883,9 @@ export class CharacterStudioRuntime {
     this.animationRuntime.stopAll();
     this.facialRuntime.resetToNeutral();
     this.liveActRigDebug.bindModelRoot(null);
+    this.faceAnchorManifestLoadToken += 1;
+    this.liveActCharacterFaceDebug.bindModelRoot(null);
+    this.liveActCharacterFaceDebug.bindManifest(null);
     this.liveActAvatarOutput?.dispose();
     this.liveActAvatarOutput = null;
     this.headBone = null;
@@ -852,6 +915,7 @@ export class CharacterStudioRuntime {
     this.liveActAvatarOutput?.dispose();
     this.liveActAvatarOutput = null;
     this.liveActRigDebug.dispose();
+    this.liveActCharacterFaceDebug.dispose();
     this.traitLifecycle.dispose();
     this.runtimeOverlays = [];
     this.headBone = null;
