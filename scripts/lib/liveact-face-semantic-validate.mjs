@@ -8,6 +8,7 @@ import {
   parseManifestEnvelope,
   validateFaceAnchorsAgainstDocument,
 } from './liveact-face-anchor-validate.mjs';
+import { validateFaceAnchorAnatomyAgainstDocument } from './liveact-face-anchor-anatomy-validate.mjs';
 import { findNodeByIdentity } from './liveact-face-anchor-glb.mjs';
 import {
   CORE_CHANNEL_SEMANTIC_RULES_V1,
@@ -171,17 +172,17 @@ function buildAnatomicalRegionClassifier(anchorPositions) {
     faceScale = Math.max(Math.abs(mouthUpper.y - chin.y), 0.05);
   }
 
-  // Tight nose; generous mouth — nearest-centroid used to steal peri-oral energy into nose/cheek.
-  const noseRadiusSq = (faceScale * 0.22) ** 2;
-  const eyeRadiusSq = (faceScale * 0.32) ** 2;
-  const eyeBandHalfHeight = faceScale * 0.2;
-  const browRadiusSq = (faceScale * 0.35) ** 2;
-  const mouthLocalRadiusSq = (faceScale * 0.72) ** 2;
-  const cheekRadiusSq = (faceScale * 0.58) ** 2;
-  const chinRadiusSq = (faceScale * 0.36) ** 2;
-  const jawBelowMouthY = mouthLower.y - faceScale * 0.22;
-  const oralYMin = mouthLower.y - faceScale * 0.35;
-  const oralYMax = Math.max(mouthUpper.y + faceScale * 0.25, noseTip.y - faceScale * 0.05);
+  // Neighborhoods scale with interocular distance (anatomy-valid anchors).
+  const noseRadiusSq = (faceScale * 0.28) ** 2;
+  const eyeRadiusSq = (faceScale * 0.62) ** 2;
+  const eyeBandHalfHeight = faceScale * 0.35;
+  const browRadiusSq = (faceScale * 0.5) ** 2;
+  const mouthLocalRadiusSq = (faceScale * 0.95) ** 2;
+  const cheekRadiusSq = (faceScale * 0.75) ** 2;
+  const chinRadiusSq = (faceScale * 0.5) ** 2;
+  const jawBelowMouthY = mouthLower.y - faceScale * 0.35;
+  const oralYMin = mouthLower.y - faceScale * 0.45;
+  const oralYMax = Math.max(mouthUpper.y + faceScale * 0.35, noseTip.y - faceScale * 0.02);
 
   let maxEyeY = browCenterY;
   for (const id of ['eyeLeftUpper', 'eyeRightUpper', 'eyeLeftLower', 'eyeRightLower']) {
@@ -189,10 +190,12 @@ function buildAnatomicalRegionClassifier(anchorPositions) {
     if (p && p.y > maxEyeY) maxEyeY = p.y;
   }
   const foreheadAnchor = anchorPositions.forehead;
+  // Forehead is above brows — do not let orbital spill get labeled forehead via a low cutoff.
   const foreheadCutoffY = Math.max(
-    maxEyeY + faceScale * 0.18,
-    foreheadAnchor ? foreheadAnchor.y - faceScale * 0.35 : browCenterY + faceScale * 0.55,
+    browCenterY + faceScale * 0.22,
+    foreheadAnchor ? foreheadAnchor.y - faceScale * 0.2 : browCenterY + faceScale * 0.4,
   );
+  void maxEyeY;
 
   /** @type {{ id: string; region: QaRegionId }[]} */
   const eyeAnchors = [
@@ -567,9 +570,28 @@ export async function validateLiveActFaceSemanticQa(document, opts) {
       profileVersion: SEMANTIC_PROFILE_VERSION,
       pass: false,
       skipped: false,
+      blockedByInvalidFaceAnchors: true,
       channels: {},
       combinations: {},
       violations: anchorTopology.errors.map((e) => `anchor_topology:${e}`),
+    };
+  }
+
+  const anatomyQa = validateFaceAnchorAnatomyAgainstDocument(document, envelope.anchors);
+  if (!anatomyQa.pass) {
+    return {
+      contractVersion: SEMANTIC_QA_CONTRACT_VERSION,
+      profileVersion: SEMANTIC_PROFILE_VERSION,
+      pass: false,
+      skipped: false,
+      blockedByInvalidFaceAnchors: true,
+      faceAnchorAnatomyQa: anatomyQa,
+      channels: {},
+      combinations: {},
+      violations: [
+        'blocked_by_invalid_face_anchors',
+        ...anatomyQa.violations.map((v) => `face_anchor_anatomy:${v}`),
+      ],
     };
   }
 
@@ -605,7 +627,23 @@ export async function validateLiveActFaceSemanticQa(document, opts) {
   const sampleMaxY = vertexSamples.reduce((max, v) => Math.max(max, v.y), Number.NEGATIVE_INFINITY);
   const headYMin = sampleMaxY - 0.45;
   const applyHeadMask = sampleMinY < 0.25 && sampleMaxY > 1.35;
-  const headMask = vertexSamples.map((v) => (applyHeadMask ? v.y >= headYMin : true));
+  const noseTip = anchorPositions.noseTip;
+  let faceScaleRoi = 0.08;
+  if (anchorPositions.eyeLeftInner && anchorPositions.eyeRightInner) {
+    const a = anchorPositions.eyeLeftInner;
+    const b = anchorPositions.eyeRightInner;
+    faceScaleRoi = Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+  }
+  const faceRoiRadius = faceScaleRoi * 2.4;
+  const faceRoiRadiusSq = faceRoiRadius * faceRoiRadius;
+  const headMask = vertexSamples.map((v) => {
+    if (applyHeadMask && v.y < headYMin) return false;
+    if (!noseTip) return true;
+    const dx = v.x - noseTip.x;
+    const dy = v.y - noseTip.y;
+    const dz = v.z - noseTip.z;
+    return dx * dx + dy * dy + dz * dz <= faceRoiRadiusSq;
+  });
   const regionBySampleIndex = vertexSamples.map((v, i) =>
     headMask[i] ? classifyVertexRegion(v) : 'jaw',
   );
@@ -725,6 +763,8 @@ export async function validateLiveActFaceSemanticQa(document, opts) {
     profileVersion: SEMANTIC_PROFILE_VERSION,
     pass: violations.length === 0,
     skipped: false,
+    blockedByInvalidFaceAnchors: false,
+    faceAnchorAnatomyQa: anatomyQa,
     channels,
     combinations,
     violations: [...new Set(violations)].sort(),

@@ -1,0 +1,19 @@
+{
+  "contractVersion": "SagaDriveAvatarVrmPackV1",
+  "packedAt": "2026-09-22T17:48:04.035Z",
+  "inputGlbPath": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb",
+  "inventoryPath": "assets/species-3d/human/runs/quality-20260921-f5-face2/face-inventory.json",
+  "rigPath": null,
+  "outputVrmPath": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm",
+  "extension": "VRMC_vrm",
+  "specVersion": "1.0",
+  "gazeMode": "morphs",
+  "lookAtType": "expression",
+  "humanoidBoneCount": 19,
+  "expressionPresetCount": 6,
+  "expressionCustomCount": 43,
+  "inputSha256": "a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c",
+  "outputSha256": "929d711ac4695ece95a71b0ed9964bbf0a95064be5dae1a66b9b55e2c5c7cd4d",
+  "outputBytes": 38408828,
+  "inventoryProfile": "core-v1"
+}

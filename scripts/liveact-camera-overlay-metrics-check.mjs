@@ -49,6 +49,7 @@ check(!/useState\(/.test(overlay), 'overlay no useState');
 check(/1 - p\.x/.test(overlay) === false || /mirrorX/.test(overlay), 'no ad-hoc double mirror');
 
 check(/metricsEnabled/.test(pip), 'pip metrics prop');
+check(/LiveActPipMetricsPanel|liveact-pip-metrics-panel/.test(pip), 'metrics beside PiP video');
 check(/diagnosticsV2Ref/.test(pip), 'pip V2 ref');
 check(/videoRef=\{videoRef\}/.test(pip), 'pip passes videoRef');
 

@@ -1,6 +1,6 @@
 {
   "contractVersion": "SagaDriveAvatarVrmPackV1",
-  "packedAt": "2026-09-22T15:43:35.151Z",
+  "packedAt": "2026-09-22T16:56:27.933Z",
   "inputGlbPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb",
   "inventoryPath": "assets/species-3d/human/runs/quality-20260921-m5-face1/face-inventory.json",
   "rigPath": null,
@@ -11,9 +11,9 @@
   "lookAtType": "expression",
   "humanoidBoneCount": 19,
   "expressionPresetCount": 6,
-  "expressionCustomCount": 41,
+  "expressionCustomCount": 43,
   "inputSha256": "134f5137019ec5b26abd977459bd510b763f080c111da3d6ab4f92cb3aaa33ff",
-  "outputSha256": "94d4c147de2ec5f7180ffbd7e9c7f294d05647b460c430a41240fc66aba05c01",
-  "outputBytes": 31174780,
+  "outputSha256": "3c0258b7d0dfedfe628f6fef9029c5c4c24309b647df11f67256d453a2c9f964",
+  "outputBytes": 31174960,
   "inventoryProfile": "core-v1"
 }

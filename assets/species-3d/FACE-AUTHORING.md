@@ -61,7 +61,13 @@ Per run, emit `face-anchors.json` beside the face GLB (semantic mouth/eye/brow/n
 - Example fixture: `.qa/fixtures/liveact-face-anchors-v1/face-anchors.json`
 - Production path: `assets/species-3d/<species>/runs/<run-id>/face-anchors.json` (reference checksum in `run.json` when present)
 
-Author `face-anchors.json` per run with `liveact-face-anchor-author.mjs` (morph-seeded heuristics on the published GLB). Validate with `liveact-face-asset-check.mjs --anchors …` (Semantic QA V2, #401).
+Author `face-anchors.json` per run with `liveact-face-anchor-author.mjs` (**head-normalized + anatomic refine**; optional QtMesh 13-marker positions). Do **not** place anchors from morph extrema (breaks circular Semantic QA). Validate with:
+
+1. topology (`liveact-face-anchor-validate`)
+2. **Anatomy QA** (`SagaDriveFaceAnchorAnatomyQaV1` / `liveact-face-anchor-anatomy-check.mjs`)
+3. Semantic Morph QA V2 (`liveact-face-asset-check.mjs --anchors …`)
+
+Semantic QA is blocked unless Anatomy QA passes.
 
 ---
 

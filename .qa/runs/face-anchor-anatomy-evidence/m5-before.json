@@ -1,0 +1,167 @@
+{
+  "id": "m5",
+  "contractVersion": "SagaDriveFaceAnchorsV1",
+  "rows": [
+    {
+      "anchor": "forehead",
+      "x": -0.00387,
+      "y": 1.75,
+      "z": -0.01611,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "browLeftInner",
+      "x": -0.00124,
+      "y": 1.68102,
+      "z": 0.07074,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "browLeftCenter",
+      "x": 0.01013,
+      "y": 1.65462,
+      "z": 0.07879,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "browLeftOuter",
+      "x": 0.02796,
+      "y": 1.66513,
+      "z": 0.0705,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "browRightInner",
+      "x": -0.00152,
+      "y": 1.68621,
+      "z": 0.0699,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "browRightCenter",
+      "x": -0.01319,
+      "y": 1.65283,
+      "z": 0.07874,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "browRightOuter",
+      "x": -0.0277,
+      "y": 1.6622,
+      "z": 0.07138,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "eyeLeftInner",
+      "x": 0.02111,
+      "y": 1.64974,
+      "z": 0.0781,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "eyeLeftOuter",
+      "x": 0.05702,
+      "y": 1.64819,
+      "z": 0.04995,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "eyeLeftUpper",
+      "x": 0.03457,
+      "y": 1.69939,
+      "z": 0.05792,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "eyeLeftLower",
+      "x": 0.028,
+      "y": 1.63952,
+      "z": 0.07944,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "eyeRightInner",
+      "x": -0.02199,
+      "y": 1.6529,
+      "z": 0.07647,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "eyeRightOuter",
+      "x": -0.05737,
+      "y": 1.643,
+      "z": 0.0517,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "eyeRightUpper",
+      "x": -0.04296,
+      "y": 1.69692,
+      "z": 0.05754,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "eyeRightLower",
+      "x": -0.0319,
+      "y": 1.63992,
+      "z": 0.07754,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "noseTip",
+      "x": -0.00004,
+      "y": 1.57963,
+      "z": 0.10611,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "mouthUpper",
+      "x": -0.002,
+      "y": 1.5927,
+      "z": 0.09893,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "mouthLower",
+      "x": -0.00099,
+      "y": 1.59041,
+      "z": 0.10082,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "mouthCornerLeft",
+      "x": 0.02348,
+      "y": 1.5958,
+      "z": 0.07441,
+      "side": "left(+X)"
+    },
+    {
+      "anchor": "mouthCornerRight",
+      "x": -0.02423,
+      "y": 1.59441,
+      "z": 0.07439,
+      "side": "right(-X)"
+    },
+    {
+      "anchor": "chin",
+      "x": 0.09058,
+      "y": 1.44084,
+      "z": -0.00789,
+      "side": "left(+X)"
+    }
+  ],
+  "metrics": {
+    "mouthGap": 0.0657,
+    "eyeOpenL": 1.4009,
+    "eyeOpenR": 1.3856,
+    "browLiftL": 0.7223,
+    "browLiftR": 0.6919,
+    "eyeSymDelta": 0.0153,
+    "browSymDelta": 0.0304
+  },
+  "anatomyFailures": [
+    "browL_not_above_eyeUpperL",
+    "nose_not_above_mouth",
+    "brow_centers_near_midline"
+  ]
+}

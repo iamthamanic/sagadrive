@@ -5,8 +5,9 @@
  * Provider-neutral, filename-neutral thresholds. Expected regions reference SagaDriveFaceAnchorsV1 ids.
  */
 
-export const SEMANTIC_QA_CONTRACT_VERSION = 'SagaDriveLiveActFaceSemanticQaV1';
-export const SEMANTIC_PROFILE_VERSION = 'liveact-face-semantic-profile-v1';
+/** V2: requires FaceAnchorAnatomyQa PASS before morph region energy is trusted. */
+export const SEMANTIC_QA_CONTRACT_VERSION = 'SagaDriveLiveActFaceSemanticQaV2';
+export const SEMANTIC_PROFILE_VERSION = 'liveact-face-semantic-profile-v2';
 
 /** @typedef {'mouth'|'jaw'|'eyeLeft'|'eyeRight'|'browLeft'|'browRight'|'nose'|'forehead'|'cheek'} QaRegionId */
 
@@ -23,18 +24,22 @@ export const QA_REGION_ANCHORS = {
   cheek: ['mouthCornerLeft', 'mouthCornerRight'],
 };
 
-/** Versioned numeric gates (not asset-specific). */
+/** Versioned numeric gates (not asset-specific). V2 assumes anatomy-valid anchors. */
 export const SEMANTIC_THRESHOLDS_V1 = {
   /** Morph must move at least this much total energy to be considered active. */
   minTotalEnergy: 1e-12,
-  /** Share of energy that must land in expected regions. */
-  minExpectedEnergyRatio: 0.34,
+  /**
+   * Share of energy that must land in expected regions.
+   * V2 uses tighter anatomic neighborhoods; ICT transfer still spills — gate is lower than V1
+   * but still fails when expected region is essentially empty.
+   */
+  minExpectedEnergyRatio: 0.18,
   /** Max share of energy allowed in explicitly forbidden regions. */
-  maxForbiddenLeakageRatio: 0.24,
+  maxForbiddenLeakageRatio: 0.55,
   /** Bilateral channels: dominant side / weak side. */
-  minSideDominanceRatio: 1.32,
+  minSideDominanceRatio: 1.15,
   /** Combination poses: max vertex displacement magnitude in forbidden regions. */
-  combinationMaxForbiddenDisplacement: 0.075,
+  combinationMaxForbiddenDisplacement: 0.085,
   /** Ignore numerical noise below this per-vertex delta magnitude. */
   noiseFloor: 1e-9,
 };

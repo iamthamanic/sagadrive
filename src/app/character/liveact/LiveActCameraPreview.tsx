@@ -1,9 +1,10 @@
 /**
- * LiveActCameraPreview — mirrored webcam PiP inside the avatar viewport (#330).
+ * LiveActCameraPreview — mirrored webcam PiP inside the avatar viewport (#330, #398).
  * Location: src/app/character/liveact/LiveActCameraPreview.tsx
  *
  * Engine remains MediaStream owner; this only mirrors via srcObject.
  * Draggable within the viewport; default dock is bottom-left.
+ * Metrics sit beside the video (not over the face) when enabled.
  */
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
@@ -13,6 +14,7 @@ import type {
   LiveActStatus,
 } from '../../../domains/character/liveact';
 import { LiveActFaceOverlay } from './LiveActFaceOverlay';
+import { LiveActPipMetricsPanel } from './LiveActPipMetricsPanel';
 
 interface LiveActCameraPreviewProps {
   video: HTMLVideoElement | null;
@@ -22,6 +24,7 @@ interface LiveActCameraPreviewProps {
   metricsEnabled: boolean;
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
   diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
+  hasNeutralBaseline?: boolean;
 }
 
 interface PipPos {
@@ -56,12 +59,14 @@ export function LiveActCameraPreview({
   metricsEnabled,
   diagnosticsRef,
   diagnosticsV2Ref,
+  hasNeutralBaseline = false,
 }: LiveActCameraPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
   /** null = CSS default bottom-left; set after first drag or resize clamp */
   const [pos, setPos] = useState<PipPos | null>(null);
+  const showMetrics = faceOverlayEnabled && metricsEnabled;
 
   useEffect(() => {
     const el = videoRef.current;
@@ -100,7 +105,7 @@ export function LiveActCameraPreview({
     const ro = new ResizeObserver(reclamp);
     ro.observe(parent);
     return () => ro.disconnect();
-  }, [visible]);
+  }, [visible, showMetrics]);
 
   if (!visible) return null;
 
@@ -161,7 +166,7 @@ export function LiveActCameraPreview({
   return (
     <div
       ref={rootRef}
-      className={`pointer-events-auto absolute z-20 w-[min(42%,11rem)] cursor-grab overflow-hidden rounded-md border border-white/15 bg-[#09111F]/90 shadow-lg aspect-[4/3] active:cursor-grabbing touch-none ${
+      className={`pointer-events-auto absolute z-20 flex max-w-[min(92%,22rem)] cursor-grab items-stretch gap-1.5 rounded-md border border-white/15 bg-[#09111F]/90 p-1 shadow-lg active:cursor-grabbing touch-none ${
         pos ? '' : 'bottom-3 left-3'
       }`}
       style={pos ? { left: pos.left, top: pos.top, right: 'auto', bottom: 'auto' } : undefined}
@@ -176,29 +181,37 @@ export function LiveActCameraPreview({
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      <video
-        ref={videoRef}
-        className="pointer-events-none h-full w-full object-cover"
-        style={{ transform: 'scaleX(-1)' }}
-        muted
-        playsInline
-        autoPlay
-      />
-      <LiveActFaceOverlay
-        enabled={faceOverlayEnabled}
-        metricsEnabled={faceOverlayEnabled && metricsEnabled}
+      <div className="relative w-[min(42vw,11rem)] shrink-0 overflow-hidden rounded-sm aspect-[4/3]">
+        <video
+          ref={videoRef}
+          className="pointer-events-none h-full w-full object-cover"
+          style={{ transform: 'scaleX(-1)' }}
+          muted
+          playsInline
+          autoPlay
+        />
+        <LiveActFaceOverlay
+          enabled={faceOverlayEnabled}
+          metricsEnabled={false}
+          diagnosticsRef={diagnosticsRef}
+          diagnosticsV2Ref={diagnosticsV2Ref}
+          videoRef={videoRef}
+        />
+        <div className="pointer-events-none absolute left-1.5 top-1.5 flex items-center gap-1 rounded bg-black/55 px-1.5 py-0.5 text-[10px] text-slate-100">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              status === 'active' ? 'bg-emerald-400' : status === 'lost' ? 'bg-amber-400' : 'bg-slate-400'
+            }`}
+          />
+          {status === 'active' ? 'LIVE' : status === 'starting' ? '…' : status === 'lost' ? 'LOST' : 'CAM'}
+        </div>
+      </div>
+      <LiveActPipMetricsPanel
+        active={showMetrics}
         diagnosticsRef={diagnosticsRef}
         diagnosticsV2Ref={diagnosticsV2Ref}
-        videoRef={videoRef}
+        hasNeutralBaseline={hasNeutralBaseline}
       />
-      <div className="pointer-events-none absolute left-1.5 top-1.5 flex items-center gap-1 rounded bg-black/55 px-1.5 py-0.5 text-[10px] text-slate-100">
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${
-            status === 'active' ? 'bg-emerald-400' : status === 'lost' ? 'bg-amber-400' : 'bg-slate-400'
-          }`}
-        />
-        {status === 'active' ? 'LIVE' : status === 'starting' ? '…' : status === 'lost' ? 'LOST' : 'CAM'}
-      </div>
     </div>
   );
 }

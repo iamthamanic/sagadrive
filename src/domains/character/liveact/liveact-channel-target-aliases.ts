@@ -25,6 +25,9 @@ function aliasesForChannel(id: LiveActFaceChannelId): readonly string[] {
   const list: string[] = [id];
   const pascal = pascalCase(id);
   if (pascal !== id) list.push(pascal);
+  // VRM 1.0 exact presets used by avatar-vrm-pack (#404/#hotfix).
+  if (id === 'eyeBlinkLeft') list.push('blinkLeft', 'BlinkLeft');
+  if (id === 'eyeBlinkRight') list.push('blinkRight', 'BlinkRight');
   return list;
 }
 

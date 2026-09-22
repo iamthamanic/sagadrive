@@ -11,6 +11,8 @@ import {
   semanticQaSkippedResult,
   validateLiveActFaceSemanticQa,
 } from './liveact-face-semantic-validate.mjs';
+import { validateFaceAnchorAnatomyFile } from './liveact-face-anchor-anatomy-validate.mjs';
+import { FACE_ANCHOR_ANATOMY_QA_CONTRACT_VERSION } from './liveact-face-anchor-anatomy-profile-v1.mjs';
 
 export const FACE_INVENTORY_VERSION = 'SagaDriveLiveActFaceInventoryV1';
 
@@ -272,22 +274,50 @@ export async function validateLiveActFaceAsset(opts) {
 
   const structuralPass = sagaErrors.length === 0;
 
+  /** @type {unknown} */
+  let faceAnchorAnatomyQa = null;
   let semanticQa;
   if (opts.anchorsPath) {
-    semanticQa = await validateLiveActFaceSemanticQa(document, {
-      profile: opts.profile,
-      anchorsPath: opts.anchorsPath,
-      usableChannels: usableNames,
+    faceAnchorAnatomyQa = await validateFaceAnchorAnatomyFile({
+      manifestPath: opts.anchorsPath,
+      glbPath: opts.inputPath,
     });
+    if (!faceAnchorAnatomyQa.pass) {
+      sagaErrors.push('face_anchor_anatomy_failed');
+      semanticQa = {
+        contractVersion: 'SagaDriveLiveActFaceSemanticQaV2',
+        profileVersion: 'liveact-face-semantic-profile-v2',
+        pass: false,
+        skipped: false,
+        blockedByInvalidFaceAnchors: true,
+        faceAnchorAnatomyQa,
+        channels: {},
+        combinations: {},
+        violations: ['blocked_by_invalid_face_anchors'],
+      };
+    } else {
+      semanticQa = await validateLiveActFaceSemanticQa(document, {
+        profile: opts.profile,
+        anchorsPath: opts.anchorsPath,
+        usableChannels: usableNames,
+      });
+    }
   } else {
     semanticQa = semanticQaSkippedResult('no_anchors_manifest');
   }
 
   const semanticBlocks = !semanticQa.skipped && semanticQa.pass === false;
-  if (semanticBlocks) {
+  if (semanticBlocks && !sagaErrors.includes('semantic_qa_failed')) {
     sagaErrors.push('semantic_qa_failed');
   }
-  const sagaPass = structuralPass && !semanticBlocks;
+  const sagaPass =
+    (khronosPass &&
+      missingRequired.length === 0 &&
+      usableNames.size > 0 &&
+      preservationErrors.length === 0 &&
+      !missingRequired.some((id) => emptyMorphs.includes(id))) &&
+    !sagaErrors.includes('face_anchor_anatomy_failed') &&
+    !semanticBlocks;
 
   const inventory = {
     version: FACE_INVENTORY_VERSION,
@@ -324,6 +354,14 @@ export async function validateLiveActFaceAsset(opts) {
       ...baseSnap,
       byteCount: baselineBytes.byteLength,
     },
+    faceAnchorAnatomyQa:
+      faceAnchorAnatomyQa ||
+      ({
+        contractVersion: FACE_ANCHOR_ANATOMY_QA_CONTRACT_VERSION,
+        skipped: true,
+        pass: true,
+        reason: 'no_anchors_manifest',
+      }),
     semanticQa,
   };
 

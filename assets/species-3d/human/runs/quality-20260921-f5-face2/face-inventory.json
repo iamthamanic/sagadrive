@@ -1,0 +1,446 @@
+{
+  "version": "SagaDriveLiveActFaceInventoryV1",
+  "input": "human-female-quality-20260921-f5-face1.glb",
+  "baselineFile": "human-female-quality-20260921-f5.glb",
+  "profile": "core-v1",
+  "profileOk": true,
+  "structuralPass": true,
+  "khronos": {
+    "pass": true,
+    "numErrors": 0,
+    "numWarnings": 4
+  },
+  "sagaDrive": {
+    "pass": true,
+    "errors": [],
+    "missingRequired": [],
+    "emptyMorphs": [],
+    "preservationErrors": []
+  },
+  "supportedChannels": [
+    "browDownLeft",
+    "browDownRight",
+    "browInnerUp",
+    "browOuterUpLeft",
+    "browOuterUpRight",
+    "cheekPuff",
+    "cheekSquintLeft",
+    "cheekSquintRight",
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "eyeLookDownLeft",
+    "eyeLookDownRight",
+    "eyeLookInLeft",
+    "eyeLookInRight",
+    "eyeLookOutLeft",
+    "eyeLookOutRight",
+    "eyeLookUpLeft",
+    "eyeLookUpRight",
+    "eyeSquintLeft",
+    "eyeSquintRight",
+    "eyeWideLeft",
+    "eyeWideRight",
+    "jawForward",
+    "jawLeft",
+    "jawOpen",
+    "jawRight",
+    "mouthClose",
+    "mouthDimpleLeft",
+    "mouthDimpleRight",
+    "mouthFrownLeft",
+    "mouthFrownRight",
+    "mouthFunnel",
+    "mouthLeft",
+    "mouthLowerDownLeft",
+    "mouthLowerDownRight",
+    "mouthPressLeft",
+    "mouthPressRight",
+    "mouthPucker",
+    "mouthRight",
+    "mouthRollLower",
+    "mouthRollUpper",
+    "mouthShrugLower",
+    "mouthShrugUpper",
+    "mouthSmileLeft",
+    "mouthSmileRight",
+    "mouthStretchLeft",
+    "mouthStretchRight",
+    "mouthUpperUpLeft",
+    "mouthUpperUpRight",
+    "noseSneerLeft",
+    "noseSneerRight"
+  ],
+  "presentChannels": [
+    "browDownLeft",
+    "browDownRight",
+    "browInnerUp",
+    "browOuterUpLeft",
+    "browOuterUpRight",
+    "cheekPuff",
+    "cheekSquintLeft",
+    "cheekSquintRight",
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "eyeLookDownLeft",
+    "eyeLookDownRight",
+    "eyeLookInLeft",
+    "eyeLookInRight",
+    "eyeLookOutLeft",
+    "eyeLookOutRight",
+    "eyeLookUpLeft",
+    "eyeLookUpRight",
+    "eyeSquintLeft",
+    "eyeSquintRight",
+    "eyeWideLeft",
+    "eyeWideRight",
+    "jawForward",
+    "jawLeft",
+    "jawOpen",
+    "jawRight",
+    "mouthClose",
+    "mouthDimpleLeft",
+    "mouthDimpleRight",
+    "mouthFrownLeft",
+    "mouthFrownRight",
+    "mouthFunnel",
+    "mouthLeft",
+    "mouthLowerDownLeft",
+    "mouthLowerDownRight",
+    "mouthPressLeft",
+    "mouthPressRight",
+    "mouthPucker",
+    "mouthRight",
+    "mouthRollLower",
+    "mouthRollUpper",
+    "mouthShrugLower",
+    "mouthShrugUpper",
+    "mouthSmileLeft",
+    "mouthSmileRight",
+    "mouthStretchLeft",
+    "mouthStretchRight",
+    "mouthUpperUpLeft",
+    "mouthUpperUpRight",
+    "noseSneerLeft",
+    "noseSneerRight"
+  ],
+  "gazeMode": "morphs",
+  "morphCount": 51,
+  "usableMorphCount": 51,
+  "byteCount": 38402848,
+  "meshCount": 1,
+  "skinCount": 1,
+  "materialCount": 1,
+  "textureCount": 4,
+  "skeletonJointCount": 24,
+  "triangleCount": 214973,
+  "baselineStats": {
+    "meshCount": 1,
+    "skinCount": 1,
+    "materialCount": 1,
+    "textureCount": 4,
+    "skeletonJointCount": 24,
+    "triangleCount": 214973,
+    "byteCount": 90360696
+  },
+  "faceAnchorAnatomyQa": {
+    "contractVersion": "SagaDriveFaceAnchorAnatomyQaV1",
+    "profileVersion": "liveact-face-anchor-anatomy-profile-v1",
+    "pass": true,
+    "violations": [],
+    "checks": {
+      "vertical_forehead_above_browL": {
+        "gap": 0.1142,
+        "min": 0.02
+      },
+      "vertical_forehead_above_browR": {
+        "gap": 0.1244,
+        "min": 0.02
+      },
+      "vertical_browL_above_eyeUpperL": {
+        "gap": 0.079,
+        "min": 0.01
+      },
+      "vertical_browR_above_eyeUpperR": {
+        "gap": 0.0693,
+        "min": 0.01
+      },
+      "vertical_eyeL_aperture": {
+        "gap": 0.1071,
+        "min": 0.004
+      },
+      "vertical_eyeR_aperture": {
+        "gap": 0.0967,
+        "min": 0.004
+      },
+      "vertical_nose_above_mouth": {
+        "gap": 0.0446,
+        "min": 0.01
+      },
+      "vertical_mouth_aperture": {
+        "gap": 0.0565,
+        "min": 0.001
+      },
+      "vertical_mouth_above_chin": {
+        "gap": 0.4834,
+        "min": 0.01
+      },
+      "eyeUpper_near_forehead": {
+        "left": 0.2386,
+        "right": 0.2307,
+        "max": 0.045
+      },
+      "brow_inner_separation": {
+        "value": 0.6512,
+        "min": 0.04
+      },
+      "brow_center_lateral": {
+        "left": 0.3692,
+        "right": 0.3878,
+        "min": 0.06
+      },
+      "mouth_near_nose_ratio": {
+        "value": 0.2959,
+        "max": 0.85
+      }
+    },
+    "metrics": {
+      "faceH": 0.34616,
+      "faceW": 0.11584,
+      "mouthGap": 0.5786,
+      "eyeOpenL": 1.0088,
+      "eyeOpenR": 1.0345,
+      "browLiftL": 1.2492,
+      "browLiftR": 1.1923,
+      "eyeSymRel": 0.0249,
+      "browSymRel": 0.0456
+    }
+  },
+  "semanticQa": {
+    "contractVersion": "SagaDriveLiveActFaceSemanticQaV2",
+    "profileVersion": "liveact-face-semantic-profile-v2",
+    "pass": true,
+    "skipped": false,
+    "blockedByInvalidFaceAnchors": false,
+    "faceAnchorAnatomyQa": {
+      "contractVersion": "SagaDriveFaceAnchorAnatomyQaV1",
+      "profileVersion": "liveact-face-anchor-anatomy-profile-v1",
+      "pass": true,
+      "violations": [],
+      "checks": {
+        "vertical_forehead_above_browL": {
+          "gap": 0.1142,
+          "min": 0.02
+        },
+        "vertical_forehead_above_browR": {
+          "gap": 0.1244,
+          "min": 0.02
+        },
+        "vertical_browL_above_eyeUpperL": {
+          "gap": 0.079,
+          "min": 0.01
+        },
+        "vertical_browR_above_eyeUpperR": {
+          "gap": 0.0693,
+          "min": 0.01
+        },
+        "vertical_eyeL_aperture": {
+          "gap": 0.1071,
+          "min": 0.004
+        },
+        "vertical_eyeR_aperture": {
+          "gap": 0.0967,
+          "min": 0.004
+        },
+        "vertical_nose_above_mouth": {
+          "gap": 0.0446,
+          "min": 0.01
+        },
+        "vertical_mouth_aperture": {
+          "gap": 0.0565,
+          "min": 0.001
+        },
+        "vertical_mouth_above_chin": {
+          "gap": 0.4834,
+          "min": 0.01
+        },
+        "eyeUpper_near_forehead": {
+          "left": 0.2386,
+          "right": 0.2307,
+          "max": 0.045
+        },
+        "brow_inner_separation": {
+          "value": 0.6512,
+          "min": 0.04
+        },
+        "brow_center_lateral": {
+          "left": 0.3692,
+          "right": 0.3878,
+          "min": 0.06
+        },
+        "mouth_near_nose_ratio": {
+          "value": 0.2959,
+          "max": 0.85
+        }
+      },
+      "metrics": {
+        "faceH": 0.34616,
+        "faceW": 0.11584,
+        "mouthGap": 0.5786,
+        "eyeOpenL": 1.0088,
+        "eyeOpenR": 1.0345,
+        "browLiftL": 1.2492,
+        "browLiftR": 1.1923,
+        "eyeSymRel": 0.0249,
+        "browSymRel": 0.0456
+      }
+    },
+    "channels": {
+      "eyeBlinkLeft": {
+        "pass": true,
+        "expectedEnergy": 0.0004103690964694296,
+        "forbiddenLeakageRatio": 0.08518236229695592,
+        "expectedEnergyRatio": 0.43751276031806713,
+        "side": {
+          "leftEnergy": 0.0009379591492853732,
+          "rightEnergy": 0
+        },
+        "violations": []
+      },
+      "eyeBlinkRight": {
+        "pass": true,
+        "expectedEnergy": 0.0003270715223328835,
+        "forbiddenLeakageRatio": 0.003370503498628675,
+        "expectedEnergyRatio": 0.5350146146855316,
+        "side": {
+          "leftEnergy": 0,
+          "rightEnergy": 0.0006113319400164949
+        },
+        "violations": []
+      },
+      "jawOpen": {
+        "pass": true,
+        "expectedEnergy": 0.6101157266658975,
+        "forbiddenLeakageRatio": 0.01462231153665952,
+        "expectedEnergyRatio": 0.3820175157001687,
+        "side": {
+          "leftEnergy": 0.7860948039477822,
+          "rightEnergy": 0.8109935535000742
+        },
+        "violations": []
+      },
+      "mouthSmileLeft": {
+        "pass": true,
+        "expectedEnergy": 0.04978621777668148,
+        "forbiddenLeakageRatio": 0.015739819516302364,
+        "expectedEnergyRatio": 0.7122881796235083,
+        "side": {
+          "leftEnergy": 0.041900293347361506,
+          "rightEnergy": 0.027995879579441055
+        },
+        "violations": []
+      },
+      "mouthSmileRight": {
+        "pass": true,
+        "expectedEnergy": 0.08050789042628016,
+        "forbiddenLeakageRatio": 0.02124366885258726,
+        "expectedEnergyRatio": 0.7261901387477947,
+        "side": {
+          "leftEnergy": 0.051093606342691604,
+          "rightEnergy": 0.059769769694201905
+        },
+        "violations": []
+      },
+      "mouthFrownLeft": {
+        "pass": true,
+        "expectedEnergy": 0.0010973279497049422,
+        "forbiddenLeakageRatio": 0,
+        "expectedEnergyRatio": 0.6105674394982987,
+        "side": {
+          "leftEnergy": 0.001700106958588137,
+          "rightEnergy": 0.00009711948802128754
+        },
+        "violations": []
+      },
+      "mouthFrownRight": {
+        "pass": true,
+        "expectedEnergy": 0.0016808027514476707,
+        "forbiddenLeakageRatio": 0,
+        "expectedEnergyRatio": 0.8156781752307163,
+        "side": {
+          "leftEnergy": 0.0005053029338184391,
+          "rightEnergy": 0.0015553170539264244
+        },
+        "violations": []
+      },
+      "mouthPucker": {
+        "pass": true,
+        "expectedEnergy": 0.11145029089122661,
+        "forbiddenLeakageRatio": 0.0028425848054304034,
+        "expectedEnergyRatio": 0.817459972727145,
+        "side": {
+          "leftEnergy": 0.06823371619298031,
+          "rightEnergy": 0.06810359035355959
+        },
+        "violations": []
+      },
+      "mouthShrugUpper": {
+        "pass": true,
+        "expectedEnergy": 0.009067782758766806,
+        "forbiddenLeakageRatio": 0,
+        "expectedEnergyRatio": 0.9098784586808704,
+        "side": {
+          "leftEnergy": 0.005087174711435239,
+          "rightEnergy": 0.004878752794875093
+        },
+        "violations": []
+      },
+      "mouthShrugLower": {
+        "pass": true,
+        "expectedEnergy": 0.038252676505240876,
+        "forbiddenLeakageRatio": 0.006543319301099466,
+        "expectedEnergyRatio": 0.42553874607845177,
+        "side": {
+          "leftEnergy": 0.0443799984877711,
+          "rightEnergy": 0.04551234823214181
+        },
+        "violations": []
+      }
+    },
+    "combinations": {
+      "jawOpen_mouthSmileLeft": {
+        "pass": true,
+        "maxForbiddenDisplacement": 0.01171515804739326,
+        "forbiddenRegions": [
+          "forehead"
+        ],
+        "violations": []
+      },
+      "jawOpen_mouthPucker": {
+        "pass": true,
+        "maxForbiddenDisplacement": 0.010798780091503575,
+        "forbiddenRegions": [
+          "forehead"
+        ],
+        "violations": []
+      },
+      "eyeBlinkLeft_eyeBlinkRight": {
+        "pass": true,
+        "maxForbiddenDisplacement": 0,
+        "forbiddenRegions": [
+          "jaw"
+        ],
+        "violations": []
+      },
+      "mouthSmileLeft_mouthFrownRight": {
+        "pass": true,
+        "maxForbiddenDisplacement": 0.0030208204703280122,
+        "forbiddenRegions": [
+          "forehead",
+          "nose"
+        ],
+        "violations": []
+      }
+    },
+    "violations": []
+  }
+}

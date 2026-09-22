@@ -63,7 +63,7 @@ import {
   type LiveActCharacterFaceDebugController,
   type LiveActCharacterFaceDebugHandle,
 } from '../liveact/liveact-character-face-debug';
-import { resolveFaceAnchorsManifestUrlFromModelUrl } from '../liveact/face-anchors-manifest-url';
+import { listFaceAnchorsManifestUrlCandidates } from '../liveact/face-anchors-manifest-url';
 
 export type { LiveActCharacterFaceDebugHandle };
 import type { AvatarEquipmentVisual } from '../../../domains/character/avatar';
@@ -812,19 +812,22 @@ export class CharacterStudioRuntime {
   private async loadFaceAnchorsManifestForModel(modelUrl: string): Promise<void> {
     const token = ++this.faceAnchorManifestLoadToken;
     this.liveActCharacterFaceDebug.bindManifest(null);
-    const manifestUrl = resolveFaceAnchorsManifestUrlFromModelUrl(modelUrl);
-    if (!manifestUrl) return;
-    try {
-      const response = await fetch(manifestUrl);
-      if (!response.ok || token !== this.faceAnchorManifestLoadToken) return;
-      const payload: unknown = await response.json();
-      if (token !== this.faceAnchorManifestLoadToken) return;
-      const parsed = parseFaceAnchorsManifestV1(payload);
-      if (parsed.ok) {
-        this.liveActCharacterFaceDebug.bindManifest(parsed.manifest);
+    const candidates = listFaceAnchorsManifestUrlCandidates(modelUrl);
+    if (!candidates.length) return;
+    for (const manifestUrl of candidates) {
+      try {
+        const response = await fetch(manifestUrl);
+        if (!response.ok || token !== this.faceAnchorManifestLoadToken) continue;
+        const payload: unknown = await response.json();
+        if (token !== this.faceAnchorManifestLoadToken) return;
+        const parsed = parseFaceAnchorsManifestV1(payload);
+        if (parsed.ok) {
+          this.liveActCharacterFaceDebug.bindManifest(parsed.manifest);
+          return;
+        }
+      } catch {
+        // Try next candidate — mapping stays unavailable if all fail (#400).
       }
-    } catch {
-      // Mapping stays unavailable — overlay remains hidden (#400).
     }
   }
 
