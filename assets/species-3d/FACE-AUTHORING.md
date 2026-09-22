@@ -69,6 +69,20 @@ Author `face-anchors.json` per run with `liveact-face-anchor-author.mjs` (**head
 
 Semantic QA is blocked unless Anatomy QA passes.
 
+### Sidecar versioning (browser)
+
+Runtime resolves sidecars via `listFaceAnchorsManifestUrlCandidates(modelUrl)`. The model URL’s cache-bust query (`?v=…`) **must** be copied onto every sidecar candidate (`{stem}-face-anchors.json`, then `face-anchors.json`). Never strip `search` — a new VRM must not reuse a stale CDN-cached sidecar.
+
+### Ground-truth provenance (`SagaDriveFaceMappingAuthoringV1`)
+
+Runtime bindings stay in `SagaDriveFaceAnchorsV1`. Authoring provenance is a **separate** sibling file:
+
+- Path: `face-mapping-authoring.json` next to `face-anchors.json` (or `{stem}-face-mapping-authoring.json` next to `{stem}-face-anchors.json`)
+- Contract: `src/domains/character/avatar/face-mapping-authoring-contract.ts`
+- Fields: `source: auto | manual | manual_override`, `reviewed`, `asset.modelPath` (+ optional sha256 / topologyFingerprint / cacheBust)
+
+**Policy:** Heuristic/auto output is proposal-only (`source: auto`, `reviewed: false`). Publish-/QA-helpers (`isReviewedFaceMappingGroundTruth`) treat only `manual` / `manual_override` with `reviewed: true` as production ground truth. `auto` + `reviewed: true` is invalid (fail-closed).
+
 ---
 
 ## Run ledger fields

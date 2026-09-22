@@ -1,9 +1,10 @@
 /**
- * face-anchors-manifest-url — resolve sibling face-anchors.json from model URL (#400/#405).
+ * face-anchors-manifest-url — resolve sibling face-anchors.json from model URL (#400/#419).
  * Location: src/infrastructure/character/liveact/face-anchors-manifest-url.ts
  *
  * Prefer model-stem sidecar (`m5-face1-face-anchors.json`) so M/W can share one folder.
  * Fall back to generic `face-anchors.json` in the same directory.
+ * Preserve model cache-bust query (`?v=…`) so CDN cannot serve a stale sidecar (#419).
  */
 
 /** Strip query/hash and known mesh extensions from a pathname basename. */
@@ -18,6 +19,7 @@ function modelStemFromPathname(pathname: string): string | null {
 /**
  * Candidate URLs for SagaDriveFaceAnchorsV1 next to a GLB/VRM.
  * Order: `{stem}-face-anchors.json`, then `face-anchors.json`.
+ * Cache-bust query from the model URL is copied onto every candidate.
  */
 export function listFaceAnchorsManifestUrlCandidates(modelUrl: string): string[] {
   const trimmed = modelUrl.trim();
@@ -28,9 +30,9 @@ export function listFaceAnchorsManifestUrlCandidates(modelUrl: string): string[]
         ? globalThis.location.href
         : 'http://localhost/';
     const url = new URL(trimmed, base);
-    // Drop query/hash so stem matches the published asset name.
-    url.search = '';
+    // Keep search for cache-bust consistency; drop hash (fragment is never fetched).
     url.hash = '';
+    const cacheBustSearch = url.search;
     const path = url.pathname;
     const slash = path.lastIndexOf('/');
     if (slash < 0) return [];
@@ -39,9 +41,11 @@ export function listFaceAnchorsManifestUrlCandidates(modelUrl: string): string[]
     const out: string[] = [];
     if (stem) {
       url.pathname = `${dir}${stem}-face-anchors.json`;
+      url.search = cacheBustSearch;
       out.push(url.href);
     }
     url.pathname = `${dir}face-anchors.json`;
+    url.search = cacheBustSearch;
     out.push(url.href);
     return out;
   } catch {

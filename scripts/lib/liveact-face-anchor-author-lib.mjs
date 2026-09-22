@@ -1,6 +1,8 @@
 /**
- * liveact-face-anchor-author-lib — bootstrap/write face-anchors.json manifests (#399).
+ * liveact-face-anchor-author-lib — bootstrap/write face-anchors.json manifests (#399/#419).
  * Location: scripts/lib/liveact-face-anchor-author-lib.mjs
+ *
+ * Heuristic/bootstrap writes are always auto + unreviewed provenance (#419).
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -11,6 +13,10 @@ import {
 } from './liveact-face-anchor-ids.mjs';
 import { findNodeByIdentity, listMeshedNodeIdentities } from './liveact-face-anchor-glb.mjs';
 import { authorHeuristicFaceAnchorsManifest } from './liveact-face-anchor-heuristic.mjs';
+import {
+  createAutoUnreviewedFaceMappingAuthoring,
+  faceMappingAuthoringPathBesideAnchors,
+} from './liveact-face-mapping-authoring.mjs';
 
 const CENTROID = { u: 1 / 3, v: 1 / 3, w: 1 / 3 };
 
@@ -50,7 +56,7 @@ export function bootstrapMinimalFaceAnchorsManifest(document, opts = {}) {
 }
 
 /**
- * @param {{ inputPath: string; outputPath: string; nodeIdentity?: string; bootstrap?: boolean }} opts
+ * @param {{ inputPath: string; outputPath: string; nodeIdentity?: string; bootstrap?: boolean; modelPath?: string; cacheBust?: string }} opts
  */
 export async function authorFaceAnchorsFromGlb(opts) {
   const io = new NodeIO();
@@ -70,7 +76,19 @@ export async function authorFaceAnchorsFromGlb(opts) {
   }
 
   writeFileSync(opts.outputPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-  return manifest;
+
+  // Heuristic/bootstrap is proposal-only — never reviewed ground truth (#419).
+  const authoring = createAutoUnreviewedFaceMappingAuthoring({
+    modelPath: opts.modelPath ?? opts.inputPath,
+    ...(opts.cacheBust ? { cacheBust: opts.cacheBust } : {}),
+    note: opts.bootstrap
+      ? 'Bootstrap-minimal face anchors (unreviewed auto).'
+      : 'Heuristic face anchors (unreviewed auto).',
+  });
+  const authoringPath = faceMappingAuthoringPathBesideAnchors(opts.outputPath);
+  writeFileSync(authoringPath, `${JSON.stringify(authoring, null, 2)}\n`, 'utf8');
+
+  return { manifest, authoring, authoringPath };
 }
 
 export function parseFaceAnchorAuthorArgs(argv) {

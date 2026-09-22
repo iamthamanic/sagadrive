@@ -1,0 +1,9 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "auto",
+  "reviewed": false,
+  "asset": {
+    "modelPath": "public/assets/avatars/species/human-m5-face1.vrm",
+    "cacheBust": "quality5-face1-vrm2"
+  }
+}

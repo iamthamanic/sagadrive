@@ -14,14 +14,16 @@ import {
 const args = parseFaceAnchorAuthorArgs(process.argv.slice(2));
 
 try {
-  const manifest = await authorFaceAnchorsFromGlb({
+  const result = await authorFaceAnchorsFromGlb({
     inputPath: args.input,
     outputPath: args.output,
     nodeIdentity: args.node ?? undefined,
     bootstrap: args.bootstrap,
   });
-  const count = Object.keys(manifest.anchors).length;
-  console.log(`liveact-face-anchor-author OK: ${count} anchors → ${args.output}`);
+  const count = Object.keys(result.manifest.anchors).length;
+  console.log(
+    `liveact-face-anchor-author OK: ${count} anchors → ${args.output}; authoring → ${result.authoringPath}`,
+  );
 } catch (err) {
   console.error(`liveact-face-anchor-author FAIL: ${err instanceof Error ? err.message : String(err)}`);
   process.exit(1);
