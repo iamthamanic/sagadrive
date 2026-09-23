@@ -71,7 +71,7 @@ export function FaceMappingAuthoringPanel({
 
   return (
     <aside
-      className="pointer-events-auto relative z-10 mt-2 flex max-h-[min(42vh,22rem)] w-full flex-col rounded-md border border-white/15 bg-slate-950/95 text-slate-100 shadow-lg backdrop-blur-sm"
+      className="pointer-events-auto relative z-10 flex max-h-[min(42vh,22rem)] w-full flex-col rounded-md border border-white/15 bg-slate-950/95 text-slate-100 shadow-lg backdrop-blur-sm"
       data-testid="face-mapping-authoring-panel"
       aria-label="Face Mapping"
     >

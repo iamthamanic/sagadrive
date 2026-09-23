@@ -60,6 +60,8 @@ check(/FaceMappingAuthoringPanel/.test(controls), 'controls compose panel');
 check(/FaceMappingMarkerLayer/.test(controls), 'controls compose markers');
 check(/createPortal/.test(controls), 'panel portals below canvas');
 check(/face-mapping-panel-host/.test(surface), 'panel host under canvas');
+check(/belowViewportSlot|data-avatar-below-viewport/.test(surface), 'host slotted under 3D frame');
+check(/belowViewportSlot/.test(read('src/app/character/avatar/AvatarCanvas.tsx')), 'AvatarCanvas belowViewportSlot');
 check(/createEmptyFaceMappingDraft/.test(controls), 'draft lifecycle');
 check(/Übernehmen/.test(panel), 'apply CTA');
 check(/text-white/.test(panel), 'selected marker white text');

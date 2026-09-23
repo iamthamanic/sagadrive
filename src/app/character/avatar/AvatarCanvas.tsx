@@ -2,7 +2,7 @@
  * AvatarCanvas — React canvas host for the CharacterStudio Three.js runtime.
  * Location: src/app/character/avatar/AvatarCanvas.tsx
  */
-import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from 'react';
+import { useEffect, useRef, useState, type MutableRefObject, type ReactNode, type RefObject } from 'react';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
 import type {
   AvatarAnimationActionId,
@@ -50,6 +50,11 @@ interface AvatarCanvasProps {
   onMtoonState?: (enabled: boolean, apply: (enabled: boolean) => void) => void;
   /** Imperative access to CharacterStudioRuntime (LiveAct bind). */
   studioRuntimeRef?: MutableRefObject<CharacterStudioRuntime | null>;
+  /**
+   * Rendered immediately under the aspect-[4/5] 3D frame (before camera/anim controls).
+   * Used for Face Mapping panel host (#420).
+   */
+  belowViewportSlot?: ReactNode;
 }
 
 async function dataUrlToPngBlob(dataUrl: string): Promise<Blob | null> {
@@ -80,6 +85,7 @@ export function AvatarCanvas({
   hideMtoonToggle = false,
   onMtoonState,
   studioRuntimeRef,
+  belowViewportSlot,
 }: AvatarCanvasProps) {
   const localRef = useRef<HTMLCanvasElement>(null);
   const targetRef = canvasRef ?? localRef;
@@ -267,6 +273,7 @@ export function AvatarCanvas({
           </div>
         ) : null}
       </div>
+      {belowViewportSlot}
       {showEditorControls ? (
         <AvatarCameraViewControls
           inspectMode={inspectMode}

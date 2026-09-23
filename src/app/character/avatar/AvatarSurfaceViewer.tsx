@@ -252,6 +252,16 @@ export function AvatarSurfaceViewer({
             hideMtoonToggle={isEditorSurface}
             onMtoonState={handleMtoonState}
             studioRuntimeRef={studioRuntimeRef}
+            belowViewportSlot={
+              isEditorSurface ? (
+                <div
+                  ref={setFaceMappingPanelHost}
+                  className="w-full empty:hidden"
+                  data-testid="face-mapping-panel-host"
+                  data-avatar-below-viewport="true"
+                />
+              ) : null
+            }
           />
           {isEditorSurface ? (
             <div
@@ -274,13 +284,6 @@ export function AvatarSurfaceViewer({
                 />
               </div>
             </div>
-          ) : null}
-          {isEditorSurface ? (
-            <div
-              ref={setFaceMappingPanelHost}
-              className="w-full"
-              data-testid="face-mapping-panel-host"
-            />
           ) : null}
           {liveSurface && faceTrackingOn ? (
             <LiveActSurfaceControls liveAct={liveAct} disabled={!runtimeReady} />
