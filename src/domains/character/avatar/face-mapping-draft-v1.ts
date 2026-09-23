@@ -104,6 +104,31 @@ export const FACE_MAPPING_ANCHOR_LABEL_DE: Readonly<Record<SagaDriveFaceAnchorId
   forehead: 'Stirn',
 };
 
+/** Short German labels for 3D overlay (readable next to dots). */
+export const FACE_MAPPING_ANCHOR_SHORT_DE: Readonly<Record<SagaDriveFaceAnchorId, string>> = {
+  mouthUpper: 'Mund ↑',
+  mouthLower: 'Mund ↓',
+  mouthCornerLeft: 'Mund L',
+  mouthCornerRight: 'Mund R',
+  eyeLeftInner: 'Auge L ·',
+  eyeLeftOuter: 'Auge L ·',
+  eyeLeftUpper: 'Auge L ↑',
+  eyeLeftLower: 'Auge L ↓',
+  eyeRightInner: 'Auge R ·',
+  eyeRightOuter: 'Auge R ·',
+  eyeRightUpper: 'Auge R ↑',
+  eyeRightLower: 'Auge R ↓',
+  browLeftInner: 'Braue L ·',
+  browLeftOuter: 'Braue L ·',
+  browLeftCenter: 'Braue L',
+  browRightInner: 'Braue R ·',
+  browRightOuter: 'Braue R ·',
+  browRightCenter: 'Braue R',
+  noseTip: 'Nase',
+  chin: 'Kinn',
+  forehead: 'Stirn',
+};
+
 export type FaceMappingDraftAnchors = Partial<
   Record<SagaDriveFaceAnchorId, SagaDriveFaceAnchorTriangleBinding | null>
 >;

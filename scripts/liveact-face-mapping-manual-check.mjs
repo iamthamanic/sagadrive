@@ -65,8 +65,12 @@ check(/belowViewportSlot/.test(read('src/app/character/avatar/AvatarCanvas.tsx')
 check(/createEmptyFaceMappingDraft/.test(controls), 'draft lifecycle');
 check(/Übernehmen/.test(panel), 'apply CTA');
 check(/text-white/.test(panel), 'selected marker white text');
+check(/FACE_MAPPING_ANCHOR_SHORT_DE/.test(draftSrc), 'short overlay labels');
+check(/drawLabel|FACE_MAPPING_ANCHOR_SHORT_DE/.test(layer), '3D marker labels painted');
+check(/drawModeBanner|Face Mapping/.test(layer), 'mode banner');
+check(/HIT_RADIUS_PX = 28|HIT_RADIUS_PX = 2[4-9]/.test(layer), 'generous drag hit radius');
 check(/requestAnimationFrame/.test(layer), 'imperative marker paint');
-check(/drawGuideContours|Lip diamond|mouthUpper/.test(layer), 'lip/contour guides');
+check(/drawGuideContours|mouthUpper/.test(layer), 'lip/contour guides');
 check(/setOrbitControlsEnabled/.test(layer) && /setOrbitControlsEnabled/.test(studio), 'drag disables orbit');
 check(!/setDraft\(/.test(layer), 'layer no draft setState');
 
