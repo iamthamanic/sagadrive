@@ -1,8 +1,8 @@
 /**
- * FaceMappingAuthoringPanel — Face Setup docked marker list + actions (#420).
+ * FaceMappingAuthoringPanel — Face Setup marker list + actions (#420).
  * Location: src/app/character/liveact/FaceMappingAuthoringPanel.tsx
  *
- * Desktop: left dock beside viewport. Mobile: bottom sheet. Session-local draft only.
+ * Renders below the AvatarCanvas (not over the 3D face). Session-local draft only.
  */
 
 import type { SagaDriveFaceAnchorId } from '../../../domains/character/avatar/face-anchor-contract';
@@ -42,7 +42,8 @@ function statusLabelDe(status: FaceMappingMarkerStatus): string {
 }
 
 function statusClass(status: FaceMappingMarkerStatus, selected: boolean): string {
-  if (selected) return 'border-primary bg-primary/20 text-primary-foreground';
+  // Selected: solid primary + white text (primary-foreground is dark on light themes).
+  if (selected) return 'border-primary bg-primary text-white';
   switch (status) {
     case 'missing':
       return 'border-white/10 bg-slate-900/80 text-slate-300';
@@ -70,7 +71,7 @@ export function FaceMappingAuthoringPanel({
 
   return (
     <aside
-      className="pointer-events-auto absolute bottom-0 left-0 z-30 flex max-h-[min(55vh,24rem)] w-full flex-col border-t border-white/15 bg-slate-950/95 text-slate-100 shadow-lg backdrop-blur-sm md:bottom-auto md:top-12 md:max-h-[min(70vh,32rem)] md:w-64 md:border md:border-white/15 md:rounded-md"
+      className="pointer-events-auto relative z-10 mt-2 flex max-h-[min(42vh,22rem)] w-full flex-col rounded-md border border-white/15 bg-slate-950/95 text-slate-100 shadow-lg backdrop-blur-sm"
       data-testid="face-mapping-authoring-panel"
       aria-label="Face Mapping"
     >
@@ -95,8 +96,7 @@ export function FaceMappingAuthoringPanel({
       </div>
 
       <p className="px-3 py-1.5 text-[10px] text-slate-400">
-        Marker wählen, dann kurz auf die Character-Oberfläche tippen. Orbit bleibt möglich
-        (ziehen ≠ setzen).
+        Marker wählen, dann tippen oder auf dem Mesh ziehen. Orbit: ziehen neben den Punkten.
       </p>
 
       {missMessage ? (
@@ -129,7 +129,7 @@ export function FaceMappingAuthoringPanel({
                       onClick={() => onSelect(id)}
                     >
                       <span className="truncate">{FACE_MAPPING_ANCHOR_LABEL_DE[id]}</span>
-                      <span className="shrink-0 text-[10px] opacity-80">{statusLabelDe(status)}</span>
+                      <span className="shrink-0 text-[10px] opacity-90">{statusLabelDe(status)}</span>
                     </button>
                   </li>
                 );
@@ -164,7 +164,7 @@ export function FaceMappingAuthoringPanel({
         <Button
           type="button"
           size="sm"
-          className="h-8 w-full bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground"
+          className="h-8 w-full bg-primary text-white hover:bg-accent hover:text-accent-foreground"
           onClick={onApply}
           data-testid="face-mapping-apply"
         >
