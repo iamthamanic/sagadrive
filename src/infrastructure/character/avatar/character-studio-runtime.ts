@@ -516,6 +516,12 @@ export class CharacterStudioRuntime {
     return this.faceMappingAuthoringActive;
   }
 
+  /** Disable orbit while dragging a face-mapping marker (#420 UX). */
+  setOrbitControlsEnabled(enabled: boolean): void {
+    if (this.disposed) return;
+    this.controls.enabled = enabled;
+  }
+
   /**
    * Raycast canvas-local pointer to a triangle binding on allowlisted avatar meshes.
    */

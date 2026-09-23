@@ -75,6 +75,7 @@ export function AvatarSurfaceViewer({
   const [mtoonEnabled, setMtoonEnabled] = useState(true);
   const mtoonHandlerRef = useRef<((enabled: boolean) => void) | null>(null);
   const studioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
+  const [faceMappingPanelHost, setFaceMappingPanelHost] = useState<HTMLDivElement | null>(null);
   const [modelEpoch, setModelEpoch] = useState(0);
   const [liveActCapabilities, setLiveActCapabilities] = useState<LiveActCapabilitiesV1 | null>(
     null,
@@ -269,9 +270,17 @@ export function AvatarSurfaceViewer({
                   capabilities={liveActCapabilities}
                   characterFaceMappingAvailable={characterFaceMappingAvailable}
                   studioRuntimeRef={studioRuntimeRef}
+                  faceMappingPanelHost={faceMappingPanelHost}
                 />
               </div>
             </div>
+          ) : null}
+          {isEditorSurface ? (
+            <div
+              ref={setFaceMappingPanelHost}
+              className="w-full"
+              data-testid="face-mapping-panel-host"
+            />
           ) : null}
           {liveSurface && faceTrackingOn ? (
             <LiveActSurfaceControls liveAct={liveAct} disabled={!runtimeReady} />

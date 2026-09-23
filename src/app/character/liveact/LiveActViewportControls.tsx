@@ -2,10 +2,12 @@
  * LiveActViewportControls — editor viewport chrome host for LiveAct gear + PiP (#330/#420).
  * Location: src/app/character/liveact/LiveActViewportControls.tsx
  *
- * Composes AvatarPreviewSettings + LiveActCameraPreview + Face Mapping authoring for AvatarSurfaceViewer.
+ * Overlay chrome (settings / markers / PiP) sits on the canvas.
+ * Face Mapping panel portals into a host below the AvatarCanvas.
  */
 
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
 import type {
   SagaDriveFaceAnchorId,
@@ -36,6 +38,8 @@ interface LiveActViewportControlsProps {
   capabilities: LiveActCapabilitiesV1 | null;
   characterFaceMappingAvailable: boolean;
   studioRuntimeRef?: RefObject<CharacterStudioRuntime | null>;
+  /** DOM host below AvatarCanvas for the Face Mapping panel. */
+  faceMappingPanelHost?: HTMLElement | null;
 }
 
 export function LiveActViewportControls({
@@ -46,6 +50,7 @@ export function LiveActViewportControls({
   capabilities,
   characterFaceMappingAvailable,
   studioRuntimeRef,
+  faceMappingPanelHost = null,
 }: LiveActViewportControlsProps) {
   const [faceMappingOpen, setFaceMappingOpen] = useState(false);
   const [draft, setDraft] = useState<SagaDriveFaceMappingDraftV1 | null>(null);
@@ -107,14 +112,53 @@ export function LiveActViewportControls({
   const onBindingPlaced = useCallback(
     (anchorId: SagaDriveFaceAnchorId, binding: SagaDriveFaceAnchorTriangleBinding | null) => {
       if (!binding) {
-        setMissMessage('Kein Treffer auf der Character-Oberfläche — erneut tippen.');
+        setMissMessage('Kein Treffer auf der Character-Oberfläche — erneut tippen oder ziehen.');
         return;
       }
       setMissMessage(null);
-      setDraft((prev) => (prev ? setFaceMappingDraftBinding(prev, anchorId, binding) : prev));
+      setDraft((prev) => {
+        if (!prev) return prev;
+        let next = setFaceMappingDraftBinding(prev, anchorId, binding);
+        if (next.selectedAnchorId !== anchorId) {
+          next = selectFaceMappingAnchor(next, anchorId);
+        }
+        draftRef.current = next;
+        return next;
+      });
     },
     [],
   );
+
+  const panelHost = faceMappingPanelHost;
+  const panel =
+    faceMappingOpen && draft ? (
+      <FaceMappingAuthoringPanel
+        draft={draft}
+        missMessage={missMessage}
+        onSelect={(id) => {
+          setMissMessage(null);
+          setDraft((prev) => (prev ? selectFaceMappingAnchor(prev, id) : prev));
+        }}
+        onClearSelected={() => {
+          setDraft((prev) => {
+            if (!prev?.selectedAnchorId) return prev;
+            return clearFaceMappingDraftBinding(prev, prev.selectedAnchorId);
+          });
+        }}
+        onReset={() => {
+          setMissMessage(null);
+          setDraft((prev) => (prev ? resetFaceMappingDraft(prev) : prev));
+        }}
+        onCancel={closeFaceMapping}
+        onApply={() => {
+          const runtime = studioRuntimeRef?.current;
+          if (!runtime || !draft) return;
+          const manifest = faceMappingDraftToManifest(draft);
+          runtime.bindFaceAnchorsManifestSession(manifest);
+          closeFaceMapping();
+        }}
+      />
+    ) : null;
 
   return (
     <>
@@ -132,34 +176,7 @@ export function LiveActViewportControls({
           onBindingPlaced={onBindingPlaced}
         />
       ) : null}
-      {faceMappingOpen && draft ? (
-        <FaceMappingAuthoringPanel
-          draft={draft}
-          missMessage={missMessage}
-          onSelect={(id) => {
-            setMissMessage(null);
-            setDraft((prev) => (prev ? selectFaceMappingAnchor(prev, id) : prev));
-          }}
-          onClearSelected={() => {
-            setDraft((prev) => {
-              if (!prev?.selectedAnchorId) return prev;
-              return clearFaceMappingDraftBinding(prev, prev.selectedAnchorId);
-            });
-          }}
-          onReset={() => {
-            setMissMessage(null);
-            setDraft((prev) => (prev ? resetFaceMappingDraft(prev) : prev));
-          }}
-          onCancel={closeFaceMapping}
-          onApply={() => {
-            const runtime = studioRuntimeRef?.current;
-            if (!runtime || !draft) return;
-            const manifest = faceMappingDraftToManifest(draft);
-            runtime.bindFaceAnchorsManifestSession(manifest);
-            closeFaceMapping();
-          }}
-        />
-      ) : null}
+      {panelHost && panel ? createPortal(panel, panelHost) : null}
       <AvatarPreviewSettings
         runtimeReady={runtimeReady}
         mtoonEnabled={mtoonEnabled}
