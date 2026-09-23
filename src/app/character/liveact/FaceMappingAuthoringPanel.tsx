@@ -96,7 +96,8 @@ export function FaceMappingAuthoringPanel({
       </div>
 
       <p className="px-3 py-1.5 text-[10px] text-slate-400">
-        Marker wählen, dann tippen oder auf dem Mesh ziehen. Orbit: ziehen neben den Punkten.
+        Marker in der Liste wählen oder am 3D-Punkt greifen und ziehen. Labels: Mund / Auge /
+        Nase / Kinn …
       </p>
 
       {missMessage ? (
