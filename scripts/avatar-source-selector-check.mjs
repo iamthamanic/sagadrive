@@ -50,6 +50,7 @@ check(/Mit KI erstellen/.test(domain), 'Meshy label in domain');
 check(/TooltipContent/.test(selector) && /summaryDe/.test(selector), 'summary in tooltip');
 check(/CircleHelp/.test(selector) && /avatar-source-help-/.test(selector), 'help icon beside title');
 check(!/text-xs opacity-90/.test(selector), 'no inline summary under title');
+check(/grid grid-cols-3/.test(selector), 'source cards always 3-col');
 
 check(/AvatarSourceSelector/.test(editor), 'editor mounts selector');
 check(/requestAvatarSourceChange/.test(editor), 'switch handler');

@@ -48,7 +48,7 @@ export function AvatarSourceSelector({
           Eine Quelle wählen. Funktionen richten sich nach der Rig-Analyse — nicht nach der Quelle.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Avatar-Quellen">
+      <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Avatar-Quellen">
         {AVATAR_SOURCE_OPTIONS.map((option) => {
           const selected = value === option.source;
           return (
@@ -61,11 +61,11 @@ export function AvatarSourceSelector({
               disabled={disabled}
               data-avatar-source-card={option.source}
               data-selected={selected ? 'true' : 'false'}
-              className="h-auto flex-col items-start gap-1.5 whitespace-normal px-3 py-3 text-left"
+              className="h-auto min-w-0 flex-col items-start gap-1.5 whitespace-normal px-2.5 py-3 text-left"
               onClick={() => onSelect(option.source)}
             >
-              <span className="flex w-full items-center gap-1.5">
-                <span className="font-medium">{option.titleDe}</span>
+              <span className="flex w-full min-w-0 items-center gap-1">
+                <span className="min-w-0 font-medium leading-snug">{option.titleDe}</span>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span
