@@ -464,6 +464,14 @@ function checkLiveActFaceMappingManual() {
   });
 }
 
+function checkLiveActFaceAnchorsCharacterPersist() {
+  console.log('LiveAct face anchors character persist: avatar.face_anchors + override...');
+  execFileSync(process.execPath, ['scripts/liveact-face-anchors-character-persist-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceMappingVisualGuides() {
   console.log(
     'LiveAct face mapping visual guides: binding labels + smooth guides + pulse/detail...',
@@ -1358,6 +1366,7 @@ checkLiveActDiagnosticsV2();
 checkLiveActFaceAnchorsV1();
 checkLiveActFaceMappingAuthoring();
 checkLiveActFaceMappingManual();
+checkLiveActFaceAnchorsCharacterPersist();
 checkLiveActFaceMappingVisualGuides();
 checkLiveActFaceAnchorAnatomy();
 checkLiveActCameraOverlayMetrics();

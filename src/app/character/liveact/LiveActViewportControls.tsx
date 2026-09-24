@@ -12,6 +12,7 @@ import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
 import type {
   SagaDriveFaceAnchorId,
   SagaDriveFaceAnchorTriangleBinding,
+  SagaDriveFaceAnchorsManifestV1,
 } from '../../../domains/character/avatar/face-anchor-contract';
 import {
   clearFaceMappingDraftBinding,
@@ -43,6 +44,8 @@ interface LiveActViewportControlsProps {
   faceMappingPanelHost?: HTMLElement | null;
   /** Open large face-framed 3D preview modal. */
   onExpandPreview?: () => void;
+  /** Persist Face Mapping anchors on the character avatar (editor hook). */
+  onFaceAnchorsCommitted?: (manifest: SagaDriveFaceAnchorsManifestV1) => void;
 }
 
 export function LiveActViewportControls({
@@ -55,6 +58,7 @@ export function LiveActViewportControls({
   studioRuntimeRef,
   faceMappingPanelHost = null,
   onExpandPreview,
+  onFaceAnchorsCommitted,
 }: LiveActViewportControlsProps) {
   const [faceMappingOpen, setFaceMappingOpen] = useState(false);
   const [draft, setDraft] = useState<SagaDriveFaceMappingDraftV1 | null>(null);
@@ -92,8 +96,9 @@ export function LiveActViewportControls({
     if (!runtime || !current) return;
     const manifest = faceMappingDraftToManifest(current);
     runtime.bindFaceAnchorsManifestSession(manifest);
+    onFaceAnchorsCommitted?.(manifest);
     closeFaceMapping();
-  }, [closeFaceMapping, studioRuntimeRef]);
+  }, [closeFaceMapping, onFaceAnchorsCommitted, studioRuntimeRef]);
 
   const openFaceMapping = useCallback(() => {
     const runtime = studioRuntimeRef?.current;
@@ -205,7 +210,7 @@ export function LiveActViewportControls({
           data-testid="face-mapping-viewport-actions"
         >
           <p className="min-w-0 flex-1 px-1 text-[10px] leading-snug text-slate-400">
-            Marker setzen, dann speichern — gilt für diese Sitzung (LiveAct-Overlay).
+            Marker setzen, dann speichern — am Charakter; Charakter speichern zum Persistieren.
           </p>
           <Button
             type="button"

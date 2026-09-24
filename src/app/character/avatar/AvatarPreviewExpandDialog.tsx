@@ -9,6 +9,7 @@
 import { useRef, useState } from 'react';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
 import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
+import type { SagaDriveFaceAnchorsManifestV1 } from '../../../domains/character/avatar';
 import type { CharacterStudioRuntime } from '../../../infrastructure/character/avatar/character-studio-runtime';
 import {
   Dialog,
@@ -29,6 +30,7 @@ interface AvatarPreviewExpandDialogProps {
   liveAct: UseLiveActViewportResult;
   capabilities: LiveActCapabilitiesV1 | null;
   characterFaceMappingAvailable: boolean;
+  onFaceAnchorsCommitted?: (manifest: SagaDriveFaceAnchorsManifestV1) => void;
 }
 
 export function AvatarPreviewExpandDialog({
@@ -39,6 +41,7 @@ export function AvatarPreviewExpandDialog({
   liveAct,
   capabilities,
   characterFaceMappingAvailable,
+  onFaceAnchorsCommitted,
 }: AvatarPreviewExpandDialogProps) {
   const [runtimeReady, setRuntimeReady] = useState(false);
   const [mtoonEnabled, setMtoonEnabled] = useState(true);
@@ -112,6 +115,7 @@ export function AvatarPreviewExpandDialog({
                   characterFaceMappingAvailable={characterFaceMappingAvailable}
                   studioRuntimeRef={studioRuntimeRef}
                   faceMappingPanelHost={faceMappingPanelHost}
+                  onFaceAnchorsCommitted={onFaceAnchorsCommitted}
                 />
               </div>
             </div>
@@ -134,6 +138,7 @@ export function AvatarPreviewExpandDialog({
                   liveAct={liveAct}
                   capabilities={null}
                   characterFaceMappingAvailable={false}
+                  onFaceAnchorsCommitted={onFaceAnchorsCommitted}
                 />
               </div>
             </div>

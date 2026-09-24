@@ -176,7 +176,7 @@ export function FaceMappingAuthoringPanel({
         </Button>
       </div>
       <p className="px-2 pb-2 text-[10px] text-slate-500">
-        Speichern sitzt unten am Viewport — gilt für diese Sitzung (LiveAct-Overlay).
+        Speichern sitzt unten am Viewport — schreibt Face Mapping auf den Charakter (danach Charakter speichern).
       </p>
     </aside>
   );

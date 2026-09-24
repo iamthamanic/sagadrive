@@ -12,6 +12,7 @@ import {
   type AvatarRigAnalysisResult,
   type BaseTraitSelection,
   type RuntimeTraitOverlay,
+  type SagaDriveFaceAnchorsManifestV1,
 } from '../../../domains/character/avatar';
 import { normalizeAvatarModelUrl } from '../../../domains/character/use-cases/avatar-presets';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
@@ -347,7 +348,7 @@ export class CharacterStudioRuntime {
       this.rebuildLiveActAvatarOutput();
       this.liveActRigDebug.bindModelRoot(root);
       this.liveActCharacterFaceDebug.bindModelRoot(root);
-      void this.loadFaceAnchorsManifestForModel(safeUrl);
+      void this.loadFaceAnchorsManifestForModel(safeUrl, avatar.face_anchors ?? null);
       this.rigidEquipmentRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.skinnedWearableRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.onStateChange({
@@ -999,8 +1000,19 @@ export class CharacterStudioRuntime {
     }
   }
 
-  private async loadFaceAnchorsManifestForModel(modelUrl: string): Promise<void> {
+  private async loadFaceAnchorsManifestForModel(
+    modelUrl: string,
+    characterOverride: SagaDriveFaceAnchorsManifestV1 | null = null,
+  ): Promise<void> {
     const token = ++this.faceAnchorManifestLoadToken;
+    // Character-persisted anchors win over asset sidecar (#persist).
+    if (characterOverride) {
+      const parsed = parseFaceAnchorsManifestV1(characterOverride);
+      if (parsed.ok && token === this.faceAnchorManifestLoadToken) {
+        this.liveActCharacterFaceDebug.bindManifest(parsed.manifest);
+        return;
+      }
+    }
     this.liveActCharacterFaceDebug.bindManifest(null);
     const candidates = listFaceAnchorsManifestUrlCandidates(modelUrl);
     if (!candidates.length) return;

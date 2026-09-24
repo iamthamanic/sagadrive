@@ -356,6 +356,7 @@ export function CharacterEditor() {
     handleBaseTraitChange,
     setHairColorDirty,
     setSkinToneDirty,
+    commitFaceAnchors,
     hydrateAvatarFromAppearance,
     handleImageUpload,
     handleGeneratePortrait,
@@ -1312,6 +1313,7 @@ export function CharacterEditor() {
                   canvasRef={avatarCanvasRef}
                   captureApiRef={portraitCaptureRef}
                   onRuntimeReady={handleAvatarRuntimeReady}
+                  onFaceAnchorsCommitted={commitFaceAnchors}
                   size="lg"
                   className="w-full border-0"
                 />

@@ -69,6 +69,7 @@ check(/face-mapping-viewport-save/.test(controls), 'viewport Speichern bar');
 check(/bindFaceAnchorsManifestSession/.test(controls), 'apply binds session manifest');
 check(!/face-mapping-apply/.test(panel), 'no duplicate Speichern in panel');
 check(/Speichern sitzt unten am Viewport/.test(panel), 'panel points to viewport Speichern');
+check(/Charakter speichern/.test(panel), 'panel mentions character save');
 check(/text-white/.test(panel), 'selected marker white text');
 check(/FACE_MAPPING_ANCHOR_SHORT_DE/.test(draftSrc), 'short overlay labels');
 check(/drawLabel|FACE_MAPPING_ANCHOR_SHORT_DE/.test(layer), '3D marker labels painted');

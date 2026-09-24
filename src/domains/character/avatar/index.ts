@@ -744,6 +744,7 @@ export {
   SAGA_DRIVE_FACE_ANCHOR_IDS,
   isSagaDriveFaceAnchorId,
   parseFaceAnchorsManifestV1,
+  readFaceAnchorsFromAvatar,
   stableFaceAnchorsManifestJson,
   validateFaceAnchorBarycentric,
   validateFaceAnchorTriangleBinding,
