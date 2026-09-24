@@ -68,7 +68,7 @@ check(/text-white/.test(panel), 'selected marker white text');
 check(/FACE_MAPPING_ANCHOR_SHORT_DE/.test(draftSrc), 'short overlay labels');
 check(/drawLabel|FACE_MAPPING_ANCHOR_SHORT_DE/.test(layer), '3D marker labels painted');
 check(/drawModeBanner|Face Mapping/.test(layer), 'mode banner');
-check(/HIT_RADIUS_PX = 28|HIT_RADIUS_PX = 2[4-9]/.test(layer), 'generous drag hit radius');
+check(/HIT_RADIUS_PX = 3[0-9]|HIT_RADIUS_PX = 2[4-9]/.test(layer), 'generous drag hit radius');
 check(/requestAnimationFrame/.test(layer), 'imperative marker paint');
 check(/drawGuidePaths|buildFaceMappingGuidePaths/.test(layer), 'lip/contour guides');
 check(/setOrbitControlsEnabled/.test(layer) && /setOrbitControlsEnabled/.test(studio), 'drag disables orbit');
