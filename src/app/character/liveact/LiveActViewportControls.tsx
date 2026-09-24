@@ -179,7 +179,6 @@ export function LiveActViewportControls({
           });
         }}
         onCancel={closeFaceMapping}
-        onApply={applyFaceMapping}
       />
     ) : null;
 
