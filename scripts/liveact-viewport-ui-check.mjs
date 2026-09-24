@@ -37,6 +37,7 @@ check(/type="multiple"/.test(settings), 'accordion allows multi open');
 check(/defaultValue=\{\[\]\}/.test(settings), 'accordion sections collapsed by default');
 check(/avatar-preview-expand/.test(settings), 'expand preview control');
 check(/AvatarPreviewExpandDialog/.test(surface), 'surface hosts expand dialog');
+check(/LiveActViewportControls/.test(read('src/app/character/avatar/AvatarPreviewExpandDialog.tsx')), 'expand dialog hosts gear chrome');
 check(/initialCameraFrame/.test(canvas), 'canvas supports initial face frame');
 check(!/disabled=\{disabled\}/.test(settings) || /Avatar-Vorschau Einstellungen/.test(settings), 'gear button not gated by runtime');
 check(/liveact-tracking-toggle/.test(settings), 'tracking toggle');

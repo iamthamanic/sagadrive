@@ -265,7 +265,7 @@ export function AvatarSurfaceViewer({
               ) : null
             }
           />
-          {isEditorSurface ? (
+          {isEditorSurface && !previewExpandOpen ? (
             <div
               className="pointer-events-none absolute inset-x-0 top-0 z-20 aspect-[4/5] w-full"
               data-avatar-viewport-chrome="true"
@@ -309,7 +309,7 @@ export function AvatarSurfaceViewer({
               {view.displayName.slice(0, 2).toUpperCase()}
             </div>
           )}
-          {isEditorSurface ? (
+          {isEditorSurface && !previewExpandOpen ? (
             <LiveActViewportControls
               runtimeReady={false}
               mtoonEnabled={mtoonEnabled}
@@ -331,6 +331,9 @@ export function AvatarSurfaceViewer({
           onOpenChange={setPreviewExpandOpen}
           avatar={show3d && avatar ? avatar : null}
           displayName={view.displayName}
+          liveAct={liveAct}
+          capabilities={liveActCapabilities}
+          characterFaceMappingAvailable={characterFaceMappingAvailable}
         />
       ) : null}
     </div>
