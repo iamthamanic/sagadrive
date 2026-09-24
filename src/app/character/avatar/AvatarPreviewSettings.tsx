@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { Maximize2, Settings } from 'lucide-react';
+import { Scaling, Settings } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -166,8 +166,8 @@ export function AvatarPreviewSettings({
               size="sm"
               variant="ghost"
               disabled={!onExpandPreview}
-              aria-label="3D Vorschau vergrößern"
-              title="3D Vorschau vergrößern (Gesicht)"
+              aria-label="3D Setup öffnen"
+              title="3D Setup — Vorschau im Gesicht-Rahmen"
               data-testid="avatar-preview-expand"
               className="h-7 gap-1 px-1.5 text-[10px] text-slate-300 hover:bg-white/10 hover:text-slate-50"
               onClick={(event) => {
@@ -177,8 +177,8 @@ export function AvatarPreviewSettings({
                 onExpandPreview?.();
               }}
             >
-              <Maximize2 className="size-3.5" aria-hidden />
-              <span>Expand</span>
+              <Scaling className="size-3.5" aria-hidden />
+              <span>Setup</span>
             </Button>
           </div>
 
