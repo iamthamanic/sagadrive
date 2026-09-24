@@ -32,6 +32,8 @@ check(/useLiveActViewport/.test(surface), 'surface uses liveact hook');
 check(/data-avatar-surface-fallback/.test(surface), 'fallback still present');
 check(/LiveActViewportControls/.test(surface) && /runtimeReady=\{false\}/.test(surface), 'gear on fallback path');
 check(/data-testid="avatar-preview-settings"/.test(settings), 'gear test id');
+check(/avatar-preview-settings-accordion/.test(settings), 'collapsible accordion sections');
+check(/type="multiple"/.test(settings), 'accordion allows multi open');
 check(!/disabled=\{disabled\}/.test(settings) || /Avatar-Vorschau Einstellungen/.test(settings), 'gear button not gated by runtime');
 check(/liveact-tracking-toggle/.test(settings), 'tracking toggle');
 check(/liveact-camera-preview-toggle/.test(settings), 'pip toggle');

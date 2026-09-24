@@ -3,8 +3,10 @@
  * Location: src/app/character/avatar/AvatarSpeciesTemplatePicker.tsx
  *
  * Renders picker DTOs from domain; never hardcodes species→body-family mapping in UI.
+ * Look summaries live in a help tooltip next to the title (keeps cards compact, 3-col grid).
  */
 
+import { CircleHelp } from 'lucide-react';
 import {
   listTemplateCreatorPickerItems,
   type BaseBodySpeciesId,
@@ -12,6 +14,7 @@ import {
 } from '../../../domains/character/avatar';
 import { Badge } from '../../../shared/ui/badge';
 import { Button } from '../../../shared/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../shared/ui/tooltip';
 
 interface AvatarSpeciesTemplatePickerProps {
   selectedSpeciesId: BaseBodySpeciesId | null;
@@ -57,7 +60,7 @@ export function AvatarSpeciesTemplatePicker({
         </p>
       </div>
       <div
-        className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid grid-cols-3 gap-2"
         role="listbox"
         aria-label="Species-Vorlagen"
       >
@@ -74,14 +77,42 @@ export function AvatarSpeciesTemplatePicker({
               data-species-template={item.speciesId}
               data-body-family={item.bodyFamily}
               data-selected={selected ? 'true' : 'false'}
-              className="h-auto min-h-[5.5rem] flex-col items-start gap-1 whitespace-normal px-3 py-3 text-left"
+              className="h-auto min-w-0 flex-col items-start gap-1.5 whitespace-normal px-2.5 py-3 text-left"
               onClick={() => onSelect(item.speciesId)}
             >
-              <span className="font-medium">{item.labelDe}</span>
+              <span className="flex w-full min-w-0 items-center gap-1">
+                <span className="min-w-0 font-medium leading-snug">{item.labelDe}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      role="img"
+                      aria-label={`${item.labelDe} erklären`}
+                      data-testid={`species-template-help-${item.speciesId}`}
+                      className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-current/80 hover:bg-foreground/10 hover:text-current"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                      onPointerDown={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                    >
+                      <CircleHelp className="pointer-events-none size-3.5" aria-hidden />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    sideOffset={6}
+                    className="max-w-[280px] text-left text-xs leading-relaxed"
+                  >
+                    {item.lookSummaryDe}
+                  </TooltipContent>
+                </Tooltip>
+              </span>
               <Badge variant="secondary" className="text-[10px]">
                 {familyLabelDe(item.bodyFamily)}
               </Badge>
-              <span className="text-xs opacity-90">{item.lookSummaryDe}</span>
             </Button>
           );
         })}
