@@ -70,11 +70,15 @@ check(/applyCameraFrame\('face'\)/.test(studio), 'open frames face frontal');
 // UI: pulse + detail + smooth guides + bidirectional select.
 check(/FaceMappingDetailCard/.test(panel), 'panel hosts detail card');
 check(/face-mapping-detail-card/.test(detail), 'detail testid');
-check(/face-mapping-detail-pulse/.test(detail) && /animate-ping/.test(detail), 'detail pulse');
+check(/face-mapping-detail-pulse/.test(detail) && /FaceMappingFeatureIcon|face-mapping-feature-icon/.test(detail), 'detail feature silhouette + pulse');
+check(/FaceMappingFeatureIcon/.test(panel), 'panel row feature icons');
 check(/buildFaceMappingGuidePaths/.test(layer), 'layer uses domain guides');
 check(/performance\.now\(\).*sin|Math\.sin\(performance\.now/.test(layer), 'viewport marker pulse');
 check(/onSelectAnchor/.test(layer) && /onSelectAnchor/.test(controls), 'viewport → panel select');
 check(/Valid hit only|leave last binding/.test(layer), 'drag keeps last valid');
+check(/pointer-events-auto/.test(layer), 'overlay owns pointer events');
+check(/setPointerCapture|grabbedExisting|select only/.test(layer), 'click selects without relocating');
+check(/controls\.enabled = false/.test(studio) && /Face Mapping session/.test(studio), 'orbit hard-off in authoring');
 check(/resetFaceMappingDraft/.test(controls), 'reset clears draft/selection');
 check(/setFaceMappingAuthoringActive\(false\)/.test(controls), 'cancel clears authoring');
 check(/setTrackingEnabled\(false\)/.test(controls), 'pauses tracking on open');
