@@ -4,10 +4,17 @@
  *
  * Always openable in editor Surface chrome (even fallback „CH“).
  * LiveAct/MToon actions stay disabled without 3D runtime — no camera prompt.
+ * Long blocks live in collapsible accordion sections so the panel stays scannable.
  */
 
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Settings } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '../../../shared/ui/accordion';
 import { Button } from '../../../shared/ui/button';
 import { Switch } from '../../../shared/ui/switch';
 import type { LiveActCameraDeviceOption } from '../liveact/useLiveActViewport';
@@ -58,6 +65,11 @@ interface AvatarPreviewSettingsProps {
   faceMappingOpen?: boolean;
   onOpenFaceMapping?: () => void;
 }
+
+const accordionTriggerClass =
+  'px-1 py-1.5 text-[11px] font-medium text-slate-300 hover:no-underline hover:text-slate-100 [&[data-state=open]]:text-slate-100 [&_svg]:size-3.5 [&_svg]:text-slate-400';
+
+const accordionContentClass = 'pb-1 pt-0';
 
 export function AvatarPreviewSettings({
   runtimeReady,
@@ -156,234 +168,266 @@ export function AvatarPreviewSettings({
             </p>
           ) : null}
 
-          <p className="px-1 pb-1 text-[11px] font-medium text-slate-300">Darstellung</p>
-          <div
-            className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5"
-            data-testid="avatar-mtoon-toggle"
+          <Accordion
+            type="multiple"
+            defaultValue={['darstellung', 'liveact']}
+            className="w-full"
+            data-testid="avatar-preview-settings-accordion"
           >
-            <div className="min-w-0">
-              <p className="text-xs text-slate-100">MToon</p>
-              <p className="text-[10px] text-slate-400">
-                {mtoonEnabled ? 'An — stilisiert' : 'Aus — PBR roh'}
-              </p>
-            </div>
-            <Switch
-              checked={mtoonEnabled}
-              disabled={actionsDisabled}
-              onCheckedChange={onMtoonChange}
-              aria-label={mtoonEnabled ? 'MToon-Stil ausschalten' : 'MToon-Stil einschalten'}
-            />
-          </div>
+            <AccordionItem value="darstellung" className="border-white/10">
+              <AccordionTrigger className={accordionTriggerClass}>Darstellung</AccordionTrigger>
+              <AccordionContent className={accordionContentClass}>
+                <div
+                  className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5"
+                  data-testid="avatar-mtoon-toggle"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs text-slate-100">MToon</p>
+                    <p className="text-[10px] text-slate-400">
+                      {mtoonEnabled ? 'An — stilisiert' : 'Aus — PBR roh'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={mtoonEnabled}
+                    disabled={actionsDisabled}
+                    onCheckedChange={onMtoonChange}
+                    aria-label={mtoonEnabled ? 'MToon-Stil ausschalten' : 'MToon-Stil einschalten'}
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
 
-          <div className="mt-2 border-t border-white/10 pt-2">
-            <p className="px-1 pb-1 text-[11px] font-medium text-slate-300">LiveAct</p>
+            <AccordionItem value="liveact" className="border-white/10">
+              <AccordionTrigger className={accordionTriggerClass}>LiveAct</AccordionTrigger>
+              <AccordionContent className={accordionContentClass}>
+                <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
+                  <div className="min-w-0">
+                    <p className="text-xs text-slate-100">Tracking</p>
+                    <p className="text-[10px] text-slate-400">Webcam → Avatar</p>
+                  </div>
+                  <Switch
+                    checked={trackingEnabled}
+                    disabled={actionsDisabled}
+                    onCheckedChange={onTrackingChange}
+                    aria-label={
+                      trackingEnabled
+                        ? 'LiveAct Tracking ausschalten'
+                        : 'LiveAct Tracking einschalten'
+                    }
+                    data-testid="liveact-tracking-toggle"
+                  />
+                </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
-              <div className="min-w-0">
-                <p className="text-xs text-slate-100">Tracking</p>
-                <p className="text-[10px] text-slate-400">Webcam → Avatar</p>
-              </div>
-              <Switch
-                checked={trackingEnabled}
-                disabled={actionsDisabled}
-                onCheckedChange={onTrackingChange}
-                aria-label={
-                  trackingEnabled ? 'LiveAct Tracking ausschalten' : 'LiveAct Tracking einschalten'
-                }
-                data-testid="liveact-tracking-toggle"
-              />
-            </div>
+                <div className="px-1 py-1.5">
+                  <label className="text-xs text-slate-100" htmlFor="liveact-camera-select">
+                    Kamera
+                  </label>
+                  <select
+                    id="liveact-camera-select"
+                    data-testid="liveact-camera-select"
+                    className="mt-1 w-full rounded border border-white/15 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 disabled:opacity-50"
+                    disabled={actionsDisabled || !trackingEnabled}
+                    value={selectedDeviceId ?? ''}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      onDeviceChange(value || undefined);
+                    }}
+                  >
+                    <option value="">
+                      {devices.length === 0 ? 'Standardkamera' : 'Kamera wählen'}
+                    </option>
+                    {devices.map((device) => (
+                      <option key={device.deviceId} value={device.deviceId}>
+                        {device.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div className="px-1 py-1.5">
-              <label className="text-xs text-slate-100" htmlFor="liveact-camera-select">
-                Kamera
-              </label>
-              <select
-                id="liveact-camera-select"
-                data-testid="liveact-camera-select"
-                className="mt-1 w-full rounded border border-white/15 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 disabled:opacity-50"
-                disabled={actionsDisabled || !trackingEnabled}
-                value={selectedDeviceId ?? ''}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  onDeviceChange(value || undefined);
-                }}
-              >
-                <option value="">
-                  {devices.length === 0 ? 'Standardkamera' : 'Kamera wählen'}
-                </option>
-                {devices.map((device) => (
-                  <option key={device.deviceId} value={device.deviceId}>
-                    {device.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
+                  <div className="min-w-0">
+                    <p className="text-xs text-slate-100">Kameravorschau</p>
+                    <p className="text-[10px] text-slate-400">PiP im Viewport</p>
+                  </div>
+                  <Switch
+                    checked={cameraPreviewEnabled}
+                    disabled={actionsDisabled}
+                    onCheckedChange={onCameraPreviewChange}
+                    aria-label="Kameravorschau umschalten"
+                    data-testid="liveact-camera-preview-toggle"
+                  />
+                </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
-              <div className="min-w-0">
-                <p className="text-xs text-slate-100">Kameravorschau</p>
-                <p className="text-[10px] text-slate-400">PiP im Viewport</p>
-              </div>
-              <Switch
-                checked={cameraPreviewEnabled}
-                disabled={actionsDisabled}
-                onCheckedChange={onCameraPreviewChange}
-                aria-label="Kameravorschau umschalten"
-                data-testid="liveact-camera-preview-toggle"
-              />
-            </div>
+                <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
+                  <div className="min-w-0">
+                    <p className="text-xs text-slate-100">Face Overlay</p>
+                    <p className="text-[10px] text-slate-400">
+                      Kamera-PiP + Character-Mesh (lokal)
+                    </p>
+                  </div>
+                  <Switch
+                    checked={faceOverlayEnabled}
+                    disabled={actionsDisabled || !trackingEnabled}
+                    onCheckedChange={onFaceOverlayChange}
+                    aria-label="Face Overlay umschalten"
+                    data-testid="liveact-face-overlay-toggle"
+                  />
+                </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
-              <div className="min-w-0">
-                <p className="text-xs text-slate-100">Face Overlay</p>
-                <p className="text-[10px] text-slate-400">
-                  Kamera-PiP + Character-Mesh (lokal)
-                </p>
-              </div>
-              <Switch
-                checked={faceOverlayEnabled}
-                disabled={actionsDisabled || !trackingEnabled}
-                onCheckedChange={onFaceOverlayChange}
-                aria-label="Face Overlay umschalten"
-                data-testid="liveact-face-overlay-toggle"
-              />
-            </div>
+                {!characterFaceMappingAvailable && runtimeReady ? (
+                  <p
+                    className="px-1 pb-1 text-[10px] text-amber-200/90"
+                    data-testid="liveact-character-face-mapping-unavailable"
+                  >
+                    Character Face Mapping nicht verfügbar (kein face-anchors.json am Modell).
+                  </p>
+                ) : null}
 
-            {!characterFaceMappingAvailable && runtimeReady ? (
-              <p
-                className="px-1 pb-1 text-[10px] text-amber-200/90"
-                data-testid="liveact-character-face-mapping-unavailable"
-              >
-                Character Face Mapping nicht verfügbar (kein face-anchors.json am Modell).
-              </p>
-            ) : null}
+                <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
+                  <div className="min-w-0">
+                    <p className="text-xs text-slate-100">Metrics</p>
+                    <p className="text-[10px] text-slate-400">Neben PiP + Character-Viewport</p>
+                  </div>
+                  <Switch
+                    checked={metricsEnabled}
+                    disabled={actionsDisabled || !trackingEnabled}
+                    onCheckedChange={onMetricsChange}
+                    aria-label="Face Metrics umschalten"
+                    data-testid="liveact-face-metrics-toggle"
+                  />
+                </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
-              <div className="min-w-0">
-                <p className="text-xs text-slate-100">Metrics</p>
-                <p className="text-[10px] text-slate-400">Neben PiP + Character-Viewport</p>
-              </div>
-              <Switch
-                checked={metricsEnabled}
-                disabled={actionsDisabled || !trackingEnabled}
-                onCheckedChange={onMetricsChange}
-                aria-label="Face Metrics umschalten"
-                data-testid="liveact-face-metrics-toggle"
-              />
-            </div>
+                <div
+                  className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5"
+                  data-testid="liveact-bones-row"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs text-slate-100">Character Bones</p>
+                    <p className="text-[10px] text-slate-400">
+                      {bonesAvailable
+                        ? 'Skelett des geladenen Modells'
+                        : 'Kein Skelett im Modell'}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={bonesEnabled}
+                    disabled={actionsDisabled || !bonesAvailable}
+                    onCheckedChange={onBonesChange}
+                    aria-label={
+                      bonesAvailable
+                        ? 'Character Bones umschalten'
+                        : 'Character Bones (kein Skelett)'
+                    }
+                    data-testid="liveact-bones-toggle"
+                  />
+                </div>
 
-            <div
-              className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5"
-              data-testid="liveact-bones-row"
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={actionsDisabled || !canCalibrate}
+                  className="mt-1 h-8 w-full border-white/15 text-xs"
+                  data-testid="liveact-calibrate"
+                  title={
+                    canCalibrate
+                      ? 'Neutrale Gesichtspose für diese Sitzung speichern'
+                      : 'Kalibrieren erfordert aktives Tracking'
+                  }
+                  onClick={onCalibrate}
+                >
+                  Kalibrieren
+                </Button>
+                {calibrationMessage ? (
+                  <p className="mt-1 px-1 text-[10px] text-slate-400" role="status">
+                    {calibrationMessage}
+                  </p>
+                ) : null}
+                {hasNeutralBaseline ? (
+                  <p className="px-1 text-[10px] text-emerald-400/90">
+                    Neutral-Baseline aktiv (ephemeral)
+                  </p>
+                ) : null}
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem
+              value="face-setup"
+              className="border-white/10"
+              data-testid="face-setup-section"
             >
-              <div className="min-w-0">
-                <p className="text-xs text-slate-100">Character Bones</p>
-                <p className="text-[10px] text-slate-400">
-                  {bonesAvailable
-                    ? 'Skelett des geladenen Modells'
-                    : 'Kein Skelett im Modell'}
+              <AccordionTrigger className={accordionTriggerClass}>Face Setup</AccordionTrigger>
+              <AccordionContent className={accordionContentClass}>
+                <p className="px-1 pb-1.5 text-[10px] text-slate-400">
+                  Manuell: Punkte auf dem Mesh setzen/ziehen (nicht LiveAct-Tracking).
                 </p>
-              </div>
-              <Switch
-                checked={bonesEnabled}
-                disabled={actionsDisabled || !bonesAvailable}
-                onCheckedChange={onBonesChange}
-                aria-label={
-                  bonesAvailable
-                    ? 'Character Bones umschalten'
-                    : 'Character Bones (kein Skelett)'
-                }
-                data-testid="liveact-bones-toggle"
-              />
-            </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="mx-1 mb-1 h-8 w-[calc(100%-0.5rem)] bg-primary text-white hover:bg-accent hover:text-accent-foreground"
+                  disabled={actionsDisabled || faceMappingOpen || !onOpenFaceMapping}
+                  onClick={() => {
+                    onOpenFaceMapping?.();
+                    setOpen(false);
+                  }}
+                  data-testid="face-mapping-open"
+                >
+                  Face Mapping öffnen
+                </Button>
+              </AccordionContent>
+            </AccordionItem>
 
-            <div className="mt-2 border-t border-white/10 pt-2" data-testid="face-setup-section">
-              <p className="px-1 pb-1 text-[11px] font-medium text-slate-300">Face Setup</p>
-              <p className="px-1 pb-1.5 text-[10px] text-slate-400">
-                Manuell: Punkte auf dem Mesh setzen/ziehen (nicht LiveAct-Tracking).
-              </p>
-              <Button
-                type="button"
-                size="sm"
-                className="mx-1 mb-1 h-8 w-[calc(100%-0.5rem)] bg-primary text-white hover:bg-accent hover:text-accent-foreground"
-                disabled={actionsDisabled || faceMappingOpen || !onOpenFaceMapping}
-                onClick={() => {
-                  onOpenFaceMapping?.();
-                  setOpen(false);
-                }}
-                data-testid="face-mapping-open"
-              >
-                Face Mapping öffnen
-              </Button>
-            </div>
-
-            <div className="mt-2 border-t border-white/10 pt-2">
-              <p className="px-1 pb-1 text-[11px] font-medium text-slate-300">
+            <AccordionItem value="capabilities" className="border-white/10">
+              <AccordionTrigger className={accordionTriggerClass}>
                 Capability Inspector
-              </p>
-              <LiveActCapabilityInspector
-                capabilities={capabilities}
-                inputLive={inputLive}
-              />
-            </div>
+              </AccordionTrigger>
+              <AccordionContent className={accordionContentClass}>
+                <LiveActCapabilityInspector
+                  capabilities={capabilities}
+                  inputLive={inputLive}
+                />
+              </AccordionContent>
+            </AccordionItem>
 
-            <div className="mt-2 border-t border-white/10 pt-2">
-              <p className="px-1 pb-1 text-[11px] font-medium text-slate-300">
+            <AccordionItem value="channel-trace" className="border-white/10">
+              <AccordionTrigger className={accordionTriggerClass}>
                 Channel Trace (RAW→APPLIED)
-              </p>
-              <LiveActDiagnosticsChannelTable
-                diagnosticsV2Ref={diagnosticsV2Ref}
-                active={open && trackingEnabled}
-              />
-            </div>
+              </AccordionTrigger>
+              <AccordionContent className={accordionContentClass}>
+                <LiveActDiagnosticsChannelTable
+                  diagnosticsV2Ref={diagnosticsV2Ref}
+                  active={open && trackingEnabled}
+                />
+              </AccordionContent>
+            </AccordionItem>
 
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={actionsDisabled || !canCalibrate}
-              className="mt-1 h-8 w-full border-white/15 text-xs"
-              data-testid="liveact-calibrate"
-              title={
-                canCalibrate
-                  ? 'Neutrale Gesichtspose für diese Sitzung speichern'
-                  : 'Kalibrieren erfordert aktives Tracking'
-              }
-              onClick={onCalibrate}
+            <AccordionItem
+              value="status"
+              className="border-white/10"
+              data-testid="liveact-status-block"
             >
-              Kalibrieren
-            </Button>
-            {calibrationMessage ? (
-              <p className="mt-1 px-1 text-[10px] text-slate-400" role="status">
-                {calibrationMessage}
-              </p>
-            ) : null}
-            {hasNeutralBaseline ? (
-              <p className="px-1 text-[10px] text-emerald-400/90">Neutral-Baseline aktiv (ephemeral)</p>
-            ) : null}
-          </div>
-
-          <div className="mt-2 border-t border-white/10 pt-2" data-testid="liveact-status-block">
-            <p className="px-1 pb-1 text-[11px] font-medium text-slate-300">Status</p>
-            <ul className="space-y-0.5 px-1 text-[10px] text-slate-300">
-              <li data-liveact-status-face={faceDetected ? 'yes' : 'no'}>
-                Gesicht {faceDetected ? 'erkannt' : '—'}
-              </li>
-              <li data-liveact-status-head={headConnected ? 'yes' : 'no'}>
-                Kopf {headConnected ? 'verbunden' : '—'}
-              </li>
-              <li data-liveact-status-eyes={eyesConnected ? 'yes' : 'no'}>
-                Augen {eyesConnected ? 'verbunden' : '—'}
-              </li>
-              <li data-liveact-status-mouth={mouthLimited ? 'limited' : 'ok'}>
-                Mund {mouthLimited ? 'eingeschränkt' : 'verbunden'}
-              </li>
-            </ul>
-            <p className="mt-1 px-1 text-[10px] text-slate-400" role="status">
-              {statusMessage} · {status}
-            </p>
-          </div>
+              <AccordionTrigger className={accordionTriggerClass}>Status</AccordionTrigger>
+              <AccordionContent className={accordionContentClass}>
+                <ul className="space-y-0.5 px-1 text-[10px] text-slate-300">
+                  <li data-liveact-status-face={faceDetected ? 'yes' : 'no'}>
+                    Gesicht {faceDetected ? 'erkannt' : '—'}
+                  </li>
+                  <li data-liveact-status-head={headConnected ? 'yes' : 'no'}>
+                    Kopf {headConnected ? 'verbunden' : '—'}
+                  </li>
+                  <li data-liveact-status-eyes={eyesConnected ? 'yes' : 'no'}>
+                    Augen {eyesConnected ? 'verbunden' : '—'}
+                  </li>
+                  <li data-liveact-status-mouth={mouthLimited ? 'limited' : 'ok'}>
+                    Mund {mouthLimited ? 'eingeschränkt' : 'verbunden'}
+                  </li>
+                </ul>
+                <p className="mt-1 px-1 text-[10px] text-slate-400" role="status">
+                  {statusMessage} · {status}
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       ) : null}
     </div>
