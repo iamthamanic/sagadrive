@@ -1,10 +1,11 @@
 /**
- * FaceMappingMarkerLayer — labeled markers + drag for Face Setup (#420).
+ * FaceMappingMarkerLayer — labeled markers + smooth guides + drag for Face Setup.
  * Location: src/app/character/liveact/FaceMappingMarkerLayer.tsx
  *
  * Projects draft bindings via CharacterStudioRuntime; no React setState per frame.
- * Draws short DE labels (Mund / Auge / Nase …), larger hit targets, lip/eye/brow guides.
- * Drag near a marker moves it (orbit disabled while dragging).
+ * Smooth eye/mouth contours + brow curves from domain guide geometry.
+ * Selected marker pulses; drag updates only on valid allowlisted raycast hits
+ * (keeps last valid draft when pointer leaves mesh).
  */
 
 import { useEffect, useRef, type RefObject } from 'react';
@@ -18,12 +19,14 @@ import {
   resolveFaceMappingMarkerStatus,
   type SagaDriveFaceMappingDraftV1,
 } from '../../../domains/character/avatar/face-mapping-draft-v1';
+import { buildFaceMappingGuidePaths } from '../../../domains/character/avatar/face-mapping-guide-geometry';
 import type { CharacterStudioRuntime } from '../../../infrastructure/character/avatar/character-studio-runtime';
 
 interface FaceMappingMarkerLayerProps {
   active: boolean;
   draftRef: RefObject<SagaDriveFaceMappingDraftV1 | null>;
   studioRuntimeRef: RefObject<CharacterStudioRuntime | null>;
+  onSelectAnchor: (anchorId: SagaDriveFaceAnchorId) => void;
   onBindingPlaced: (
     anchorId: SagaDriveFaceAnchorId,
     binding: SagaDriveFaceAnchorTriangleBinding | null,
@@ -38,6 +41,14 @@ const STATUS_FILL: Record<string, string> = {
   selected: 'rgba(6, 182, 212, 0.98)',
 };
 
+const GUIDE_STROKE: Record<string, string> = {
+  eyeLeft: 'rgba(96, 165, 250, 0.95)',
+  eyeRight: 'rgba(96, 165, 250, 0.95)',
+  mouth: 'rgba(52, 211, 153, 0.95)',
+  browLeft: 'rgba(251, 191, 36, 0.95)',
+  browRight: 'rgba(251, 191, 36, 0.95)',
+};
+
 /** Generous hit target so points are easy to grab and drag. */
 const HIT_RADIUS_PX = 28;
 const DOT_RADIUS = 7;
@@ -45,95 +56,25 @@ const DOT_RADIUS_SELECTED = 10;
 
 type ScreenPt = { x: number; y: number };
 
-function pickScreen(
-  screen: Partial<Record<SagaDriveFaceAnchorId, ScreenPt>>,
-  id: SagaDriveFaceAnchorId,
-): ScreenPt | null {
-  return screen[id] ?? null;
-}
-
-function drawPolyline(
-  ctx: CanvasRenderingContext2D,
-  points: readonly ScreenPt[],
-  closed: boolean,
-): void {
-  if (points.length < 2) return;
-  ctx.beginPath();
-  for (let i = 0; i < points.length; i += 1) {
-    const p = points[i];
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
-  }
-  if (closed) ctx.closePath();
-  ctx.stroke();
-}
-
-function drawGuideContours(
+function drawGuidePaths(
   ctx: CanvasRenderingContext2D,
   screen: Partial<Record<SagaDriveFaceAnchorId, ScreenPt>>,
 ): void {
-  ctx.lineWidth = 1.6;
-
-  const mouthUpper = pickScreen(screen, 'mouthUpper');
-  const mouthLower = pickScreen(screen, 'mouthLower');
-  const mouthCornerLeft = pickScreen(screen, 'mouthCornerLeft');
-  const mouthCornerRight = pickScreen(screen, 'mouthCornerRight');
-  if (mouthUpper && mouthLower && mouthCornerLeft && mouthCornerRight) {
-    ctx.strokeStyle = 'rgba(52, 211, 153, 0.95)';
-    drawPolyline(ctx, [mouthUpper, mouthCornerRight, mouthLower, mouthCornerLeft], true);
-    ctx.setLineDash([4, 3]);
-    ctx.strokeStyle = 'rgba(52, 211, 153, 0.6)';
-    drawPolyline(ctx, [mouthUpper, mouthLower], false);
-    ctx.setLineDash([]);
-  } else if (mouthUpper && mouthLower) {
-    ctx.strokeStyle = 'rgba(52, 211, 153, 0.9)';
-    drawPolyline(ctx, [mouthUpper, mouthLower], false);
-  }
-
-  const li = pickScreen(screen, 'eyeLeftInner');
-  const lo = pickScreen(screen, 'eyeLeftOuter');
-  const lu = pickScreen(screen, 'eyeLeftUpper');
-  const ll = pickScreen(screen, 'eyeLeftLower');
-  if (li && lo && lu && ll) {
-    ctx.strokeStyle = 'rgba(96, 165, 250, 0.95)';
-    drawPolyline(ctx, [li, lu, lo, ll], true);
-  }
-
-  const ri = pickScreen(screen, 'eyeRightInner');
-  const ro = pickScreen(screen, 'eyeRightOuter');
-  const ru = pickScreen(screen, 'eyeRightUpper');
-  const rl = pickScreen(screen, 'eyeRightLower');
-  if (ri && ro && ru && rl) {
-    ctx.strokeStyle = 'rgba(96, 165, 250, 0.95)';
-    drawPolyline(ctx, [ri, ru, ro, rl], true);
-  }
-
-  const bli = pickScreen(screen, 'browLeftInner');
-  const blc = pickScreen(screen, 'browLeftCenter');
-  const blo = pickScreen(screen, 'browLeftOuter');
-  if (bli && blc && blo) {
-    ctx.strokeStyle = 'rgba(251, 191, 36, 0.95)';
-    drawPolyline(ctx, [bli, blc, blo], false);
-  }
-
-  const bri = pickScreen(screen, 'browRightInner');
-  const brc = pickScreen(screen, 'browRightCenter');
-  const bro = pickScreen(screen, 'browRightOuter');
-  if (bri && brc && bro) {
-    ctx.strokeStyle = 'rgba(251, 191, 36, 0.95)';
-    drawPolyline(ctx, [bri, brc, bro], false);
-  }
-
-  const nose = pickScreen(screen, 'noseTip');
-  const chin = pickScreen(screen, 'chin');
-  const forehead = pickScreen(screen, 'forehead');
-  if (nose && chin) {
-    ctx.strokeStyle = 'rgba(226, 232, 240, 0.5)';
-    drawPolyline(ctx, [nose, chin], false);
-  }
-  if (forehead && nose) {
-    ctx.strokeStyle = 'rgba(226, 232, 240, 0.4)';
-    drawPolyline(ctx, [forehead, nose], false);
+  const paths = buildFaceMappingGuidePaths(screen);
+  ctx.lineWidth = 1.75;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  for (const path of paths) {
+    if (path.points.length < 2) continue;
+    ctx.beginPath();
+    ctx.strokeStyle = GUIDE_STROKE[path.kind] ?? 'rgba(226, 232, 240, 0.7)';
+    for (let i = 0; i < path.points.length; i += 1) {
+      const p = path.points[i];
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    if (path.closed) ctx.closePath();
+    ctx.stroke();
   }
 }
 
@@ -222,11 +163,14 @@ export function FaceMappingMarkerLayer({
   active,
   draftRef,
   studioRuntimeRef,
+  onSelectAnchor,
   onBindingPlaced,
 }: FaceMappingMarkerLayerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const onPlaceRef = useRef(onBindingPlaced);
   onPlaceRef.current = onBindingPlaced;
+  const onSelectRef = useRef(onSelectAnchor);
+  onSelectRef.current = onSelectAnchor;
 
   useEffect(() => {
     if (!active) return;
@@ -237,8 +181,12 @@ export function FaceMappingMarkerLayer({
     let raf = 0;
     let draggingId: SagaDriveFaceAnchorId | null = null;
     let dragMoved = false;
-    let pointerDown: { x: number; y: number; t: number; anchorId: SagaDriveFaceAnchorId | null } | null =
-      null;
+    let pointerDown: {
+      x: number;
+      y: number;
+      t: number;
+      anchorId: SagaDriveFaceAnchorId | null;
+    } | null = null;
 
     const paint = () => {
       const draft = draftRef.current;
@@ -260,9 +208,10 @@ export function FaceMappingMarkerLayer({
       drawModeBanner(ctx, width);
 
       const screen = projectDraftScreens(rt, draft);
-      drawGuideContours(ctx, screen);
+      drawGuidePaths(ctx, screen);
 
-      // Draw unselected first, selected on top (with label).
+      const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 220);
+
       for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
         const pt = screen[id];
         if (!pt || draft.selectedAnchorId === id) continue;
@@ -281,13 +230,19 @@ export function FaceMappingMarkerLayer({
       if (selectedId) {
         const pt = screen[selectedId];
         if (pt) {
+          const ringR = DOT_RADIUS_SELECTED + 4 + pulse * 5;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, ringR, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(6, 182, 212, ${0.25 + pulse * 0.45})`;
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
           ctx.beginPath();
           ctx.arc(pt.x, pt.y, DOT_RADIUS_SELECTED + 3, 0, Math.PI * 2);
           ctx.strokeStyle = 'rgba(255,255,255,0.55)';
           ctx.lineWidth = 2;
           ctx.stroke();
           ctx.beginPath();
-          ctx.arc(pt.x, pt.y, DOT_RADIUS_SELECTED, 0, Math.PI * 2);
+          ctx.arc(pt.x, pt.y, DOT_RADIUS_SELECTED + pulse * 1.5, 0, Math.PI * 2);
           ctx.fillStyle = STATUS_FILL.selected;
           ctx.fill();
           ctx.strokeStyle = 'rgba(255,255,255,0.95)';
@@ -323,9 +278,8 @@ export function FaceMappingMarkerLayer({
       dragMoved = false;
       if (near) {
         draggingId = near;
+        onSelectRef.current(near);
         rt.setOrbitControlsEnabled(false);
-        // Select for list sync via place callback with current binding if no move yet —
-        // parent selects on place; fire a no-op position update by re-placing same hit.
         event.preventDefault();
         event.stopPropagation();
       }
@@ -340,6 +294,7 @@ export function FaceMappingMarkerLayer({
       if (Math.hypot(dx, dy) > 3) dragMoved = true;
       if (!dragMoved) return;
       const { x, y } = canvasXY(event, rt);
+      // Valid hit only — leave last binding unchanged when pointer leaves mesh.
       const hit = rt.raycastFaceMappingAtCanvas(x, y);
       if (hit) onPlaceRef.current(draggingId, hit.binding);
     };
@@ -362,6 +317,11 @@ export function FaceMappingMarkerLayer({
       if (Math.hypot(dx, dy) > 8 || performance.now() - down.t > 500) return;
       const anchorId = down.anchorId ?? draft.selectedAnchorId;
       if (!anchorId) return;
+      // Clicking an existing marker selects without re-placing (PDF detail sync).
+      if (wasDragging && !dragMoved) {
+        onSelectRef.current(anchorId);
+        return;
+      }
       const { x, y } = canvasXY(event, rt);
       const hit = rt.raycastFaceMappingAtCanvas(x, y);
       onPlaceRef.current(anchorId, hit?.binding ?? null);

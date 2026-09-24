@@ -499,7 +499,7 @@ export class CharacterStudioRuntime {
     this.liveActCharacterFaceDebug.bindManifest(manifest);
   }
 
-  /** Face Setup authoring mode: neutralize pose and suppress LiveAct drive. */
+  /** Face Setup authoring: neutralize pose, suppress LiveAct drive, frame face frontal. */
   setFaceMappingAuthoringActive(active: boolean): void {
     if (this.disposed) return;
     this.faceMappingAuthoringActive = active;

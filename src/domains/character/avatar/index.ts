@@ -790,6 +790,17 @@ export {
   type FaceMappingMarkerStatus,
   type SagaDriveFaceMappingDraftV1,
 } from './face-mapping-draft-v1';
+export {
+  FACE_MAPPING_GUIDE_KINDS,
+  buildClosedQuadGuide,
+  buildFaceMappingGuidePaths,
+  buildOpenTripleGuide,
+  resolveFaceMappingFeatureGroupDe,
+  sampleCatmullRomSpline,
+  type FaceMappingGuideKind,
+  type FaceMappingGuidePathV1,
+  type FaceMappingGuidePoint2,
+} from './face-mapping-guide-geometry';
 
 export {
   SPECIES_DEFAULT_BODY_FAMILY,
