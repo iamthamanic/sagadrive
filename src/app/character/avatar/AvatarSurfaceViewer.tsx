@@ -17,6 +17,7 @@ import {
 } from '../../../domains/character/avatar';
 import { resolveLiveActRetargetProfile } from '../../../infrastructure/character/liveact';
 import { AvatarCanvas, type AvatarPortraitCaptureHandle } from './AvatarCanvas';
+import { AvatarPreviewExpandDialog } from './AvatarPreviewExpandDialog';
 import {
   LiveActSurfaceControls,
   LiveActViewportControls,
@@ -77,6 +78,7 @@ export function AvatarSurfaceViewer({
   const studioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
   const [faceMappingPanelHost, setFaceMappingPanelHost] = useState<HTMLDivElement | null>(null);
   const [modelEpoch, setModelEpoch] = useState(0);
+  const [previewExpandOpen, setPreviewExpandOpen] = useState(false);
   const [liveActCapabilities, setLiveActCapabilities] = useState<LiveActCapabilitiesV1 | null>(
     null,
   );
@@ -281,6 +283,7 @@ export function AvatarSurfaceViewer({
                   characterFaceMappingAvailable={characterFaceMappingAvailable}
                   studioRuntimeRef={studioRuntimeRef}
                   faceMappingPanelHost={faceMappingPanelHost}
+                  onExpandPreview={() => setPreviewExpandOpen(true)}
                 />
               </div>
             </div>
@@ -314,12 +317,21 @@ export function AvatarSurfaceViewer({
               liveAct={liveAct}
               capabilities={null}
               characterFaceMappingAvailable={false}
+              onExpandPreview={() => setPreviewExpandOpen(true)}
             />
           ) : null}
         </div>
       )}
       {view.fallbackReason && show3d === false ? (
         <span className="sr-only">{view.fallbackReason}</span>
+      ) : null}
+      {isEditorSurface ? (
+        <AvatarPreviewExpandDialog
+          open={previewExpandOpen}
+          onOpenChange={setPreviewExpandOpen}
+          avatar={show3d && avatar ? avatar : null}
+          displayName={view.displayName}
+        />
       ) : null}
     </div>
   );

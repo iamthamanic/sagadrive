@@ -40,6 +40,8 @@ interface LiveActViewportControlsProps {
   studioRuntimeRef?: RefObject<CharacterStudioRuntime | null>;
   /** DOM host below AvatarCanvas for the Face Mapping panel. */
   faceMappingPanelHost?: HTMLElement | null;
+  /** Open large face-framed 3D preview modal. */
+  onExpandPreview?: () => void;
 }
 
 export function LiveActViewportControls({
@@ -51,6 +53,7 @@ export function LiveActViewportControls({
   characterFaceMappingAvailable,
   studioRuntimeRef,
   faceMappingPanelHost = null,
+  onExpandPreview,
 }: LiveActViewportControlsProps) {
   const [faceMappingOpen, setFaceMappingOpen] = useState(false);
   const [draft, setDraft] = useState<SagaDriveFaceMappingDraftV1 | null>(null);
@@ -230,6 +233,7 @@ export function LiveActViewportControls({
         hasNeutralBaseline={liveAct.hasNeutralBaseline}
         faceMappingOpen={faceMappingOpen}
         onOpenFaceMapping={openFaceMapping}
+        onExpandPreview={onExpandPreview}
       />
       <LiveActCameraPreview
         video={liveAct.previewVideo}

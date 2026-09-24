@@ -34,6 +34,10 @@ check(/LiveActViewportControls/.test(surface) && /runtimeReady=\{false\}/.test(s
 check(/data-testid="avatar-preview-settings"/.test(settings), 'gear test id');
 check(/avatar-preview-settings-accordion/.test(settings), 'collapsible accordion sections');
 check(/type="multiple"/.test(settings), 'accordion allows multi open');
+check(/defaultValue=\{\[\]\}/.test(settings), 'accordion sections collapsed by default');
+check(/avatar-preview-expand/.test(settings), 'expand preview control');
+check(/AvatarPreviewExpandDialog/.test(surface), 'surface hosts expand dialog');
+check(/initialCameraFrame/.test(canvas), 'canvas supports initial face frame');
 check(!/disabled=\{disabled\}/.test(settings) || /Avatar-Vorschau Einstellungen/.test(settings), 'gear button not gated by runtime');
 check(/liveact-tracking-toggle/.test(settings), 'tracking toggle');
 check(/liveact-camera-preview-toggle/.test(settings), 'pip toggle');

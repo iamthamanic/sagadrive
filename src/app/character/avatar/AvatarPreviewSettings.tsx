@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { Settings } from 'lucide-react';
+import { Maximize2, Settings } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -64,6 +64,8 @@ interface AvatarPreviewSettingsProps {
   /** Face Setup authoring session open (#420). */
   faceMappingOpen?: boolean;
   onOpenFaceMapping?: () => void;
+  /** Open large face-framed 3D preview modal. */
+  onExpandPreview?: () => void;
 }
 
 const accordionTriggerClass =
@@ -105,6 +107,7 @@ export function AvatarPreviewSettings({
   hasNeutralBaseline,
   faceMappingOpen = false,
   onOpenFaceMapping,
+  onExpandPreview,
 }: AvatarPreviewSettingsProps) {
   const [open, setOpen] = useState(false);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -156,7 +159,28 @@ export function AvatarPreviewSettings({
           data-testid="avatar-preview-settings-menu"
           className="absolute right-0 top-full z-30 mt-1 max-h-[min(70vh,28rem)] w-64 overflow-y-auto rounded-md border border-white/15 bg-slate-950 p-2 text-slate-100 shadow-lg"
         >
-          <p className="px-1 pb-1 text-[11px] font-medium text-slate-300">3D Vorschau</p>
+          <div className="mb-1 flex items-center justify-between gap-2 px-1">
+            <p className="text-[11px] font-medium text-slate-300">3D Vorschau</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={!onExpandPreview}
+              aria-label="3D Vorschau vergrößern"
+              title="3D Vorschau vergrößern (Gesicht)"
+              data-testid="avatar-preview-expand"
+              className="h-7 gap-1 px-1.5 text-[10px] text-slate-300 hover:bg-white/10 hover:text-slate-50"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setOpen(false);
+                onExpandPreview?.();
+              }}
+            >
+              <Maximize2 className="size-3.5" aria-hidden />
+              <span>Expand</span>
+            </Button>
+          </div>
 
           {!runtimeReady ? (
             <p
@@ -170,7 +194,7 @@ export function AvatarPreviewSettings({
 
           <Accordion
             type="multiple"
-            defaultValue={['darstellung', 'liveact']}
+            defaultValue={[]}
             className="w-full"
             data-testid="avatar-preview-settings-accordion"
           >
