@@ -47,6 +47,8 @@ check(!/from ['"]react['"]/.test(draftSrc), 'draft no React');
 check(/raycastFaceMappingPointer/.test(raycastSrc), 'raycast helper');
 check(/isFaceMappingAllowlistedMesh/.test(raycastSrc), 'mesh allowlist');
 check(/barycentric/.test(raycastSrc), 'barycentric binding');
+check(/getVertexPosition/.test(raycastSrc), 'deformed vertex barycentric');
+check(/normalizeFaceMappingBarycentric/.test(raycastSrc), 'barycentric clamp/renorm');
 check(/EXCLUDE_NAME_RE|sagadriveExcludeFaceMapping/.test(raycastSrc), 'exclude helpers');
 
 check(/setFaceMappingAuthoringActive/.test(studio), 'studio authoring mode');

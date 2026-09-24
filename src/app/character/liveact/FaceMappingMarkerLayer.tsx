@@ -261,13 +261,14 @@ export function FaceMappingMarkerLayer({
     };
     raf = requestAnimationFrame(paint);
 
-    const canvasXY = (event: PointerEvent) => {
-      const rect = overlay.getBoundingClientRect();
-      const scaleX = overlay.width / Math.max(1, rect.width);
-      const scaleY = overlay.height / Math.max(1, rect.height);
+    const canvasXY = (event: PointerEvent, rt: CharacterStudioRuntime) => {
+      // Always use the WebGL canvas CSS box — same space as projectWorldToFaceMappingCanvas /
+      // raycastFaceMappingAtCanvas (clientWidth/clientHeight), never overlay bitmap scaling.
+      const host = rt.getFaceMappingCanvasElement();
+      const rect = host.getBoundingClientRect();
       return {
-        x: (event.clientX - rect.left) * scaleX,
-        y: (event.clientY - rect.top) * scaleY,
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
       };
     };
 
@@ -276,7 +277,7 @@ export function FaceMappingMarkerLayer({
       const draft = draftRef.current;
       const rt = studioRuntimeRef.current;
       if (!draft || !rt) return;
-      const { x, y } = canvasXY(event);
+      const { x, y } = canvasXY(event, rt);
       const screen = projectDraftScreens(rt, draft);
       const near = findNearestMarker(screen, x, y, draft.selectedAnchorId);
       pointerDown = {
@@ -309,7 +310,7 @@ export function FaceMappingMarkerLayer({
       const dy = event.clientY - pointerDown.y;
       if (Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) dragMoved = true;
       if (!dragMoved) return;
-      const { x, y } = canvasXY(event);
+      const { x, y } = canvasXY(event, rt);
       // Valid hit only — leave last binding unchanged when pointer leaves mesh.
       const hit = rt.raycastFaceMappingAtCanvas(x, y);
       if (hit) onPlaceRef.current(draggingId, hit.binding);
@@ -363,7 +364,7 @@ export function FaceMappingMarkerLayer({
       // Empty-mesh tap: place currently selected marker (if any).
       const anchorId = draft.selectedAnchorId;
       if (!anchorId || wasGrab) return;
-      const { x, y } = canvasXY(event);
+      const { x, y } = canvasXY(event, rt);
       const hit = rt.raycastFaceMappingAtCanvas(x, y);
       // Miss keeps last valid binding — only report via null callback.
       onPlaceRef.current(anchorId, hit?.binding ?? null);
