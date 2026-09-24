@@ -511,6 +511,7 @@ export class CharacterStudioRuntime {
       this.setLiveActRigDebugEnabled(false);
       this.applyCameraFrame('face');
       // Hard-disable orbit for the whole Face Mapping session (marker drag must not rotate).
+      // Face frame enables inspect zoom limits; controls stay off so pan/orbit cannot steal drags.
       this.controls.enabled = false;
     } else {
       this.controls.enabled = true;
