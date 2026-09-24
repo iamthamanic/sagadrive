@@ -107,7 +107,7 @@ function drawLabel(
 }
 
 function drawModeBanner(ctx: CanvasRenderingContext2D, width: number): void {
-  const text = 'Face Mapping — Punkt greifen & ziehen · Tippen auf Mesh setzt Marker';
+  const text = 'Face Mapping — Scroll = zoomen · Punkt greifen & ziehen · Tippen setzt Marker';
   ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
   const pad = 8;
   const h = 26;
@@ -179,8 +179,8 @@ export function FaceMappingMarkerLayer({
     const runtime = studioRuntimeRef.current;
     if (!overlay || !runtime) return;
 
-    // Session-level orbit lock — do not re-enable on pointerup while Face Mapping is open.
-    runtime.setOrbitControlsEnabled(false);
+    // Face Mapping: zoom/pan on, rotate off. Freeze camera only while dragging a marker.
+    runtime.setOrbitControlsEnabled(true);
 
     let raf = 0;
     let draggingId: SagaDriveFaceAnchorId | null = null;
@@ -289,7 +289,8 @@ export function FaceMappingMarkerLayer({
       dragMoved = false;
       grabbedExisting = Boolean(near);
       draggingId = near;
-      rt.setOrbitControlsEnabled(false);
+      // Freeze zoom/pan while grabbing a marker; keep rotate off.
+      rt.setOrbitControlsEnabled(!near);
       if (near) {
         onSelectRef.current(near);
         try {
@@ -337,8 +338,8 @@ export function FaceMappingMarkerLayer({
         // ignore
       }
 
-      // Keep orbit disabled while Face Mapping authoring is active.
-      if (rt) rt.setOrbitControlsEnabled(false);
+      // Restore Face Mapping zoom/pan after marker interaction.
+      if (rt) rt.setOrbitControlsEnabled(true);
 
       if (!down || !rt || !draft) return;
 
@@ -377,12 +378,21 @@ export function FaceMappingMarkerLayer({
     overlay.addEventListener('pointerup', onPointerUp);
     overlay.addEventListener('pointercancel', onPointerUp);
 
+    const onWheel = (event: WheelEvent) => {
+      // Overlay sits above the GL canvas — forward zoom into Face Mapping camera.
+      event.preventDefault();
+      event.stopPropagation();
+      runtime.dollyFaceMappingCamera(event.deltaY);
+    };
+    overlay.addEventListener('wheel', onWheel, { passive: false });
+
     return () => {
       cancelAnimationFrame(raf);
       overlay.removeEventListener('pointerdown', onPointerDown);
       overlay.removeEventListener('pointermove', onPointerMove);
       overlay.removeEventListener('pointerup', onPointerUp);
       overlay.removeEventListener('pointercancel', onPointerUp);
+      overlay.removeEventListener('wheel', onWheel);
       // Authoring teardown restores orbit via setFaceMappingAuthoringActive(false).
     };
   }, [active, draftRef, studioRuntimeRef]);

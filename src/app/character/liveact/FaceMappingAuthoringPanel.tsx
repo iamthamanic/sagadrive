@@ -100,7 +100,8 @@ export function FaceMappingAuthoringPanel({
       </div>
 
       <p className="px-3 py-1.5 text-[10px] text-slate-400">
-        Marker wählen → Detail zeigt Feature. Am 3D-Punkt greifen und ziehen; Guides folgen live.
+        Scroll zoomen für Präzision. Marker wählen → Detail zeigt Feature. Am 3D-Punkt greifen und
+        ziehen; Guides folgen live.
       </p>
 
       {selectedId ? <FaceMappingDetailCard draft={draft} selectedAnchorId={selectedId} /> : null}
