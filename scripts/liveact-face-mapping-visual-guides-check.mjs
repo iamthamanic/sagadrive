@@ -66,6 +66,9 @@ check(/raycastFaceMappingPointer/.test(raycastSrc), 'canonical raycast');
 check(!/raycastFaceMappingPointer/.test(guideSrc), 'guides do not reimplement raycast');
 check(/setFaceMappingAuthoringActive/.test(studio), 'studio authoring');
 check(/applyCameraFrame\('face'\)/.test(studio), 'open frames face frontal');
+check(/dollyFaceMappingCamera|minDistance = 0\.0[6-9]/.test(studio), 'face mapping close zoom');
+check(/Scroll = zoomen|Scroll zoomen/.test(layer) || /Scroll zoomen/.test(panel), 'zoom hint in UI');
+check(/enableRotate = false/.test(studio) && /applyFaceMappingOrbitMode/.test(studio), 'rotate off zoom on');
 
 // UI: pulse + detail + smooth guides + bidirectional select.
 check(/FaceMappingDetailCard/.test(panel), 'panel hosts detail card');
@@ -78,7 +81,7 @@ check(/onSelectAnchor/.test(layer) && /onSelectAnchor/.test(controls), 'viewport
 check(/Valid hit only|leave last binding/.test(layer), 'drag keeps last valid');
 check(/pointer-events-auto/.test(layer), 'overlay owns pointer events');
 check(/setPointerCapture|grabbedExisting|select only/.test(layer), 'click selects without relocating');
-check(/controls\.enabled = false/.test(studio) && /Face Mapping session/.test(studio), 'orbit hard-off in authoring');
+check(/dollyFaceMappingCamera/.test(studio) && /wheel/.test(layer), 'overlay wheel zooms face');
 check(/resetFaceMappingDraft/.test(controls), 'reset clears draft/selection');
 check(/setFaceMappingAuthoringActive\(false\)/.test(controls), 'cancel clears authoring');
 check(/setTrackingEnabled\(false\)/.test(controls), 'pauses tracking on open');

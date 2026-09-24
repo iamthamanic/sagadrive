@@ -510,11 +510,12 @@ export class CharacterStudioRuntime {
       this.setLiveActCharacterFaceDebugEnabled(false);
       this.setLiveActRigDebugEnabled(false);
       this.applyCameraFrame('face');
-      // Hard-disable orbit for the whole Face Mapping session (marker drag must not rotate).
-      // Face frame enables inspect zoom limits; controls stay off so pan/orbit cannot steal drags.
-      this.controls.enabled = false;
+      // Zoom/pan allowed for precise placement; rotate stays off so marker drag wins.
+      this.applyFaceMappingOrbitMode(false);
     } else {
+      this.controls.enableRotate = true;
       this.controls.enabled = true;
+      this.applyOrbitLimits(this.inspectMode ? 'inspect' : 'default');
     }
   }
 
@@ -522,10 +523,53 @@ export class CharacterStudioRuntime {
     return this.faceMappingAuthoringActive;
   }
 
-  /** Disable orbit while dragging a face-mapping marker (#420 UX). */
+  /**
+   * During Face Mapping: disable rotate always; disable zoom/pan only while dragging a marker.
+   * Outside Face Mapping: toggles OrbitControls.enabled (legacy #420).
+   */
   setOrbitControlsEnabled(enabled: boolean): void {
     if (this.disposed) return;
+    if (this.faceMappingAuthoringActive) {
+      this.applyFaceMappingOrbitMode(!enabled);
+      return;
+    }
     this.controls.enabled = enabled;
+  }
+
+  /**
+   * Scroll-wheel zoom while the marker overlay owns pointer events.
+   * Positive deltaY = zoom out, negative = zoom in (browser wheel convention).
+   */
+  dollyFaceMappingCamera(deltaY: number): void {
+    if (this.disposed || !this.faceMappingAuthoringActive) return;
+    if (!Number.isFinite(deltaY) || deltaY === 0) return;
+
+    const offset = this.camera.position.clone().sub(this.controls.target);
+    const distance = offset.length();
+    if (!(distance > 1e-6)) return;
+
+    // ~10% per 100px wheel notch; clamp to face-mapping limits.
+    const factor = Math.exp(deltaY * 0.0015);
+    const minD = 0.06;
+    const maxD = 2.5;
+    const next = Math.min(maxD, Math.max(minD, distance * factor));
+    offset.multiplyScalar(next / distance);
+    this.camera.position.copy(this.controls.target).add(offset);
+    this.controls.update();
+  }
+
+  /** Face-mapping camera: zoom + pan, no rotate. `draggingMarker` freezes camera. */
+  private applyFaceMappingOrbitMode(draggingMarker: boolean): void {
+    this.controls.enabled = true;
+    this.controls.enableRotate = false;
+    this.controls.enableZoom = !draggingMarker;
+    this.controls.enablePan = !draggingMarker;
+    this.controls.screenSpacePanning = true;
+    this.controls.minDistance = 0.06;
+    this.controls.maxDistance = 2.5;
+    this.controls.minPolarAngle = 0.05;
+    this.controls.maxPolarAngle = Math.PI - 0.05;
+    this.controls.update();
   }
 
   /**
