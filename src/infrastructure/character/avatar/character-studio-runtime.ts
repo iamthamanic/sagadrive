@@ -558,6 +558,36 @@ export class CharacterStudioRuntime {
     this.controls.update();
   }
 
+  /**
+   * Screen-space pan (CSS pixels). Drag up → look higher on the face (Stirn).
+   * Moves camera + orbit target together so framing stays frontal.
+   */
+  panFaceMappingCamera(deltaXPx: number, deltaYPx: number): void {
+    if (this.disposed || !this.faceMappingAuthoringActive) return;
+    if (!Number.isFinite(deltaXPx) || !Number.isFinite(deltaYPx)) return;
+    if (deltaXPx === 0 && deltaYPx === 0) return;
+
+    const canvas = this.renderer.domElement;
+    const height = Math.max(1, canvas.clientHeight);
+    const distance = this.camera.position.distanceTo(this.controls.target);
+    const fov = THREE.MathUtils.degToRad(this.camera.fov);
+    const worldPerPixel = (2 * Math.tan(fov / 2) * distance) / height;
+
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3();
+    right.setFromMatrixColumn(this.camera.matrixWorld, 0).normalize();
+    up.setFromMatrixColumn(this.camera.matrixWorld, 1).normalize();
+
+    // Drag right → content moves right (camera left); drag up (negative deltaY) → look higher.
+    const move = right
+      .multiplyScalar(-deltaXPx * worldPerPixel)
+      .addScaledVector(up, -deltaYPx * worldPerPixel);
+
+    this.camera.position.add(move);
+    this.controls.target.add(move);
+    this.controls.update();
+  }
+
   /** Face-mapping camera: zoom + pan, no rotate. `draggingMarker` freezes camera. */
   private applyFaceMappingOrbitMode(draggingMarker: boolean): void {
     this.controls.enabled = true;

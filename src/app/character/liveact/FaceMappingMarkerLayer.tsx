@@ -107,7 +107,8 @@ function drawLabel(
 }
 
 function drawModeBanner(ctx: CanvasRenderingContext2D, width: number): void {
-  const text = 'Face Mapping — Scroll = zoomen · Punkt greifen & ziehen · Tippen setzt Marker';
+  const text =
+    'Face Mapping — Scroll = zoomen · Ziehen (leer) = verschieben · Punkt greifen setzt Marker';
   ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
   const pad = 8;
   const h = 26;
@@ -186,11 +187,14 @@ export function FaceMappingMarkerLayer({
     let draggingId: SagaDriveFaceAnchorId | null = null;
     let dragMoved = false;
     let grabbedExisting = false;
+    let panning = false;
+    let panLast: { x: number; y: number } | null = null;
     let pointerDown: {
       x: number;
       y: number;
       t: number;
       anchorId: SagaDriveFaceAnchorId | null;
+      button: number;
     } | null = null;
 
     const paint = () => {
@@ -273,10 +277,32 @@ export function FaceMappingMarkerLayer({
     };
 
     const onPointerDown = (event: PointerEvent) => {
-      if (event.button !== 0) return;
       const draft = draftRef.current;
       const rt = studioRuntimeRef.current;
       if (!draft || !rt) return;
+
+      // Right / middle button: always pan the camera (move up to forehead, etc.).
+      if (event.button === 1 || event.button === 2) {
+        panning = true;
+        panLast = { x: event.clientX, y: event.clientY };
+        pointerDown = {
+          x: event.clientX,
+          y: event.clientY,
+          t: performance.now(),
+          anchorId: null,
+          button: event.button,
+        };
+        try {
+          overlay.setPointerCapture(event.pointerId);
+        } catch {
+          // optional
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      if (event.button !== 0) return;
       const { x, y } = canvasXY(event, rt);
       const screen = projectDraftScreens(rt, draft);
       const near = findNearestMarker(screen, x, y, draft.selectedAnchorId);
@@ -285,10 +311,13 @@ export function FaceMappingMarkerLayer({
         y: event.clientY,
         t: performance.now(),
         anchorId: near ?? draft.selectedAnchorId,
+        button: 0,
       };
       dragMoved = false;
       grabbedExisting = Boolean(near);
       draggingId = near;
+      panning = false;
+      panLast = near ? null : { x: event.clientX, y: event.clientY };
       // Freeze zoom/pan while grabbing a marker; keep rotate off.
       rt.setOrbitControlsEnabled(!near);
       if (near) {
@@ -298,15 +327,52 @@ export function FaceMappingMarkerLayer({
         } catch {
           // Pointer capture optional — window listeners still track drag.
         }
+      } else {
+        try {
+          overlay.setPointerCapture(event.pointerId);
+        } catch {
+          // optional
+        }
       }
       event.preventDefault();
       event.stopPropagation();
     };
 
     const onPointerMove = (event: PointerEvent) => {
-      if (!draggingId || !pointerDown) return;
       const rt = studioRuntimeRef.current;
-      if (!rt) return;
+      if (!rt || !pointerDown) return;
+
+      // Active camera pan (right/middle, or left empty-space drag).
+      if (panning && panLast && !draggingId) {
+        const dx = event.clientX - panLast.x;
+        const dy = event.clientY - panLast.y;
+        panLast = { x: event.clientX, y: event.clientY };
+        if (Math.hypot(dx, dy) > 0) {
+          dragMoved = true;
+          rt.panFaceMappingCamera(dx, dy);
+        }
+        event.preventDefault();
+        return;
+      }
+
+      if (!draggingId) {
+        // Left-drag on empty mesh → start pan once past threshold (not a tap-to-place).
+        if (pointerDown.button === 0 && panLast && !grabbedExisting) {
+          const dx0 = event.clientX - pointerDown.x;
+          const dy0 = event.clientY - pointerDown.y;
+          if (Math.hypot(dx0, dy0) > DRAG_THRESHOLD_PX) {
+            panning = true;
+            dragMoved = true;
+            const dx = event.clientX - panLast.x;
+            const dy = event.clientY - panLast.y;
+            panLast = { x: event.clientX, y: event.clientY };
+            rt.panFaceMappingCamera(dx, dy);
+            event.preventDefault();
+          }
+        }
+        return;
+      }
+
       const dx = event.clientX - pointerDown.x;
       const dy = event.clientY - pointerDown.y;
       if (Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) dragMoved = true;
@@ -325,10 +391,13 @@ export function FaceMappingMarkerLayer({
       const wasDragging = draggingId;
       const wasGrab = grabbedExisting;
       const moved = dragMoved;
+      const wasPanning = panning;
       pointerDown = null;
       draggingId = null;
       grabbedExisting = false;
       dragMoved = false;
+      panning = false;
+      panLast = null;
 
       try {
         if (overlay.hasPointerCapture(event.pointerId)) {
@@ -342,6 +411,13 @@ export function FaceMappingMarkerLayer({
       if (rt) rt.setOrbitControlsEnabled(true);
 
       if (!down || !rt || !draft) return;
+
+      // Pan gesture — never place/clear markers.
+      if (wasPanning || (down.button !== 0 && moved)) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
 
       // Finished a drag — binding already updated on move; do not re-place.
       if (wasDragging && moved) {
@@ -364,7 +440,7 @@ export function FaceMappingMarkerLayer({
 
       // Empty-mesh tap: place currently selected marker (if any).
       const anchorId = draft.selectedAnchorId;
-      if (!anchorId || wasGrab) return;
+      if (!anchorId || wasGrab || moved) return;
       const { x, y } = canvasXY(event, rt);
       const hit = rt.raycastFaceMappingAtCanvas(x, y);
       // Miss keeps last valid binding — only report via null callback.
@@ -373,10 +449,15 @@ export function FaceMappingMarkerLayer({
       event.stopPropagation();
     };
 
+    const onContextMenu = (event: Event) => {
+      event.preventDefault();
+    };
+
     overlay.addEventListener('pointerdown', onPointerDown);
     overlay.addEventListener('pointermove', onPointerMove);
     overlay.addEventListener('pointerup', onPointerUp);
     overlay.addEventListener('pointercancel', onPointerUp);
+    overlay.addEventListener('contextmenu', onContextMenu);
 
     const onWheel = (event: WheelEvent) => {
       // Overlay sits above the GL canvas — forward zoom into Face Mapping camera.
@@ -392,6 +473,7 @@ export function FaceMappingMarkerLayer({
       overlay.removeEventListener('pointermove', onPointerMove);
       overlay.removeEventListener('pointerup', onPointerUp);
       overlay.removeEventListener('pointercancel', onPointerUp);
+      overlay.removeEventListener('contextmenu', onContextMenu);
       overlay.removeEventListener('wheel', onWheel);
       // Authoring teardown restores orbit via setFaceMappingAuthoringActive(false).
     };
