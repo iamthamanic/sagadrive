@@ -464,6 +464,16 @@ function checkLiveActFaceMappingManual() {
   });
 }
 
+function checkLiveActFaceMappingVisualGuides() {
+  console.log(
+    'LiveAct face mapping visual guides: binding labels + smooth guides + pulse/detail...',
+  );
+  execFileSync(process.execPath, ['scripts/liveact-face-mapping-visual-guides-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceAnchorAnatomy() {
   console.log('LiveAct face anchor anatomy QA: SagaDriveFaceAnchorAnatomyQaV1...');
   execFileSync(process.execPath, ['scripts/liveact-face-anchor-anatomy-check.mjs'], {
@@ -1348,6 +1358,7 @@ checkLiveActDiagnosticsV2();
 checkLiveActFaceAnchorsV1();
 checkLiveActFaceMappingAuthoring();
 checkLiveActFaceMappingManual();
+checkLiveActFaceMappingVisualGuides();
 checkLiveActFaceAnchorAnatomy();
 checkLiveActCameraOverlayMetrics();
 checkLiveActCharacterFaceOverlay();

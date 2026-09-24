@@ -70,7 +70,7 @@ check(/drawLabel|FACE_MAPPING_ANCHOR_SHORT_DE/.test(layer), '3D marker labels pa
 check(/drawModeBanner|Face Mapping/.test(layer), 'mode banner');
 check(/HIT_RADIUS_PX = 28|HIT_RADIUS_PX = 2[4-9]/.test(layer), 'generous drag hit radius');
 check(/requestAnimationFrame/.test(layer), 'imperative marker paint');
-check(/drawGuideContours|mouthUpper/.test(layer), 'lip/contour guides');
+check(/drawGuidePaths|buildFaceMappingGuidePaths/.test(layer), 'lip/contour guides');
 check(/setOrbitControlsEnabled/.test(layer) && /setOrbitControlsEnabled/.test(studio), 'drag disables orbit');
 check(!/setDraft\(/.test(layer), 'layer no draft setState');
 
@@ -92,7 +92,7 @@ await build({
   logLevel: 'silent',
 });
 const draftMod = await import(`${draftOut}?t=${Date.now()}`);
-check(draftMod.FACE_MAPPING_MARKER_GROUP_DEFS.length === 5, '5 groups');
+check(draftMod.FACE_MAPPING_MARKER_GROUP_DEFS.length === 6, '6 groups');
 const empty = draftMod.createEmptyFaceMappingDraft(null);
 check(empty.dirty === false && empty.selectedAnchorId === null, 'empty draft');
 check(draftMod.resolveFaceMappingMarkerStatus(empty, 'mouthUpper') === 'missing', 'missing status');

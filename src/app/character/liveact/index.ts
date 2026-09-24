@@ -9,6 +9,7 @@ export { LiveActCharacterFaceOverlay } from './LiveActCharacterFaceOverlay';
 export { LiveActSurfaceControls } from './LiveActSurfaceControls';
 export { LiveActViewportControls } from './LiveActViewportControls';
 export { FaceMappingAuthoringPanel } from './FaceMappingAuthoringPanel';
+export { FaceMappingDetailCard } from './FaceMappingDetailCard';
 export { FaceMappingMarkerLayer } from './FaceMappingMarkerLayer';
 export {
   acquireSharedLiveActEngine,

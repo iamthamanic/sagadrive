@@ -88,6 +88,7 @@ export function LiveActViewportControls({
     liveAct.setTrackingEnabled(false);
     liveAct.setFaceOverlayEnabled(false);
     liveAct.setBonesEnabled(false);
+    // Neutralize + frontal face frame (studio owns camera via applyCameraFrame('face')).
     runtime.setFaceMappingAuthoringActive(true);
     const baseline = runtime.getFaceAnchorsManifest();
     const next = createEmptyFaceMappingDraft(baseline);
@@ -108,6 +109,16 @@ export function LiveActViewportControls({
       studioRuntimeRef?.current?.setFaceMappingAuthoringActive(false);
     };
   }, [studioRuntimeRef]);
+
+  const onSelectAnchor = useCallback((anchorId: SagaDriveFaceAnchorId) => {
+    setMissMessage(null);
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const next = selectFaceMappingAnchor(prev, anchorId);
+      draftRef.current = next;
+      return next;
+    });
+  }, []);
 
   const onBindingPlaced = useCallback(
     (anchorId: SagaDriveFaceAnchorId, binding: SagaDriveFaceAnchorTriangleBinding | null) => {
@@ -135,19 +146,24 @@ export function LiveActViewportControls({
       <FaceMappingAuthoringPanel
         draft={draft}
         missMessage={missMessage}
-        onSelect={(id) => {
-          setMissMessage(null);
-          setDraft((prev) => (prev ? selectFaceMappingAnchor(prev, id) : prev));
-        }}
+        onSelect={onSelectAnchor}
         onClearSelected={() => {
           setDraft((prev) => {
             if (!prev?.selectedAnchorId) return prev;
-            return clearFaceMappingDraftBinding(prev, prev.selectedAnchorId);
+            const next = clearFaceMappingDraftBinding(prev, prev.selectedAnchorId);
+            draftRef.current = next;
+            return next;
           });
         }}
         onReset={() => {
           setMissMessage(null);
-          setDraft((prev) => (prev ? resetFaceMappingDraft(prev) : prev));
+          setDraft((prev) => {
+            if (!prev) return prev;
+            // Full clear: selection + working anchors → baseline (guides empty until rebound).
+            const next = resetFaceMappingDraft(prev);
+            draftRef.current = next;
+            return next;
+          });
         }}
         onCancel={closeFaceMapping}
         onApply={() => {
@@ -173,6 +189,7 @@ export function LiveActViewportControls({
           active={faceMappingOpen}
           draftRef={draftRef}
           studioRuntimeRef={studioRuntimeRef}
+          onSelectAnchor={onSelectAnchor}
           onBindingPlaced={onBindingPlaced}
         />
       ) : null}
