@@ -24,6 +24,7 @@ import {
 } from '../../../domains/character/avatar/face-mapping-draft-v1';
 import type { CharacterStudioRuntime } from '../../../infrastructure/character/avatar/character-studio-runtime';
 import { AvatarPreviewSettings } from '../avatar/AvatarPreviewSettings';
+import { Button } from '../../../shared/ui/button';
 import { FaceMappingAuthoringPanel } from './FaceMappingAuthoringPanel';
 import { FaceMappingMarkerLayer } from './FaceMappingMarkerLayer';
 import { LiveActCameraPreview } from './LiveActCameraPreview';
@@ -84,6 +85,15 @@ export function LiveActViewportControls({
     setDraft(null);
     setMissMessage(null);
   }, [studioRuntimeRef]);
+
+  const applyFaceMapping = useCallback(() => {
+    const runtime = studioRuntimeRef?.current;
+    const current = draftRef.current;
+    if (!runtime || !current) return;
+    const manifest = faceMappingDraftToManifest(current);
+    runtime.bindFaceAnchorsManifestSession(manifest);
+    closeFaceMapping();
+  }, [closeFaceMapping, studioRuntimeRef]);
 
   const openFaceMapping = useCallback(() => {
     const runtime = studioRuntimeRef?.current;
@@ -169,13 +179,7 @@ export function LiveActViewportControls({
           });
         }}
         onCancel={closeFaceMapping}
-        onApply={() => {
-          const runtime = studioRuntimeRef?.current;
-          if (!runtime || !draft) return;
-          const manifest = faceMappingDraftToManifest(draft);
-          runtime.bindFaceAnchorsManifestSession(manifest);
-          closeFaceMapping();
-        }}
+        onApply={applyFaceMapping}
       />
     ) : null;
 
@@ -195,6 +199,35 @@ export function LiveActViewportControls({
           onSelectAnchor={onSelectAnchor}
           onBindingPlaced={onBindingPlaced}
         />
+      ) : null}
+      {faceMappingOpen ? (
+        <div
+          className="pointer-events-auto absolute inset-x-3 bottom-3 z-30 flex items-center gap-2 rounded-md border border-white/15 bg-slate-950/95 p-2 shadow-lg backdrop-blur-sm"
+          data-testid="face-mapping-viewport-actions"
+        >
+          <p className="min-w-0 flex-1 px-1 text-[10px] leading-snug text-slate-400">
+            Marker setzen, dann speichern — gilt für diese Sitzung (LiveAct-Overlay).
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 shrink-0 border-white/15 text-[11px]"
+            onClick={closeFaceMapping}
+            data-testid="face-mapping-viewport-cancel"
+          >
+            Abbrechen
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            className="h-8 shrink-0 bg-primary text-white hover:bg-accent hover:text-accent-foreground"
+            onClick={applyFaceMapping}
+            data-testid="face-mapping-viewport-save"
+          >
+            Speichern
+          </Button>
+        </div>
       ) : null}
       {panelHost && panel ? createPortal(panel, panelHost) : null}
       <AvatarPreviewSettings

@@ -183,9 +183,12 @@ export function FaceMappingAuthoringPanel({
           onClick={onApply}
           data-testid="face-mapping-apply"
         >
-          Übernehmen
+          Speichern
         </Button>
       </div>
+      <p className="px-2 pb-2 text-[10px] text-slate-500">
+        Speichert die Marker für diese Sitzung (LiveAct-Overlay). Kein Upload auf den Server.
+      </p>
     </aside>
   );
 }
