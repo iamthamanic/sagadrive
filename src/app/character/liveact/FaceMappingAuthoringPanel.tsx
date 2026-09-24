@@ -17,6 +17,7 @@ import {
 } from '../../../domains/character/avatar/face-mapping-draft-v1';
 import { Button } from '../../../shared/ui/button';
 import { FaceMappingDetailCard } from './FaceMappingDetailCard';
+import { FaceMappingFeatureIcon } from './FaceMappingFeatureIcon';
 
 interface FaceMappingAuthoringPanelProps {
   draft: SagaDriveFaceMappingDraftV1;
@@ -133,7 +134,15 @@ export function FaceMappingAuthoringPanel({
                       data-testid={`face-mapping-marker-${id}`}
                       onClick={() => onSelect(id)}
                     >
-                      <span className="truncate">{FACE_MAPPING_ANCHOR_LABEL_DE[id]}</span>
+                      <span className="flex min-w-0 items-center gap-2">
+                        <FaceMappingFeatureIcon
+                          anchorId={id}
+                          size="sm"
+                          pulse={selected}
+                          className="shrink-0"
+                        />
+                        <span className="truncate">{FACE_MAPPING_ANCHOR_LABEL_DE[id]}</span>
+                      </span>
                       <span className="shrink-0 text-[10px] opacity-90">{statusLabelDe(status)}</span>
                     </button>
                   </li>

@@ -4,8 +4,8 @@
  *
  * Projects draft bindings via CharacterStudioRuntime; no React setState per frame.
  * Smooth eye/mouth contours + brow curves from domain guide geometry.
- * Selected marker pulses; drag updates only on valid allowlisted raycast hits
- * (keeps last valid draft when pointer leaves mesh).
+ * Selected marker pulses; overlay owns pointer events so orbit cannot steal drags.
+ * Drag updates only on valid allowlisted raycast hits (keeps last valid draft).
  */
 
 import { useEffect, useRef, type RefObject } from 'react';
@@ -49,10 +49,11 @@ const GUIDE_STROKE: Record<string, string> = {
   browRight: 'rgba(251, 191, 36, 0.95)',
 };
 
-/** Generous hit target so points are easy to grab and drag. */
-const HIT_RADIUS_PX = 28;
+/** Generous hit target so points (and nearby labels) are easy to grab. */
+const HIT_RADIUS_PX = 36;
 const DOT_RADIUS = 7;
 const DOT_RADIUS_SELECTED = 10;
+const DRAG_THRESHOLD_PX = 4;
 
 type ScreenPt = { x: number; y: number };
 
@@ -106,7 +107,7 @@ function drawLabel(
 }
 
 function drawModeBanner(ctx: CanvasRenderingContext2D, width: number): void {
-  const text = 'Face Mapping — Punkt greifen & ziehen · Tippen setzt ausgewählten Marker';
+  const text = 'Face Mapping — Punkt greifen & ziehen · Tippen auf Mesh setzt Marker';
   ctx.font = '11px ui-sans-serif, system-ui, sans-serif';
   const pad = 8;
   const h = 26;
@@ -125,7 +126,7 @@ function projectDraftScreens(
   for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
     const binding = draft.anchors[id];
     if (!binding) continue;
-    const world = rt.evaluateFaceMappingBindingWorld(binding);
+    const world = rt.evaluateFaceMappingBindingWorld(binding, id);
     if (!world) continue;
     const pt = rt.projectWorldToFaceMappingCanvas(world.x, world.y, world.z);
     if (pt) screen[id] = pt;
@@ -178,9 +179,13 @@ export function FaceMappingMarkerLayer({
     const runtime = studioRuntimeRef.current;
     if (!overlay || !runtime) return;
 
+    // Session-level orbit lock — do not re-enable on pointerup while Face Mapping is open.
+    runtime.setOrbitControlsEnabled(false);
+
     let raf = 0;
     let draggingId: SagaDriveFaceAnchorId | null = null;
     let dragMoved = false;
+    let grabbedExisting = false;
     let pointerDown: {
       x: number;
       y: number;
@@ -256,9 +261,14 @@ export function FaceMappingMarkerLayer({
     };
     raf = requestAnimationFrame(paint);
 
-    const canvasXY = (event: PointerEvent, rt: CharacterStudioRuntime) => {
-      const rect = rt.getFaceMappingCanvasElement().getBoundingClientRect();
-      return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    const canvasXY = (event: PointerEvent) => {
+      const rect = overlay.getBoundingClientRect();
+      const scaleX = overlay.width / Math.max(1, rect.width);
+      const scaleY = overlay.height / Math.max(1, rect.height);
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY,
+      };
     };
 
     const onPointerDown = (event: PointerEvent) => {
@@ -266,7 +276,7 @@ export function FaceMappingMarkerLayer({
       const draft = draftRef.current;
       const rt = studioRuntimeRef.current;
       if (!draft || !rt) return;
-      const { x, y } = canvasXY(event, rt);
+      const { x, y } = canvasXY(event);
       const screen = projectDraftScreens(rt, draft);
       const near = findNearestMarker(screen, x, y, draft.selectedAnchorId);
       pointerDown = {
@@ -276,13 +286,19 @@ export function FaceMappingMarkerLayer({
         anchorId: near ?? draft.selectedAnchorId,
       };
       dragMoved = false;
+      grabbedExisting = Boolean(near);
+      draggingId = near;
+      rt.setOrbitControlsEnabled(false);
       if (near) {
-        draggingId = near;
         onSelectRef.current(near);
-        rt.setOrbitControlsEnabled(false);
-        event.preventDefault();
-        event.stopPropagation();
+        try {
+          overlay.setPointerCapture(event.pointerId);
+        } catch {
+          // Pointer capture optional — window listeners still track drag.
+        }
       }
+      event.preventDefault();
+      event.stopPropagation();
     };
 
     const onPointerMove = (event: PointerEvent) => {
@@ -291,53 +307,82 @@ export function FaceMappingMarkerLayer({
       if (!rt) return;
       const dx = event.clientX - pointerDown.x;
       const dy = event.clientY - pointerDown.y;
-      if (Math.hypot(dx, dy) > 3) dragMoved = true;
+      if (Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) dragMoved = true;
       if (!dragMoved) return;
-      const { x, y } = canvasXY(event, rt);
+      const { x, y } = canvasXY(event);
       // Valid hit only — leave last binding unchanged when pointer leaves mesh.
       const hit = rt.raycastFaceMappingAtCanvas(x, y);
       if (hit) onPlaceRef.current(draggingId, hit.binding);
+      event.preventDefault();
     };
 
     const onPointerUp = (event: PointerEvent) => {
       const rt = studioRuntimeRef.current;
       const draft = draftRef.current;
       const down = pointerDown;
-      pointerDown = null;
       const wasDragging = draggingId;
+      const wasGrab = grabbedExisting;
+      const moved = dragMoved;
+      pointerDown = null;
       draggingId = null;
-      if (rt) rt.setOrbitControlsEnabled(true);
+      grabbedExisting = false;
+      dragMoved = false;
+
+      try {
+        if (overlay.hasPointerCapture(event.pointerId)) {
+          overlay.releasePointerCapture(event.pointerId);
+        }
+      } catch {
+        // ignore
+      }
+
+      // Keep orbit disabled while Face Mapping authoring is active.
+      if (rt) rt.setOrbitControlsEnabled(false);
 
       if (!down || !rt || !draft) return;
 
-      if (wasDragging && dragMoved) return;
+      // Finished a drag — binding already updated on move; do not re-place.
+      if (wasDragging && moved) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
 
       const dx = event.clientX - down.x;
       const dy = event.clientY - down.y;
       if (Math.hypot(dx, dy) > 8 || performance.now() - down.t > 500) return;
-      const anchorId = down.anchorId ?? draft.selectedAnchorId;
-      if (!anchorId) return;
-      // Clicking an existing marker selects without re-placing (PDF detail sync).
-      if (wasDragging && !dragMoved) {
-        onSelectRef.current(anchorId);
+
+      // Clicking an existing marker: select only — never jump/clear the point.
+      if (wasGrab && wasDragging && !moved) {
+        onSelectRef.current(wasDragging);
+        event.preventDefault();
+        event.stopPropagation();
         return;
       }
-      const { x, y } = canvasXY(event, rt);
+
+      // Empty-mesh tap: place currently selected marker (if any).
+      const anchorId = draft.selectedAnchorId;
+      if (!anchorId || wasGrab) return;
+      const { x, y } = canvasXY(event);
       const hit = rt.raycastFaceMappingAtCanvas(x, y);
+      // Miss keeps last valid binding — only report via null callback.
       onPlaceRef.current(anchorId, hit?.binding ?? null);
+      event.preventDefault();
+      event.stopPropagation();
     };
 
-    const gl = runtime.getFaceMappingCanvasElement();
-    gl.addEventListener('pointerdown', onPointerDown, true);
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
+    overlay.addEventListener('pointerdown', onPointerDown);
+    overlay.addEventListener('pointermove', onPointerMove);
+    overlay.addEventListener('pointerup', onPointerUp);
+    overlay.addEventListener('pointercancel', onPointerUp);
 
     return () => {
       cancelAnimationFrame(raf);
-      gl.removeEventListener('pointerdown', onPointerDown, true);
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      runtime.setOrbitControlsEnabled(true);
+      overlay.removeEventListener('pointerdown', onPointerDown);
+      overlay.removeEventListener('pointermove', onPointerMove);
+      overlay.removeEventListener('pointerup', onPointerUp);
+      overlay.removeEventListener('pointercancel', onPointerUp);
+      // Authoring teardown restores orbit via setFaceMappingAuthoringActive(false).
     };
   }, [active, draftRef, studioRuntimeRef]);
 
@@ -346,7 +391,7 @@ export function FaceMappingMarkerLayer({
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none absolute inset-0 z-[15] h-full w-full"
+      className="pointer-events-auto absolute inset-0 z-[15] h-full w-full touch-none cursor-crosshair"
       data-testid="face-mapping-marker-layer"
       aria-hidden
     />

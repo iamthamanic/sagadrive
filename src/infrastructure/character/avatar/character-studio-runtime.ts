@@ -65,6 +65,7 @@ import {
 } from '../liveact/liveact-character-face-debug';
 import { listFaceAnchorsManifestUrlCandidates } from '../liveact/face-anchors-manifest-url';
 import type {
+  SagaDriveFaceAnchorId,
   SagaDriveFaceAnchorTriangleBinding,
   SagaDriveFaceAnchorsManifestV1,
 } from '../../../domains/character/avatar/face-anchor-contract';
@@ -509,6 +510,10 @@ export class CharacterStudioRuntime {
       this.setLiveActCharacterFaceDebugEnabled(false);
       this.setLiveActRigDebugEnabled(false);
       this.applyCameraFrame('face');
+      // Hard-disable orbit for the whole Face Mapping session (marker drag must not rotate).
+      this.controls.enabled = false;
+    } else {
+      this.controls.enabled = true;
     }
   }
 
@@ -567,10 +572,11 @@ export class CharacterStudioRuntime {
   /** Evaluate a draft binding to world coordinates (null if unavailable). */
   evaluateFaceMappingBindingWorld(
     binding: SagaDriveFaceAnchorTriangleBinding,
+    anchorId: SagaDriveFaceAnchorId = 'noseTip',
   ): { x: number; y: number; z: number } | null {
     if (this.disposed || !this.currentRoot) return null;
     const index = buildFaceAnchorNodeIndex(this.currentRoot);
-    const result = evaluateFaceAnchorWorldPosition(index, 'noseTip', binding);
+    const result = evaluateFaceAnchorWorldPosition(index, anchorId, binding);
     if (result.status !== 'available') return null;
     return { x: result.x, y: result.y, z: result.z };
   }

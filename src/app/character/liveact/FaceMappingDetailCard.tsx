@@ -2,7 +2,7 @@
  * FaceMappingDetailCard — selected-marker detail popup for Face-Rig Editor.
  * Location: src/app/character/liveact/FaceMappingDetailCard.tsx
  *
- * PDF behavior: shows body-part feature + binding label + pulsing point matching
+ * PDF behavior: Körperteil-Silhouette + binding label + pulsing landmark matching
  * the highlighted Character marker (bidirectional selection feedback).
  */
 
@@ -13,6 +13,7 @@ import {
   type SagaDriveFaceMappingDraftV1,
 } from '../../../domains/character/avatar/face-mapping-draft-v1';
 import { resolveFaceMappingFeatureGroupDe } from '../../../domains/character/avatar/face-mapping-guide-geometry';
+import { FaceMappingFeatureIcon } from './FaceMappingFeatureIcon';
 
 interface FaceMappingDetailCardProps {
   draft: SagaDriveFaceMappingDraftV1;
@@ -48,18 +49,17 @@ export function FaceMappingDetailCard({ draft, selectedAnchorId }: FaceMappingDe
     >
       <div className="flex items-center gap-3">
         <div
-          className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/50 bg-slate-950"
+          className="relative shrink-0"
           aria-hidden
           data-testid="face-mapping-detail-pulse"
         >
-          <span className="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-primary/40" />
-          <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-primary shadow-[0_0_8px_rgba(6,182,212,0.9)]" />
+          <FaceMappingFeatureIcon anchorId={selectedAnchorId} size="lg" pulse />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-medium uppercase tracking-wide text-primary">{feature}</p>
           <p className="truncate text-xs font-medium text-white">{bindingLabel}</p>
           <p className="text-[10px] text-slate-400">
-            Marker · {statusLabelDe(status)} · pulsiert auf Charakter
+            Marker · {statusLabelDe(status)} · pulsiert auf Charakter + Icon
           </p>
         </div>
       </div>
