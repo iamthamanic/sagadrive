@@ -1329,21 +1329,19 @@ export function CharacterEditor() {
                 onSelect={requestAvatarSourceChange}
               />
               {avatarSource === 'sagadrive' ? (
-                <>
-                  <AvatarSpeciesTemplatePicker
-                    selectedSpeciesId={selectedTemplateSpeciesId}
-                    onSelect={applySpeciesTemplate}
-                    disabled={saving}
-                    warningsDe={templateWarningsDe}
-                  />
-                  {selectedTemplateSpeciesId === 'human' ? (
+                <AvatarSpeciesTemplatePicker
+                  selectedSpeciesId={selectedTemplateSpeciesId}
+                  onSelect={applySpeciesTemplate}
+                  disabled={saving}
+                  warningsDe={templateWarningsDe}
+                  humanMeshSlot={
                     <HumanLiveActMeshVariantSelect
                       value={humanMeshVariant}
                       onChange={setHumanMeshVariant}
                       disabled={saving}
                     />
-                  ) : null}
-                </>
+                  }
+                />
               ) : null}
               {avatarSource === 'import' ? (
                 <AvatarImportPanel

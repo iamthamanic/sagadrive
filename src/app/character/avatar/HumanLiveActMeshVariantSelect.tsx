@@ -27,7 +27,7 @@ export function HumanLiveActMeshVariantSelect({
   return (
     <div className="space-y-1.5" data-testid="human-liveact-mesh-variant">
       <label className="text-xs font-medium text-foreground" htmlFor="human-mesh-variant">
-        Vorlage
+        Mensch — Mesh-Vorlage
       </label>
       <select
         id="human-mesh-variant"
@@ -36,6 +36,7 @@ export function HumanLiveActMeshVariantSelect({
         disabled={disabled}
         value={value}
         onChange={(event) => onChange(event.target.value as LiveActHumanMeshVariantId)}
+        aria-label="Mensch Mesh-Vorlage"
       >
         {options.map((option) => (
           <option key={option.id} value={option.id}>

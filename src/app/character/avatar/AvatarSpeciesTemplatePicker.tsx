@@ -4,8 +4,10 @@
  *
  * Renders picker DTOs from domain; never hardcodes species→body-family mapping in UI.
  * Look summaries live in a help tooltip next to the title (keeps cards compact, 3-col grid).
+ * Optional humanMeshSlot renders under the header when Mensch is selected (LiveAct reference).
  */
 
+import type { ReactNode } from 'react';
 import { CircleHelp } from 'lucide-react';
 import {
   listTemplateCreatorPickerItems,
@@ -21,6 +23,8 @@ interface AvatarSpeciesTemplatePickerProps {
   onSelect: (speciesId: BaseBodySpeciesId) => void;
   disabled?: boolean;
   warningsDe?: readonly string[];
+  /** Shown under the section header when Mensch is selected (e.g. Golden Reference select). */
+  humanMeshSlot?: ReactNode;
 }
 
 function familyLabelDe(family: SpeciesTemplatePickerItemV1['bodyFamily']): string {
@@ -43,6 +47,7 @@ export function AvatarSpeciesTemplatePicker({
   onSelect,
   disabled = false,
   warningsDe = [],
+  humanMeshSlot = null,
 }: AvatarSpeciesTemplatePickerProps) {
   const items = listTemplateCreatorPickerItems();
 
@@ -59,6 +64,14 @@ export function AvatarSpeciesTemplatePicker({
           Editor.
         </p>
       </div>
+      {selectedSpeciesId === 'human' && humanMeshSlot ? (
+        <div
+          className="rounded-md border border-primary/30 bg-primary/5 p-2.5"
+          data-testid="human-mesh-variant-slot"
+        >
+          {humanMeshSlot}
+        </div>
+      ) : null}
       <div
         className="grid grid-cols-3 gap-2"
         role="listbox"
