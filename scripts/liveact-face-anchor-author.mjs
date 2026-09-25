@@ -19,6 +19,7 @@ try {
     outputPath: args.output,
     nodeIdentity: args.node ?? undefined,
     bootstrap: args.bootstrap,
+    seed: args.seed ?? undefined,
   });
   const count = Object.keys(result.manifest.anchors).length;
   console.log(

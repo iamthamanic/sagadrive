@@ -121,11 +121,49 @@ const path = gazeMod.resolveLiveActGazeDrivePath({
 });
 check(path === 'lookAt', 'single gaze path lookAt for reference capabilities');
 
+// Overlay points: committed sidecar, auto/unreviewed, generic morph seed, never persisted.
+const sidecarRel = 'public/assets/avatars/reference/valid-white-m1-default-face-anchors.json';
+check(existsSync(join(root, sidecarRel)), 'reference face-anchors sidecar committed');
+const sidecar = JSON.parse(read(sidecarRel));
+check(sidecar.contractVersion === 'SagaDriveFaceAnchorsV1', 'sidecar contract version');
+check(Object.keys(sidecar.anchors ?? {}).length === 21, 'sidecar has all 21 anchors');
+const authoring = JSON.parse(
+  read('public/assets/avatars/reference/valid-white-m1-default-face-mapping-authoring.json'),
+);
+check(authoring.source === 'auto' && authoring.reviewed === false, 'sidecar marked auto/unreviewed');
+
+const morphSeed = read('scripts/lib/liveact-face-anchor-morph-seed.mjs');
+check(
+  !/valid-white|White_M|TLTMedia|reference-vrm|H_DDS/i.test(morphSeed),
+  'morph seed has no asset-specific names',
+);
+
+const avatarEditorHook = read('src/app/character/edit/useCharacterAvatarEditor.ts');
+check(
+  /face_anchors:\s*_referenceAnchors/.test(avatarEditorHook),
+  'avatarForPersist strips reference face_anchors',
+);
+check(
+  /if \(useGoldenReference\) \{\s*setReferenceFaceAnchorsManifest\(manifest\)/.test(avatarEditorHook),
+  'Face Setup on reference stays session-only',
+);
+check(
+  !/next === LIVEACT_GOLDEN_REFERENCE_AVATAR_ID\) \{\s*[^}]*setFaceAnchorsManifest\(null\)/.test(avatarEditorHook),
+  'switching to reference keeps SagaDrive face mapping',
+);
+
 const binary = join(root, 'public/assets/avatars/reference/valid-white-m1-default.vrm');
 if (!existsSync(binary)) {
   console.warn(
     'liveact-reference-vrm-golden-avatar-check WARN: binary missing — run node scripts/fetch-liveact-reference-vrm.mjs',
   );
+} else {
+  const { validateFaceAnchorsManifestFile } = await import('./lib/liveact-face-anchor-validate.mjs');
+  const bound = await validateFaceAnchorsManifestFile({
+    manifestPath: join(root, sidecarRel),
+    glbPath: binary,
+  });
+  check(bound.ok, `sidecar binds to reference VRM (${(bound.errors ?? []).join(', ')})`);
 }
 
 console.log('liveact-reference-vrm-golden-avatar-check OK');

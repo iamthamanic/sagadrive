@@ -181,6 +181,9 @@ export function useCharacterAvatarEditor({
   /** Session diagnostic: Golden Reference VRM vs SagaDrive Human mesh (not persisted). */
   const [humanMeshVariant, setHumanMeshVariant] =
     useState<LiveActHumanMeshVariantId>('sagadrive-human');
+  /** Face Setup on the Reference VRM — session only; never persisted (other topology). */
+  const [referenceFaceAnchorsManifest, setReferenceFaceAnchorsManifest] =
+    useState<SagaDriveFaceAnchorsManifestV1 | null>(null);
   const [avatarBodyFamily, setAvatarBodyFamily] = useState<CanonicalBodyFamilyId | null>(null);
   const [starterWardrobeIds, setStarterWardrobeIds] = useState<readonly string[]>([]);
   const [templateWarningsDe, setTemplateWarningsDe] = useState<readonly string[]>([]);
@@ -200,6 +203,11 @@ export function useCharacterAvatarEditor({
     return parseSpeciesTemplatePersistenceId(speciesTemplateId);
   }, [speciesTemplateId]);
 
+  const useGoldenReference =
+    avatarSource === 'sagadrive' &&
+    selectedTemplateSpeciesId === 'human' &&
+    humanMeshVariant === LIVEACT_GOLDEN_REFERENCE_AVATAR_ID;
+
   const currentAvatar = useMemo(() => {
     const templatePreviewUrl =
       avatarSource === 'sagadrive'
@@ -208,10 +216,10 @@ export function useCharacterAvatarEditor({
             genderReading,
           })
         : undefined;
-    const useGoldenReference =
-      avatarSource === 'sagadrive' &&
-      selectedTemplateSpeciesId === 'human' &&
-      humanMeshVariant === LIVEACT_GOLDEN_REFERENCE_AVATAR_ID;
+    // Reference: session anchors or none → runtime loads the asset sidecar face-anchors.json.
+    const activeFaceAnchors = useGoldenReference
+      ? referenceFaceAnchorsManifest
+      : faceAnchorsManifest;
     const modelUrl = useGoldenReference
       ? resolveLiveActGoldenReferenceModelUrl()
       : (importedModelUrl ?? templatePreviewUrl);
@@ -244,7 +252,7 @@ export function useCharacterAvatarEditor({
         body_compatibility: importComposition.bodyCompatibility,
         anatomy: importComposition.anatomy,
         modularity: importComposition.modularity,
-        ...(faceAnchorsManifest ? { face_anchors: faceAnchorsManifest } : {}),
+        ...(activeFaceAnchors ? { face_anchors: activeFaceAnchors } : {}),
       };
     }
     // Native template OR modular generate (#269): family + wardrobe without requiring species.
@@ -260,13 +268,11 @@ export function useCharacterAvatarEditor({
           importComposition?.modularity ??
           ('modular-parts' as const),
         starter_wardrobe: [...starterWardrobeIds],
-        ...(faceAnchorsManifest ? { face_anchors: faceAnchorsManifest } : {}),
+        ...(activeFaceAnchors ? { face_anchors: activeFaceAnchors } : {}),
       };
     }
     if (!speciesTemplateId || !avatarBodyFamily) {
-      return faceAnchorsManifest
-        ? { ...withMorph, face_anchors: faceAnchorsManifest }
-        : withMorph;
+      return activeFaceAnchors ? { ...withMorph, face_anchors: activeFaceAnchors } : withMorph;
     }
     return {
       ...withMorph,
@@ -275,7 +281,7 @@ export function useCharacterAvatarEditor({
       anatomy: 'humanoid' as const,
       modularity: 'modular-parts' as const,
       starter_wardrobe: [...starterWardrobeIds],
-      ...(faceAnchorsManifest ? { face_anchors: faceAnchorsManifest } : {}),
+      ...(activeFaceAnchors ? { face_anchors: activeFaceAnchors } : {}),
     };
   }, [
     accessory,
@@ -293,44 +299,35 @@ export function useCharacterAvatarEditor({
     importComposition,
     importedModelUrl,
     modularGenerateResult,
+    referenceFaceAnchorsManifest,
     selectedTemplateSpeciesId,
-    humanMeshVariant,
     skinTone,
     speciesTemplateId,
     starterWardrobeIds,
+    useGoldenReference,
   ]);
 
   const avatarForPersist = useMemo(() => {
-    if (
-      humanMeshVariant !== LIVEACT_GOLDEN_REFERENCE_AVATAR_ID ||
-      selectedTemplateSpeciesId !== 'human' ||
-      avatarSource !== 'sagadrive'
-    ) {
-      return currentAvatar;
-    }
+    if (!useGoldenReference) return currentAvatar;
     const sagadriveUrl = resolveSpeciesTemplateModelUrl({
       speciesId: 'human',
       genderReading,
     });
+    // Reference is diagnostic only: persist the SagaDrive mesh + its own anchors, never reference ones.
+    const { face_anchors: _referenceAnchors, ...rest } = currentAvatar;
     return {
-      ...currentAvatar,
+      ...rest,
       model_url: sagadriveUrl ?? currentAvatar.model_url,
+      ...(faceAnchorsManifest ? { face_anchors: faceAnchorsManifest } : {}),
     };
-  }, [
-    avatarSource,
-    currentAvatar,
-    genderReading,
-    humanMeshVariant,
-    selectedTemplateSpeciesId,
-  ]);
+  }, [currentAvatar, faceAnchorsManifest, genderReading, useGoldenReference]);
 
   const setHumanMeshVariantSafe = (next: LiveActHumanMeshVariantId) => {
     setHumanMeshVariant(next);
     if (next === LIVEACT_GOLDEN_REFERENCE_AVATAR_ID) {
-      // Reference topology ≠ SagaDrive anchors — fail closed (no Face Mapping required).
-      setFaceAnchorsManifest(null);
       toast.message('Reference VRM geladen', {
-        description: 'Diagnose-Avatar — ohne Face Mapping; LiveAct nutzt ARKit-Expressions.',
+        description:
+          'Diagnose-Avatar mit automatischen Face-Punkten. Dein SagaDrive-Face-Mapping bleibt erhalten.',
       });
     }
   };
@@ -618,6 +615,13 @@ export function useCharacterAvatarEditor({
     if (!validated.ok) {
       toast.error('Face Mapping ungültig — Speichern abgebrochen');
       return false;
+    }
+    if (useGoldenReference) {
+      setReferenceFaceAnchorsManifest(manifest);
+      toast.success('Face Mapping für Reference VRM übernommen', {
+        description: 'Nur für diese Sitzung — wird nicht mit dem Charakter gespeichert.',
+      });
+      return true;
     }
     setFaceAnchorsManifest(manifest);
     setSagaDriveDirty(true);
