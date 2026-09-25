@@ -26,7 +26,6 @@ interface FaceMappingAuthoringPanelProps {
   onClearSelected: () => void;
   onReset: () => void;
   onCancel: () => void;
-  onApply: () => void;
 }
 
 function statusLabelDe(status: FaceMappingMarkerStatus): string {
@@ -68,7 +67,6 @@ export function FaceMappingAuthoringPanel({
   onClearSelected,
   onReset,
   onCancel,
-  onApply,
 }: FaceMappingAuthoringPanelProps) {
   const summary = validateFaceMappingDraft(draft);
   const selectedId = draft.selectedAnchorId;
@@ -176,16 +174,10 @@ export function FaceMappingAuthoringPanel({
         >
           Reset
         </Button>
-        <Button
-          type="button"
-          size="sm"
-          className="h-8 w-full bg-primary text-white hover:bg-accent hover:text-accent-foreground"
-          onClick={onApply}
-          data-testid="face-mapping-apply"
-        >
-          Übernehmen
-        </Button>
       </div>
+      <p className="px-2 pb-2 text-[10px] text-slate-500">
+        Speichern sitzt unten am Viewport — schreibt Face Mapping auf den Charakter (danach Charakter speichern).
+      </p>
     </aside>
   );
 }

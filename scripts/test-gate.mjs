@@ -464,6 +464,46 @@ function checkLiveActFaceMappingManual() {
   });
 }
 
+function checkLiveActFaceAnchorsCharacterPersist() {
+  console.log('LiveAct face anchors character persist: avatar.face_anchors + override...');
+  execFileSync(process.execPath, ['scripts/liveact-face-anchors-character-persist-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLiveActExpandDriveBind() {
+  console.log('LiveAct expand drive bind: Setup modal XOR card bindOutput...');
+  execFileSync(process.execPath, ['scripts/liveact-expand-drive-bind-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLiveActReferenceVrmGoldenAvatar() {
+  console.log('LiveAct Golden Reference VRM (ARKit52) diagnostic path...');
+  execFileSync(process.execPath, ['scripts/liveact-reference-vrm-golden-avatar-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkSagaHumanCanonicalV1() {
+  console.log('Saga Human Canonical V1 PoC: sources, build report, sidecars, runtime isolation...');
+  execFileSync(process.execPath, ['scripts/saga-human-canonical-v1-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLiveActFidelity() {
+  console.log('LiveAct fidelity: calibration once + range gains, idle ownership, teeth binds...');
+  execFileSync(process.execPath, ['scripts/liveact-fidelity-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceMappingVisualGuides() {
   console.log(
     'LiveAct face mapping visual guides: binding labels + smooth guides + pulse/detail...',
@@ -1358,6 +1398,11 @@ checkLiveActDiagnosticsV2();
 checkLiveActFaceAnchorsV1();
 checkLiveActFaceMappingAuthoring();
 checkLiveActFaceMappingManual();
+checkLiveActFaceAnchorsCharacterPersist();
+checkLiveActExpandDriveBind();
+checkLiveActReferenceVrmGoldenAvatar();
+checkSagaHumanCanonicalV1();
+checkLiveActFidelity();
 checkLiveActFaceMappingVisualGuides();
 checkLiveActFaceAnchorAnatomy();
 checkLiveActCameraOverlayMetrics();

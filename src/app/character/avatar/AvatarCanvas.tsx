@@ -55,6 +55,8 @@ interface AvatarCanvasProps {
    * Used for Face Mapping panel host (#420).
    */
   belowViewportSlot?: ReactNode;
+  /** Camera frame applied once the model reaches ready (e.g. expand modal → face). */
+  initialCameraFrame?: AvatarCameraFrameId;
 }
 
 async function dataUrlToPngBlob(dataUrl: string): Promise<Blob | null> {
@@ -86,12 +88,15 @@ export function AvatarCanvas({
   onMtoonState,
   studioRuntimeRef,
   belowViewportSlot,
+  initialCameraFrame = 'full',
 }: AvatarCanvasProps) {
   const localRef = useRef<HTMLCanvasElement>(null);
   const targetRef = canvasRef ?? localRef;
   const runtimeRef = useRef<CharacterStudioRuntime>();
   const onRuntimeReadyRef = useRef(onRuntimeReady);
   onRuntimeReadyRef.current = onRuntimeReady;
+  const initialCameraFrameRef = useRef(initialCameraFrame);
+  initialCameraFrameRef.current = initialCameraFrame;
   const [runtimeState, setRuntimeState] = useState<AvatarRuntimeState>(initialState);
   const [rigAnalysis, setRigAnalysis] = useState<AvatarRigAnalysisResult | null>(null);
   const [styleNotice, setStyleNotice] = useState<string | null>(null);
@@ -102,7 +107,7 @@ export function AvatarCanvas({
   const [activeFacialKey, setActiveFacialKey] = useState<FacialCanonicalKey | null>(null);
   const [facialMessage, setFacialMessage] = useState<string | undefined>(undefined);
   const [inspectMode, setInspectMode] = useState(false);
-  const [activeFrame, setActiveFrame] = useState<AvatarCameraFrameId | null>('full');
+  const [activeFrame, setActiveFrame] = useState<AvatarCameraFrameId | null>(initialCameraFrame);
   const [mtoonStyleEnabled, setMtoonStyleEnabled] = useState(true);
   const manifest = getAvatarAssetManifest(avatar.preset);
   const modelUrl = resolveAvatarModelUrl(avatar);
@@ -128,6 +133,12 @@ export function AvatarCanvas({
     const onStateChange = (state: AvatarRuntimeState) => {
       setRuntimeState(state);
       if (state.status === 'ready') {
+        const frame = initialCameraFrameRef.current;
+        if (frame && frame !== 'full') {
+          runtimeRef.current?.applyCameraFrame(frame);
+          setActiveFrame(frame);
+          setInspectMode(runtimeRef.current?.isInspectMode() ?? true);
+        }
         onRuntimeReadyRef.current?.();
       }
     };
@@ -194,7 +205,7 @@ export function AvatarCanvas({
 
     void runtime.loadModel(modelUrl, avatar, manifest);
     setInspectMode(false);
-    setActiveFrame('full');
+    setActiveFrame(initialCameraFrameRef.current);
     setMtoonStyleEnabled(true);
   }, [manifest, modelUrl]);
 

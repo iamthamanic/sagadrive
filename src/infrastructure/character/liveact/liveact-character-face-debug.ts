@@ -6,17 +6,14 @@
  */
 
 import * as THREE from 'three';
-import type { SagaDriveFaceAnchorId, SagaDriveFaceAnchorsManifestV1 } from '../../../domains/character/avatar/face-anchor-contract';
+import { SAGA_DRIVE_FACE_ANCHOR_IDS, type SagaDriveFaceAnchorId, type SagaDriveFaceAnchorsManifestV1 } from '../../../domains/character/avatar/face-anchor-contract';
 import type { LiveActFaceLandmark2d } from '../../../domains/character/liveact/liveact-face-diagnostics';
 import {
   buildLiveActFaceLandmarksFromAnchorScreenPoints,
   computeLiveActFaceMetrics,
   type LiveActFaceMetricsV1,
 } from '../../../domains/character/liveact/liveact-face-metrics';
-import {
-  evaluateFaceAnchorsManifest,
-  type FaceAnchorEvaluationV1,
-} from '../avatar/face-anchor-runtime';
+import { evaluateFaceAnchorsManifest } from '../avatar/face-anchor-runtime';
 
 export interface LiveActCharacterFaceScreenPoint {
   readonly x: number;
@@ -36,10 +33,12 @@ export interface LiveActCharacterFaceDebugSnapshot {
   readonly canvasWidth: number;
   readonly canvasHeight: number;
   readonly contours: LiveActCharacterFaceDebugContours | null;
+  /** Individual projected anchors (partial maps still draw). */
+  readonly points: Readonly<Partial<Record<SagaDriveFaceAnchorId, LiveActCharacterFaceScreenPoint>>>;
   readonly metrics: LiveActFaceMetricsV1;
 }
 
-/** Minimum anchor ids for overlay + metrics — fail closed when missing. */
+/** Contour feature ids — groups draw when complete; singles still show as points. */
 export const LIVEACT_CHARACTER_FACE_OVERLAY_ANCHOR_IDS = [
   'mouthUpper',
   'mouthLower',
@@ -61,6 +60,7 @@ export const LIVEACT_CHARACTER_FACE_OVERLAY_ANCHOR_IDS = [
   'browRightOuter',
 ] as const satisfies readonly SagaDriveFaceAnchorId[];
 
+const OVERLAY_POINT_IDS: readonly SagaDriveFaceAnchorId[] = SAGA_DRIVE_FACE_ANCHOR_IDS;
 export interface LiveActCharacterFaceDebugHandle {
   /** In-place snapshot updated by {@link sample}. */
   readonly snapshot: LiveActCharacterFaceDebugSnapshot;
@@ -131,35 +131,31 @@ function buildContours(
   const brc = pickScreen(screen, 'browRightCenter');
   const bro = pickScreen(screen, 'browRightOuter');
 
+  const lips =
+    mouthUpper && mouthLower && mouthCornerLeft && mouthCornerRight
+      ? [mouthUpper, mouthCornerLeft, mouthLower, mouthCornerRight]
+      : [];
+  const leftEye = li && lo && lu && ll ? [li, lu, lo, ll] : [];
+  const rightEye = ri && ro && ru && rl ? [ri, ru, ro, rl] : [];
+  const leftEyebrow = bli && blc && blo ? [bli, blc, blo] : [];
+  const rightEyebrow = bri && brc && bro ? [bri, brc, bro] : [];
+
   if (
-    !mouthUpper ||
-    !mouthLower ||
-    !mouthCornerLeft ||
-    !mouthCornerRight ||
-    !li ||
-    !lo ||
-    !lu ||
-    !ll ||
-    !ri ||
-    !ro ||
-    !ru ||
-    !rl ||
-    !bli ||
-    !blc ||
-    !blo ||
-    !bri ||
-    !brc ||
-    !bro
+    lips.length === 0 &&
+    leftEye.length === 0 &&
+    rightEye.length === 0 &&
+    leftEyebrow.length === 0 &&
+    rightEyebrow.length === 0
   ) {
     return null;
   }
 
   return {
-    lips: [mouthUpper, mouthCornerLeft, mouthLower, mouthCornerRight],
-    leftEye: [li, lu, lo, ll],
-    rightEye: [ri, ru, ro, rl],
-    leftEyebrow: [bli, blc, blo],
-    rightEyebrow: [bri, brc, bro],
+    lips,
+    leftEye,
+    rightEye,
+    leftEyebrow,
+    rightEyebrow,
   };
 }
 
@@ -172,17 +168,6 @@ function toNormalizedLandmark(
     x: width > 0 ? p.x / width : 0,
     y: height > 0 ? p.y / height : 0,
   };
-}
-
-function evaluationsAvailable(
-  evaluations: Readonly<Partial<Record<SagaDriveFaceAnchorId, FaceAnchorEvaluationV1>>>,
-  ids: readonly SagaDriveFaceAnchorId[],
-): boolean {
-  for (const id of ids) {
-    const ev = evaluations[id];
-    if (!ev || ev.status !== 'available') return false;
-  }
-  return true;
 }
 
 const EMPTY_METRICS: LiveActFaceMetricsV1 = {
@@ -209,6 +194,7 @@ export function createLiveActCharacterFaceDebugController(deps: {
     canvasWidth: 1,
     canvasHeight: 1,
     contours: null,
+    points: {},
     metrics: EMPTY_METRICS,
   };
 
@@ -224,6 +210,7 @@ export function createLiveActCharacterFaceDebugController(deps: {
           canvasWidth: width,
           canvasHeight: height,
           contours: null,
+          points: {},
           metrics: EMPTY_METRICS,
         };
         return;
@@ -231,19 +218,9 @@ export function createLiveActCharacterFaceDebugController(deps: {
 
       const { width, height } = deps.getCanvasSize();
       const evaluated = evaluateFaceAnchorsManifest(modelRoot, manifest);
-      if (!evaluationsAvailable(evaluated.evaluations, LIVEACT_CHARACTER_FACE_OVERLAY_ANCHOR_IDS)) {
-        snapshot = {
-          available: false,
-          canvasWidth: width,
-          canvasHeight: height,
-          contours: null,
-          metrics: EMPTY_METRICS,
-        };
-        return;
-      }
 
       const screen: Partial<Record<SagaDriveFaceAnchorId, LiveActCharacterFaceScreenPoint>> = {};
-      for (const id of LIVEACT_CHARACTER_FACE_OVERLAY_ANCHOR_IDS) {
+      for (const id of OVERLAY_POINT_IDS) {
         const ev = evaluated.evaluations[id];
         if (!ev || ev.status !== 'available') continue;
         const projected = projectWorldToCanvas(
@@ -257,17 +234,20 @@ export function createLiveActCharacterFaceDebugController(deps: {
         if (projected) screen[id] = projected;
       }
 
-      const contours = buildContours(screen);
-      if (!contours) {
+      const pointCount = Object.keys(screen).length;
+      if (pointCount === 0) {
         snapshot = {
           available: false,
           canvasWidth: width,
           canvasHeight: height,
           contours: null,
+          points: {},
           metrics: EMPTY_METRICS,
         };
         return;
       }
+
+      const contours = buildContours(screen);
 
       const normalized: Partial<Record<SagaDriveFaceAnchorId, LiveActFaceLandmark2d>> = {};
       for (const id of LIVEACT_CHARACTER_FACE_OVERLAY_ANCHOR_IDS) {
@@ -282,6 +262,7 @@ export function createLiveActCharacterFaceDebugController(deps: {
         canvasWidth: width,
         canvasHeight: height,
         contours,
+        points: screen,
         metrics,
       };
     },
@@ -329,6 +310,7 @@ export function createLiveActCharacterFaceDebugController(deps: {
         canvasWidth: 1,
         canvasHeight: 1,
         contours: null,
+        points: {},
         metrics: EMPTY_METRICS,
       };
     },

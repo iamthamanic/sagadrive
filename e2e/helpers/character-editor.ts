@@ -46,6 +46,20 @@ export async function completeSpeciesBasics(page: Page) {
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
 }
 
+/** Open gear + LiveAct accordion (sections start collapsed). */
+export async function openAvatarPreviewLiveActSettings(page: Page) {
+  const gear = page.getByTestId('avatar-preview-settings');
+  await expect(gear).toBeVisible({ timeout: 20_000 });
+  await gear.click();
+  const liveActTrigger = page.getByTestId('liveact-settings-accordion-trigger');
+  await expect(liveActTrigger).toBeVisible({ timeout: 10_000 });
+  const trackingToggle = page.getByTestId('liveact-tracking-toggle');
+  if (!(await trackingToggle.isVisible().catch(() => false))) {
+    await liveActTrigger.click();
+  }
+  await expect(trackingToggle).toBeVisible({ timeout: 10_000 });
+}
+
 const FREE_SKILL_ATTRIBUTE: Readonly<Record<string, string>> = {
   Athletik: 'Stärke',
   Akrobatik: 'Geschicklichkeit',

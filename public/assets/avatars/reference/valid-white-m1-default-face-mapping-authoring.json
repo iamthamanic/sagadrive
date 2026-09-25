@@ -1,0 +1,9 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "auto",
+  "reviewed": false,
+  "asset": {
+    "modelPath": "public/assets/avatars/reference/valid-white-m1-default.vrm"
+  },
+  "note": "ARKit morph-seeded face anchors (unreviewed auto; overlay/diagnostic only)."
+}

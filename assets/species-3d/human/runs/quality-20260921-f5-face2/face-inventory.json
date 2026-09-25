@@ -124,6 +124,7 @@
     "noseSneerRight"
   ],
   "gazeMode": "morphs",
+  "gazeModeSource": "inferred",
   "morphCount": 51,
   "usableMorphCount": 51,
   "byteCount": 38402848,

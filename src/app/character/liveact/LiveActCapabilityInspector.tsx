@@ -40,6 +40,15 @@ export function LiveActCapabilityInspector({
 
   return (
     <div data-testid="liveact-capability-inspector">
+      <p
+        className="px-1 pb-1 text-[10px] leading-snug text-slate-400"
+        data-testid="liveact-capability-runtime-summary"
+      >
+        Runtime {capabilities.runtimeKind.toUpperCase()} · Gaze{' '}
+        <span data-testid="liveact-capability-gaze-path">{capabilities.gazeDrivePath}</span>
+        {' · '}
+        Expressions {capabilities.activeFaceChannelCount}/{capabilities.totalFaceChannelCount}
+      </p>
       <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-2 px-1 pb-1 text-[9px] font-medium uppercase tracking-wide text-slate-500">
         <span>Kanal</span>
         <span className="text-right">Input</span>

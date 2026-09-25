@@ -267,3 +267,15 @@ export function stableFaceAnchorsManifestJson(manifest: SagaDriveFaceAnchorsMani
     anchors: ordered,
   });
 }
+
+/**
+ * Read validated face anchors from a character avatar bag (persist hydrate).
+ * Invalid / missing → null (sidecar may still apply at runtime).
+ */
+export function readFaceAnchorsFromAvatar(avatar: {
+  face_anchors?: unknown;
+} | null | undefined): SagaDriveFaceAnchorsManifestV1 | null {
+  if (!avatar || avatar.face_anchors == null) return null;
+  const parsed = parseFaceAnchorsManifestV1(avatar.face_anchors);
+  return parsed.ok ? parsed.manifest : null;
+}

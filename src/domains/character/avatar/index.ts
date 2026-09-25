@@ -744,6 +744,7 @@ export {
   SAGA_DRIVE_FACE_ANCHOR_IDS,
   isSagaDriveFaceAnchorId,
   parseFaceAnchorsManifestV1,
+  readFaceAnchorsFromAvatar,
   stableFaceAnchorsManifestJson,
   validateFaceAnchorBarycentric,
   validateFaceAnchorTriangleBinding,
@@ -832,6 +833,28 @@ export {
   listSpeciesTemplateModelPaths,
   resolveSpeciesTemplateModelUrl,
 } from './species-template-models-v1';
+export {
+  LIVEACT_GOLDEN_REFERENCE_AVATAR_ID,
+  LIVEACT_GOLDEN_REFERENCE_CONTRACT_VERSION,
+  LIVEACT_GOLDEN_REFERENCE_EXPECTED_CHANNELS,
+  LIVEACT_GOLDEN_REFERENCE_PROVENANCE,
+  LIVEACT_GOLDEN_REFERENCE_PUBLIC_PATH,
+  isLiveActHumanMeshVariantId,
+  listLiveActHumanMeshVariantOptions,
+  resolveLiveActGoldenReferenceModelUrl,
+  resolveLiveActHumanMeshVariantModelUrl,
+  type LiveActGoldenReferenceProvenanceV1,
+  type LiveActHumanMeshVariantId,
+} from './liveact-golden-reference-avatar-v1';
+export {
+  SAGA_HUMAN_CANONICAL_V1_CONTRACTS,
+  SAGA_HUMAN_CANONICAL_V1_ID,
+  SAGA_HUMAN_CANONICAL_V1_PROVENANCE,
+  SAGA_HUMAN_CANONICAL_V1_PUBLIC_PATH,
+  SAGA_HUMAN_CANONICAL_V1_VRM_SHA256_PREFIX,
+  resolveSagaHumanCanonicalV1ModelUrl,
+  type SagaHumanCanonicalV1ProvenanceV1,
+} from './saga-human-canonical-v1';
 export {
   STARTER_WARDROBE_CONTRACT_VERSION,
   STARTER_WARDROBE_PACK_VERSION,

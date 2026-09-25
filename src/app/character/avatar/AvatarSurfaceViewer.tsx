@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from 'react';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
 import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
+import type { SagaDriveFaceAnchorsManifestV1 } from '../../../domains/character/avatar';
 import {
   resolveAvatarSurfaceView,
   type AvatarRenderMode,
@@ -17,6 +18,7 @@ import {
 } from '../../../domains/character/avatar';
 import { resolveLiveActRetargetProfile } from '../../../infrastructure/character/liveact';
 import { AvatarCanvas, type AvatarPortraitCaptureHandle } from './AvatarCanvas';
+import { AvatarPreviewExpandDialog } from './AvatarPreviewExpandDialog';
 import {
   LiveActSurfaceControls,
   LiveActViewportControls,
@@ -39,6 +41,8 @@ interface AvatarSurfaceViewerProps {
   size?: 'sm' | 'md' | 'lg';
   /** Override Face Tracking on 3D surfaces. Default: on for editor/player-panel, off for tiny session strip. */
   enableFaceTracking?: boolean;
+  /** Persist Face Mapping anchors onto the character avatar (editor). */
+  onFaceAnchorsCommitted?: (manifest: SagaDriveFaceAnchorsManifestV1) => void;
 }
 
 const SIZE_CLASS = {
@@ -68,6 +72,7 @@ export function AvatarSurfaceViewer({
   onRuntimeReady,
   size = 'md',
   enableFaceTracking,
+  onFaceAnchorsCommitted,
 }: AvatarSurfaceViewerProps) {
   const [webGlAvailable, setWebGlAvailable] = useState(true);
   const [imageFailed, setImageFailed] = useState(false);
@@ -75,8 +80,12 @@ export function AvatarSurfaceViewer({
   const [mtoonEnabled, setMtoonEnabled] = useState(true);
   const mtoonHandlerRef = useRef<((enabled: boolean) => void) | null>(null);
   const studioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
+  const expandStudioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
   const [faceMappingPanelHost, setFaceMappingPanelHost] = useState<HTMLDivElement | null>(null);
   const [modelEpoch, setModelEpoch] = useState(0);
+  const [faceAnchorEpoch, setFaceAnchorEpoch] = useState(0);
+  const [previewExpandOpen, setPreviewExpandOpen] = useState(false);
+  const [expandRuntimeReady, setExpandRuntimeReady] = useState(false);
   const [liveActCapabilities, setLiveActCapabilities] = useState<LiveActCapabilitiesV1 | null>(
     null,
   );
@@ -170,36 +179,59 @@ export function AvatarSurfaceViewer({
       window.clearTimeout(t2);
       window.clearTimeout(t3);
     };
-  }, [runtimeReady, modelEpoch, liveAct.characterFaceDebugHandleRef]);
+  }, [runtimeReady, modelEpoch, faceAnchorEpoch, liveAct.characterFaceDebugHandleRef]);
 
   useEffect(() => {
     if (!isEditorSurface || !runtimeReady) {
       studioRuntimeRef.current?.setLiveActCharacterFaceDebugEnabled(false);
       return;
     }
-    const enabled =
-      liveAct.faceOverlayEnabled &&
-      characterFaceMappingAvailable &&
-      liveAct.trackingEnabled;
+    // Mesh anchors are independent of webcam tracking — only Face Overlay toggle + mapping.
+    const enabled = liveAct.faceOverlayEnabled && characterFaceMappingAvailable;
     studioRuntimeRef.current?.setLiveActCharacterFaceDebugEnabled(enabled);
   }, [
     isEditorSurface,
     runtimeReady,
     modelEpoch,
+    faceAnchorEpoch,
     liveAct.faceOverlayEnabled,
-    liveAct.trackingEnabled,
     characterFaceMappingAvailable,
   ]);
+
+  const handleFaceAnchorsCommitted = (manifest: SagaDriveFaceAnchorsManifestV1) => {
+    onFaceAnchorsCommitted?.(manifest);
+    const runtime = studioRuntimeRef.current;
+    if (runtime) {
+      runtime.bindFaceAnchorsManifestSession(manifest);
+      liveAct.characterFaceDebugHandleRef.current = runtime.getLiveActCharacterFaceDebugHandle();
+      setCharacterFaceMappingAvailable(runtime.hasLiveActCharacterFaceMapping());
+    } else {
+      setCharacterFaceMappingAvailable(Object.keys(manifest.anchors).length > 0);
+    }
+    setFaceAnchorEpoch((value) => value + 1);
+    // Show mesh-bound overlay immediately; do not require webcam tracking.
+    liveAct.setFaceOverlayEnabled(true);
+  };
 
   useEffect(() => {
     const engine = liveAct.engineRef.current;
     if (!engine || !liveActEnabled) return;
-    if (!liveAct.trackingEnabled || !runtimeReady) {
+    if (!liveAct.trackingEnabled) {
       engine.bindOutput(null);
       return;
     }
-    const output = studioRuntimeRef.current?.getLiveActAvatarOutput() ?? null;
+    // One drive target: expand modal when open+ready, else editor card.
+    const driveExpand = previewExpandOpen && expandRuntimeReady;
+    if (!driveExpand && !runtimeReady) {
+      engine.bindOutput(null);
+      return;
+    }
+    const runtime = driveExpand
+      ? expandStudioRuntimeRef.current
+      : studioRuntimeRef.current;
+    const output = runtime?.getLiveActAvatarOutput() ?? null;
     engine.bindOutput(output);
+    runtime?.setLiveActDriveActive(output !== null);
     engine.setRetargetProfile(
       resolveLiveActRetargetProfile({
         avatarCapabilities: output?.getAvatarCapabilities() ?? null,
@@ -207,12 +239,15 @@ export function AvatarSurfaceViewer({
     );
     return () => {
       engine.bindOutput(null);
+      runtime?.setLiveActDriveActive(false);
     };
   }, [
     liveActEnabled,
     liveAct.trackingEnabled,
     runtimeReady,
     modelEpoch,
+    previewExpandOpen,
+    expandRuntimeReady,
     liveAct.engineRef,
   ]);
 
@@ -263,7 +298,7 @@ export function AvatarSurfaceViewer({
               ) : null
             }
           />
-          {isEditorSurface ? (
+          {isEditorSurface && !previewExpandOpen ? (
             <div
               className="pointer-events-none absolute inset-x-0 top-0 z-20 aspect-[4/5] w-full"
               data-avatar-viewport-chrome="true"
@@ -281,6 +316,8 @@ export function AvatarSurfaceViewer({
                   characterFaceMappingAvailable={characterFaceMappingAvailable}
                   studioRuntimeRef={studioRuntimeRef}
                   faceMappingPanelHost={faceMappingPanelHost}
+                  onExpandPreview={() => setPreviewExpandOpen(true)}
+                  onFaceAnchorsCommitted={handleFaceAnchorsCommitted}
                 />
               </div>
             </div>
@@ -306,7 +343,7 @@ export function AvatarSurfaceViewer({
               {view.displayName.slice(0, 2).toUpperCase()}
             </div>
           )}
-          {isEditorSurface ? (
+          {isEditorSurface && !previewExpandOpen ? (
             <LiveActViewportControls
               runtimeReady={false}
               mtoonEnabled={mtoonEnabled}
@@ -314,12 +351,34 @@ export function AvatarSurfaceViewer({
               liveAct={liveAct}
               capabilities={null}
               characterFaceMappingAvailable={false}
+              onExpandPreview={() => setPreviewExpandOpen(true)}
+              onFaceAnchorsCommitted={handleFaceAnchorsCommitted}
             />
           ) : null}
         </div>
       )}
       {view.fallbackReason && show3d === false ? (
         <span className="sr-only">{view.fallbackReason}</span>
+      ) : null}
+      {isEditorSurface ? (
+        <AvatarPreviewExpandDialog
+          open={previewExpandOpen}
+          onOpenChange={(next) => {
+            setPreviewExpandOpen(next);
+            if (!next) {
+              setExpandRuntimeReady(false);
+              expandStudioRuntimeRef.current = null;
+            }
+          }}
+          avatar={show3d && avatar ? avatar : null}
+          displayName={view.displayName}
+          liveAct={liveAct}
+          capabilities={liveActCapabilities}
+          characterFaceMappingAvailable={characterFaceMappingAvailable}
+          studioRuntimeRef={expandStudioRuntimeRef}
+          onRuntimeReadyChange={setExpandRuntimeReady}
+          onFaceAnchorsCommitted={handleFaceAnchorsCommitted}
+        />
       ) : null}
     </div>
   );
