@@ -45,4 +45,23 @@ check(/characterOverride/.test(studio) || /face_anchors \?\? null/.test(studio),
 check(/avatar\.face_anchors/.test(studio), 'loadModel reads avatar.face_anchors');
 check(/liveact-face-anchors-character-persist/.test(acceptance), 'acceptance exists');
 
+// PR #440 review: hydrated anchors without model reload must rebind (P1).
+const applyAppearanceBody = studio.match(/applyAppearance\(avatar: CharacterAvatarDto[\s\S]*?\n {2}\}/)?.[0] ?? '';
+check(/this\.syncCharacterFaceAnchors\(avatar\)/.test(applyAppearanceBody), 'applyAppearance rebinds changed face_anchors');
+check(
+  /this\.syncCharacterFaceAnchors\(this\.currentAvatar \?\? avatar, true\)/.test(studio),
+  'loadModel binds anchors from the latest avatar, not the load-start snapshot',
+);
+check(!/loadFaceAnchorsManifestForModel\(safeUrl, avatar\.face_anchors/.test(studio), 'no stale load-start anchors read');
+
+// PR #440 review: empty / invalid drafts must not become an override (P2).
+check(/validateFaceMappingDraft\(current\)/.test(controls), 'Speichern validates the draft');
+check(/disabled=\{!draftValidation\?\.ok\}/.test(controls), 'Speichern disabled for invalid drafts');
+
+// PR #440 review: every topology-changing path clears anchors (P2).
+const bodyConversion = hook.match(/const applyBodyConversion = [\s\S]*?\n {2}\};/)?.[0] ?? '';
+check(/setFaceAnchorsManifest\(null\)/.test(bodyConversion), 'applyBodyConversion clears anchors');
+const appearancePreset = hook.match(/const applyAppearancePreset = [\s\S]*?\n {2}\};/)?.[0] ?? '';
+check(/setFaceAnchorsManifest\(null\)/.test(appearancePreset), 'applyAppearancePreset clears anchors when the preset owns the mesh');
+
 console.log('liveact-face-anchors-character-persist-check OK');

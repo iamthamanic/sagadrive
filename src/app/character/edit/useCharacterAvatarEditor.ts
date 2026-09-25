@@ -377,6 +377,7 @@ export function useCharacterAvatarEditor({
     // Converted artifact uses canonical body — clear external mesh URL.
     setImportedModelUrl(undefined);
     setAvatarSource('sagadrive');
+    setFaceAnchorsManifest(null);
     setSpeciesTemplateId(null);
     setStarterWardrobeIds([]);
     setTemplateWarningsDe(result.limitationsDe);
@@ -437,6 +438,10 @@ export function useCharacterAvatarEditor({
 
   const applyAppearancePreset = (race: string) => {
     const preset = getAvatarRacePreset(race);
+    // The race preset only swaps the mesh when no explicit model URL / canonical family pins it.
+    if (!currentAvatar.model_url && !isCanonicalBodyFamilyId(currentAvatar.body_family)) {
+      setFaceAnchorsManifest(null);
+    }
     setBodySize([preset.bodySize]);
     setHeight([preset.height]);
     setHeadStyle(preset.head);

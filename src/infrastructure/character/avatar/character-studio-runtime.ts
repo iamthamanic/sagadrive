@@ -196,6 +196,10 @@ export class CharacterStudioRuntime {
   private readonly liveActRigDebug: LiveActRigDebugController;
   private readonly liveActCharacterFaceDebug: LiveActCharacterFaceDebugController;
   private faceAnchorManifestLoadToken = 0;
+  /** Model URL whose anchors are bound; null until the current model is ready. */
+  private faceAnchorsModelUrl: string | null = null;
+  /** Last bound `avatar.face_anchors` reference — hydration can change it without a model reload. */
+  private faceAnchorsOverrideSource: SagaDriveFaceAnchorsManifestV1 | null = null;
   /** When true, LiveAct drive application is suppressed for Face Setup (#420). */
   private faceMappingAuthoringActive = false;
   private readonly faceMappingProjectScratch = new THREE.Vector3();
@@ -296,6 +300,8 @@ export class CharacterStudioRuntime {
     const version = ++this.loadVersion;
     this.currentAvatar = avatar;
     this.currentManifest = manifest;
+    // Anchors of the incoming model must not be bound onto the outgoing mesh mid-load.
+    this.faceAnchorsModelUrl = null;
 
     const safeUrl = normalizeAvatarModelUrl(url);
     if (!safeUrl) {
@@ -347,7 +353,8 @@ export class CharacterStudioRuntime {
       this.rebuildLiveActAvatarOutput();
       this.liveActRigDebug.bindModelRoot(root);
       this.liveActCharacterFaceDebug.bindModelRoot(root);
-      void this.loadFaceAnchorsManifestForModel(safeUrl, avatar.face_anchors ?? null);
+      this.faceAnchorsModelUrl = safeUrl;
+      this.syncCharacterFaceAnchors(this.currentAvatar ?? avatar, true);
       this.rigidEquipmentRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.skinnedWearableRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.onStateChange({
@@ -794,6 +801,7 @@ export class CharacterStudioRuntime {
   applyAppearance(avatar: CharacterAvatarDto, manifest: AvatarAssetManifest): void {
     this.currentAvatar = avatar;
     this.currentManifest = manifest;
+    this.syncCharacterFaceAnchors(avatar);
     const root = this.currentRoot;
     if (!root) return;
 
@@ -1004,6 +1012,19 @@ export class CharacterStudioRuntime {
     }
   }
 
+  /**
+   * Rebinds character anchors whenever `avatar.face_anchors` changes for the loaded model
+   * (e.g. hydration of a draft whose model URL/manifest stayed the same).
+   */
+  private syncCharacterFaceAnchors(avatar: CharacterAvatarDto, force = false): void {
+    const modelUrl = this.faceAnchorsModelUrl;
+    if (!modelUrl) return;
+    const override = avatar.face_anchors ?? null;
+    if (!force && override === this.faceAnchorsOverrideSource) return;
+    this.faceAnchorsOverrideSource = override;
+    void this.loadFaceAnchorsManifestForModel(modelUrl, override);
+  }
+
   private async loadFaceAnchorsManifestForModel(
     modelUrl: string,
     characterOverride: SagaDriveFaceAnchorsManifestV1 | null = null,
@@ -1093,6 +1114,8 @@ export class CharacterStudioRuntime {
     this.facialRuntime.resetToNeutral();
     this.liveActRigDebug.bindModelRoot(null);
     this.faceAnchorManifestLoadToken += 1;
+    this.faceAnchorsModelUrl = null;
+    this.faceAnchorsOverrideSource = null;
     this.liveActCharacterFaceDebug.bindModelRoot(null);
     this.liveActCharacterFaceDebug.bindManifest(null);
     this.liveActAvatarOutput?.dispose();

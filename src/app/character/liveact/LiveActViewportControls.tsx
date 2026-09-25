@@ -21,6 +21,8 @@ import {
   resetFaceMappingDraft,
   selectFaceMappingAnchor,
   setFaceMappingDraftBinding,
+  validateFaceMappingDraft,
+  type FaceMappingDraftValidationResult,
   type SagaDriveFaceMappingDraftV1,
 } from '../../../domains/character/avatar/face-mapping-draft-v1';
 import type { CharacterStudioRuntime } from '../../../infrastructure/character/avatar/character-studio-runtime';
@@ -46,6 +48,13 @@ interface LiveActViewportControlsProps {
   onExpandPreview?: () => void;
   /** Persist Face Mapping anchors on the character avatar (editor hook). */
   onFaceAnchorsCommitted?: (manifest: SagaDriveFaceAnchorsManifestV1) => void;
+}
+
+function faceMappingSaveBlockedMessage(validation: FaceMappingDraftValidationResult): string {
+  if (validation.setCount === 0) {
+    return 'Noch kein Punkt gesetzt — mindestens einen Face-Punkt am Mesh platzieren.';
+  }
+  return `${validation.invalidCount} Punkt(e) ungültig — neu setzen oder entfernen, dann speichern.`;
 }
 
 export function LiveActViewportControls({
@@ -77,6 +86,13 @@ export function LiveActViewportControls({
     const runtime = studioRuntimeRef?.current;
     const current = draftRef.current;
     if (!runtime || !current) return;
+    // An empty/invalid manifest would win over and suppress the asset sidecar anchors.
+    const validation = validateFaceMappingDraft(current);
+    if (!validation.ok) {
+      console.warn('[face-mapping] Speichern blocked — draft not valid', validation);
+      setMissMessage(faceMappingSaveBlockedMessage(validation));
+      return;
+    }
     const manifest = faceMappingDraftToManifest(current);
     runtime.bindFaceAnchorsManifestSession(manifest);
     // Authoring markers close; mesh overlay must take over immediately (no webcam required).
@@ -162,6 +178,7 @@ export function LiveActViewportControls({
     Boolean(liveAct.previewVideo) &&
     runtimeReady;
 
+  const draftValidation = draft ? validateFaceMappingDraft(draft) : null;
   const panelHost = faceMappingPanelHost;
   const panel =
     faceMappingOpen && draft ? (
@@ -232,6 +249,12 @@ export function LiveActViewportControls({
             size="sm"
             className="h-8 shrink-0 bg-primary text-white hover:bg-accent hover:text-accent-foreground"
             onClick={applyFaceMapping}
+            disabled={!draftValidation?.ok}
+            title={
+              draftValidation && !draftValidation.ok
+                ? faceMappingSaveBlockedMessage(draftValidation)
+                : undefined
+            }
             data-testid="face-mapping-viewport-save"
           >
             Speichern
