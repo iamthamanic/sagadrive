@@ -33,6 +33,7 @@ const studio = read('src/infrastructure/character/avatar/character-studio-runtim
 const videoSrc = read('src/infrastructure/character/liveact/mediapipe-face-source.ts');
 const controls = read('src/app/character/liveact/LiveActViewportControls.tsx');
 const panel = read('src/app/character/liveact/FaceMappingAuthoringPanel.tsx');
+const layer = read('src/app/character/liveact/FaceMappingMarkerLayer.tsx');
 const barrel = read('src/domains/character/avatar/index.ts');
 const gate = read('scripts/test-gate.mjs');
 const acceptance = read('.qa/acceptance/liveact-face-mapping-auto.md');
@@ -62,7 +63,9 @@ check(!/runningMode: 'IMAGE'/.test(videoSrc), 'VIDEO source not IMAGE');
 check(/runFaceMappingAutoPipeline/.test(pipeSrc), 'pipeline');
 check(/raycastFaceMappingPointer|raycast\(/.test(pipeSrc), 'reuses raycast path');
 check(/captureFaceMappingAutoFrame/.test(studio), 'studio capture');
-check(/face-mapping-copy-json|JSON kopieren/.test(panel), 'compare JSON copy button');
+check(/face-mapping-overlay-view-mode|face-mapping-view-both/.test(panel), 'overlay view mode toggle');
+check(/FaceMappingOverlayViewMode|viewMode|autoBindingsRef/.test(layer), 'marker layer view mode');
+check(/drawAutoGhosts|AUTO_STROKE|viewModeRef/.test(layer), 'auto ghost draw');
 check(/stringifyFaceMappingCompareExport|buildFaceMappingCompareExport/.test(autoDomain), 'compare export builder');
 check(/SagaDriveFaceMappingCompareV1|FACE_MAPPING_COMPARE_EXPORT_KIND/.test(autoDomain), 'compare export kind');
 check(/createMediaPipeFaceImageLandmarker/.test(controls), 'controls use IMAGE landmarker');

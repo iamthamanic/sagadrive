@@ -43,7 +43,10 @@ import {
   type FaceMappingAutoCoordV1,
   type FaceMappingManualCoordV1,
 } from './FaceMappingAuthoringPanel';
-import { FaceMappingMarkerLayer } from './FaceMappingMarkerLayer';
+import {
+  FaceMappingMarkerLayer,
+  type FaceMappingOverlayViewMode,
+} from './FaceMappingMarkerLayer';
 import { LiveActCameraPreview } from './LiveActCameraPreview';
 import { LiveActCharacterFaceOverlay } from './LiveActCharacterFaceOverlay';
 import type { UseLiveActViewportResult } from './useLiveActViewport';
@@ -64,6 +67,18 @@ function autoCoordsFromSession(
       y: row.screenY,
       meshLabel: row.binding ? meshLabelFromBinding(row.binding) : row.meshNodeIdentity,
     };
+  }
+  return out;
+}
+
+function autoBindingsFromSession(
+  session: FaceMappingAutoSessionResultV1,
+): Partial<Record<SagaDriveFaceAnchorId, SagaDriveFaceAnchorTriangleBinding>> {
+  const out: Partial<Record<SagaDriveFaceAnchorId, SagaDriveFaceAnchorTriangleBinding>> = {};
+  for (const row of session.anchors) {
+    if (row.binding && row.outcome === 'mapped') {
+      out[row.anchorId] = row.binding;
+    }
   }
   return out;
 }
@@ -135,8 +150,12 @@ export function LiveActViewportControls({
   const [autoCoords, setAutoCoords] = useState<
     Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>>
   >({});
+  const [overlayViewMode, setOverlayViewMode] = useState<FaceMappingOverlayViewMode>('draft');
   const draftRef = useRef<SagaDriveFaceMappingDraftV1 | null>(null);
   const authoringMetaRef = useRef<FaceMappingDraftAuthoringMeta>({});
+  const autoBindingsRef = useRef<Partial<
+    Record<SagaDriveFaceAnchorId, SagaDriveFaceAnchorTriangleBinding>
+  > | null>(null);
   draftRef.current = draft;
 
   const closeFaceMapping = useCallback(() => {
@@ -148,6 +167,8 @@ export function LiveActViewportControls({
     setAutoStatusMessage(null);
     setManualCoords({});
     setAutoCoords({});
+    setOverlayViewMode('draft');
+    autoBindingsRef.current = null;
     authoringMetaRef.current = {};
   }, [studioRuntimeRef]);
 
@@ -186,6 +207,7 @@ export function LiveActViewportControls({
     setDraft(next);
     setMissMessage(null);
     setAutoStatusMessage(null);
+    setOverlayViewMode('draft');
     setFaceMappingOpen(true);
   }, [liveAct, runtimeReady, studioRuntimeRef]);
 
@@ -235,6 +257,8 @@ export function LiveActViewportControls({
         draftRef.current = applied.draft;
         setDraft(applied.draft);
         setAutoCoords(autoCoordsFromSession(session));
+        autoBindingsRef.current = autoBindingsFromSession(session);
+        setOverlayViewMode('both');
         const skipNote =
           applied.skippedProtectedCount > 0
             ? ` · ${applied.skippedProtectedCount} manuelle geschützt`
@@ -345,6 +369,8 @@ export function LiveActViewportControls({
         autoStatusMessage={autoStatusMessage}
         manualCoords={manualCoords}
         autoCoords={autoCoords}
+        overlayViewMode={overlayViewMode}
+        onOverlayViewModeChange={setOverlayViewMode}
         onSelect={onSelectAnchor}
         onClearSelected={() => {
           setDraft((prev) => {
@@ -358,6 +384,8 @@ export function LiveActViewportControls({
           setMissMessage(null);
           setAutoStatusMessage(null);
           setAutoCoords({});
+          autoBindingsRef.current = null;
+          setOverlayViewMode('draft');
           setDraft((prev) => {
             if (!prev) return prev;
             // Full clear: selection + working anchors → baseline (guides empty until rebound).
@@ -390,6 +418,8 @@ export function LiveActViewportControls({
           active={faceMappingOpen}
           draftRef={draftRef}
           studioRuntimeRef={studioRuntimeRef}
+          autoBindingsRef={autoBindingsRef}
+          viewMode={overlayViewMode}
           onSelectAnchor={onSelectAnchor}
           onBindingPlaced={onBindingPlaced}
         />

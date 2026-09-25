@@ -23,6 +23,7 @@ import {
 import { Button } from '../../../shared/ui/button';
 import { FaceMappingDetailCard } from './FaceMappingDetailCard';
 import { FaceMappingFeatureIcon } from './FaceMappingFeatureIcon';
+import type { FaceMappingOverlayViewMode } from './FaceMappingMarkerLayer';
 
 /** Canvas CSS pixels for a placed (manual/current) marker. */
 export interface FaceMappingManualCoordV1 {
@@ -49,6 +50,9 @@ interface FaceMappingAuthoringPanelProps {
   manualCoords?: Readonly<Partial<Record<SagaDriveFaceAnchorId, FaceMappingManualCoordV1>>>;
   /** Last Auto Mapping session proposals (kept for compare even after apply). */
   autoCoords?: Readonly<Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>>>;
+  /** 3D overlay compare mode. */
+  overlayViewMode?: FaceMappingOverlayViewMode;
+  onOverlayViewModeChange?: (mode: FaceMappingOverlayViewMode) => void;
   onSelect: (anchorId: SagaDriveFaceAnchorId) => void;
   onClearSelected: () => void;
   onReset: () => void;
@@ -174,6 +178,8 @@ export function FaceMappingAuthoringPanel({
   autoStatusMessage = null,
   manualCoords = {},
   autoCoords = {},
+  overlayViewMode = 'draft',
+  onOverlayViewModeChange,
   onSelect,
   onClearSelected,
   onReset,
@@ -258,34 +264,85 @@ export function FaceMappingAuthoringPanel({
       </p>
 
       {onAutoMapping ? (
-        <div className="flex gap-1.5 border-b border-white/10 px-2 pb-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-8 flex-1 border-primary/40 text-[11px] text-primary hover:bg-primary/10"
-            disabled={autoBusy}
-            onClick={onAutoMapping}
-            data-testid="face-mapping-auto"
-          >
-            {autoBusy ? 'Auto Mapping…' : 'Auto Mapping'}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-8 shrink-0 border-white/15 text-[11px]"
-            disabled={summary.setCount === 0 && !hasAnyAuto}
-            onClick={() => void copyJson()}
-            data-testid="face-mapping-copy-json"
-            title="Manuell + Auto Koordinaten/Bindings als JSON kopieren"
-          >
-            {copyState === 'copied'
-              ? 'Kopiert'
-              : copyState === 'failed'
-                ? 'Fehlgeschlagen'
-                : 'JSON kopieren'}
-          </Button>
+        <div className="flex flex-col gap-1.5 border-b border-white/10 px-2 pb-2">
+          <div className="flex gap-1.5">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 flex-1 border-primary/40 text-[11px] text-primary hover:bg-primary/10"
+              disabled={autoBusy}
+              onClick={onAutoMapping}
+              data-testid="face-mapping-auto"
+            >
+              {autoBusy ? 'Auto Mapping…' : 'Auto Mapping'}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 shrink-0 border-white/15 text-[11px]"
+              disabled={summary.setCount === 0 && !hasAnyAuto}
+              onClick={() => void copyJson()}
+              data-testid="face-mapping-copy-json"
+              title="Manuell + Auto Koordinaten/Bindings als JSON kopieren"
+            >
+              {copyState === 'copied'
+                ? 'Kopiert'
+                : copyState === 'failed'
+                  ? 'Fehlgeschlagen'
+                  : 'JSON kopieren'}
+            </Button>
+          </div>
+          {onOverlayViewModeChange ? (
+            <div
+              className="flex rounded-sm border border-white/15 p-0.5"
+              role="group"
+              aria-label="3D Overlay Ansicht"
+              data-testid="face-mapping-overlay-view-mode"
+            >
+              {(
+                [
+                  { id: 'draft' as const, label: 'Draft', title: 'Amber Draft-Marker (editierbar)' },
+                  {
+                    id: 'auto' as const,
+                    label: 'Auto',
+                    title: 'Cyan Auto-Vorschlag (nur Anzeige)',
+                  },
+                  {
+                    id: 'both' as const,
+                    label: 'Beide',
+                    title: 'Draft + Auto übereinander',
+                  },
+                ] as const
+              ).map((opt) => {
+                const active = overlayViewMode === opt.id;
+                const disabled = (opt.id === 'auto' || opt.id === 'both') && !hasAnyAuto;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    title={opt.title}
+                    disabled={disabled}
+                    aria-pressed={active}
+                    data-testid={`face-mapping-view-${opt.id}`}
+                    className={`h-7 flex-1 rounded-sm text-[10px] ${
+                      active
+                        ? opt.id === 'auto'
+                          ? 'bg-cyan-500/30 text-cyan-50'
+                          : opt.id === 'both'
+                            ? 'bg-primary/40 text-white'
+                            : 'bg-amber-500/30 text-amber-50'
+                        : 'text-slate-400 hover:bg-white/5 disabled:opacity-40'
+                    }`}
+                    onClick={() => onOverlayViewModeChange(opt.id)}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="flex gap-1.5 border-b border-white/10 px-2 pb-2">
