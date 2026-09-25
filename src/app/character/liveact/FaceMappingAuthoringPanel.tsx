@@ -8,8 +8,10 @@
  * Marker rows show manual screen coords and last Auto proposal side-by-side.
  */
 
+import { useEffect, useRef, useState } from 'react';
 import type { SagaDriveFaceAnchorId } from '../../../domains/character/avatar/face-anchor-contract';
 import type { FaceMappingAutoAnchorOutcome } from '../../../domains/character/avatar/face-mapping-auto-v1';
+import { stringifyFaceMappingCompareExport } from '../../../domains/character/avatar/face-mapping-auto-v1';
 import {
   FACE_MAPPING_ANCHOR_LABEL_DE,
   FACE_MAPPING_MARKER_GROUP_DEFS,
@@ -52,6 +54,10 @@ interface FaceMappingAuthoringPanelProps {
   onReset: () => void;
   onCancel: () => void;
   onAutoMapping?: () => void;
+  /** Optional authoring provenance for JSON export (source per anchor). */
+  getAuthoringMeta?: () => Readonly<
+    Partial<Record<SagaDriveFaceAnchorId, { source: string; confidence?: number; reviewed?: boolean }>>
+  >;
 }
 
 function statusLabelDe(status: FaceMappingMarkerStatus): string {
@@ -173,10 +179,49 @@ export function FaceMappingAuthoringPanel({
   onReset,
   onCancel,
   onAutoMapping,
+  getAuthoringMeta,
 }: FaceMappingAuthoringPanelProps) {
   const summary = validateFaceMappingDraft(draft);
   const selectedId = draft.selectedAnchorId;
   const hasAnyAuto = Object.keys(autoCoords).length > 0;
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    },
+    [],
+  );
+
+  const copyJson = async () => {
+    try {
+      const metaRaw = getAuthoringMeta?.() ?? {};
+      const meta = Object.fromEntries(
+        Object.entries(metaRaw).map(([id, row]) => [
+          id,
+          {
+            source: row.source as 'auto' | 'manual' | 'manual_override',
+            ...(row.confidence != null ? { confidence: row.confidence } : {}),
+            ...(row.reviewed != null ? { reviewed: row.reviewed } : {}),
+          },
+        ]),
+      );
+      const json = stringifyFaceMappingCompareExport({
+        draft,
+        manualCoords,
+        autoCoords,
+        meta,
+      });
+      await navigator.clipboard.writeText(json);
+      setCopyState('copied');
+    } catch (error) {
+      console.warn('[face-mapping] compare JSON clipboard failed', error);
+      setCopyState('failed');
+    }
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => setCopyState('idle'), 2000);
+  };
 
   return (
     <aside
@@ -225,8 +270,43 @@ export function FaceMappingAuthoringPanel({
           >
             {autoBusy ? 'Auto Mapping…' : 'Auto Mapping'}
           </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 shrink-0 border-white/15 text-[11px]"
+            disabled={summary.setCount === 0 && !hasAnyAuto}
+            onClick={() => void copyJson()}
+            data-testid="face-mapping-copy-json"
+            title="Manuell + Auto Koordinaten/Bindings als JSON kopieren"
+          >
+            {copyState === 'copied'
+              ? 'Kopiert'
+              : copyState === 'failed'
+                ? 'Fehlgeschlagen'
+                : 'JSON kopieren'}
+          </Button>
         </div>
-      ) : null}
+      ) : (
+        <div className="flex gap-1.5 border-b border-white/10 px-2 pb-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 w-full border-white/15 text-[11px]"
+            disabled={summary.setCount === 0 && !hasAnyAuto}
+            onClick={() => void copyJson()}
+            data-testid="face-mapping-copy-json"
+            title="Manuell + Auto Koordinaten/Bindings als JSON kopieren"
+          >
+            {copyState === 'copied'
+              ? 'Kopiert'
+              : copyState === 'failed'
+                ? 'Fehlgeschlagen'
+                : 'JSON kopieren'}
+          </Button>
+        </div>
+      )}
 
       {selectedId ? <FaceMappingDetailCard draft={draft} selectedAnchorId={selectedId} /> : null}
 

@@ -813,6 +813,9 @@ export {
   isProtectedFaceMappingAnchor,
   markFaceMappingAnchorManual,
   resetFaceMappingDraftAndMeta,
+  buildFaceMappingCompareExport,
+  stringifyFaceMappingCompareExport,
+  FACE_MAPPING_COMPARE_EXPORT_KIND,
   type ApplyAutoMappingOptions,
   type ApplyAutoMappingResult,
   type FaceMappingAnchorAuthoringMetaV1,
@@ -823,6 +826,7 @@ export {
   type FaceMappingAutoEvalSummaryV1,
   type FaceMappingAutoSessionResultV1,
   type FaceMappingAutoSessionStatus,
+  type FaceMappingCompareExportV1,
   type FaceMappingDraftAuthoringMeta,
 } from './face-mapping-auto-v1';
 

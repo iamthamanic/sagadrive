@@ -371,6 +371,7 @@ export function LiveActViewportControls({
         onAutoMapping={() => {
           void runAutoMapping();
         }}
+        getAuthoringMeta={() => authoringMetaRef.current}
       />
     ) : null;
 

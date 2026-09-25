@@ -368,3 +368,138 @@ export function evaluateAutoVsManualScreenPoints(input: {
     },
   };
 }
+
+export const FACE_MAPPING_COMPARE_EXPORT_KIND = 'SagaDriveFaceMappingCompareV1' as const;
+
+export interface FaceMappingCompareExportScreenV1 {
+  readonly x: number;
+  readonly y: number;
+  readonly meshLabel?: string | null;
+}
+
+export interface FaceMappingCompareExportAutoV1 {
+  readonly outcome: FaceMappingAutoAnchorOutcome;
+  readonly x: number | null;
+  readonly y: number | null;
+  readonly meshLabel?: string | null;
+}
+
+export interface FaceMappingCompareExportAnchorV1 {
+  readonly anchorId: SagaDriveFaceAnchorId;
+  readonly status: 'missing' | 'set' | 'invalid';
+  readonly source: FaceMappingAuthoringSource | null;
+  readonly binding: SagaDriveFaceAnchorTriangleBinding | null;
+  readonly manualScreen: FaceMappingCompareExportScreenV1 | null;
+  readonly auto: FaceMappingCompareExportAutoV1 | null;
+  readonly deltaPx: number | null;
+}
+
+export interface FaceMappingCompareExportV1 {
+  readonly kind: typeof FACE_MAPPING_COMPARE_EXPORT_KIND;
+  readonly exportedAt: string;
+  readonly setCount: number;
+  readonly missingCount: number;
+  readonly autoProposalCount: number;
+  readonly anchors: readonly FaceMappingCompareExportAnchorV1[];
+}
+
+/** Clipboard JSON: manual draft + screen coords + last Auto proposals (no images). */
+export function buildFaceMappingCompareExport(input: {
+  draft: SagaDriveFaceMappingDraftV1;
+  manualCoords: Readonly<
+    Partial<Record<SagaDriveFaceAnchorId, { x: number; y: number; meshLabel?: string | null }>>
+  >;
+  autoCoords: Readonly<
+    Partial<
+      Record<
+        SagaDriveFaceAnchorId,
+        {
+          outcome: FaceMappingAutoAnchorOutcome;
+          x: number | null;
+          y: number | null;
+          meshLabel?: string | null;
+        }
+      >
+    >
+  >;
+  meta?: FaceMappingDraftAuthoringMeta;
+  nowIso?: string;
+}): FaceMappingCompareExportV1 {
+  const anchors: FaceMappingCompareExportAnchorV1[] = [];
+  let setCount = 0;
+  let missingCount = 0;
+  let autoProposalCount = 0;
+
+  for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
+    const binding = input.draft.anchors[id] ?? null;
+    const manual = input.manualCoords[id];
+    const auto = input.autoCoords[id];
+    if (auto) autoProposalCount += 1;
+
+    let status: 'missing' | 'set' | 'invalid' = 'missing';
+    if (binding) {
+      // Lightweight: presence only; full validation lives in draft helpers.
+      status = 'set';
+      setCount += 1;
+    } else {
+      missingCount += 1;
+    }
+
+    let deltaPx: number | null = null;
+    if (
+      manual &&
+      auto &&
+      auto.x != null &&
+      auto.y != null &&
+      Number.isFinite(auto.x) &&
+      Number.isFinite(auto.y)
+    ) {
+      deltaPx = Math.hypot(auto.x - manual.x, auto.y - manual.y);
+    }
+
+    anchors.push({
+      anchorId: id,
+      status,
+      source: input.meta?.[id]?.source ?? null,
+      binding: binding
+        ? {
+            nodeIdentity: binding.nodeIdentity,
+            primitiveIndex: binding.primitiveIndex,
+            triangleIndex: binding.triangleIndex,
+            barycentric: { ...binding.barycentric },
+          }
+        : null,
+      manualScreen: manual
+        ? {
+            x: Math.round(manual.x * 10) / 10,
+            y: Math.round(manual.y * 10) / 10,
+            ...(manual.meshLabel != null ? { meshLabel: manual.meshLabel } : {}),
+          }
+        : null,
+      auto: auto
+        ? {
+            outcome: auto.outcome,
+            x: auto.x != null ? Math.round(auto.x * 10) / 10 : null,
+            y: auto.y != null ? Math.round(auto.y * 10) / 10 : null,
+            ...(auto.meshLabel != null ? { meshLabel: auto.meshLabel } : {}),
+          }
+        : null,
+      deltaPx: deltaPx != null ? Math.round(deltaPx * 10) / 10 : null,
+    });
+  }
+
+  return {
+    kind: FACE_MAPPING_COMPARE_EXPORT_KIND,
+    exportedAt: input.nowIso ?? new Date().toISOString(),
+    setCount,
+    missingCount,
+    autoProposalCount,
+    anchors,
+  };
+}
+
+export function stringifyFaceMappingCompareExport(
+  input: Parameters<typeof buildFaceMappingCompareExport>[0],
+): string {
+  return `${JSON.stringify(buildFaceMappingCompareExport(input), null, 2)}\n`;
+}

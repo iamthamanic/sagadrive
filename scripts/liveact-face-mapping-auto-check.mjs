@@ -62,9 +62,9 @@ check(!/runningMode: 'IMAGE'/.test(videoSrc), 'VIDEO source not IMAGE');
 check(/runFaceMappingAutoPipeline/.test(pipeSrc), 'pipeline');
 check(/raycastFaceMappingPointer|raycast\(/.test(pipeSrc), 'reuses raycast path');
 check(/captureFaceMappingAutoFrame/.test(studio), 'studio capture');
-check(/face-mapping-auto/.test(panel), 'Auto Mapping button');
-check(/face-mapping-coord-manual|Manuell/.test(panel), 'manual coord row');
-check(/face-mapping-coord-auto|Auto/.test(panel), 'auto coord compare');
+check(/face-mapping-copy-json|JSON kopieren/.test(panel), 'compare JSON copy button');
+check(/stringifyFaceMappingCompareExport|buildFaceMappingCompareExport/.test(autoDomain), 'compare export builder');
+check(/SagaDriveFaceMappingCompareV1|FACE_MAPPING_COMPARE_EXPORT_KIND/.test(autoDomain), 'compare export kind');
 check(/createMediaPipeFaceImageLandmarker/.test(controls), 'controls use IMAGE landmarker');
 check(/autoCoordsFromSession|projectManualCoords|manualCoords/.test(controls), 'coord projection wired');
 check(/applyAutoMappingToDraft/.test(controls), 'controls merge');
@@ -260,6 +260,26 @@ check(evalReport.summary.expectedAnchors === 21, 'eval expected 21');
 check(typeof evalReport.summary.medianErrorPx === 'number', 'median error present');
 check(typeof evalReport.summary.p95ErrorPx === 'number', 'p95 error present');
 check(typeof evalReport.summary.maxErrorPx === 'number', 'max error present');
+
+const compareExport = autoMod.buildFaceMappingCompareExport({
+  draft: protectedApply.draft,
+  manualCoords: { noseTip: { x: 100, y: 120, meshLabel: 'HeadMesh/t0' } },
+  autoCoords: {
+    noseTip: { outcome: 'mapped', x: 102, y: 119, meshLabel: 'HeadMesh/t1' },
+  },
+  meta: protectedApply.meta,
+  nowIso: '2026-09-25T00:00:00.000Z',
+});
+check(compareExport.kind === 'SagaDriveFaceMappingCompareV1', 'compare export kind value');
+check(compareExport.anchors.length === 21, 'compare export 21 anchors');
+check(compareExport.anchors.find((a) => a.anchorId === 'noseTip')?.deltaPx != null, 'compare delta');
+const compareJson = autoMod.stringifyFaceMappingCompareExport({
+  draft: protectedApply.draft,
+  manualCoords: {},
+  autoCoords: {},
+  nowIso: '2026-09-25T00:00:00.000Z',
+});
+check(compareJson.includes('SagaDriveFaceMappingCompareV1'), 'stringify compare export');
 
 const hair = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
 hair.name = 'Hair_Front';
