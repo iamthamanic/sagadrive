@@ -9,10 +9,11 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
-import type {
-  SagaDriveFaceAnchorId,
-  SagaDriveFaceAnchorTriangleBinding,
-  SagaDriveFaceAnchorsManifestV1,
+import {
+  SAGA_DRIVE_FACE_ANCHOR_IDS,
+  type SagaDriveFaceAnchorId,
+  type SagaDriveFaceAnchorTriangleBinding,
+  type SagaDriveFaceAnchorsManifestV1,
 } from '../../../domains/character/avatar/face-anchor-contract';
 import {
   clearFaceMappingDraftBinding,
@@ -29,6 +30,7 @@ import {
   applyAutoMappingToDraft,
   createEmptyAnchorAuthoringMeta,
   markFaceMappingAnchorManual,
+  type FaceMappingAutoSessionResultV1,
   type FaceMappingDraftAuthoringMeta,
 } from '../../../domains/character/avatar/face-mapping-auto-v1';
 import type { CharacterStudioRuntime } from '../../../infrastructure/character/avatar/character-studio-runtime';
@@ -36,11 +38,56 @@ import { runFaceMappingAutoPipeline } from '../../../infrastructure/character/av
 import { createMediaPipeFaceImageLandmarker } from '../../../infrastructure/character/liveact/mediapipe-face-image-landmarker';
 import { AvatarPreviewSettings } from '../avatar/AvatarPreviewSettings';
 import { Button } from '../../../shared/ui/button';
-import { FaceMappingAuthoringPanel } from './FaceMappingAuthoringPanel';
+import {
+  FaceMappingAuthoringPanel,
+  type FaceMappingAutoCoordV1,
+  type FaceMappingManualCoordV1,
+} from './FaceMappingAuthoringPanel';
 import { FaceMappingMarkerLayer } from './FaceMappingMarkerLayer';
 import { LiveActCameraPreview } from './LiveActCameraPreview';
 import { LiveActCharacterFaceOverlay } from './LiveActCharacterFaceOverlay';
 import type { UseLiveActViewportResult } from './useLiveActViewport';
+
+function meshLabelFromBinding(binding: SagaDriveFaceAnchorTriangleBinding): string {
+  const node = binding.nodeIdentity.trim() || '?';
+  return `${node}/t${binding.triangleIndex}`;
+}
+
+function autoCoordsFromSession(
+  session: FaceMappingAutoSessionResultV1,
+): Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>> {
+  const out: Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>> = {};
+  for (const row of session.anchors) {
+    out[row.anchorId] = {
+      outcome: row.outcome,
+      x: row.screenX,
+      y: row.screenY,
+      meshLabel: row.binding ? meshLabelFromBinding(row.binding) : row.meshNodeIdentity,
+    };
+  }
+  return out;
+}
+
+function projectManualCoords(
+  runtime: CharacterStudioRuntime,
+  draft: SagaDriveFaceMappingDraftV1,
+): Partial<Record<SagaDriveFaceAnchorId, FaceMappingManualCoordV1>> {
+  const out: Partial<Record<SagaDriveFaceAnchorId, FaceMappingManualCoordV1>> = {};
+  for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
+    const binding = draft.anchors[id];
+    if (!binding) continue;
+    const world = runtime.evaluateFaceMappingBindingWorld(binding, id);
+    if (!world) continue;
+    const screen = runtime.projectWorldToFaceMappingCanvas(world.x, world.y, world.z);
+    if (!screen) continue;
+    out[id] = {
+      x: screen.x,
+      y: screen.y,
+      meshLabel: meshLabelFromBinding(binding),
+    };
+  }
+  return out;
+}
 
 interface LiveActViewportControlsProps {
   runtimeReady: boolean;
@@ -82,6 +129,12 @@ export function LiveActViewportControls({
   const [missMessage, setMissMessage] = useState<string | null>(null);
   const [autoBusy, setAutoBusy] = useState(false);
   const [autoStatusMessage, setAutoStatusMessage] = useState<string | null>(null);
+  const [manualCoords, setManualCoords] = useState<
+    Partial<Record<SagaDriveFaceAnchorId, FaceMappingManualCoordV1>>
+  >({});
+  const [autoCoords, setAutoCoords] = useState<
+    Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>>
+  >({});
   const draftRef = useRef<SagaDriveFaceMappingDraftV1 | null>(null);
   const authoringMetaRef = useRef<FaceMappingDraftAuthoringMeta>({});
   draftRef.current = draft;
@@ -93,6 +146,8 @@ export function LiveActViewportControls({
     setMissMessage(null);
     setAutoBusy(false);
     setAutoStatusMessage(null);
+    setManualCoords({});
+    setAutoCoords({});
     authoringMetaRef.current = {};
   }, [studioRuntimeRef]);
 
@@ -179,6 +234,7 @@ export function LiveActViewportControls({
         authoringMetaRef.current = applied.meta;
         draftRef.current = applied.draft;
         setDraft(applied.draft);
+        setAutoCoords(autoCoordsFromSession(session));
         const skipNote =
           applied.skippedProtectedCount > 0
             ? ` · ${applied.skippedProtectedCount} manuelle geschützt`
@@ -201,6 +257,24 @@ export function LiveActViewportControls({
       closeFaceMapping();
     }
   }, [closeFaceMapping, faceMappingOpen, runtimeReady]);
+
+  /** Keep manual screen coords in sync with draft + camera framing. */
+  useEffect(() => {
+    if (!faceMappingOpen || !draft) {
+      setManualCoords({});
+      return;
+    }
+    const refresh = () => {
+      const runtime = studioRuntimeRef?.current;
+      const current = draftRef.current;
+      if (runtime && current) {
+        setManualCoords(projectManualCoords(runtime, current));
+      }
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 150);
+    return () => window.clearInterval(timer);
+  }, [draft, faceMappingOpen, studioRuntimeRef]);
 
   useEffect(() => {
     return () => {
@@ -269,6 +343,8 @@ export function LiveActViewportControls({
         missMessage={missMessage}
         autoBusy={autoBusy}
         autoStatusMessage={autoStatusMessage}
+        manualCoords={manualCoords}
+        autoCoords={autoCoords}
         onSelect={onSelectAnchor}
         onClearSelected={() => {
           setDraft((prev) => {
@@ -281,6 +357,7 @@ export function LiveActViewportControls({
         onReset={() => {
           setMissMessage(null);
           setAutoStatusMessage(null);
+          setAutoCoords({});
           setDraft((prev) => {
             if (!prev) return prev;
             // Full clear: selection + working anchors → baseline (guides empty until rebound).

@@ -5,9 +5,11 @@
  * Renders below the AvatarCanvas (not over the 3D face). Session-local draft only.
  * Detail card mirrors PDF: selected feature + pulsing point synced with viewport.
  * Auto Mapping (#421) proposes anchors; never auto-publishes.
+ * Marker rows show manual screen coords and last Auto proposal side-by-side.
  */
 
 import type { SagaDriveFaceAnchorId } from '../../../domains/character/avatar/face-anchor-contract';
+import type { FaceMappingAutoAnchorOutcome } from '../../../domains/character/avatar/face-mapping-auto-v1';
 import {
   FACE_MAPPING_ANCHOR_LABEL_DE,
   FACE_MAPPING_MARKER_GROUP_DEFS,
@@ -20,11 +22,31 @@ import { Button } from '../../../shared/ui/button';
 import { FaceMappingDetailCard } from './FaceMappingDetailCard';
 import { FaceMappingFeatureIcon } from './FaceMappingFeatureIcon';
 
+/** Canvas CSS pixels for a placed (manual/current) marker. */
+export interface FaceMappingManualCoordV1 {
+  readonly x: number;
+  readonly y: number;
+  /** Compact mesh token, e.g. HeadMesh/t12 */
+  readonly meshLabel: string | null;
+}
+
+/** Last Auto Mapping proposal for one anchor (may differ from applied draft). */
+export interface FaceMappingAutoCoordV1 {
+  readonly outcome: FaceMappingAutoAnchorOutcome;
+  readonly x: number | null;
+  readonly y: number | null;
+  readonly meshLabel: string | null;
+}
+
 interface FaceMappingAuthoringPanelProps {
   draft: SagaDriveFaceMappingDraftV1;
   missMessage: string | null;
   autoBusy?: boolean;
   autoStatusMessage?: string | null;
+  /** Current draft → screen projection (updates with camera). */
+  manualCoords?: Readonly<Partial<Record<SagaDriveFaceAnchorId, FaceMappingManualCoordV1>>>;
+  /** Last Auto Mapping session proposals (kept for compare even after apply). */
+  autoCoords?: Readonly<Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>>>;
   onSelect: (anchorId: SagaDriveFaceAnchorId) => void;
   onClearSelected: () => void;
   onReset: () => void;
@@ -64,11 +86,88 @@ function statusClass(status: FaceMappingMarkerStatus, selected: boolean): string
   }
 }
 
+function fmtPx(x: number, y: number): string {
+  return `${Math.round(x)}×${Math.round(y)}`;
+}
+
+function autoOutcomeDe(outcome: FaceMappingAutoAnchorOutcome): string {
+  switch (outcome) {
+    case 'mapped':
+      return 'ok';
+    case 'raycast_miss':
+      return 'miss';
+    case 'missing_landmark':
+      return 'kein LM';
+    case 'low_confidence':
+      return 'unsicher';
+    case 'skipped_protected':
+      return 'geschützt';
+    default:
+      return outcome;
+  }
+}
+
+function MarkerCoordCompare({
+  manual,
+  auto,
+}: {
+  manual: FaceMappingManualCoordV1 | undefined;
+  auto: FaceMappingAutoCoordV1 | undefined;
+}) {
+  if (!manual && !auto) return null;
+
+  let deltaLabel: string | null = null;
+  if (
+    manual &&
+    auto &&
+    auto.x != null &&
+    auto.y != null &&
+    Number.isFinite(auto.x) &&
+    Number.isFinite(auto.y)
+  ) {
+    const d = Math.hypot(auto.x - manual.x, auto.y - manual.y);
+    deltaLabel = `Δ${Math.round(d)}`;
+  }
+
+  return (
+    <span
+      className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[9px] leading-tight opacity-90"
+      data-testid="face-mapping-marker-coords"
+    >
+      {manual ? (
+        <span title={manual.meshLabel ?? undefined} data-testid="face-mapping-coord-manual">
+          <span className="text-emerald-200/90">Manuell</span>{' '}
+          {fmtPx(manual.x, manual.y)}
+          {manual.meshLabel ? (
+            <span className="ml-1 opacity-70">{manual.meshLabel}</span>
+          ) : null}
+        </span>
+      ) : (
+        <span className="opacity-50" data-testid="face-mapping-coord-manual-empty">
+          Manuell —
+        </span>
+      )}
+      {auto ? (
+        <span title={auto.meshLabel ?? undefined} data-testid="face-mapping-coord-auto">
+          <span className="text-cyan-200/90">Auto</span>{' '}
+          {auto.x != null && auto.y != null ? fmtPx(auto.x, auto.y) : '—'}
+          {auto.outcome !== 'mapped' ? (
+            <span className="ml-1 text-amber-200/80">({autoOutcomeDe(auto.outcome)})</span>
+          ) : null}
+          {deltaLabel ? <span className="ml-1 opacity-70">{deltaLabel}</span> : null}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 export function FaceMappingAuthoringPanel({
   draft,
   missMessage,
   autoBusy = false,
   autoStatusMessage = null,
+  manualCoords = {},
+  autoCoords = {},
   onSelect,
   onClearSelected,
   onReset,
@@ -77,6 +176,7 @@ export function FaceMappingAuthoringPanel({
 }: FaceMappingAuthoringPanelProps) {
   const summary = validateFaceMappingDraft(draft);
   const selectedId = draft.selectedAnchorId;
+  const hasAnyAuto = Object.keys(autoCoords).length > 0;
 
   return (
     <aside
@@ -107,6 +207,9 @@ export function FaceMappingAuthoringPanel({
       <p className="px-3 py-1.5 text-[10px] text-slate-400">
         Scroll zoomen. Auf leerer Fläche ziehen = Kamera verschieben (z. B. nach oben zur Stirn).
         Marker greifen und setzen; Guides folgen live. Auto Mapping ist nur ein Vorschlag.
+        {hasAnyAuto
+          ? ' Koordinaten: Manuell (aktuell) · Auto (letzter Lauf) · Δ = Abstand px.'
+          : ' Gesetzte Marker zeigen Screen-Koordinaten (px).'}
       </p>
 
       {onAutoMapping ? (
@@ -157,25 +260,32 @@ export function FaceMappingAuthoringPanel({
               {group.anchorIds.map((id) => {
                 const status = resolveFaceMappingMarkerStatus(draft, id);
                 const selected = draft.selectedAnchorId === id;
+                const manual = manualCoords[id];
+                const auto = autoCoords[id];
                 return (
                   <li key={id}>
                     <button
                       type="button"
-                      className={`flex w-full items-center justify-between gap-2 rounded-sm border px-2 py-1.5 text-left text-[11px] ${statusClass(status, selected)} ${selected ? 'animate-pulse' : ''}`}
+                      className={`flex w-full flex-col gap-0.5 rounded-sm border px-2 py-1.5 text-left text-[11px] ${statusClass(status, selected)} ${selected ? 'animate-pulse' : ''}`}
                       aria-pressed={selected}
                       data-testid={`face-mapping-marker-${id}`}
                       onClick={() => onSelect(id)}
                     >
-                      <span className="flex min-w-0 items-center gap-2">
-                        <FaceMappingFeatureIcon
-                          anchorId={id}
-                          size="sm"
-                          pulse={selected}
-                          className="shrink-0"
-                        />
-                        <span className="truncate">{FACE_MAPPING_ANCHOR_LABEL_DE[id]}</span>
+                      <span className="flex w-full items-center justify-between gap-2">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <FaceMappingFeatureIcon
+                            anchorId={id}
+                            size="sm"
+                            pulse={selected}
+                            className="shrink-0"
+                          />
+                          <span className="truncate">{FACE_MAPPING_ANCHOR_LABEL_DE[id]}</span>
+                        </span>
+                        <span className="shrink-0 text-[10px] opacity-90">
+                          {statusLabelDe(status)}
+                        </span>
                       </span>
-                      <span className="shrink-0 text-[10px] opacity-90">{statusLabelDe(status)}</span>
+                      <MarkerCoordCompare manual={manual} auto={auto} />
                     </button>
                   </li>
                 );
