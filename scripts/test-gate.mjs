@@ -488,6 +488,14 @@ function checkLiveActReferenceVrmGoldenAvatar() {
   });
 }
 
+function checkSagaHumanCanonicalV1() {
+  console.log('Saga Human Canonical V1 PoC: sources, build report, sidecars, runtime isolation...');
+  execFileSync(process.execPath, ['scripts/saga-human-canonical-v1-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFidelity() {
   console.log('LiveAct fidelity: calibration once + range gains, idle ownership, teeth binds...');
   execFileSync(process.execPath, ['scripts/liveact-fidelity-check.mjs'], {
@@ -1393,6 +1401,7 @@ checkLiveActFaceMappingManual();
 checkLiveActFaceAnchorsCharacterPersist();
 checkLiveActExpandDriveBind();
 checkLiveActReferenceVrmGoldenAvatar();
+checkSagaHumanCanonicalV1();
 checkLiveActFidelity();
 checkLiveActFaceMappingVisualGuides();
 checkLiveActFaceAnchorAnatomy();

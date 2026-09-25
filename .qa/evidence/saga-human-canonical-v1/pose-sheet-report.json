@@ -1,0 +1,2570 @@
+{
+  "tilePx": 256,
+  "framings": {
+    "face": 0.62,
+    "eyes": 0.26,
+    "mouth": 0.24
+  },
+  "avatars": {
+    "sagadrive-human": {
+      "url": "/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm",
+      "triangles": 215832,
+      "expressionCount": 49,
+      "hasTongueOutExpression": false,
+      "gazeDrivePath": "lookAt",
+      "supportedFaceChannels": 43,
+      "lookAt": {
+        "type": "expression",
+        "offsetFromHeadBone": [
+          0,
+          0.06,
+          0
+        ],
+        "rangeMapHorizontalOuter": {
+          "inputMaxValue": 90,
+          "outputScale": 10
+        },
+        "rangeMapVerticalUp": {
+          "inputMaxValue": 90,
+          "outputScale": 10
+        }
+      },
+      "anchorsMm": {
+        "eyes": [
+          1,
+          1618,
+          65
+        ],
+        "mouth": [
+          -3,
+          1512,
+          67
+        ]
+      },
+      "binds": {
+        "blinkLeft": [
+          {
+            "mesh": "human-male-quality-20260921-m5_mesh",
+            "weight": 1,
+            "movedVertices": 42,
+            "maxDeltaMm": 3.61,
+            "centroidMm": [
+              33,
+              1653,
+              72
+            ]
+          }
+        ],
+        "lookLeft": [
+          {
+            "mesh": "human-male-quality-20260921-m5_mesh",
+            "weight": 1,
+            "movedVertices": 60,
+            "maxDeltaMm": 1.59,
+            "centroidMm": [
+              -5,
+              1646,
+              74
+            ]
+          }
+        ],
+        "jawOpen": [
+          {
+            "mesh": "human-male-quality-20260921-m5_mesh",
+            "weight": 1,
+            "movedVertices": 4012,
+            "maxDeltaMm": 27.81,
+            "centroidMm": [
+              -5,
+              1526,
+              66
+            ]
+          }
+        ],
+        "mouthSmileLeft": [
+          {
+            "mesh": "human-male-quality-20260921-m5_mesh",
+            "weight": 1,
+            "movedVertices": 652,
+            "maxDeltaMm": 7.75,
+            "centroidMm": [
+              35,
+              1612,
+              68
+            ]
+          }
+        ]
+      },
+      "morphRegionToAnchorMm": {
+        "blinkLeft": {
+          "mesh": "human-male-quality-20260921-m5_mesh",
+          "distance": 37,
+          "dy": 34
+        },
+        "lookLeft": {
+          "mesh": "human-male-quality-20260921-m5_mesh",
+          "distance": 58,
+          "dy": 27
+        },
+        "mouthSmileLeft": {
+          "mesh": "human-male-quality-20260921-m5_mesh",
+          "distance": 97,
+          "dy": 97
+        }
+      },
+      "channelEffects": {
+        "browDownLeft": {
+          "expressions": [
+            "browDownLeft"
+          ],
+          "maxDeltaMm": 3.49
+        },
+        "browDownRight": {
+          "expressions": [
+            "browDownRight"
+          ],
+          "maxDeltaMm": 3.36
+        },
+        "browInnerUp": {
+          "expressions": [
+            "browInnerUp"
+          ],
+          "maxDeltaMm": 2.7
+        },
+        "browOuterUpLeft": {
+          "expressions": [
+            "browOuterUpLeft"
+          ],
+          "maxDeltaMm": 4.26
+        },
+        "browOuterUpRight": {
+          "expressions": [
+            "browOuterUpRight"
+          ],
+          "maxDeltaMm": 4.07
+        },
+        "cheekPuff": {
+          "expressions": [
+            "cheekPuff"
+          ],
+          "maxDeltaMm": 6.32
+        },
+        "cheekSquintLeft": {
+          "expressions": [
+            "cheekSquintLeft"
+          ],
+          "maxDeltaMm": 5.1
+        },
+        "cheekSquintRight": {
+          "expressions": [
+            "cheekSquintRight"
+          ],
+          "maxDeltaMm": 5.16
+        },
+        "eyeBlinkLeft": {
+          "expressions": [
+            "eyeBlinkLeft"
+          ],
+          "maxDeltaMm": 3.61
+        },
+        "eyeBlinkRight": {
+          "expressions": [
+            "eyeBlinkRight"
+          ],
+          "maxDeltaMm": 3.68
+        },
+        "eyeLookDownLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookDownRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookInLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookInRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookOutLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookOutRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookUpLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookUpRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeSquintLeft": {
+          "expressions": [
+            "eyeSquintLeft"
+          ],
+          "maxDeltaMm": 2.54
+        },
+        "eyeSquintRight": {
+          "expressions": [
+            "eyeSquintRight"
+          ],
+          "maxDeltaMm": 2.64
+        },
+        "eyeWideLeft": {
+          "expressions": [
+            "eyeWideLeft"
+          ],
+          "maxDeltaMm": 1.4
+        },
+        "eyeWideRight": {
+          "expressions": [
+            "eyeWideRight"
+          ],
+          "maxDeltaMm": 1.43
+        },
+        "jawForward": {
+          "expressions": [
+            "jawForward"
+          ],
+          "maxDeltaMm": 5.93
+        },
+        "jawLeft": {
+          "expressions": [
+            "jawLeft"
+          ],
+          "maxDeltaMm": 5.12
+        },
+        "jawOpen": {
+          "expressions": [
+            "jawOpen"
+          ],
+          "maxDeltaMm": 27.81
+        },
+        "jawRight": {
+          "expressions": [
+            "jawRight"
+          ],
+          "maxDeltaMm": 5.34
+        },
+        "mouthClose": {
+          "expressions": [
+            "mouthClose"
+          ],
+          "maxDeltaMm": 32.05
+        },
+        "mouthDimpleLeft": {
+          "expressions": [
+            "mouthDimpleLeft"
+          ],
+          "maxDeltaMm": 5.49
+        },
+        "mouthDimpleRight": {
+          "expressions": [
+            "mouthDimpleRight"
+          ],
+          "maxDeltaMm": 5.23
+        },
+        "mouthFrownLeft": {
+          "expressions": [
+            "mouthFrownLeft"
+          ],
+          "maxDeltaMm": 4.51
+        },
+        "mouthFrownRight": {
+          "expressions": [
+            "mouthFrownRight"
+          ],
+          "maxDeltaMm": 4.51
+        },
+        "mouthFunnel": {
+          "expressions": [
+            "mouthFunnel"
+          ],
+          "maxDeltaMm": 10.36
+        },
+        "mouthLeft": {
+          "expressions": [
+            "mouthLeft"
+          ],
+          "maxDeltaMm": 17.21
+        },
+        "mouthLowerDownLeft": {
+          "expressions": [
+            "mouthLowerDownLeft"
+          ],
+          "maxDeltaMm": 3.3
+        },
+        "mouthLowerDownRight": {
+          "expressions": [
+            "mouthLowerDownRight"
+          ],
+          "maxDeltaMm": 3.35
+        },
+        "mouthPressLeft": {
+          "expressions": [
+            "mouthPressLeft"
+          ],
+          "maxDeltaMm": 2.28
+        },
+        "mouthPressRight": {
+          "expressions": [
+            "mouthPressRight"
+          ],
+          "maxDeltaMm": 2.34
+        },
+        "mouthPucker": {
+          "expressions": [
+            "mouthPucker"
+          ],
+          "maxDeltaMm": 6.13
+        },
+        "mouthRight": {
+          "expressions": [
+            "mouthRight"
+          ],
+          "maxDeltaMm": 18.44
+        },
+        "mouthRollLower": {
+          "expressions": [
+            "mouthRollLower"
+          ],
+          "maxDeltaMm": 11.57
+        },
+        "mouthRollUpper": {
+          "expressions": [
+            "mouthRollUpper"
+          ],
+          "maxDeltaMm": 5.13
+        },
+        "mouthShrugLower": {
+          "expressions": [
+            "mouthShrugLower"
+          ],
+          "maxDeltaMm": 6.58
+        },
+        "mouthShrugUpper": {
+          "expressions": [
+            "mouthShrugUpper"
+          ],
+          "maxDeltaMm": 5
+        },
+        "mouthSmileLeft": {
+          "expressions": [
+            "mouthSmileLeft"
+          ],
+          "maxDeltaMm": 7.75
+        },
+        "mouthSmileRight": {
+          "expressions": [
+            "mouthSmileRight"
+          ],
+          "maxDeltaMm": 7.94
+        },
+        "mouthStretchLeft": {
+          "expressions": [
+            "mouthStretchLeft"
+          ],
+          "maxDeltaMm": 5.81
+        },
+        "mouthStretchRight": {
+          "expressions": [
+            "mouthStretchRight"
+          ],
+          "maxDeltaMm": 5.91
+        },
+        "mouthUpperUpLeft": {
+          "expressions": [
+            "mouthUpperUpLeft"
+          ],
+          "maxDeltaMm": 5.55
+        },
+        "mouthUpperUpRight": {
+          "expressions": [
+            "mouthUpperUpRight"
+          ],
+          "maxDeltaMm": 5.38
+        },
+        "noseSneerLeft": {
+          "expressions": [
+            "noseSneerLeft"
+          ],
+          "maxDeltaMm": 6.11
+        },
+        "noseSneerRight": {
+          "expressions": [
+            "noseSneerRight"
+          ],
+          "maxDeltaMm": 6.03
+        }
+      },
+      "poses": {
+        "neutral": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "headYaw": {
+          "missing": [],
+          "lookAtYawDeg": -20.06,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 20.05,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 1,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "headPitch": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": -14.18,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 14.9,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 1,
+            "lookDown": 0
+          }
+        },
+        "headRoll": {
+          "missing": [],
+          "lookAtYawDeg": -0.18,
+          "lookAtPitchDeg": 0.69,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 14.9,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0.02,
+            "lookUp": 0,
+            "lookDown": 0.077
+          }
+        },
+        "gazeLeft": {
+          "missing": [],
+          "lookAtYawDeg": 16.38,
+          "lookAtPitchDeg": 0.69,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 1,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.077
+          }
+        },
+        "gazeRight": {
+          "missing": [],
+          "lookAtYawDeg": -16.38,
+          "lookAtPitchDeg": 0.69,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 1,
+            "lookUp": 0,
+            "lookDown": 0.077
+          }
+        },
+        "gazeUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": -8.84,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0.982,
+            "lookDown": 0
+          }
+        },
+        "gazeDown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 10.23,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 1
+          }
+        },
+        "blinkLeft": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "blinkRight": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "blinkBoth": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "eyeWide": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "eyeSquint": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "browInnerUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "browOuterUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "browDown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "jawOpen": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "jawLeft": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "jawRight": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "jawForward": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthSmile": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthFrown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthFunnel": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthPucker": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthClose": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthRoll": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthShrug": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthPress": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthStretch": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthUpperUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthLowerDown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthLeft": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "mouthRight": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "cheekPuff": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "cheekSquint": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "noseSneer": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "tongueOut": {
+          "missing": [
+            "tongueOut (no expression)"
+          ],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        },
+        "tongueOutOpen": {
+          "missing": [
+            "tongueOut (no expression)"
+          ],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 0.72,
+          "leftEyeRotationDeg": null,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0.08
+          }
+        }
+      }
+    },
+    "reference-vrm-arkit52": {
+      "url": "/assets/avatars/reference/valid-white-m1-default.vrm",
+      "triangles": 58724,
+      "expressionCount": 53,
+      "hasTongueOutExpression": false,
+      "gazeDrivePath": "lookAt",
+      "supportedFaceChannels": 37,
+      "lookAt": {
+        "type": "bone",
+        "offsetFromHeadBone": [
+          0,
+          0,
+          0
+        ],
+        "rangeMapHorizontalOuter": {
+          "inputMaxValue": 90,
+          "outputScale": 10
+        },
+        "rangeMapVerticalUp": {
+          "inputMaxValue": 90,
+          "outputScale": 10
+        }
+      },
+      "anchorsMm": {
+        "eyes": [
+          0,
+          1680,
+          56
+        ],
+        "mouth": [
+          -5,
+          1608,
+          81
+        ]
+      },
+      "binds": {
+        "blinkLeft": [
+          {
+            "mesh": "H_DDS_HighRes",
+            "weight": 1,
+            "movedVertices": 84,
+            "maxDeltaMm": 10.26,
+            "centroidMm": [
+              35,
+              1685,
+              57
+            ]
+          }
+        ],
+        "lookLeft": [],
+        "jawOpen": [
+          {
+            "mesh": "H_DDS_HighRes",
+            "weight": 1,
+            "movedVertices": 851,
+            "maxDeltaMm": 20.26,
+            "centroidMm": [
+              0,
+              1596,
+              60
+            ]
+          },
+          {
+            "mesh": "h_TeethDown",
+            "weight": 1,
+            "movedVertices": 4717,
+            "maxDeltaMm": 15.54,
+            "centroidMm": [
+              0,
+              1602,
+              48
+            ]
+          }
+        ],
+        "mouthSmileLeft": [
+          {
+            "mesh": "H_DDS_HighRes",
+            "weight": 1,
+            "movedVertices": 515,
+            "maxDeltaMm": 12.68,
+            "centroidMm": [
+              25,
+              1615,
+              66
+            ]
+          }
+        ]
+      },
+      "morphRegionToAnchorMm": {
+        "blinkLeft": {
+          "mesh": "H_DDS_HighRes",
+          "distance": 5,
+          "dy": 5
+        },
+        "lookLeft": null,
+        "mouthSmileLeft": {
+          "mesh": "H_DDS_HighRes",
+          "distance": 7,
+          "dy": 7
+        }
+      },
+      "channelEffects": {
+        "browDownLeft": {
+          "expressions": [
+            "browDownLeft"
+          ],
+          "maxDeltaMm": 6.12
+        },
+        "browDownRight": {
+          "expressions": [
+            "browDownRight"
+          ],
+          "maxDeltaMm": 6.13
+        },
+        "browInnerUp": {
+          "expressions": [
+            "browInnerUp"
+          ],
+          "maxDeltaMm": 2.64
+        },
+        "browOuterUpLeft": {
+          "expressions": [
+            "browOuterUpLeft"
+          ],
+          "maxDeltaMm": 5.27
+        },
+        "browOuterUpRight": {
+          "expressions": [
+            "browOuterUpRight"
+          ],
+          "maxDeltaMm": 5.28
+        },
+        "cheekPuff": {
+          "expressions": [
+            "cheekPuff"
+          ],
+          "maxDeltaMm": 12.52
+        },
+        "cheekSquintLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "cheekSquintRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeBlinkLeft": {
+          "expressions": [
+            "blinkLeft"
+          ],
+          "maxDeltaMm": 10.26
+        },
+        "eyeBlinkRight": {
+          "expressions": [
+            "blinkRight"
+          ],
+          "maxDeltaMm": 10.65
+        },
+        "eyeLookDownLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookDownRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookInLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookInRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookOutLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookOutRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookUpLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookUpRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeSquintLeft": {
+          "expressions": [
+            "eyeSquintLeft"
+          ],
+          "maxDeltaMm": 8.43
+        },
+        "eyeSquintRight": {
+          "expressions": [
+            "eyeSquintRight"
+          ],
+          "maxDeltaMm": 7.55
+        },
+        "eyeWideLeft": {
+          "expressions": [
+            "eyeWideLeft"
+          ],
+          "maxDeltaMm": 3.62
+        },
+        "eyeWideRight": {
+          "expressions": [
+            "eyeWideRight"
+          ],
+          "maxDeltaMm": 3.62
+        },
+        "jawForward": {
+          "expressions": [
+            "jawForward"
+          ],
+          "maxDeltaMm": 8.03
+        },
+        "jawLeft": {
+          "expressions": [
+            "jawLeft"
+          ],
+          "maxDeltaMm": 6.02
+        },
+        "jawOpen": {
+          "expressions": [
+            "jawOpen"
+          ],
+          "maxDeltaMm": 20.26
+        },
+        "jawRight": {
+          "expressions": [
+            "jawRight"
+          ],
+          "maxDeltaMm": 6.07
+        },
+        "mouthClose": {
+          "expressions": [
+            "mouthClose"
+          ],
+          "maxDeltaMm": 3.32
+        },
+        "mouthDimpleLeft": {
+          "expressions": [
+            "mouthDimpleLeft"
+          ],
+          "maxDeltaMm": 5.32
+        },
+        "mouthDimpleRight": {
+          "expressions": [
+            "mouthDimpleRight"
+          ],
+          "maxDeltaMm": 5.25
+        },
+        "mouthFrownLeft": {
+          "expressions": [
+            "mouthFrownLeft"
+          ],
+          "maxDeltaMm": 6.81
+        },
+        "mouthFrownRight": {
+          "expressions": [
+            "mouthFrownRight"
+          ],
+          "maxDeltaMm": 6.91
+        },
+        "mouthFunnel": {
+          "expressions": [
+            "mouthFunnel"
+          ],
+          "maxDeltaMm": 42.34
+        },
+        "mouthLeft": {
+          "expressions": [
+            "mouthLeft"
+          ],
+          "maxDeltaMm": 3.01
+        },
+        "mouthLowerDownLeft": {
+          "expressions": [
+            "mouthLowerDownLeft"
+          ],
+          "maxDeltaMm": 7.55
+        },
+        "mouthLowerDownRight": {
+          "expressions": [
+            "mouthLowerDownRight"
+          ],
+          "maxDeltaMm": 7.55
+        },
+        "mouthPressLeft": {
+          "expressions": [
+            "mouthPressLeft"
+          ],
+          "maxDeltaMm": 12.52
+        },
+        "mouthPressRight": {
+          "expressions": [
+            "mouthPressRight"
+          ],
+          "maxDeltaMm": 12.65
+        },
+        "mouthPucker": {
+          "expressions": [
+            "mouthPucker"
+          ],
+          "maxDeltaMm": 10.02
+        },
+        "mouthRight": {
+          "expressions": [
+            "mouthRight"
+          ],
+          "maxDeltaMm": 3.03
+        },
+        "mouthRollLower": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "mouthRollUpper": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "mouthShrugLower": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "mouthShrugUpper": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "mouthSmileLeft": {
+          "expressions": [
+            "mouthSmileLeft"
+          ],
+          "maxDeltaMm": 12.68
+        },
+        "mouthSmileRight": {
+          "expressions": [
+            "mouthSmileRight"
+          ],
+          "maxDeltaMm": 12.58
+        },
+        "mouthStretchLeft": {
+          "expressions": [
+            "mouthStretchLeft"
+          ],
+          "maxDeltaMm": 1.1
+        },
+        "mouthStretchRight": {
+          "expressions": [
+            "mouthStretchRight"
+          ],
+          "maxDeltaMm": 1.11
+        },
+        "mouthUpperUpLeft": {
+          "expressions": [
+            "mouthUpperUpLeft"
+          ],
+          "maxDeltaMm": 8.21
+        },
+        "mouthUpperUpRight": {
+          "expressions": [
+            "mouthUpperUpRight"
+          ],
+          "maxDeltaMm": 8.26
+        },
+        "noseSneerLeft": {
+          "expressions": [
+            "noseSneerLeft"
+          ],
+          "maxDeltaMm": 1.99
+        },
+        "noseSneerRight": {
+          "expressions": [
+            "noseSneerRight"
+          ],
+          "maxDeltaMm": 1.75
+        }
+      },
+      "poses": {
+        "neutral": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "headYaw": {
+          "missing": [],
+          "lookAtYawDeg": -20.05,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 17.83,
+          "headRotationDeg": 20.05,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "headPitch": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": -11.35,
+          "leftEyeRotationDeg": 13.64,
+          "headRotationDeg": 14.9,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "headRoll": {
+          "missing": [],
+          "lookAtYawDeg": -0.91,
+          "lookAtPitchDeg": 3.43,
+          "leftEyeRotationDeg": 14.9,
+          "headRotationDeg": 14.9,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "gazeLeft": {
+          "missing": [],
+          "lookAtYawDeg": 15.97,
+          "lookAtPitchDeg": 3.41,
+          "leftEyeRotationDeg": 1.81,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "gazeRight": {
+          "missing": [],
+          "lookAtYawDeg": -15.97,
+          "lookAtPitchDeg": 3.41,
+          "leftEyeRotationDeg": 1.81,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "gazeUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": -5.79,
+          "leftEyeRotationDeg": 0.64,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "gazeDown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 12.71,
+          "leftEyeRotationDeg": 1.41,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "blinkLeft": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "blinkRight": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "blinkBoth": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "eyeWide": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "eyeSquint": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "browInnerUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "browOuterUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "browDown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "jawOpen": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "jawLeft": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "jawRight": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "jawForward": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthSmile": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthFrown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthFunnel": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthPucker": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthClose": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthRoll": {
+          "missing": [
+            "mouthRollUpper",
+            "mouthRollLower"
+          ],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthShrug": {
+          "missing": [
+            "mouthShrugUpper",
+            "mouthShrugLower"
+          ],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthPress": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthStretch": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthUpperUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthLowerDown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthLeft": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "mouthRight": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "cheekPuff": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "cheekSquint": {
+          "missing": [
+            "cheekSquintLeft",
+            "cheekSquintRight"
+          ],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "noseSneer": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "tongueOut": {
+          "missing": [
+            "tongueOut (no expression)"
+          ],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        },
+        "tongueOutOpen": {
+          "missing": [
+            "tongueOut (no expression)"
+          ],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 3.55,
+          "leftEyeRotationDeg": 0.39,
+          "headRotationDeg": 0,
+          "lookExpressionWeights": {
+            "lookLeft": 0,
+            "lookRight": 0,
+            "lookUp": 0,
+            "lookDown": 0
+          }
+        }
+      }
+    },
+    "saga-human-canonical-v1": {
+      "url": "/assets/avatars/canonical/saga-human-canonical-v1.vrm",
+      "triangles": 36924,
+      "expressionCount": 46,
+      "hasTongueOutExpression": true,
+      "gazeDrivePath": "lookAt",
+      "supportedFaceChannels": 43,
+      "lookAt": {
+        "type": "bone",
+        "offsetFromHeadBone": [
+          0,
+          0.0389,
+          0.0834
+        ],
+        "rangeMapHorizontalOuter": {
+          "inputMaxValue": 30,
+          "outputScale": 30
+        },
+        "rangeMapVerticalUp": {
+          "inputMaxValue": 30,
+          "outputScale": 30
+        }
+      },
+      "anchorsMm": {
+        "eyes": [
+          0,
+          1637,
+          3
+        ],
+        "mouth": [
+          0,
+          1569,
+          21
+        ]
+      },
+      "binds": {
+        "blinkLeft": [
+          {
+            "mesh": "Body",
+            "weight": 1,
+            "movedVertices": 207,
+            "maxDeltaMm": 12.61,
+            "centroidMm": [
+              23,
+              1640,
+              -5
+            ]
+          },
+          {
+            "mesh": "Eyelashes",
+            "weight": 1,
+            "movedVertices": 55,
+            "maxDeltaMm": 15.52,
+            "centroidMm": [
+              35,
+              1641,
+              5
+            ]
+          },
+          {
+            "mesh": "Eyebrows",
+            "weight": 1,
+            "movedVertices": 6,
+            "maxDeltaMm": 3.62,
+            "centroidMm": [
+              35,
+              1648,
+              9
+            ]
+          }
+        ],
+        "lookLeft": [],
+        "jawOpen": [
+          {
+            "mesh": "Body",
+            "weight": 1,
+            "movedVertices": 563,
+            "maxDeltaMm": 38.74,
+            "centroidMm": [
+              0,
+              1557,
+              -1
+            ]
+          },
+          {
+            "mesh": "Teeth",
+            "weight": 1,
+            "movedVertices": 2256,
+            "maxDeltaMm": 30.26,
+            "centroidMm": [
+              0,
+              1569,
+              -13
+            ]
+          },
+          {
+            "mesh": "Tongue",
+            "weight": 1,
+            "movedVertices": 245,
+            "maxDeltaMm": 28.14,
+            "centroidMm": [
+              0,
+              1568,
+              -17
+            ]
+          },
+          {
+            "mesh": "Eyebrows",
+            "weight": 1,
+            "movedVertices": 14,
+            "maxDeltaMm": 0.38,
+            "centroidMm": [
+              0,
+              1645,
+              -14
+            ]
+          }
+        ],
+        "mouthSmileLeft": [
+          {
+            "mesh": "Body",
+            "weight": 1,
+            "movedVertices": 252,
+            "maxDeltaMm": 18.68,
+            "centroidMm": [
+              23,
+              1568,
+              5
+            ]
+          },
+          {
+            "mesh": "Eyelashes",
+            "weight": 1,
+            "movedVertices": 58,
+            "maxDeltaMm": 0.24,
+            "centroidMm": [
+              32,
+              1634,
+              4
+            ]
+          },
+          {
+            "mesh": "Eyebrows",
+            "weight": 1,
+            "movedVertices": 7,
+            "maxDeltaMm": 0.37,
+            "centroidMm": [
+              59,
+              1645,
+              -14
+            ]
+          }
+        ]
+      },
+      "morphRegionToAnchorMm": {
+        "blinkLeft": {
+          "mesh": "Body",
+          "distance": 13,
+          "dy": 3
+        },
+        "lookLeft": null,
+        "mouthSmileLeft": {
+          "mesh": "Body",
+          "distance": 9,
+          "dy": -5
+        }
+      },
+      "channelEffects": {
+        "browDownLeft": {
+          "expressions": [
+            "browDownLeft"
+          ],
+          "maxDeltaMm": 6.95
+        },
+        "browDownRight": {
+          "expressions": [
+            "browDownRight"
+          ],
+          "maxDeltaMm": 6.95
+        },
+        "browInnerUp": {
+          "expressions": [
+            "browInnerUp"
+          ],
+          "maxDeltaMm": 5.2
+        },
+        "browOuterUpLeft": {
+          "expressions": [
+            "browOuterUpLeft"
+          ],
+          "maxDeltaMm": 6.97
+        },
+        "browOuterUpRight": {
+          "expressions": [
+            "browOuterUpRight"
+          ],
+          "maxDeltaMm": 6.97
+        },
+        "cheekPuff": {
+          "expressions": [
+            "cheekPuff"
+          ],
+          "maxDeltaMm": 14.17
+        },
+        "cheekSquintLeft": {
+          "expressions": [
+            "cheekSquintLeft"
+          ],
+          "maxDeltaMm": 8.95
+        },
+        "cheekSquintRight": {
+          "expressions": [
+            "cheekSquintRight"
+          ],
+          "maxDeltaMm": 8.95
+        },
+        "eyeBlinkLeft": {
+          "expressions": [
+            "eyeBlinkLeft"
+          ],
+          "maxDeltaMm": 15.52
+        },
+        "eyeBlinkRight": {
+          "expressions": [
+            "eyeBlinkRight"
+          ],
+          "maxDeltaMm": 15.52
+        },
+        "eyeLookDownLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookDownRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookInLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookInRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookOutLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookOutRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookUpLeft": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeLookUpRight": {
+          "expressions": [],
+          "maxDeltaMm": 0
+        },
+        "eyeSquintLeft": {
+          "expressions": [
+            "eyeSquintLeft"
+          ],
+          "maxDeltaMm": 3.95
+        },
+        "eyeSquintRight": {
+          "expressions": [
+            "eyeSquintRight"
+          ],
+          "maxDeltaMm": 3.95
+        },
+        "eyeWideLeft": {
+          "expressions": [
+            "eyeWideLeft"
+          ],
+          "maxDeltaMm": 3.92
+        },
+        "eyeWideRight": {
+          "expressions": [
+            "eyeWideRight"
+          ],
+          "maxDeltaMm": 3.92
+        },
+        "jawForward": {
+          "expressions": [
+            "jawForward"
+          ],
+          "maxDeltaMm": 8.63
+        },
+        "jawLeft": {
+          "expressions": [
+            "jawLeft"
+          ],
+          "maxDeltaMm": 8.06
+        },
+        "jawOpen": {
+          "expressions": [
+            "jawOpen"
+          ],
+          "maxDeltaMm": 38.74
+        },
+        "jawRight": {
+          "expressions": [
+            "jawRight"
+          ],
+          "maxDeltaMm": 8.06
+        },
+        "mouthClose": {
+          "expressions": [
+            "mouthClose"
+          ],
+          "maxDeltaMm": 35.93
+        },
+        "mouthDimpleLeft": {
+          "expressions": [
+            "mouthDimpleLeft"
+          ],
+          "maxDeltaMm": 7.9
+        },
+        "mouthDimpleRight": {
+          "expressions": [
+            "mouthDimpleRight"
+          ],
+          "maxDeltaMm": 7.9
+        },
+        "mouthFrownLeft": {
+          "expressions": [
+            "mouthFrownLeft"
+          ],
+          "maxDeltaMm": 6.69
+        },
+        "mouthFrownRight": {
+          "expressions": [
+            "mouthFrownRight"
+          ],
+          "maxDeltaMm": 6.69
+        },
+        "mouthFunnel": {
+          "expressions": [
+            "mouthFunnel"
+          ],
+          "maxDeltaMm": 10.93
+        },
+        "mouthLeft": {
+          "expressions": [
+            "mouthLeft"
+          ],
+          "maxDeltaMm": 10.69
+        },
+        "mouthLowerDownLeft": {
+          "expressions": [
+            "mouthLowerDownLeft"
+          ],
+          "maxDeltaMm": 4.91
+        },
+        "mouthLowerDownRight": {
+          "expressions": [
+            "mouthLowerDownRight"
+          ],
+          "maxDeltaMm": 4.91
+        },
+        "mouthPressLeft": {
+          "expressions": [
+            "mouthPressLeft"
+          ],
+          "maxDeltaMm": 8.09
+        },
+        "mouthPressRight": {
+          "expressions": [
+            "mouthPressRight"
+          ],
+          "maxDeltaMm": 8.09
+        },
+        "mouthPucker": {
+          "expressions": [
+            "mouthPucker"
+          ],
+          "maxDeltaMm": 8.71
+        },
+        "mouthRight": {
+          "expressions": [
+            "mouthRight"
+          ],
+          "maxDeltaMm": 10.69
+        },
+        "mouthRollLower": {
+          "expressions": [
+            "mouthRollLower"
+          ],
+          "maxDeltaMm": 7.29
+        },
+        "mouthRollUpper": {
+          "expressions": [
+            "mouthRollUpper"
+          ],
+          "maxDeltaMm": 10.6
+        },
+        "mouthShrugLower": {
+          "expressions": [
+            "mouthShrugLower"
+          ],
+          "maxDeltaMm": 6.94
+        },
+        "mouthShrugUpper": {
+          "expressions": [
+            "mouthShrugUpper"
+          ],
+          "maxDeltaMm": 5.32
+        },
+        "mouthSmileLeft": {
+          "expressions": [
+            "mouthSmileLeft"
+          ],
+          "maxDeltaMm": 18.68
+        },
+        "mouthSmileRight": {
+          "expressions": [
+            "mouthSmileRight"
+          ],
+          "maxDeltaMm": 18.06
+        },
+        "mouthStretchLeft": {
+          "expressions": [
+            "mouthStretchLeft"
+          ],
+          "maxDeltaMm": 8.64
+        },
+        "mouthStretchRight": {
+          "expressions": [
+            "mouthStretchRight"
+          ],
+          "maxDeltaMm": 8.64
+        },
+        "mouthUpperUpLeft": {
+          "expressions": [
+            "mouthUpperUpLeft"
+          ],
+          "maxDeltaMm": 5.96
+        },
+        "mouthUpperUpRight": {
+          "expressions": [
+            "mouthUpperUpRight"
+          ],
+          "maxDeltaMm": 5.96
+        },
+        "noseSneerLeft": {
+          "expressions": [
+            "noseSneerLeft"
+          ],
+          "maxDeltaMm": 4.82
+        },
+        "noseSneerRight": {
+          "expressions": [
+            "noseSneerRight"
+          ],
+          "maxDeltaMm": 4.82
+        }
+      },
+      "poses": {
+        "neutral": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "headYaw": {
+          "missing": [],
+          "lookAtYawDeg": -21.4,
+          "lookAtPitchDeg": 4.23,
+          "leftEyeRotationDeg": 4.44,
+          "headRotationDeg": 20.05
+        },
+        "headPitch": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": -11.71,
+          "leftEyeRotationDeg": 3.19,
+          "headRotationDeg": 14.9
+        },
+        "headRoll": {
+          "missing": [],
+          "lookAtYawDeg": -0.62,
+          "lookAtPitchDeg": 4.16,
+          "leftEyeRotationDeg": 15.5,
+          "headRotationDeg": 14.9
+        },
+        "gazeLeft": {
+          "missing": [],
+          "lookAtYawDeg": 16.14,
+          "lookAtPitchDeg": 4.08,
+          "leftEyeRotationDeg": 16.64,
+          "headRotationDeg": 0
+        },
+        "gazeRight": {
+          "missing": [],
+          "lookAtYawDeg": -16.14,
+          "lookAtPitchDeg": 4.08,
+          "leftEyeRotationDeg": 16.64,
+          "headRotationDeg": 0
+        },
+        "gazeUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": -5.21,
+          "leftEyeRotationDeg": 5.21,
+          "headRotationDeg": 0
+        },
+        "gazeDown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 13.47,
+          "leftEyeRotationDeg": 13.47,
+          "headRotationDeg": 0
+        },
+        "blinkLeft": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "blinkRight": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "blinkBoth": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "eyeWide": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "eyeSquint": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "browInnerUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "browOuterUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "browDown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "jawOpen": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "jawLeft": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "jawRight": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "jawForward": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthSmile": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthFrown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthFunnel": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthPucker": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthClose": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthRoll": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthShrug": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthPress": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthStretch": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthUpperUp": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthLowerDown": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthLeft": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "mouthRight": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "cheekPuff": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "cheekSquint": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "noseSneer": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "tongueOut": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        },
+        "tongueOutOpen": {
+          "missing": [],
+          "lookAtYawDeg": 0,
+          "lookAtPitchDeg": 4.24,
+          "leftEyeRotationDeg": 4.24,
+          "headRotationDeg": 0
+        }
+      }
+    }
+  },
+  "webgl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+  "matrix": [
+    "neutral",
+    "headYaw",
+    "headPitch",
+    "headRoll",
+    "gazeLeft",
+    "gazeRight",
+    "gazeUp",
+    "gazeDown",
+    "blinkLeft",
+    "blinkRight",
+    "blinkBoth",
+    "eyeWide",
+    "eyeSquint",
+    "browInnerUp",
+    "browOuterUp",
+    "browDown",
+    "jawOpen",
+    "jawLeft",
+    "jawRight",
+    "jawForward",
+    "mouthSmile",
+    "mouthFrown",
+    "mouthFunnel",
+    "mouthPucker",
+    "mouthClose",
+    "mouthRoll",
+    "mouthShrug",
+    "mouthPress",
+    "mouthStretch",
+    "mouthUpperUp",
+    "mouthLowerDown",
+    "mouthLeft",
+    "mouthRight",
+    "cheekPuff",
+    "cheekSquint",
+    "noseSneer",
+    "tongueOut",
+    "tongueOutOpen"
+  ],
+  "pageErrors": []
+}
