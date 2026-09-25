@@ -213,6 +213,7 @@ export function LiveActViewportControls({
       <LiveActCharacterFaceOverlay
         enabled={characterOverlayOn}
         metricsEnabled={liveAct.metricsEnabled}
+        fullDetail={liveAct.faceOverlayFullDetail}
         studioRuntimeRef={studioRuntimeRef}
         debugHandleRef={liveAct.characterFaceDebugHandleRef}
         diagnosticsV2Ref={liveAct.diagnosticsV2Ref}
@@ -272,6 +273,8 @@ export function LiveActViewportControls({
         onCameraPreviewChange={liveAct.setCameraPreviewEnabled}
         faceOverlayEnabled={liveAct.faceOverlayEnabled}
         onFaceOverlayChange={liveAct.setFaceOverlayEnabled}
+        faceOverlayFullDetail={liveAct.faceOverlayFullDetail}
+        onFaceOverlayFullDetailChange={liveAct.setFaceOverlayFullDetail}
         characterFaceMappingAvailable={characterFaceMappingAvailable}
         metricsEnabled={liveAct.metricsEnabled}
         onMetricsChange={liveAct.setMetricsEnabled}
@@ -294,9 +297,40 @@ export function LiveActViewportControls({
         onCalibrate={() => {
           void liveAct.calibrateNeutral();
         }}
+        canAdvanceCalibration={liveAct.canAdvanceCalibration}
+        calibrationAdvanceLabelDe={liveAct.calibrationAdvanceLabelDe}
+        onAdvanceCalibration={liveAct.advanceCalibration}
+        calibrationCountdownSec={liveAct.calibrationCountdownSec}
+        calibrationStepPhase={liveAct.calibrationStepPhase}
+        canStartCalibrationHold={liveAct.canStartCalibrationHold}
+        canRetryCalibrationHold={liveAct.canRetryCalibrationHold}
+        calibrationStepPeaks={liveAct.calibrationStepPeaks}
+        onStartCalibrationHold={liveAct.startCalibrationHold}
+        onRetryCalibrationHold={liveAct.retryCalibrationHold}
+        canCopyCalibrationAudit={liveAct.canCopyCalibrationAudit}
+        calibrationPeakFrames={liveAct.calibrationPeakFrames}
+        getCalibrationAuditJson={liveAct.getCalibrationAuditJson}
         calibrationMessage={liveAct.calibrationMessage}
         hasNeutralBaseline={liveAct.hasNeutralBaseline}
         hasRangeCalibration={liveAct.hasRangeCalibration}
+        canMotionTest={liveAct.canMotionTest}
+        onMotionTest={liveAct.startMotionTest}
+        motionTestStatus={liveAct.motionTestStatus}
+        motionTestMessage={liveAct.motionTestMessage}
+        motionTestStepPhase={liveAct.motionTestStepPhase}
+        motionTestCountdownSec={liveAct.motionTestCountdownSec}
+        motionTestStepPeaks={liveAct.motionTestStepPeaks}
+        motionTestStepIndex={liveAct.motionTestStepIndex}
+        canStartMotionTestHold={liveAct.canStartMotionTestHold}
+        canRetryMotionTestHold={liveAct.canRetryMotionTestHold}
+        canAdvanceMotionTest={liveAct.canAdvanceMotionTest}
+        motionTestAdvanceLabelDe={liveAct.motionTestAdvanceLabelDe}
+        onStartMotionTestHold={liveAct.startMotionTestHold}
+        onRetryMotionTestHold={liveAct.retryMotionTestHold}
+        onAdvanceMotionTest={liveAct.advanceMotionTest}
+        canCopyMotionTestAudit={liveAct.canCopyMotionTestAudit}
+        motionTestPeakFrames={liveAct.motionTestPeakFrames}
+        getMotionTestAuditJson={liveAct.getMotionTestAuditJson}
         faceMappingOpen={faceMappingOpen}
         onOpenFaceMapping={openFaceMapping}
         onExpandPreview={onExpandPreview}
@@ -307,12 +341,42 @@ export function LiveActViewportControls({
         visible={showPip}
         faceOverlayEnabled={liveAct.faceOverlayEnabled}
         metricsEnabled={liveAct.metricsEnabled}
+        fullDetail={liveAct.faceOverlayFullDetail}
         diagnosticsRef={liveAct.diagnosticsRef}
         diagnosticsV2Ref={liveAct.diagnosticsV2Ref}
         hasNeutralBaseline={liveAct.hasNeutralBaseline}
         hasRangeCalibration={liveAct.hasRangeCalibration}
         calibrationRunning={liveAct.calibrationStatus === 'running'}
         calibrationMessage={liveAct.calibrationMessage}
+        canAdvanceCalibration={liveAct.canAdvanceCalibration}
+        calibrationAdvanceLabelDe={liveAct.calibrationAdvanceLabelDe}
+        onAdvanceCalibration={liveAct.advanceCalibration}
+        calibrationCountdownSec={liveAct.calibrationCountdownSec}
+        calibrationStepPhase={liveAct.calibrationStepPhase}
+        canStartCalibrationHold={liveAct.canStartCalibrationHold}
+        canRetryCalibrationHold={liveAct.canRetryCalibrationHold}
+        calibrationStepPeaks={liveAct.calibrationStepPeaks}
+        onStartCalibrationHold={liveAct.startCalibrationHold}
+        onRetryCalibrationHold={liveAct.retryCalibrationHold}
+        canCopyCalibrationAudit={liveAct.canCopyCalibrationAudit}
+        calibrationPeakFrames={liveAct.calibrationPeakFrames}
+        getCalibrationAuditJson={liveAct.getCalibrationAuditJson}
+        motionTestRunning={liveAct.motionTestStatus === 'running'}
+        motionTestMessage={liveAct.motionTestMessage}
+        canAdvanceMotionTest={liveAct.canAdvanceMotionTest}
+        motionTestAdvanceLabelDe={liveAct.motionTestAdvanceLabelDe}
+        onAdvanceMotionTest={liveAct.advanceMotionTest}
+        motionTestCountdownSec={liveAct.motionTestCountdownSec}
+        motionTestStepPhase={liveAct.motionTestStepPhase}
+        motionTestStepIndex={liveAct.motionTestStepIndex}
+        canStartMotionTestHold={liveAct.canStartMotionTestHold}
+        canRetryMotionTestHold={liveAct.canRetryMotionTestHold}
+        motionTestStepPeaks={liveAct.motionTestStepPeaks}
+        onStartMotionTestHold={liveAct.startMotionTestHold}
+        onRetryMotionTestHold={liveAct.retryMotionTestHold}
+        canCopyMotionTestAudit={liveAct.canCopyMotionTestAudit}
+        motionTestPeakFrames={liveAct.motionTestPeakFrames}
+        getMotionTestAuditJson={liveAct.getMotionTestAuditJson}
       />
     </>
   );

@@ -4,6 +4,7 @@
  *
  * Owns Tracking/PiP toggles and binds LiveActEngine. No CharacterEditor state.
  * Per-frame updates stay off React — only status/preview refs change slowly.
+ * While calibration or motion test runs, Diagnostics V2 peaks accumulate for clipboard export.
  */
 
 import {
@@ -15,16 +16,36 @@ import {
   type RefObject,
 } from 'react';
 import {
+  accumulateLiveActDiagnosticsPeaks,
+  buildLiveActMotionTestExport,
   composeLiveActCapabilities,
+  createLiveActDiagnosticsPeaks,
+  createLiveActMotionTestHoldAcc,
+  exportLiveActDiagnosticsPeaks,
+  finalizeLiveActMotionTestStepPeaks,
+  LIVEACT_MOTION_TEST_MIN_FRAMES,
+  LIVEACT_MOTION_TEST_STEPS,
+  liveActMotionTestAdvanceLabelDe,
+  liveActMotionTestHoldMs,
+  liveActMotionTestStepPrompt,
   liveActStatusLabelDe,
+  pushLiveActMotionTestHoldSample,
+  readLiveActMotionTestSignal,
   type LiveActAvatarCapabilities,
   type LiveActCapabilitiesV1,
+  type LiveActDiagnosticsPeaksV1,
   type LiveActDiagnosticsV2Snapshot,
   type LiveActFaceDiagnosticsFrameV1,
+  type LiveActMotionTestHoldAcc,
+  type LiveActMotionTestStatus,
+  type LiveActMotionTestStepPeakV1,
+  type LiveActMotionTestStepResultV1,
+  type LiveActRangeStepPhase,
   type LiveActStatus,
 } from '../../../domains/character/liveact';
 import type { LiveActCharacterFaceDebugHandle } from '../../../infrastructure/character/avatar/character-studio-runtime';
 import type { LiveActEngine, LiveActEngineState } from '../../../infrastructure/character/liveact';
+import { playLiveActCalibrationCue } from './liveact-calibration-cues';
 import {
   acquireSharedLiveActEngine,
   acquireSharedLiveActTracking,
@@ -56,6 +77,9 @@ export interface UseLiveActViewportResult {
   setCameraPreviewEnabled: (enabled: boolean) => void;
   faceOverlayEnabled: boolean;
   setFaceOverlayEnabled: (enabled: boolean) => void;
+  /** When Face Overlay is on: draw every landmark/anchor (not just contours). */
+  faceOverlayFullDetail: boolean;
+  setFaceOverlayFullDetail: (enabled: boolean) => void;
   metricsEnabled: boolean;
   setMetricsEnabled: (enabled: boolean) => void;
   bonesEnabled: boolean;
@@ -79,7 +103,42 @@ export interface UseLiveActViewportResult {
   hasNeutralBaseline: boolean;
   hasRangeCalibration: boolean;
   canCalibrate: boolean;
+  canAdvanceCalibration: boolean;
+  calibrationAdvanceLabelDe: 'Weiter' | 'Fertig' | null;
+  calibrationCountdownSec: number | null;
+  calibrationStepPhase: LiveActEngineState['calibrationStepPhase'];
+  canStartCalibrationHold: boolean;
+  canRetryCalibrationHold: boolean;
+  calibrationStepPeaks: LiveActEngineState['calibrationStepPeaks'];
   calibrateNeutral: () => Promise<void>;
+  advanceCalibration: () => void;
+  startCalibrationHold: () => void;
+  retryCalibrationHold: () => void;
+  /** Frames counted into the calibration peak audit (0 until a run collects data). */
+  calibrationPeakFrames: number;
+  /** True when a calibration audit JSON can be copied (peaks from the last run). */
+  canCopyCalibrationAudit: boolean;
+  /** Peaks + range gains from the last calibration run (clipboard / paste into chat). */
+  getCalibrationAuditJson: () => string;
+  /** Read-only fidelity walkthrough (does not change calibration). */
+  canMotionTest: boolean;
+  motionTestStatus: LiveActMotionTestStatus;
+  motionTestMessage: string;
+  motionTestStepPhase: LiveActRangeStepPhase | null;
+  motionTestCountdownSec: number | null;
+  motionTestStepPeaks: readonly LiveActMotionTestStepPeakV1[];
+  motionTestStepIndex: number;
+  canStartMotionTestHold: boolean;
+  canRetryMotionTestHold: boolean;
+  canAdvanceMotionTest: boolean;
+  motionTestAdvanceLabelDe: 'Weiter' | 'Fertig' | null;
+  startMotionTest: () => void;
+  startMotionTestHold: () => void;
+  retryMotionTestHold: () => void;
+  advanceMotionTest: () => void;
+  motionTestPeakFrames: number;
+  canCopyMotionTestAudit: boolean;
+  getMotionTestAuditJson: () => string;
   /** Composed Input×Avatar matrix for Capability Inspector (#381). */
   composedCapabilities: LiveActCapabilitiesV1 | null;
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
@@ -108,6 +167,8 @@ export function useLiveActViewport({
   const [trackingEnabled, setTrackingEnabledState] = useState(false);
   const [cameraPreviewEnabled, setCameraPreviewEnabled] = useState(true);
   const [faceOverlayEnabled, setFaceOverlayEnabled] = useState(false);
+  /** Session-local; only meaningful while Face Overlay is on. */
+  const [faceOverlayFullDetail, setFaceOverlayFullDetail] = useState(false);
   /** Session-local; initial true; independent of face overlay (#398). */
   const [metricsEnabled, setMetricsEnabled] = useState(true);
   const [bonesEnabled, setBonesEnabledState] = useState(false);
@@ -128,6 +189,121 @@ export function useLiveActViewport({
   const [calibrationMessage, setCalibrationMessage] = useState('');
   const [hasNeutralBaseline, setHasNeutralBaseline] = useState(false);
   const [hasRangeCalibration, setHasRangeCalibration] = useState(false);
+  const [canAdvanceCalibration, setCanAdvanceCalibration] = useState(false);
+  const [calibrationAdvanceLabelDe, setCalibrationAdvanceLabelDe] = useState<
+    'Weiter' | 'Fertig' | null
+  >(null);
+  const [calibrationCountdownSec, setCalibrationCountdownSec] = useState<number | null>(null);
+  const [calibrationStepPhase, setCalibrationStepPhase] = useState<
+    LiveActEngineState['calibrationStepPhase']
+  >(null);
+  const [canStartCalibrationHold, setCanStartCalibrationHold] = useState(false);
+  const [canRetryCalibrationHold, setCanRetryCalibrationHold] = useState(false);
+  const [calibrationStepPeaks, setCalibrationStepPeaks] = useState<
+    LiveActEngineState['calibrationStepPeaks']
+  >([]);
+  const [calibrationPeakFrames, setCalibrationPeakFrames] = useState(0);
+  const calibrationPeaksRef = useRef<LiveActDiagnosticsPeaksV1>(createLiveActDiagnosticsPeaks());
+  const calibrationStatusRef = useRef(calibrationStatus);
+  calibrationStatusRef.current = calibrationStatus;
+  const prevCountdownRef = useRef<number | null>(null);
+  const prevCalibrationStatusRef = useRef(calibrationStatus);
+
+  const [motionTestStatus, setMotionTestStatus] = useState<LiveActMotionTestStatus>('idle');
+  const [motionTestMessage, setMotionTestMessage] = useState('');
+  const [motionTestStepIndex, setMotionTestStepIndex] = useState(0);
+  const [motionTestStepPhase, setMotionTestStepPhase] = useState<LiveActRangeStepPhase | null>(
+    null,
+  );
+  const [motionTestCountdownSec, setMotionTestCountdownSec] = useState<number | null>(null);
+  const [motionTestStepPeaks, setMotionTestStepPeaks] = useState<
+    readonly LiveActMotionTestStepPeakV1[]
+  >([]);
+  const motionTestStepPeaksRef = useRef<readonly LiveActMotionTestStepPeakV1[]>([]);
+  const [motionTestPeakFrames, setMotionTestPeakFrames] = useState(0);
+  const motionTestPeaksRef = useRef<LiveActDiagnosticsPeaksV1>(createLiveActDiagnosticsPeaks());
+  const motionTestHoldAccRef = useRef<LiveActMotionTestHoldAcc>(createLiveActMotionTestHoldAcc());
+  const motionTestHoldFramesRef = useRef(0);
+  const motionTestHoldLastSequenceRef = useRef<number | null>(null);
+  const motionTestHoldStartedAtRef = useRef(0);
+  const motionTestStepResultsRef = useRef<LiveActMotionTestStepResultV1[]>([]);
+  const motionTestStatusRef = useRef(motionTestStatus);
+  motionTestStatusRef.current = motionTestStatus;
+  const motionTestStepIndexRef = useRef(motionTestStepIndex);
+  motionTestStepIndexRef.current = motionTestStepIndex;
+  const motionTestStepPhaseRef = useRef(motionTestStepPhase);
+  motionTestStepPhaseRef.current = motionTestStepPhase;
+  const prevMotionCountdownRef = useRef<number | null>(null);
+  const prevMotionStatusRef = useRef(motionTestStatus);
+
+  useEffect(() => {
+    const prevStatus = prevCalibrationStatusRef.current;
+    const prevSec = prevCountdownRef.current;
+    prevCalibrationStatusRef.current = calibrationStatus;
+    prevCountdownRef.current = calibrationCountdownSec;
+
+    if (calibrationStatus === 'success' && prevStatus === 'running') {
+      playLiveActCalibrationCue('complete');
+      return;
+    }
+    if (calibrationStatus !== 'running') return;
+
+    if (
+      typeof calibrationCountdownSec === 'number' &&
+      calibrationCountdownSec > 0 &&
+      (prevSec === null || prevSec === 0 || calibrationCountdownSec > prevSec)
+    ) {
+      playLiveActCalibrationCue('start');
+      return;
+    }
+    if (
+      typeof calibrationCountdownSec === 'number' &&
+      typeof prevSec === 'number' &&
+      calibrationCountdownSec < prevSec &&
+      calibrationCountdownSec > 0
+    ) {
+      playLiveActCalibrationCue('tick');
+      return;
+    }
+    if (calibrationCountdownSec === 0 && typeof prevSec === 'number' && prevSec > 0) {
+      playLiveActCalibrationCue('done');
+    }
+  }, [calibrationCountdownSec, calibrationStatus]);
+
+  useEffect(() => {
+    const prevStatus = prevMotionStatusRef.current;
+    const prevSec = prevMotionCountdownRef.current;
+    prevMotionStatusRef.current = motionTestStatus;
+    prevMotionCountdownRef.current = motionTestCountdownSec;
+
+    if (motionTestStatus === 'success' && prevStatus === 'running') {
+      playLiveActCalibrationCue('complete');
+      return;
+    }
+    if (motionTestStatus !== 'running') return;
+
+    if (
+      typeof motionTestCountdownSec === 'number' &&
+      motionTestCountdownSec > 0 &&
+      (prevSec === null || prevSec === 0 || motionTestCountdownSec > prevSec)
+    ) {
+      playLiveActCalibrationCue('start');
+      return;
+    }
+    if (
+      typeof motionTestCountdownSec === 'number' &&
+      typeof prevSec === 'number' &&
+      motionTestCountdownSec < prevSec &&
+      motionTestCountdownSec > 0
+    ) {
+      playLiveActCalibrationCue('tick');
+      return;
+    }
+    if (motionTestCountdownSec === 0 && typeof prevSec === 'number' && prevSec > 0) {
+      playLiveActCalibrationCue('done');
+    }
+  }, [motionTestCountdownSec, motionTestStatus]);
+
   const [composedCapabilities, setComposedCapabilities] = useState<LiveActCapabilitiesV1 | null>(
     null,
   );
@@ -182,6 +358,13 @@ export function useLiveActViewport({
       setCalibrationMessage(state.calibrationMessage);
       setHasNeutralBaseline(state.hasNeutralBaseline);
       setHasRangeCalibration(state.hasRangeCalibration);
+      setCanAdvanceCalibration(state.canAdvanceCalibration);
+      setCalibrationAdvanceLabelDe(state.calibrationAdvanceLabelDe);
+      setCalibrationCountdownSec(state.calibrationCountdownSec);
+      setCalibrationStepPhase(state.calibrationStepPhase);
+      setCanStartCalibrationHold(state.canStartCalibrationHold);
+      setCanRetryCalibrationHold(state.canRetryCalibrationHold);
+      setCalibrationStepPeaks(state.calibrationStepPeaks);
       const frame = state.frame;
       const active =
         state.status === 'active' || state.status === 'lost' || state.status === 'paused';
@@ -218,6 +401,28 @@ export function useLiveActViewport({
     });
     const unsubDiagnosticsV2 = engine.subscribeDiagnosticsV2((snapshot) => {
       diagnosticsV2Ref.current = snapshot;
+      if (calibrationStatusRef.current === 'running') {
+        if (accumulateLiveActDiagnosticsPeaks(calibrationPeaksRef.current, snapshot)) {
+          setCalibrationPeakFrames(calibrationPeaksRef.current.frames);
+        }
+      }
+      if (motionTestStatusRef.current === 'running') {
+        if (accumulateLiveActDiagnosticsPeaks(motionTestPeaksRef.current, snapshot)) {
+          setMotionTestPeakFrames(motionTestPeaksRef.current.frames);
+        }
+        if (motionTestStepPhaseRef.current === 'holding' && !snapshot.trackingLost) {
+          if (snapshot.sequence !== motionTestHoldLastSequenceRef.current) {
+            motionTestHoldLastSequenceRef.current = snapshot.sequence;
+            const stepIndex = motionTestStepIndexRef.current;
+            pushLiveActMotionTestHoldSample(
+              motionTestHoldAccRef.current,
+              stepIndex,
+              (key, stage) => readLiveActMotionTestSignal(snapshot, key, stage),
+            );
+            motionTestHoldFramesRef.current += 1;
+          }
+        }
+      }
     });
     return () => {
       unsubStatus();
@@ -304,11 +509,48 @@ export function useLiveActViewport({
     setTrackingEnabledState(false);
   }, [runtimeReady, trackingEnabled]);
 
+  /** Finish a hold when countdown + min frames are met. */
+  useEffect(() => {
+    if (motionTestStatus !== 'running' || motionTestStepPhase !== 'holding') return;
+    const holdMs = liveActMotionTestHoldMs(motionTestStepIndex);
+    const tick = () => {
+      if (motionTestStatusRef.current !== 'running' || motionTestStepPhaseRef.current !== 'holding') {
+        return;
+      }
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const elapsed = now - motionTestHoldStartedAtRef.current;
+      const remainingSec = Math.max(0, Math.ceil((holdMs - elapsed) / 1000));
+      setMotionTestCountdownSec(remainingSec);
+      if (
+        elapsed >= holdMs &&
+        motionTestHoldFramesRef.current >= LIVEACT_MOTION_TEST_MIN_FRAMES
+      ) {
+        const peaks = finalizeLiveActMotionTestStepPeaks(
+          motionTestHoldAccRef.current,
+          motionTestStepIndexRef.current,
+        );
+        motionTestStepPeaksRef.current = peaks;
+        setMotionTestStepPeaks(peaks);
+        setMotionTestStepPhase('review');
+        setMotionTestCountdownSec(0);
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, 100);
+    return () => window.clearInterval(id);
+  }, [motionTestStatus, motionTestStepPhase, motionTestStepIndex]);
+
   const setTrackingEnabled = (next: boolean) => {
     if (next && !runtimeReady) return;
     setTrackingEnabledState(next);
     if (!next) {
       setPreviewVideo(null);
+      if (motionTestStatusRef.current === 'running') {
+        setMotionTestStatus('cancelled');
+        setMotionTestStepPhase(null);
+        setMotionTestMessage('');
+        setMotionTestCountdownSec(null);
+      }
     }
   };
 
@@ -316,14 +558,155 @@ export function useLiveActViewport({
     runtimeReady &&
     trackingEnabled &&
     (status === 'active' || status === 'lost') &&
-    calibrationStatus !== 'running';
+    calibrationStatus !== 'running' &&
+    motionTestStatus !== 'running';
 
+  const canMotionTest =
+    runtimeReady &&
+    trackingEnabled &&
+    (status === 'active' || status === 'lost') &&
+    calibrationStatus !== 'running' &&
+    motionTestStatus !== 'running';
+
+  const beginMotionTestStep = useCallback((stepIndex: number) => {
+    setMotionTestStepIndex(stepIndex);
+    setMotionTestStepPhase('armed');
+    motionTestStepPeaksRef.current = [];
+    setMotionTestStepPeaks([]);
+    setMotionTestCountdownSec(null);
+    motionTestHoldAccRef.current = createLiveActMotionTestHoldAcc();
+    motionTestHoldFramesRef.current = 0;
+    motionTestHoldLastSequenceRef.current = null;
+    setMotionTestMessage(liveActMotionTestStepPrompt(stepIndex));
+  }, []);
+
+  const startMotionTest = useCallback(() => {
+    if (!canMotionTest) return;
+    motionTestPeaksRef.current = createLiveActDiagnosticsPeaks();
+    motionTestStepResultsRef.current = [];
+    setMotionTestPeakFrames(0);
+    setMotionTestStatus('running');
+    beginMotionTestStep(0);
+  }, [beginMotionTestStep, canMotionTest]);
+
+  const startMotionTestHold = useCallback(() => {
+    if (motionTestStatusRef.current !== 'running') return;
+    if (motionTestStepPhaseRef.current !== 'armed') return;
+    motionTestHoldAccRef.current = createLiveActMotionTestHoldAcc();
+    motionTestHoldFramesRef.current = 0;
+    motionTestHoldLastSequenceRef.current = null;
+    motionTestHoldStartedAtRef.current =
+      typeof performance !== 'undefined' ? performance.now() : Date.now();
+    motionTestStepPeaksRef.current = [];
+    setMotionTestStepPeaks([]);
+    setMotionTestStepPhase('holding');
+    setMotionTestCountdownSec(Math.ceil(liveActMotionTestHoldMs(motionTestStepIndexRef.current) / 1000));
+  }, []);
+
+  const retryMotionTestHold = useCallback(() => {
+    if (motionTestStatusRef.current !== 'running') return;
+    if (motionTestStepPhaseRef.current !== 'review') return;
+    beginMotionTestStep(motionTestStepIndexRef.current);
+  }, [beginMotionTestStep]);
+
+  const advanceMotionTest = useCallback(() => {
+    if (motionTestStatusRef.current !== 'running') return;
+    if (motionTestStepPhaseRef.current !== 'review') return;
+    const stepIndex = motionTestStepIndexRef.current;
+    const step = LIVEACT_MOTION_TEST_STEPS[stepIndex];
+    if (step) {
+      motionTestStepResultsRef.current = [
+        ...motionTestStepResultsRef.current,
+        {
+          id: step.id,
+          labelDe: step.labelDe,
+          holdMs: step.holdMs,
+          peaks: [...motionTestStepPeaksRef.current],
+        },
+      ];
+    }
+    const next = stepIndex + 1;
+    if (next >= LIVEACT_MOTION_TEST_STEPS.length) {
+      setMotionTestStatus('success');
+      setMotionTestStepPhase(null);
+      setMotionTestCountdownSec(null);
+      setMotionTestMessage('Motion Test fertig — Messwerte kopieren.');
+      return;
+    }
+    beginMotionTestStep(next);
+  }, [beginMotionTestStep]);
   const calibrateNeutral = useCallback(async () => {
     if (!canCalibrate) return;
     const engine = engineRef.current;
     if (!engine) return;
+    calibrationPeaksRef.current = createLiveActDiagnosticsPeaks();
+    setCalibrationPeakFrames(0);
     await engine.calibrate();
   }, [canCalibrate]);
+
+  const advanceCalibration = useCallback(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    engine.advanceCalibration();
+  }, []);
+
+  const startCalibrationHold = useCallback(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    engine.startCalibrationHold();
+  }, []);
+
+  const retryCalibrationHold = useCallback(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    engine.retryCalibrationHold();
+  }, []);
+
+  const getCalibrationAuditJson = useCallback((): string => {
+    const engine = engineRef.current;
+    const peaks = exportLiveActDiagnosticsPeaks(calibrationPeaksRef.current);
+    return JSON.stringify(
+      {
+        ...peaks,
+        rangeGains: engine?.getRangeCalibration()?.gain ?? null,
+        hasNeutralBaseline: Boolean(engine?.getState().hasNeutralBaseline),
+        hasRangeCalibration: Boolean(engine?.getState().hasRangeCalibration),
+      },
+      null,
+      2,
+    );
+  }, []);
+
+  const getMotionTestAuditJson = useCallback((): string => {
+    const engine = engineRef.current;
+    return JSON.stringify(
+      buildLiveActMotionTestExport({
+        stepResults: motionTestStepResultsRef.current,
+        sessionPeaks: motionTestPeaksRef.current,
+        hasNeutralBaseline: Boolean(engine?.getState().hasNeutralBaseline),
+        hasRangeCalibration: Boolean(engine?.getState().hasRangeCalibration),
+      }),
+      null,
+      2,
+    );
+  }, []);
+
+  const canCopyCalibrationAudit =
+    calibrationPeakFrames > 0 && calibrationStatus !== 'running';
+
+  const canCopyMotionTestAudit =
+    motionTestPeakFrames > 0 && motionTestStatus !== 'running';
+
+  const canStartMotionTestHold =
+    motionTestStatus === 'running' && motionTestStepPhase === 'armed';
+  const canRetryMotionTestHold =
+    motionTestStatus === 'running' && motionTestStepPhase === 'review';
+  const canAdvanceMotionTest =
+    motionTestStatus === 'running' && motionTestStepPhase === 'review';
+  const motionTestAdvanceLabelDe =
+    motionTestStatus === 'running' && motionTestStepPhase === 'review'
+      ? liveActMotionTestAdvanceLabelDe(motionTestStepIndex)
+      : null;
 
   return {
     trackingEnabled,
@@ -332,6 +715,8 @@ export function useLiveActViewport({
     setCameraPreviewEnabled,
     faceOverlayEnabled,
     setFaceOverlayEnabled,
+    faceOverlayFullDetail,
+    setFaceOverlayFullDetail,
     metricsEnabled,
     setMetricsEnabled,
     bonesEnabled,
@@ -354,7 +739,38 @@ export function useLiveActViewport({
     hasNeutralBaseline,
     hasRangeCalibration,
     canCalibrate,
+    canAdvanceCalibration,
+    calibrationAdvanceLabelDe,
+    calibrationCountdownSec,
+    calibrationStepPhase,
+    canStartCalibrationHold,
+    canRetryCalibrationHold,
+    calibrationStepPeaks,
     calibrateNeutral,
+    advanceCalibration,
+    startCalibrationHold,
+    retryCalibrationHold,
+    calibrationPeakFrames,
+    canCopyCalibrationAudit,
+    getCalibrationAuditJson,
+    canMotionTest,
+    motionTestStatus,
+    motionTestMessage,
+    motionTestStepPhase,
+    motionTestCountdownSec,
+    motionTestStepPeaks,
+    motionTestStepIndex,
+    canStartMotionTestHold,
+    canRetryMotionTestHold,
+    canAdvanceMotionTest,
+    motionTestAdvanceLabelDe,
+    startMotionTest,
+    startMotionTestHold,
+    retryMotionTestHold,
+    advanceMotionTest,
+    motionTestPeakFrames,
+    canCopyMotionTestAudit,
+    getMotionTestAuditJson,
     composedCapabilities,
     diagnosticsRef,
     diagnosticsV2Ref,

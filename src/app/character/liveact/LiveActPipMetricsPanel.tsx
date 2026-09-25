@@ -57,12 +57,14 @@ function buildLines(
     `eye L ${formatLiveActMetric(metrics.eyeOpenLeft)} R ${formatLiveActMetric(metrics.eyeOpenRight)}`,
     `brow L ${formatLiveActMetric(metrics.browLiftLeft)} R ${formatLiveActMetric(metrics.browLiftRight)}`,
   ];
+  // Landmark metrics above are the user's own sides; retargeted channels are the avatar's
+  // (mirrored: the user's left blink is the avatar's eyeBlinkRight).
   const retargeted = diagnosticsV2?.stages.retargeted;
   if (retargeted) {
     for (const key of ['face.jawOpen', 'face.eyeBlinkLeft', 'face.eyeBlinkRight', 'face.browInnerUp'] as const) {
       const v = retargeted[key];
       if (typeof v === 'number' && v > 0.08) {
-        lines.push(`${key.replace('face.', '')}=${v.toFixed(2)}`);
+        lines.push(`Avatar ${key.replace('face.', '')}=${v.toFixed(2)}`);
       }
     }
   }

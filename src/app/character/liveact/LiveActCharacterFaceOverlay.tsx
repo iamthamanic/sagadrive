@@ -4,6 +4,7 @@
  *
  * Samples deformed SagaDriveFaceAnchorsV1 via the viewport's CharacterStudioRuntime
  * (same camera + GL canvas as Face Mapping). Shared liveAct handle is fallback only.
+ * Full Detail draws every projected anchor with a short id label.
  */
 
 import { useEffect, useRef, type RefObject } from 'react';
@@ -20,6 +21,8 @@ import type { LiveActCharacterFaceDebugContours } from '../../../infrastructure/
 interface LiveActCharacterFaceOverlayProps {
   enabled: boolean;
   metricsEnabled: boolean;
+  /** Every mesh anchor as labeled dots (in addition to contours). */
+  fullDetail?: boolean;
   /** Prefer this viewport's runtime — expand modal ≠ editor card camera. */
   studioRuntimeRef?: RefObject<CharacterStudioRuntime | null>;
   debugHandleRef: RefObject<LiveActCharacterFaceDebugHandle | null>;
@@ -62,16 +65,24 @@ function drawContours(
 function drawAnchorPoints(
   ctx: CanvasRenderingContext2D,
   points: Readonly<Partial<Record<string, { x: number; y: number }>>>,
+  fullDetail: boolean,
 ): void {
-  ctx.fillStyle = 'rgba(34, 211, 238, 0.95)';
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-  ctx.lineWidth = 1;
-  for (const pt of Object.values(points)) {
+  ctx.font = '8px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.textBaseline = 'bottom';
+  const radius = fullDetail ? 4 : 3.5;
+  for (const [id, pt] of Object.entries(points)) {
     if (!pt) continue;
+    ctx.fillStyle = 'rgba(34, 211, 238, 0.95)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(pt.x, pt.y, 3.5, 0, Math.PI * 2);
+    ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+    if (fullDetail) {
+      ctx.fillStyle = 'rgba(226, 232, 240, 0.95)';
+      ctx.fillText(id, pt.x + 5, pt.y - 4);
+    }
   }
 }
 
@@ -107,6 +118,7 @@ function appliedValue(
 export function LiveActCharacterFaceOverlay({
   enabled,
   metricsEnabled,
+  fullDetail = false,
   studioRuntimeRef,
   debugHandleRef,
   diagnosticsV2Ref,
@@ -161,7 +173,7 @@ export function LiveActCharacterFaceOverlay({
       if (snap.contours) {
         drawContours(ctx, snap.contours);
       }
-      drawAnchorPoints(ctx, snap.points);
+      drawAnchorPoints(ctx, snap.points, fullDetail);
 
       if (metricsEnabled) {
         const m = snap.metrics;
@@ -169,7 +181,7 @@ export function LiveActCharacterFaceOverlay({
         if (!m.available) {
           lines.push('Character metrics: —');
         } else {
-          lines.push('Character geometry');
+          lines.push(fullDetail ? 'Character geometry (full)' : 'Character geometry');
           const bbox = m.bbox;
           lines.push(
             bbox
@@ -183,6 +195,9 @@ export function LiveActCharacterFaceOverlay({
           lines.push(
             `browLift L ${formatLiveActMetric(m.browLiftLeft)}  R ${formatLiveActMetric(m.browLiftRight)}`,
           );
+          if (fullDetail) {
+            lines.push(`anchors ${Object.keys(snap.points).length}`);
+          }
           const d2 = diagnosticsV2Ref?.current ?? null;
           const jaw = appliedValue(d2, 'face.jawOpen');
           const blinkL = appliedValue(d2, 'face.eyeBlinkLeft');
@@ -190,7 +205,9 @@ export function LiveActCharacterFaceOverlay({
           const brow = appliedValue(d2, 'face.browInnerUp');
           lines.push('Applied');
           lines.push(`jawOpen ${jaw == null ? '—' : jaw.toFixed(2)}`);
-          lines.push(`blinkL ${blinkL == null ? '—' : blinkL.toFixed(2)}  blinkR ${blinkR == null ? '—' : blinkR.toFixed(2)}`);
+          lines.push(
+            `blinkL ${blinkL == null ? '—' : blinkL.toFixed(2)}  blinkR ${blinkR == null ? '—' : blinkR.toFixed(2)}`,
+          );
           lines.push(`browInnerUp ${brow == null ? '—' : brow.toFixed(2)}`);
         }
         drawMetricsHud(ctx, lines, width);
@@ -202,7 +219,7 @@ export function LiveActCharacterFaceOverlay({
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
     };
-  }, [enabled, metricsEnabled, studioRuntimeRef, debugHandleRef, diagnosticsV2Ref]);
+  }, [enabled, metricsEnabled, fullDetail, studioRuntimeRef, debugHandleRef, diagnosticsV2Ref]);
 
   if (!enabled) return null;
 
@@ -211,6 +228,7 @@ export function LiveActCharacterFaceOverlay({
       ref={canvasRef}
       className="pointer-events-none absolute inset-0 z-[15] h-full w-full"
       data-testid="liveact-character-face-overlay-canvas"
+      data-full-detail={fullDetail ? 'true' : 'false'}
       aria-hidden
     />
   );

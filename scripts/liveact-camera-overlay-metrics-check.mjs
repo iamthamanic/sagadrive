@@ -56,7 +56,13 @@ check(/videoRef=\{videoRef\}/.test(pip), 'pip passes videoRef');
 check(/metricsEnabled/.test(hook) && /useState\(true\)/.test(hook), 'metrics initial true');
 check(/setMetricsEnabled/.test(hook), 'metrics setter');
 check(/liveact-face-metrics-toggle/.test(settings), 'settings metrics toggle');
+check(/liveact-face-overlay-full-detail-toggle/.test(settings), 'settings full detail toggle');
+check(/faceOverlayFullDetail/.test(hook), 'hook full detail state');
+check(/fullDetail/.test(overlay), 'pip overlay full detail');
+check(/drawAllLandmarks|IRIS_LANDMARK/.test(overlay), 'pip draws all landmarks');
+check(/fullDetail/.test(read('src/app/character/liveact/LiveActCharacterFaceOverlay.tsx')), 'character overlay full detail');
 check(/onMetricsChange/.test(controls), 'controls wire metrics');
+check(/faceOverlayFullDetail/.test(controls), 'controls wire full detail');
 
 check(/checkLiveActCameraOverlayMetrics/.test(gate), 'test-gate');
 check(/liveact-face-metrics-toggle/.test(e2e), 'e2e metrics toggle');
