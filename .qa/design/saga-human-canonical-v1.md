@@ -43,7 +43,7 @@ Stack (unten → oben):
 Im Code verifizierter Runtime-Stand. Alle Punkte sind in `scripts/liveact-fidelity-check.mjs` abgesichert, der Check hängt im Test-Gate.
 
 - **Idle-Suppression:** `AvatarSurfaceViewer` ruft `setLiveActDriveActive(output !== null)` → `CharacterStudioRuntime.setLiveActDriveActive` → `animationRuntime.setSuspended`.
-- **Kalibrierung:** `stepLiveActCalibratedFrame(this.pipelineStep, …)` mit EMA vor dem Neutral-Abzug. Schritt 1/2 = Neutral, Schritt 2/2 = 5 s Maximalbewegung (`LIVEACT_RANGE_CALIBRATION_DURATION_MS`). Die Gains sind Session-Gains und werden nicht persistiert.
+- **Kalibrierung:** `stepLiveActCalibratedFrame(this.pipelineStep, …)` mit EMA vor dem Neutral-Abzug. Schritt 1 = Neutral, danach je ein Maximal-Ausdruck (Mund auf → Augen zu → Brauen → Lächeln → Lippen roll/press/close/upper/lower/funnel/pucker/Schmoll → Mund links/rechts), Weiter/Fertig nach min. 2 s Hold. Die Gains sind Session-Gains und werden nicht persistiert.
 - **Single Gaze Owner:** `resolveLiveActGazeDrivePath` wählt in der Reihenfolge bones → lookAt → morphs. Wenn Pose-Gaze aktiv ist, werden eyeLook-Morphs auf 0 gesetzt (`vrm-liveact-avatar-output.ts`).
 - **Diagnose-Kette:** RAW→MAPPED→SMOOTHED→CALIBRATED→RETARGETED→APPLIED.
 - **Expand-Runtime-Binding:** `e2a86ca`.
@@ -322,7 +322,7 @@ Angepasst (klein, abwärtskompatibel):
 - Ein Build aus 72 gepinnten CC0-Dateien liefert einen Menschen mit echten Augäpfeln, Zahnreihen, Zunge, Kiefer, Eye-Bones und 52 ARKit-Morphs.
 - Er läuft unverändert durch Validator → Packer → dieselbe LiveAct-Runtime und reagiert dort in den richtigen Gesichtsregionen.
 - Der bisherige SagaDrive Human reagiert in derselben Runtime kaum. Seine Morphs sitzen messbar an der falschen Stelle (11.5).
-- **Nicht** belegt ist die zeitliche Stabilität mit echter Webcam. Der manuelle A/B-Test steht aus.
+- **Nicht** belegt ist die zeitliche Stabilität mit echter Webcam. Der erste Webcam-Test deckte Runtime-Fehler auf (Kopfachsen, L/R, Gaze). Sie sind gefixt und per Round-Trip belegt (11.6, 11.9); der Retest steht aus.
 
 ### 11.1 Build
 
@@ -415,6 +415,7 @@ Gesamt 36 924 Dreiecke (Meshy-Human: 215 832).
 - `pose-sheet-11.jpg` — 11 Pflicht-Posen × 3 Avatare
 - `closeups.jpg` — Mund und Augen nah
 - `matrix-<avatar>.jpg` — 38 Posen der Testmatrix
+- `mouth-channels-<avatar>.jpg` — 25 Mund-Close-ups (jeder Lippenkanal einzeln auf 1,0; `mouthClose` 0,5 mit `jawOpen` 0,5)
 - `face-anchors.jpg`
 - `pose-sheet-report.json`
 
@@ -457,16 +458,21 @@ Gesamt 36 924 Dreiecke (Meshy-Human: 215 832).
 | lookLeft → linkes Auge | — (Bone-Gaze) | — (Bone-Gaze) | 58 mm, max. 1,6 mm Bewegung |
 | mouthSmileLeft → Mundwinkel | 9 mm | 7 mm | **97 mm** (auf Augenhöhe) |
 
-**Gaze:**
-- Gemessen wird die Weltrotation des linken Augapfels.
-- LiveAct setzt ein welt-fixes Ziel `(x·0,35, 1,55 + y·0,2, 1,2)`.
+**Gaze (Stand nach den Fixes aus 11.6, gemessen: Weltrotation des linken Augapfels):**
+- LiveAct setzt Auge-im-Kopf direkt: `vrm.lookAt.yaw/pitch = Blick × deklarierter Asset-Bereich`. Es gibt kein Weltziel mehr.
+- Die alten Werte mit welt-fixem Ziel `(x·0,35, 1,55 + y·0,2, 1,2)` stehen in 11.6.
 
-| Pose | Kandidat (Map 30/30) | Reference (Map 90→10) | SagaDrive Human (Expression-LookAt) |
+| Pose | Kandidat (Bone, Map 30→30) | Reference (Bone, Map 90→10) | SagaDrive Human (Expression, Map 90→10) |
 |---|---|---|---|
-| neutral | 4,2° nach unten | 0,4° | `lookDown` dauerhaft 8 % |
-| x = ±1 (LookAt ±16°) | 16,6° | **1,8°** | `lookLeft` Gewicht 1 → Morph 1,6 mm |
-| y = +1 / −1 | 5,2° / 13,5° | 0,6° / 1,4° | — |
-| Kopf-Yaw 20° | LookAt −21,4°, Auge 4,4° in Welt | Auge 17,8° in Welt | — |
+| neutral | 0° (Ruhelage) | 0° | `look*` = 0 |
+| x = ±1 | 30° | 10° (Asset-Maximum) | `lookLeft`/`lookRight` = 1 |
+| x = 0,5 | 15° | 5° | Gewicht 0,5 (linear, keine Früh-Sättigung) |
+| y = ±1 | 30° | 10° | `lookUp`/`lookDown` = 1 |
+| Kopf-Yaw 20° | Augen drehen mit dem Kopf (kopf-relativ) | ebenso | ebenso |
+
+Die Mund-Close-ups je Lippenkanal (`mouth-channels-<avatar>.jpg`) sind der Geometrie-Beleg für das Lippen-Audit in 11.9.
+
+![Lippenkanäle Kandidat](../evidence/saga-human-canonical-v1/mouth-channels-saga-human-canonical-v1.jpg)
 
 ### 11.5 Befund SagaDrive Human (Antwort auf „wieso reagiert der Charakter nicht wie ich")
 
@@ -480,14 +486,25 @@ Gesamt 36 924 Dreiecke (Meshy-Human: 215 832).
 
 ![Face-Anchors der drei Vorlagen](../evidence/saga-human-canonical-v1/face-anchors.jpg)
 
-### 11.6 Runtime-Befunde (dokumentiert, **nicht** geändert — PoC-Constraint)
+### 11.6 Runtime-Befunde und Fixes (nach dem ersten Webcam-Test)
 
-1. **Fixe Ziel-Höhe y = 1,55 m.** Bei neutralem Blick schauen Avatare mit höheren Augen nach unten, der Kandidat um 4,2° (Augen auf 1,637 m). Beim SagaDrive Human bleibt `lookDown` dauerhaft auf 8 %.
-2. **Welt-fixes Blickziel.** Bei 20° Kopfdrehung dreht LookAt um −21° zurück, die Augen bleiben in der Welt stehen. MediaPipe liefert aber Auge-im-Kopf. Schaut der User mit gedrehtem Kopf geradeaus in die Kamera, wird doppelt kompensiert. Bei der Reference verdeckt die 90→10-Map den Effekt, beim Kandidaten (1:1) wird er sichtbar.
-3. **Range-Maps der Assets.** Die 90°→10°-Map (Reference, SagaDrive Human) dämpft ±16° auf 1,8° Augenrotation. Beim Expression-LookAt ist `outputScale` 10 ein Morph-Gewicht und läuft sofort in die Sättigung (Gewicht 1).
-4. **Klein:** three-vrm liest in `lookAt.lookAt()` die Kopf-Matrix des letzten Renders. In der App entsteht so 1 Frame Verzögerung (vernachlässigbar). Im Harness wird deshalb pro Tick `scene.updateMatrixWorld()` aufgerufen wie im Renderer.
+Ursprünglich waren die Befunde nur dokumentiert (PoC-Constraint). Nach dem Webcam-Test des Users wurden die klaren Runtime-Bugs auf ausdrückliche Anweisung minimal gefixt. Das Asset blieb unverändert, es gibt keine avatar-spezifische Logik (Check `runtime isolation` weiter grün).
 
-Die Punkte 1–3 sind eine eigene Runtime-Aufgabe: Auge-im-Kopf-Gaze statt Welt-Ziel, danach kalibrierte Range. Sie ist nach PoC-Abnahme separat zu planen und hier nicht umgesetzt.
+| # | Befund (User-Webcam) | Ursache (belegt) | Fix |
+|---|---|---|---|
+| 1 | Kopf links/rechts → Avatar nickt; Nicken → Avatar kippt | Die alte Zerlegung war ZYX-Aerospace (`yaw = atan2(r10, r00)`, Yaw um Z). Im Y-up-Kameraraum von MediaPipe sind die Achsen damit zyklisch vertauscht: Drehen (um Y) → pitch, Nicken (um X) → roll, Neigen (um Z) → yaw | `liveActHeadPoseFromFacialTransform`: intrinsische YXZ-Zerlegung der spaltenweisen Matrix im Kameraraum des Roh-Frames. Geteilt von LiveAct-Quelle, Legacy-Runtime und Harness |
+| 2 | Links zwinkern → Avatar zwinkert rechts (vom User aus gesehen) | MediaPipe-L/R ist anatomisch, die Pipeline kopierte anatomisch. Die PiP ist per CSS `scaleX(-1)` gespiegelt: gleiche Seite im Mesh, gegenüberliegende Seite am Bildschirm | Konvention `LIVEACT_MIRROR_AVATAR`: Der Avatar ist das Spiegelbild des Users. Die Engine spiegelt zwischen RAW und MAPPED (L/R-Kanäle und Augen tauschen, x/yaw/roll negiert). RAW bleibt anatomisch; PiP-Label „Avatar …" für Kanäle ab MAPPED |
+| 3 | Schaut immer leicht nach unten | Fixe Welt-Zielhöhe 1,55 m: Der Kandidat schaute neutral 4,2° nach unten, beim SagaDrive Human stand `lookDown` dauerhaft auf 8 % | Welt-Ziel entfernt; neutral = Augen in Ruhelage (0°). Restrisiko: Tracker-Bias ohne Kalibrierung, siehe 11.9 |
+| 4 | Augen „stehen" im Raum | Welt-fixes Blickziel: Bei 20° Kopfdrehung drehte LookAt um −21° zurück, obwohl MediaPipe Auge-im-Kopf liefert | Kopf-relative Gaze: `vrm.lookAt.yaw/pitch` direkt. Genau ein Gaze-Owner: die LiveAct-VRM-Output, eyeLook-Morphs genullt. Die Legacy-`AvatarFaceTrackingRuntime` wird in `src` nicht instanziiert |
+| 5 | Blick zu klein (90→10) | Die Range-Maps der Assets wurden über den Umweg Welt-Ziel angesteuert (±16° Eingang → 1,8° bei 90→10). Beim Expression-LookAt ist `outputScale` 10 ein Gewicht, das sofort sättigt | `liveActLookAtGazeScaleDeg`: Blick ±1 erreicht genau den deklarierten Asset-Bereich (Kandidat 30°, Reference 10°, Expression-Gewicht 1, linear). three-vrm-3.5.1-Eigenheit gepinnt: Der Bone-Applier liest für „hoch" `rangeMapVerticalDown` |
+| 6 | Zunge reagiert nicht | MediaPipe liefert 52 Kategorien ohne `tongueOut` | kein Runtime-Bug. Asset-Fähigkeit ja, Webcam-Tracking nein |
+
+**Verifikation:**
+- `npm run qa:liveact-tracking-roundtrip`: Tracker liest die gerenderte Pose zurück (11.9).
+- `scripts/liveact-fidelity-check.mjs` (im test-gate), Abschnitt 1c: physikalisch definierte Kopfposen ohne Achsen-Übersprechen, Gimbal-Fall, Spiegel-Involution, konjugiertes Gaze-Vorzeichen, Engine RAW anatomisch vs. MAPPED gespiegelt, Kopf-/Augen-Anwendung mit echten three-vrm-Appliern.
+- Mutationsprobe: Yaw/Pitch-Tausch und abgeschaltete Spiegel-Konvention machen den Check jeweils rot.
+
+**Klein:** three-vrm liest in `lookAt.update()` die Kopf-Matrix des letzten Renders. In der App ist das 1 Frame Verzögerung (vernachlässigbar). Im Harness wird deshalb pro Tick `scene.updateMatrixWorld()` aufgerufen wie im Renderer.
 
 ### 11.7 Bewertung gegen die Exit-Kriterien (Abschnitt 10)
 
@@ -497,14 +514,14 @@ Die Punkte 1–3 sind eine eigene Runtime-Aufgabe: Auge-im-Kopf-Gaze statt Welt-
 | 2 | strukturelle QA | **erfüllt** (11.2); zwei dokumentierte Abweichungen (11.3 Punkte 1–2) |
 | 3 | full-v1 + tongueOut, Semantic QA ehrlich | **erfüllt**: 52/52, Semantic 10/10 mit auto/unreviewed Anchors |
 | 4 | Pose-Sheet: die vier MakeHuman-Punkte | **erfüllt** (11.4) |
-| 5 | keine Runtime-Diffs | **erfüllt**: `git diff HEAD -- src/infrastructure/character/liveact src/domains/character/liveact` ist leer; Check `runtime isolation` im Gate |
-| 6 | sichtbar besser / stabiler als Meshy-Human | **„besser“ statisch belegt** (11.4, 11.5); **„stabiler“ offen**, der Webcam-A/B-Test durch den User steht aus |
+| 5 | keine Runtime-Diffs | **auf User-Anweisung aufgehoben** (Webcam-Befunde, 11.6). Minimal-Fixes an Kopfachsen, L/R-Konvention und Gaze; weiterhin keine Canonical-spezifische Logik (Check `runtime isolation` im Gate) |
+| 6 | sichtbar besser / stabiler als Meshy-Human | **„besser“ statisch belegt** (11.4, 11.5); **„stabiler“ offen**. Der erste Webcam-Test führte zu 11.6, der Retest (11.9) steht aus |
 
 **Urteil:** Die Canonical-Human-Richtung ist tragfähig. Bestanden ist sie bis auf den manuellen Webcam-A/B-Test. Validatoren und Renders sind grün, das heißt aber **nicht** „perfekt“ (Lücken siehe 11.8).
 
 ### 11.8 Bekannte Lücken
 
-- **Lider folgen dem Blick nicht.** Bei Bone-Gaze bleiben die eyeLook-Morphs auf Body und Wimpern ungetrieben. Bei y = +1 verschwindet der obere Irisrand unter dem Lid.
+- **Lider folgen dem Blick nicht.** Bei Bone-Gaze bleiben die eyeLook-Morphs auf Body und Wimpern ungetrieben. Ab etwa 25–30° Blick nach oben verdeckt das Oberlid die Iris; der Tracker liest dann kaum noch „oben" (Round-Trip `gazeUp30`, INFO).
 - **Optik:** glatzköpfig, ohne Haare und Kleidung, nur Diffuse-Texturen (MakeHuman-Default-Skin). Wirkt wie eine Schaufensterpuppe. Rest-Pose ist A-Pose.
 - **Einige faceunits sind frontal nur schwach sichtbar:** cheekPuff, cheekSquint, noseSneer, mouthPress/Shrug, jawLeft/Right. Upstream sind sie „autogenerated“, nicht handgetunt.
 - **`mouthClose` allein bewegt 35,9 mm.** ARKit-Semantik: Der Kanal ist relativ zu `jawOpen` gemeint. Meldet MediaPipe `mouthClose` ohne `jawOpen`, können sich die Lippen durchdringen. Live nicht getestet.
@@ -512,3 +529,80 @@ Die Punkte 1–3 sind eine eigene Runtime-Aufgabe: Auge-im-Kopf-Gaze statt Welt-
 - **Deployment:** Das VRM (10 MB) ist gitignored und damit nicht auf Vercel. Zu entscheiden ist: committen, LFS oder Build-Schritt.
 - Face-Anchors und Face-Mapping-Authoring sind auto/unreviewed.
 - Zunge nur ≥ 0,90 am Kiefer. Das ist irrelevant, solange der Kiefer morph-owned ist.
+- **Neutral ohne Kalibrierung:** Die Kalibrierung ist manuell. Ohne Schritt 1 geht der Neutral-Bias des Trackers direkt in den Kopf (11.9).
+
+### 11.9 Tracking-Audit (Round-Trip) und Webcam-Retest
+
+**Methode (`npm run qa:liveact-tracking-roundtrip`):**
+- Avatar rendern; MediaPipe (tasks-vision 0.10.14, IMAGE, CPU) liest den Render wie eine Webcam (640×480, FOV 40°, 0,5 m).
+- Danach läuft dieselbe Mapping-/Spiegel-Kette wie in der App, die Pose wird angewendet und ihre Wirkung gemessen.
+- Gating (Exit ≠ 0) nur bei Konventionsfehlern (`FAIL`). `WEAK`, `SKIP`, `INFO`, `BIAS` und `ASSET` sind Befunde.
+- **Proxy-Grenze:** MediaPipe ist auf echten Gesichtern trainiert. Auf Renders ohne Haar und Hautdetail werden manche Kanäle unterschätzt. Die Kanal-Klassen sind deshalb **vorläufig**; endgültig entscheidet der Peak-Export aus dem Webcam-Retest.
+- Tracking-Proxy ist nur ein Avatar, auf dem Blink oder jawOpen „gut" gelesen werden (Kandidat, Reference). SagaDrive Human ist kein Proxy.
+- Evidenz: `.qa/evidence/liveact-tracking-roundtrip/roundtrip-frames.jpg`, `roundtrip-report.json`.
+
+**Kopf** (Tracker-Δ gegen gerenderte Pose; Soll: yaw ±20°, pitch ±15°, roll 15°):
+
+| Avatar | yaw + / − | pitch runter / hoch | roll | max. Übersprechen |
+|---|---|---|---|---|
+| Kandidat | 21,2° / −21,5° | 13,7° / −13,4° | 15,0° | 4,1° |
+| Reference | 19,4° / −18,1° | 12,9° / −14,0° | 14,9° | 4,3° |
+| SagaDrive Human | 18,7° / −18,6° | 14,4° / −13,0° | 14,6° | 2,0° |
+
+**Links/Rechts** (App-Konvention gespiegelt):
+- Kandidat und Reference: alle 9 Aktionen OK, Wirkung auf der PiP-Seite (blink, smile, jaw, mouth, Kopf drehen/neigen/nicken, Blick links/hoch).
+- Beispiel Kandidat: RAW `eyeBlinkLeft` → MAPPED `eyeBlinkRight` → APPLIED `eyeBlinkRight` → Morph `eyeBlinkRight` auf Body, Eyelashes und Eyebrows → Bildschirm links = PiP links.
+- **Asset-Befund SagaDrive Human:** `jawLeft`/`jawRight` sind im Asset vertauscht; der Morph `jawRight` bewegt zur Avatar-Linken. Status `ASSET`, nicht gating; ein Runtime-Workaround ist verboten.
+
+**Neutral:**
+- Angewandt: lookAt 0°/0° bei allen Avataren.
+- Der Tracker liest die neutralen Renders als leicht nach unten geneigt: Kandidat 8,4°, Reference 8,0°, SagaDrive Human 6,4°. Yaw und Roll bleiben ≤ 0,4°, der Blick ≤ 0,07.
+- Unkalibriert treibt dieser Bias den Kopf nach unten; Kalibrierung Schritt 1 zieht ihn ab. Ob echte Webcams denselben Bias zeigen, klärt der Retest (A/B).
+- Die App-Kamera liegt 3–11° **unter** der Augenlinie (full −10,8°, portrait −4,2°, face −3,2° beim Kandidaten). Sie erzeugt also keinen Blick nach unten.
+
+**Blick** (Kandidat, Augapfel 15°):
+- Horizontal liest der Tracker Δx ≈ 0,45; mit Bereich 30° ergibt das ≈ 13,5° (nahe 1:1).
+- Vertikal Δy ≈ 0,23 ≈ 7° (halbe Amplitude).
+- Aufwärts-Sweep: 20° → 0,28, 25° → 0,18, 30° → 0,04 (Lid verdeckt die Iris, 11.8).
+
+**Lippen-Fidelity-Audit (vorläufig, Kandidat; Kanal auf 1,0):**
+- Morph = Geometrie (`mouth-channels-*.jpg`, max. Vertex-Verschiebung).
+- Tracking = Tracker-Δ auf dem Render-Proxy (gut ≥ 0,3, schwach ≥ 0,1).
+
+| Kanal | Morph | Tracking Kandidat / Reference | vorläufige Klasse |
+|---|---|---|---|
+| mouthSmileLeft/Right | 18,7 / 18,1 mm, klar | 0,69 / 0,42 · Ref 0,50 / 0,55 | **good** |
+| mouthPucker | 8,7 mm, sichtbar | 0,81 · Ref 0,87 | **good** |
+| mouthPressLeft/Right | 8,1 mm, subtil | 0,36 / 0,51 · Ref (12,5 mm) 0,01 | **good** |
+| jawOpen | 38,7 mm | 0,79 · Ref 0,55 | **good** |
+| mouthRollLower | 7,3 mm, sichtbar | 0,27 · Ref ohne Morph | **Tracking weak** + wahrscheinlich **LiveAct attenuation** (kein Range-Gain) |
+| mouthRollUpper | 10,6 mm, sichtbar | 0,02 · Ref ohne Morph | **Tracking weak?** (kein zweiter Proxy) |
+| mouthShrugUpper/Lower | 5,3 / 6,9 mm | 0,14 / 0,24 · Ref ohne Morph | **Tracking weak** (schwach erkannt) |
+| mouthUpperUpLeft/Right | 6,0 mm, Zähne sichtbar | 0,01 / 0,14 · Ref 0,41 / 0,63 | **Morph weak** (liest sich deutlich schwächer als die Reference) |
+| mouthFrownLeft/Right | 6,7 mm | 0,05 / 0,03 · Ref 0,14 / 0,11 | **Morph weak?** (Reference schwach erkannt, Kandidat nicht) |
+| mouthLowerDownLeft/Right | 4,9 mm, Zähne sichtbar | 0,01 · Ref (7,6 mm) 0,00 | **Tracking weak?** (auf keinem Proxy) |
+| mouthFunnel | 10,9 mm, klar | 0,10 · Ref (42 mm) 0,04 | **Tracking weak?** (auf keinem Proxy) |
+| mouthClose (+ jawOpen 0,5) | Lippen schließen plausibel | 0,00 · Ref 0,00 | **Tracking weak?** (auf keinem Proxy) |
+| mouthStretch / Dimple | 8,6 / 7,9 mm, subtil | ≤ 0,06 · Ref ≤ 0,01 | **Tracking weak?** |
+| mouthLeft/Right | 10,7 mm | 0,21 / 0,39 · Ref (3 mm) 0,00 | **good** (links schwach erkannt) |
+
+**LiveAct-Stufen (gemessen oder aus dem Code belegt):**
+- MAPPED: alle 51 Kanäle 1:1 per Name, ohne Allowlist oder Umbenennung.
+- SMOOTHED: EMA α 0,35 pro Sample (Desktop 30 fps, Mobile 15 fps). Amplitude bei 1 / 2 / 3 / 5 / 8 Hz: 91 / 72 / 58 / 45 / 28 %; 90 %-Sprungantwort 167 ms. Gehaltene Ausdrücke kommen voll an, schnelle Silben (3–6 Hz) halbiert. Das ist ein Kandidat für „Lippen starr / nicht fein".
+- CALIBRATED:
+  - Schritt 1 zieht die Neutral-Baseline ab.
+  - Schritte 2+ vergeben Range-Gain `min(4, 1/span)` nur für Kanäle mit Span ≥ 0,1. Die Lippen-Schritte (Roll, Press, Close, UpperUp, LowerDown, Funnel, Pucker, Shrug, Mund links/rechts) sind Teil derselben Weiter-Kette.
+- RETARGETED: Identity für alle Avatare (`resolveLiveActRetargetProfile`), keine Deadzone.
+- APPLIED: nur Clamp 0..1. Keine der an die 51 Kanäle gebundenen Expressions hat `isBinary` oder `override*` ≠ `none` (alle drei Avatare). Es gibt also keine gegenseitige Unterdrückung.
+
+**Zunge:** Asset-Fähigkeit `tongueOut`: **ja** (Pose-Test). Webcam-Tracking-Fähigkeit: **nein**, MediaPipe liefert 52 Kategorien ohne `tongueOut`. Es gibt keinen Fake-Marker. Lippenlecken wäre höchstens eine ausgelöste Animation (Phase 2).
+
+**Nicht umgesetzt (Entscheidung nach dem Webcam-Retest):**
+- Glättung pro Kanal / One-Euro-Filter
+- Lippen-Kalibrierung ist in der Weiter-Kette (Roll/Press/Close/…) — Feintuning der Hold-Zeiten ggf. nach Webcam-Peaks
+- automatische Neutral-Kalibrierung beim Tracking-Start
+- Correctives (Phase 2)
+
+**Webcam-Retest:**
+- Das Gear-Panel → „Channel Trace (RAW→APPLIED)" hat einen Peak-Recorder: min/max pro Kanal und Stufe, „Reset", „Kopieren" als JSON (nur Zahlen, kein Bild).
+- Pro Kanal zeigt RAW-max die Tracking-Stärke auf dem echten Gesicht, CALIBRATED/RAW den Gain bzw. die Dämpfung und APPLIED das Morph-Gewicht.

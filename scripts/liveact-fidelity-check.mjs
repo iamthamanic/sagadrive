@@ -5,6 +5,9 @@
  *
  * 1. Calibration pipeline: baseline subtracted once (no smoothing feedback), range gains,
  *    tracking-lost easing without jumps (real domain functions, engine order).
+ * 1c. Tracking conventions: MediaPipe head matrix → yaw/pitch/roll (physically defined poses, no
+ *    axis cross-talk), left/right mirror, conjugate gaze sign, engine RAW anatomical vs. MAPPED
+ *    mirrored, diagnostics peaks, head / eye application with real three-vrm LookAt appliers.
  * 2. Ownership: procedural idle cannot overwrite the LiveAct head while suspended
  *    (real AvatarAnimationRuntime + three AnimationMixer).
  * 3. Reference VRM teeth binds: patch lib on a synthetic GLB (+ local binary when present).
@@ -204,24 +207,44 @@ try {
     face: { eyeBlinkLeft: 0.85, eyeBlinkRight: 0.85, jawOpen: 0.56, browInnerUp: 0.5 },
   });
 
+  const rangeSteps = d.LIVEACT_RANGE_CALIBRATION_STEPS;
   const firstRun = engine.calibrate();
   check(
     engine.getState().calibrationStatus === 'running' &&
-      /Schritt 1\/2/.test(engine.getState().calibrationMessage),
+      new RegExp(`Schritt 1/${rangeSteps.length + 1}`).test(engine.getState().calibrationMessage),
     'engine starts with neutral step',
   );
   feed(sample(), 30);
   check(engine.getState().hasNeutralBaseline, 'engine stores neutral after 30 frames');
   check(
     engine.getState().calibrationStatus === 'running' &&
-      /Schritt 2\/2 \(5 s\)/.test(engine.getState().calibrationMessage),
-    'engine continues with max pass',
+      /Mund weit auf/.test(engine.getState().calibrationMessage),
+    'engine continues with jaw-open step',
   );
-  const rangePass = feed((i) => (i < 80 ? grimace : sample()), 160);
-  check(
-    ['(4 s)', '(3 s)', '(2 s)', '(1 s)'].every((s) => [...rangePass.messages].some((m) => m.includes(s))),
-    'max pass counts down',
-  );
+  check(engine.getState().calibrationStepPhase === 'armed', 'jaw step waits for Start');
+  check(engine.getState().canStartCalibrationHold, 'Start unlocked when armed');
+  check(!engine.getState().canAdvanceCalibration, 'Weiter locked until review');
+  for (let i = 0; i < rangeSteps.length; i += 1) {
+    const step = rangeSteps[i];
+    const holdFrames = Math.ceil(step.holdMs / 33) + 5;
+    check(
+      engine.getState().calibrationMessage.includes(step.labelDe),
+      `range step ${i + 1}: ${step.labelDe}`,
+    );
+    check(engine.getState().canStartCalibrationHold, `Start ready at ${step.id}`);
+    engine.startCalibrationHold();
+    check(engine.getState().calibrationStepPhase === 'holding', `holding ${step.id}`);
+    feed(grimace, holdFrames);
+    check(engine.getState().calibrationStepPhase === 'review', `review ${step.id}`);
+    check(engine.getState().calibrationStepPeaks.length > 0, `peaks for ${step.id}`);
+    check(engine.getState().canRetryCalibrationHold, `Wiederholen at ${step.id}`);
+    check(
+      engine.getState().calibrationAdvanceLabelDe ===
+        (i === rangeSteps.length - 1 ? 'Fertig' : 'Weiter'),
+      `advance label at ${step.id}`,
+    );
+    engine.advanceCalibration();
+  }
   const firstResult = await firstRun;
   check(firstResult.ok && /Neutral \+ Maximal/.test(firstResult.messageDe), 'engine resolves after max pass');
   check(engine.getState().hasRangeCalibration, 'engine exposes range calibration');
@@ -232,7 +255,12 @@ try {
   const secondRun = engine.calibrate();
   feed(sample(), 30);
   check(!engine.getState().hasRangeCalibration, 'new neutral clears previous range gains');
-  feed(sample(), 160);
+  for (let step = 0; step < rangeSteps.length; step += 1) {
+    const holdFrames = Math.ceil(rangeSteps[step].holdMs / 33) + 5;
+    engine.startCalibrationHold();
+    feed(sample(), holdFrames);
+    engine.advanceCalibration();
+  }
   const secondResult = await secondRun;
   check(
     secondResult.ok && /ohne genug Bewegung/.test(secondResult.messageDe) && !engine.getState().hasRangeCalibration,
@@ -249,6 +277,244 @@ try {
   if (originalNow) Object.defineProperty(performance, 'now', originalNow);
   else delete performance.now;
 }
+
+// --- 1c. Tracking conventions ---------------------------------------------------------------
+// MediaPipe facial transform (column-major; camera space of the raw frame: +X image right = the
+// user's own left, +Y up, +Z toward the camera) with scale + translation like the real matrix.
+const facialTransform = (rotation, scale = 0.93) =>
+  new THREE.Matrix4()
+    .compose(new THREE.Vector3(1.5, -2, -40), rotation, new THREE.Vector3(scale, scale, scale))
+    .toArray();
+const AXIS_Y = new THREE.Vector3(0, 1, 0);
+const AXIS_Z = new THREE.Vector3(0, 0, 1);
+const turn = (from, to) => new THREE.Quaternion().setFromUnitVectors(from, to.clone().normalize());
+const headFrom = (rotation) => d.liveActHeadPoseFromFacialTransform(facialTransform(rotation));
+const A20 = THREE.MathUtils.degToRad(20);
+const S20 = Math.sin(A20);
+const C20 = Math.cos(A20);
+for (const [label, rotation, want] of [
+  ["face turned toward the user's own left", turn(AXIS_Z, new THREE.Vector3(S20, 0, C20)), { yaw: A20, pitch: 0, roll: 0 }],
+  ['face turned down', turn(AXIS_Z, new THREE.Vector3(0, -S20, C20)), { yaw: 0, pitch: A20, roll: 0 }],
+  ["head tilted toward the user's right shoulder", turn(AXIS_Y, new THREE.Vector3(-S20, C20, 0)), { yaw: 0, pitch: 0, roll: A20 }],
+]) {
+  const pose = headFrom(rotation);
+  for (const axis of ['yaw', 'pitch', 'roll']) near(pose[axis], want[axis], 1e-6, `${label}: ${axis}`);
+}
+for (const [pitch, yaw, roll] of [
+  [-0.2, 0.3, -0.15],
+  [0.35, -0.5, 0.3],
+]) {
+  const pose = headFrom(new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, yaw, roll, 'YXZ')));
+  near(pose.pitch, pitch, 1e-6, `combined head pose: pitch ${pitch}`);
+  near(pose.yaw, yaw, 1e-6, `combined head pose: yaw ${yaw}`);
+  near(pose.roll, roll, 1e-6, `combined head pose: roll ${roll}`);
+}
+const gimbal = headFrom(new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0.4, 0, 'YXZ')));
+near(gimbal.pitch, Math.PI / 2, 1e-6, 'gimbal lock: pitch 90°');
+near(gimbal.yaw, 0.4, 1e-6, 'gimbal lock: shared axis attributed to yaw');
+near(gimbal.roll, 0, 1e-12, 'gimbal lock: roll 0');
+check(
+  d.liveActHeadPoseFromFacialTransform(null) === null && d.liveActHeadPoseFromFacialTransform([1, 0, 0]) === null,
+  'missing / short head matrix → null',
+);
+
+const asymmetric = sample({
+  headYaw: 0.3,
+  headPitch: 0.2,
+  headRoll: 0.1,
+  eyeLeftX: 0.4,
+  eyeLeftY: 0.3,
+  eyeRightX: 0.2,
+  eyeRightY: -0.1,
+  face: { eyeBlinkLeft: 0.9, eyeBlinkRight: 0.1, jawLeft: 0.7, mouthSmileLeft: 0.6, mouthPucker: 0.5, jawOpen: 0.3 },
+});
+const mirrored = d.mirrorLiveActSourceSample(asymmetric);
+near(mirrored.headYaw, -0.3, 1e-12, 'mirror: yaw flips');
+near(mirrored.headPitch, 0.2, 1e-12, 'mirror: pitch stays');
+near(mirrored.headRoll, -0.1, 1e-12, 'mirror: roll flips');
+near(mirrored.eyeLeftX, -0.2, 1e-12, "mirror: avatar left eye = user's right eye, x flipped");
+near(mirrored.eyeLeftY, -0.1, 1e-12, 'mirror: vertical gaze stays');
+near(mirrored.eyeRightX, -0.4, 1e-12, "mirror: avatar right eye = user's left eye, x flipped");
+near(mirrored.eyeRightY, 0.3, 1e-12, 'mirror: vertical gaze stays (right eye)');
+check(
+  mirrored.face.eyeBlinkRight === 0.9 && mirrored.face.eyeBlinkLeft === 0.1,
+  "mirror: user's left blink → avatar's eyeBlinkRight",
+);
+check(mirrored.face.jawRight === 0.7 && mirrored.face.jawLeft === undefined, 'mirror: jawLeft → jawRight');
+check(
+  mirrored.face.mouthSmileRight === 0.6 && mirrored.face.mouthPucker === 0.5 && mirrored.face.jawOpen === 0.3,
+  'mirror: sided channels swap, centre channels stay',
+);
+const sameValues = (a, b) => Object.keys({ ...a, ...b }).every((key) => a[key] === b[key]);
+const { face: faceBefore, ...restBefore } = asymmetric;
+const { face: faceTwice, ...restTwice } = d.mirrorLiveActSourceSample(mirrored);
+check(sameValues(restBefore, restTwice) && sameValues(faceBefore, faceTwice), 'mirror twice = original sample');
+for (const id of d.LIVEACT_FACE_CHANNELS) {
+  const twin = d.mirroredLiveActFaceChannel(id);
+  check(d.LIVEACT_FACE_CHANNELS.includes(twin) && d.mirroredLiveActFaceChannel(twin) === id, `${id}: twin round trip`);
+  check(/(Left|Right)$/.test(id) === (twin !== id), `${id}: sided channels have a twin, centre channels map to themselves`);
+}
+check(d.LIVEACT_MIRROR_AVATAR === true, 'app convention: the avatar mirrors the user like the mirrored PiP');
+
+const mediaPipe = (scores, options = {}) =>
+  d.mapMediaPipeFaceToLiveActSample({
+    categories: Object.entries(scores).map(([categoryName, score]) => ({ categoryName, score })),
+    matrix: options.matrix ?? null,
+    enableHeadPose: options.enableHeadPose ?? true,
+    faceIndex: 0,
+    faceCount: 1,
+  });
+const gazeLeft = mediaPipe({ eyeLookOutLeft: 0.6, eyeLookInRight: 0.5 });
+near(gazeLeft.eyeLeftX, 0.6, 1e-12, "gaze toward the user's own left: left eye looks out → +x");
+near(gazeLeft.eyeRightX, 0.5, 1e-12, "gaze toward the user's own left: right eye looks in → +x (conjugate)");
+const gazeRight = mediaPipe({ eyeLookInLeft: 0.5, eyeLookOutRight: 0.6 });
+check(gazeRight.eyeLeftX < 0 && gazeRight.eyeRightX < 0, "gaze toward the user's right: both eyes −x");
+const gazeUp = mediaPipe({ eyeLookUpLeft: 0.4, eyeLookUpRight: 0.4, eyeLookDownLeft: 0.1 });
+near(gazeUp.eyeLeftY, 0.3, 1e-12, 'gaze up → +y (left eye, up − down)');
+near(gazeUp.eyeRightY, 0.4, 1e-12, 'gaze up → +y (right eye)');
+const headMatrix = facialTransform(turn(AXIS_Z, new THREE.Vector3(S20, 0, C20)));
+const tracked = mediaPipe({ eyeBlinkLeft: 0.8, jawOpen: 0.4 }, { matrix: headMatrix });
+near(tracked.headYaw, A20, 1e-6, 'mapper passes the matrix head pose');
+check(tracked.face.eyeBlinkLeft === 0.8, 'mapper keeps anatomical blendshapes (RAW)');
+check(
+  tracked.face.tongueOut === undefined,
+  'MediaPipe has no tongueOut category: channel stays unset (asset capability only)',
+);
+check(mediaPipe({}, { matrix: headMatrix, enableHeadPose: false }).headYaw === 0, 'head pose disabled → 0');
+
+const orientEngine = new engineModule.LiveActEngine(async () => {
+  throw new Error('no face source in check');
+});
+try {
+  const oriented = orientEngine.ingestSampleForTests(asymmetric, 5000);
+  const stages = orientEngine.getDiagnosticsV2()?.stages;
+  check(Boolean(stages), 'engine exposes Diagnostics V2 after a sample');
+  near(stages.raw['face.eyeBlinkLeft'], 0.9, 1e-12, "Diagnostics RAW stays anatomical (user's left blink)");
+  near(stages.raw['head.yaw'], 0.3, 1e-12, 'Diagnostics RAW yaw anatomical');
+  near(stages.mapped['face.eyeBlinkRight'], 0.9, 1e-12, 'Diagnostics MAPPED is avatar-oriented (mirrored)');
+  near(stages.mapped['head.yaw'], -0.3, 1e-12, 'Diagnostics MAPPED yaw mirrored');
+  near(oriented.face.eyeBlinkRight, 0.9, 1e-12, "engine frame: user's left blink closes the avatar's right eye");
+  near(oriented.head.roll, -0.1, 1e-12, 'engine frame: roll mirrored');
+} finally {
+  orientEngine.dispose();
+}
+
+const peaks = d.createLiveActDiagnosticsPeaks();
+const peakSnapshot = (sequence, values, applied, trackingLost = false) => ({
+  contractVersion: d.LIVEACT_DIAGNOSTICS_V2_VERSION,
+  timestampMs: sequence * 33,
+  sequence,
+  trackingLost,
+  stages: { raw: values, mapped: values, smoothed: values, calibrated: values, retargeted: values, applied },
+});
+check(
+  d.accumulateLiveActDiagnosticsPeaks(
+    peaks,
+    peakSnapshot(1, { 'face.mouthPucker': 0.2, 'head.yaw': -0.1 }, { 'face.mouthPucker': { status: 'supported', value: 0.1 } }),
+  ),
+  'peaks count a new engine frame',
+);
+check(!d.accumulateLiveActDiagnosticsPeaks(peaks, peakSnapshot(1, { 'face.mouthPucker': 0.9 }, {})), 'same snapshot counted once');
+d.accumulateLiveActDiagnosticsPeaks(
+  peaks,
+  peakSnapshot(
+    2,
+    { 'face.mouthPucker': 0.6, 'head.yaw': 0.2 },
+    { 'face.mouthPucker': { status: 'supported', value: 0.3 }, 'face.tongueOut': { status: 'unavailable', value: null } },
+  ),
+);
+check(!d.accumulateLiveActDiagnosticsPeaks(peaks, peakSnapshot(3, { 'face.mouthPucker': 1 }, {}, true)), 'tracking-lost frames skipped');
+const peakExport = d.exportLiveActDiagnosticsPeaks(peaks);
+check(peakExport.frames === 2, 'peak frame count');
+check(JSON.stringify(peakExport.signals['face.mouthPucker'].raw) === '[0.2,0.6]', 'peaks: RAW min/max');
+check(JSON.stringify(peakExport.signals['face.mouthPucker'].applied) === '[0.1,0.3]', 'peaks: APPLIED min/max');
+check(JSON.stringify(peakExport.signals['head.yaw'].raw) === '[-0.1,0.2]', 'peaks: signed signals keep their minimum');
+check(peakExport.signals['face.tongueOut'] === undefined, 'peaks: unavailable / idle signals left out');
+check(peakExport.avatarMirrored === d.LIVEACT_MIRROR_AVATAR, 'peaks export states the avatar orientation');
+
+const poseDrive = await bundle(
+  'src/infrastructure/character/liveact/liveact-pose-drive.ts',
+  'liveact-fidelity-pose-drive-bundle.mjs',
+  { platform: 'node', external: ['three', '@pixiv/three-vrm'] },
+);
+const { VRMLookAtBoneApplier, VRMLookAtExpressionApplier, VRMLookAtRangeMap } = await import('@pixiv/three-vrm');
+
+const headNode = new THREE.Object3D();
+const headAxes = (pose, rest = new THREE.Quaternion()) => {
+  poseDrive.applyLiveActHeadRotation(headNode, rest, pose, new THREE.Euler(), new THREE.Quaternion());
+  return {
+    forward: AXIS_Z.clone().applyQuaternion(headNode.quaternion),
+    up: AXIS_Y.clone().applyQuaternion(headNode.quaternion),
+  };
+};
+check(headAxes({ yaw: 0.35, pitch: 0, roll: 0 }).forward.x > 0.3, "+yaw turns the head toward the avatar's own left (+X)");
+check(headAxes({ yaw: 0, pitch: 0.26, roll: 0 }).forward.y < -0.2, '+pitch turns the face down');
+check(headAxes({ yaw: 0, pitch: 0, roll: 0.26 }).up.x < -0.2, "+roll tilts toward the avatar's right shoulder (−X)");
+const headRestPose = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.16, 0, 0));
+headAxes({ yaw: 0, pitch: 0, roll: 0 }, headRestPose);
+check(headNode.quaternion.angleTo(headRestPose) < 1e-9, 'zero head pose keeps the authored rest');
+headAxes({ yaw: 0.3, pitch: -0.2, roll: 0.15 });
+const decodedHead = d.liveActHeadPoseFromFacialTransform(facialTransform(headNode.quaternion));
+near(decodedHead.yaw, 0.3, 1e-6, 'avatar head → facial transform → same yaw');
+near(decodedHead.pitch, -0.2, 1e-6, 'avatar head → facial transform → same pitch');
+near(decodedHead.roll, 0.15, 1e-6, 'avatar head → facial transform → same roll');
+
+const rangeMap = (inputMax, outputScale) => new VRMLookAtRangeMap(inputMax, outputScale);
+const rawEyes = { leftEye: new THREE.Object3D(), rightEye: new THREE.Object3D() };
+new THREE.Group().add(rawEyes.leftEye);
+new THREE.Group().add(rawEyes.rightEye);
+const normalizedEyes = { leftEye: new THREE.Object3D(), rightEye: new THREE.Object3D() };
+const eyeHumanoid = {
+  getRawBoneNode: (name) => rawEyes[name] ?? null,
+  getNormalizedBoneNode: (name) => normalizedEyes[name] ?? null,
+};
+// Distinct vertical maps reveal which one three-vrm reads for up (pitch < 0) and for down.
+const boneApplier = new VRMLookAtBoneApplier(eyeHumanoid, rangeMap(30, 30), rangeMap(30, 30), rangeMap(20, 12), rangeMap(40, 30));
+const boneScale = poseDrive.liveActLookAtGazeScaleDeg(boneApplier);
+check(
+  boneScale.horizontal === 30 && boneScale.up === 20 && boneScale.down === 40,
+  `bone LookAt scale from the declared ranges (got ${JSON.stringify(boneScale)})`,
+);
+const driveLookAt = (applier, x, y) => {
+  const vrm = { lookAt: { applier, yaw: 0, pitch: 0 } };
+  poseDrive.applyLiveActVrmEyeLookAt(vrm, { x, y }, { x, y });
+  applier.applyYawPitch(vrm.lookAt.yaw, vrm.lookAt.pitch);
+};
+const leftEyeDeg = (x, y) => {
+  driveLookAt(boneApplier, x, y);
+  const forward = AXIS_Z.clone().applyQuaternion(rawEyes.leftEye.quaternion);
+  return {
+    toAvatarLeft: THREE.MathUtils.radToDeg(Math.asin(forward.x)),
+    up: THREE.MathUtils.radToDeg(Math.asin(forward.y)),
+  };
+};
+near(leftEyeDeg(1, 0).toAvatarLeft, 30, 1e-6, "gaze x +1 → the asset's full 30° toward the avatar's left (+X)");
+near(leftEyeDeg(0.5, 0).toAvatarLeft, 15, 1e-6, 'gaze is linear inside the declared range');
+near(leftEyeDeg(0, 1).up, 12, 1e-6, 'gaze up +1 → full output of the map three-vrm reads for up (rangeMapVerticalDown)');
+near(leftEyeDeg(0, -1).up, -30, 1e-6, 'gaze down −1 → full output of the down map (rangeMapVerticalUp)');
+near(leftEyeDeg(0, 0).up, 0, 1e-9, 'neutral gaze → eyes at rest (head-relative, no world target)');
+
+const lookWeights = {};
+const expressionApplier = new VRMLookAtExpressionApplier(
+  { setValue: (name, value) => (lookWeights[name] = value) },
+  rangeMap(90, 10),
+  rangeMap(90, 10),
+  rangeMap(90, 10),
+  rangeMap(90, 10),
+);
+near(poseDrive.liveActLookAtGazeScaleDeg(expressionApplier).horizontal, 9, 1e-9, 'expression LookAt: full weight at 90° × 1/10');
+for (const x of [0.25, 0.5, 1]) {
+  driveLookAt(expressionApplier, x, 0);
+  near(lookWeights.lookLeft, x, 1e-9, `expression gaze x ${x} → lookLeft ${x} (linear, not saturated early)`);
+}
+driveLookAt(expressionApplier, 0, 0.5);
+near(lookWeights.lookUp, 0.5, 1e-9, 'expression gaze up 0.5 → lookUp 0.5');
+check(lookWeights.lookDown === 0, 'expression gaze up → lookDown 0');
+const fallbackScale = poseDrive.liveActLookAtGazeScaleDeg({ applyYawPitch() {} });
+check(
+  fallbackScale.horizontal === 30 && fallbackScale.up === 30 && fallbackScale.down === 30,
+  'unknown LookAt applier → 30° fallback',
+);
 
 // --- 2. Ownership: idle suspended while LiveAct drives ------------------------------------
 const anim = await bundle(
@@ -281,7 +547,8 @@ const liveActHead = headRest
   .multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0.2, 'YXZ')));
 const runtime = new anim.AvatarAnimationRuntime();
 runtime.bind(scene, analysis);
-check(runtime.getActiveAction() === 'idle', 'idle auto-plays after bind');
+check(runtime.getActiveAction() === null, 'bind stays in rest pose (no idle autoplay)');
+check(runtime.play('idle') === true, 'idle starts on demand');
 
 function driveHead(frames) {
   let maxError = 0;
@@ -307,7 +574,7 @@ runtime.bind(scene, analysis);
 check(runtime.getActiveAction() === null, 'rebind while suspended does not auto-play');
 check(driveHead(30) < 1e-6, 'rebind while suspended keeps LiveAct head');
 runtime.setSuspended(false);
-check(runtime.getActiveAction() === 'idle', 'resume after rebind plays default idle');
+check(runtime.getActiveAction() === null, 'resume after rebind stays still without prior play');
 runtime.dispose();
 
 // --- 3. Reference VRM teeth binds -----------------------------------------------------------
@@ -375,13 +642,30 @@ const controls = read('src/app/character/liveact/LiveActViewportControls.tsx');
 const fetchScript = read('scripts/fetch-liveact-reference-vrm.mjs');
 const attribution = read('public/assets/avatars/reference/ATTRIBUTION.md');
 const gate = read('scripts/test-gate.mjs');
+const faceSource = read('src/infrastructure/character/liveact/mediapipe-face-source.ts');
+const vrmOutput = read('src/infrastructure/character/liveact/vrm-liveact-avatar-output.ts');
+
+check(
+  /const oriented = LIVEACT_MIRROR_AVATAR \? mirrorLiveActSourceSample\(sample\) : sample/.test(engine),
+  'engine orients the sample between RAW and MAPPED',
+);
+check(/raw: snapshotLiveActDiagnosticsV2FromSample\(sample\)/.test(engine), 'Diagnostics RAW is the unmirrored sample');
+check(/tickCalibration\(oriented\)/.test(engine), 'calibration runs in avatar orientation');
+check(!/mirrorLiveActSourceSample|LIVEACT_MIRROR_AVATAR/.test(faceSource), 'face source stays anatomical');
+check(
+  /applyLiveActVrmEyeLookAt\(this\.deps\.vrm/.test(vrmOutput) && !/eyeLookTarget/.test(vrmOutput),
+  'VRM output: head-relative LookAt, no world target',
+);
+check(/transform: 'scaleX\(-1\)'/.test(pip), 'PiP preview is mirrored');
 
 check(/stepLiveActCalibratedFrame\(\s*this\.pipelineStep/.test(engine), 'engine uses calibrated step');
 check(!/smoothLiveActFrame\(this\.frame/.test(engine), 'engine no longer smooths the calibrated frame');
 check(/pipelineStep = null/.test(engine), 'engine resets pipeline state');
 check(/rangeCalibration = null/.test(engine), 'engine clears range calibration');
-check(/LIVEACT_RANGE_CALIBRATION_DURATION_MS/.test(engine), 'engine runs max pass');
-check(/Schritt 2\/2/.test(engine), 'max pass prompt');
+check(/LIVEACT_RANGE_CALIBRATION_STEPS/.test(engine), 'engine runs stepped max pass');
+check(/advanceCalibration\(/.test(engine), 'engine exposes advanceCalibration');
+check(/liveActNeutralCalibrationPrompt\(/.test(engine), 'neutral step prompt from step total');
+check(/liveact-calibrate-advance-pip/.test(pip), 'Weiter control in PiP');
 check(/setLiveActDriveActive\(output !== null\)/.test(viewer), 'viewer suspends idle on bind');
 check(/setLiveActDriveActive\(false\)/.test(viewer), 'viewer resumes idle on unbind');
 check(

@@ -7,7 +7,11 @@
  * (diagnostic) and Saga Human Canonical V1 (candidate), in headless Chromium (SwiftShader WebGL).
  * Output: .qa/evidence/saga-human-canonical-v1/*.jpg + pose-sheet-report.json (renders only,
  * no camera / user data). Bundle + page live in .qa/runs/ (never committed).
- * Usage: node scripts/saga-human-canonical-v1-pose-sheet.mjs
+ * --roundtrip: render known poses as unmirrored webcam frames, track them with the app's MediaPipe
+ * Face Landmarker + LiveAct sample mapping (conventions, neutral, left/right chain, channel audit,
+ * smoothing transfer; see scripts/lib/liveact-tracking-roundtrip-eval.mjs)
+ * → .qa/evidence/liveact-tracking-roundtrip/.
+ * Usage: node scripts/saga-human-canonical-v1-pose-sheet.mjs [--roundtrip]
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -17,13 +21,27 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 import { build } from 'esbuild';
+import {
+  LR_ACTIONS,
+  ROUNDTRIP,
+  evaluateConventions,
+  evaluateLrChain,
+  evaluateNeutral,
+  summarizeChannelAudit,
+  summarizeStageTransfer,
+} from './lib/liveact-tracking-roundtrip-eval.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const RUN_DIR = join(root, '.qa/runs/saga-human-canonical-v1-pose-sheet');
-const EVIDENCE_DIR = join(root, '.qa/evidence/saga-human-canonical-v1');
+const ROUNDTRIP_MODE = process.argv.includes('--roundtrip');
+const EVIDENCE_DIR = join(
+  root,
+  ROUNDTRIP_MODE ? '.qa/evidence/liveact-tracking-roundtrip' : '.qa/evidence/saga-human-canonical-v1',
+);
 const PUBLIC_DIR = join(root, 'public');
 const HARNESS_PREFIX = '/__harness/';
 
+const CANDIDATE_ID = 'saga-human-canonical-v1';
 const AVATARS = [
   {
     id: 'sagadrive-human',
@@ -36,7 +54,7 @@ const AVATARS = [
     url: '/assets/avatars/reference/valid-white-m1-default.vrm',
   },
   {
-    id: 'saga-human-canonical-v1',
+    id: CANDIDATE_ID,
     labelDe: 'Saga Human Canonical V1\n(Kandidat)',
     url: '/assets/avatars/canonical/saga-human-canonical-v1.vrm',
   },
@@ -108,6 +126,38 @@ const CLOSEUPS = [
   { pose: 'gazeUp', framing: 'eyes', label: 'gaze y+1' },
 ];
 
+/** Lip channels one by one (mouth close-ups): the visible geometry of the lip fidelity audit. */
+const MOUTH_AUDIT_CHANNELS = [
+  'mouthRollUpper',
+  'mouthRollLower',
+  'mouthPressLeft',
+  'mouthPressRight',
+  'mouthUpperUpLeft',
+  'mouthUpperUpRight',
+  'mouthLowerDownLeft',
+  'mouthLowerDownRight',
+  'mouthShrugUpper',
+  'mouthShrugLower',
+  'mouthDimpleLeft',
+  'mouthDimpleRight',
+  'mouthStretchLeft',
+  'mouthStretchRight',
+  'mouthSmileLeft',
+  'mouthSmileRight',
+  'mouthFrownLeft',
+  'mouthFrownRight',
+  'mouthFunnel',
+  'mouthPucker',
+  'mouthLeft',
+  'mouthRight',
+];
+const MOUTH_AUDIT = [
+  { id: 'neutral', label: 'neutral' },
+  { id: 'jawOpen', label: 'jawOpen .5', face: { jawOpen: 0.5 } },
+  { id: 'mouthClose', label: 'mouthClose .5 + jawOpen .5', face: { mouthClose: 0.5, jawOpen: 0.5 } },
+  ...MOUTH_AUDIT_CHANNELS.map((id) => ({ id, label: id, face: { [id]: 1 } })),
+];
+
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -116,6 +166,7 @@ const MIME = {
   '.glb': 'model/gltf-binary',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.wasm': 'application/wasm',
 };
 
 const log = (msg) => console.log(`saga-human-canonical-v1-pose-sheet: ${msg}`);
@@ -180,10 +231,14 @@ async function main() {
     });
     await page.goto(`http://127.0.0.1:${port}${HARNESS_PREFIX}index.html`);
     await page.waitForFunction(() => window.__poseSheetReady === true, null, { timeout: 60_000 });
+    if (ROUNDTRIP_MODE) {
+      await runRoundtrip(page, pageErrors);
+      return;
+    }
     const t0 = Date.now();
     const result = await page.evaluate(
       (config) => window.__poseSheet.run(config),
-      { avatars: AVATARS, matrix: MATRIX, sheet11: SHEET_11, closeups: CLOSEUPS },
+      { avatars: AVATARS, matrix: MATRIX, sheet11: SHEET_11, closeups: CLOSEUPS, mouthAudit: MOUTH_AUDIT },
     );
     log(`rendered ${Object.keys(result.images).length} sheets in ${Date.now() - t0} ms`);
     if (pageErrors.length) log(`page errors:\n  ${pageErrors.join('\n  ')}`);
@@ -194,7 +249,12 @@ async function main() {
       writeFileSync(join(EVIDENCE_DIR, `${name}.jpg`), jpg);
       log(`→ .qa/evidence/saga-human-canonical-v1/${name}.jpg (${jpg.byteLength} B)`);
     }
-    const report = { ...result.report, matrix: MATRIX.map((p) => p.id), pageErrors };
+    const report = {
+      ...result.report,
+      matrix: MATRIX.map((p) => p.id),
+      mouthAudit: MOUTH_AUDIT.map((p) => p.id),
+      pageErrors,
+    };
     for (const entry of Object.values(report.avatars)) delete entry.loadMs;
     writeFileSync(join(EVIDENCE_DIR, 'pose-sheet-report.json'), `${JSON.stringify(report, null, 2)}\n`);
     log('→ .qa/evidence/saga-human-canonical-v1/pose-sheet-report.json');
@@ -202,6 +262,47 @@ async function main() {
     await browser.close();
     server.close();
   }
+}
+
+async function runRoundtrip(page, pageErrors) {
+  const t0 = Date.now();
+  const result = await page.evaluate(
+    (config) => window.__poseSheet.roundtrip(config),
+    { avatars: AVATARS, roundtrip: ROUNDTRIP, lrActions: LR_ACTIONS },
+  );
+  log(`round trip: ${ROUNDTRIP.length} poses × ${AVATARS.length} avatars in ${Date.now() - t0} ms`);
+  if (pageErrors.length) log(`page errors:\n  ${pageErrors.join('\n  ')}`);
+  const dataUrl = result.images['roundtrip-frames'];
+  if (!dataUrl.startsWith('data:image/jpeg;base64,')) throw new Error('roundtrip-frames: unexpected image encoding');
+  const jpg = Buffer.from(dataUrl.slice('data:image/jpeg;base64,'.length), 'base64');
+  writeFileSync(join(EVIDENCE_DIR, 'roundtrip-frames.jpg'), jpg);
+  log(`→ .qa/evidence/liveact-tracking-roundtrip/roundtrip-frames.jpg (${jpg.byteLength} B)`);
+
+  const conventions = evaluateConventions(result.report);
+  const neutral = evaluateNeutral(result.report);
+  const lr = evaluateLrChain(result.report);
+  const audit = summarizeChannelAudit(result.report, CANDIDATE_ID);
+  const failures = [...conventions.failures, ...lr.failures];
+  const report = {
+    ...result.report,
+    poses: ROUNDTRIP,
+    lrActions: LR_ACTIONS,
+    channelClasses: audit.classes,
+    verdict: { failures, assetWeak: conventions.assetWeak, assetSide: lr.assetSide },
+    pageErrors,
+  };
+  writeFileSync(join(EVIDENCE_DIR, 'roundtrip-report.json'), `${JSON.stringify(report, null, 2)}\n`);
+  log('→ .qa/evidence/liveact-tracking-roundtrip/roundtrip-report.json');
+  const section = (title, rows) => console.log(`\n— ${title} —\n${rows.join('\n')}`);
+  section('Konventionen (Tracker liest die Avatar-Pose zurück)', conventions.rows);
+  section('Neutral', neutral.rows);
+  section(`Links/Rechts-Kette (App: ${result.report.appMirrorsAvatar ? 'gespiegelt' : 'anatomisch'})`, lr.rows);
+  section('Kanal-Audit (Render-Proxy: Kanal 1.0 → Tracker-Δ, Morph mm; * = Lippen-Fokus)', [audit.header, ...audit.rows]);
+  section('Stufen', summarizeStageTransfer(result.report));
+  if (failures.length) {
+    throw new Error(`round trip: ${failures.length} failing check(s)`);
+  }
+  log('round trip OK');
 }
 
 main().catch((error) => {
