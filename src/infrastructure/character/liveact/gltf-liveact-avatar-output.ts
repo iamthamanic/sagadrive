@@ -90,6 +90,8 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
       leftEyeBone: Boolean(this.leftEyeBone),
       rightEyeBone: Boolean(this.rightEyeBone),
       avatarFace: resolution.faceSupport,
+      gazeDrivePath: this.gazePath,
+      runtimeKind: 'gltf',
     });
     this.recordNeutralApplied();
   }

@@ -8,6 +8,7 @@ import { AvatarMeshyGeneratingOverlay } from '../avatar/AvatarMeshyGeneratingOve
 import { AvatarModularGenerateProgress } from '../avatar/AvatarModularGenerateProgress';
 import { AvatarSourceSelector } from '../avatar/AvatarSourceSelector';
 import { AvatarSpeciesTemplatePicker } from '../avatar/AvatarSpeciesTemplatePicker';
+import { HumanLiveActMeshVariantSelect } from '../avatar/HumanLiveActMeshVariantSelect';
 import { AvatarTraitPanels } from '../avatar/AvatarTraitPanels';
 import { BaseBodyMorphFixture } from '../avatar/BaseBodyMorphFixture';
 import { AvatarMorphEditorPanels } from '../avatar/AvatarMorphEditorPanels';
@@ -341,11 +342,14 @@ export function CharacterEditor() {
     avatarCanvasRef,
     portraitCaptureRef,
     currentAvatar,
+    avatarForPersist,
     editorSurfaces,
     morphCapabilities,
     sourceCapabilitySummary,
     appearanceEditable,
     selectedTemplateSpeciesId,
+    humanMeshVariant,
+    setHumanMeshVariant,
     applyImportOriginalKeep,
     applyBodyConversion,
     applySpeciesTemplate,
@@ -576,7 +580,7 @@ export function CharacterEditor() {
         skin_tone: currentAvatar.colors.skin,
         clothing: currentAvatar.traits.clothing ?? clothing,
         gender_reading: genderReading,
-        avatar: currentAvatar,
+        avatar: avatarForPersist,
       },
       attributes,
       skills: finalSkillRanks,
@@ -1070,20 +1074,20 @@ export function CharacterEditor() {
 
     setSaving(true);
     const priorModelUrl = importedModelUrl;
-    let avatarForSave = currentAvatar;
+    let avatarForSave = avatarForPersist;
     try {
       trackActivity(`Character Editor: Charakter "${characterName}" wird gespeichert`);
       // Complete saves materialize owner-scoped GLB; incomplete drafts keep current model URL.
       if (isComplete) {
         try {
           const exportArtifact = await materializeAvatarSaveExport({
-            avatar: currentAvatar,
+            avatar: avatarForPersist,
             characterId: savedCharacterId,
             runtimeOverlays: [],
-            sourceModelUrl: resolveAvatarModelUrl(currentAvatar),
+            sourceModelUrl: resolveAvatarModelUrl(avatarForPersist),
           });
           avatarForSave = {
-            ...currentAvatar,
+            ...avatarForPersist,
             model_url: exportArtifact.modelUrl,
             model_format: 'glb',
           };
@@ -1325,12 +1329,21 @@ export function CharacterEditor() {
                 onSelect={requestAvatarSourceChange}
               />
               {avatarSource === 'sagadrive' ? (
-                <AvatarSpeciesTemplatePicker
-                  selectedSpeciesId={selectedTemplateSpeciesId}
-                  onSelect={applySpeciesTemplate}
-                  disabled={saving}
-                  warningsDe={templateWarningsDe}
-                />
+                <>
+                  <AvatarSpeciesTemplatePicker
+                    selectedSpeciesId={selectedTemplateSpeciesId}
+                    onSelect={applySpeciesTemplate}
+                    disabled={saving}
+                    warningsDe={templateWarningsDe}
+                  />
+                  {selectedTemplateSpeciesId === 'human' ? (
+                    <HumanLiveActMeshVariantSelect
+                      value={humanMeshVariant}
+                      onChange={setHumanMeshVariant}
+                      disabled={saving}
+                    />
+                  ) : null}
+                </>
               ) : null}
               {avatarSource === 'import' ? (
                 <AvatarImportPanel

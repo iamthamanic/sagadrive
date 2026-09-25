@@ -834,6 +834,18 @@ export {
   resolveSpeciesTemplateModelUrl,
 } from './species-template-models-v1';
 export {
+  LIVEACT_GOLDEN_REFERENCE_AVATAR_ID,
+  LIVEACT_GOLDEN_REFERENCE_CONTRACT_VERSION,
+  LIVEACT_GOLDEN_REFERENCE_EXPECTED_CHANNELS,
+  LIVEACT_GOLDEN_REFERENCE_PROVENANCE,
+  LIVEACT_GOLDEN_REFERENCE_PUBLIC_PATH,
+  isLiveActHumanMeshVariantId,
+  listLiveActHumanMeshVariantOptions,
+  resolveLiveActGoldenReferenceModelUrl,
+  type LiveActGoldenReferenceProvenanceV1,
+  type LiveActHumanMeshVariantId,
+} from './liveact-golden-reference-avatar-v1';
+export {
   STARTER_WARDROBE_CONTRACT_VERSION,
   STARTER_WARDROBE_PACK_VERSION,
   STARTER_WEARABLE_IDS,

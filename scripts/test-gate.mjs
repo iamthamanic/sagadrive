@@ -480,6 +480,14 @@ function checkLiveActExpandDriveBind() {
   });
 }
 
+function checkLiveActReferenceVrmGoldenAvatar() {
+  console.log('LiveAct Golden Reference VRM (ARKit52) diagnostic path...');
+  execFileSync(process.execPath, ['scripts/liveact-reference-vrm-golden-avatar-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceMappingVisualGuides() {
   console.log(
     'LiveAct face mapping visual guides: binding labels + smooth guides + pulse/detail...',
@@ -1376,6 +1384,7 @@ checkLiveActFaceMappingAuthoring();
 checkLiveActFaceMappingManual();
 checkLiveActFaceAnchorsCharacterPersist();
 checkLiveActExpandDriveBind();
+checkLiveActReferenceVrmGoldenAvatar();
 checkLiveActFaceMappingVisualGuides();
 checkLiveActFaceAnchorAnatomy();
 checkLiveActCameraOverlayMetrics();

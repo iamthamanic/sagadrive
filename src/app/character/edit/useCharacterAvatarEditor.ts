@@ -37,21 +37,24 @@ import type {
 } from '../../../domains/character/avatar';
 import {
   applySpeciesTemplateIngress,
+  buildGenerateEditorSeed,
   createDefaultAvatarMorphState,
   evaluateAvatarSourceSwitch,
   isCanonicalBodyFamilyId,
+  LIVEACT_GOLDEN_REFERENCE_AVATAR_ID,
   migrateCharacterAvatarDtoToMorph,
+  morphEvidenceFromImportAnalysis,
   morphToLegacySlider,
   parseSpeciesTemplatePersistenceId,
   readFaceAnchorsFromAvatar,
   resolveAvatarSource,
+  resolveLiveActGoldenReferenceModelUrl,
   resolveSpeciesTemplateModelUrl,
-  morphEvidenceFromImportAnalysis,
-  buildGenerateEditorSeed,
   runModularGenerateFlow,
   validateAvatarMorphInput,
   validateFaceAnchorsManifestV1,
   withAvatarMorphState,
+  type LiveActHumanMeshVariantId,
   type SagaDriveAvatarMorphStateV1,
 } from '../../../domains/character/avatar';
 import {
@@ -115,6 +118,10 @@ export type CharacterAvatarEditorApi = {
   sourceCapabilitySummary: string;
   appearanceEditable: boolean;
   selectedTemplateSpeciesId: BaseBodySpeciesId | null;
+  humanMeshVariant: LiveActHumanMeshVariantId;
+  setHumanMeshVariant: (next: LiveActHumanMeshVariantId) => void;
+  /** Avatar DTO safe for character save (strips Golden Reference URL). */
+  avatarForPersist: ReturnType<typeof createCharacterStudioAvatar>;
   applyImportOriginalKeep: (seed: ImportOriginalKeepSeedV1) => void;
   applyBodyConversion: (result: BodyConversionResultV1) => void;
   applySpeciesTemplate: (speciesId: BaseBodySpeciesId) => void;
@@ -171,6 +178,9 @@ export function useCharacterAvatarEditor({
     createDefaultAvatarMorphState(),
   );
   const [speciesTemplateId, setSpeciesTemplateId] = useState<string | null>(null);
+  /** Session diagnostic: Golden Reference VRM vs SagaDrive Human mesh (not persisted). */
+  const [humanMeshVariant, setHumanMeshVariant] =
+    useState<LiveActHumanMeshVariantId>('sagadrive-human');
   const [avatarBodyFamily, setAvatarBodyFamily] = useState<CanonicalBodyFamilyId | null>(null);
   const [starterWardrobeIds, setStarterWardrobeIds] = useState<readonly string[]>([]);
   const [templateWarningsDe, setTemplateWarningsDe] = useState<readonly string[]>([]);
@@ -198,6 +208,13 @@ export function useCharacterAvatarEditor({
             genderReading,
           })
         : undefined;
+    const useGoldenReference =
+      avatarSource === 'sagadrive' &&
+      selectedTemplateSpeciesId === 'human' &&
+      humanMeshVariant === LIVEACT_GOLDEN_REFERENCE_AVATAR_ID;
+    const modelUrl = useGoldenReference
+      ? resolveLiveActGoldenReferenceModelUrl()
+      : (importedModelUrl ?? templatePreviewUrl);
     const base = createCharacterStudioAvatar({
       race: characterRace,
       head: headStyle,
@@ -209,7 +226,7 @@ export function useCharacterAvatarEditor({
       skinTone,
       bodySize: morphToLegacySlider(avatarMorph.body.build),
       height: morphToLegacySlider(avatarMorph.body.height),
-      modelUrl: importedModelUrl ?? templatePreviewUrl,
+      modelUrl,
       source: avatarSource,
     });
     const withMorph = withAvatarMorphState(base, {
@@ -277,10 +294,46 @@ export function useCharacterAvatarEditor({
     importedModelUrl,
     modularGenerateResult,
     selectedTemplateSpeciesId,
+    humanMeshVariant,
     skinTone,
     speciesTemplateId,
     starterWardrobeIds,
   ]);
+
+  const avatarForPersist = useMemo(() => {
+    if (
+      humanMeshVariant !== LIVEACT_GOLDEN_REFERENCE_AVATAR_ID ||
+      selectedTemplateSpeciesId !== 'human' ||
+      avatarSource !== 'sagadrive'
+    ) {
+      return currentAvatar;
+    }
+    const sagadriveUrl = resolveSpeciesTemplateModelUrl({
+      speciesId: 'human',
+      genderReading,
+    });
+    return {
+      ...currentAvatar,
+      model_url: sagadriveUrl ?? currentAvatar.model_url,
+    };
+  }, [
+    avatarSource,
+    currentAvatar,
+    genderReading,
+    humanMeshVariant,
+    selectedTemplateSpeciesId,
+  ]);
+
+  const setHumanMeshVariantSafe = (next: LiveActHumanMeshVariantId) => {
+    setHumanMeshVariant(next);
+    if (next === LIVEACT_GOLDEN_REFERENCE_AVATAR_ID) {
+      // Reference topology ≠ SagaDrive anchors — fail closed (no Face Mapping required).
+      setFaceAnchorsManifest(null);
+      toast.message('Reference VRM geladen', {
+        description: 'Diagnose-Avatar — ohne Face Mapping; LiveAct nutzt ARKit-Expressions.',
+      });
+    }
+  };
 
   const requestAutoPortraitAfterModel = () => {
     pendingAutoPortraitRef.current = true;
@@ -360,6 +413,7 @@ export function useCharacterAvatarEditor({
     setImportComposition(null);
     setImportMorphEvidence(null);
     setFaceAnchorsManifest(null);
+    setHumanMeshVariant('sagadrive-human');
     setSpeciesTemplateId(seed.templateId);
     setAvatarBodyFamily(seed.bodyFamily);
     setStarterWardrobeIds(seed.starterWardrobeIds);
@@ -774,12 +828,15 @@ export function useCharacterAvatarEditor({
     avatarCanvasRef,
     portraitCaptureRef,
     currentAvatar,
+    avatarForPersist,
     avatarComposition,
     editorSurfaces,
     morphCapabilities,
     sourceCapabilitySummary,
     appearanceEditable,
     selectedTemplateSpeciesId,
+    humanMeshVariant,
+    setHumanMeshVariant: setHumanMeshVariantSafe,
     applyImportOriginalKeep,
     applyBodyConversion,
     applySpeciesTemplate,

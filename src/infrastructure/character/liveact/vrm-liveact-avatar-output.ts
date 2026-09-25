@@ -96,6 +96,8 @@ export class VrmLiveActAvatarOutput implements LiveActAvatarOutput {
       leftEyeBone: this.hasLookAt,
       rightEyeBone: this.hasLookAt,
       avatarFace: resolution.faceSupport,
+      gazeDrivePath: this.gazePath,
+      runtimeKind: 'vrm',
     });
     this.recordNeutralApplied();
   }
