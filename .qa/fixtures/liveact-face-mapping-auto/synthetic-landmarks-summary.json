@@ -2,20 +2,26 @@
   "mapVersion": "MediaPipeSagaDriveFaceAnchorMapV1",
   "sampleCount": 21,
   "leftMouthX": 0.721,
-  "rightMouthX": 0.28,
+  "rightMouthX": 0.281,
+  "leftMouthIndex": 291,
+  "rightMouthIndex": 61,
+  "mediapipeLeftEyeHas263": true,
   "pipelineStatus": "incomplete",
-  "mapped": 14,
+  "mapped": 13,
   "evalSummary": {
     "expectedAnchors": 21,
-    "successfullyMapped": 14,
-    "missing": 7,
-    "raycastMisses": 7,
+    "successfullyMapped": 13,
+    "missing": 8,
+    "raycastMisses": 8,
     "wrongSurfaceHits": 0,
+    "surfaceMismatchCount": 0,
     "lrSwaps": 0,
     "medianErrorPx": 2.23606797749979,
     "p95ErrorPx": 2.23606797749979,
     "maxErrorPx": 2.23606797749979,
     "thresholdStatus": "needs-calibration",
     "outlierAnchorIds": []
-  }
+  },
+  "unreviewedGtValid": false,
+  "reviewedGtValid": true
 }

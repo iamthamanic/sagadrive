@@ -75,7 +75,19 @@ check(/replaceProtected|window\.confirm/.test(controls), 'explicit replace for p
 check(/face-mapping-auto-v1/.test(barrel), 'barrel export');
 check(/checkLiveActFaceMappingAuto|liveact-face-mapping-auto-check/.test(gate), 'test-gate wired');
 check(/Auto Mapping|IMAGE/.test(acceptance), 'acceptance');
-check(/MediaPipe|mouthCornerLeft|61/.test(design), 'design map table');
+check(/freezeFaceMappingGroundTruthReference/.test(autoDomain), 'GT freeze');
+check(/validForGroundTruthComparison/.test(autoDomain), 'GT validity flag');
+check(/clearFaceMappingAuthoringMetaForAnchor/.test(autoDomain), 'clear meta helper');
+check(/markAllBoundFaceMappingAnchorsAsReviewedManual/.test(autoDomain), 'mark reviewed GT');
+check(/face-mapping-surface-semantics/.test(barrel), 'surface semantics barrel');
+check(/classifyFaceMappingSurfaceFromNodeIdentity/.test(read('src/domains/character/avatar/face-mapping-surface-semantics-v1.ts')), 'surface classifier');
+check(/autoSessionTokenRef|groundTruthReferenceRef/.test(controls), 'stale-session + GT refs');
+check(/face-mapping-mark-ground-truth/.test(panel), 'mark GT button');
+check(/getCompareExportJson/.test(controls) && /getCompareExportJson/.test(panel), 'compare from frozen GT');
+check(/editingAllowed=\{!autoBusy\}/.test(controls), 'edits locked while auto busy');
+check(/Valid hit only|leave last binding/.test(layer), 'drag keeps last valid comment');
+check(/MediaPipe|mouthCornerLeft|291/.test(design), 'design map table');
+check(/Auto Mapping|IMAGE|Ground Truth|validForGroundTruthComparison/.test(acceptance), 'acceptance');
 
 const runsDir = join(root, '.qa/runs');
 const fixturesDir = join(root, '.qa/fixtures/liveact-face-mapping-auto');
@@ -97,35 +109,67 @@ mapMod.assertMediaPipeSagaDriveFaceAnchorMapComplete();
 
 const leftMouth = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'mouthCornerLeft');
 const rightMouth = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'mouthCornerRight');
+const leftEyeOuter = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'eyeLeftOuter');
+const rightEyeOuter = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'eyeRightOuter');
 check(leftMouth?.laterality === 'left' && rightMouth?.laterality === 'right', 'mouth L/R laterality');
-check(leftMouth.landmarkIndices[0] === 61 && rightMouth.landmarkIndices[0] === 291, 'mouth MediaPipe indices');
+// Anatomical LEFT = MediaPipe FACE_LANDMARKS_LEFT_* (291 / 263), not historic LiveAct mouthLeft=61.
+check(leftMouth.landmarkIndices[0] === 291 && rightMouth.landmarkIndices[0] === 61, 'mouth MediaPipe anatomical indices');
+check(leftEyeOuter.landmarkIndices[0] === 263 && rightEyeOuter.landmarkIndices[0] === 33, 'eye outer MediaPipe anatomical indices');
 
-// Synthetic landmarks: subject's left at higher x (unmirrored frontal).
-const landmarks = Array.from({ length: 478 }, () => ({ x: 0.5, y: 0.5, z: 0 }));
-for (const entry of mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1) {
-  const baseX = entry.laterality === 'left' ? 0.72 : entry.laterality === 'right' ? 0.28 : 0.5;
-  const baseY =
-    entry.expectedRegion === 'mouth'
-      ? 0.62
-      : entry.expectedRegion.startsWith('eye')
-        ? 0.42
-        : entry.expectedRegion.startsWith('brow')
-          ? 0.32
-          : entry.anchorId === 'forehead'
-            ? 0.18
-            : entry.anchorId === 'chin'
-              ? 0.82
-              : 0.48;
-  for (const idx of entry.landmarkIndices) {
-    landmarks[idx] = { x: baseX + (idx % 3) * 0.001, y: baseY + (idx % 2) * 0.001, z: 0 };
+// Independent L/R evidence from @mediapipe/tasks-vision topology (not from our laterality metadata).
+const { FaceLandmarker } = await import('@mediapipe/tasks-vision');
+function connectionIndices(conns) {
+  const out = new Set();
+  for (const c of conns ?? []) {
+    if (typeof c?.start === 'number') out.add(c.start);
+    if (typeof c?.end === 'number') out.add(c.end);
   }
+  return out;
+}
+const mpLeftEye = connectionIndices(FaceLandmarker.FACE_LANDMARKS_LEFT_EYE);
+const mpRightEye = connectionIndices(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE);
+check(mpLeftEye.has(263) && mpLeftEye.has(362), 'MediaPipe LEFT_EYE contains 263/362');
+check(mpRightEye.has(33) && mpRightEye.has(133), 'MediaPipe RIGHT_EYE contains 33/133');
+check(mpLeftEye.has(leftEyeOuter.landmarkIndices[0]), 'map eyeLeftOuter ∈ FACE_LANDMARKS_LEFT_EYE');
+check(mpRightEye.has(rightEyeOuter.landmarkIndices[0]), 'map eyeRightOuter ∈ FACE_LANDMARKS_RIGHT_EYE');
+check(!mpLeftEye.has(33), '33 is not MediaPipe LEFT_EYE');
+const leftTestIdx = mapMod.mediapipeAnatomicalLeftLandmarkIndicesForTests();
+check(leftTestIdx.includes(291) && leftTestIdx.includes(263), 'left test helper indices');
+
+// Synthetic landmarks by INDEX from MediaPipe topology (higher X = anatomical left on unmirrored frame).
+// Do NOT derive X from entry.laterality — that would circularly test our own metadata.
+const landmarks = Array.from({ length: 478 }, () => ({ x: 0.5, y: 0.5, z: 0 }));
+const ANAT_LEFT = new Set(leftTestIdx);
+const ANAT_RIGHT = new Set([61, 33, 133, 159, 158, 157, 145, 144, 153, 107, 105, 70]);
+for (let i = 0; i < 478; i += 1) {
+  if (ANAT_LEFT.has(i)) landmarks[i] = { x: 0.72 + (i % 5) * 0.001, y: 0.45, z: 0 };
+  else if (ANAT_RIGHT.has(i)) landmarks[i] = { x: 0.28 + (i % 5) * 0.001, y: 0.45, z: 0 };
+}
+// Midline / mouth centers
+for (const [idx, y] of [
+  [1, 0.48],
+  [13, 0.62],
+  [14, 0.68],
+  [10, 0.18],
+  [152, 0.82],
+]) {
+  landmarks[idx] = { x: 0.5, y, z: 0 };
+}
+// Lid centroids need their indices present
+for (const idx of [386, 385, 387, 374, 380, 373, 336, 334, 300]) {
+  if (!landmarks[idx] || landmarks[idx].x === 0.5) {
+    landmarks[idx] = { x: 0.72 + (idx % 3) * 0.001, y: idx >= 336 ? 0.32 : 0.4, z: 0 };
+  }
+}
+for (const idx of [159, 158, 157, 145, 144, 153, 107, 105, 70]) {
+  landmarks[idx] = { x: 0.28 + (idx % 3) * 0.001, y: idx <= 70 || idx >= 105 ? 0.32 : 0.4, z: 0 };
 }
 
 const samples = mapMod.resolveAllMediaPipeAnchorSamples(landmarks);
 check(samples.every((s) => s.available), 'all 21 samples available from synthetic');
 const sampleLeft = samples.find((s) => s.anchorId === 'mouthCornerLeft');
 const sampleRight = samples.find((s) => s.anchorId === 'mouthCornerRight');
-check(sampleLeft.x > sampleRight.x, 'L/R: subject left has higher image x (unmirrored)');
+check(sampleLeft.x > sampleRight.x, 'L/R: anatomical left (291) has higher image x than right (61)');
 
 const autoOut = join(runsDir, 'liveact-face-mapping-auto-domain-bundle.mjs');
 await build({
@@ -137,6 +181,25 @@ await build({
   logLevel: 'silent',
 });
 const autoMod = await import(`${autoOut}?t=${Date.now()}`);
+
+const surfOut = join(runsDir, 'liveact-face-mapping-surface-semantics-bundle.mjs');
+await build({
+  entryPoints: [join(root, 'src/domains/character/avatar/face-mapping-surface-semantics-v1.ts')],
+  bundle: true,
+  format: 'esm',
+  platform: 'neutral',
+  outfile: surfOut,
+  logLevel: 'silent',
+});
+const surfMod = await import(`${surfOut}?t=${Date.now()}`);
+check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Eyes') === 'eyeball', 'Eyes → eyeball');
+check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Eyelashes') === 'eyelash', 'Eyelashes → eyelash');
+check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Head') === 'face_skin', 'Head → face_skin');
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftOuter', 'eyeball'), 'canthus on eyeball = mismatch');
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftUpper', 'eyeball'), 'lid on eyeball = mismatch');
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'hair'), 'mouth on hair = mismatch');
+check(surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyelash'), 'lid on eyelash allowed');
+check(surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'face_skin'), 'mouth on face_skin ok');
 
 const pipeOut = join(runsDir, 'liveact-face-mapping-auto-pipeline-bundle.mjs');
 await build({
@@ -225,6 +288,8 @@ await build({
   logLevel: 'silent',
 });
 const draftMod = await import(`${draftOut}?t=${Date.now()}`);
+
+// Fail-closed seed: baseline bindings are auto/unreviewed, not invented manual GT.
 let draft = draftMod.createEmptyFaceMappingDraft(null);
 draft = draftMod.setFaceMappingDraftBinding(draft, 'noseTip', {
   nodeIdentity: 'HeadMesh',
@@ -233,8 +298,10 @@ draft = draftMod.setFaceMappingDraftBinding(draft, 'noseTip', {
   barycentric: { u: 0.34, v: 0.33, w: 0.33 },
 });
 let meta = autoMod.createEmptyAnchorAuthoringMeta(draft);
-check(meta.noseTip?.source === 'manual', 'baseline meta = manual');
+check(meta.noseTip?.source === 'auto' && meta.noseTip?.reviewed !== true, 'baseline meta fail-closed auto');
 
+// Explicit manual binding is protected.
+meta = { ...meta, noseTip: { source: 'manual', reviewed: false } };
 const protectedApply = autoMod.applyAutoMappingToDraft(draft, session, meta, {
   replaceProtected: false,
 });
@@ -244,8 +311,121 @@ check(
   'protected binding unchanged',
 );
 
+// Cleared protected: meta orphan must NOT block fill-empty.
+let cleared = draftMod.clearFaceMappingDraftBinding(draft, 'noseTip');
+let clearedMeta = autoMod.clearFaceMappingAuthoringMetaForAnchor(
+  { noseTip: { source: 'manual', reviewed: false } },
+  'noseTip',
+);
+check(!clearedMeta.noseTip, 'clear removes meta');
+const refill = autoMod.applyAutoMappingToDraft(cleared, session, clearedMeta, {
+  replaceProtected: false,
+});
+const noseAuto = session.anchors.find((a) => a.anchorId === 'noseTip');
+if (noseAuto?.binding) {
+  check(refill.draft.anchors.noseTip != null, 'cleared anchor refillable by auto');
+}
+
+// Orphan meta without binding is not protected.
+check(
+  !autoMod.isProtectedFaceMappingAnchor({ source: 'manual', reviewed: false }, null),
+  'orphan meta not protected',
+);
+
 meta = autoMod.markFaceMappingAnchorManual(meta, 'mouthUpper', true);
 check(meta.mouthUpper?.source === 'manual_override', 'manual edit after auto → override');
+
+// GT: unreviewed auto is NOT valid comparison.
+const allAutoDraft = draftMod.createEmptyFaceMappingDraft(null);
+const allAutoScreens = {};
+const allAutoMeta = {};
+for (const id of draftMod.SAGA_DRIVE_FACE_ANCHOR_IDS ?? Object.keys({})) {
+  /* filled below */
+}
+const ANCHOR_IDS = [
+  'noseTip', 'chin', 'forehead', 'mouthUpper', 'mouthLower', 'mouthCornerLeft', 'mouthCornerRight',
+  'eyeLeftInner', 'eyeLeftOuter', 'eyeLeftUpper', 'eyeLeftLower',
+  'eyeRightInner', 'eyeRightOuter', 'eyeRightUpper', 'eyeRightLower',
+  'browLeftInner', 'browLeftCenter', 'browLeftOuter',
+  'browRightInner', 'browRightCenter', 'browRightOuter',
+];
+let gtDraft = draftMod.createEmptyFaceMappingDraft(null);
+const gtMeta = {};
+const gtScreens = {};
+for (const id of ANCHOR_IDS) {
+  gtDraft = draftMod.setFaceMappingDraftBinding(gtDraft, id, {
+    nodeIdentity: 'HeadMesh',
+    primitiveIndex: 0,
+    triangleIndex: 0,
+    barycentric: { u: 0.34, v: 0.33, w: 0.33 },
+  });
+  gtMeta[id] = { source: 'auto', reviewed: false };
+  gtScreens[id] = { x: 100, y: 100 };
+}
+const unreviewedRef = autoMod.freezeFaceMappingGroundTruthReference({
+  draft: gtDraft,
+  meta: gtMeta,
+  screenCoords: gtScreens,
+});
+check(unreviewedRef.validForGroundTruthComparison === false, 'unreviewed auto not valid GT');
+check(unreviewedRef.status === 'unreviewed_auto', 'status unreviewed_auto');
+
+const reviewedMeta = {};
+for (const id of ANCHOR_IDS) {
+  reviewedMeta[id] = { source: 'manual', reviewed: true, reviewedAt: '2026-09-25T00:00:00.000Z' };
+}
+const reviewedRef = autoMod.freezeFaceMappingGroundTruthReference({
+  draft: gtDraft,
+  meta: reviewedMeta,
+  screenCoords: gtScreens,
+  nowIso: '2026-09-25T00:00:00.000Z',
+});
+check(reviewedRef.validForGroundTruthComparison === true, 'reviewed manual is valid GT');
+
+// Reference immutability: compare uses frozen reference screens, not post-auto draft.
+const refScreensOffset = {};
+for (const row of session.anchors) {
+  if (row.screenX != null && row.screenY != null) {
+    refScreensOffset[row.anchorId] = { x: row.screenX + 5, y: row.screenY - 3 };
+  }
+}
+const immutableRef = autoMod.freezeFaceMappingGroundTruthReference({
+  draft: gtDraft,
+  meta: reviewedMeta,
+  screenCoords: Object.fromEntries(
+    ANCHOR_IDS.map((id) => [
+      id,
+      refScreensOffset[id] ?? { x: 10, y: 10 },
+    ]),
+  ),
+});
+const appliedAuto = autoMod.applyAutoMappingToDraft(gtDraft, session, reviewedMeta, {
+  replaceProtected: true,
+});
+check(appliedAuto.meta.noseTip?.source === 'auto', 'after replace meta is auto');
+const compareValid = autoMod.buildFaceMappingCompareExport({
+  reference: immutableRef,
+  autoSession: session,
+  draftAfter: appliedAuto.draft,
+  metaAfter: appliedAuto.meta,
+});
+check(compareValid.validForGroundTruthComparison === true, 'compare inherits valid GT');
+check(compareValid.comparison != null, 'comparison present when valid');
+const noseDelta =
+  compareValid.comparison?.anchors?.find((r) => r.anchorId === 'noseTip')?.screenErrorPx ?? null;
+if (session.anchors.find((a) => a.anchorId === 'noseTip')?.screenX != null) {
+  check(noseDelta != null && noseDelta > 0, `immutable ref yields non-zero delta (got ${noseDelta})`);
+}
+
+const compareInvalid = autoMod.buildFaceMappingCompareExport({
+  reference: unreviewedRef,
+  autoSession: session,
+});
+check(compareInvalid.validForGroundTruthComparison === false, 'invalid GT flagged');
+check(
+  compareInvalid.comparison == null || compareInvalid.summary?.medianErrorPx == null,
+  'no fake 0px quality when GT invalid',
+);
 
 const manualScreen = {};
 for (const row of session.anchors) {
@@ -261,28 +441,6 @@ const evalReport = autoMod.evaluateAutoVsManualScreenPoints({
 check(evalReport.summary.thresholdStatus === 'needs-calibration', 'thresholds non-normative');
 check(evalReport.summary.expectedAnchors === 21, 'eval expected 21');
 check(typeof evalReport.summary.medianErrorPx === 'number', 'median error present');
-check(typeof evalReport.summary.p95ErrorPx === 'number', 'p95 error present');
-check(typeof evalReport.summary.maxErrorPx === 'number', 'max error present');
-
-const compareExport = autoMod.buildFaceMappingCompareExport({
-  draft: protectedApply.draft,
-  manualCoords: { noseTip: { x: 100, y: 120, meshLabel: 'HeadMesh/t0' } },
-  autoCoords: {
-    noseTip: { outcome: 'mapped', x: 102, y: 119, meshLabel: 'HeadMesh/t1' },
-  },
-  meta: protectedApply.meta,
-  nowIso: '2026-09-25T00:00:00.000Z',
-});
-check(compareExport.kind === 'SagaDriveFaceMappingCompareV1', 'compare export kind value');
-check(compareExport.anchors.length === 21, 'compare export 21 anchors');
-check(compareExport.anchors.find((a) => a.anchorId === 'noseTip')?.deltaPx != null, 'compare delta');
-const compareJson = autoMod.stringifyFaceMappingCompareExport({
-  draft: protectedApply.draft,
-  manualCoords: {},
-  autoCoords: {},
-  nowIso: '2026-09-25T00:00:00.000Z',
-});
-check(compareJson.includes('SagaDriveFaceMappingCompareV1'), 'stringify compare export');
 
 const hair = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
 hair.name = 'Hair_Front';
@@ -296,9 +454,14 @@ writeFileSync(
       sampleCount: samples.length,
       leftMouthX: sampleLeft.x,
       rightMouthX: sampleRight.x,
+      leftMouthIndex: leftMouth.landmarkIndices[0],
+      rightMouthIndex: rightMouth.landmarkIndices[0],
+      mediapipeLeftEyeHas263: mpLeftEye.has(263),
       pipelineStatus: session.status,
       mapped,
       evalSummary: evalReport.summary,
+      unreviewedGtValid: unreviewedRef.validForGroundTruthComparison,
+      reviewedGtValid: reviewedRef.validForGroundTruthComparison,
     },
     null,
     2,

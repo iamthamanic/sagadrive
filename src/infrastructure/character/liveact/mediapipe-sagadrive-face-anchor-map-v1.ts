@@ -3,13 +3,16 @@
  * Location: src/infrastructure/character/liveact/mediapipe-sagadrive-face-anchor-map-v1.ts
  *
  * Provider-specific indices stay in infrastructure. Domain only sees SagaDriveFaceAnchorId.
- * Left/Right = anatomical (subject's left/right), matching LiveAct RAW / face-metrics.
+ * Left/Right = anatomical (subject's left/right), matching FaceLandmarker topology:
+ * FACE_LANDMARKS_LEFT_EYE = 263,362,386… ; FACE_LANDMARKS_RIGHT_EYE = 33,133,159…
+ *
+ * Do NOT use LIVEACT_FACE_METRIC_LANDMARK_INDICES.*Left for left anchors — those names are
+ * historically inverted vs official MediaPipe LEFT/RIGHT topology.
  *
  * Known V1 limits (not solved here — Epic #442): no full lip/lid/cheek/nasolabial/iris curves.
  */
 
 import type { SagaDriveFaceAnchorId } from '../../../domains/character/avatar/face-anchor-contract';
-import { LIVEACT_FACE_METRIC_LANDMARK_INDICES } from '../../../domains/character/liveact/liveact-face-metrics';
 
 export const MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_VERSION =
   'MediaPipeSagaDriveFaceAnchorMapV1' as const;
@@ -35,11 +38,30 @@ export interface MediaPipeFaceAnchorMapEntryV1 {
   readonly laterality: 'left' | 'right' | 'center';
 }
 
-const I = LIVEACT_FACE_METRIC_LANDMARK_INDICES;
+/**
+ * Anatomical-LEFT landmark indices used by left anchors (for independent tests).
+ * Matches FaceLandmarker.FACE_LANDMARKS_LEFT_EYE / LEFT_EYEBROW topology + mouth 291.
+ */
+export function mediapipeAnatomicalLeftLandmarkIndicesForTests(): readonly number[] {
+  return [
+    291, // mouth corner left
+    362, // eye left inner (LEFT_EYE)
+    263, // eye left outer (LEFT_EYE)
+    386, // eye left upper lid (LEFT_EYE)
+    385,
+    387,
+    374, // eye left lower lid
+    380,
+    373,
+    336, // brow left inner
+    334, // brow left center
+    300, // brow left outer
+  ] as const;
+}
 
 /**
  * Versioned table: exactly the 21 SagaDriveFaceAnchorsV1 slots.
- * Reuses metric indices where they already encode mouth/eye L/R; brows use Face Mesh topology.
+ * Hardcoded indices aligned to official MediaPipe LEFT/RIGHT contour sets.
  */
 export const MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1: readonly MediaPipeFaceAnchorMapEntryV1[] = [
   {
@@ -68,145 +90,161 @@ export const MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1: readonly MediaPipeFaceAncho
   },
   {
     anchorId: 'mouthUpper',
-    landmarkIndices: [I.upperLip],
+    landmarkIndices: [13],
     kind: 'single',
-    rationale: 'Upper lip outer center — same index as LiveAct mouthGap metric.',
+    rationale: 'Upper lip outer center (Face Mesh lips contour).',
     expectedRegion: 'mouth',
     laterality: 'center',
   },
   {
     anchorId: 'mouthLower',
-    landmarkIndices: [I.lowerLip],
+    landmarkIndices: [14],
     kind: 'single',
-    rationale: 'Lower lip outer center — same index as LiveAct mouthGap metric.',
+    rationale: 'Lower lip outer center (Face Mesh lips contour).',
     expectedRegion: 'mouth',
     laterality: 'center',
   },
   {
     anchorId: 'mouthCornerLeft',
-    landmarkIndices: [I.mouthLeft],
+    landmarkIndices: [291],
     kind: 'single',
-    rationale: "Subject's left mouth corner (MediaPipe mouthLeft=61).",
+    rationale:
+      "Anatomical left mouth corner (291). Paired with FACE_LANDMARKS_LEFT_EYE laterality — not LiveAct mouthLeft=61.",
     expectedRegion: 'mouth',
     laterality: 'left',
   },
   {
     anchorId: 'mouthCornerRight',
-    landmarkIndices: [I.mouthRight],
+    landmarkIndices: [61],
     kind: 'single',
-    rationale: "Subject's right mouth corner (MediaPipe mouthRight=291).",
+    rationale:
+      "Anatomical right mouth corner (61). Paired with FACE_LANDMARKS_RIGHT_EYE laterality — not LiveAct mouthRight=291.",
     expectedRegion: 'mouth',
     laterality: 'right',
   },
   {
     anchorId: 'eyeLeftInner',
-    landmarkIndices: [I.leftEyeInner],
+    landmarkIndices: [362],
     kind: 'single',
-    rationale: "Subject's left eye inner canthus (toward nose).",
+    rationale:
+      "Subject's left eye inner canthus — FaceLandmarker.FACE_LANDMARKS_LEFT_EYE (362).",
     expectedRegion: 'eye_left',
     laterality: 'left',
   },
   {
     anchorId: 'eyeLeftOuter',
-    landmarkIndices: [I.leftEyeOuter],
+    landmarkIndices: [263],
     kind: 'single',
-    rationale: "Subject's left eye outer canthus (toward temple).",
+    rationale:
+      "Subject's left eye outer canthus — FaceLandmarker.FACE_LANDMARKS_LEFT_EYE (263).",
     expectedRegion: 'eye_left',
     laterality: 'left',
   },
   {
     anchorId: 'eyeLeftUpper',
-    landmarkIndices: [I.leftUpperLid, 158, 157],
+    landmarkIndices: [386, 385, 387],
     kind: 'centroid',
-    rationale: 'Upper lid center + neighbors — single lid index alone jitters.',
+    rationale:
+      'Left upper lid centroid from FACE_LANDMARKS_LEFT_EYE (386+neighbors) — single lid index alone jitters.',
     expectedRegion: 'eye_left',
     laterality: 'left',
   },
   {
     anchorId: 'eyeLeftLower',
-    landmarkIndices: [I.leftLowerLid, 144, 153],
+    landmarkIndices: [374, 380, 373],
     kind: 'centroid',
-    rationale: 'Lower lid center + neighbors for stability.',
+    rationale:
+      'Left lower lid centroid from FACE_LANDMARKS_LEFT_EYE neighborhood (374+neighbors).',
     expectedRegion: 'eye_left',
     laterality: 'left',
   },
   {
     anchorId: 'eyeRightInner',
-    landmarkIndices: [I.rightEyeInner],
+    landmarkIndices: [133],
     kind: 'single',
-    rationale: "Subject's right eye inner canthus.",
+    rationale:
+      "Subject's right eye inner canthus — FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE (133).",
     expectedRegion: 'eye_right',
     laterality: 'right',
   },
   {
     anchorId: 'eyeRightOuter',
-    landmarkIndices: [I.rightEyeOuter],
+    landmarkIndices: [33],
     kind: 'single',
-    rationale: "Subject's right eye outer canthus.",
+    rationale:
+      "Subject's right eye outer canthus — FaceLandmarker.FACE_LANDMARKS_RIGHT_EYE (33).",
     expectedRegion: 'eye_right',
     laterality: 'right',
   },
   {
     anchorId: 'eyeRightUpper',
-    landmarkIndices: [I.rightUpperLid, 385, 387],
+    landmarkIndices: [159, 158, 157],
     kind: 'centroid',
-    rationale: 'Right upper lid centroid.',
+    rationale:
+      'Right upper lid centroid from FACE_LANDMARKS_RIGHT_EYE (159+neighbors).',
     expectedRegion: 'eye_right',
     laterality: 'right',
   },
   {
     anchorId: 'eyeRightLower',
-    landmarkIndices: [I.rightLowerLid, 380, 373],
+    landmarkIndices: [145, 144, 153],
     kind: 'centroid',
-    rationale: 'Right lower lid centroid.',
+    rationale:
+      'Right lower lid centroid from FACE_LANDMARKS_RIGHT_EYE neighborhood (145+neighbors).',
     expectedRegion: 'eye_right',
     laterality: 'right',
   },
   {
     anchorId: 'browLeftInner',
-    landmarkIndices: [107],
+    landmarkIndices: [336],
     kind: 'single',
-    rationale: "Subject's left brow near glabella.",
+    rationale:
+      "Subject's left brow near glabella — FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW (336).",
     expectedRegion: 'brow_left',
     laterality: 'left',
   },
   {
     anchorId: 'browLeftCenter',
-    landmarkIndices: [I.leftBrow],
+    landmarkIndices: [334],
     kind: 'single',
-    rationale: 'Left brow mid — same index as LiveAct browLiftLeft.',
+    rationale:
+      "Subject's left brow mid — FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW (334).",
     expectedRegion: 'brow_left',
     laterality: 'left',
   },
   {
     anchorId: 'browLeftOuter',
-    landmarkIndices: [70],
+    landmarkIndices: [300],
     kind: 'single',
-    rationale: "Subject's left brow temple end.",
+    rationale:
+      "Subject's left brow temple end — FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW (300).",
     expectedRegion: 'brow_left',
     laterality: 'left',
   },
   {
     anchorId: 'browRightInner',
-    landmarkIndices: [336],
+    landmarkIndices: [107],
     kind: 'single',
-    rationale: "Subject's right brow near glabella.",
+    rationale:
+      "Subject's right brow near glabella — FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW (107).",
     expectedRegion: 'brow_right',
     laterality: 'right',
   },
   {
     anchorId: 'browRightCenter',
-    landmarkIndices: [I.rightBrow],
+    landmarkIndices: [105],
     kind: 'single',
-    rationale: 'Right brow mid — same index as LiveAct browLiftRight.',
+    rationale:
+      "Subject's right brow mid — FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW (105).",
     expectedRegion: 'brow_right',
     laterality: 'right',
   },
   {
     anchorId: 'browRightOuter',
-    landmarkIndices: [300],
+    landmarkIndices: [70],
     kind: 'single',
-    rationale: "Subject's right brow temple end.",
+    rationale:
+      "Subject's right brow temple end — FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW (70).",
     expectedRegion: 'brow_right',
     laterality: 'right',
   },

@@ -17,6 +17,12 @@ import {
   setFaceMappingDraftBinding,
   type SagaDriveFaceMappingDraftV1,
 } from './face-mapping-draft-v1';
+import {
+  classifyFaceMappingSurfaceFromNodeIdentity,
+  expectedFaceMappingSurfaceClasses,
+  isFaceMappingSurfaceSemanticsOk,
+  type FaceMappingSurfaceClassV1,
+} from './face-mapping-surface-semantics-v1';
 
 export const FACE_MAPPING_AUTO_CONTRACT_VERSION = 'SagaDriveFaceMappingAutoV1' as const;
 
@@ -44,6 +50,8 @@ export interface FaceMappingAnchorAuthoringMetaV1 {
   readonly source: FaceMappingAuthoringSource;
   readonly confidence?: number;
   readonly reviewed?: boolean;
+  /** ISO timestamp when reviewed=true (required for GT publish/sidecar). */
+  readonly reviewedAt?: string;
 }
 
 export type FaceMappingDraftAuthoringMeta = Partial<
@@ -72,25 +80,52 @@ export interface FaceMappingAutoSessionResultV1 {
   readonly mapVersion: string;
 }
 
+/**
+ * Seed authoring meta for anchors that already have draft bindings.
+ * Default (options omitted): source='auto', reviewed=false — fail-closed;
+ * never invent reviewed ground truth for baseline/sidecar seeds.
+ * Callers that know true manual provenance pass `defaultSource: 'manual'`.
+ * `defaultReviewed` is ignored when source is auto (authoring contract forbids auto+reviewed).
+ */
 export function createEmptyAnchorAuthoringMeta(
   draft: SagaDriveFaceMappingDraftV1,
+  options?: { defaultSource?: FaceMappingAuthoringSource; defaultReviewed?: boolean },
 ): FaceMappingDraftAuthoringMeta {
+  const source = options?.defaultSource ?? 'auto';
+  const reviewed =
+    source === 'auto' ? false : (options?.defaultReviewed ?? false);
   const meta: FaceMappingDraftAuthoringMeta = {};
   for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
     if (draft.anchors[id]) {
-      // Baseline / loaded bindings are treated as manual ground truth until overridden.
-      meta[id] = { source: 'manual', reviewed: false };
+      meta[id] = { source, reviewed };
     }
   }
   return meta;
 }
 
+/**
+ * Protected only when a draft binding EXISTS and meta marks manual / manual_override / reviewed.
+ * Meta alone (orphaned) does not protect.
+ */
 export function isProtectedFaceMappingAnchor(
   meta: FaceMappingAnchorAuthoringMetaV1 | undefined,
+  binding: SagaDriveFaceAnchorTriangleBinding | null | undefined,
 ): boolean {
+  if (!binding) return false;
   if (!meta) return false;
   if (meta.reviewed === true) return true;
   return meta.source === 'manual' || meta.source === 'manual_override';
+}
+
+/** Remove authoring meta for one anchor (e.g. after clear). */
+export function clearFaceMappingAuthoringMetaForAnchor(
+  meta: FaceMappingDraftAuthoringMeta,
+  anchorId: SagaDriveFaceAnchorId,
+): FaceMappingDraftAuthoringMeta {
+  if (!(anchorId in meta)) return meta;
+  const next: FaceMappingDraftAuthoringMeta = { ...meta };
+  delete next[anchorId];
+  return next;
 }
 
 export interface ApplyAutoMappingOptions {
@@ -111,7 +146,7 @@ export interface ApplyAutoMappingResult {
 
 /**
  * Merge auto proposals into a draft. Never sets reviewed=true.
- * Protected anchors are skipped unless replaceProtected.
+ * Protected anchors are skipped unless replaceProtected — only when draft binding exists AND meta protected.
  */
 export function applyAutoMappingToDraft(
   draft: SagaDriveFaceMappingDraftV1,
@@ -140,8 +175,12 @@ export function applyAutoMappingToDraft(
       // Treat as mapped but still apply — UI can show amber via confidence.
     }
 
-    const existing = meta[row.anchorId];
-    if (!options.replaceProtected && isProtectedFaceMappingAnchor(existing)) {
+    const existingBinding = draftNext.anchors[row.anchorId];
+    const existingMeta = meta[row.anchorId];
+    if (
+      !options.replaceProtected &&
+      isProtectedFaceMappingAnchor(existingMeta, existingBinding)
+    ) {
       skippedProtectedCount += 1;
       continue;
     }
@@ -180,6 +219,34 @@ export function markFaceMappingAnchorManual(
   };
 }
 
+/**
+ * Mark every bound anchor as reviewed manual ground truth.
+ * Auto → manual_override (never auto+reviewed — forbidden by authoring contract).
+ * Existing manual / manual_override keep their source; missing meta → manual.
+ */
+export function markAllBoundFaceMappingAnchorsAsReviewedManual(
+  meta: FaceMappingDraftAuthoringMeta,
+  draft: SagaDriveFaceMappingDraftV1,
+  nowIso: string,
+): FaceMappingDraftAuthoringMeta {
+  const next: FaceMappingDraftAuthoringMeta = { ...meta };
+  for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
+    if (!draft.anchors[id]) continue;
+    const existing = meta[id];
+    const source: FaceMappingAuthoringSource =
+      existing?.source === 'auto'
+        ? 'manual_override'
+        : (existing?.source ?? 'manual');
+    next[id] = {
+      source,
+      reviewed: true,
+      reviewedAt: nowIso,
+      ...(existing?.confidence != null ? { confidence: existing.confidence } : {}),
+    };
+  }
+  return next;
+}
+
 export function resetFaceMappingDraftAndMeta(
   draft: SagaDriveFaceMappingDraftV1,
 ): { draft: SagaDriveFaceMappingDraftV1; meta: FaceMappingDraftAuthoringMeta } {
@@ -201,6 +268,9 @@ export interface FaceMappingAutoEvalAnchorRowV1 {
   readonly raycastHit: boolean;
   readonly meshNodeIdentity: string | null;
   readonly lateralityOk: boolean | null;
+  readonly actualSurfaceClass: FaceMappingSurfaceClassV1 | null;
+  readonly expectedSurfaceClasses: readonly FaceMappingSurfaceClassV1[];
+  readonly surfaceSemanticsOk: boolean | null;
   readonly outlier: boolean;
 }
 
@@ -210,6 +280,7 @@ export interface FaceMappingAutoEvalSummaryV1 {
   readonly missing: number;
   readonly raycastMisses: number;
   readonly wrongSurfaceHits: number;
+  readonly surfaceMismatchCount: number;
   readonly lrSwaps: number;
   readonly medianErrorPx: number | null;
   readonly p95ErrorPx: number | null;
@@ -241,9 +312,18 @@ function median(sorted: readonly number[]): number | null {
   return (a + b) / 2;
 }
 
+function countsAsGroundTruthMeta(meta: FaceMappingAnchorAuthoringMetaV1 | undefined): boolean {
+  if (!meta) return false;
+  // source=auto + reviewed=false must NOT count as GT.
+  if (meta.source === 'auto' && meta.reviewed !== true) return false;
+  if (meta.reviewed === true) return true;
+  return meta.source === 'manual' || meta.source === 'manual_override';
+}
+
 /**
  * Compare auto screen points vs manual screen points (same camera/frame).
  * Does not invent pass/fail thresholds — thresholdStatus is always needs-calibration.
+ * Surface semantics use provider-neutral node-identity classification.
  */
 export function evaluateAutoVsManualScreenPoints(input: {
   manualScreen: Readonly<Partial<Record<SagaDriveFaceAnchorId, { x: number; y: number }>>>;
@@ -262,7 +342,7 @@ export function evaluateAutoVsManualScreenPoints(input: {
   let missing = 0;
   let raycastMisses = 0;
   let lrSwaps = 0;
-  let wrongSurfaceHits = 0;
+  let surfaceMismatchCount = 0;
 
   const autoById = new Map(input.autoSession.anchors.map((a) => [a.anchorId, a]));
 
@@ -303,6 +383,15 @@ export function evaluateAutoVsManualScreenPoints(input: {
       }
     }
 
+    const expectedSurface = expectedFaceMappingSurfaceClasses(id);
+    let actualSurfaceClass: FaceMappingSurfaceClassV1 | null = null;
+    let surfaceSemanticsOk: boolean | null = null;
+    if (auto?.meshNodeIdentity) {
+      actualSurfaceClass = classifyFaceMappingSurfaceFromNodeIdentity(auto.meshNodeIdentity);
+      surfaceSemanticsOk = isFaceMappingSurfaceSemanticsOk(id, actualSurfaceClass);
+      if (!surfaceSemanticsOk) surfaceMismatchCount += 1;
+    }
+
     rows.push({
       anchorId: id,
       manualPresent,
@@ -314,6 +403,9 @@ export function evaluateAutoVsManualScreenPoints(input: {
       raycastHit: Boolean(auto?.binding),
       meshNodeIdentity: auto?.meshNodeIdentity ?? null,
       lateralityOk,
+      actualSurfaceClass,
+      expectedSurfaceClasses: expectedSurface,
+      surfaceSemanticsOk,
       outlier: false,
     });
   }
@@ -332,24 +424,6 @@ export function evaluateAutoVsManualScreenPoints(input: {
     }
   }
 
-  // Wrong-surface: heuristic — different node than majority of midline hits (reporting only).
-  const midlineNodes = rows
-    .filter((r) => ['noseTip', 'chin', 'forehead', 'mouthUpper', 'mouthLower'].includes(r.anchorId))
-    .map((r) => r.meshNodeIdentity)
-    .filter((n): n is string => Boolean(n));
-  const majority =
-    midlineNodes.length > 0
-      ? midlineNodes.sort(
-          (a, b) =>
-            midlineNodes.filter((x) => x === b).length - midlineNodes.filter((x) => x === a).length,
-        )[0]
-      : null;
-  if (majority) {
-    for (const row of rows) {
-      if (row.meshNodeIdentity && row.meshNodeIdentity !== majority) wrongSurfaceHits += 1;
-    }
-  }
-
   return {
     contractVersion: 'SagaDriveFaceMappingAutoEvalV1',
     rows,
@@ -358,7 +432,8 @@ export function evaluateAutoVsManualScreenPoints(input: {
       successfullyMapped,
       missing,
       raycastMisses,
-      wrongSurfaceHits,
+      wrongSurfaceHits: surfaceMismatchCount,
+      surfaceMismatchCount,
       lrSwaps,
       medianErrorPx: med,
       p95ErrorPx: percentile(sorted, 0.95),
@@ -369,6 +444,133 @@ export function evaluateAutoVsManualScreenPoints(input: {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Ground-truth reference freeze (#421)
+// ---------------------------------------------------------------------------
+
+export const FACE_MAPPING_GROUND_TRUTH_REFERENCE_VERSION =
+  'SagaDriveFaceMappingGroundTruthReferenceV1' as const;
+
+export const FACE_MAPPING_GROUND_TRUTH_REFERENCE_STATUSES = [
+  'reviewed_manual_complete',
+  'partial_reviewed_manual',
+  'unreviewed_auto',
+  'missing_reviewed_ground_truth',
+] as const;
+
+export type FaceMappingGroundTruthReferenceStatusV1 =
+  (typeof FACE_MAPPING_GROUND_TRUTH_REFERENCE_STATUSES)[number];
+
+export interface FaceMappingGroundTruthScreenV1 {
+  readonly x: number;
+  readonly y: number;
+  readonly meshLabel?: string | null;
+}
+
+export interface FaceMappingGroundTruthReferenceAnchorV1 {
+  readonly anchorId: SagaDriveFaceAnchorId;
+  readonly binding: SagaDriveFaceAnchorTriangleBinding;
+  readonly screen: FaceMappingGroundTruthScreenV1 | null;
+  readonly source: FaceMappingAuthoringSource;
+  readonly reviewed: boolean;
+}
+
+export interface FaceMappingGroundTruthReferenceV1 {
+  readonly contractVersion: typeof FACE_MAPPING_GROUND_TRUTH_REFERENCE_VERSION;
+  readonly status: FaceMappingGroundTruthReferenceStatusV1;
+  readonly validForGroundTruthComparison: boolean;
+  readonly frozenAt: string;
+  readonly assetFingerprint: string | null;
+  readonly topologyFingerprint: string | null;
+  readonly anchors: readonly FaceMappingGroundTruthReferenceAnchorV1[];
+}
+
+export type FaceMappingScreenCoordMap = Readonly<
+  Partial<
+    Record<SagaDriveFaceAnchorId, { x: number; y: number; meshLabel?: string | null }>
+  >
+>;
+
+/**
+ * Freeze a reviewed/manual draft as ground-truth reference for auto comparison.
+ * valid=true only when all 21 anchors have bindings and each is reviewed OR source manual/manual_override.
+ * source=auto && !reviewed never counts as GT.
+ */
+export function freezeFaceMappingGroundTruthReference(input: {
+  draft: SagaDriveFaceMappingDraftV1;
+  meta: FaceMappingDraftAuthoringMeta;
+  screenCoords: FaceMappingScreenCoordMap;
+  assetFingerprint?: string | null;
+  topologyFingerprint?: string | null;
+  nowIso?: string;
+}): FaceMappingGroundTruthReferenceV1 {
+  const anchors: FaceMappingGroundTruthReferenceAnchorV1[] = [];
+  let boundCount = 0;
+  let gtCount = 0;
+  let autoUnreviewedBound = 0;
+
+  for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
+    const binding = input.draft.anchors[id];
+    if (!binding) continue;
+    boundCount += 1;
+    const m = input.meta[id];
+    const source: FaceMappingAuthoringSource = m?.source ?? 'auto';
+    const reviewed = m?.reviewed === true;
+    if (countsAsGroundTruthMeta(m)) gtCount += 1;
+    if (source === 'auto' && !reviewed) autoUnreviewedBound += 1;
+
+    const screenRaw = input.screenCoords[id];
+    anchors.push({
+      anchorId: id,
+      binding: {
+        nodeIdentity: binding.nodeIdentity,
+        primitiveIndex: binding.primitiveIndex,
+        triangleIndex: binding.triangleIndex,
+        barycentric: { ...binding.barycentric },
+      },
+      screen: screenRaw
+        ? {
+            x: screenRaw.x,
+            y: screenRaw.y,
+            ...(screenRaw.meshLabel != null ? { meshLabel: screenRaw.meshLabel } : {}),
+          }
+        : null,
+      source,
+      reviewed,
+    });
+  }
+
+  let status: FaceMappingGroundTruthReferenceStatusV1;
+  let validForGroundTruthComparison = false;
+
+  if (boundCount === 0) {
+    status = 'missing_reviewed_ground_truth';
+  } else if (gtCount === SAGA_DRIVE_FACE_ANCHOR_IDS.length) {
+    status = 'reviewed_manual_complete';
+    validForGroundTruthComparison = true;
+  } else if (gtCount > 0) {
+    status = 'partial_reviewed_manual';
+  } else if (autoUnreviewedBound > 0) {
+    status = 'unreviewed_auto';
+  } else {
+    status = 'missing_reviewed_ground_truth';
+  }
+
+  return {
+    contractVersion: FACE_MAPPING_GROUND_TRUTH_REFERENCE_VERSION,
+    status,
+    validForGroundTruthComparison,
+    frozenAt: input.nowIso ?? new Date().toISOString(),
+    assetFingerprint: input.assetFingerprint ?? null,
+    topologyFingerprint: input.topologyFingerprint ?? null,
+    anchors,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Compare export (#421) — GT reference vs auto proposal
+// ---------------------------------------------------------------------------
+
 export const FACE_MAPPING_COMPARE_EXPORT_KIND = 'SagaDriveFaceMappingCompareV1' as const;
 
 export interface FaceMappingCompareExportScreenV1 {
@@ -377,124 +579,298 @@ export interface FaceMappingCompareExportScreenV1 {
   readonly meshLabel?: string | null;
 }
 
-export interface FaceMappingCompareExportAutoV1 {
-  readonly outcome: FaceMappingAutoAnchorOutcome;
-  readonly x: number | null;
-  readonly y: number | null;
-  readonly meshLabel?: string | null;
+export interface FaceMappingCompareReferenceAnchorV1 {
+  readonly anchorId: SagaDriveFaceAnchorId;
+  readonly binding: SagaDriveFaceAnchorTriangleBinding;
+  readonly screen: FaceMappingCompareExportScreenV1 | null;
+  readonly source: FaceMappingAuthoringSource;
+  readonly reviewed: boolean;
 }
 
-export interface FaceMappingCompareExportAnchorV1 {
+export interface FaceMappingCompareProposalAnchorV1 {
   readonly anchorId: SagaDriveFaceAnchorId;
-  readonly status: 'missing' | 'set' | 'invalid';
-  readonly source: FaceMappingAuthoringSource | null;
   readonly binding: SagaDriveFaceAnchorTriangleBinding | null;
-  readonly manualScreen: FaceMappingCompareExportScreenV1 | null;
-  readonly auto: FaceMappingCompareExportAutoV1 | null;
-  readonly deltaPx: number | null;
+  readonly screen: FaceMappingCompareExportScreenV1 | null;
+  readonly source: 'auto';
+  readonly confidence: number | null;
+  readonly outcome: FaceMappingAutoAnchorOutcome | null;
+  readonly meshNodeIdentity: string | null;
+  readonly actualSurfaceClass: FaceMappingSurfaceClassV1 | null;
+  readonly expectedSurfaceClasses: readonly FaceMappingSurfaceClassV1[];
+  readonly surfaceSemanticsOk: boolean | null;
+}
+
+export interface FaceMappingCompareAnchorDeltaV1 {
+  readonly anchorId: SagaDriveFaceAnchorId;
+  readonly screenErrorPx: number | null;
+  readonly normalizedFaceError: number | null;
+  readonly lateralityOk: boolean | null;
+  readonly surfaceSemanticsOk: boolean | null;
+  readonly outlier: boolean;
+}
+
+export interface FaceMappingCompareExportSummaryV1 {
+  readonly expectedAnchors: number;
+  readonly mapped: number;
+  readonly missing: number;
+  readonly medianErrorPx: number | null;
+  readonly p95ErrorPx: number | null;
+  readonly maxErrorPx: number | null;
+  readonly lrSwaps: number;
+  readonly surfaceMismatchCount: number;
+  readonly thresholdStatus: typeof FACE_MAPPING_AUTO_EVAL_THRESHOLD_STATUS;
 }
 
 export interface FaceMappingCompareExportV1 {
   readonly kind: typeof FACE_MAPPING_COMPARE_EXPORT_KIND;
   readonly exportedAt: string;
-  readonly setCount: number;
-  readonly missingCount: number;
-  readonly autoProposalCount: number;
-  readonly anchors: readonly FaceMappingCompareExportAnchorV1[];
+  readonly validForGroundTruthComparison: boolean;
+  readonly referenceStatus: FaceMappingGroundTruthReferenceStatusV1 | null;
+  readonly assetFingerprint: string | null;
+  readonly reference: {
+    readonly anchors: readonly FaceMappingCompareReferenceAnchorV1[];
+  } | null;
+  readonly proposal: {
+    readonly anchors: readonly FaceMappingCompareProposalAnchorV1[];
+  } | null;
+  /**
+   * Per-anchor deltas — only populated when validForGroundTruthComparison.
+   * When !valid, comparison is null (do not treat draftAfter as manualScreen).
+   */
+  readonly comparison: {
+    readonly anchors: readonly FaceMappingCompareAnchorDeltaV1[];
+  } | null;
+  readonly summary: FaceMappingCompareExportSummaryV1;
+  /** Optional display provenance after apply — not used as GT manualScreen. */
+  readonly draftAfterProvenance?: {
+    readonly setCount: number;
+    readonly metaSources: Readonly<Partial<Record<SagaDriveFaceAnchorId, FaceMappingAuthoringSource>>>;
+  };
 }
 
-/** Clipboard JSON: manual draft + screen coords + last Auto proposals (no images). */
+function round1(n: number): number {
+  return Math.round(n * 10) / 10;
+}
+
+function screenFromCoords(
+  coords: FaceMappingScreenCoordMap | undefined,
+  id: SagaDriveFaceAnchorId,
+  fallbackX: number | null,
+  fallbackY: number | null,
+  meshLabel?: string | null,
+): FaceMappingCompareExportScreenV1 | null {
+  const c = coords?.[id];
+  if (c) {
+    return {
+      x: round1(c.x),
+      y: round1(c.y),
+      ...(c.meshLabel != null ? { meshLabel: c.meshLabel } : {}),
+    };
+  }
+  if (fallbackX != null && fallbackY != null && Number.isFinite(fallbackX) && Number.isFinite(fallbackY)) {
+    return {
+      x: round1(fallbackX),
+      y: round1(fallbackY),
+      ...(meshLabel != null ? { meshLabel } : {}),
+    };
+  }
+  return null;
+}
+
+/**
+ * Build GT-vs-auto compare report.
+ * draftAfter / metaAfter are display provenance only — never used as manualScreen for deltas.
+ */
 export function buildFaceMappingCompareExport(input: {
-  draft: SagaDriveFaceMappingDraftV1;
-  manualCoords: Readonly<
-    Partial<Record<SagaDriveFaceAnchorId, { x: number; y: number; meshLabel?: string | null }>>
-  >;
-  autoCoords: Readonly<
-    Partial<
-      Record<
-        SagaDriveFaceAnchorId,
-        {
-          outcome: FaceMappingAutoAnchorOutcome;
-          x: number | null;
-          y: number | null;
-          meshLabel?: string | null;
-        }
-      >
-    >
-  >;
-  meta?: FaceMappingDraftAuthoringMeta;
+  reference: FaceMappingGroundTruthReferenceV1 | null;
+  autoSession: FaceMappingAutoSessionResultV1 | null;
+  /** Current draft only for display provenance after apply — NOT used as manualScreen. */
+  draftAfter?: SagaDriveFaceMappingDraftV1;
+  metaAfter?: FaceMappingDraftAuthoringMeta;
+  /** Optional override screens for proposal (else session screenX/Y). */
+  proposalScreens?: FaceMappingScreenCoordMap;
+  assetFingerprint?: string | null;
+  faceWidthPx?: number;
+  outlierMedianFactor?: number;
   nowIso?: string;
 }): FaceMappingCompareExportV1 {
-  const anchors: FaceMappingCompareExportAnchorV1[] = [];
-  let setCount = 0;
-  let missingCount = 0;
-  let autoProposalCount = 0;
+  const valid = input.reference?.validForGroundTruthComparison === true;
+  const referenceStatus = input.reference?.status ?? null;
+  const factor = input.outlierMedianFactor ?? 3;
+  const faceWidth = input.faceWidthPx;
+
+  const refById = new Map(
+    (input.reference?.anchors ?? []).map((a) => [a.anchorId, a] as const),
+  );
+  const autoById = new Map(
+    (input.autoSession?.anchors ?? []).map((a) => [a.anchorId, a] as const),
+  );
+
+  const referenceAnchors: FaceMappingCompareReferenceAnchorV1[] = [];
+  for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
+    const ref = refById.get(id);
+    if (!ref) continue;
+    referenceAnchors.push({
+      anchorId: id,
+      binding: ref.binding,
+      screen: ref.screen
+        ? {
+            x: round1(ref.screen.x),
+            y: round1(ref.screen.y),
+            ...(ref.screen.meshLabel != null ? { meshLabel: ref.screen.meshLabel } : {}),
+          }
+        : null,
+      source: ref.source,
+      reviewed: ref.reviewed,
+    });
+  }
+
+  const proposalAnchors: FaceMappingCompareProposalAnchorV1[] = [];
+  let mapped = 0;
+  let missing = 0;
+  let surfaceMismatchCount = 0;
 
   for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
-    const binding = input.draft.anchors[id] ?? null;
-    const manual = input.manualCoords[id];
-    const auto = input.autoCoords[id];
-    if (auto) autoProposalCount += 1;
-
-    let status: 'missing' | 'set' | 'invalid' = 'missing';
-    if (binding) {
-      // Lightweight: presence only; full validation lives in draft helpers.
-      status = 'set';
-      setCount += 1;
-    } else {
-      missingCount += 1;
+    const auto = autoById.get(id);
+    const expected = expectedFaceMappingSurfaceClasses(id);
+    const meshNodeIdentity = auto?.meshNodeIdentity ?? auto?.binding?.nodeIdentity ?? null;
+    let actualSurfaceClass: FaceMappingSurfaceClassV1 | null = null;
+    let surfaceSemanticsOk: boolean | null = null;
+    if (meshNodeIdentity) {
+      actualSurfaceClass = classifyFaceMappingSurfaceFromNodeIdentity(meshNodeIdentity);
+      surfaceSemanticsOk = isFaceMappingSurfaceSemanticsOk(id, actualSurfaceClass);
+      if (surfaceSemanticsOk === false) surfaceMismatchCount += 1;
     }
 
-    let deltaPx: number | null = null;
-    if (
-      manual &&
-      auto &&
-      auto.x != null &&
-      auto.y != null &&
-      Number.isFinite(auto.x) &&
-      Number.isFinite(auto.y)
-    ) {
-      deltaPx = Math.hypot(auto.x - manual.x, auto.y - manual.y);
-    }
+    const hasBinding = Boolean(auto?.binding);
+    if (hasBinding) mapped += 1;
+    else missing += 1;
 
-    anchors.push({
+    proposalAnchors.push({
       anchorId: id,
-      status,
-      source: input.meta?.[id]?.source ?? null,
-      binding: binding
+      binding: auto?.binding
         ? {
-            nodeIdentity: binding.nodeIdentity,
-            primitiveIndex: binding.primitiveIndex,
-            triangleIndex: binding.triangleIndex,
-            barycentric: { ...binding.barycentric },
+            nodeIdentity: auto.binding.nodeIdentity,
+            primitiveIndex: auto.binding.primitiveIndex,
+            triangleIndex: auto.binding.triangleIndex,
+            barycentric: { ...auto.binding.barycentric },
           }
         : null,
-      manualScreen: manual
-        ? {
-            x: Math.round(manual.x * 10) / 10,
-            y: Math.round(manual.y * 10) / 10,
-            ...(manual.meshLabel != null ? { meshLabel: manual.meshLabel } : {}),
-          }
-        : null,
-      auto: auto
-        ? {
-            outcome: auto.outcome,
-            x: auto.x != null ? Math.round(auto.x * 10) / 10 : null,
-            y: auto.y != null ? Math.round(auto.y * 10) / 10 : null,
-            ...(auto.meshLabel != null ? { meshLabel: auto.meshLabel } : {}),
-          }
-        : null,
-      deltaPx: deltaPx != null ? Math.round(deltaPx * 10) / 10 : null,
+      screen: screenFromCoords(
+        input.proposalScreens,
+        id,
+        auto?.screenX ?? null,
+        auto?.screenY ?? null,
+        meshNodeIdentity,
+      ),
+      source: 'auto',
+      confidence: auto?.confidence ?? null,
+      outcome: auto?.outcome ?? null,
+      meshNodeIdentity,
+      actualSurfaceClass,
+      expectedSurfaceClasses: expected,
+      surfaceSemanticsOk,
     });
+  }
+
+  let comparison: FaceMappingCompareExportV1['comparison'] = null;
+  let medianErrorPx: number | null = null;
+  let p95ErrorPx: number | null = null;
+  let maxErrorPx: number | null = null;
+  let lrSwaps = 0;
+
+  if (valid && input.reference) {
+    const errors: number[] = [];
+    const deltas: FaceMappingCompareAnchorDeltaV1[] = [];
+    const proposalScreenById = new Map(
+      proposalAnchors.map((p) => [p.anchorId, p] as const),
+    );
+
+    for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
+      const ref = refById.get(id);
+      const prop = proposalScreenById.get(id);
+      let screenErrorPx: number | null = null;
+      let normalizedFaceError: number | null = null;
+      if (ref?.screen && prop?.screen) {
+        screenErrorPx = Math.hypot(prop.screen.x - ref.screen.x, prop.screen.y - ref.screen.y);
+        errors.push(screenErrorPx);
+        if (faceWidth && faceWidth > 1e-6) {
+          normalizedFaceError = screenErrorPx / faceWidth;
+        }
+      }
+
+      let lateralityOk: boolean | null = null;
+      if (id.endsWith('Left') || id.includes('Left')) {
+        const rightId = id.replace('Left', 'Right') as SagaDriveFaceAnchorId;
+        const leftScreen = prop?.screen;
+        const rightScreen = proposalScreenById.get(rightId)?.screen;
+        if (leftScreen && rightScreen) {
+          lateralityOk = leftScreen.x > rightScreen.x;
+          if (!lateralityOk) lrSwaps += 1;
+        }
+      }
+
+      deltas.push({
+        anchorId: id,
+        screenErrorPx: screenErrorPx != null ? round1(screenErrorPx) : null,
+        normalizedFaceError,
+        lateralityOk,
+        surfaceSemanticsOk: prop?.surfaceSemanticsOk ?? null,
+        outlier: false,
+      });
+    }
+
+    const sorted = [...errors].sort((a, b) => a - b);
+    medianErrorPx = median(sorted);
+    p95ErrorPx = percentile(sorted, 0.95);
+    maxErrorPx = sorted.length ? sorted[sorted.length - 1]! : null;
+
+    if (medianErrorPx != null && medianErrorPx > 0) {
+      for (let i = 0; i < deltas.length; i += 1) {
+        const d = deltas[i];
+        if (!d || d.screenErrorPx == null) continue;
+        if (d.screenErrorPx > medianErrorPx * factor) {
+          deltas[i] = { ...d, outlier: true };
+        }
+      }
+    }
+
+    comparison = { anchors: deltas };
+  }
+
+  let draftAfterProvenance: FaceMappingCompareExportV1['draftAfterProvenance'];
+  if (input.draftAfter) {
+    let setCount = 0;
+    const metaSources: Partial<Record<SagaDriveFaceAnchorId, FaceMappingAuthoringSource>> = {};
+    for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
+      if (input.draftAfter.anchors[id]) setCount += 1;
+      const src = input.metaAfter?.[id]?.source;
+      if (src) metaSources[id] = src;
+    }
+    draftAfterProvenance = { setCount, metaSources };
   }
 
   return {
     kind: FACE_MAPPING_COMPARE_EXPORT_KIND,
     exportedAt: input.nowIso ?? new Date().toISOString(),
-    setCount,
-    missingCount,
-    autoProposalCount,
-    anchors,
+    validForGroundTruthComparison: valid,
+    referenceStatus,
+    assetFingerprint: input.assetFingerprint ?? input.reference?.assetFingerprint ?? null,
+    reference: input.reference ? { anchors: referenceAnchors } : null,
+    proposal: input.autoSession ? { anchors: proposalAnchors } : null,
+    comparison,
+    summary: {
+      expectedAnchors: SAGA_DRIVE_FACE_ANCHOR_IDS.length,
+      mapped,
+      missing,
+      medianErrorPx: valid ? (medianErrorPx != null ? round1(medianErrorPx) : null) : null,
+      p95ErrorPx: valid ? (p95ErrorPx != null ? round1(p95ErrorPx) : null) : null,
+      maxErrorPx: valid ? (maxErrorPx != null ? round1(maxErrorPx) : null) : null,
+      lrSwaps: valid ? lrSwaps : 0,
+      surfaceMismatchCount,
+      thresholdStatus: FACE_MAPPING_AUTO_EVAL_THRESHOLD_STATUS,
+    },
+    ...(draftAfterProvenance ? { draftAfterProvenance } : {}),
   };
 }
 

@@ -5,7 +5,7 @@
  * Projects draft bindings via CharacterStudioRuntime; no React setState per frame.
  * Smooth eye/mouth contours + brow curves from domain guide geometry.
  * Selected marker pulses; overlay owns pointer events so orbit cannot steal drags.
- * Drag updates only on valid allowlisted raycast hits (keeps last valid draft).
+ * Valid hit only — leave last binding (drag updates only on allowlisted raycast hits).
  * View mode: draft (amber) / auto ghost (cyan) / both (#421 compare).
  */
 
@@ -35,6 +35,8 @@ interface FaceMappingMarkerLayerProps {
   >;
   /** What to draw on the 3D overlay. */
   viewMode?: FaceMappingOverlayViewMode;
+  /** When false, pan/select only — no draft place/drag (e.g. while autoBusy). */
+  editingAllowed?: boolean;
   onSelectAnchor: (anchorId: SagaDriveFaceAnchorId) => void;
   onBindingPlaced: (
     anchorId: SagaDriveFaceAnchorId,
@@ -237,6 +239,7 @@ export function FaceMappingMarkerLayer({
   studioRuntimeRef,
   autoBindingsRef,
   viewMode = 'draft',
+  editingAllowed: editingAllowedProp = true,
   onSelectAnchor,
   onBindingPlaced,
 }: FaceMappingMarkerLayerProps) {
@@ -247,6 +250,8 @@ export function FaceMappingMarkerLayer({
   onSelectRef.current = onSelectAnchor;
   const viewModeRef = useRef(viewMode);
   viewModeRef.current = viewMode;
+  const editingAllowedPropRef = useRef(editingAllowedProp);
+  editingAllowedPropRef.current = editingAllowedProp;
 
   useEffect(() => {
     if (!active) return;
@@ -367,7 +372,8 @@ export function FaceMappingMarkerLayer({
       };
     };
 
-    const editingAllowed = () => viewModeRef.current !== 'auto';
+    const editingAllowed = () =>
+      editingAllowedPropRef.current && viewModeRef.current !== 'auto';
 
     const onPointerDown = (event: PointerEvent) => {
       const draft = draftRef.current;

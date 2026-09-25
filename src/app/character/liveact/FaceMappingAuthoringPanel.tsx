@@ -5,13 +5,13 @@
  * Renders below the AvatarCanvas (not over the 3D face). Session-local draft only.
  * Detail card mirrors PDF: selected feature + pulsing point synced with viewport.
  * Auto Mapping (#421) proposes anchors; never auto-publishes.
- * Marker rows show manual screen coords and last Auto proposal side-by-side.
+ * Marker rows show draft screen coords and last Auto proposal side-by-side.
+ * Compare JSON comes from parent frozen GT reference — never freeze current draft at copy time.
  */
 
 import { useEffect, useRef, useState } from 'react';
 import type { SagaDriveFaceAnchorId } from '../../../domains/character/avatar/face-anchor-contract';
 import type { FaceMappingAutoAnchorOutcome } from '../../../domains/character/avatar/face-mapping-auto-v1';
-import { stringifyFaceMappingCompareExport } from '../../../domains/character/avatar/face-mapping-auto-v1';
 import {
   FACE_MAPPING_ANCHOR_LABEL_DE,
   FACE_MAPPING_MARKER_GROUP_DEFS,
@@ -25,7 +25,7 @@ import { FaceMappingDetailCard } from './FaceMappingDetailCard';
 import { FaceMappingFeatureIcon } from './FaceMappingFeatureIcon';
 import type { FaceMappingOverlayViewMode } from './FaceMappingMarkerLayer';
 
-/** Canvas CSS pixels for a placed (manual/current) marker. */
+/** Canvas CSS pixels for a placed (draft/current) marker. */
 export interface FaceMappingManualCoordV1 {
   readonly x: number;
   readonly y: number;
@@ -58,7 +58,17 @@ interface FaceMappingAuthoringPanelProps {
   onReset: () => void;
   onCancel: () => void;
   onAutoMapping?: () => void;
-  /** Optional authoring provenance for JSON export (source per anchor). */
+  /** Mark all bound anchors as reviewed manual GT. */
+  onMarkAllReviewed?: () => void;
+  /** From last frozen GT reference (before auto). */
+  groundTruthValid?: boolean | null;
+  referenceStatus?: string | null;
+  /**
+   * Parent builds compare from frozen GT reference + last auto session —
+   * never freeze current draft as reference at copy time.
+   */
+  getCompareExportJson?: () => string;
+  /** Optional authoring provenance for fallback display (source per anchor). */
   getAuthoringMeta?: () => Readonly<
     Partial<Record<SagaDriveFaceAnchorId, { source: string; confidence?: number; reviewed?: boolean }>>
   >;
@@ -146,7 +156,7 @@ function MarkerCoordCompare({
     >
       {manual ? (
         <span title={manual.meshLabel ?? undefined} data-testid="face-mapping-coord-manual">
-          <span className="text-emerald-200/90">Manuell</span>{' '}
+          <span className="text-emerald-200/90">Draft</span>{' '}
           {fmtPx(manual.x, manual.y)}
           {manual.meshLabel ? (
             <span className="ml-1 opacity-70">{manual.meshLabel}</span>
@@ -154,7 +164,7 @@ function MarkerCoordCompare({
         </span>
       ) : (
         <span className="opacity-50" data-testid="face-mapping-coord-manual-empty">
-          Manuell —
+          Draft —
         </span>
       )}
       {auto ? (
@@ -185,7 +195,10 @@ export function FaceMappingAuthoringPanel({
   onReset,
   onCancel,
   onAutoMapping,
-  getAuthoringMeta,
+  onMarkAllReviewed,
+  groundTruthValid = null,
+  referenceStatus = null,
+  getCompareExportJson,
 }: FaceMappingAuthoringPanelProps) {
   const summary = validateFaceMappingDraft(draft);
   const selectedId = draft.selectedAnchorId;
@@ -202,23 +215,11 @@ export function FaceMappingAuthoringPanel({
 
   const copyJson = async () => {
     try {
-      const metaRaw = getAuthoringMeta?.() ?? {};
-      const meta = Object.fromEntries(
-        Object.entries(metaRaw).map(([id, row]) => [
-          id,
-          {
-            source: row.source as 'auto' | 'manual' | 'manual_override',
-            ...(row.confidence != null ? { confidence: row.confidence } : {}),
-            ...(row.reviewed != null ? { reviewed: row.reviewed } : {}),
-          },
-        ]),
-      );
-      const json = stringifyFaceMappingCompareExport({
-        draft,
-        manualCoords,
-        autoCoords,
-        meta,
-      });
+      if (!getCompareExportJson) {
+        setCopyState('failed');
+        return;
+      }
+      const json = getCompareExportJson();
       await navigator.clipboard.writeText(json);
       setCopyState('copied');
     } catch (error) {
@@ -241,6 +242,7 @@ export function FaceMappingAuthoringPanel({
           <p className="text-[10px] text-slate-400">
             {summary.setCount} gesetzt · {summary.missingCount} fehlen
             {summary.invalidCount > 0 ? ` · ${summary.invalidCount} ungültig` : ''}
+            {groundTruthValid === true ? ' · GT gültig' : ''}
           </p>
         </div>
         <Button
@@ -259,9 +261,19 @@ export function FaceMappingAuthoringPanel({
         Scroll zoomen. Auf leerer Fläche ziehen = Kamera verschieben (z. B. nach oben zur Stirn).
         Marker greifen und setzen; Guides folgen live. Auto Mapping ist nur ein Vorschlag.
         {hasAnyAuto
-          ? ' Koordinaten: Manuell (aktuell) · Auto (letzter Lauf) · Δ = Abstand px.'
+          ? ' Koordinaten: Draft (aktuell) · Auto (letzter Lauf) · Δ = Abstand px.'
           : ' Gesetzte Marker zeigen Screen-Koordinaten (px).'}
       </p>
+
+      {referenceStatus === 'unreviewed_auto' ? (
+        <p
+          className="mx-3 mb-1 rounded-sm bg-amber-400/15 px-2 py-1.5 text-[10px] text-amber-100"
+          role="status"
+          data-testid="face-mapping-gt-unreviewed-banner"
+        >
+          Sidecar/Draft ist auto/unreviewed — kein gültiger Auto-vs-Manual Benchmark
+        </p>
+      ) : null}
 
       {onAutoMapping ? (
         <div className="flex flex-col gap-1.5 border-b border-white/10 px-2 pb-2">
@@ -285,7 +297,7 @@ export function FaceMappingAuthoringPanel({
               disabled={summary.setCount === 0 && !hasAnyAuto}
               onClick={() => void copyJson()}
               data-testid="face-mapping-copy-json"
-              title="Manuell + Auto Koordinaten/Bindings als JSON kopieren"
+              title="GT-Referenz + Auto-Vorschlag als Compare-JSON kopieren"
             >
               {copyState === 'copied'
                 ? 'Kopiert'
@@ -294,6 +306,20 @@ export function FaceMappingAuthoringPanel({
                   : 'JSON kopieren'}
             </Button>
           </div>
+          {onMarkAllReviewed ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 w-full border-emerald-400/40 text-[11px] text-emerald-100 hover:bg-emerald-500/10"
+              disabled={autoBusy || summary.setCount === 0}
+              onClick={onMarkAllReviewed}
+              data-testid="face-mapping-mark-ground-truth"
+              title="Alle gesetzten Marker als reviewed manual Ground Truth markieren"
+            >
+              Als Ground Truth markieren
+            </Button>
+          ) : null}
           {onOverlayViewModeChange ? (
             <div
               className="flex rounded-sm border border-white/15 p-0.5"
@@ -345,7 +371,7 @@ export function FaceMappingAuthoringPanel({
           ) : null}
         </div>
       ) : (
-        <div className="flex gap-1.5 border-b border-white/10 px-2 pb-2">
+        <div className="flex flex-col gap-1.5 border-b border-white/10 px-2 pb-2">
           <Button
             type="button"
             size="sm"
@@ -354,7 +380,7 @@ export function FaceMappingAuthoringPanel({
             disabled={summary.setCount === 0 && !hasAnyAuto}
             onClick={() => void copyJson()}
             data-testid="face-mapping-copy-json"
-            title="Manuell + Auto Koordinaten/Bindings als JSON kopieren"
+            title="GT-Referenz + Auto-Vorschlag als Compare-JSON kopieren"
           >
             {copyState === 'copied'
               ? 'Kopiert'
@@ -362,6 +388,20 @@ export function FaceMappingAuthoringPanel({
                 ? 'Fehlgeschlagen'
                 : 'JSON kopieren'}
           </Button>
+          {onMarkAllReviewed ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 w-full border-emerald-400/40 text-[11px] text-emerald-100 hover:bg-emerald-500/10"
+              disabled={autoBusy || summary.setCount === 0}
+              onClick={onMarkAllReviewed}
+              data-testid="face-mapping-mark-ground-truth"
+              title="Alle gesetzten Marker als reviewed manual Ground Truth markieren"
+            >
+              Als Ground Truth markieren
+            </Button>
+          ) : null}
         </div>
       )}
 
@@ -438,7 +478,7 @@ export function FaceMappingAuthoringPanel({
           size="sm"
           variant="outline"
           className="h-8 flex-1 border-white/15 text-[11px]"
-          disabled={!draft.selectedAnchorId}
+          disabled={!draft.selectedAnchorId || autoBusy}
           onClick={onClearSelected}
           data-testid="face-mapping-clear"
         >
@@ -449,6 +489,7 @@ export function FaceMappingAuthoringPanel({
           size="sm"
           variant="outline"
           className="h-8 flex-1 border-white/15 text-[11px]"
+          disabled={autoBusy}
           onClick={onReset}
           data-testid="face-mapping-reset"
         >

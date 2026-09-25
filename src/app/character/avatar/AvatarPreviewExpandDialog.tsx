@@ -54,6 +54,7 @@ export function AvatarPreviewExpandDialog({
   const [mtoonEnabled, setMtoonEnabled] = useState(true);
   const mtoonHandlerRef = useRef<((enabled: boolean) => void) | null>(null);
   const [faceMappingPanelHost, setFaceMappingPanelHost] = useState<HTMLDivElement | null>(null);
+  const [settingsStickyHost, setSettingsStickyHost] = useState<HTMLDivElement | null>(null);
 
   // Mesh overlay samples this dialog's runtime — keep debug enabled in sync with the toggle.
   useEffect(() => {
@@ -102,6 +103,16 @@ export function AvatarPreviewExpandDialog({
 
         {avatar ? (
           <div className="relative w-full" data-testid="avatar-preview-expand-viewport">
+            <div
+              className="pointer-events-none sticky top-12 z-30 flex h-0 justify-end overflow-visible pr-3 pt-3"
+              data-avatar-preview-settings-sticky-bar="expand"
+            >
+              <div
+                ref={setSettingsStickyHost}
+                className="pointer-events-auto relative"
+                data-testid="avatar-preview-settings-sticky-host"
+              />
+            </div>
             <AvatarCanvas
               avatar={avatar}
               controlMode="editor"
@@ -144,6 +155,7 @@ export function AvatarPreviewExpandDialog({
                   characterFaceMappingAvailable={characterFaceMappingAvailable}
                   studioRuntimeRef={studioRuntimeRef}
                   faceMappingPanelHost={faceMappingPanelHost}
+                  settingsStickyHost={settingsStickyHost}
                   onFaceAnchorsCommitted={onFaceAnchorsCommitted}
                 />
               </div>
@@ -151,6 +163,16 @@ export function AvatarPreviewExpandDialog({
           </div>
         ) : (
           <div className="relative w-full" data-testid="avatar-preview-expand-fallback-host">
+            <div
+              className="pointer-events-none sticky top-12 z-30 flex h-0 justify-end overflow-visible pr-3 pt-3"
+              data-avatar-preview-settings-sticky-bar="expand"
+            >
+              <div
+                ref={setSettingsStickyHost}
+                className="pointer-events-auto relative"
+                data-testid="avatar-preview-settings-sticky-host"
+              />
+            </div>
             <div
               className="flex aspect-[4/5] w-full items-center justify-center rounded-lg border border-border bg-muted/40 px-4 text-center text-sm text-muted-foreground"
               data-testid="avatar-preview-expand-fallback"
@@ -167,6 +189,7 @@ export function AvatarPreviewExpandDialog({
                   liveAct={liveAct}
                   capabilities={null}
                   characterFaceMappingAvailable={false}
+                  settingsStickyHost={settingsStickyHost}
                   onFaceAnchorsCommitted={onFaceAnchorsCommitted}
                 />
               </div>
