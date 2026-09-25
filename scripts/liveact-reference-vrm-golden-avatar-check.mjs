@@ -4,6 +4,7 @@
  * Location: scripts/liveact-reference-vrm-golden-avatar-check.mjs
  */
 import { readFileSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
@@ -86,6 +87,22 @@ check(/fetch-liveact-reference-vrm/.test(fetchScript), 'fetch script');
 check(/checkLiveActReferenceVrmGoldenAvatar/.test(gate), 'test-gate wiring');
 check(/Golden Reference/.test(acceptance), 'acceptance present');
 
+// Provenance: immutable original (upstream LFS sha256) vs reproducible derivative (served file).
+const pinned = (name) => fetchScript.match(new RegExp(`const ${name} = '([0-9a-f]{64})'`))?.[1] ?? null;
+const originalSha = pinned('ORIGINAL_SHA256');
+const derivativeSha = pinned('DERIVATIVE_SHA256');
+check(originalSha && derivativeSha && originalSha !== derivativeSha, 'fetch pins original + derivative sha256');
+check(domain.includes(`originalSha256: '${originalSha}'`), 'domain provenance pins the same original sha256');
+check(domain.includes(`sha256: '${derivativeSha}'`), 'domain provenance pins the same derivative sha256');
+check(/saga-teeth-binds-v1/.test(domain) && /saga-teeth-binds-v1/.test(fetchScript), 'derivative id shared');
+check(/\.cache\/liveact-reference-vrm\//.test(fetchScript), 'original cached outside public/');
+check(!/writeFileSync\(ORIGINAL/.test(fetchScript), 'fetch never rewrites the original');
+check(
+  attribution.includes(originalSha) && attribution.includes(derivativeSha) && /saga-teeth-binds-v1/.test(attribution),
+  'attribution documents original + derivative',
+);
+check(/abgeleitet vom Original/.test(domain), 'UI hint discloses the derivative');
+
 const aliasOut = await bundle(
   'src/domains/character/liveact/liveact-channel-target-aliases.ts',
   'liveact-golden-reference-aliases-bundle.mjs',
@@ -158,6 +175,11 @@ if (!existsSync(binary)) {
     'liveact-reference-vrm-golden-avatar-check WARN: binary missing — run node scripts/fetch-liveact-reference-vrm.mjs',
   );
 } else {
+  const servedSha = createHash('sha256').update(readFileSync(binary)).digest('hex');
+  check(
+    servedSha === derivativeSha,
+    `served Reference VRM is not the pinned derivative (${servedSha}) — run: node scripts/fetch-liveact-reference-vrm.mjs`,
+  );
   const { validateFaceAnchorsManifestFile } = await import('./lib/liveact-face-anchor-validate.mjs');
   const bound = await validateFaceAnchorsManifestFile({
     manifestPath: join(root, sidecarRel),

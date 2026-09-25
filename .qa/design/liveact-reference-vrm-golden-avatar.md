@@ -20,6 +20,8 @@ A known-good ARKit52 VRM through the **same** LiveAct path will either move clea
 | File | `White/White_M_1_Default.vrm` |
 | Upstream | https://github.com/TLTMedia/valid-vrm-avatars |
 | Commit | `3a79e95bc81655a3e1ec020538c67e7e17551b6f` |
+| Original sha256 | `1ab7130c773bce62053c18599aea786ae6565604aeab4fcc9ef75c940830cff9` (upstream LFS oid; cached unmodified in `.cache/liveact-reference-vrm/`) |
+| Served file | Derivative `saga-teeth-binds-v1`, sha256 `323269ae9de3b13294135e6e2c3d84b52eb2c5d29d5a2ac9e1619f273be1645b` — `jaw*` expressions also bind `h_TeethDown`; geometry/rig unchanged |
 | Why | Neutral adult male, Default outfit, VRM 1.0, documented ARKit 52, humanoid bones + LookAt |
 
 ## 4. License / Attribution

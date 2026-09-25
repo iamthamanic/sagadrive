@@ -44,6 +44,7 @@ Add one known-good external VRM 1.0 avatar with full ARKit52 expressions as a **
 - Domain catalog: `liveact-golden-reference-avatar-v1.ts` (id, pinned path, provenance, expected channels)
 - UI: `HumanLiveActMeshVariantSelect` under Mensch; session `humanMeshVariant`; `avatarForPersist` strips reference URL on save
 - Asset: `scripts/fetch-liveact-reference-vrm.mjs` → `public/assets/avatars/reference/valid-white-m1-default.vrm` (gitignored); ATTRIBUTION.md committed
+- Provenance: unmodified original cached in `.cache/liveact-reference-vrm/` and verified against the upstream LFS sha256 `1ab7130c…cff9`; the served file is the reproducible derivative `saga-teeth-binds-v1` (sha256 `323269ae…645b`, lower teeth bound to the jaw expressions). The UI hint discloses the derivative; the golden-avatar check fails if the served binary drifts from the pinned derivative.
 - Capabilities: `gazeDrivePath` + `runtimeKind` on LiveActAvatarCapabilities; inspector summary line
 - Fixture: `.qa/fixtures/liveact-reference-vrm/expression-inventory.json` (lookAt bone, expression inventory, missing channels)
 - Check: `liveact-reference-vrm-golden-avatar-check.mjs` (resolution, SagaDrive regression, no asset-specific hacks, gaze exclusivity)
