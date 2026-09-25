@@ -196,6 +196,7 @@ export function LiveActViewportControls({
       <LiveActCharacterFaceOverlay
         enabled={characterOverlayOn}
         metricsEnabled={liveAct.metricsEnabled}
+        studioRuntimeRef={studioRuntimeRef}
         debugHandleRef={liveAct.characterFaceDebugHandleRef}
         diagnosticsV2Ref={liveAct.diagnosticsV2Ref}
       />

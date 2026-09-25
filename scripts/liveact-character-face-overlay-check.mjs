@@ -50,6 +50,10 @@ check(/setFaceOverlayEnabled\(true\)/.test(controls), 'Speichern enables mesh ov
 check(/setLiveActCharacterFaceDebugEnabled\(true\)/.test(controls), 'Speichern re-enables debug sampling');
 check(/hasLiveActCharacterFaceMapping/.test(controls), 'overlay uses live runtime mapping');
 check(/snap\.points/.test(overlay), 'overlay draws anchor points');
+check(/getLiveActCharacterFaceDebugHandle\(\)/.test(overlay), 'overlay samples viewport runtime handle');
+check(/getFaceMappingCanvasElement/.test(overlay), 'overlay sizes to WebGL canvas CSS box');
+check(/studioRuntimeRef/.test(overlay), 'overlay accepts studioRuntimeRef');
+check(/setLiveActCharacterFaceDebugEnabled/.test(read('src/app/character/avatar/AvatarPreviewExpandDialog.tsx')), 'expand dialog enables face debug');
 check(/OVERLAY_POINT_IDS/.test(debug), 'partial anchors including nose/chin/forehead');
 check(/faceOverlayEnabled && characterFaceMappingAvailable/.test(surface), 'mesh overlay independent of webcam tracking');
 check(

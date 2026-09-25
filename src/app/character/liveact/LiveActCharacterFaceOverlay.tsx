@@ -2,8 +2,8 @@
  * LiveActCharacterFaceOverlay — mesh-bound face debug over avatar viewport (#400).
  * Location: src/app/character/liveact/LiveActCharacterFaceOverlay.tsx
  *
- * Samples deformed SagaDriveFaceAnchorsV1 via CharacterStudioRuntime handle; rAF only.
- * Geometry metrics + key APPLIED channels (not a 1:1 webcam ratio comparison).
+ * Samples deformed SagaDriveFaceAnchorsV1 via the viewport's CharacterStudioRuntime
+ * (same camera + GL canvas as Face Mapping). Shared liveAct handle is fallback only.
  */
 
 import { useEffect, useRef, type RefObject } from 'react';
@@ -11,12 +11,17 @@ import {
   formatLiveActMetric,
   type LiveActDiagnosticsV2Snapshot,
 } from '../../../domains/character/liveact';
-import type { LiveActCharacterFaceDebugHandle } from '../../../infrastructure/character/avatar/character-studio-runtime';
+import type {
+  CharacterStudioRuntime,
+  LiveActCharacterFaceDebugHandle,
+} from '../../../infrastructure/character/avatar/character-studio-runtime';
 import type { LiveActCharacterFaceDebugContours } from '../../../infrastructure/character/liveact/liveact-character-face-debug';
 
 interface LiveActCharacterFaceOverlayProps {
   enabled: boolean;
   metricsEnabled: boolean;
+  /** Prefer this viewport's runtime — expand modal ≠ editor card camera. */
+  studioRuntimeRef?: RefObject<CharacterStudioRuntime | null>;
   debugHandleRef: RefObject<LiveActCharacterFaceDebugHandle | null>;
   diagnosticsV2Ref?: RefObject<LiveActDiagnosticsV2Snapshot | null>;
 }
@@ -102,6 +107,7 @@ function appliedValue(
 export function LiveActCharacterFaceOverlay({
   enabled,
   metricsEnabled,
+  studioRuntimeRef,
   debugHandleRef,
   diagnosticsV2Ref,
 }: LiveActCharacterFaceOverlayProps) {
@@ -120,14 +126,19 @@ export function LiveActCharacterFaceOverlay({
 
     const tick = (): void => {
       rafRef.current = requestAnimationFrame(tick);
-      const handle = debugHandleRef.current;
+      const runtime = studioRuntimeRef?.current ?? null;
+      // Always sample the runtime that owns this viewport's WebGL camera.
+      const handle =
+        runtime?.getLiveActCharacterFaceDebugHandle() ?? debugHandleRef.current;
       const canvas = canvasRef.current;
       if (!handle || !canvas) return;
-      const parent = canvas.parentElement;
-      if (!parent) return;
 
-      const width = Math.max(1, Math.floor(parent.clientWidth));
-      const height = Math.max(1, Math.floor(parent.clientHeight));
+      // Same CSS box as FaceMappingMarkerLayer / projectWorldToFaceMappingCanvas.
+      const host = runtime?.getFaceMappingCanvasElement() ?? canvas.parentElement;
+      if (!host) return;
+
+      const width = Math.max(1, Math.round(host.clientWidth));
+      const height = Math.max(1, Math.round(host.clientHeight));
       if (canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
         canvas.height = height;
@@ -191,7 +202,7 @@ export function LiveActCharacterFaceOverlay({
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
     };
-  }, [enabled, metricsEnabled, debugHandleRef, diagnosticsV2Ref]);
+  }, [enabled, metricsEnabled, studioRuntimeRef, debugHandleRef, diagnosticsV2Ref]);
 
   if (!enabled) return null;
 

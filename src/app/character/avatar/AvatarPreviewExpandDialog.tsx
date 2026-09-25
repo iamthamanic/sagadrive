@@ -4,9 +4,10 @@
  *
  * Opened from AvatarPreviewSettings „Setup“ control.
  * Same gear chrome as the editor viewport so LiveAct / Face Setup stay reachable.
+ * Owns a separate CharacterStudioRuntime — face overlay must sample that camera, not the card.
  */
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
 import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
 import type { SagaDriveFaceAnchorsManifestV1 } from '../../../domains/character/avatar';
@@ -48,6 +49,20 @@ export function AvatarPreviewExpandDialog({
   const mtoonHandlerRef = useRef<((enabled: boolean) => void) | null>(null);
   const studioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
   const [faceMappingPanelHost, setFaceMappingPanelHost] = useState<HTMLDivElement | null>(null);
+
+  // Mesh overlay samples this dialog's runtime — keep debug enabled in sync with the toggle.
+  useEffect(() => {
+    if (!open || !runtimeReady) {
+      studioRuntimeRef.current?.setLiveActCharacterFaceDebugEnabled(false);
+      return;
+    }
+    const mapping =
+      characterFaceMappingAvailable ||
+      Boolean(studioRuntimeRef.current?.hasLiveActCharacterFaceMapping());
+    studioRuntimeRef.current?.setLiveActCharacterFaceDebugEnabled(
+      liveAct.faceOverlayEnabled && mapping,
+    );
+  }, [open, runtimeReady, liveAct.faceOverlayEnabled, characterFaceMappingAvailable]);
 
   return (
     <Dialog
