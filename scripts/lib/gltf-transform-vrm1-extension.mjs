@@ -27,7 +27,10 @@ export function attachVrmcVrm1Extension(jsonDoc, vrmcVrm) {
   json.extensionsUsed = [...used];
 
   const required = Array.isArray(json.extensionsRequired) ? json.extensionsRequired : [];
-  json.extensionsRequired = required.filter((n) => n !== VRMC_VRM_EXTENSION_NAME);
+  const stillRequired = required.filter((n) => n !== VRMC_VRM_EXTENSION_NAME);
+  // glTF forbids empty arrays (Khronos EMPTY_ENTITY error).
+  if (stillRequired.length) json.extensionsRequired = stillRequired;
+  else delete json.extensionsRequired;
 
   json.extensions = {
     ...(json.extensions && typeof json.extensions === 'object' ? json.extensions : {}),

@@ -1,0 +1,623 @@
+{
+  "contractVersion": "SagaHumanCanonicalSourcesV1",
+  "humanId": "saga-human-canonical-v1",
+  "licenseSpdx": "CC0-1.0",
+  "licenseNote": "Only MakeHuman assets are used (base mesh, targets, rig, weights, proxies, textures) \u2014 released CC0 1.0 per makehuman LICENSE.md section C and extra-targets LICENSE. No MakeHuman / MakeHuman II / MPFB program code (AGPL-3.0 / GPL-3.0) is copied, imported or executed.",
+  "origins": {
+    "makehuman": {
+      "repository": "https://github.com/makehumancommunity/makehuman",
+      "commit": "a8bc2d54ff0ac92e78ff71431b1023eda42bf482",
+      "rawBaseUrl": "https://raw.githubusercontent.com/makehumancommunity/makehuman/a8bc2d54ff0ac92e78ff71431b1023eda42bf482/",
+      "license": "LICENSE.md section C \u2014 assets CC0 1.0 (code AGPL-3.0, not used)"
+    },
+    "extraTargets": {
+      "repository": "https://github.com/makehumancommunity/extra-targets",
+      "commit": "7eaba3453134385bb5ea9811ef0b33b85b4b556d",
+      "rawBaseUrl": "https://raw.githubusercontent.com/makehumancommunity/extra-targets/7eaba3453134385bb5ea9811ef0b33b85b4b556d/",
+      "license": "LICENSE \u2014 CC0 1.0"
+    },
+    "systemAssets": {
+      "zipUrl": "https://mirror1.makehuman.net/asset_packs/makehuman_system_assets/makehuman_system_assets_cc0.zip",
+      "listedBy": "makehumancommunity/makehuman2@65329ad0a27d7b92052eec24afb1dad2c823007c data/makehuman2_version.json (url_systemassets)",
+      "license": "CC0 1.0 (pack name + per-file CC0 headers)",
+      "note": "The zip is not version-pinned upstream; each member is pinned by sha256 and the fetch fails on drift.",
+      "observed": {
+        "bytes": 280737770,
+        "entries": 517,
+        "lastModified": "Sun, 14 Apr 2024 13:28:46 GMT",
+        "etag": "\"10bbb7ea-661bda0e-54e314c49b5daedc;;;\""
+      }
+    }
+  },
+  "files": [
+    {
+      "id": "base-mesh",
+      "origin": "makehuman",
+      "path": "makehuman/data/3dobjs/base.obj",
+      "sha256": "8e761e6624b8f54536409135d1636da63b32486a90d4897f84e121d144f6fb4c",
+      "bytes": 1749303,
+      "role": "hm08 base mesh (body + helpers + joint cubes)"
+    },
+    {
+      "id": "identity:caucasian-male-young",
+      "origin": "makehuman",
+      "path": "makehuman/data/targets/macrodetails/caucasian-male-young.target",
+      "sha256": "70e228ba7164737dae664454394536fc5935fa48d333c1a97d77e2dc6eacc5f5",
+      "bytes": 396479,
+      "role": "identity target (macro gender=1, age=25y, caucasian=1, muscle/weight average = empty target)"
+    },
+    {
+      "id": "rig",
+      "origin": "makehuman",
+      "path": "makehuman/data/rigs/default.mhskel",
+      "sha256": "99f179bce0aa850b45d4191a1d0d234c5851f881c057439470ded3bddf729a24",
+      "bytes": 117790,
+      "role": "default skeleton (163 bones, joints as vertex groups)"
+    },
+    {
+      "id": "rig-weights",
+      "origin": "makehuman",
+      "path": "makehuman/data/rigs/default_weights.mhw",
+      "sha256": "0f3641d651ae3d00ad6b4ccee43142edb109d3bd909d27d9e4139ef1beed8625",
+      "bytes": 897521,
+      "role": "default skin weights"
+    },
+    {
+      "id": "eyes:mhclo",
+      "origin": "makehuman",
+      "path": "makehuman/data/eyes/high-poly/high-poly.mhclo",
+      "sha256": "b183cfe37120ab726f9b3f2ea6cd3a64c44ce7b4bd91a77c841cf70c04f83a0d",
+      "bytes": 72490,
+      "role": "eyeball proxy fitting"
+    },
+    {
+      "id": "eyes:obj",
+      "origin": "makehuman",
+      "path": "makehuman/data/eyes/high-poly/high-poly.obj",
+      "sha256": "da2493215b708a344c33dc72f2a9a5b8fa985dcc5a70ad3b208995cf871da8e1",
+      "bytes": 100882,
+      "role": "eyeball proxy mesh"
+    },
+    {
+      "id": "eyes:texture",
+      "origin": "makehuman",
+      "path": "makehuman/data/eyes/materials/brown_eye.png",
+      "sha256": "4659691c7295ad6206c78b003e5fd0e5f91dcd53032fa914a229bb48cabe424b",
+      "bytes": 610817,
+      "role": "iris/sclera texture"
+    },
+    {
+      "id": "faceunit:browDownLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/browDownLeft.target",
+      "sha256": "095b8e45fc918aa17f845ea6490561644e10d83d3a5aa42790488a6806b2ccf1",
+      "bytes": 11474,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:browDownRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/browDownRight.target",
+      "sha256": "f092d3c8446b9e1bdf523b039465796e629b6cf9e20ac3f8fb853f98e890f105",
+      "bytes": 11014,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:browInnerUp",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/browInnerUp.target",
+      "sha256": "84c8be8c1cade46a51486786244c1a80dfbf6e1915bf1f5a72b74ef8eb951f6d",
+      "bytes": 11346,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:browOuterUpLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/browOuterUpLeft.target",
+      "sha256": "9821d5a8279c0ba8751d4595e0333ef5d1a041fad6d85ffffdae7b5044908fa0",
+      "bytes": 6834,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:browOuterUpRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/browOuterUpRight.target",
+      "sha256": "770fd5cb608adbeb778e17ab39e085f9472191d65056cebe0df5f3e4d6cab364",
+      "bytes": 6775,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:cheekPuff",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/cheekPuff.target",
+      "sha256": "fb99e2ab7e923be84cf2387a10d198d410b6b4135a14d58a1111b55edd624894",
+      "bytes": 40086,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:cheekSquintLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/cheekSquintLeft.target",
+      "sha256": "2ec68e1aca9ecd24019db58af53d7998f10e4964dda2729fd0f319597f734d75",
+      "bytes": 14657,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:cheekSquintRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/cheekSquintRight.target",
+      "sha256": "7daf855b7d23d2b95ae4e75ed0994b4951d8d9ec6d82a9a6aec8742df033bdbc",
+      "bytes": 14359,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeBlinkLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeBlinkLeft.target",
+      "sha256": "53d35e0a8357140d4e37277a674f211bdaf97be011b61cfcdff618f0bfea0ec8",
+      "bytes": 16277,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeBlinkRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeBlinkRight.target",
+      "sha256": "00d159a70fad650b336eb6f739a1a6a47f916da4331ef9848fb0eef989ca5cc5",
+      "bytes": 16075,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeLookDownLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeLookDownLeft.target",
+      "sha256": "df824a8a46447e95bc465b198ea9e49f10db8429c94531568dfbc512811f3f07",
+      "bytes": 12016,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeLookDownRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeLookDownRight.target",
+      "sha256": "568da82dd1a31eb5eb6a46025d56dbf13e6e9a9cb7950f0546111af0781d3f4c",
+      "bytes": 11540,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeLookInLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeLookInLeft.target",
+      "sha256": "d0774cb36def532a3be8576fc62cc23ad10bcc6f668365fcf387fe52a83155a0",
+      "bytes": 9977,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeLookInRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeLookInRight.target",
+      "sha256": "de9123797cbca735fa2d12853723dc1eb88d9ad435033465b713dc5e64511a28",
+      "bytes": 9181,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeLookOutLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeLookOutLeft.target",
+      "sha256": "9dd01ff6424676eb3abd4cfcd13ecfa3ffe87ea4feb8eeb252fd06aeb441be1e",
+      "bytes": 9891,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeLookOutRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeLookOutRight.target",
+      "sha256": "c25852238d3833d9f8977d7fac66942f810e4a24b0c90f584894d3c76c626ae7",
+      "bytes": 9949,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeLookUpLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeLookUpLeft.target",
+      "sha256": "3c8b3e2ac2bb82561f72deb94bb3d58e3876675cd3b87262967df812bcd6acb9",
+      "bytes": 17382,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeLookUpRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeLookUpRight.target",
+      "sha256": "4b91cf96e42c527179e8b7f60f0c69ae9d3dec0abe4ce475ceca0c95f8cd9cc0",
+      "bytes": 17011,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeSquintLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeSquintLeft.target",
+      "sha256": "4f7298dec327d91f53fe9525bf07ef17cf02776c4228da8baaef4b19079fd311",
+      "bytes": 8918,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeSquintRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeSquintRight.target",
+      "sha256": "f8563d6a34269f97110b1b0513b79bf98153125a7d179135f1ef206d0b0f2504",
+      "bytes": 8360,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeWideLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeWideLeft.target",
+      "sha256": "40c1f1ba32e511609828e1da2280158db4e515fa0294892c08b4a6a863f08fab",
+      "bytes": 9345,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:eyeWideRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/eyeWideRight.target",
+      "sha256": "be06515fd73d078639871d33ae4770a61bee41ffacd06d619913319054832839",
+      "bytes": 8880,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:jawForward",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/jawForward.target",
+      "sha256": "c87b4893f82e6908601cb766e5362d0534a73310f1c072ea4041ad2f1cc9d39e",
+      "bytes": 39389,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:jawLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/jawLeft.target",
+      "sha256": "21cf8350d2310e237ac0cf941a1928f67589c9166d71ae254d3a0d1079f25426",
+      "bytes": 40987,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:jawOpen",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/jawOpen.target",
+      "sha256": "2439e703e434f999b58a1d26cffdb6b2fd5f30941b8ff19cac70b75392d4de6f",
+      "bytes": 51426,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:jawRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/jawRight.target",
+      "sha256": "8473c887d979b98b4d5f37f034028a246d03131d6350ce76a338951f99dd5794",
+      "bytes": 42707,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthClose",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthClose.target",
+      "sha256": "965135637c90019c9f91ddd7540405124da7274b3a5b6b6a2201fa97956773f5",
+      "bytes": 38826,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthDimpleLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthDimpleLeft.target",
+      "sha256": "8d36c4877b39adffefd0f29ec19e9aae56ab3fe69733bf569b9c8c5c900062f7",
+      "bytes": 19204,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthDimpleRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthDimpleRight.target",
+      "sha256": "3aa3934cc294b9c6666ab9f6034b569ea9cc111cf7342aa7442918f33fc82ab0",
+      "bytes": 19220,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthFrownLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthFrownLeft.target",
+      "sha256": "39d0c7cc1305ac62bdf989522f00f1b820ade8e1762a738f7398926bf6f91cd4",
+      "bytes": 16454,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthFrownRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthFrownRight.target",
+      "sha256": "a14b45427d3f78ddb8a05604b6c353bddcda49376588097809797c4a51714767",
+      "bytes": 16382,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthFunnel",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthFunnel.target",
+      "sha256": "b273e870938c798357b314dac22f388b4030d9f4b782fd2179991c9f7831d32a",
+      "bytes": 34011,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthLeft.target",
+      "sha256": "0a90cd34d70f1b858d029189ed00a134566053a92d78e681b75c46027ed9deeb",
+      "bytes": 36590,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthLowerDownLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthLowerDownLeft.target",
+      "sha256": "493600ee77f3c8f06113d49e7b6d9cda75fb1fe9dfd9df602e7f90f55b5477eb",
+      "bytes": 6563,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthLowerDownRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthLowerDownRight.target",
+      "sha256": "08be0c2158339981e6bf9533666c734cf030c08fa7bed2a931aa965d01aaff44",
+      "bytes": 6801,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthPressLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthPressLeft.target",
+      "sha256": "00613a25981f172decf2f95f0871dda1cb775bfcba65088e9e0978b441ca5b5a",
+      "bytes": 21555,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthPressRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthPressRight.target",
+      "sha256": "27d1cf1610d2565be0fb99e1ff2e96dc8e58531e05309a69f961a638fa1a39a2",
+      "bytes": 21610,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthPucker",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthPucker.target",
+      "sha256": "3d90b495088fac29e5db4022842860d0b0f10f875e201670d559e37db4da67ae",
+      "bytes": 33524,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthRight.target",
+      "sha256": "170b71c2fe038248e7edd50e417dda4096f3cf620fec75a0f5b66b4c04edd69f",
+      "bytes": 37328,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthRollLower",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthRollLower.target",
+      "sha256": "69cff9c045c3c461eee4be855883c2f1b79ddb645ca7bf499c35a95b3adbb055",
+      "bytes": 11003,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthRollUpper",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthRollUpper.target",
+      "sha256": "c5965de076f01d5b227d28d233be58e40180ed63a302fb9869e74ab6f93d1fb7",
+      "bytes": 18790,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthShrugLower",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthShrugLower.target",
+      "sha256": "0948e2b311179b563692c24d64435e1770bb9e6c60bd8df63ca284d349a57739",
+      "bytes": 6727,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthShrugUpper",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthShrugUpper.target",
+      "sha256": "2991fcd27cf7ca215e222d30c31a23c79c6ee744a59501e336ea063a280b5b47",
+      "bytes": 15600,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthSmileLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthSmileLeft.target",
+      "sha256": "11cabf2fa6f9664c4d0b9f8f0cadaf4b2a1a9625b72c7593262465ce8d4cb9a2",
+      "bytes": 32657,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthSmileRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthSmileRight.target",
+      "sha256": "70578981892db13c02512455583c2f9743683d5c571c1e2624b09638cf37bedd",
+      "bytes": 33258,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthStretchLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthStretchLeft.target",
+      "sha256": "0b3622bfc1d922c9d686523800babd217e06d865338cb979485c2b22efd63c4d",
+      "bytes": 24684,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthStretchRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthStretchRight.target",
+      "sha256": "b866286fc0b607b07c6191c36c458c6f197ad19ce26c66218b8df37c1a283b38",
+      "bytes": 25253,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthUpperUpLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthUpperUpLeft.target",
+      "sha256": "db4e4f0d22b5488c139a6a6434e0ba1599e30211fbd577796b071a409a19b075",
+      "bytes": 16255,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:mouthUpperUpRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/mouthUpperUpRight.target",
+      "sha256": "5919a0772f665cb275097e0d291d3e7a9269ee2ffd3a4340e8f1c3093b78e6c4",
+      "bytes": 15896,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:noseSneerLeft",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/noseSneerLeft.target",
+      "sha256": "c205f9972e41f5147525b74d543b7617e51bba80dbfe601456711cb2f265b9c8",
+      "bytes": 21184,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:noseSneerRight",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/noseSneerRight.target",
+      "sha256": "51039beca77f3ccaf505645ec9db19438b96102ddd3fba6cbd72ec9280dee685",
+      "bytes": 20467,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "faceunit:tongueOut",
+      "origin": "extraTargets",
+      "path": "assets/faceunits01/targets/faceunits/tongueOut.target",
+      "sha256": "d153f31b458c309671cab9222652d60d238218561695dfc8b3678ab3e8482e19",
+      "bytes": 4924,
+      "role": "ARKit faceunit target"
+    },
+    {
+      "id": "teeth:mhclo",
+      "origin": "systemAssets",
+      "path": "teeth/teeth_base/teeth_base.mhclo",
+      "sha256": "9edc3deff3bb97a95c791878064dd069a74a38f95ea6d9707a9ba68d888b3b5c",
+      "bytes": 263220,
+      "role": "teeth proxy mhclo",
+      "crc32": "d3a9411c"
+    },
+    {
+      "id": "teeth:obj",
+      "origin": "systemAssets",
+      "path": "teeth/teeth_base/teeth_base.obj",
+      "sha256": "f55198069e55d360c4b4cc7ecb1cc292b2c7665753ab8b65eabf46a8783f2875",
+      "bytes": 313110,
+      "role": "teeth proxy obj",
+      "crc32": "5a282fe6"
+    },
+    {
+      "id": "teeth:texture",
+      "origin": "systemAssets",
+      "path": "teeth/teeth_base/teeth.png",
+      "sha256": "d0afb57869c6fbb56b98f5efc4aec629ee7593e70d8dd2bfb9de923acfb65f43",
+      "bytes": 1799930,
+      "role": "teeth proxy texture",
+      "crc32": "bef6dc23"
+    },
+    {
+      "id": "tongue:mhclo",
+      "origin": "systemAssets",
+      "path": "tongue/tongue01/tongue01.mhclo",
+      "sha256": "61d825899cd78ff3146fa1324118060cb44b095fae1427d408c199ade74e3c9e",
+      "bytes": 2113,
+      "role": "tongue proxy mhclo",
+      "crc32": "1727b3d1"
+    },
+    {
+      "id": "tongue:obj",
+      "origin": "systemAssets",
+      "path": "tongue/tongue01/tongue01.obj",
+      "sha256": "12f4a6a9f85abae2ce3b4aa42d8119e1f679a437e0e89cb928ec68b29a7a1587",
+      "bytes": 17155,
+      "role": "tongue proxy obj",
+      "crc32": "42a54a88"
+    },
+    {
+      "id": "tongue:texture",
+      "origin": "systemAssets",
+      "path": "tongue/tongue01/tongue01_diffuse.png",
+      "sha256": "3150be398e48e8ba1feac164c3143c16c0b2e959d9ffb6155f0171f59cfb4ea9",
+      "bytes": 625419,
+      "role": "tongue proxy texture",
+      "crc32": "8b5d7b0f"
+    },
+    {
+      "id": "eyelashes:mhclo",
+      "origin": "systemAssets",
+      "path": "eyelashes/eyelashes01/eyelashes01.mhclo",
+      "sha256": "5a86b29c15649273d723084954b7fa7bf199112571d4f58539b46734d397ee6b",
+      "bytes": 2265,
+      "role": "eyelashes proxy mhclo",
+      "crc32": "5bc81988"
+    },
+    {
+      "id": "eyelashes:obj",
+      "origin": "systemAssets",
+      "path": "eyelashes/eyelashes01/eyelashes01.obj",
+      "sha256": "f78f5b93fea1946fcae103d32c4f082dd9612a1ec2e7e2f90b03ebe59b0baf20",
+      "bytes": 18832,
+      "role": "eyelashes proxy obj",
+      "crc32": "c57f8242"
+    },
+    {
+      "id": "eyelashes:texture",
+      "origin": "systemAssets",
+      "path": "eyelashes/eyelashes01/eyelashes01.png",
+      "sha256": "4b69c0fff2648874460e9caf80c31413c444218a5c50afebc425aeaa65484a35",
+      "bytes": 91600,
+      "role": "eyelashes proxy texture",
+      "crc32": "c9506eef"
+    },
+    {
+      "id": "eyebrows:mhclo",
+      "origin": "systemAssets",
+      "path": "eyebrows/eyebrow001/eyebrow001.mhclo",
+      "sha256": "54c8892c2ba577f4152d779ce1f20f7cd323beb8cbd9cb701796165c221b4f5b",
+      "bytes": 9141,
+      "role": "eyebrows proxy mhclo",
+      "crc32": "593a400e"
+    },
+    {
+      "id": "eyebrows:obj",
+      "origin": "systemAssets",
+      "path": "eyebrows/eyebrow001/eyebrow001.obj",
+      "sha256": "88b13146395133f3901715e11706cdfd293e5d6087ad7c5e01efe1485a26b513",
+      "bytes": 8227,
+      "role": "eyebrows proxy obj",
+      "crc32": "07e9d5f6"
+    },
+    {
+      "id": "eyebrows:texture",
+      "origin": "systemAssets",
+      "path": "eyebrows/eyebrow001/eyebrow001.png",
+      "sha256": "9940f7d0b1b223709a19b05156ba6f6e9e4dbdbced02d7574f4d51d72c58967b",
+      "bytes": 89619,
+      "role": "eyebrows proxy texture",
+      "crc32": "d5ee806a"
+    },
+    {
+      "id": "skin:texture",
+      "origin": "systemAssets",
+      "path": "skins/young_caucasian_male/young_lightskinned_male_diffuse.png",
+      "sha256": "862a26e335e958b70534cb5f0d7c47ef30ab148a56c42b3e9da969cf76f12963",
+      "bytes": 3693828,
+      "role": "skin diffuse (paints mouth-cavity and eye-socket UV islands)",
+      "crc32": "e723c591"
+    }
+  ]
+}

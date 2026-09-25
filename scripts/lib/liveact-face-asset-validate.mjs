@@ -183,6 +183,24 @@ function inferGazeMode(usableNames, hasEyeBones) {
   return 'none';
 }
 
+/**
+ * Explicit author decision wins over inference (assets may carry eyeLook morphs AND eye bones).
+ * @returns {{ gazeMode: 'bones'|'morphs'|'none'; source: 'explicit'|'inferred'; error: string | null }}
+ */
+function resolveGazeMode(gazeOwner, usableNames, hasEyeBones) {
+  if (gazeOwner === 'bones') {
+    return hasEyeBones
+      ? { gazeMode: 'bones', source: 'explicit', error: null }
+      : { gazeMode: 'none', source: 'explicit', error: 'gaze_owner_bones_missing' };
+  }
+  if (gazeOwner === 'morphs') {
+    return GAZE_MORPHS.every((id) => usableNames.has(id))
+      ? { gazeMode: 'morphs', source: 'explicit', error: null }
+      : { gazeMode: 'none', source: 'explicit', error: 'gaze_owner_morphs_missing' };
+  }
+  return { gazeMode: inferGazeMode(usableNames, hasEyeBones), source: 'inferred', error: null };
+}
+
 function khronosOk(report) {
   if ((report.issues?.numErrors ?? 0) > 0) return false;
   const messages = report.issues?.messages;
@@ -191,9 +209,12 @@ function khronosOk(report) {
 }
 
 /**
- * @param {{ inputPath: string, baselinePath: string, profile: 'core-v1'|'full-v1', outPath?: string, anchorsPath?: string }} opts
+ * @param {{ inputPath: string, baselinePath: string, profile: 'core-v1'|'full-v1', outPath?: string, anchorsPath?: string, gazeOwner?: 'bones'|'morphs' }} opts
  */
 export async function validateLiveActFaceAsset(opts) {
+  if (opts.gazeOwner != null && opts.gazeOwner !== 'bones' && opts.gazeOwner !== 'morphs') {
+    throw new Error(`gazeOwner must be "bones" or "morphs" (got ${opts.gazeOwner})`);
+  }
   const inputBytes = readFileSync(opts.inputPath);
   const baselineBytes = readFileSync(opts.baselinePath);
   const required = opts.profile === 'full-v1' ? FULL_V1_CHANNELS : CORE_V1_CHANNELS;
@@ -250,7 +271,8 @@ export async function validateLiveActFaceAsset(opts) {
   const missingRequired = required.filter((id) => !usableNames.has(id));
   const emptyMorphs = presentNames.filter((n) => morphMap.get(n) && !morphMap.get(n).usable);
   const eyeBones = hasEyeBoneNodes(document);
-  const gazeMode = inferGazeMode(usableNames, eyeBones);
+  const gaze = resolveGazeMode(opts.gazeOwner, usableNames, eyeBones);
+  const gazeMode = gaze.gazeMode;
 
   const snap = preservationSnapshot(document);
   const baseSnap = preservationSnapshot(baselineDoc);
@@ -264,6 +286,7 @@ export async function validateLiveActFaceAsset(opts) {
   if (snap.meshCount < 1) preservationErrors.push('no_meshes');
 
   const sagaErrors = [];
+  if (gaze.error) sagaErrors.push(gaze.error);
   if (!khronosPass) sagaErrors.push('khronos_failed');
   if (missingRequired.length) sagaErrors.push('missing_required_morphs');
   if (usableNames.size === 0) sagaErrors.push('no_usable_morphs');
@@ -311,6 +334,7 @@ export async function validateLiveActFaceAsset(opts) {
     sagaErrors.push('semantic_qa_failed');
   }
   const sagaPass =
+    !gaze.error &&
     (khronosPass &&
       missingRequired.length === 0 &&
       usableNames.size > 0 &&
@@ -341,6 +365,7 @@ export async function validateLiveActFaceAsset(opts) {
     supportedChannels: [...usableNames].sort(),
     presentChannels: presentNames.sort(),
     gazeMode,
+    gazeModeSource: gaze.source,
     morphCount: morphMap.size,
     usableMorphCount: usableNames.size,
     byteCount: inputBytes.byteLength,
@@ -370,7 +395,7 @@ export async function validateLiveActFaceAsset(opts) {
 }
 
 export function parseFaceAssetCheckArgs(argv) {
-  const args = { input: null, baseline: null, profile: 'core-v1', out: null, anchors: null };
+  const args = { input: null, baseline: null, profile: 'core-v1', out: null, anchors: null, gazeOwner: null };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--input') args.input = argv[++i];
@@ -378,11 +403,15 @@ export function parseFaceAssetCheckArgs(argv) {
     else if (a === '--profile') args.profile = argv[++i];
     else if (a === '--out') args.out = argv[++i];
     else if (a === '--anchors') args.anchors = argv[++i];
+    else if (a === '--gaze-owner') args.gazeOwner = argv[++i];
   }
   if (!args.input || !args.baseline) {
     throw new Error(
-      'Usage: --input <glb> --baseline <glb> --profile <core-v1|full-v1> [--anchors <face-anchors.json>] --out <json>',
+      'Usage: --input <glb> --baseline <glb> --profile <core-v1|full-v1> [--anchors <face-anchors.json>] [--gaze-owner bones|morphs] --out <json>',
     );
+  }
+  if (args.gazeOwner != null && args.gazeOwner !== 'bones' && args.gazeOwner !== 'morphs') {
+    throw new Error('--gaze-owner must be bones or morphs');
   }
   if (args.profile !== 'core-v1' && args.profile !== 'full-v1') {
     throw new Error('--profile must be core-v1 or full-v1');
