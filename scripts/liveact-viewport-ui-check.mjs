@@ -40,6 +40,7 @@ check(/AvatarPreviewExpandDialog/.test(surface), 'surface hosts expand dialog');
 check(/LiveActViewportControls/.test(read('src/app/character/avatar/AvatarPreviewExpandDialog.tsx')), 'expand dialog hosts gear chrome');
 check(/initialCameraFrame/.test(canvas), 'canvas supports initial face frame');
 check(!/disabled=\{disabled\}/.test(settings) || /Avatar-Vorschau Einstellungen/.test(settings), 'gear button not gated by runtime');
+check(/liveact-settings-accordion-trigger/.test(settings), 'liveact accordion trigger test id');
 check(/liveact-tracking-toggle/.test(settings), 'tracking toggle');
 check(/liveact-camera-preview-toggle/.test(settings), 'pip toggle');
 check(/liveact-face-overlay-toggle/.test(settings), 'face overlay toggle');

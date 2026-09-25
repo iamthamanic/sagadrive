@@ -300,7 +300,12 @@ export function AvatarPreviewSettings({
             </AccordionItem>
 
             <AccordionItem value="liveact" className="border-white/10">
-              <AccordionTrigger className={accordionTriggerClass}>LiveAct</AccordionTrigger>
+              <AccordionTrigger
+                className={accordionTriggerClass}
+                data-testid="liveact-settings-accordion-trigger"
+              >
+                LiveAct
+              </AccordionTrigger>
               <AccordionContent className={accordionContentClass}>
                 <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
                   <div className="min-w-0">

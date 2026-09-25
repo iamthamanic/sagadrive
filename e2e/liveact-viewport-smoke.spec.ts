@@ -5,7 +5,11 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { completeSpeciesBasics, openBlankCharacterEditor } from './helpers/character-editor';
+import {
+  completeSpeciesBasics,
+  openAvatarPreviewLiveActSettings,
+  openBlankCharacterEditor,
+} from './helpers/character-editor';
 
 const EVIDENCE = '.qa/evidence/liveact-viewport-smoke';
 
@@ -28,9 +32,7 @@ test('Character Editor LiveAct gear toggles with fake camera', async ({ page }) 
   await openBlankCharacterEditor(page);
   await completeSpeciesBasics(page);
 
-  const gear = page.getByTestId('avatar-preview-settings');
-  await expect(gear).toBeVisible({ timeout: 20_000 });
-  await gear.click();
+  await openAvatarPreviewLiveActSettings(page);
 
   const trackingToggle = page.getByTestId('liveact-tracking-toggle');
   const pipToggle = page.getByTestId('liveact-camera-preview-toggle');
