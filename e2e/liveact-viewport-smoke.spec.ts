@@ -44,7 +44,6 @@ test('Character Editor LiveAct gear toggles with fake camera', async ({ page }) 
   await expect(faceOverlayToggle).toBeVisible();
   await expect(metricsToggle).toBeVisible();
   await expect(bonesToggle).toBeVisible();
-  await expect(page.getByTestId('liveact-calibrate')).toBeVisible();
 
   const webglSurface = page.locator('[data-avatar-use-webgl="true"]').first();
   const hasWebGl = await webglSurface
@@ -75,6 +74,9 @@ test('Character Editor LiveAct gear toggles with fake camera', async ({ page }) 
   await pipToggle.click();
 
   await expect(page.getByTestId('liveact-status-block')).toBeVisible();
+  // Kalibrieren only after tracking is active (canCalibrate gate).
+  await expect(page.getByTestId('liveact-calibrate')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId('liveact-motion-test')).toBeVisible();
 
   await page.screenshot({
     path: path.join(EVIDENCE, '01-liveact-gear-3d.png'),
