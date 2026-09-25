@@ -488,6 +488,14 @@ function checkLiveActReferenceVrmGoldenAvatar() {
   });
 }
 
+function checkLiveActFidelity() {
+  console.log('LiveAct fidelity: calibration once + range gains, idle ownership, teeth binds...');
+  execFileSync(process.execPath, ['scripts/liveact-fidelity-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceMappingVisualGuides() {
   console.log(
     'LiveAct face mapping visual guides: binding labels + smooth guides + pulse/detail...',
@@ -1385,6 +1393,7 @@ checkLiveActFaceMappingManual();
 checkLiveActFaceAnchorsCharacterPersist();
 checkLiveActExpandDriveBind();
 checkLiveActReferenceVrmGoldenAvatar();
+checkLiveActFidelity();
 checkLiveActFaceMappingVisualGuides();
 checkLiveActFaceAnchorAnatomy();
 checkLiveActCameraOverlayMetrics();

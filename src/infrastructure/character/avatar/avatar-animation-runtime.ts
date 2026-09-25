@@ -142,11 +142,48 @@ export class AvatarAnimationRuntime {
   });
   private prefersReducedMotion = false;
   private disposed = false;
+  private suspended = false;
+  private resumeAction: AvatarAnimationActionId | null = null;
 
   constructor(private readonly onStateChange?: AnimationStateListener) {}
 
   setPrefersReducedMotion(value: boolean): void {
     this.prefersReducedMotion = value;
+  }
+
+  /**
+   * While suspended the mixer writes no bones: stopped actions restore the rest pose, so an
+   * external driver (LiveAct head) is not overwritten by procedural clips every frame.
+   */
+  setSuspended(suspended: boolean): void {
+    if (this.suspended === suspended) return;
+    this.suspended = suspended;
+    if (suspended) {
+      this.resumeAction = this.activeAction;
+      for (const action of this.actions.values()) {
+        action.stop();
+      }
+      this.activeAction = null;
+      this.emit('Animation pausiert — LiveAct steuert den Charakter.');
+      return;
+    }
+    const remembered = this.resumeAction;
+    this.resumeAction = null;
+    const next =
+      remembered && getAnimationCatalogEntry(remembered)?.loop
+        ? remembered
+        : this.prefersReducedMotion
+          ? null
+          : this.support.defaultAction;
+    if (next) {
+      this.play(next);
+    } else {
+      this.emit('AnimationRuntime bereit.');
+    }
+  }
+
+  isSuspended(): boolean {
+    return this.suspended;
   }
 
   /**
@@ -179,7 +216,11 @@ export class AvatarAnimationRuntime {
     this.emit('AnimationRuntime bereit.');
 
     if (this.support.defaultAction && !this.prefersReducedMotion) {
-      this.play(this.support.defaultAction);
+      if (this.suspended) {
+        this.resumeAction = this.support.defaultAction;
+      } else {
+        this.play(this.support.defaultAction);
+      }
     }
   }
 
@@ -202,6 +243,11 @@ export class AvatarAnimationRuntime {
       this.emit('Clip fehlt im Katalog.');
       return false;
     }
+    if (this.suspended) {
+      this.resumeAction = actionId;
+      this.emit('Animation pausiert, solange LiveAct läuft.');
+      return false;
+    }
 
     const fade = resolveAnimationCrossfadeSeconds(this.prefersReducedMotion);
     const previous = this.activeAction ? this.actions.get(this.activeAction) : undefined;
@@ -220,7 +266,7 @@ export class AvatarAnimationRuntime {
   }
 
   update(delta: number): void {
-    if (this.disposed) return;
+    if (this.disposed || this.suspended) return;
     this.mixer?.update(delta);
   }
 

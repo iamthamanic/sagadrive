@@ -273,6 +273,7 @@ export function LiveActViewportControls({
         }}
         calibrationMessage={liveAct.calibrationMessage}
         hasNeutralBaseline={liveAct.hasNeutralBaseline}
+        hasRangeCalibration={liveAct.hasRangeCalibration}
         faceMappingOpen={faceMappingOpen}
         onOpenFaceMapping={openFaceMapping}
         onExpandPreview={onExpandPreview}
@@ -286,6 +287,9 @@ export function LiveActViewportControls({
         diagnosticsRef={liveAct.diagnosticsRef}
         diagnosticsV2Ref={liveAct.diagnosticsV2Ref}
         hasNeutralBaseline={liveAct.hasNeutralBaseline}
+        hasRangeCalibration={liveAct.hasRangeCalibration}
+        calibrationRunning={liveAct.calibrationStatus === 'running'}
+        calibrationMessage={liveAct.calibrationMessage}
       />
     </>
   );

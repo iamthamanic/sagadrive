@@ -455,6 +455,11 @@ export class CharacterStudioRuntime {
     return this.liveActAvatarOutput;
   }
 
+  /** Procedural clips pause while LiveAct drives this runtime so they cannot overwrite the head pose. */
+  setLiveActDriveActive(active: boolean): void {
+    this.animationRuntime.setSuspended(active);
+  }
+
   /** Asset/bone/morph inventory only — compose with engine input in app (#381). */
   getLiveActAvatarCapabilities(): LiveActAvatarCapabilities | null {
     return this.liveActAvatarOutput?.getAvatarCapabilities() ?? null;

@@ -7,5 +7,6 @@
 - **Original:** Google VALID — https://github.com/google-research/google-research/tree/master/valid
 - **VRM + ARKit52:** TLTMedia
 - **Purpose:** SagaDrive LiveAct diagnostic reference only — not a product default avatar
+- **Changes (SagaDrive):** the expressions `jawOpen`, `jawLeft`, `jawRight` and `jawForward` additionally bind the lower-teeth mesh (`h_TeethDown`) to its authored `h_teeth.t_*` twin shape, so the teeth follow the jaw. Applied by `scripts/lib/liveact-reference-vrm-teeth-binds.mjs`; geometry, textures and rig are unchanged.
 
-Fetch binary: `node scripts/fetch-liveact-reference-vrm.mjs`
+Fetch binary: `node scripts/fetch-liveact-reference-vrm.mjs` (existing copy: add `--skip-if-present` to apply the patch only)

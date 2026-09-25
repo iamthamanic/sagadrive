@@ -152,13 +152,27 @@ export {
 export {
   LIVEACT_CALIBRATION_FRAME_TARGET,
   LIVEACT_CALIBRATION_TIMEOUT_MS,
+  LIVEACT_RANGE_CALIBRATION_DURATION_MS,
+  LIVEACT_RANGE_CALIBRATION_MIN_FRAMES,
+  LIVEACT_RANGE_MIN_SPAN,
+  LIVEACT_RANGE_MAX_GAIN,
   createLiveActCalibrationAccumulator,
   isValidLiveActCalibrationSample,
   pushLiveActCalibrationSample,
   finalizeLiveActCalibration,
   applyLiveActNeutralBaseline,
+  createLiveActRangeCalibrationAccumulator,
+  pushLiveActRangeCalibrationSample,
+  finalizeLiveActRangeCalibration,
+  applyLiveActRangeCalibration,
+  applyLiveActCalibration,
+  stepLiveActCalibratedFrame,
   type LiveActNeutralBaselineV1,
   type LiveActCalibrationAccumulator,
+  type LiveActRangeCalibrationV1,
+  type LiveActRangeCalibrationAccumulator,
+  type LiveActCalibrationSetV1,
+  type LiveActCalibratedStepV1,
 } from './liveact-calibration';
 
 export {

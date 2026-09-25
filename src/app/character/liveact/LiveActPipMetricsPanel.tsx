@@ -20,12 +20,19 @@ interface LiveActPipMetricsPanelProps {
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
   diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
   hasNeutralBaseline?: boolean;
+  hasRangeCalibration?: boolean;
+}
+
+function calibrationLine(hasNeutralBaseline: boolean, hasRangeCalibration: boolean): string {
+  if (!hasNeutralBaseline) return 'cal: OFF (Kalibrieren)';
+  return hasRangeCalibration ? 'cal: neutral+max' : 'cal: neutral';
 }
 
 function buildLines(
   frame: LiveActFaceDiagnosticsFrameV1 | null,
   diagnosticsV2: LiveActDiagnosticsV2Snapshot | null,
   hasNeutralBaseline: boolean,
+  hasRangeCalibration: boolean,
 ): { lines: string[]; lost: boolean } {
   if (!frame || frame.trackingLost) {
     return { lines: ['Metrics: LOST'], lost: true };
@@ -39,7 +46,7 @@ function buildLines(
   const roll = diagnosticsV2?.stages.calibrated['head.roll'];
   const bbox = metrics.bbox;
   const lines: string[] = [
-    hasNeutralBaseline ? 'cal: ON' : 'cal: OFF (run Neutral)',
+    calibrationLine(hasNeutralBaseline, hasRangeCalibration),
     bbox
       ? `bbox ${bbox.minX.toFixed(2)}–${bbox.maxX.toFixed(2)} × ${bbox.minY.toFixed(2)}–${bbox.maxY.toFixed(2)}`
       : 'bbox —',
@@ -67,6 +74,7 @@ export function LiveActPipMetricsPanel({
   diagnosticsRef,
   diagnosticsV2Ref,
   hasNeutralBaseline = false,
+  hasRangeCalibration = false,
 }: LiveActPipMetricsPanelProps) {
   const listRef = useRef<HTMLUListElement>(null);
   const rafRef = useRef(0);
@@ -86,6 +94,7 @@ export function LiveActPipMetricsPanel({
         diagnosticsRef.current,
         diagnosticsV2Ref.current,
         hasNeutralBaseline,
+        hasRangeCalibration,
       );
       const list = listRef.current;
       if (list) {
@@ -113,7 +122,7 @@ export function LiveActPipMetricsPanel({
       cancelled = true;
       cancelAnimationFrame(rafRef.current);
     };
-  }, [active, diagnosticsRef, diagnosticsV2Ref, hasNeutralBaseline]);
+  }, [active, diagnosticsRef, diagnosticsV2Ref, hasNeutralBaseline, hasRangeCalibration]);
 
   if (!active) return null;
 

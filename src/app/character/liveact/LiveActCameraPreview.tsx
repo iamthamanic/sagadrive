@@ -5,6 +5,7 @@
  * Engine remains MediaStream owner; this only mirrors via srcObject.
  * Draggable within the viewport; default dock is bottom-left.
  * Metrics sit beside the video (not over the face) when enabled.
+ * While calibration runs, the step instruction is shown on the video (where the user looks).
  */
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
@@ -25,6 +26,9 @@ interface LiveActCameraPreviewProps {
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
   diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
   hasNeutralBaseline?: boolean;
+  hasRangeCalibration?: boolean;
+  calibrationRunning?: boolean;
+  calibrationMessage?: string;
 }
 
 interface PipPos {
@@ -60,6 +64,9 @@ export function LiveActCameraPreview({
   diagnosticsRef,
   diagnosticsV2Ref,
   hasNeutralBaseline = false,
+  hasRangeCalibration = false,
+  calibrationRunning = false,
+  calibrationMessage = '',
 }: LiveActCameraPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -205,12 +212,22 @@ export function LiveActCameraPreview({
           />
           {status === 'active' ? 'LIVE' : status === 'starting' ? '…' : status === 'lost' ? 'LOST' : 'CAM'}
         </div>
+        {calibrationRunning && calibrationMessage ? (
+          <div
+            className="pointer-events-none absolute inset-x-1 bottom-1 rounded bg-black/75 px-1.5 py-1 text-[10px] font-medium leading-tight text-amber-200"
+            data-testid="liveact-calibration-prompt"
+            role="status"
+          >
+            {calibrationMessage}
+          </div>
+        ) : null}
       </div>
       <LiveActPipMetricsPanel
         active={showMetrics}
         diagnosticsRef={diagnosticsRef}
         diagnosticsV2Ref={diagnosticsV2Ref}
         hasNeutralBaseline={hasNeutralBaseline}
+        hasRangeCalibration={hasRangeCalibration}
       />
     </div>
   );

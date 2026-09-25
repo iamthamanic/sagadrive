@@ -77,6 +77,7 @@ export interface UseLiveActViewportResult {
   calibrationStatus: LiveActEngineState['calibrationStatus'];
   calibrationMessage: string;
   hasNeutralBaseline: boolean;
+  hasRangeCalibration: boolean;
   canCalibrate: boolean;
   calibrateNeutral: () => Promise<void>;
   /** Composed Input×Avatar matrix for Capability Inspector (#381). */
@@ -126,6 +127,7 @@ export function useLiveActViewport({
     useState<LiveActEngineState['calibrationStatus']>('idle');
   const [calibrationMessage, setCalibrationMessage] = useState('');
   const [hasNeutralBaseline, setHasNeutralBaseline] = useState(false);
+  const [hasRangeCalibration, setHasRangeCalibration] = useState(false);
   const [composedCapabilities, setComposedCapabilities] = useState<LiveActCapabilitiesV1 | null>(
     null,
   );
@@ -179,6 +181,7 @@ export function useLiveActViewport({
       setCalibrationStatus(state.calibrationStatus);
       setCalibrationMessage(state.calibrationMessage);
       setHasNeutralBaseline(state.hasNeutralBaseline);
+      setHasRangeCalibration(state.hasRangeCalibration);
       const frame = state.frame;
       const active =
         state.status === 'active' || state.status === 'lost' || state.status === 'paused';
@@ -349,6 +352,7 @@ export function useLiveActViewport({
     calibrationStatus,
     calibrationMessage,
     hasNeutralBaseline,
+    hasRangeCalibration,
     canCalibrate,
     calibrateNeutral,
     composedCapabilities,

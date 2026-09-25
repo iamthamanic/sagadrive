@@ -46,7 +46,7 @@ check(/liveact-face-overlay-toggle/.test(settings), 'face overlay toggle');
 check(/LiveActFaceOverlay/.test(pip), 'pip composes face overlay');
 check(/liveact-bones-toggle/.test(settings), 'bones stub');
 check(/liveact-calibrate/.test(settings), 'calibrate control');
-check(/Kamera-PiP \+ Character-Mesh/.test(settings), 'face overlay DE copy');
+check(/Mesh-Anker am Charakter/.test(settings), 'face overlay DE copy');
 check(/LiveActCharacterFaceOverlay/.test(controls), 'controls compose character overlay');
 check(/subscribeDiagnostics/.test(hook), 'hook diagnostics ref');
 check(/3D-Modell erforderlich/.test(settings), 'disabled hint');

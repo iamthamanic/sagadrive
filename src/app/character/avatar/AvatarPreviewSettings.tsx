@@ -61,6 +61,8 @@ interface AvatarPreviewSettingsProps {
   onCalibrate: () => void;
   calibrationMessage: string;
   hasNeutralBaseline: boolean;
+  /** Step 2 (max pass) produced per-channel range gains. */
+  hasRangeCalibration?: boolean;
   /** Face Setup authoring session open (#420). */
   faceMappingOpen?: boolean;
   onOpenFaceMapping?: () => void;
@@ -105,6 +107,7 @@ export function AvatarPreviewSettings({
   onCalibrate,
   calibrationMessage,
   hasNeutralBaseline,
+  hasRangeCalibration = false,
   faceMappingOpen = false,
   onOpenFaceMapping,
   onExpandPreview,
@@ -355,7 +358,7 @@ export function AvatarPreviewSettings({
                   data-testid="liveact-calibrate"
                   title={
                     canCalibrate
-                      ? 'Neutrale Gesichtspose für diese Sitzung speichern'
+                      ? '2 Schritte (nur diese Sitzung): 2 s neutral halten, dann 5 s maximal — Mund weit auf, Augen zu, Brauen hoch, lächeln'
                       : 'Kalibrieren erfordert aktives Tracking'
                   }
                   onClick={onCalibrate}
@@ -369,7 +372,9 @@ export function AvatarPreviewSettings({
                 ) : null}
                 {hasNeutralBaseline ? (
                   <p className="px-1 text-[10px] text-emerald-400/90">
-                    Neutral-Baseline aktiv (ephemeral)
+                    {hasRangeCalibration
+                      ? 'Neutral + Maximal aktiv (ephemeral)'
+                      : 'Neutral-Baseline aktiv (ephemeral)'}
                   </p>
                 ) : null}
               </AccordionContent>

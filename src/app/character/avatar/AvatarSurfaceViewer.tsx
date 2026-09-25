@@ -231,6 +231,7 @@ export function AvatarSurfaceViewer({
       : studioRuntimeRef.current;
     const output = runtime?.getLiveActAvatarOutput() ?? null;
     engine.bindOutput(output);
+    runtime?.setLiveActDriveActive(output !== null);
     engine.setRetargetProfile(
       resolveLiveActRetargetProfile({
         avatarCapabilities: output?.getAvatarCapabilities() ?? null,
@@ -238,6 +239,7 @@ export function AvatarSurfaceViewer({
     );
     return () => {
       engine.bindOutput(null);
+      runtime?.setLiveActDriveActive(false);
     };
   }, [
     liveActEnabled,
