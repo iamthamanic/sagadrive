@@ -184,10 +184,8 @@ export function AvatarSurfaceViewer({
       studioRuntimeRef.current?.setLiveActCharacterFaceDebugEnabled(false);
       return;
     }
-    const enabled =
-      liveAct.faceOverlayEnabled &&
-      characterFaceMappingAvailable &&
-      liveAct.trackingEnabled;
+    // Mesh anchors are independent of webcam tracking — only Face Overlay toggle + mapping.
+    const enabled = liveAct.faceOverlayEnabled && characterFaceMappingAvailable;
     studioRuntimeRef.current?.setLiveActCharacterFaceDebugEnabled(enabled);
   }, [
     isEditorSurface,
@@ -195,7 +193,6 @@ export function AvatarSurfaceViewer({
     modelEpoch,
     faceAnchorEpoch,
     liveAct.faceOverlayEnabled,
-    liveAct.trackingEnabled,
     characterFaceMappingAvailable,
   ]);
 
@@ -207,9 +204,10 @@ export function AvatarSurfaceViewer({
       liveAct.characterFaceDebugHandleRef.current = runtime.getLiveActCharacterFaceDebugHandle();
       setCharacterFaceMappingAvailable(runtime.hasLiveActCharacterFaceMapping());
     } else {
-      setCharacterFaceMappingAvailable(true);
+      setCharacterFaceMappingAvailable(Object.keys(manifest.anchors).length > 0);
     }
     setFaceAnchorEpoch((value) => value + 1);
+    // Show mesh-bound overlay immediately; do not require webcam tracking.
     liveAct.setFaceOverlayEnabled(true);
   };
 

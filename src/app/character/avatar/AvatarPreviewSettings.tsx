@@ -286,12 +286,12 @@ export function AvatarPreviewSettings({
                   <div className="min-w-0">
                     <p className="text-xs text-slate-100">Face Overlay</p>
                     <p className="text-[10px] text-slate-400">
-                      Kamera-PiP + Character-Mesh (lokal)
+                      Mesh-Anker am Charakter (ohne Webcam)
                     </p>
                   </div>
                   <Switch
                     checked={faceOverlayEnabled}
-                    disabled={actionsDisabled || !trackingEnabled}
+                    disabled={actionsDisabled}
                     onCheckedChange={onFaceOverlayChange}
                     aria-label="Face Overlay umschalten"
                     data-testid="liveact-face-overlay-toggle"
@@ -303,18 +303,18 @@ export function AvatarPreviewSettings({
                     className="px-1 pb-1 text-[10px] text-amber-200/90"
                     data-testid="liveact-character-face-mapping-unavailable"
                   >
-                    Character Face Mapping nicht verfügbar (kein face-anchors.json am Modell).
+                    Character Face Mapping nicht verfügbar — Face Setup speichern oder face-anchors.json am Modell.
                   </p>
                 ) : null}
 
                 <div className="flex items-center justify-between gap-3 rounded-sm px-1 py-1.5">
                   <div className="min-w-0">
                     <p className="text-xs text-slate-100">Metrics</p>
-                    <p className="text-[10px] text-slate-400">Neben PiP + Character-Viewport</p>
+                    <p className="text-[10px] text-slate-400">Neben Overlay / PiP</p>
                   </div>
                   <Switch
                     checked={metricsEnabled}
-                    disabled={actionsDisabled || !trackingEnabled}
+                    disabled={actionsDisabled || !faceOverlayEnabled}
                     onCheckedChange={onMetricsChange}
                     aria-label="Face Metrics umschalten"
                     data-testid="liveact-face-metrics-toggle"

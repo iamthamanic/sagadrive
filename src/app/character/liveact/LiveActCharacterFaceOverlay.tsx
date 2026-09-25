@@ -54,6 +54,22 @@ function drawContours(
   drawPolyline(ctx, contours.rightEyebrow, false);
 }
 
+function drawAnchorPoints(
+  ctx: CanvasRenderingContext2D,
+  points: Readonly<Partial<Record<string, { x: number; y: number }>>>,
+): void {
+  ctx.fillStyle = 'rgba(34, 211, 238, 0.95)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.lineWidth = 1;
+  for (const pt of Object.values(points)) {
+    if (!pt) continue;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
 function drawMetricsHud(
   ctx: CanvasRenderingContext2D,
   lines: string[],
@@ -124,14 +140,17 @@ export function LiveActCharacterFaceOverlay({
       if (!ctx) return;
       ctx.clearRect(0, 0, width, height);
 
-      if (!snap.available || !snap.contours) {
+      if (!snap.available) {
         if (metricsEnabled) {
           drawMetricsHud(ctx, ['Character metrics: —'], width);
         }
         return;
       }
 
-      drawContours(ctx, snap.contours);
+      if (snap.contours) {
+        drawContours(ctx, snap.contours);
+      }
+      drawAnchorPoints(ctx, snap.points);
 
       if (metricsEnabled) {
         const m = snap.metrics;

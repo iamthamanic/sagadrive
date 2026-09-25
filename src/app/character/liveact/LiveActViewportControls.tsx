@@ -66,23 +66,6 @@ export function LiveActViewportControls({
   const draftRef = useRef<SagaDriveFaceMappingDraftV1 | null>(null);
   draftRef.current = draft;
 
-  const characterOverlayOn =
-    !faceMappingOpen &&
-    liveAct.faceOverlayEnabled &&
-    runtimeReady &&
-    characterFaceMappingAvailable;
-  const inputLive =
-    runtimeReady &&
-    liveAct.trackingEnabled &&
-    liveAct.faceDetected &&
-    (liveAct.status === 'active' || liveAct.status === 'lost');
-  const showPip =
-    !faceMappingOpen &&
-    liveAct.trackingEnabled &&
-    liveAct.cameraPreviewEnabled &&
-    Boolean(liveAct.previewVideo) &&
-    runtimeReady;
-
   const closeFaceMapping = useCallback(() => {
     studioRuntimeRef?.current?.setFaceMappingAuthoringActive(false);
     setFaceMappingOpen(false);
@@ -96,9 +79,13 @@ export function LiveActViewportControls({
     if (!runtime || !current) return;
     const manifest = faceMappingDraftToManifest(current);
     runtime.bindFaceAnchorsManifestSession(manifest);
+    // Authoring markers close; mesh overlay must take over immediately (no webcam required).
+    liveAct.setFaceOverlayEnabled(true);
     onFaceAnchorsCommitted?.(manifest);
     closeFaceMapping();
-  }, [closeFaceMapping, onFaceAnchorsCommitted, studioRuntimeRef]);
+    // Authoring forced debug off — turn sampling back on for the mesh overlay.
+    runtime.setLiveActCharacterFaceDebugEnabled(true);
+  }, [closeFaceMapping, liveAct, onFaceAnchorsCommitted, studioRuntimeRef]);
 
   const openFaceMapping = useCallback(() => {
     const runtime = studioRuntimeRef?.current;
@@ -158,6 +145,23 @@ export function LiveActViewportControls({
     [],
   );
 
+  const mappingLive =
+    characterFaceMappingAvailable ||
+    Boolean(studioRuntimeRef?.current?.hasLiveActCharacterFaceMapping());
+  const characterOverlayOn =
+    !faceMappingOpen && liveAct.faceOverlayEnabled && runtimeReady && mappingLive;
+  const inputLive =
+    runtimeReady &&
+    liveAct.trackingEnabled &&
+    liveAct.faceDetected &&
+    (liveAct.status === 'active' || liveAct.status === 'lost');
+  const showPip =
+    !faceMappingOpen &&
+    liveAct.trackingEnabled &&
+    liveAct.cameraPreviewEnabled &&
+    Boolean(liveAct.previewVideo) &&
+    runtimeReady;
+
   const panelHost = faceMappingPanelHost;
   const panel =
     faceMappingOpen && draft ? (
@@ -210,7 +214,7 @@ export function LiveActViewportControls({
           data-testid="face-mapping-viewport-actions"
         >
           <p className="min-w-0 flex-1 px-1 text-[10px] leading-snug text-slate-400">
-            Marker setzen, dann speichern — am Charakter; Charakter speichern zum Persistieren.
+            Speichern hält die Punkte am Mesh (Face Overlay). Webcam-Tracking ist getrennt — danach Charakter speichern.
           </p>
           <Button
             type="button"
