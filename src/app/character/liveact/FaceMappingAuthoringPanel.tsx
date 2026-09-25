@@ -4,9 +4,14 @@
  *
  * Renders below the AvatarCanvas (not over the 3D face). Session-local draft only.
  * Detail card mirrors PDF: selected feature + pulsing point synced with viewport.
+ * Auto Mapping (#421) proposes anchors; never auto-publishes.
+ * Marker rows show draft screen coords and last Auto proposal side-by-side.
+ * Compare JSON comes from parent frozen GT reference — never freeze current draft at copy time.
  */
 
+import { useEffect, useRef, useState } from 'react';
 import type { SagaDriveFaceAnchorId } from '../../../domains/character/avatar/face-anchor-contract';
+import type { FaceMappingAutoAnchorOutcome } from '../../../domains/character/avatar/face-mapping-auto-v1';
 import {
   FACE_MAPPING_ANCHOR_LABEL_DE,
   FACE_MAPPING_MARKER_GROUP_DEFS,
@@ -18,14 +23,55 @@ import {
 import { Button } from '../../../shared/ui/button';
 import { FaceMappingDetailCard } from './FaceMappingDetailCard';
 import { FaceMappingFeatureIcon } from './FaceMappingFeatureIcon';
+import type { FaceMappingOverlayViewMode } from './FaceMappingMarkerLayer';
+
+/** Canvas CSS pixels for a placed (draft/current) marker. */
+export interface FaceMappingManualCoordV1 {
+  readonly x: number;
+  readonly y: number;
+  /** Compact mesh token, e.g. HeadMesh/t12 */
+  readonly meshLabel: string | null;
+}
+
+/** Last Auto Mapping proposal for one anchor (may differ from applied draft). */
+export interface FaceMappingAutoCoordV1 {
+  readonly outcome: FaceMappingAutoAnchorOutcome;
+  readonly x: number | null;
+  readonly y: number | null;
+  readonly meshLabel: string | null;
+}
 
 interface FaceMappingAuthoringPanelProps {
   draft: SagaDriveFaceMappingDraftV1;
   missMessage: string | null;
+  autoBusy?: boolean;
+  autoStatusMessage?: string | null;
+  /** Current draft → screen projection (updates with camera). */
+  manualCoords?: Readonly<Partial<Record<SagaDriveFaceAnchorId, FaceMappingManualCoordV1>>>;
+  /** Last Auto Mapping session proposals (kept for compare even after apply). */
+  autoCoords?: Readonly<Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>>>;
+  /** 3D overlay compare mode. */
+  overlayViewMode?: FaceMappingOverlayViewMode;
+  onOverlayViewModeChange?: (mode: FaceMappingOverlayViewMode) => void;
   onSelect: (anchorId: SagaDriveFaceAnchorId) => void;
   onClearSelected: () => void;
   onReset: () => void;
   onCancel: () => void;
+  onAutoMapping?: () => void;
+  /** Mark all bound anchors as reviewed manual GT. */
+  onMarkAllReviewed?: () => void;
+  /** From last frozen GT reference (before auto). */
+  groundTruthValid?: boolean | null;
+  referenceStatus?: string | null;
+  /**
+   * Parent builds compare from frozen GT reference + last auto session —
+   * never freeze current draft as reference at copy time.
+   */
+  getCompareExportJson?: () => string;
+  /** Optional authoring provenance for fallback display (source per anchor). */
+  getAuthoringMeta?: () => Readonly<
+    Partial<Record<SagaDriveFaceAnchorId, { source: string; confidence?: number; reviewed?: boolean }>>
+  >;
 }
 
 function statusLabelDe(status: FaceMappingMarkerStatus): string {
@@ -60,16 +106,129 @@ function statusClass(status: FaceMappingMarkerStatus, selected: boolean): string
   }
 }
 
+function fmtPx(x: number, y: number): string {
+  return `${Math.round(x)}×${Math.round(y)}`;
+}
+
+function autoOutcomeDe(outcome: FaceMappingAutoAnchorOutcome): string {
+  switch (outcome) {
+    case 'mapped':
+      return 'ok';
+    case 'raycast_miss':
+      return 'miss';
+    case 'missing_landmark':
+      return 'kein LM';
+    case 'low_confidence':
+      return 'unsicher';
+    case 'skipped_protected':
+      return 'geschützt';
+    default:
+      return outcome;
+  }
+}
+
+function MarkerCoordCompare({
+  manual,
+  auto,
+}: {
+  manual: FaceMappingManualCoordV1 | undefined;
+  auto: FaceMappingAutoCoordV1 | undefined;
+}) {
+  if (!manual && !auto) return null;
+
+  let deltaLabel: string | null = null;
+  if (
+    manual &&
+    auto &&
+    auto.x != null &&
+    auto.y != null &&
+    Number.isFinite(auto.x) &&
+    Number.isFinite(auto.y)
+  ) {
+    const d = Math.hypot(auto.x - manual.x, auto.y - manual.y);
+    deltaLabel = `Δ${Math.round(d)}`;
+  }
+
+  return (
+    <span
+      className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[9px] leading-tight opacity-90"
+      data-testid="face-mapping-marker-coords"
+    >
+      {manual ? (
+        <span title={manual.meshLabel ?? undefined} data-testid="face-mapping-coord-manual">
+          <span className="text-emerald-200/90">Draft</span>{' '}
+          {fmtPx(manual.x, manual.y)}
+          {manual.meshLabel ? (
+            <span className="ml-1 opacity-70">{manual.meshLabel}</span>
+          ) : null}
+        </span>
+      ) : (
+        <span className="opacity-50" data-testid="face-mapping-coord-manual-empty">
+          Draft —
+        </span>
+      )}
+      {auto ? (
+        <span title={auto.meshLabel ?? undefined} data-testid="face-mapping-coord-auto">
+          <span className="text-cyan-200/90">Auto</span>{' '}
+          {auto.x != null && auto.y != null ? fmtPx(auto.x, auto.y) : '—'}
+          {auto.outcome !== 'mapped' ? (
+            <span className="ml-1 text-amber-200/80">({autoOutcomeDe(auto.outcome)})</span>
+          ) : null}
+          {deltaLabel ? <span className="ml-1 opacity-70">{deltaLabel}</span> : null}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 export function FaceMappingAuthoringPanel({
   draft,
   missMessage,
+  autoBusy = false,
+  autoStatusMessage = null,
+  manualCoords = {},
+  autoCoords = {},
+  overlayViewMode = 'draft',
+  onOverlayViewModeChange,
   onSelect,
   onClearSelected,
   onReset,
   onCancel,
+  onAutoMapping,
+  onMarkAllReviewed,
+  groundTruthValid = null,
+  referenceStatus = null,
+  getCompareExportJson,
 }: FaceMappingAuthoringPanelProps) {
   const summary = validateFaceMappingDraft(draft);
   const selectedId = draft.selectedAnchorId;
+  const hasAnyAuto = Object.keys(autoCoords).length > 0;
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    },
+    [],
+  );
+
+  const copyJson = async () => {
+    try {
+      if (!getCompareExportJson) {
+        setCopyState('failed');
+        return;
+      }
+      const json = getCompareExportJson();
+      await navigator.clipboard.writeText(json);
+      setCopyState('copied');
+    } catch (error) {
+      console.warn('[face-mapping] compare JSON clipboard failed', error);
+      setCopyState('failed');
+    }
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => setCopyState('idle'), 2000);
+  };
 
   return (
     <aside
@@ -83,6 +242,7 @@ export function FaceMappingAuthoringPanel({
           <p className="text-[10px] text-slate-400">
             {summary.setCount} gesetzt · {summary.missingCount} fehlen
             {summary.invalidCount > 0 ? ` · ${summary.invalidCount} ungültig` : ''}
+            {groundTruthValid === true ? ' · GT gültig' : ''}
           </p>
         </div>
         <Button
@@ -99,10 +259,163 @@ export function FaceMappingAuthoringPanel({
 
       <p className="px-3 py-1.5 text-[10px] text-slate-400">
         Scroll zoomen. Auf leerer Fläche ziehen = Kamera verschieben (z. B. nach oben zur Stirn).
-        Marker greifen und setzen; Guides folgen live.
+        Marker greifen und setzen; Guides folgen live. Auto Mapping ist nur ein Vorschlag.
+        {hasAnyAuto
+          ? ' Koordinaten: Draft (aktuell) · Auto (letzter Lauf) · Δ = Abstand px.'
+          : ' Gesetzte Marker zeigen Screen-Koordinaten (px).'}
       </p>
 
+      {referenceStatus === 'unreviewed_auto' ? (
+        <p
+          className="mx-3 mb-1 rounded-sm bg-amber-400/15 px-2 py-1.5 text-[10px] text-amber-100"
+          role="status"
+          data-testid="face-mapping-gt-unreviewed-banner"
+        >
+          Sidecar/Draft ist auto/unreviewed — kein gültiger Auto-vs-Manual Benchmark
+        </p>
+      ) : null}
+
+      {onAutoMapping ? (
+        <div className="flex flex-col gap-1.5 border-b border-white/10 px-2 pb-2">
+          <div className="flex gap-1.5">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 flex-1 border-primary/40 text-[11px] text-primary hover:bg-primary/10"
+              disabled={autoBusy}
+              onClick={onAutoMapping}
+              data-testid="face-mapping-auto"
+            >
+              {autoBusy ? 'Auto Mapping…' : 'Auto Mapping'}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 shrink-0 border-white/15 text-[11px]"
+              disabled={summary.setCount === 0 && !hasAnyAuto}
+              onClick={() => void copyJson()}
+              data-testid="face-mapping-copy-json"
+              title="GT-Referenz + Auto-Vorschlag als Compare-JSON kopieren"
+            >
+              {copyState === 'copied'
+                ? 'Kopiert'
+                : copyState === 'failed'
+                  ? 'Fehlgeschlagen'
+                  : 'JSON kopieren'}
+            </Button>
+          </div>
+          {onMarkAllReviewed ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 w-full border-emerald-400/40 text-[11px] text-emerald-100 hover:bg-emerald-500/10"
+              disabled={autoBusy || summary.setCount === 0}
+              onClick={onMarkAllReviewed}
+              data-testid="face-mapping-mark-ground-truth"
+              title="Alle gesetzten Marker als reviewed manual Ground Truth markieren"
+            >
+              Als Ground Truth markieren
+            </Button>
+          ) : null}
+          {onOverlayViewModeChange ? (
+            <div
+              className="flex rounded-sm border border-white/15 p-0.5"
+              role="group"
+              aria-label="3D Overlay Ansicht"
+              data-testid="face-mapping-overlay-view-mode"
+            >
+              {(
+                [
+                  { id: 'draft' as const, label: 'Draft', title: 'Amber Draft-Marker (editierbar)' },
+                  {
+                    id: 'auto' as const,
+                    label: 'Auto',
+                    title: 'Cyan Auto-Vorschlag (nur Anzeige)',
+                  },
+                  {
+                    id: 'both' as const,
+                    label: 'Beide',
+                    title: 'Draft + Auto übereinander',
+                  },
+                ] as const
+              ).map((opt) => {
+                const active = overlayViewMode === opt.id;
+                const disabled = (opt.id === 'auto' || opt.id === 'both') && !hasAnyAuto;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    title={opt.title}
+                    disabled={disabled}
+                    aria-pressed={active}
+                    data-testid={`face-mapping-view-${opt.id}`}
+                    className={`h-7 flex-1 rounded-sm text-[10px] ${
+                      active
+                        ? opt.id === 'auto'
+                          ? 'bg-cyan-500/30 text-cyan-50'
+                          : opt.id === 'both'
+                            ? 'bg-primary/40 text-white'
+                            : 'bg-amber-500/30 text-amber-50'
+                        : 'text-slate-400 hover:bg-white/5 disabled:opacity-40'
+                    }`}
+                    onClick={() => onOverlayViewModeChange(opt.id)}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1.5 border-b border-white/10 px-2 pb-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 w-full border-white/15 text-[11px]"
+            disabled={summary.setCount === 0 && !hasAnyAuto}
+            onClick={() => void copyJson()}
+            data-testid="face-mapping-copy-json"
+            title="GT-Referenz + Auto-Vorschlag als Compare-JSON kopieren"
+          >
+            {copyState === 'copied'
+              ? 'Kopiert'
+              : copyState === 'failed'
+                ? 'Fehlgeschlagen'
+                : 'JSON kopieren'}
+          </Button>
+          {onMarkAllReviewed ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 w-full border-emerald-400/40 text-[11px] text-emerald-100 hover:bg-emerald-500/10"
+              disabled={autoBusy || summary.setCount === 0}
+              onClick={onMarkAllReviewed}
+              data-testid="face-mapping-mark-ground-truth"
+              title="Alle gesetzten Marker als reviewed manual Ground Truth markieren"
+            >
+              Als Ground Truth markieren
+            </Button>
+          ) : null}
+        </div>
+      )}
+
       {selectedId ? <FaceMappingDetailCard draft={draft} selectedAnchorId={selectedId} /> : null}
+
+      {autoStatusMessage ? (
+        <p
+          className="mx-3 mb-1 mt-2 rounded-sm bg-primary/10 px-2 py-1 text-[10px] text-cyan-100"
+          role="status"
+          data-testid="face-mapping-auto-status"
+        >
+          {autoStatusMessage}
+        </p>
+      ) : null}
 
       {missMessage ? (
         <p
@@ -124,25 +437,32 @@ export function FaceMappingAuthoringPanel({
               {group.anchorIds.map((id) => {
                 const status = resolveFaceMappingMarkerStatus(draft, id);
                 const selected = draft.selectedAnchorId === id;
+                const manual = manualCoords[id];
+                const auto = autoCoords[id];
                 return (
                   <li key={id}>
                     <button
                       type="button"
-                      className={`flex w-full items-center justify-between gap-2 rounded-sm border px-2 py-1.5 text-left text-[11px] ${statusClass(status, selected)} ${selected ? 'animate-pulse' : ''}`}
+                      className={`flex w-full flex-col gap-0.5 rounded-sm border px-2 py-1.5 text-left text-[11px] ${statusClass(status, selected)} ${selected ? 'animate-pulse' : ''}`}
                       aria-pressed={selected}
                       data-testid={`face-mapping-marker-${id}`}
                       onClick={() => onSelect(id)}
                     >
-                      <span className="flex min-w-0 items-center gap-2">
-                        <FaceMappingFeatureIcon
-                          anchorId={id}
-                          size="sm"
-                          pulse={selected}
-                          className="shrink-0"
-                        />
-                        <span className="truncate">{FACE_MAPPING_ANCHOR_LABEL_DE[id]}</span>
+                      <span className="flex w-full items-center justify-between gap-2">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <FaceMappingFeatureIcon
+                            anchorId={id}
+                            size="sm"
+                            pulse={selected}
+                            className="shrink-0"
+                          />
+                          <span className="truncate">{FACE_MAPPING_ANCHOR_LABEL_DE[id]}</span>
+                        </span>
+                        <span className="shrink-0 text-[10px] opacity-90">
+                          {statusLabelDe(status)}
+                        </span>
                       </span>
-                      <span className="shrink-0 text-[10px] opacity-90">{statusLabelDe(status)}</span>
+                      <MarkerCoordCompare manual={manual} auto={auto} />
                     </button>
                   </li>
                 );
@@ -158,7 +478,7 @@ export function FaceMappingAuthoringPanel({
           size="sm"
           variant="outline"
           className="h-8 flex-1 border-white/15 text-[11px]"
-          disabled={!draft.selectedAnchorId}
+          disabled={!draft.selectedAnchorId || autoBusy}
           onClick={onClearSelected}
           data-testid="face-mapping-clear"
         >
@@ -169,6 +489,7 @@ export function FaceMappingAuthoringPanel({
           size="sm"
           variant="outline"
           className="h-8 flex-1 border-white/15 text-[11px]"
+          disabled={autoBusy}
           onClick={onReset}
           data-testid="face-mapping-reset"
         >

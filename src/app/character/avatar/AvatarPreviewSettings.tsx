@@ -111,6 +111,11 @@ interface AvatarPreviewSettingsProps {
   onOpenFaceMapping?: () => void;
   /** Open large face-framed 3D preview modal. */
   onExpandPreview?: () => void;
+  /**
+   * When true, host is laid out by a sticky portal parent (no absolute inset).
+   * Keeps the gear visible while scrolling Face Mapping / dialog content.
+   */
+  stickyHost?: boolean;
 }
 
 const accordionTriggerClass =
@@ -186,6 +191,7 @@ export function AvatarPreviewSettings({
   faceMappingOpen = false,
   onOpenFaceMapping,
   onExpandPreview,
+  stickyHost = false,
 }: AvatarPreviewSettingsProps) {
   const [open, setOpen] = useState(false);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -213,8 +219,13 @@ export function AvatarPreviewSettings({
   return (
     <div
       ref={hostRef}
-      className="pointer-events-auto absolute right-3 top-3 z-20"
+      className={
+        stickyHost
+          ? 'pointer-events-auto relative z-20'
+          : 'pointer-events-auto absolute right-3 top-3 z-20'
+      }
       data-avatar-preview-settings-host="true"
+      data-avatar-preview-settings-sticky={stickyHost ? 'true' : undefined}
     >
       <Button
         type="button"

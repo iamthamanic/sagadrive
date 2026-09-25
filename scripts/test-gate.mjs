@@ -464,6 +464,14 @@ function checkLiveActFaceMappingManual() {
   });
 }
 
+function checkLiveActFaceMappingAuto() {
+  console.log('LiveAct face mapping auto (#421): IMAGE MediaPipe + shared raycast...');
+  execFileSync(process.execPath, ['scripts/liveact-face-mapping-auto-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceAnchorsCharacterPersist() {
   console.log('LiveAct face anchors character persist: avatar.face_anchors + override...');
   execFileSync(process.execPath, ['scripts/liveact-face-anchors-character-persist-check.mjs'], {
@@ -1398,6 +1406,7 @@ checkLiveActDiagnosticsV2();
 checkLiveActFaceAnchorsV1();
 checkLiveActFaceMappingAuthoring();
 checkLiveActFaceMappingManual();
+checkLiveActFaceMappingAuto();
 checkLiveActFaceAnchorsCharacterPersist();
 checkLiveActExpandDriveBind();
 checkLiveActReferenceVrmGoldenAvatar();

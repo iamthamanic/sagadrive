@@ -673,6 +673,37 @@ export class CharacterStudioRuntime {
   }
 
   /**
+   * Deterministic frontal capture for Auto Mapping (#421).
+   * Neutral pose + face camera frame; returns a 2D canvas copy (no upload/persist).
+   * CSS size matches Manual Mapping raycast coordinates.
+   */
+  captureFaceMappingAutoFrame(): {
+    image: HTMLCanvasElement;
+    canvasWidth: number;
+    canvasHeight: number;
+  } | null {
+    if (this.disposed || !this.currentRoot) return null;
+    this.resetLiveActPose();
+    this.resetFaceTrackingPose();
+    this.applyCameraFrame('face');
+    this.controls.update();
+    this.renderer.render(this.scene, this.camera);
+
+    const src = this.renderer.domElement;
+    const canvasWidth = Math.max(1, Math.round(src.clientWidth));
+    const canvasHeight = Math.max(1, Math.round(src.clientHeight));
+    if (!(src.width > 0) || !(src.height > 0)) return null;
+
+    const image = document.createElement('canvas');
+    image.width = src.width;
+    image.height = src.height;
+    const ctx = image.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(src, 0, 0);
+    return { image, canvasWidth, canvasHeight };
+  }
+
+  /**
    * Apply local face-tracking drive (#12) onto head bone + facial weights.
    * Ephemeral only — never written into appearance.avatar.
    */
