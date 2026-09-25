@@ -6,7 +6,7 @@
  */
 
 import * as THREE from 'three';
-import type { SagaDriveFaceAnchorId, SagaDriveFaceAnchorsManifestV1 } from '../../../domains/character/avatar/face-anchor-contract';
+import { SAGA_DRIVE_FACE_ANCHOR_IDS, type SagaDriveFaceAnchorId, type SagaDriveFaceAnchorsManifestV1 } from '../../../domains/character/avatar/face-anchor-contract';
 import type { LiveActFaceLandmark2d } from '../../../domains/character/liveact/liveact-face-diagnostics';
 import {
   buildLiveActFaceLandmarksFromAnchorScreenPoints,
@@ -60,13 +60,7 @@ export const LIVEACT_CHARACTER_FACE_OVERLAY_ANCHOR_IDS = [
   'browRightOuter',
 ] as const satisfies readonly SagaDriveFaceAnchorId[];
 
-const OVERLAY_POINT_IDS: readonly SagaDriveFaceAnchorId[] = [
-  ...LIVEACT_CHARACTER_FACE_OVERLAY_ANCHOR_IDS,
-  'noseTip',
-  'chin',
-  'forehead',
-];
-
+const OVERLAY_POINT_IDS: readonly SagaDriveFaceAnchorId[] = SAGA_DRIVE_FACE_ANCHOR_IDS;
 export interface LiveActCharacterFaceDebugHandle {
   /** In-place snapshot updated by {@link sample}. */
   readonly snapshot: LiveActCharacterFaceDebugSnapshot;

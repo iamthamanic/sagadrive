@@ -4,13 +4,13 @@
  *
  * Single first-party MediaPipe asset path; no CDN. Emits LiveActSourceSample
  * with full 52 face channels plus separate local-only diagnostics landmarks.
+ * Samples are anatomical (RAW); head axes and gaze sign live in the pure domain mapper, the
+ * mirror convention in the engine.
  */
 
 import {
-  LIVEACT_FACE_CHANNELS,
+  mapMediaPipeFaceToLiveActSample,
   resolveLiveActQualityProfile,
-  type LiveActFaceChannelId,
-  type LiveActFaceChannelPartial,
   type LiveActFaceDiagnosticsFrameV1,
   type LiveActQualityProfile,
   type LiveActSourceSample,
@@ -35,30 +35,6 @@ export interface LiveActFaceSource {
 export type LiveActFaceSourceFactory = (
   profile: LiveActQualityProfile,
 ) => Promise<LiveActFaceSource>;
-
-function scoreOf(
-  categories: Array<{ categoryName: string; score: number }> | undefined,
-  name: string,
-): number {
-  if (!categories) return 0;
-  const hit = categories.find((c) => c.categoryName === name);
-  return hit?.score ?? 0;
-}
-
-function channelsFromCategories(
-  categories: Array<{ categoryName: string; score: number }> | undefined,
-): LiveActFaceChannelPartial {
-  if (!categories || categories.length === 0) return {};
-  const byName = new Map(categories.map((c) => [c.categoryName, c.score]));
-  const out: Partial<Record<LiveActFaceChannelId, number>> = {};
-  for (const id of LIVEACT_FACE_CHANNELS) {
-    const score = byName.get(id);
-    if (typeof score === 'number') {
-      out[id] = score;
-    }
-  }
-  return out;
-}
 
 /**
  * Lazy-load MediaPipe Face Landmarker for LiveAct (full blendshape channels).
@@ -99,38 +75,15 @@ export async function createMediaPipeLiveActFaceSource(
         if (shapes.length === 0) {
           return { samples: [], diagnostics: [] };
         }
-        const samples = shapes.map((shape, index) => {
-          const cats = shape.categories;
-          let headYaw = 0;
-          let headPitch = 0;
-          let headRoll = 0;
-          if (profile.enableHeadPose) {
-            const matrix = result.facialTransformationMatrixes?.[index]?.data;
-            if (matrix && matrix.length >= 11) {
-              const r00 = Number(matrix[0]);
-              const r10 = Number(matrix[1]);
-              const r20 = Number(matrix[2]);
-              const r21 = Number(matrix[6]);
-              const r22 = Number(matrix[10]);
-              headYaw = Math.atan2(r10, r00);
-              headPitch = Math.atan2(-r20, Math.hypot(r21, r22));
-              headRoll = Math.atan2(r21, r22);
-            }
-          }
-          return {
-            presence: 1,
-            headYaw,
-            headPitch,
-            headRoll,
-            eyeLeftX: scoreOf(cats, 'eyeLookOutLeft') - scoreOf(cats, 'eyeLookInLeft'),
-            eyeLeftY: scoreOf(cats, 'eyeLookUpLeft') - scoreOf(cats, 'eyeLookDownLeft'),
-            eyeRightX: scoreOf(cats, 'eyeLookOutRight') - scoreOf(cats, 'eyeLookInRight'),
-            eyeRightY: scoreOf(cats, 'eyeLookUpRight') - scoreOf(cats, 'eyeLookDownRight'),
-            face: channelsFromCategories(cats),
+        const samples: LiveActSourceSample[] = shapes.map((shape, index) =>
+          mapMediaPipeFaceToLiveActSample({
+            categories: shape.categories,
+            matrix: result.facialTransformationMatrixes?.[index]?.data,
+            enableHeadPose: profile.enableHeadPose,
             faceIndex: index,
             faceCount: shapes.length,
-          } satisfies LiveActSourceSample;
-        });
+          }),
+        );
 
         const diagnostics = shapes.map((_, index) =>
           mapMediaPipeLandmarksToLiveActDiagnostics({

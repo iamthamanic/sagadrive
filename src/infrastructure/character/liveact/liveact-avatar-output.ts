@@ -36,7 +36,6 @@ export interface CreateLiveActAvatarOutputInput {
   headRestQuaternion: THREE.Quaternion;
   headScratchEuler: THREE.Euler;
   headScratchQuaternion: THREE.Quaternion;
-  eyeLookTarget: THREE.Vector3;
 }
 
 export function createLiveActAvatarOutput(
@@ -47,7 +46,6 @@ export function createLiveActAvatarOutput(
       vrm: input.vrm,
       headBone: input.headBone,
       headRestQuaternion: input.headRestQuaternion,
-      eyeLookTarget: input.eyeLookTarget,
       headScratchEuler: input.headScratchEuler,
       headScratchQuaternion: input.headScratchQuaternion,
     });

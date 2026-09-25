@@ -43,6 +43,16 @@ export {
 } from './liveact-contract';
 
 export {
+  LIVEACT_MIRROR_AVATAR,
+  liveActHeadPoseFromFacialTransform,
+  mapMediaPipeFaceToLiveActSample,
+  mirrorLiveActSourceSample,
+  mirroredLiveActFaceChannel,
+  type LiveActMediaPipeCategory,
+  type LiveActMediaPipeFaceInput,
+} from './liveact-mediapipe-sample';
+
+export {
   LIVEACT_CAPABILITIES_VERSION,
   createEmptyLiveActAvatarFaceSupport,
   createLiveActInputCapabilities,
@@ -135,6 +145,16 @@ export {
 } from './liveact-diagnostics-v2';
 
 export {
+  LIVEACT_DIAGNOSTICS_PEAKS_VERSION,
+  createLiveActDiagnosticsPeaks,
+  accumulateLiveActDiagnosticsPeaks,
+  exportLiveActDiagnosticsPeaks,
+  type LiveActSignalRange,
+  type LiveActDiagnosticsPeaksV1,
+  type LiveActDiagnosticsPeaksExportV1,
+} from './liveact-diagnostics-peaks';
+
+export {
   computeLiveActObjectCoverTransform,
   projectLiveActLandmarkToCanvas,
   type LiveActVideoViewportTransform,
@@ -153,9 +173,19 @@ export {
   LIVEACT_CALIBRATION_FRAME_TARGET,
   LIVEACT_CALIBRATION_TIMEOUT_MS,
   LIVEACT_RANGE_CALIBRATION_DURATION_MS,
+  LIVEACT_RANGE_CALIBRATION_STEPS,
+  LIVEACT_RANGE_STEP_MIN_FRAMES,
+  LIVEACT_RANGE_STEP_MIN_MS,
   LIVEACT_RANGE_CALIBRATION_MIN_FRAMES,
   LIVEACT_RANGE_MIN_SPAN,
   LIVEACT_RANGE_MAX_GAIN,
+  liveActCalibrationStepTotal,
+  liveActNeutralCalibrationPrompt,
+  liveActRangeStepHoldMs,
+  liveActRangeStepChannels,
+  liveActRangeCalibrationStepPrompt,
+  type LiveActRangeStepPhase,
+  type LiveActCalibrationStepPeakV1,
   createLiveActCalibrationAccumulator,
   isValidLiveActCalibrationSample,
   pushLiveActCalibrationSample,
@@ -171,9 +201,37 @@ export {
   type LiveActCalibrationAccumulator,
   type LiveActRangeCalibrationV1,
   type LiveActRangeCalibrationAccumulator,
+  type LiveActRangeCalibrationStepId,
   type LiveActCalibrationSetV1,
   type LiveActCalibratedStepV1,
 } from './liveact-calibration';
+
+export {
+  LIVEACT_MOTION_TEST_CONTRACT,
+  LIVEACT_MOTION_TEST_MIN_FRAMES,
+  LIVEACT_MOTION_TEST_STEPS,
+  liveActMotionTestStepTotal,
+  liveActMotionTestHoldMs,
+  liveActMotionTestStepPrompt,
+  liveActMotionTestAdvanceLabelDe,
+  createLiveActMotionTestHoldAcc,
+  motionTestFocusStorageKey,
+  pushLiveActMotionTestHoldSample,
+  finalizeLiveActMotionTestStepPeaks,
+  formatLiveActMotionTestPeak,
+  liveActMotionTestFocusModeForPeak,
+  buildLiveActMotionTestExport,
+  readLiveActMotionTestSignal,
+  type LiveActMotionTestFocusMode,
+  type LiveActMotionTestFocusV1,
+  type LiveActMotionTestStepV1,
+  type LiveActMotionTestStepId,
+  type LiveActMotionTestStatus,
+  type LiveActMotionTestStepPeakV1,
+  type LiveActMotionTestStepResultV1,
+  type LiveActMotionTestExportV1,
+  type LiveActMotionTestHoldAcc,
+} from './liveact-motion-test';
 
 export {
   LIVEACT_UI_STATUS_MAX_HZ,

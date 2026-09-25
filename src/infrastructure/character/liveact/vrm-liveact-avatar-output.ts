@@ -56,7 +56,6 @@ export interface VrmLiveActAvatarOutputDeps {
   vrm: VRM;
   headBone: THREE.Object3D | null;
   headRestQuaternion: THREE.Quaternion;
-  eyeLookTarget: THREE.Vector3;
   headScratchEuler: THREE.Euler;
   headScratchQuaternion: THREE.Quaternion;
 }
@@ -125,12 +124,7 @@ export class VrmLiveActAvatarOutput implements LiveActAvatarOutput {
     );
     const usePoseGaze = liveActGazePathUsesPoseDriver(this.gazePath);
     if (usePoseGaze && this.hasLookAt) {
-      applyLiveActVrmEyeLookAt(
-        this.deps.vrm,
-        this.deps.eyeLookTarget,
-        frame.eyeLeft,
-        frame.eyeRight,
-      );
+      applyLiveActVrmEyeLookAt(this.deps.vrm, frame.eyeLeft, frame.eyeRight);
     } else {
       this.deps.vrm.lookAt?.reset?.();
     }

@@ -4,6 +4,7 @@
  *
  * Procedural allowlisted preview clips; tracks bind only to mapped SagaDriveHumanoidRigV1 bones.
  * Rigid attachment fixture follows the catalog attachment anchor.
+ * Editor preview stays in rest pose until the user picks Idle/Walk/… — no autoplay on bind.
  */
 
 import * as THREE from 'three';
@@ -169,14 +170,9 @@ export class AvatarAnimationRuntime {
     }
     const remembered = this.resumeAction;
     this.resumeAction = null;
-    const next =
-      remembered && getAnimationCatalogEntry(remembered)?.loop
-        ? remembered
-        : this.prefersReducedMotion
-          ? null
-          : this.support.defaultAction;
-    if (next) {
-      this.play(next);
+    // Only resume what was playing before LiveAct — never auto-start idle after tracking ends.
+    if (remembered && getAnimationCatalogEntry(remembered)?.loop) {
+      this.play(remembered);
     } else {
       this.emit('AnimationRuntime bereit.');
     }
@@ -193,6 +189,7 @@ export class AvatarAnimationRuntime {
     this.disposeMixer();
     this.root = root;
     this.analysis = analysis;
+    this.resumeAction = null;
     this.support = resolveAvatarAnimationSupport({
       capabilityFlags: analysis.capabilities.flags,
       mappedBones: analysis.rig.bones,
@@ -214,14 +211,6 @@ export class AvatarAnimationRuntime {
 
     this.ensureAttachmentFixture(analysis);
     this.emit('AnimationRuntime bereit.');
-
-    if (this.support.defaultAction && !this.prefersReducedMotion) {
-      if (this.suspended) {
-        this.resumeAction = this.support.defaultAction;
-      } else {
-        this.play(this.support.defaultAction);
-      }
-    }
   }
 
   getSupport(): AvatarAnimationSupportResult {

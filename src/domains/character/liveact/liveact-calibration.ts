@@ -2,8 +2,9 @@
  * LiveAct calibration — ephemeral neutral baseline + per-channel range gains (pure domain).
  * Location: src/domains/character/liveact/liveact-calibration.ts
  *
- * Step 1 averages a neutral pose; step 2 (max pass) turns per-channel peaks into gains so a
- * fully exercised expression reaches 1.0. Both apply to outgoing LiveAct frames only.
+ * Step 1 averages a neutral pose. Each max-pass expression is Start → hold → review peaks →
+ * Wiederholen / Weiter. Peaks across all range steps become gains so a fully exercised
+ * expression reaches 1.0. Both apply to outgoing LiveAct frames only.
  */
 
 import {
@@ -178,7 +179,149 @@ export function applyLiveActNeutralBaseline(
   };
 }
 
-export const LIVEACT_RANGE_CALIBRATION_DURATION_MS = 5000 as const;
+/**
+ * Max-pass expressions in order. Neutral is step 1 outside this list.
+ * Each step: Start → hold (countdown) → review peaks → Wiederholen or Weiter.
+ * `channels` are the RAW face keys shown after the hold.
+ */
+export const LIVEACT_RANGE_CALIBRATION_STEPS = [
+  {
+    id: 'jawOpen',
+    labelDe: 'Mund weit auf',
+    holdDe: 'Mund weit öffnen',
+    holdMs: 3000,
+    channels: ['jawOpen'],
+  },
+  {
+    id: 'eyesClosed',
+    labelDe: 'Augen fest zu',
+    holdDe: 'Augen zu bis der Ton kommt',
+    holdMs: 3000,
+    channels: ['eyeBlinkLeft', 'eyeBlinkRight'],
+  },
+  {
+    id: 'browsUp',
+    labelDe: 'Brauen hoch',
+    holdDe: 'Brauen hochziehen',
+    holdMs: 3000,
+    channels: ['browInnerUp', 'browOuterUpLeft', 'browOuterUpRight'],
+  },
+  {
+    id: 'smile',
+    labelDe: 'Breit lächeln',
+    holdDe: '2–3× breit lächeln',
+    holdMs: 6000,
+    channels: ['mouthSmileLeft', 'mouthSmileRight'],
+  },
+  {
+    id: 'rollUpper',
+    labelDe: 'Oberlippe einrollen',
+    holdDe: 'Oberlippe nach innen — 2–3×',
+    holdMs: 6000,
+    channels: ['mouthRollUpper'],
+  },
+  {
+    id: 'rollLower',
+    labelDe: 'Unterlippe einrollen',
+    holdDe: 'Unterlippe nach innen — 2–3×',
+    holdMs: 6000,
+    channels: ['mouthRollLower'],
+  },
+  {
+    id: 'press',
+    labelDe: 'Lippen zusammenpressen',
+    holdDe: 'Lippen fest pressen — 2–3×',
+    holdMs: 6000,
+    channels: ['mouthPressLeft', 'mouthPressRight'],
+  },
+  {
+    id: 'mouthClose',
+    labelDe: 'Zähne zeigen, Lippen zukneifen',
+    holdDe: 'Mund etwas offen, Lippen zukneifen — 2–3×',
+    holdMs: 6000,
+    channels: ['mouthClose', 'jawOpen'],
+  },
+  {
+    id: 'upperUp',
+    labelDe: 'Oberlippe hochziehen',
+    holdDe: 'wie Naserümpfen — 2–3×',
+    holdMs: 6000,
+    channels: ['mouthUpperUpLeft', 'mouthUpperUpRight'],
+  },
+  {
+    id: 'lowerDown',
+    labelDe: 'Unterlippe herunterziehen',
+    holdDe: 'Unterlippe runter — 2–3×',
+    holdMs: 6000,
+    channels: ['mouthLowerDownLeft', 'mouthLowerDownRight'],
+  },
+  {
+    id: 'funnel',
+    labelDe: 'Starkes O / Funnel',
+    holdDe: 'rundes O — 2–3×',
+    holdMs: 6000,
+    channels: ['mouthFunnel'],
+  },
+  {
+    id: 'pucker',
+    labelDe: 'Kussmund / Pucker',
+    holdDe: 'Lippen spitzen — 2–3×',
+    holdMs: 6000,
+    channels: ['mouthPucker'],
+  },
+  {
+    id: 'shrug',
+    labelDe: 'Schmollmund',
+    holdDe: 'Schmollen — 2–3×',
+    holdMs: 6000,
+    channels: ['mouthShrugUpper', 'mouthShrugLower'],
+  },
+  {
+    id: 'mouthLeft',
+    labelDe: 'Mund zur linken Wange',
+    holdDe: 'Mund zu deiner linken Wange — 2–3×',
+    holdMs: 6000,
+    channels: ['mouthLeft'],
+  },
+  {
+    id: 'mouthRight',
+    labelDe: 'Mund zur rechten Wange',
+    holdDe: 'Mund zu deiner rechten Wange — 2–3×',
+    holdMs: 6000,
+    channels: ['mouthRight'],
+  },
+] as const satisfies ReadonlyArray<{
+  id: string;
+  labelDe: string;
+  holdDe: string;
+  holdMs: number;
+  channels: readonly LiveActFaceChannelId[];
+}>;
+
+export type LiveActRangeCalibrationStepId =
+  (typeof LIVEACT_RANGE_CALIBRATION_STEPS)[number]['id'];
+
+export type LiveActRangeStepPhase = 'armed' | 'holding' | 'review';
+
+export interface LiveActCalibrationStepPeakV1 {
+  channel: LiveActFaceChannelId;
+  /** Peak RAW score during the hold (0..1). */
+  max: number;
+}
+
+/** Minimum hold frames before a step can complete (~0.7 s at 30 fps). */
+export const LIVEACT_RANGE_STEP_MIN_FRAMES = 20 as const;
+/** Default hold when a step omits holdMs. */
+export const LIVEACT_RANGE_STEP_MIN_MS = 3000 as const;
+
+/**
+ * @deprecated Prefer per-step holdMs — kept as the sum of step floors for older checks.
+ */
+export const LIVEACT_RANGE_CALIBRATION_DURATION_MS = LIVEACT_RANGE_CALIBRATION_STEPS.reduce(
+  (sum, step) => sum + step.holdMs,
+  0,
+);
+
 export const LIVEACT_RANGE_CALIBRATION_MIN_FRAMES = 30 as const;
 /** Channels whose peak stays this close to neutral were not exercised and stay 1:1. */
 export const LIVEACT_RANGE_MIN_SPAN = 0.1 as const;
@@ -186,6 +329,35 @@ export const LIVEACT_RANGE_MIN_SPAN = 0.1 as const;
 export const LIVEACT_RANGE_MAX_GAIN = 4 as const;
 /** Robust peak — single-frame spikes must not define the range. */
 const LIVEACT_RANGE_PEAK_QUANTILE = 0.95;
+
+export function liveActCalibrationStepTotal(): number {
+  return LIVEACT_RANGE_CALIBRATION_STEPS.length + 1;
+}
+
+export function liveActNeutralCalibrationPrompt(): string {
+  return `Schritt 1/${liveActCalibrationStepTotal()}: Neutral halten …`;
+}
+
+/** Hold duration for a max-pass step (countdown length). */
+export function liveActRangeStepHoldMs(stepIndex: number): number {
+  const step = LIVEACT_RANGE_CALIBRATION_STEPS[stepIndex];
+  return step?.holdMs ?? LIVEACT_RANGE_STEP_MIN_MS;
+}
+
+export function liveActRangeStepChannels(stepIndex: number): readonly LiveActFaceChannelId[] {
+  return LIVEACT_RANGE_CALIBRATION_STEPS[stepIndex]?.channels ?? [];
+}
+
+/** Human-readable max-pass prompt; phase-specific UI adds Start / Werte / Weiter. */
+export function liveActRangeCalibrationStepPrompt(stepIndex: number): string {
+  const steps = LIVEACT_RANGE_CALIBRATION_STEPS;
+  const total = liveActCalibrationStepTotal();
+  const step = steps[stepIndex];
+  if (!step) return `Schritt ${total}/${total}: Fertig`;
+  const ordinal = stepIndex + 2;
+  const seconds = Math.round(liveActRangeStepHoldMs(stepIndex) / 1000);
+  return `Schritt ${ordinal}/${total}: ${step.labelDe} — ${step.holdDe} (${seconds} s)`;
+}
 
 export interface LiveActRangeCalibrationV1 {
   /** Multiplier applied after neutral subtraction; channels without entry stay 1:1. */

@@ -1105,7 +1105,6 @@ export class CharacterStudioRuntime {
       headRestQuaternion: this.headRestQuaternion,
       headScratchEuler: this.headScratchEuler,
       headScratchQuaternion: this.headScratchQuaternion,
-      eyeLookTarget: this.eyeLookTarget,
     });
   }
 
