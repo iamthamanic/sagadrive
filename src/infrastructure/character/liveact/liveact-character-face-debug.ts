@@ -316,6 +316,7 @@ export function createLiveActCharacterFaceDebugController(deps: {
         canvasWidth: 1,
         canvasHeight: 1,
         contours: null,
+        points: {},
         metrics: EMPTY_METRICS,
       };
     },

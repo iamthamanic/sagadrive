@@ -4,10 +4,11 @@
  *
  * Opened from AvatarPreviewSettings „Setup“ control.
  * Same gear chrome as the editor viewport so LiveAct / Face Setup stay reachable.
- * Owns a separate CharacterStudioRuntime — face overlay must sample that camera, not the card.
+ * Owns a separate CharacterStudioRuntime — face overlay + LiveAct drive use this
+ * viewport's camera/output while open (parent rebinds engine when ready).
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type MutableRefObject } from 'react';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
 import type { LiveActCapabilitiesV1 } from '../../../domains/character/liveact';
 import type { SagaDriveFaceAnchorsManifestV1 } from '../../../domains/character/avatar';
@@ -31,6 +32,9 @@ interface AvatarPreviewExpandDialogProps {
   liveAct: UseLiveActViewportResult;
   capabilities: LiveActCapabilitiesV1 | null;
   characterFaceMappingAvailable: boolean;
+  /** Parent-owned ref so LiveAct can bindOutput to this viewport. */
+  studioRuntimeRef: MutableRefObject<CharacterStudioRuntime | null>;
+  onRuntimeReadyChange: (ready: boolean) => void;
   onFaceAnchorsCommitted?: (manifest: SagaDriveFaceAnchorsManifestV1) => void;
 }
 
@@ -42,12 +46,13 @@ export function AvatarPreviewExpandDialog({
   liveAct,
   capabilities,
   characterFaceMappingAvailable,
+  studioRuntimeRef,
+  onRuntimeReadyChange,
   onFaceAnchorsCommitted,
 }: AvatarPreviewExpandDialogProps) {
   const [runtimeReady, setRuntimeReady] = useState(false);
   const [mtoonEnabled, setMtoonEnabled] = useState(true);
   const mtoonHandlerRef = useRef<((enabled: boolean) => void) | null>(null);
-  const studioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
   const [faceMappingPanelHost, setFaceMappingPanelHost] = useState<HTMLDivElement | null>(null);
 
   // Mesh overlay samples this dialog's runtime — keep debug enabled in sync with the toggle.
@@ -62,7 +67,13 @@ export function AvatarPreviewExpandDialog({
     studioRuntimeRef.current?.setLiveActCharacterFaceDebugEnabled(
       liveAct.faceOverlayEnabled && mapping,
     );
-  }, [open, runtimeReady, liveAct.faceOverlayEnabled, characterFaceMappingAvailable]);
+  }, [
+    open,
+    runtimeReady,
+    liveAct.faceOverlayEnabled,
+    characterFaceMappingAvailable,
+    studioRuntimeRef,
+  ]);
 
   return (
     <Dialog
@@ -70,8 +81,8 @@ export function AvatarPreviewExpandDialog({
       onOpenChange={(next) => {
         if (!next) {
           setRuntimeReady(false);
+          onRuntimeReadyChange(false);
           mtoonHandlerRef.current = null;
-          studioRuntimeRef.current = null;
         }
         onOpenChange(next);
       }}
@@ -99,7 +110,10 @@ export function AvatarPreviewExpandDialog({
               initialCameraFrame="face"
               className="relative flex w-full flex-col gap-2"
               studioRuntimeRef={studioRuntimeRef}
-              onRuntimeReady={() => setRuntimeReady(true)}
+              onRuntimeReady={() => {
+                setRuntimeReady(true);
+                onRuntimeReadyChange(true);
+              }}
               onMtoonState={(enabled, apply) => {
                 setMtoonEnabled(enabled);
                 mtoonHandlerRef.current = apply;

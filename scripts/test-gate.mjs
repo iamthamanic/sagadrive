@@ -472,6 +472,14 @@ function checkLiveActFaceAnchorsCharacterPersist() {
   });
 }
 
+function checkLiveActExpandDriveBind() {
+  console.log('LiveAct expand drive bind: Setup modal XOR card bindOutput...');
+  execFileSync(process.execPath, ['scripts/liveact-expand-drive-bind-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceMappingVisualGuides() {
   console.log(
     'LiveAct face mapping visual guides: binding labels + smooth guides + pulse/detail...',
@@ -1367,6 +1375,7 @@ checkLiveActFaceAnchorsV1();
 checkLiveActFaceMappingAuthoring();
 checkLiveActFaceMappingManual();
 checkLiveActFaceAnchorsCharacterPersist();
+checkLiveActExpandDriveBind();
 checkLiveActFaceMappingVisualGuides();
 checkLiveActFaceAnchorAnatomy();
 checkLiveActCameraOverlayMetrics();

@@ -80,10 +80,12 @@ export function AvatarSurfaceViewer({
   const [mtoonEnabled, setMtoonEnabled] = useState(true);
   const mtoonHandlerRef = useRef<((enabled: boolean) => void) | null>(null);
   const studioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
+  const expandStudioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
   const [faceMappingPanelHost, setFaceMappingPanelHost] = useState<HTMLDivElement | null>(null);
   const [modelEpoch, setModelEpoch] = useState(0);
   const [faceAnchorEpoch, setFaceAnchorEpoch] = useState(0);
   const [previewExpandOpen, setPreviewExpandOpen] = useState(false);
+  const [expandRuntimeReady, setExpandRuntimeReady] = useState(false);
   const [liveActCapabilities, setLiveActCapabilities] = useState<LiveActCapabilitiesV1 | null>(
     null,
   );
@@ -214,11 +216,20 @@ export function AvatarSurfaceViewer({
   useEffect(() => {
     const engine = liveAct.engineRef.current;
     if (!engine || !liveActEnabled) return;
-    if (!liveAct.trackingEnabled || !runtimeReady) {
+    if (!liveAct.trackingEnabled) {
       engine.bindOutput(null);
       return;
     }
-    const output = studioRuntimeRef.current?.getLiveActAvatarOutput() ?? null;
+    // One drive target: expand modal when open+ready, else editor card.
+    const driveExpand = previewExpandOpen && expandRuntimeReady;
+    if (!driveExpand && !runtimeReady) {
+      engine.bindOutput(null);
+      return;
+    }
+    const runtime = driveExpand
+      ? expandStudioRuntimeRef.current
+      : studioRuntimeRef.current;
+    const output = runtime?.getLiveActAvatarOutput() ?? null;
     engine.bindOutput(output);
     engine.setRetargetProfile(
       resolveLiveActRetargetProfile({
@@ -233,6 +244,8 @@ export function AvatarSurfaceViewer({
     liveAct.trackingEnabled,
     runtimeReady,
     modelEpoch,
+    previewExpandOpen,
+    expandRuntimeReady,
     liveAct.engineRef,
   ]);
 
@@ -348,12 +361,20 @@ export function AvatarSurfaceViewer({
       {isEditorSurface ? (
         <AvatarPreviewExpandDialog
           open={previewExpandOpen}
-          onOpenChange={setPreviewExpandOpen}
+          onOpenChange={(next) => {
+            setPreviewExpandOpen(next);
+            if (!next) {
+              setExpandRuntimeReady(false);
+              expandStudioRuntimeRef.current = null;
+            }
+          }}
           avatar={show3d && avatar ? avatar : null}
           displayName={view.displayName}
           liveAct={liveAct}
           capabilities={liveActCapabilities}
           characterFaceMappingAvailable={characterFaceMappingAvailable}
+          studioRuntimeRef={expandStudioRuntimeRef}
+          onRuntimeReadyChange={setExpandRuntimeReady}
           onFaceAnchorsCommitted={handleFaceAnchorsCommitted}
         />
       ) : null}

@@ -12,7 +12,6 @@ import {
   type AvatarRigAnalysisResult,
   type BaseTraitSelection,
   type RuntimeTraitOverlay,
-  type SagaDriveFaceAnchorsManifestV1,
 } from '../../../domains/character/avatar';
 import { normalizeAvatarModelUrl } from '../../../domains/character/use-cases/avatar-presets';
 import type { CharacterAvatarDto } from '../../../domains/character/domain/character.entity';
