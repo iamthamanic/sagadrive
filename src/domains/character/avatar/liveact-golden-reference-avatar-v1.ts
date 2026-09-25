@@ -2,9 +2,15 @@
  * liveact-golden-reference-avatar-v1 — diagnostic Golden Reference VRM catalog entry.
  * Location: src/domains/character/avatar/liveact-golden-reference-avatar-v1.ts
  *
- * Single known-good external ARKit52 VRM for LiveAct A/B vs SagaDrive Human.
+ * Single known-good external ARKit52 VRM for LiveAct A/B vs SagaDrive Human, plus the Human
+ * mesh variant list (SagaDrive Human / Reference / Saga Human Canonical V1 candidate).
  * Pure domain: allowlisted relative path + provenance. No React / Three / fetch.
  */
+
+import {
+  resolveSagaHumanCanonicalV1ModelUrl,
+  SAGA_HUMAN_CANONICAL_V1_ID,
+} from './saga-human-canonical-v1';
 
 export const LIVEACT_GOLDEN_REFERENCE_CONTRACT_VERSION =
   'SagaDriveLiveActGoldenReferenceAvatarV1' as const;
@@ -14,7 +20,8 @@ export const LIVEACT_GOLDEN_REFERENCE_AVATAR_ID = 'reference-vrm-arkit52' as con
 
 export type LiveActHumanMeshVariantId =
   | 'sagadrive-human'
-  | typeof LIVEACT_GOLDEN_REFERENCE_AVATAR_ID;
+  | typeof LIVEACT_GOLDEN_REFERENCE_AVATAR_ID
+  | typeof SAGA_HUMAN_CANONICAL_V1_ID;
 
 /** Allowlisted public Vite path (binary via scripts/fetch-liveact-reference-vrm.mjs). */
 export const LIVEACT_GOLDEN_REFERENCE_PUBLIC_PATH =
@@ -71,11 +78,22 @@ export const LIVEACT_GOLDEN_REFERENCE_EXPECTED_CHANNELS = [
 ] as const;
 
 export function isLiveActHumanMeshVariantId(value: string): value is LiveActHumanMeshVariantId {
-  return value === 'sagadrive-human' || value === LIVEACT_GOLDEN_REFERENCE_AVATAR_ID;
+  return (
+    value === 'sagadrive-human' ||
+    value === LIVEACT_GOLDEN_REFERENCE_AVATAR_ID ||
+    value === SAGA_HUMAN_CANONICAL_V1_ID
+  );
 }
 
 export function resolveLiveActGoldenReferenceModelUrl(): string {
   return LIVEACT_GOLDEN_REFERENCE_PUBLIC_PATH;
+}
+
+/** Comparison mesh URL for a variant; null = SagaDrive Human (species template resolves it). */
+export function resolveLiveActHumanMeshVariantModelUrl(id: LiveActHumanMeshVariantId): string | null {
+  if (id === LIVEACT_GOLDEN_REFERENCE_AVATAR_ID) return resolveLiveActGoldenReferenceModelUrl();
+  if (id === SAGA_HUMAN_CANONICAL_V1_ID) return resolveSagaHumanCanonicalV1ModelUrl();
+  return null;
 }
 
 export function listLiveActHumanMeshVariantOptions(): readonly {
@@ -89,6 +107,12 @@ export function listLiveActHumanMeshVariantOptions(): readonly {
       id: LIVEACT_GOLDEN_REFERENCE_AVATAR_ID,
       labelDe: 'Reference VRM (ARKit52)',
       hintDe: `Nur für LiveAct-Diagnose · abgeleitet vom Original (${LIVEACT_GOLDEN_REFERENCE_PROVENANCE.derivative.id}: Zähne folgen dem Kiefer)`,
+    },
+    {
+      id: SAGA_HUMAN_CANONICAL_V1_ID,
+      labelDe: 'Saga Human Canonical V1 (Kandidat)',
+      hintDe:
+        'PoC-Kandidat · MakeHuman-Daten (CC0) · echte Augen/Zähne/Zunge · lokal bauen: npm run build:saga-human-canonical-v1',
     },
   ];
 }

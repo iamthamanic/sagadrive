@@ -157,12 +157,17 @@ check(
 
 const avatarEditorHook = read('src/app/character/edit/useCharacterAvatarEditor.ts');
 check(
-  /face_anchors:\s*_referenceAnchors/.test(avatarEditorHook),
-  'avatarForPersist strips reference face_anchors',
+  /face_anchors:\s*_comparisonAnchors/.test(avatarEditorHook),
+  'avatarForPersist strips comparison (reference) face_anchors',
 );
 check(
-  /if \(useGoldenReference\) \{\s*setReferenceFaceAnchorsManifest\(manifest\)/.test(avatarEditorHook),
+  /if \(useComparisonMesh\) \{\s*setComparisonFaceAnchorsByVariant\(/.test(avatarEditorHook),
   'Face Setup on reference stays session-only',
+);
+check(
+  /resolveLiveActHumanMeshVariantModelUrl\(humanMeshVariant\)/.test(avatarEditorHook) &&
+    /if \(id === LIVEACT_GOLDEN_REFERENCE_AVATAR_ID\) return resolveLiveActGoldenReferenceModelUrl\(\)/.test(domain),
+  'reference variant still resolves the reference URL',
 );
 check(
   !/next === LIVEACT_GOLDEN_REFERENCE_AVATAR_ID\) \{\s*[^}]*setFaceAnchorsManifest\(null\)/.test(avatarEditorHook),

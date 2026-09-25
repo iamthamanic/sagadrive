@@ -1,8 +1,9 @@
 /**
- * HumanLiveActMeshVariantSelect — SagaDrive Human vs Golden Reference VRM.
+ * HumanLiveActMeshVariantSelect — SagaDrive Human vs Golden Reference VRM vs Canonical candidate.
  * Location: src/app/character/avatar/HumanLiveActMeshVariantSelect.tsx
  *
- * Shown under Vorlage anpassen when species is human. Diagnostic-only reference path.
+ * Shown under Vorlage anpassen when species is human. Reference = diagnostic only,
+ * Saga Human Canonical V1 = PoC comparison candidate; neither is persisted.
  */
 
 import {
