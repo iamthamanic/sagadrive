@@ -4,6 +4,7 @@
  *
  * Renders below the AvatarCanvas (not over the 3D face). Session-local draft only.
  * Detail card mirrors PDF: selected feature + pulsing point synced with viewport.
+ * Auto Mapping (#421) proposes anchors; never auto-publishes.
  */
 
 import type { SagaDriveFaceAnchorId } from '../../../domains/character/avatar/face-anchor-contract';
@@ -22,10 +23,13 @@ import { FaceMappingFeatureIcon } from './FaceMappingFeatureIcon';
 interface FaceMappingAuthoringPanelProps {
   draft: SagaDriveFaceMappingDraftV1;
   missMessage: string | null;
+  autoBusy?: boolean;
+  autoStatusMessage?: string | null;
   onSelect: (anchorId: SagaDriveFaceAnchorId) => void;
   onClearSelected: () => void;
   onReset: () => void;
   onCancel: () => void;
+  onAutoMapping?: () => void;
 }
 
 function statusLabelDe(status: FaceMappingMarkerStatus): string {
@@ -63,10 +67,13 @@ function statusClass(status: FaceMappingMarkerStatus, selected: boolean): string
 export function FaceMappingAuthoringPanel({
   draft,
   missMessage,
+  autoBusy = false,
+  autoStatusMessage = null,
   onSelect,
   onClearSelected,
   onReset,
   onCancel,
+  onAutoMapping,
 }: FaceMappingAuthoringPanelProps) {
   const summary = validateFaceMappingDraft(draft);
   const selectedId = draft.selectedAnchorId;
@@ -99,10 +106,36 @@ export function FaceMappingAuthoringPanel({
 
       <p className="px-3 py-1.5 text-[10px] text-slate-400">
         Scroll zoomen. Auf leerer Fläche ziehen = Kamera verschieben (z. B. nach oben zur Stirn).
-        Marker greifen und setzen; Guides folgen live.
+        Marker greifen und setzen; Guides folgen live. Auto Mapping ist nur ein Vorschlag.
       </p>
 
+      {onAutoMapping ? (
+        <div className="flex gap-1.5 border-b border-white/10 px-2 pb-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 flex-1 border-primary/40 text-[11px] text-primary hover:bg-primary/10"
+            disabled={autoBusy}
+            onClick={onAutoMapping}
+            data-testid="face-mapping-auto"
+          >
+            {autoBusy ? 'Auto Mapping…' : 'Auto Mapping'}
+          </Button>
+        </div>
+      ) : null}
+
       {selectedId ? <FaceMappingDetailCard draft={draft} selectedAnchorId={selectedId} /> : null}
+
+      {autoStatusMessage ? (
+        <p
+          className="mx-3 mb-1 mt-2 rounded-sm bg-primary/10 px-2 py-1 text-[10px] text-cyan-100"
+          role="status"
+          data-testid="face-mapping-auto-status"
+        >
+          {autoStatusMessage}
+        </p>
+      ) : null}
 
       {missMessage ? (
         <p

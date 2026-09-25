@@ -25,7 +25,15 @@ import {
   type FaceMappingDraftValidationResult,
   type SagaDriveFaceMappingDraftV1,
 } from '../../../domains/character/avatar/face-mapping-draft-v1';
+import {
+  applyAutoMappingToDraft,
+  createEmptyAnchorAuthoringMeta,
+  markFaceMappingAnchorManual,
+  type FaceMappingDraftAuthoringMeta,
+} from '../../../domains/character/avatar/face-mapping-auto-v1';
 import type { CharacterStudioRuntime } from '../../../infrastructure/character/avatar/character-studio-runtime';
+import { runFaceMappingAutoPipeline } from '../../../infrastructure/character/avatar/face-mapping-auto-pipeline';
+import { createMediaPipeFaceImageLandmarker } from '../../../infrastructure/character/liveact/mediapipe-face-image-landmarker';
 import { AvatarPreviewSettings } from '../avatar/AvatarPreviewSettings';
 import { Button } from '../../../shared/ui/button';
 import { FaceMappingAuthoringPanel } from './FaceMappingAuthoringPanel';
@@ -72,7 +80,10 @@ export function LiveActViewportControls({
   const [faceMappingOpen, setFaceMappingOpen] = useState(false);
   const [draft, setDraft] = useState<SagaDriveFaceMappingDraftV1 | null>(null);
   const [missMessage, setMissMessage] = useState<string | null>(null);
+  const [autoBusy, setAutoBusy] = useState(false);
+  const [autoStatusMessage, setAutoStatusMessage] = useState<string | null>(null);
   const draftRef = useRef<SagaDriveFaceMappingDraftV1 | null>(null);
+  const authoringMetaRef = useRef<FaceMappingDraftAuthoringMeta>({});
   draftRef.current = draft;
 
   const closeFaceMapping = useCallback(() => {
@@ -80,6 +91,9 @@ export function LiveActViewportControls({
     setFaceMappingOpen(false);
     setDraft(null);
     setMissMessage(null);
+    setAutoBusy(false);
+    setAutoStatusMessage(null);
+    authoringMetaRef.current = {};
   }, [studioRuntimeRef]);
 
   const applyFaceMapping = useCallback(() => {
@@ -113,10 +127,73 @@ export function LiveActViewportControls({
     runtime.setFaceMappingAuthoringActive(true);
     const baseline = runtime.getFaceAnchorsManifest();
     const next = createEmptyFaceMappingDraft(baseline);
+    authoringMetaRef.current = createEmptyAnchorAuthoringMeta(next);
     setDraft(next);
     setMissMessage(null);
+    setAutoStatusMessage(null);
     setFaceMappingOpen(true);
   }, [liveAct, runtimeReady, studioRuntimeRef]);
+
+  const runAutoMapping = useCallback(async () => {
+    const runtime = studioRuntimeRef?.current;
+    const current = draftRef.current;
+    if (!runtime || !current || autoBusy) return;
+
+    const protectedCount = Object.values(authoringMetaRef.current).filter(
+      (m) => m && (m.source === 'manual' || m.source === 'manual_override' || m.reviewed),
+    ).length;
+    let replaceProtected = false;
+    if (protectedCount > 0) {
+      const ok = window.confirm(
+        `${protectedCount} manuelle/reviewed Marker vorhanden.\n\nOK = Auto Mapping überschreibt sie (Replace).\nAbbrechen = nur leere/auto Marker füllen.`,
+      );
+      replaceProtected = ok;
+    }
+
+    setAutoBusy(true);
+    setMissMessage(null);
+    setAutoStatusMessage('Auto Mapping läuft…');
+    try {
+      const landmarker = await createMediaPipeFaceImageLandmarker();
+      if (!landmarker) {
+        setAutoStatusMessage('MediaPipe IMAGE-Landmarker nicht verfügbar.');
+        return;
+      }
+      try {
+        const frame = runtime.captureFaceMappingAutoFrame();
+        if (!frame) {
+          setAutoStatusMessage('Character-Render für Auto Mapping fehlgeschlagen.');
+          return;
+        }
+        const detected = landmarker.detect(frame.image);
+        const session = runFaceMappingAutoPipeline({
+          landmarks: detected.landmarks,
+          faceCount: detected.faceCount,
+          canvasWidth: frame.canvasWidth,
+          canvasHeight: frame.canvasHeight,
+          raycast: (x, y) => runtime.raycastFaceMappingAtCanvas(x, y),
+        });
+        const applied = applyAutoMappingToDraft(current, session, authoringMetaRef.current, {
+          replaceProtected,
+        });
+        authoringMetaRef.current = applied.meta;
+        draftRef.current = applied.draft;
+        setDraft(applied.draft);
+        const skipNote =
+          applied.skippedProtectedCount > 0
+            ? ` · ${applied.skippedProtectedCount} manuelle geschützt`
+            : '';
+        setAutoStatusMessage(`${session.messageDe}${skipNote}`);
+      } finally {
+        landmarker.dispose();
+      }
+    } catch (error) {
+      console.warn('[face-mapping-auto] failed', error);
+      setAutoStatusMessage('Auto Mapping fehlgeschlagen — Details in der Konsole.');
+    } finally {
+      setAutoBusy(false);
+    }
+  }, [autoBusy, studioRuntimeRef]);
 
   useEffect(() => {
     if (!faceMappingOpen) return;
@@ -154,6 +231,11 @@ export function LiveActViewportControls({
         if (next.selectedAnchorId !== anchorId) {
           next = selectFaceMappingAnchor(next, anchorId);
         }
+        authoringMetaRef.current = markFaceMappingAnchorManual(
+          authoringMetaRef.current,
+          anchorId,
+          authoringMetaRef.current[anchorId]?.source === 'auto',
+        );
         draftRef.current = next;
         return next;
       });
@@ -185,6 +267,8 @@ export function LiveActViewportControls({
       <FaceMappingAuthoringPanel
         draft={draft}
         missMessage={missMessage}
+        autoBusy={autoBusy}
+        autoStatusMessage={autoStatusMessage}
         onSelect={onSelectAnchor}
         onClearSelected={() => {
           setDraft((prev) => {
@@ -196,15 +280,20 @@ export function LiveActViewportControls({
         }}
         onReset={() => {
           setMissMessage(null);
+          setAutoStatusMessage(null);
           setDraft((prev) => {
             if (!prev) return prev;
             // Full clear: selection + working anchors → baseline (guides empty until rebound).
             const next = resetFaceMappingDraft(prev);
+            authoringMetaRef.current = createEmptyAnchorAuthoringMeta(next);
             draftRef.current = next;
             return next;
           });
         }}
         onCancel={closeFaceMapping}
+        onAutoMapping={() => {
+          void runAutoMapping();
+        }}
       />
     ) : null;
 

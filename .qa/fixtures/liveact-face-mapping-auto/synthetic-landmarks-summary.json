@@ -1,0 +1,21 @@
+{
+  "mapVersion": "MediaPipeSagaDriveFaceAnchorMapV1",
+  "sampleCount": 21,
+  "leftMouthX": 0.721,
+  "rightMouthX": 0.28,
+  "pipelineStatus": "incomplete",
+  "mapped": 14,
+  "evalSummary": {
+    "expectedAnchors": 21,
+    "successfullyMapped": 14,
+    "missing": 7,
+    "raycastMisses": 7,
+    "wrongSurfaceHits": 0,
+    "lrSwaps": 0,
+    "medianErrorPx": 2.23606797749979,
+    "p95ErrorPx": 2.23606797749979,
+    "maxErrorPx": 2.23606797749979,
+    "thresholdStatus": "needs-calibration",
+    "outlierAnchorIds": []
+  }
+}

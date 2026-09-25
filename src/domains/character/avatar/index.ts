@@ -802,6 +802,29 @@ export {
   type FaceMappingGuidePathV1,
   type FaceMappingGuidePoint2,
 } from './face-mapping-guide-geometry';
+export {
+  FACE_MAPPING_AUTO_CONTRACT_VERSION,
+  FACE_MAPPING_AUTO_EVAL_THRESHOLD_STATUS,
+  FACE_MAPPING_AUTO_ANCHOR_OUTCOMES,
+  FACE_MAPPING_AUTO_SESSION_STATUSES,
+  applyAutoMappingToDraft,
+  createEmptyAnchorAuthoringMeta,
+  evaluateAutoVsManualScreenPoints,
+  isProtectedFaceMappingAnchor,
+  markFaceMappingAnchorManual,
+  resetFaceMappingDraftAndMeta,
+  type ApplyAutoMappingOptions,
+  type ApplyAutoMappingResult,
+  type FaceMappingAnchorAuthoringMetaV1,
+  type FaceMappingAutoAnchorOutcome,
+  type FaceMappingAutoAnchorResultV1,
+  type FaceMappingAutoEvalAnchorRowV1,
+  type FaceMappingAutoEvalReportV1,
+  type FaceMappingAutoEvalSummaryV1,
+  type FaceMappingAutoSessionResultV1,
+  type FaceMappingAutoSessionStatus,
+  type FaceMappingDraftAuthoringMeta,
+} from './face-mapping-auto-v1';
 
 export {
   SPECIES_DEFAULT_BODY_FAMILY,
