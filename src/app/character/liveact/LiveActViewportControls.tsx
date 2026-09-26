@@ -230,7 +230,8 @@ export function LiveActViewportControls({
     const next = createEmptyFaceMappingDraft(baseline);
     // Fail-closed: no getFaceMappingAuthoring sidecar — never invent reviewed GT.
     authoringMetaRef.current = createEmptyAnchorAuthoringMeta(next);
-    autoSessionTokenRef.current = 0;
+    // Invalidate any in-flight Auto from a previous panel session (monotonic — never reset to 0).
+    autoSessionTokenRef.current += 1;
     groundTruthReferenceRef.current = null;
     lastAutoSessionRef.current = null;
     autoBindingsRef.current = null;

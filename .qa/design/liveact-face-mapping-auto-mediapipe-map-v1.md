@@ -53,6 +53,7 @@ See `face-mapping-surface-semantics-v1.ts` — provider-neutral class from node 
 - Canthus / lids: allow `eyelid_or_skin` | `face_skin` only
 - **Reject** eyeball and **eyelash** for lids (#421 fail-closed; functional eyelash follow-proof is #422+)
 - Mouth/nose/chin/forehead: `face_skin` only
+- `unknown` (unlabeled `*_mesh` / HighRes skins without semantic tokens) is allowed when the anchor expects `face_skin` — not an asset-name allowlist
 
 ## Ground-truth compare
 

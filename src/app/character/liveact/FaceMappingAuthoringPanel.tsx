@@ -294,8 +294,7 @@ export function FaceMappingAuthoringPanel({
             <Button
               type="button"
               size="sm"
-              variant="outline"
-              className="h-11 min-h-[44px] flex-1 border-primary/40 text-[11px] text-primary hover:bg-primary/10"
+              className="h-11 min-h-[44px] flex-1 text-[11px]"
               disabled={autoBusy}
               onClick={onAutoMapping}
               data-testid="face-mapping-auto"
@@ -324,7 +323,7 @@ export function FaceMappingAuthoringPanel({
               type="button"
               size="sm"
               variant="outline"
-              className="h-8 w-full border-emerald-400/40 text-[11px] text-emerald-100 hover:bg-emerald-500/10"
+              className="h-11 min-h-[44px] w-full border-emerald-400/40 text-[11px] text-emerald-100 hover:bg-emerald-500/10"
               disabled={autoBusy || summary.setCount === 0}
               onClick={onMarkAllReviewed}
               data-testid="face-mapping-mark-ground-truth"
@@ -367,11 +366,7 @@ export function FaceMappingAuthoringPanel({
                     data-testid={`face-mapping-view-${opt.id}`}
                     className={`h-7 flex-1 rounded-sm text-[10px] ${
                       active
-                        ? opt.id === 'auto'
-                          ? 'bg-cyan-500/30 text-cyan-50'
-                          : opt.id === 'both'
-                            ? 'bg-primary/40 text-white'
-                            : 'bg-amber-500/30 text-amber-50'
+                        ? 'bg-cyan-500/30 text-cyan-50'
                         : 'text-slate-400 hover:bg-white/5 disabled:opacity-40'
                     }`}
                     onClick={() => onOverlayViewModeChange(opt.id)}
@@ -406,7 +401,7 @@ export function FaceMappingAuthoringPanel({
               type="button"
               size="sm"
               variant="outline"
-              className="h-8 w-full border-emerald-400/40 text-[11px] text-emerald-100 hover:bg-emerald-500/10"
+              className="h-11 min-h-[44px] w-full border-emerald-400/40 text-[11px] text-emerald-100 hover:bg-emerald-500/10"
               disabled={autoBusy || summary.setCount === 0}
               onClick={onMarkAllReviewed}
               data-testid="face-mapping-mark-ground-truth"

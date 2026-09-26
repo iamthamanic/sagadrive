@@ -207,9 +207,29 @@ check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Head') === 'face_skin'
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftOuter', 'eyeball'), 'canthus on eyeball = mismatch');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftUpper', 'eyeball'), 'lid on eyeball = mismatch');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'hair'), 'mouth on hair = mismatch');
-check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyelash'), 'lid on eyelash = mismatch (#421 fail-closed)');
 check(surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyelid_or_skin'), 'lid on eyelid_or_skin ok');
 check(surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'face_skin'), 'mouth on face_skin ok');
+check(surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'unknown'), 'unlabeled mesh ok for face_skin anchors');
+check(
+  surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'unknown'),
+  'unlabeled *_mesh/HighRes ok for lid when class unknown',
+);
+check(
+  surfMod.classifyFaceMappingSurfaceFromNodeIdentity('human-male-quality-20260921-m5_mesh') ===
+    'unknown',
+  'preset mesh name classifies unknown (no token hack)',
+);
+check(
+  surfMod.isFaceMappingSurfaceSemanticsOk(
+    'noseTip',
+    surfMod.classifyFaceMappingSurfaceFromNodeIdentity('human-male-quality-20260921-m5_mesh'),
+  ),
+  'preset mesh allowed for nose via unknown→face_skin policy',
+);
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyelash'), 'lid on eyelash = mismatch (#421 fail-closed)');
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyeball'), 'lid on eyeball = mismatch');
+check(/autoSessionTokenRef\.current \+= 1/.test(controls), 'token monotonic bump on open');
+check(!/autoSessionTokenRef\.current = 0/.test(controls), 'token never reset to zero');
 
 const pipeOut = join(runsDir, 'liveact-face-mapping-auto-pipeline-bundle.mjs');
 await build({

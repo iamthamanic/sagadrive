@@ -128,11 +128,16 @@ export function expectedFaceMappingSurfaceClasses(
 
 /**
  * Ok when actual class is among expected for the anchor.
- * Rules: eye canthus/lids on eyeball = NOT ok; mouth/nose/chin on non-face_skin = NOT ok.
+ * Rules: eye canthus/lids on eyeball/eyelash = NOT ok; mouth/nose/chin on non-face_skin = NOT ok.
+ * `unknown` is allowed only when the anchor expects `face_skin` (provisional unlabeled body mesh —
+ * e.g. `*_mesh`, HighRes skins without semantic tokens). Known-bad classes still reject.
  */
 export function isFaceMappingSurfaceSemanticsOk(
   anchorId: SagaDriveFaceAnchorId,
   actualClass: FaceMappingSurfaceClassV1,
 ): boolean {
-  return expectedFaceMappingSurfaceClasses(anchorId).includes(actualClass);
+  const expected = expectedFaceMappingSurfaceClasses(anchorId);
+  if (expected.includes(actualClass)) return true;
+  if (actualClass === 'unknown' && expected.includes('face_skin')) return true;
+  return false;
 }
