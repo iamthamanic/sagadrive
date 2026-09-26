@@ -16,6 +16,10 @@ import {
   resolveAllMediaPipeAnchorSamples,
   type NormalizedLandmark2dLike,
 } from '../liveact/mediapipe-sagadrive-face-anchor-map-v1';
+import {
+  classifyFaceMappingSurfaceFromNodeIdentity,
+  isFaceMappingSurfaceSemanticsOk,
+} from '../../../domains/character/avatar/face-mapping-surface-semantics-v1';
 
 export interface FaceMappingAutoPipelineInput {
   readonly landmarks: readonly NormalizedLandmark2dLike[];
@@ -137,6 +141,22 @@ export function runFaceMappingAutoPipeline(
         screenX,
         screenY,
         meshNodeIdentity: null,
+        laterality: sample.laterality,
+      });
+      continue;
+    }
+
+    const surfaceClass = classifyFaceMappingSurfaceFromNodeIdentity(hit.binding.nodeIdentity);
+    if (!isFaceMappingSurfaceSemanticsOk(sample.anchorId, surfaceClass)) {
+      anchors.push({
+        anchorId: sample.anchorId,
+        outcome: 'surface_mismatch',
+        binding: null,
+        confidence: sample.availability * (input.presenceConfidence ?? 1),
+        landmarkAvailability: sample.availability,
+        screenX,
+        screenY,
+        meshNodeIdentity: hit.binding.nodeIdentity,
         laterality: sample.laterality,
       });
       continue;

@@ -266,6 +266,9 @@ export function LiveActViewportControls({
     autoSessionTokenRef.current += 1;
     const token = autoSessionTokenRef.current;
 
+    // Same face-frame camera for GT freeze and Auto capture (no zoom/pan mismatch).
+    runtime.applyFaceMappingAutoCameraState();
+
     // Freeze GT reference BEFORE async work — never use post-auto draft as manualScreen.
     groundTruthReferenceRef.current = freezeFaceMappingGroundTruthReference({
       draft: seedDraft,
@@ -356,7 +359,13 @@ export function LiveActViewportControls({
       current,
       nowIso,
     );
+    // New GT invalidates any prior Auto session — avoid self-compare (proposal vs itself).
+    lastAutoSessionRef.current = null;
+    autoBindingsRef.current = null;
+    setAutoCoords({});
+    setAutoStatusMessage(null);
     if (runtime) {
+      runtime.applyFaceMappingAutoCameraState();
       groundTruthReferenceRef.current = freezeFaceMappingGroundTruthReference({
         draft: current,
         meta: authoringMetaRef.current,
@@ -413,10 +422,7 @@ export function LiveActViewportControls({
     (anchorId: SagaDriveFaceAnchorId, binding: SagaDriveFaceAnchorTriangleBinding | null) => {
       if (!binding) {
         setMissMessage('Kein Treffer auf der Character-Oberfläche — erneut tippen oder ziehen.');
-        authoringMetaRef.current = clearFaceMappingAuthoringMetaForAnchor(
-          authoringMetaRef.current,
-          anchorId,
-        );
+        // Keep existing binding + meta (protection). Only explicit Clear removes provenance.
         return;
       }
       setMissMessage(null);

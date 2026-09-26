@@ -41,6 +41,7 @@ export const FACE_MAPPING_AUTO_ANCHOR_OUTCOMES = [
   'missing_landmark',
   'low_confidence',
   'raycast_miss',
+  'surface_mismatch',
   'skipped_protected',
 ] as const;
 
@@ -82,16 +83,16 @@ export interface FaceMappingAutoSessionResultV1 {
 
 /**
  * Seed authoring meta for anchors that already have draft bindings.
- * Default (options omitted): source='auto', reviewed=false — fail-closed;
- * never invent reviewed ground truth for baseline/sidecar seeds.
- * Callers that know true manual provenance pass `defaultSource: 'manual'`.
+ * Default: source='manual', reviewed=false — protected from silent Auto replace,
+ * but NOT valid Ground Truth until explicit review (reviewed=true).
+ * Unknown sidecar/baseline provenance stays invalid as GT while remaining protected.
  * `defaultReviewed` is ignored when source is auto (authoring contract forbids auto+reviewed).
  */
 export function createEmptyAnchorAuthoringMeta(
   draft: SagaDriveFaceMappingDraftV1,
   options?: { defaultSource?: FaceMappingAuthoringSource; defaultReviewed?: boolean },
 ): FaceMappingDraftAuthoringMeta {
-  const source = options?.defaultSource ?? 'auto';
+  const source = options?.defaultSource ?? 'manual';
   const reviewed =
     source === 'auto' ? false : (options?.defaultReviewed ?? false);
   const meta: FaceMappingDraftAuthoringMeta = {};
@@ -164,7 +165,13 @@ export function applyAutoMappingToDraft(
 
   for (const row of session.anchors) {
     if (row.outcome === 'mapped' && row.binding) mappedCount += 1;
-    if (row.outcome === 'raycast_miss' || row.outcome === 'missing_landmark') missCount += 1;
+    if (
+      row.outcome === 'raycast_miss' ||
+      row.outcome === 'missing_landmark' ||
+      row.outcome === 'surface_mismatch'
+    ) {
+      missCount += 1;
+    }
 
     if (!row.binding || row.outcome !== 'mapped') continue;
     if (

@@ -295,7 +295,7 @@ export function FaceMappingAuthoringPanel({
               type="button"
               size="sm"
               variant="outline"
-              className="h-8 flex-1 border-primary/40 text-[11px] text-primary hover:bg-primary/10"
+              className="h-11 min-h-[44px] flex-1 border-primary/40 text-[11px] text-primary hover:bg-primary/10"
               disabled={autoBusy}
               onClick={onAutoMapping}
               data-testid="face-mapping-auto"

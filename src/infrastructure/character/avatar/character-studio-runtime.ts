@@ -673,6 +673,18 @@ export class CharacterStudioRuntime {
   }
 
   /**
+   * Shared camera/pose state for Auto Mapping capture + GT screen freeze (#421).
+   * Keeps reference and proposal projections on the same face frame.
+   */
+  applyFaceMappingAutoCameraState(): void {
+    if (this.disposed) return;
+    this.resetLiveActPose();
+    this.resetFaceTrackingPose();
+    this.applyCameraFrame('face');
+    this.controls.update();
+  }
+
+  /**
    * Deterministic frontal capture for Auto Mapping (#421).
    * Neutral pose + face camera frame; returns a 2D canvas copy (no upload/persist).
    * CSS size matches Manual Mapping raycast coordinates.
@@ -683,10 +695,7 @@ export class CharacterStudioRuntime {
     canvasHeight: number;
   } | null {
     if (this.disposed || !this.currentRoot) return null;
-    this.resetLiveActPose();
-    this.resetFaceTrackingPose();
-    this.applyCameraFrame('face');
-    this.controls.update();
+    this.applyFaceMappingAutoCameraState();
     this.renderer.render(this.scene, this.camera);
 
     const src = this.renderer.domElement;

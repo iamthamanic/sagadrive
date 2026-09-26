@@ -83,7 +83,14 @@ check(/reviewed === true/.test(autoDomain) || /meta\.reviewed === true/.test(aut
 check(/face-mapping-gt-needs-review-banner|Als Ground Truth markieren/.test(panel), 'GT review UI copy');
 check(/face-mapping-surface-semantics/.test(barrel), 'surface semantics barrel');
 check(/classifyFaceMappingSurfaceFromNodeIdentity/.test(read('src/domains/character/avatar/face-mapping-surface-semantics-v1.ts')), 'surface classifier');
+check(/applyFaceMappingAutoCameraState/.test(studio), 'studio shared auto camera state');
+check(/applyFaceMappingAutoCameraState/.test(controls), 'controls freeze on auto camera');
 check(/autoSessionTokenRef|groundTruthReferenceRef/.test(controls), 'stale-session + GT refs');
+check(/lastAutoSessionRef\.current = null/.test(controls), 'mark GT clears prior auto session');
+check(/surface_mismatch/.test(pipeSrc), 'pipeline rejects invalid surfaces');
+check(/surface_mismatch/.test(autoDomain), 'surface_mismatch outcome');
+check(/Only explicit Clear removes provenance/.test(controls), 'miss click keeps provenance');
+check(/min-h-\[44px\]/.test(panel), 'auto button 44px touch target');
 check(/face-mapping-mark-ground-truth/.test(panel), 'mark GT button');
 check(/getCompareExportJson/.test(controls) && /getCompareExportJson/.test(panel), 'compare from frozen GT');
 check(/editingAllowed=\{!autoBusy\}/.test(controls), 'edits locked while auto busy');
@@ -301,7 +308,7 @@ draft = draftMod.setFaceMappingDraftBinding(draft, 'noseTip', {
   barycentric: { u: 0.34, v: 0.33, w: 0.33 },
 });
 let meta = autoMod.createEmptyAnchorAuthoringMeta(draft);
-check(meta.noseTip?.source === 'auto' && meta.noseTip?.reviewed !== true, 'baseline meta fail-closed auto');
+check(meta.noseTip?.source === 'manual' && meta.noseTip?.reviewed !== true, 'baseline meta protected manual unreviewed');
 
 // Explicit manual binding is protected.
 meta = { ...meta, noseTip: { source: 'manual', reviewed: false } };
