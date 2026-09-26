@@ -312,12 +312,13 @@ function median(sorted: readonly number[]): number | null {
   return (a + b) / 2;
 }
 
+/**
+ * An anchor counts as Ground Truth only when explicitly human-reviewed.
+ * `source=manual` / `manual_override` alone is NOT enough — reviewed must be true.
+ */
 function countsAsGroundTruthMeta(meta: FaceMappingAnchorAuthoringMetaV1 | undefined): boolean {
   if (!meta) return false;
-  // source=auto + reviewed=false must NOT count as GT.
-  if (meta.source === 'auto' && meta.reviewed !== true) return false;
-  if (meta.reviewed === true) return true;
-  return meta.source === 'manual' || meta.source === 'manual_override';
+  return meta.reviewed === true;
 }
 
 /**
@@ -492,9 +493,9 @@ export type FaceMappingScreenCoordMap = Readonly<
 >;
 
 /**
- * Freeze a reviewed/manual draft as ground-truth reference for auto comparison.
- * valid=true only when all 21 anchors have bindings and each is reviewed OR source manual/manual_override.
- * source=auto && !reviewed never counts as GT.
+ * Freeze a draft as ground-truth reference for auto comparison.
+ * valid=true only when all 21 anchors are bound AND each has reviewed=true.
+ * source alone (manual / manual_override / auto) never grants GT without reviewed.
  */
 export function freezeFaceMappingGroundTruthReference(input: {
   draft: SagaDriveFaceMappingDraftV1;

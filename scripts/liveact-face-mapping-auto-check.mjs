@@ -79,6 +79,8 @@ check(/freezeFaceMappingGroundTruthReference/.test(autoDomain), 'GT freeze');
 check(/validForGroundTruthComparison/.test(autoDomain), 'GT validity flag');
 check(/clearFaceMappingAuthoringMetaForAnchor/.test(autoDomain), 'clear meta helper');
 check(/markAllBoundFaceMappingAnchorsAsReviewedManual/.test(autoDomain), 'mark reviewed GT');
+check(/reviewed === true/.test(autoDomain) || /meta\.reviewed === true/.test(autoDomain), 'GT requires reviewed=true');
+check(/face-mapping-gt-needs-review-banner|Als Ground Truth markieren/.test(panel), 'GT review UI copy');
 check(/face-mapping-surface-semantics/.test(barrel), 'surface semantics barrel');
 check(/classifyFaceMappingSurfaceFromNodeIdentity/.test(read('src/domains/character/avatar/face-mapping-surface-semantics-v1.ts')), 'surface classifier');
 check(/autoSessionTokenRef|groundTruthReferenceRef/.test(controls), 'stale-session + GT refs');
@@ -198,7 +200,8 @@ check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Head') === 'face_skin'
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftOuter', 'eyeball'), 'canthus on eyeball = mismatch');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftUpper', 'eyeball'), 'lid on eyeball = mismatch');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'hair'), 'mouth on hair = mismatch');
-check(surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyelash'), 'lid on eyelash allowed');
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyelash'), 'lid on eyelash = mismatch (#421 fail-closed)');
+check(surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyelid_or_skin'), 'lid on eyelid_or_skin ok');
 check(surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'face_skin'), 'mouth on face_skin ok');
 
 const pipeOut = join(runsDir, 'liveact-face-mapping-auto-pipeline-bundle.mjs');
@@ -335,13 +338,7 @@ check(
 meta = autoMod.markFaceMappingAnchorManual(meta, 'mouthUpper', true);
 check(meta.mouthUpper?.source === 'manual_override', 'manual edit after auto → override');
 
-// GT: unreviewed auto is NOT valid comparison.
-const allAutoDraft = draftMod.createEmptyFaceMappingDraft(null);
-const allAutoScreens = {};
-const allAutoMeta = {};
-for (const id of draftMod.SAGA_DRIVE_FACE_ANCHOR_IDS ?? Object.keys({})) {
-  /* filled below */
-}
+// GT: reviewed-only — source alone never grants validForGroundTruthComparison.
 const ANCHOR_IDS = [
   'noseTip', 'chin', 'forehead', 'mouthUpper', 'mouthLower', 'mouthCornerLeft', 'mouthCornerRight',
   'eyeLeftInner', 'eyeLeftOuter', 'eyeLeftUpper', 'eyeLeftLower',
@@ -349,38 +346,88 @@ const ANCHOR_IDS = [
   'browLeftInner', 'browLeftCenter', 'browLeftOuter',
   'browRightInner', 'browRightCenter', 'browRightOuter',
 ];
-let gtDraft = draftMod.createEmptyFaceMappingDraft(null);
-const gtMeta = {};
-const gtScreens = {};
-for (const id of ANCHOR_IDS) {
-  gtDraft = draftMod.setFaceMappingDraftBinding(gtDraft, id, {
-    nodeIdentity: 'HeadMesh',
-    primitiveIndex: 0,
-    triangleIndex: 0,
-    barycentric: { u: 0.34, v: 0.33, w: 0.33 },
-  });
-  gtMeta[id] = { source: 'auto', reviewed: false };
-  gtScreens[id] = { x: 100, y: 100 };
+function fillAllBindings(baseDraft) {
+  let d = baseDraft;
+  for (const id of ANCHOR_IDS) {
+    d = draftMod.setFaceMappingDraftBinding(d, id, {
+      nodeIdentity: 'HeadMesh',
+      primitiveIndex: 0,
+      triangleIndex: 0,
+      barycentric: { u: 0.34, v: 0.33, w: 0.33 },
+    });
+  }
+  return d;
 }
-const unreviewedRef = autoMod.freezeFaceMappingGroundTruthReference({
+const gtScreens = Object.fromEntries(ANCHOR_IDS.map((id) => [id, { x: 100, y: 100 }]));
+const gtDraft = fillAllBindings(draftMod.createEmptyFaceMappingDraft(null));
+
+// A) 21× manual, reviewed=false → false
+const manualUnreviewedMeta = Object.fromEntries(
+  ANCHOR_IDS.map((id) => [id, { source: 'manual', reviewed: false }]),
+);
+const refA = autoMod.freezeFaceMappingGroundTruthReference({
   draft: gtDraft,
-  meta: gtMeta,
+  meta: manualUnreviewedMeta,
   screenCoords: gtScreens,
 });
-check(unreviewedRef.validForGroundTruthComparison === false, 'unreviewed auto not valid GT');
-check(unreviewedRef.status === 'unreviewed_auto', 'status unreviewed_auto');
+check(refA.validForGroundTruthComparison === false, 'A: 21 manual unreviewed → not valid GT');
+check(refA.status !== 'reviewed_manual_complete', 'A: status not reviewed_manual_complete');
 
-const reviewedMeta = {};
-for (const id of ANCHOR_IDS) {
-  reviewedMeta[id] = { source: 'manual', reviewed: true, reviewedAt: '2026-09-25T00:00:00.000Z' };
-}
+// B) 21× manual_override, reviewed=false → false
+const overrideUnreviewedMeta = Object.fromEntries(
+  ANCHOR_IDS.map((id) => [id, { source: 'manual_override', reviewed: false }]),
+);
+const refB = autoMod.freezeFaceMappingGroundTruthReference({
+  draft: gtDraft,
+  meta: overrideUnreviewedMeta,
+  screenCoords: gtScreens,
+});
+check(refB.validForGroundTruthComparison === false, 'B: 21 manual_override unreviewed → not valid GT');
+
+// C) 20 reviewed + 1 unreviewed → false / partial
+const partialMeta = Object.fromEntries(
+  ANCHOR_IDS.map((id, i) => [
+    id,
+    i === 0
+      ? { source: 'manual', reviewed: false }
+      : { source: 'manual', reviewed: true, reviewedAt: '2026-09-25T00:00:00.000Z' },
+  ]),
+);
+const refC = autoMod.freezeFaceMappingGroundTruthReference({
+  draft: gtDraft,
+  meta: partialMeta,
+  screenCoords: gtScreens,
+});
+check(refC.validForGroundTruthComparison === false, 'C: partial reviewed → not valid GT');
+check(refC.status === 'partial_reviewed_manual', 'C: status partial_reviewed_manual');
+
+// D) 21 reviewed → true
+const reviewedMeta = Object.fromEntries(
+  ANCHOR_IDS.map((id) => [
+    id,
+    { source: 'manual', reviewed: true, reviewedAt: '2026-09-25T00:00:00.000Z' },
+  ]),
+);
 const reviewedRef = autoMod.freezeFaceMappingGroundTruthReference({
   draft: gtDraft,
   meta: reviewedMeta,
   screenCoords: gtScreens,
   nowIso: '2026-09-25T00:00:00.000Z',
 });
-check(reviewedRef.validForGroundTruthComparison === true, 'reviewed manual is valid GT');
+check(reviewedRef.validForGroundTruthComparison === true, 'D: 21 reviewed → valid GT');
+check(reviewedRef.status === 'reviewed_manual_complete', 'D: status reviewed_manual_complete');
+
+// E) 21 auto/unreviewed → unreviewed_auto / false
+const autoUnreviewedMeta = Object.fromEntries(
+  ANCHOR_IDS.map((id) => [id, { source: 'auto', reviewed: false }]),
+);
+const unreviewedRef = autoMod.freezeFaceMappingGroundTruthReference({
+  draft: gtDraft,
+  meta: autoUnreviewedMeta,
+  screenCoords: gtScreens,
+});
+check(unreviewedRef.validForGroundTruthComparison === false, 'E: unreviewed auto not valid GT');
+check(unreviewedRef.status === 'unreviewed_auto', 'E: status unreviewed_auto');
 
 // Reference immutability: compare uses frozen reference screens, not post-auto draft.
 const refScreensOffset = {};

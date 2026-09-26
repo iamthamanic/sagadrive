@@ -271,7 +271,20 @@ export function FaceMappingAuthoringPanel({
           role="status"
           data-testid="face-mapping-gt-unreviewed-banner"
         >
-          Sidecar/Draft ist auto/unreviewed — kein gültiger Auto-vs-Manual Benchmark
+          Sidecar/Draft ist auto/unreviewed — kein gültiger Auto-vs-GT Benchmark. Marker prüfen,
+          dann „Als Ground Truth markieren“.
+        </p>
+      ) : null}
+
+      {referenceStatus === 'partial_reviewed_manual' ||
+      (referenceStatus === 'missing_reviewed_ground_truth' && summary.setCount > 0) ? (
+        <p
+          className="mx-3 mb-1 rounded-sm bg-amber-400/15 px-2 py-1.5 text-[10px] text-amber-100"
+          role="status"
+          data-testid="face-mapping-gt-needs-review-banner"
+        >
+          Ground Truth gilt erst nach explizitem Review aller 21 Marker („Als Ground Truth
+          markieren“) — source=manual allein reicht nicht.
         </p>
       ) : null}
 

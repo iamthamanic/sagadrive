@@ -82,11 +82,8 @@ export function classifyFaceMappingSurfaceFromNodeIdentity(
 
 const FACE_SKIN_ONLY: readonly FaceMappingSurfaceClassV1[] = ['face_skin'];
 const EYE_CANTHUS: readonly FaceMappingSurfaceClassV1[] = ['eyelid_or_skin', 'face_skin'];
-const EYE_LID: readonly FaceMappingSurfaceClassV1[] = [
-  'eyelid_or_skin',
-  'face_skin',
-  'eyelash',
-];
+/** Lid QA surfaces — eyelash rejected until a functional follow-proof exists (#422+). */
+const EYE_LID: readonly FaceMappingSurfaceClassV1[] = ['eyelid_or_skin', 'face_skin'];
 const BROW: readonly FaceMappingSurfaceClassV1[] = ['eyebrow', 'face_skin'];
 
 /**

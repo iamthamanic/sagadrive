@@ -10,8 +10,8 @@ Auto Mapping rendert den Character frontal, erkennt Face-Landmarks mit einem **g
 - [x] Definierte MediaPipe-Indizes/Centroids → dieselbe `raycastFaceMappingPointer`-Pipeline → Draft-Bindings.
 - [x] Anatomical L/R aligned to `FaceLandmarker.FACE_LANDMARKS_LEFT_EYE` / `RIGHT_EYE` (left mouth=291, left outer eye=263).
 - [x] Auto-Marker `source=auto`; manuelle Korrektur → `manual_override`; erneutes Auto überschreibt Protected nicht ohne Confirm/Replace.
-- [x] Immutable Ground-Truth freeze **before** Auto; `validForGroundTruthComparison` only for reviewed/manual complete sets.
-- [x] Surface-semantics classes (eyeball ≠ ok for canthus/lids); Compare export carries expected/actual/ok.
+- [x] Immutable Ground-Truth freeze **before** Auto; `validForGroundTruthComparison` only when all 21 are `reviewed=true` (source alone insufficient).
+- [x] Surface-semantics: lids/canthus allow eyelid_or_skin|face_skin; eyeball **and** eyelash rejected for lids (#421).
 - [x] Async stale-result protection (session token) + edits locked while `autoBusy`.
 - [x] 0-face / multi-face / partial → verständlicher Status; kein Auto-Publish.
 - [x] Touched files: typed-strict (keine Escape-Hatches).

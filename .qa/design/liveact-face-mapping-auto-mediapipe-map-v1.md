@@ -46,15 +46,21 @@ Independent check (does not read our `laterality` field for expected X):
 2. Assert map `eyeLeftOuter` ∈ LEFT set, `eyeRightOuter` ∈ RIGHT set
 3. Place landmark **indices** 263/291 at high X and 33/61 at low X; assert resolved mouthCornerLeft.x > mouthCornerRight.x
 
+## Surface semantics
+
+See `face-mapping-surface-semantics-v1.ts` — provider-neutral class from node identity tokens (`Eyes`→eyeball, `Eyelashes`→eyelash, `Head`→face_skin).
+
+- Canthus / lids: allow `eyelid_or_skin` | `face_skin` only
+- **Reject** eyeball and **eyelash** for lids (#421 fail-closed; functional eyelash follow-proof is #422+)
+- Mouth/nose/chin/forehead: `face_skin` only
+
 ## Ground-truth compare
 
 - Freeze reference **before** Auto apply (`freezeFaceMappingGroundTruthReference`)
-- `source=auto` + `reviewed=false` → `validForGroundTruthComparison=false` (no fake 0px PASS)
-- Mark GT via UI → `manual_override` + `reviewed=true` for all bound anchors
-
-## Surface semantics
-
-See `face-mapping-surface-semantics-v1.ts` — provider-neutral class from node identity tokens (`Eyes`→eyeball, `Eyelashes`→eyelash, `Head`→face_skin). Eyeball is **not** OK for canthus/lids.
+- `validForGroundTruthComparison=true` **only** when all 21 anchors are bound **and** each has `reviewed=true`
+- `source=manual` / `manual_override` alone is **not** enough
+- Mark GT via UI → sets `reviewed=true` (auto → `manual_override`) for all bound anchors
+- Unreviewed auto sidecar → `unreviewed_auto` / not valid
 
 ## Known V1 limits (Epic #442 later)
 
