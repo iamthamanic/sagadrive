@@ -304,6 +304,14 @@ function checkLookProfilePersistence() {
   });
 }
 
+function checkLiveSessionRoleCapabilityContract() {
+  console.log('Live Session role/capability contract (#362): access, visibility, director...');
+  execFileSync(process.execPath, ['scripts/live-session-role-capability-contract-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1373,6 +1381,7 @@ checkItemRoutingFoundation();
 checkSagaRoutingPublicIdFoundation();
 checkLookProfileDomain();
 checkLookProfilePersistence();
+checkLiveSessionRoleCapabilityContract();
 checkPlayerTestSessionSecurity();
 checkPlayerTestRealtimeRuntime();
 checkPlayerTestPlayerPanel();
