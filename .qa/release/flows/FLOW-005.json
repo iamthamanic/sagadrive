@@ -1,0 +1,28 @@
+{
+  "id": "FLOW-005",
+  "title": "Director steuert Preview/Program",
+  "requiredFrom": "R2",
+  "preconditions": [
+    "User besitzt Director-Capability",
+    "Session liefert Program Sources"
+  ],
+  "steps": [
+    "Preview Source wählen",
+    "Take auslösen",
+    "Automatic Mode aktivieren",
+    "Session Event erzeugen",
+    "manuell übersteuern"
+  ],
+  "passCriteria": [
+    "Preview verändert Program nicht vor Take",
+    "Automatic Cue deterministisch",
+    "Manual Override gewinnt",
+    "keine Gameplay-Rechte durch Director"
+  ],
+  "requiredGates": [
+    "DIRECTOR-001",
+    "DIRECTOR-002",
+    "DIRECTOR-003",
+    "DIRECTOR-004"
+  ]
+}
