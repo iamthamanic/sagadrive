@@ -1,6 +1,6 @@
 # Review Ticket — look-world-capability-stubs (#346)
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: af624e4111983f99085c9234d6833bb58a6bcb89
 - Date: 2026-09-27
 
 ## Prerequisites
