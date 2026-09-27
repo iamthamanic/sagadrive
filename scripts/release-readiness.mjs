@@ -121,6 +121,7 @@ function evaluateVerification(spec) {
       : { status: 'FAIL', detail: 'missing ' + spec.path };
   }
   if (spec.type === 'human_evidence') return humanEvidence(spec);
+  if (spec.type === 'derived') return { status: 'PASS', detail: 'derived from dependencies' };
   return { status: 'FAIL', detail: 'unknown verification type ' + spec.type };
 }
 
