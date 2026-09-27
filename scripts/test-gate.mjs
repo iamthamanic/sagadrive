@@ -288,6 +288,14 @@ function checkSagaRoutingPublicIdFoundation() {
   });
 }
 
+function checkLookProfileDomain() {
+  console.log('LookProfile domain (#339): contracts, resolution, capabilities...');
+  execFileSync(process.execPath, ['scripts/look-profile-domain-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1355,6 +1363,7 @@ checkItemInventoryWorldCatalogWire();
 checkItemEpicAcceptance();
 checkItemRoutingFoundation();
 checkSagaRoutingPublicIdFoundation();
+checkLookProfileDomain();
 checkPlayerTestSessionSecurity();
 checkPlayerTestRealtimeRuntime();
 checkPlayerTestPlayerPanel();
