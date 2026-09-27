@@ -199,12 +199,24 @@ export function FaceMappingAuthoringPanel({
   groundTruthValid = null,
   referenceStatus = null,
   getCompareExportJson,
+  getAuthoringMeta,
 }: FaceMappingAuthoringPanelProps) {
   const summary = validateFaceMappingDraft(draft);
   const selectedId = draft.selectedAnchorId;
   const hasAnyAuto = Object.keys(autoCoords).length > 0;
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Derive reviewed marker IDs from provenance so rows show "reviewed", not only "gesetzt".
+  let reviewedAnchorIds: ReadonlySet<SagaDriveFaceAnchorId> | undefined;
+  if (getAuthoringMeta) {
+    const meta = getAuthoringMeta();
+    const ids = new Set<SagaDriveFaceAnchorId>();
+    for (const id of Object.keys(meta) as SagaDriveFaceAnchorId[]) {
+      if (meta[id]?.reviewed === true) ids.add(id);
+    }
+    reviewedAnchorIds = ids;
+  }
 
   useEffect(
     () => () => {
@@ -323,7 +335,7 @@ export function FaceMappingAuthoringPanel({
               type="button"
               size="sm"
               variant="outline"
-              className="h-11 min-h-[44px] w-full border-emerald-400/40 text-[11px] text-emerald-100 hover:bg-emerald-500/10"
+              className="h-11 min-h-[44px] w-full text-[11px]"
               disabled={autoBusy || summary.setCount === 0}
               onClick={onMarkAllReviewed}
               data-testid="face-mapping-mark-ground-truth"
@@ -401,7 +413,7 @@ export function FaceMappingAuthoringPanel({
               type="button"
               size="sm"
               variant="outline"
-              className="h-11 min-h-[44px] w-full border-emerald-400/40 text-[11px] text-emerald-100 hover:bg-emerald-500/10"
+              className="h-11 min-h-[44px] w-full text-[11px]"
               disabled={autoBusy || summary.setCount === 0}
               onClick={onMarkAllReviewed}
               data-testid="face-mapping-mark-ground-truth"
@@ -443,7 +455,9 @@ export function FaceMappingAuthoringPanel({
             </p>
             <ul className="flex flex-col gap-1">
               {group.anchorIds.map((id) => {
-                const status = resolveFaceMappingMarkerStatus(draft, id);
+                const status = resolveFaceMappingMarkerStatus(draft, id, {
+                  reviewedAnchorIds,
+                });
                 const selected = draft.selectedAnchorId === id;
                 const manual = manualCoords[id];
                 const auto = autoCoords[id];

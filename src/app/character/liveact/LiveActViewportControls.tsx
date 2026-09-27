@@ -282,14 +282,24 @@ export function LiveActViewportControls({
     setAutoBusy(true);
     setMissMessage(null);
     setAutoStatusMessage('Auto Mapping läuft…');
+    const ownsSession = () =>
+      token === autoSessionTokenRef.current &&
+      faceMappingOpenRef.current &&
+      Boolean(draftRef.current);
     try {
       const landmarker = await createMediaPipeFaceImageLandmarker();
+      // Revalidate ownership immediately after await — never capture/pose for a stale run.
+      if (!ownsSession()) {
+        landmarker?.dispose();
+        return;
+      }
       if (!landmarker) {
         setAutoStatusMessage('MediaPipe IMAGE-Landmarker nicht verfügbar.');
         return;
       }
       try {
         const frame = runtime.captureFaceMappingAutoFrame();
+        if (!ownsSession()) return;
         if (!frame) {
           setAutoStatusMessage('Character-Render für Auto Mapping fehlgeschlagen.');
           return;
@@ -303,17 +313,12 @@ export function LiveActViewportControls({
           raycast: (x, y) => runtime.raycastFaceMappingAtCanvas(x, y),
         });
 
-        if (
-          token !== autoSessionTokenRef.current ||
-          !faceMappingOpenRef.current ||
-          !draftRef.current
-        ) {
-          setAutoStatusMessage('Auto Mapping verworfen');
+        if (!ownsSession()) {
           return;
         }
 
         const applied = applyAutoMappingToDraft(
-          draftRef.current,
+          draftRef.current!,
           session,
           authoringMetaRef.current,
           { replaceProtected },
@@ -335,9 +340,14 @@ export function LiveActViewportControls({
       }
     } catch (error) {
       console.warn('[face-mapping-auto] failed', error);
-      setAutoStatusMessage('Auto Mapping fehlgeschlagen — Details in der Konsole.');
+      if (ownsSession()) {
+        setAutoStatusMessage('Auto Mapping fehlgeschlagen — Details in der Konsole.');
+      }
     } finally {
-      setAutoBusy(false);
+      // Only the owning session may clear busy / re-enable edits.
+      if (token === autoSessionTokenRef.current) {
+        setAutoBusy(false);
+      }
     }
   }, [autoBusy, studioRuntimeRef]);
 
