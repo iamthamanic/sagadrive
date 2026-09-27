@@ -312,6 +312,14 @@ function checkLookLibrary() {
   });
 }
 
+function checkReleaseReadinessContract() {
+  console.log('Release readiness contract: IDs, dependencies, flows, milestones...');
+  execFileSync(process.execPath, ['scripts/release-readiness.mjs', '--validate-only'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveSessionRoleCapabilityContract() {
   console.log('Live Session role/capability contract (#362): access, visibility, director...');
   execFileSync(process.execPath, ['scripts/live-session-role-capability-contract-check.mjs'], {
@@ -1390,6 +1398,7 @@ checkSagaRoutingPublicIdFoundation();
 checkLookProfileDomain();
 checkLookProfilePersistence();
 checkLookLibrary();
+checkReleaseReadinessContract();
 checkLiveSessionRoleCapabilityContract();
 checkPlayerTestSessionSecurity();
 checkPlayerTestRealtimeRuntime();
