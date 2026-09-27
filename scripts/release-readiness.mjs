@@ -8,6 +8,7 @@ const root = process.cwd();
 const args = new Set(process.argv.slice(2));
 const refreshGithub = args.has('--refresh-github');
 const write = args.has('--write');
+const validateOnly = args.has('--validate-only');
 const contract = JSON.parse(fs.readFileSync(path.join(root, '.qa/release/readiness.json'), 'utf8'));
 const allowedStatuses = new Set(contract.statuses);
 const milestoneOrder = new Map(contract.milestones.map((m, i) => [m.id, i]));
@@ -138,6 +139,10 @@ function combine(results) {
 }
 
 validateContract();
+if (validateOnly) {
+  console.log('Release readiness contract valid: ' + contract.gates.length + ' gates, ' + contract.flows.length + ' flows.');
+  process.exit(0);
+}
 
 const gateResults = new Map();
 const flowResults = new Map();
