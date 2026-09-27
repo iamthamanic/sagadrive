@@ -1,7 +1,11 @@
 name: Quality Gates
 
+# PRs: only pull_request (avoids duplicate push+PR runs that race and cancel each other).
+# main: push after merge.
 on:
   push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -10,7 +14,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: quality-gates-${{ github.ref }}
+  group: quality-gates-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -71,7 +75,8 @@ jobs:
     name: Browser E2E
     needs: test-gate
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Suite ~8m; retries under load need headroom (was hitting 15m / flake races).
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
@@ -99,7 +104,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: character-editor-browser-evidence
+          name: browser-e2e-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             .qa/evidence/
             .qa/test-results/
