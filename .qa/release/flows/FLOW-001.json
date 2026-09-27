@@ -1,0 +1,28 @@
+{
+  "id": "FLOW-001",
+  "title": "Player tritt einer Session bei",
+  "requiredFrom": "R1",
+  "preconditions": [
+    "GM hat eine Session erstellt",
+    "Player besitzt einen erlaubten Character",
+    "Invite/Session-Code ist gültig"
+  ],
+  "steps": [
+    "Invite/Code öffnen",
+    "Session erkennen",
+    "Character bestätigen",
+    "Kamera/Mikrofon erlauben oder bewusst ablehnen",
+    "LiveAct optional kalibrieren",
+    "Live Stage betreten"
+  ],
+  "passCriteria": [
+    "Kein DB-/Console-Eingriff",
+    "Kein Architekturwissen nötig",
+    "R2: Median invite→ready <=2 min, P90 <=4 min"
+  ],
+  "requiredGates": [
+    "SESSION-001",
+    "SESSION-002",
+    "SESSION-004"
+  ]
+}
