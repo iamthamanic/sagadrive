@@ -15,8 +15,15 @@ A **LookProfile** describes a visual look (style + optional content references) 
 | `LookSource` | How the look was authored: `manual`, `preset`, `reference-analysis`, `imported` |
 | `LookReference` | External/visual reference with kind `style` \| `content` (never swapped) |
 | `LookScope` | Application target: `system`, `saga`, `session`, `player-character` |
-| `LookCapability` | Functional: `character`, `lighting`, `postFx`. Reserved: `environment`, `sky`, `water`, `vegetation`, `terrain`, `props`, `vfx` |
+| `LookCapability` | Functional: `character`, `lighting`, `postFx`. Reserved (world stubs): `environment`, `sky`, `water`, `vegetation`, `terrain`, `props`, `vfx` — see `LOOK_CAPABILITY_METADATA` / [docs/look-world-capabilities.md](../../docs/look-world-capabilities.md) (#346) |
 | `LookExecutionMode` | `realtime` \| `rendered` |
+
+## Capability metadata (#346)
+
+- Single registry: `src/domains/look/capability-metadata.ts`
+- Reserved domains are **unsupported** (`availability: 'reserved'`) with DE copy „Noch nicht verfügbar“
+- Look Editor must render capability rows from `listLookCapabilityMetadata()` — never a parallel hardcoded world-domain list
+- Future world renderers **extend** LookProfile capabilities; they do not invent a second style system
 
 ## Resolution rules
 
