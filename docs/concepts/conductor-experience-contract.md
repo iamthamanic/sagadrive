@@ -508,3 +508,77 @@ This contract does not require:
 - hiding complex rules from expert users.
 
 The goal is **direct, legible, responsive control over fiction and presentation**, not spectacle.
+
+
+---
+
+## 17. Decision Rationale and Provenance
+
+This section preserves **why** the contract exists and **why the numeric defaults were chosen**. Future agents must not treat the numbers as universal laws.
+
+### 17.1 Evidence labels
+
+Each baseline belongs to one of four categories:
+
+- **RESEARCH-INFORMED** — supported by published HCI or TTRPG research, then adapted to SagaDrive.
+- **PLATFORM CONVENTION** — based on mature platform guidance and used as a compatibility/accessibility baseline.
+- **PRODUCT HEURISTIC** — an explicit SagaDrive design choice that must be validated in real use.
+- **DOMAIN PRINCIPLE** — derived from the kind of product SagaDrive is and the live-session job it performs.
+
+A PRODUCT HEURISTIC is intentionally testable and replaceable. It is not disguised as scientific fact.
+
+### 17.2 Principle rationale
+
+| Rule | Why it exists | Evidence type | Failure mode it prevents |
+|---|---|---|---|
+| Stage permanence | Live play loses flow when routine commands replace the shared world with administrative screens. The stage is the user's spatial anchor. | DOMAIN PRINCIPLE | dashboard feeling, context loss, re-orientation cost |
+| Context instead of navigation | Selection should change what can be done *to the current world*, not send the user away from it. | DOMAIN PRINCIPLE | CRUD navigation replacing direct manipulation |
+| Direct manipulation | The GM/Director must be able to react at conversational speed. | DOMAIN PRINCIPLE | missed timing, tool friction during speech/play |
+| Consequence is feedback | The user should see the world change, not merely receive confirmation that a database write happened. | DOMAIN PRINCIPLE | toast-driven admin UX, weak causality |
+| Source -> destination causality | Transfer/reveal/program operations are easier to understand when the relationship between source and result is visible. | RESEARCH-INFORMED / PRODUCT HEURISTIC | uncertainty about what changed or where it went |
+| Mastery layer | Repeated live use should become faster through muscle memory without creating a separate expert-only semantic model. | PRODUCT HEURISTIC | permanent novice-speed interaction |
+| Selected / armed / pending / live distinction | These states have different consequences and must not be visually conflated. | DOMAIN PRINCIPLE | accidental publication, unclear authority |
+
+### 17.3 Numeric baseline rationale
+
+| Baseline | Why this value was selected | Evidence type | Change rule |
+|---|---|---|---|
+| input acknowledgement p95 <= 100 ms | Delays around/above 100 ms in discrete interaction become perceptible and weaken the direct-manipulation illusion. SagaDrive uses this as a user-visible response ceiling, not a server SLA. | RESEARCH-INFORMED | may become stricter; loosen only with measured evidence and explicit ticket rationale |
+| context update <= 100 ms, ceiling 150 ms | Context selection should feel like the same interaction as the click/keypress. 150 ms is a temporary upper bound, not a target. | PRODUCT HEURISTIC informed by responsiveness research | validate on supported devices |
+| press 70-100 ms | Press feedback should read as tactile acknowledgement, not as a transition. | PRODUCT HEURISTIC | tune globally, not per feature |
+| hover 120-160 ms | Long enough to avoid visual flicker, short enough to stay subordinate to selection/action. | PRODUCT HEURISTIC | tune globally after usability testing |
+| selection 120-180 ms | Selection carries more meaning than hover but must remain immediate. | PRODUCT HEURISTIC | tune globally |
+| panel transition 180-240 ms | Provides spatial continuity without slowing live operation. | PRODUCT HEURISTIC | >300 ms requires explicit authored reason |
+| spatial transition 250-400 ms | Source -> destination motion needs enough time to be legible as movement rather than a color flash. | PRODUCT HEURISTIC | use shortest duration that preserves causality |
+| reveal 400-700 ms, <=900 ms default | Reveals may deliberately carry more weight, but should not suspend control for a full second during live play. | PRODUCT HEURISTIC | authored set pieces may override explicitly |
+| >=44x44 px primary touch target | 44x44 is the comfortable default control size used in Apple touch guidance; SagaDrive adopts it as a cross-device product baseline for important touch controls. | PLATFORM CONVENTION | do not reduce for primary touch actions |
+| <=2 interactions after target selection | A GM should be able to react to conversation without entering an administrative mini-flow. Two interactions allow one optional choice plus commit. | DOMAIN PRINCIPLE / PRODUCT HEURISTIC | measure task completion in live-session tests |
+| <=3 interactions from neutral live state | Neutral state may require selecting the target first; this adds one step to the <=2 rule. | DOMAIN PRINCIPLE / PRODUCT HEURISTIC | same as above |
+| max 7 direct contextual actions | This is a scanability/product-density heuristic, **not Miller's Law**. Beyond this point SagaDrive requires grouping/overflow so the action rail remains readable. | PRODUCT HEURISTIC | tune based on observed command frequency |
+| Undo >=8 s or persistent history | Gives time to notice a mistaken live action without leaving an indefinite transient control on screen. | PRODUCT HEURISTIC | persistent history may replace timeout |
+| top 5 frequent commands get shortcut/palette path | "5" forces explicit prioritization of the actual recurring workflow rather than shortcutting everything. | PRODUCT HEURISTIC | derive from telemetry/usability once available |
+| max 3 emphasized status signals per local region | Prevents every status from competing for attention during live play. | PRODUCT HEURISTIC | exceptions require hierarchy rationale |
+| helper copy <=120 characters for high-frequency controls | Forces live controls to remain scannable; long explanations belong in help/details, not the performance surface. | PRODUCT HEURISTIC | localization may justify small variance |
+
+### 17.4 Research and platform references
+
+These references explain the direction of the evidence-backed rules. They do **not** validate every SagaDrive-specific heuristic above.
+
+- Apple, **Improving app responsiveness**: discrete interaction work should stay below roughly 100 ms; continuous interaction must update around display refresh intervals. https://developer.apple.com/documentation/xcode/improving-app-responsiveness
+- Apple, **Understanding user interface responsiveness**: distinguishes discrete and continuous interaction and explains how latency/hitches break direct manipulation. https://developer.apple.com/documentation/xcode/understanding-user-interface-responsiveness/
+- Apple, **Accessibility / Buttons / Game controls**: 44x44 pt is a recommended/default comfortable touch-control size on iOS/iPadOS. https://developer.apple.com/design/human-interface-guidelines/accessibility and https://developer.apple.com/design/human-interface-guidelines/game-controls
+
+### 17.5 Historical intent
+
+These baselines were introduced in September 2026 while converting the product goal "SagaDrive should feel like conducting/bending a living world rather than operating software" into instructions that AI coding agents can execute and reviewers can verify.
+
+The values are intentionally explicit because agents do not reliably infer human qualities such as flow, responsiveness, tactility, restraint or instrument-like control from adjectives alone.
+
+When changing a value later, preserve history:
+
+1. state the old value;
+2. state the new value;
+3. record the observed problem or evidence;
+4. note which CE gates are affected.
+
+Do not silently "clean up" numbers because they look arbitrary. If they are wrong, replace them with a documented better decision.
