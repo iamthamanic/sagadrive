@@ -55,4 +55,9 @@ Roadmap: kein `.qa/design/product-roadmap.md` vorhanden; Release-Stufen aus der 
 Nicht anwendbar: Tooling-/QA-Feature ohne neue Produkt-UI.
 
 ## Implementation Notes
-- Wird nach Implementierung ergänzt.
+- Files touched: `.qa/release/readiness.json`, `.qa/release/flows/FLOW-001..006.json`, `.qa/release/README.md`, `.qa/release/STATUS.md`, `.qa/release/OPENCLAW_PROMPT.md`, `scripts/release-readiness.mjs`, `scripts/release-readiness-setup.mjs`, `scripts/test-gate.mjs`, `.gitignore`.
+- Release contract: 108 granular gates across R0–R3; milestones are cumulative.
+- Verification: GitHub issue state, derived dependency gates and commit-pinned human evidence with stale-path detection.
+- Reporting: per milestone PASS/total, % complete, % missing, missing task count, READY/BLOCKED, userflows and daily deltas.
+- Tests: Node syntax checks for both new scripts passed in isolated container; contract validator is wired into `npm run test-gate`.
+- Known limitation: this environment cannot execute the private repo checkout or create GitHub milestones directly; `release-readiness-setup.mjs` performs the idempotent milestone creation from an authenticated OpenClaw/gh environment.
