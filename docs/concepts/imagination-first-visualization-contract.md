@@ -769,3 +769,92 @@ The goal is not "less visual".
 The goal is:
 
 > **Visualize selectively so imagination remains an active part of play.**
+
+
+---
+
+## 25. Decision Rationale and Provenance
+
+This section preserves the reasoning behind the Imagination-First contract so future agents do not mistake its thresholds for arbitrary style preferences or scientific constants.
+
+### 25.1 Evidence labels
+
+- **RESEARCH-INFORMED** — grounded in work on collaborative/co-constitutive imagination, TTRPG play or media/Actual Play, then translated into a SagaDrive design rule.
+- **PRODUCT HEURISTIC** — a deliberate SagaDrive starting point to be tested with players.
+- **DOMAIN PRINCIPLE** — follows from the product decision that humans remain authors and SagaDrive materializes shared fiction rather than fully simulating it.
+
+### 25.2 Principle rationale
+
+| Rule | Why it exists | Evidence type | Failure mode it prevents |
+|---|---|---|---|
+| Show enough to synchronize, leave enough to imagine | TTRPG play depends on people jointly elaborating an incomplete shared world. SagaDrive should stabilize shared reference without resolving every personal image. | RESEARCH-INFORMED / DOMAIN PRINCIPLE | turning shared imagination into passive visual consumption |
+| canonical / suggestive / atmospheric | A generated image contains more visible detail than the fiction has actually established. Authority levels prevent pixels from silently becoming world truth. | DOMAIN PRINCIPLE | "it is on screen, therefore it exists" |
+| Progressive Materialization | In tabletop play, locations/objects become more specific through questions, attention and action. Visual detail should follow the same causal rhythm. | RESEARCH-INFORMED / PRODUCT HEURISTIC | maximum-detail scene dump before play begins |
+| Human Authorship Rule | The core loop is human intent -> uncertainty/rules -> consequence. AI should amplify/materialize this, not replace it with pre-authored spectacle. | DOMAIN PRINCIPLE | AI becoming the actual storyteller |
+| Viewer prioritizes reaction/consequence | Actual Play derives value from watching play, improvisation, reactions and collaborative storytelling, not only fictional imagery. | RESEARCH-INFORMED / DOMAIN PRINCIPLE | Program output becoming a detached animation |
+| Character/world specificity asymmetry | Concrete self/party embodiment supports identity while leaving the wider world less resolved preserves imaginative participation. | PRODUCT HEURISTIC | every part of the world becoming equally explicit |
+| Fog of Imagination | Unknown information should remain evocative without leaking exact hidden state. | DOMAIN PRINCIPLE | mystery collapse and hidden-info leakage |
+
+### 25.3 Numeric baseline rationale
+
+The following percentages/counts are **design heuristics**, not empirical laws.
+
+| Baseline | Why this value was selected | Evidence type | Change rule |
+|---|---|---|---|
+| Canonical 20-35%, Suggestive 35-55%, Atmospheric 20-40% | Forces normal narrative scenes to contain more evocative/non-authoritative material than hard world facts while still maintaining shared orientation. | PRODUCT HEURISTIC | validate through playtests; do not present as research result |
+| >60% Canonical requires justification | A forcing function against defaulting narrative scenes to simulation-level explicitness. Tactical scenes are exempt when precision is mechanically necessary. | PRODUCT HEURISTIC | explicit context exception allowed |
+| >=30% potentially describable detail left unspecified | Creates a concrete minimum "imagination budget" so agents cannot satisfy the principle with token ambiguity while rendering everything else. | PRODUCT HEURISTIC | tune through player research |
+| 3-7 canonical visual facts at standard scene opening | Enough anchors to align a group without providing a complete inventory of the environment. | PRODUCT HEURISTIC informed by progressive shared-world elaboration | use scene-type limits in Section 10 |
+| 5-15 suggestive cues | Gives texture/genre without elevating every visible prop to gameplay significance. The cues should be grouped rather than counted as isolated UI elements. | PRODUCT HEURISTIC | composition judgement still required |
+| 1-3 dominant atmosphere channels | Prevents light/weather/sound/particles/camera/color from all competing simultaneously. | PRODUCT HEURISTIC | authored set pieces may explicitly exceed |
+| L1/L2 default for new narrative scenes | New places should first be evoked/oriented and become more specific through attention, questions and actions. | RESEARCH-INFORMED / PRODUCT HEURISTIC | L4/L5 only when mechanics immediately require precision |
+| 1 primary + max 2 secondary focal subjects | Establishes a staging hierarchy and prevents equal emphasis across the whole rendered world. | PRODUCT HEURISTIC | change only with explicit composition reason |
+| Character specificity 90-100%, scene 40-70%, background 20-50%, unknown 0-30% | Encodes the intentional asymmetry between identity-bearing characters and imagination-bearing world space. | PRODUCT HEURISTIC | not opacity; validate per art direction |
+| <=1 automatic reframing event per 4 s in dialogue | Protects conversational continuity and reactions from an overactive automatic Director. | PRODUCT HEURISTIC | strong events can override |
+| sound: 1 base + 0-2 secondary + 0-1 focal, normally <=4 perceptual layers | Preserves an intelligible sound hierarchy while allowing audio to imply off-screen detail. | PRODUCT HEURISTIC | authored scenes may exceed with mix validation |
+| reveal 250-900 ms depending on importance | Creates visual weight without blocking conversational control for long periods. | PRODUCT HEURISTIC | repeated reveals should shorten |
+| max 2 supporting effects around a reveal | Keeps the newly revealed fact as the moment's dominant information. | PRODUCT HEURISTIC | authored exception requires focus rationale |
+| narrative first reveal 3-5 canonical facts / exploration 4-7 | Social scenes require less spatial precision; exploration needs slightly more orientation. | PRODUCT HEURISTIC | tactical scenes follow mechanics instead |
+
+### 25.4 Research references
+
+These sources support the **direction** of the contract. They do not establish the SagaDrive-specific percentages above.
+
+- Bogotá, Kines & Ekdahl (2025), **You walk into a tavern: co-constitutive imagination in Dungeons and Dragons**. The paper describes D&D's imagined world as dynamically sustained and elaborated through reciprocal participation, with shared objects becoming increasingly detailed through inquiry and interaction. https://link.springer.com/article/10.1007/s11097-025-10106-2
+- Nicholas J. Mizer (2019), **Tabletop Role-Playing Games and the Experience of Imagined Worlds**. Ethnographic work on how free-form imagination and constrained rules combine in actual play. https://link.springer.com/book/10.1007/978-3-030-29127-3
+- Alex Chalk (2023), **Mapping an online production network: The field of 'actual play' media**. Describes Actual Play as recorded unscripted tabletop roleplaying combining narrative, modeled play and player charisma/chemistry. https://journals.sagepub.com/doi/abs/10.1177/13548565221103987
+- Jan Švelch (2022), **Mediatization of tabletop role-playing: The intertwined cases of Critical Role and D&D Beyond**. Examines Critical Role and the coexistence of mediated/digital forms with embodied tabletop practices. https://journals.sagepub.com/doi/10.1177/13548565221111680
+
+### 25.5 What is hypothesis vs. product law
+
+The following are **current product hypotheses** and should eventually be validated with SagaDrive playtests:
+
+- 30% unspecified detail is enough to preserve imaginative participation;
+- the authority distribution ranges produce the desired balance;
+- L1/L2 openings feel evocative rather than under-rendered;
+- the specificity hierarchy preserves character identity without over-defining the world;
+- four-second automatic camera restraint is appropriate during dialogue.
+
+The following are **product laws unless explicitly changed at product level**:
+
+- visual output must not silently invent canonical facts;
+- hidden/private facts must not leak through visuals;
+- humans remain the authoritative source of consequential fiction;
+- generated visual detail must distinguish fiction truth from evocation;
+- more visual detail is not automatically higher quality.
+
+### 25.6 Historical intent
+
+This contract was introduced in September 2026 because SagaDrive increasingly supports characters, scenes, items, LiveAct, Program output and Director-style presentation. Without a counter-rule, technical progress naturally pushes the product toward "render everything".
+
+The intended direction is different:
+
+> SagaDrive should make shared imagination more tangible without replacing the act of imagining together.
+
+When a future agent changes a threshold, it must record:
+
+1. previous value;
+2. new value;
+3. playtest/research/technical reason;
+4. affected IV gates;
+5. whether the change is a product hypothesis update or a product-law change.
