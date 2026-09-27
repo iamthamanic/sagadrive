@@ -1,0 +1,48 @@
+{
+  "id": "FLOW-003",
+  "title": "Golden Run – vollständiger 60–90-Minuten-One-Shot",
+  "requiredFrom": "R1",
+  "preconditions": [
+    "1 GM",
+    "3–4 Player",
+    "Dornhain/Golden Adventure instanziert",
+    "Keine Dev-Konsole/DB als geplanter Teil des Runs"
+  ],
+  "steps": [
+    "Session starten",
+    "Player joinen",
+    "LiveAct/Media aktivieren",
+    "Social Scene",
+    "unerwartete freie Aktion adjudizieren",
+    "Check + Drive",
+    "Scene wechseln",
+    "World Consequence setzen",
+    "Combat",
+    "Inventory-Aktion",
+    "Reconnect erzwingen",
+    "optional Viewer join",
+    "Pause/Resume/Complete"
+  ],
+  "passCriteria": [
+    "0 P0",
+    "0 Datenverlust",
+    "0 Permission Leak",
+    "0 State Divergence",
+    "keine Entwicklerintervention außer dokumentiertem Recovery",
+    "60–90 Minuten vollständig spielbar"
+  ],
+  "requiredGates": [
+    "SESSION-006",
+    "RULES-001",
+    "RULES-002",
+    "COMBAT-001",
+    "COMBAT-002",
+    "LIVEACT-014",
+    "MEDIA-002",
+    "SCENE-005",
+    "PLAYER-UX-001",
+    "GM-UX-002",
+    "WORLD-002",
+    "STAB-003"
+  ]
+}
