@@ -1,6 +1,6 @@
 # Composition Gate — look-profile-domain
 
-- HEAD_SHA: PENDING
+- HEAD_SHA: 2e74d88cf5085bbaabbf24ffb1ce120ecb302635
 - Date: 2026-09-27
 - Verdict: **SKIPPED**
 
