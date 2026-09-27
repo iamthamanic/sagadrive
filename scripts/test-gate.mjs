@@ -296,6 +296,14 @@ function checkLookProfileDomain() {
   });
 }
 
+function checkLookProfilePersistence() {
+  console.log('LookProfile persistence (#340): migration/RLS, draft validation, append-only versions...');
+  execFileSync(process.execPath, ['scripts/look-profile-persistence-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1364,6 +1372,7 @@ checkItemEpicAcceptance();
 checkItemRoutingFoundation();
 checkSagaRoutingPublicIdFoundation();
 checkLookProfileDomain();
+checkLookProfilePersistence();
 checkPlayerTestSessionSecurity();
 checkPlayerTestRealtimeRuntime();
 checkPlayerTestPlayerPanel();

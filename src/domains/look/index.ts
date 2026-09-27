@@ -16,8 +16,12 @@ export {
   type LookCapability,
   type LookExecutionMode,
   type LookFunctionalCapability,
+  LOOK_PROFILE_STATUSES,
   type LookProfile,
+  type LookProfileRecord,
+  type LookProfileStatus,
   type LookProfileVersion,
+  type LookProfileWriteDraft,
   type LookReference,
   type LookReferenceKind,
   type LookReservedCapability,
@@ -27,6 +31,15 @@ export {
   type LookScope,
   type LookSource,
 } from './types';
+
+export type {
+  AppendLookProfileVersionInput,
+  CreateLookProfileInput,
+  DuplicateLookProfileInput,
+  LookProfileRepository,
+} from './persistence-contracts';
+
+export { normalizeLookProfileWriteDraft, type LookDraftValidationError } from './write-draft';
 
 export {
   isLookCapability,

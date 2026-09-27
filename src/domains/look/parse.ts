@@ -118,11 +118,20 @@ export function parseLookReference(value: unknown): LookReference | null {
     typeof value.label === 'string' && value.label.length > 0
       ? value.label
       : undefined;
+  let weight: number | undefined;
+  if (value.weight !== undefined) {
+    if (typeof value.weight !== 'number' || Number.isNaN(value.weight)) {
+      return null;
+    }
+    if (value.weight < 0 || value.weight > 1) return null;
+    weight = value.weight;
+  }
   return {
     id: value.id,
     kind: value.kind,
     uri: value.uri,
     ...(label !== undefined ? { label } : {}),
+    ...(weight !== undefined ? { weight } : {}),
   };
 }
 
