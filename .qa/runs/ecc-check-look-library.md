@@ -1,7 +1,7 @@
 # ECC Check — look-library (#343)
 
 Date: 2026-09-27
-HEAD: WORKTREE
+HEAD: df328f763bdf5e1d2ab1a59bfa501e4f25ea9f76
 
 ## Phase matrix
 | Phase | Result |

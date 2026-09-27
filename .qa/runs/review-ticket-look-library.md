@@ -1,7 +1,7 @@
 # Review Ticket — look-library (#343)
 
-- BASE_SHA: origin/main (merge-base)
-- HEAD_SHA: WORKTREE
+- BASE_SHA: 28f6ff94adab6a3083243117b671b9b4e7fe93f2
+- HEAD_SHA: df328f763bdf5e1d2ab1a59bfa501e4f25ea9f76
 - Date: 2026-09-27
 
 ## Prerequisites
