@@ -5,7 +5,7 @@
  * Default: multi browser.newContext smoke + domain checklist markers (mocked).
  * Live multi-account vertical slice: E2E_PLAYER_TEST_LIVE=1 (+ seeded accounts).
  */
-import { test, expect, type Browser, type Page } from '@playwright/test';
+import { test, expect, type Browser } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
@@ -14,26 +14,10 @@ import {
   authorizeSessionCommand,
   isCompletePhase8Checklist,
 } from '../src/domains/session/contracts/multiuser-e2e-security';
+import { ensureLoggedIn } from './helpers/character-editor';
 
 const EVIDENCE_DIR = '.qa/evidence/player-test-multiuser-e2e-security';
 const LIVE = process.env.E2E_PLAYER_TEST_LIVE === '1';
-
-async function ensureLoggedIn(page: Page, user = 'admin', password = '1234') {
-  await page.goto('/');
-  const loginTab = page.getByRole('tab', { name: 'Login' });
-  if (await loginTab.count()) {
-    await page.getByPlaceholder('admin oder deine@email.de').fill(user);
-    await page.getByPlaceholder('••••••••').fill(password);
-    await page.getByRole('button', { name: 'Einloggen' }).click();
-  }
-  await expect(
-    page
-      .getByRole('heading', { name: 'Dashboard' })
-      .or(page.getByRole('button', { name: 'Home' }))
-      .or(page.getByRole('button', { name: 'Dashboard' }))
-      .first(),
-  ).toBeVisible({ timeout: 15_000 });
-}
 
 test.beforeAll(() => {
   fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
@@ -152,8 +136,8 @@ test('live vertical slice (opt-in E2E_PLAYER_TEST_LIVE=1)', async ({ browser }: 
   const gmPage = await gmCtx.newPage();
   const playerPage = await playerCtx.newPage();
 
-  await ensureLoggedIn(gmPage, gmUser, gmPass);
-  await ensureLoggedIn(playerPage, playerUser, playerPass);
+  await ensureLoggedIn(gmPage, { user: gmUser, password: gmPass });
+  await ensureLoggedIn(playerPage, { user: playerUser, password: playerPass });
 
   // Minimal live probe: both reach library / session surfaces without crash.
   await gmPage.getByRole('button', { name: 'Bibliothek' }).first().click();
