@@ -320,6 +320,18 @@ function median(sorted: readonly number[]): number | null {
 }
 
 /**
+ * Usable Auto proposal for GT compare — non-null alone is not enough
+ * (no_face / multi_face sessions have no mapped anchors).
+ */
+export function isUsableFaceMappingAutoSessionForCompare(
+  session: FaceMappingAutoSessionResultV1 | null | undefined,
+): boolean {
+  if (!session) return false;
+  if (session.status !== 'proposed' && session.status !== 'incomplete') return false;
+  return session.anchors.some((a) => a.outcome === 'mapped' && a.binding != null);
+}
+
+/**
  * An anchor counts as Ground Truth only when explicitly human-reviewed.
  * `source=manual` / `manual_override` alone is NOT enough — reviewed must be true.
  */
@@ -421,11 +433,13 @@ export function evaluateAutoVsManualScreenPoints(input: {
   const sorted = [...errors].sort((a, b) => a - b);
   const med = median(sorted);
   const outlierIds: SagaDriveFaceAnchorId[] = [];
-  if (med != null && med > 0) {
+  if (med != null) {
     for (let i = 0; i < rows.length; i += 1) {
       const row = rows[i];
       if (!row || row.screenErrorPx == null) continue;
-      if (row.screenErrorPx > med * factor) {
+      const isOutlier =
+        med > 0 ? row.screenErrorPx > med * factor : row.screenErrorPx > 0;
+      if (isOutlier) {
         outlierIds.push(row.anchorId);
         rows[i] = { ...row, outlier: true };
       }
@@ -712,7 +726,8 @@ export function buildFaceMappingCompareExport(input: {
   nowIso?: string;
 }): FaceMappingCompareExportV1 {
   const valid =
-    input.reference?.validForGroundTruthComparison === true && input.autoSession != null;
+    input.reference?.validForGroundTruthComparison === true &&
+    isUsableFaceMappingAutoSessionForCompare(input.autoSession);
   const referenceStatus = input.reference?.status ?? null;
   const factor = input.outlierMedianFactor ?? 3;
   const faceWidth = input.faceWidthPx;
@@ -843,11 +858,15 @@ export function buildFaceMappingCompareExport(input: {
     p95ErrorPx = percentile(sorted, 0.95);
     maxErrorPx = sorted.length ? sorted[sorted.length - 1]! : null;
 
-    if (medianErrorPx != null && medianErrorPx > 0) {
+    if (medianErrorPx != null) {
       for (let i = 0; i < deltas.length; i += 1) {
         const d = deltas[i];
         if (!d || d.screenErrorPx == null) continue;
-        if (d.screenErrorPx > medianErrorPx * factor) {
+        const isOutlier =
+          medianErrorPx > 0
+            ? d.screenErrorPx > medianErrorPx * factor
+            : d.screenErrorPx > 0;
+        if (isOutlier) {
           deltas[i] = { ...d, outlier: true };
         }
       }

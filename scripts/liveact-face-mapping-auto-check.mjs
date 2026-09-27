@@ -206,8 +206,12 @@ check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Eyelashes') === 'eyela
 check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Head') === 'face_skin', 'Head → face_skin');
 check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Helmet') === 'equipment', 'Helmet → equipment');
 check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Headwear') === 'equipment', 'Headwear → equipment (not face_skin)');
+check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('eyepatch') === 'equipment', 'eyepatch → equipment');
+check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('goggles') === 'equipment', 'goggles → equipment');
+check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('beard-full') === 'equipment', 'beard-full → equipment');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'equipment'), 'mouth on helmet = mismatch');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('forehead', 'equipment'), 'forehead on headwear = mismatch');
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('chin', 'equipment'), 'chin on beard = mismatch');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftOuter', 'eyeball'), 'canthus on eyeball = mismatch');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftUpper', 'eyeball'), 'lid on eyeball = mismatch');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'hair'), 'mouth on hair = mismatch');
@@ -232,6 +236,7 @@ check(
 );
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyelash'), 'lid on eyelash = mismatch (#421 fail-closed)');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyeball'), 'lid on eyeball = mismatch');
+check(/projectAutoCoordsFromBindings|projectWorldToFaceMappingCanvas/.test(controls), 'auto coords reprojected with camera');
 check(/autoSessionTokenRef\.current \+= 1/.test(controls), 'token monotonic bump on open');
 check(!/autoSessionTokenRef\.current = 0/.test(controls), 'token never reset to zero');
 
@@ -518,6 +523,27 @@ check(
   'compare invalid without auto session even if GT reviewed',
 );
 check(compareNoAuto.comparison == null, 'no comparison when auto session missing');
+
+const compareEmptyDetect = autoMod.buildFaceMappingCompareExport({
+  reference: immutableRef,
+  autoSession: noFace,
+});
+check(
+  compareEmptyDetect.validForGroundTruthComparison === false,
+  'compare invalid for no_face session even if GT reviewed',
+);
+check(
+  !autoMod.isUsableFaceMappingAutoSessionForCompare(noFace),
+  'no_face session not usable for compare',
+);
+check(
+  !autoMod.isUsableFaceMappingAutoSessionForCompare(multi),
+  'multi_face session not usable for compare',
+);
+check(
+  autoMod.isUsableFaceMappingAutoSessionForCompare(session),
+  'mapped session usable for compare',
+);
 
 const compareInvalid = autoMod.buildFaceMappingCompareExport({
   reference: unreviewedRef,

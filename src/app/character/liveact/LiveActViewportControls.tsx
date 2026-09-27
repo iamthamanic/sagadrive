@@ -110,6 +110,41 @@ function projectManualCoords(
   return out;
 }
 
+/** Reproject frozen Auto bindings with the current camera so Draft/Auto deltas share one frame. */
+function projectAutoCoordsFromBindings(
+  runtime: CharacterStudioRuntime,
+  session: FaceMappingAutoSessionResultV1,
+  bindings: Partial<Record<SagaDriveFaceAnchorId, SagaDriveFaceAnchorTriangleBinding>>,
+): Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>> {
+  const out: Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>> = {};
+  for (const row of session.anchors) {
+    const binding = bindings[row.anchorId] ?? row.binding;
+    let x = row.screenX;
+    let y = row.screenY;
+    let meshLabel: string | null = row.binding
+      ? meshLabelFromBinding(row.binding)
+      : row.meshNodeIdentity;
+    if (binding) {
+      const world = runtime.evaluateFaceMappingBindingWorld(binding, row.anchorId);
+      if (world) {
+        const screen = runtime.projectWorldToFaceMappingCanvas(world.x, world.y, world.z);
+        if (screen) {
+          x = screen.x;
+          y = screen.y;
+          meshLabel = meshLabelFromBinding(binding);
+        }
+      }
+    }
+    out[row.anchorId] = {
+      outcome: row.outcome,
+      x,
+      y,
+      meshLabel,
+    };
+  }
+  return out;
+}
+
 interface LiveActViewportControlsProps {
   runtimeReady: boolean;
   mtoonEnabled: boolean;
@@ -401,7 +436,7 @@ export function LiveActViewportControls({
     }
   }, [closeFaceMapping, faceMappingOpen, runtimeReady]);
 
-  /** Keep manual screen coords in sync with draft + camera framing. */
+  /** Keep Draft + Auto screen coords in the same camera frame (reproject Auto bindings). */
   useEffect(() => {
     if (!faceMappingOpen || !draft) {
       setManualCoords({});
@@ -412,6 +447,11 @@ export function LiveActViewportControls({
       const current = draftRef.current;
       if (runtime && current) {
         setManualCoords(projectManualCoords(runtime, current));
+      }
+      const session = lastAutoSessionRef.current;
+      const autoB = autoBindingsRef.current;
+      if (runtime && session && autoB) {
+        setAutoCoords(projectAutoCoordsFromBindings(runtime, session, autoB));
       }
     };
     refresh();

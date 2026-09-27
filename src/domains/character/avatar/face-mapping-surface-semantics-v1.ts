@@ -46,7 +46,8 @@ export function classifyFaceMappingSurfaceFromNodeIdentity(
   const hasAny = (...cands: string[]): boolean => cands.some((c) => has(c));
 
   if (hasAny('helper', 'debug', 'gizmo', 'null', 'empty')) return 'helper';
-  // Head equipment before face_skin — "Headwear" must not match via includes('head').
+  // Head equipment / accessories before face_skin — avoid "head" substring false positives
+  // and unknown→face_skin fallback for catalog wearables (beard, eyepatch, goggles, …).
   if (
     hasAny(
       'weapon',
@@ -63,9 +64,22 @@ export function classifyFaceMappingSurfaceFromNodeIdentity(
       'mask',
       'crown',
       'hood',
+      'eyepatch',
+      'goggles',
+      'glasses',
+      'sunglass',
+      'sunglasses',
+      'beard',
+      'mustache',
+      'moustache',
+      'goatee',
+      'stubble',
     ) ||
     joined.includes('helmet') ||
-    joined.includes('headwear')
+    joined.includes('headwear') ||
+    joined.includes('eyepatch') ||
+    joined.includes('goggles') ||
+    joined.includes('beard')
   ) {
     return 'equipment';
   }

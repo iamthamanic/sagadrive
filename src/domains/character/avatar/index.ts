@@ -816,6 +816,7 @@ export {
   createEmptyAnchorAuthoringMeta,
   evaluateAutoVsManualScreenPoints,
   freezeFaceMappingGroundTruthReference,
+  isUsableFaceMappingAutoSessionForCompare,
   isProtectedFaceMappingAnchor,
   markAllBoundFaceMappingAnchorsAsReviewedManual,
   markFaceMappingAnchorManual,
