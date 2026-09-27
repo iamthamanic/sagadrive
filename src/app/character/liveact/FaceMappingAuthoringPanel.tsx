@@ -300,6 +300,18 @@ export function FaceMappingAuthoringPanel({
         </p>
       ) : null}
 
+      {referenceStatus === 'reviewed_manual_complete' && groundTruthValid === false ? (
+        <p
+          className="mx-3 mb-1 rounded-sm bg-amber-400/15 px-2 py-1.5 text-[10px] text-amber-100"
+          role="status"
+          data-testid="face-mapping-gt-unprojectable-banner"
+        >
+          Alle Marker sind reviewed, aber mindestens ein Screen-Punkt fehlt (stale Binding /
+          Projektion). Marker neu setzen und erneut als Ground Truth markieren — sonst kein
+          gültiger Benchmark.
+        </p>
+      ) : null}
+
       {onAutoMapping ? (
         <div className="flex flex-col gap-1.5 border-b border-white/10 px-2 pb-2">
           <div className="flex gap-1.5">
@@ -379,7 +391,7 @@ export function FaceMappingAuthoringPanel({
                     className={`h-7 flex-1 rounded-sm text-[10px] ${
                       active
                         ? 'bg-cyan-500/30 text-cyan-50'
-                        : 'text-slate-400 hover:bg-white/5 disabled:opacity-40'
+                        : 'text-slate-400 hover:bg-amber-500/15 hover:text-amber-100 disabled:opacity-40'
                     }`}
                     onClick={() => onOverlayViewModeChange(opt.id)}
                   >
