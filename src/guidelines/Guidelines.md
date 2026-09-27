@@ -1,6 +1,13 @@
 # SagaDrive UI Generation Guidelines
 
-Diese Regeln gelten fuer neue und ueberarbeitete SagaDrive-Produktoberflaechen. `src/THEME_GUIDE.md` ist die kanonische Detailreferenz. UI-Primitives unter `src/shared/ui/` sind die technische Source of Truth.
+Diese Regeln gelten fuer neue und ueberarbeitete SagaDrive-Produktoberflaechen. `src/THEME_GUIDE.md` ist die kanonische visuelle Detailreferenz. UI-Primitives unter `src/shared/ui/` sind die technische Source of Truth.
+
+Vor Generierung oder Umsetzung zuerst klassifizieren:
+- `SETUP`: klassische Konfigurations-/Editor-UI ist erlaubt.
+- `PERFORMANCE`: `docs/concepts/conductor-experience-contract.md` lesen und CE-Gates anwenden.
+- Visualisierung/Scene/Program/Viewer/3D: zusaetzlich `docs/concepts/imagination-first-visualization-contract.md` lesen und IV-Gates anwenden.
+
+"Premium", "cinematic", "immersive" oder "smooth" duerfen nie allein als Designanforderung interpretiert werden; die Agenten muessen diese Begriffe in messbare Interaktions-, Motion-, Fokus-, Detail- und State-Regeln uebersetzen.
 
 ## Grundstil
 

@@ -104,7 +104,21 @@ supabase/functions/
 - `src/THEME_GUIDE.md` is the canonical SagaDrive design-system reference.
 - `src/guidelines/Guidelines.md` contains compact AI/Figma-Make generation rules.
 - `src/styles/globals.css` and `src/shared/ui/` are the technical source of truth.
+- `docs/concepts/conductor-experience-contract.md` is mandatory for Performance Mode/live interaction work.
+- `docs/concepts/imagination-first-visualization-contract.md` is mandatory for Scene/Program/Viewer/3D/visualization work.
 - Do not introduce local color conventions that conflict with these files.
+
+### Product Experience Contracts
+
+Before implementing any UI feature, classify it as `SETUP`, `PERFORMANCE`, or mixed.
+
+For `PERFORMANCE` work, agents MUST read and apply `docs/concepts/conductor-experience-contract.md`. Relevant acceptance criteria must reference its `CE-*` gates.
+
+For visualization work, agents MUST read and apply `docs/concepts/imagination-first-visualization-contract.md`. Relevant acceptance criteria must reference its `IV-*` gates.
+
+Subjective words such as "premium", "cinematic", "immersive", "smooth", "magical" or "high quality" are never sufficient acceptance criteria. Translate them into observable behavior, quantitative thresholds, state rules and the applicable CE/IV gates.
+
+If a ticket intentionally violates a contract baseline, the deviation and reason MUST be explicit in the ticket/acceptance.
 
 ### Brand Color Roles
 
