@@ -81,3 +81,18 @@ export {
   assertLookReferenceKindSemantics,
   type LookInvariantResult,
 } from './invariants';
+
+export {
+  LOOK_CAPABILITY_METADATA,
+  LOOK_CAPABILITY_UNAVAILABLE_LABEL_DE,
+  LOOK_WORLD_RESERVED_CAPABILITY_IDS,
+  classifyLookCapabilityToken,
+  getLookCapabilityMeta,
+  isLookCapabilityReserved,
+  isLookCapabilitySupported,
+  listLookCapabilityMetadata,
+  listReservedLookCapabilityMetadata,
+  lookCapabilityUnavailableLabel,
+  type LookCapabilityAvailability,
+  type LookCapabilityMeta,
+} from './capability-metadata';
