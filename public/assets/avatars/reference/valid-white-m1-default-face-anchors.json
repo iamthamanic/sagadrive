@@ -1,0 +1,215 @@
+{
+  "contractVersion": "SagaDriveFaceAnchorsV1",
+  "anchors": {
+    "mouthUpper": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 37840,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "mouthLower": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 12918,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "mouthCornerLeft": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 6816,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "mouthCornerRight": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 27717,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "eyeLeftInner": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 17126,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "eyeLeftOuter": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 10744,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "eyeLeftUpper": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 10562,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "eyeLeftLower": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 17062,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "eyeRightInner": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 38028,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "eyeRightOuter": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 31642,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "eyeRightUpper": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 31462,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "eyeRightLower": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 27333,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "browLeftInner": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 6529,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "browLeftOuter": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 18252,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "browLeftCenter": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 6534,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "browRightInner": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 27428,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "browRightOuter": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 39152,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "browRightCenter": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 27430,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "noseTip": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 6377,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "chin": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 7006,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "forehead": {
+      "nodeIdentity": "H_DDS_HighRes",
+      "primitiveIndex": 0,
+      "triangleIndex": 33730,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    }
+  }
+}

@@ -13,6 +13,7 @@ import {
 } from './liveact-face-anchor-ids.mjs';
 import { findNodeByIdentity, listMeshedNodeIdentities } from './liveact-face-anchor-glb.mjs';
 import { authorHeuristicFaceAnchorsManifest } from './liveact-face-anchor-heuristic.mjs';
+import { authorMorphSeededFaceAnchorsManifest } from './liveact-face-anchor-morph-seed.mjs';
 import {
   createAutoUnreviewedFaceMappingAuthoring,
   faceMappingAuthoringPathBesideAnchors,
@@ -56,7 +57,7 @@ export function bootstrapMinimalFaceAnchorsManifest(document, opts = {}) {
 }
 
 /**
- * @param {{ inputPath: string; outputPath: string; nodeIdentity?: string; bootstrap?: boolean; modelPath?: string; cacheBust?: string }} opts
+ * @param {{ inputPath: string; outputPath: string; nodeIdentity?: string; bootstrap?: boolean; seed?: "arkit-morphs"; modelPath?: string; cacheBust?: string }} opts
  */
 export async function authorFaceAnchorsFromGlb(opts) {
   const io = new NodeIO();
@@ -65,6 +66,12 @@ export async function authorFaceAnchorsFromGlb(opts) {
   let manifest;
   if (opts.bootstrap) {
     manifest = bootstrapMinimalFaceAnchorsManifest(document, { nodeIdentity: opts.nodeIdentity });
+  } else if (opts.seed === 'arkit-morphs') {
+    const authored = authorMorphSeededFaceAnchorsManifest(document);
+    manifest = {
+      contractVersion: FACE_ANCHORS_CONTRACT_VERSION,
+      anchors: authored.anchors,
+    };
   } else {
     const authored = authorHeuristicFaceAnchorsManifest(document, {
       nodeIdentity: opts.nodeIdentity,
@@ -83,7 +90,9 @@ export async function authorFaceAnchorsFromGlb(opts) {
     ...(opts.cacheBust ? { cacheBust: opts.cacheBust } : {}),
     note: opts.bootstrap
       ? 'Bootstrap-minimal face anchors (unreviewed auto).'
-      : 'Heuristic face anchors (unreviewed auto).',
+      : opts.seed === 'arkit-morphs'
+        ? 'ARKit morph-seeded face anchors (unreviewed auto; overlay/diagnostic only).'
+        : 'Heuristic face anchors (unreviewed auto).',
   });
   const authoringPath = faceMappingAuthoringPathBesideAnchors(opts.outputPath);
   writeFileSync(authoringPath, `${JSON.stringify(authoring, null, 2)}\n`, 'utf8');
@@ -92,16 +101,22 @@ export async function authorFaceAnchorsFromGlb(opts) {
 }
 
 export function parseFaceAnchorAuthorArgs(argv) {
-  const args = { input: null, output: null, node: null, bootstrap: false };
+  const args = { input: null, output: null, node: null, bootstrap: false, seed: null };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--input') args.input = argv[++i];
     else if (a === '--output') args.output = argv[++i];
     else if (a === '--node') args.node = argv[++i];
     else if (a === '--bootstrap-minimal') args.bootstrap = true;
+    else if (a === '--seed') args.seed = argv[++i];
   }
   if (!args.input || !args.output) {
-    throw new Error('Usage: --input <glb> --output <face-anchors.json> [--node <name>] [--bootstrap-minimal]');
+    throw new Error(
+      'Usage: --input <glb|vrm> --output <face-anchors.json> [--node <name>] [--bootstrap-minimal] [--seed arkit-morphs]',
+    );
+  }
+  if (args.seed != null && args.seed !== 'arkit-morphs') {
+    throw new Error(`Unknown --seed "${args.seed}" (supported: arkit-morphs)`);
   }
   return args;
 }

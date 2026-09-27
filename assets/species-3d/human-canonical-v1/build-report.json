@@ -1,0 +1,732 @@
+{
+  "contractVersion": "SagaHumanCanonicalBuildReportV1",
+  "humanId": "saga-human-canonical-v1",
+  "sourcesManifestSha256": "93a97820f5199ff6f12890b873221ecf0728b84305b80adeb72f3b82a6071c45",
+  "identity": "caucasian-male-young × 1.0 (average muscle/weight = no extra target)",
+  "outputs": {
+    "baseGlb": {
+      "sha256": "0e150f353ebed648c74b91a5c91b9b95634755f81d79f49d5c3f4c114483e394",
+      "bytes": 8234084
+    },
+    "faceGlb": {
+      "sha256": "440dfb3d6bd3a79c5ec9eaafe11757b99c3f12fb884efeaebc146df14035afda",
+      "bytes": 10235412
+    },
+    "vrm": {
+      "path": "public/assets/avatars/canonical/saga-human-canonical-v1.vrm",
+      "sha256": "4628e5edca861d7d28f1f42e4e9ddb878afadc41e33de25c881fe3d14d05f3eb",
+      "bytes": 10243088
+    },
+    "faceAnchors": {
+      "path": "public/assets/avatars/canonical/saga-human-canonical-v1-face-anchors.json",
+      "bindsToVrm": true
+    }
+  },
+  "faceGate": {
+    "profile": "full-v1",
+    "structuralPass": true,
+    "khronosErrors": 0,
+    "khronosWarnings": 0,
+    "usableChannels": 52,
+    "missingRequired": [],
+    "gazeMode": "bones",
+    "gazeModeSource": "explicit"
+  },
+  "vrmPack": {
+    "humanoidBoneCount": 21,
+    "expressionPresetCount": 2,
+    "expressionCustomCount": 44,
+    "lookAt": {
+      "offsetFromHeadBone": [
+        0,
+        0.0389,
+        0.0834
+      ],
+      "rangeMap": {
+        "inputMaxValue": 30,
+        "outputScale": 30
+      }
+    },
+    "khronosErrors": 0,
+    "khronosWarnings": 0
+  },
+  "structuralQa": {
+    "assembled": {
+      "jointCount": 22,
+      "joints": [
+        {
+          "id": "hips",
+          "source": "root",
+          "parent": null,
+          "worldMm": [
+            0,
+            928.29,
+            -64.69
+          ]
+        },
+        {
+          "id": "spine",
+          "source": "spine04",
+          "parent": "hips",
+          "worldMm": [
+            0,
+            1026.61,
+            -25.32
+          ]
+        },
+        {
+          "id": "chest",
+          "source": "spine02",
+          "parent": "spine",
+          "worldMm": [
+            0,
+            1158.51,
+            -24.18
+          ]
+        },
+        {
+          "id": "neck",
+          "source": "neck01",
+          "parent": "chest",
+          "worldMm": [
+            0,
+            1504.45,
+            15.03
+          ]
+        },
+        {
+          "id": "head",
+          "source": "head",
+          "parent": "neck",
+          "worldMm": [
+            0,
+            1600.87,
+            47
+          ]
+        },
+        {
+          "id": "jaw",
+          "source": "jaw",
+          "parent": "head",
+          "worldMm": [
+            0,
+            1607.38,
+            64.05
+          ]
+        },
+        {
+          "id": "leftEye",
+          "source": "eye.L",
+          "parent": "head",
+          "worldMm": [
+            29.31,
+            1639.74,
+            130.44
+          ]
+        },
+        {
+          "id": "rightEye",
+          "source": "eye.R",
+          "parent": "head",
+          "worldMm": [
+            -29.31,
+            1639.74,
+            130.44
+          ]
+        },
+        {
+          "id": "leftShoulder",
+          "source": "clavicle.L",
+          "parent": "chest",
+          "worldMm": [
+            23.09,
+            1429.25,
+            26.75
+          ]
+        },
+        {
+          "id": "leftUpperArm",
+          "source": "upperarm01.L",
+          "parent": "leftShoulder",
+          "worldMm": [
+            188.18,
+            1399.61,
+            21.42
+          ]
+        },
+        {
+          "id": "leftLowerArm",
+          "source": "lowerarm01.L",
+          "parent": "leftUpperArm",
+          "worldMm": [
+            355.29,
+            1207.99,
+            19.23
+          ]
+        },
+        {
+          "id": "leftHand",
+          "source": "wrist.L",
+          "parent": "leftLowerArm",
+          "worldMm": [
+            488.25,
+            1081.54,
+            206.83
+          ]
+        },
+        {
+          "id": "rightShoulder",
+          "source": "clavicle.R",
+          "parent": "chest",
+          "worldMm": [
+            -23.09,
+            1429.25,
+            26.75
+          ]
+        },
+        {
+          "id": "rightUpperArm",
+          "source": "upperarm01.R",
+          "parent": "rightShoulder",
+          "worldMm": [
+            -188.18,
+            1399.61,
+            21.42
+          ]
+        },
+        {
+          "id": "rightLowerArm",
+          "source": "lowerarm01.R",
+          "parent": "rightUpperArm",
+          "worldMm": [
+            -355.29,
+            1207.99,
+            19.23
+          ]
+        },
+        {
+          "id": "rightHand",
+          "source": "wrist.R",
+          "parent": "rightLowerArm",
+          "worldMm": [
+            -488.25,
+            1081.54,
+            206.83
+          ]
+        },
+        {
+          "id": "leftUpperLeg",
+          "source": "upperleg01.L",
+          "parent": "hips",
+          "worldMm": [
+            109.77,
+            933.32,
+            -3.83
+          ]
+        },
+        {
+          "id": "leftLowerLeg",
+          "source": "lowerleg01.L",
+          "parent": "leftUpperLeg",
+          "worldMm": [
+            152.53,
+            507.22,
+            30.75
+          ]
+        },
+        {
+          "id": "leftFoot",
+          "source": "foot.L",
+          "parent": "leftLowerLeg",
+          "worldMm": [
+            196.36,
+            72.33,
+            18.92
+          ]
+        },
+        {
+          "id": "rightUpperLeg",
+          "source": "upperleg01.R",
+          "parent": "hips",
+          "worldMm": [
+            -109.77,
+            933.32,
+            -3.83
+          ]
+        },
+        {
+          "id": "rightLowerLeg",
+          "source": "lowerleg01.R",
+          "parent": "rightUpperLeg",
+          "worldMm": [
+            -152.53,
+            507.22,
+            30.75
+          ]
+        },
+        {
+          "id": "rightFoot",
+          "source": "foot.R",
+          "parent": "rightLowerLeg",
+          "worldMm": [
+            -196.36,
+            72.33,
+            18.92
+          ]
+        }
+      ],
+      "parts": [
+        {
+          "name": "Body",
+          "vertices": 14517,
+          "triangles": 26756,
+          "morphTargets": 51
+        },
+        {
+          "name": "Eyes",
+          "vertices": 1076,
+          "triangles": 2040,
+          "morphTargets": 8
+        },
+        {
+          "name": "Teeth",
+          "vertices": 4712,
+          "triangles": 7120,
+          "morphTargets": 4
+        },
+        {
+          "name": "Tongue",
+          "vertices": 264,
+          "triangles": 448,
+          "morphTargets": 5
+        },
+        {
+          "name": "Eyelashes",
+          "vertices": 250,
+          "triangles": 368,
+          "morphTargets": 25
+        },
+        {
+          "name": "Eyebrows",
+          "vertices": 126,
+          "triangles": 192,
+          "morphTargets": 41
+        }
+      ],
+      "morphMaxDisplacementMm": {
+        "Body": {
+          "browDownLeft": 6.95,
+          "browDownRight": 6.95,
+          "browInnerUp": 5.2,
+          "browOuterUpLeft": 6.97,
+          "browOuterUpRight": 6.97,
+          "cheekPuff": 14.17,
+          "cheekSquintLeft": 8.95,
+          "cheekSquintRight": 8.95,
+          "eyeBlinkLeft": 12.61,
+          "eyeBlinkRight": 12.61,
+          "eyeLookDownLeft": 3.73,
+          "eyeLookDownRight": 3.73,
+          "eyeLookInLeft": 1,
+          "eyeLookInRight": 1,
+          "eyeLookOutLeft": 1,
+          "eyeLookOutRight": 1,
+          "eyeLookUpLeft": 2.58,
+          "eyeLookUpRight": 2.58,
+          "eyeSquintLeft": 3.56,
+          "eyeSquintRight": 3.56,
+          "eyeWideLeft": 3.62,
+          "eyeWideRight": 3.62,
+          "jawForward": 8.63,
+          "jawLeft": 8.06,
+          "jawOpen": 38.74,
+          "jawRight": 8.06,
+          "mouthClose": 35.93,
+          "mouthDimpleLeft": 7.9,
+          "mouthDimpleRight": 7.9,
+          "mouthFrownLeft": 6.69,
+          "mouthFrownRight": 6.69,
+          "mouthFunnel": 10.93,
+          "mouthLeft": 10.69,
+          "mouthLowerDownLeft": 4.91,
+          "mouthLowerDownRight": 4.91,
+          "mouthPressLeft": 8.09,
+          "mouthPressRight": 8.09,
+          "mouthPucker": 8.71,
+          "mouthRight": 10.69,
+          "mouthRollLower": 7.29,
+          "mouthRollUpper": 10.6,
+          "mouthShrugLower": 6.94,
+          "mouthShrugUpper": 5.32,
+          "mouthSmileLeft": 18.68,
+          "mouthSmileRight": 18.06,
+          "mouthStretchLeft": 8.64,
+          "mouthStretchRight": 8.64,
+          "mouthUpperUpLeft": 5.96,
+          "mouthUpperUpRight": 5.96,
+          "noseSneerLeft": 4.82,
+          "noseSneerRight": 4.82
+        },
+        "Eyes": {
+          "eyeLookDownLeft": 4.75,
+          "eyeLookDownRight": 4.75,
+          "eyeLookInLeft": 5.82,
+          "eyeLookInRight": 5.82,
+          "eyeLookOutLeft": 5.71,
+          "eyeLookOutRight": 5.71,
+          "eyeLookUpLeft": 2.89,
+          "eyeLookUpRight": 2.9
+        },
+        "Teeth": {
+          "jawForward": 8.43,
+          "jawLeft": 7.92,
+          "jawOpen": 30.26,
+          "jawRight": 7.92
+        },
+        "Tongue": {
+          "jawForward": 8.43,
+          "jawLeft": 7.92,
+          "jawOpen": 28.14,
+          "jawRight": 7.92,
+          "tongueOut": 27.47
+        },
+        "Eyelashes": {
+          "browDownLeft": 1,
+          "browDownRight": 1,
+          "cheekPuff": 0.17,
+          "cheekSquintLeft": 1.68,
+          "cheekSquintRight": 1.68,
+          "eyeBlinkLeft": 15.52,
+          "eyeBlinkRight": 15.52,
+          "eyeLookDownLeft": 4.01,
+          "eyeLookDownRight": 4.01,
+          "eyeLookInLeft": 1.1,
+          "eyeLookInRight": 1.1,
+          "eyeLookOutLeft": 1.1,
+          "eyeLookOutRight": 1.1,
+          "eyeLookUpLeft": 2.82,
+          "eyeLookUpRight": 2.82,
+          "eyeSquintLeft": 3.95,
+          "eyeSquintRight": 3.95,
+          "eyeWideLeft": 3.92,
+          "eyeWideRight": 3.92,
+          "mouthSmileLeft": 0.24,
+          "mouthSmileRight": 0.24,
+          "mouthStretchLeft": 0.14,
+          "mouthStretchRight": 0.14,
+          "noseSneerLeft": 0.28,
+          "noseSneerRight": 0.28
+        },
+        "Eyebrows": {
+          "browDownLeft": 5.53,
+          "browDownRight": 5.53,
+          "browInnerUp": 4.25,
+          "browOuterUpLeft": 6.3,
+          "browOuterUpRight": 6.3,
+          "cheekPuff": 0.31,
+          "cheekSquintLeft": 1.13,
+          "cheekSquintRight": 1.13,
+          "eyeBlinkLeft": 3.62,
+          "eyeBlinkRight": 3.62,
+          "eyeLookDownLeft": 0.95,
+          "eyeLookDownRight": 0.95,
+          "eyeLookInLeft": 0.24,
+          "eyeLookInRight": 0.24,
+          "eyeLookOutLeft": 0.24,
+          "eyeLookOutRight": 0.24,
+          "eyeLookUpLeft": 0.77,
+          "eyeLookUpRight": 0.77,
+          "eyeSquintLeft": 0.19,
+          "eyeSquintRight": 0.19,
+          "eyeWideLeft": 1.41,
+          "eyeWideRight": 1.41,
+          "jawForward": 0.11,
+          "jawLeft": 0.08,
+          "jawOpen": 0.38,
+          "jawRight": 0.08,
+          "mouthClose": 0.22,
+          "mouthFrownLeft": 0.1,
+          "mouthFrownRight": 0.1,
+          "mouthFunnel": 0.03,
+          "mouthLeft": 0.18,
+          "mouthPressLeft": 0.08,
+          "mouthPressRight": 0.08,
+          "mouthPucker": 0.14,
+          "mouthRight": 0.18,
+          "mouthSmileLeft": 0.37,
+          "mouthSmileRight": 0.37,
+          "mouthStretchLeft": 0.1,
+          "mouthStretchRight": 0.1,
+          "noseSneerLeft": 3.78,
+          "noseSneerRight": 3.78
+        }
+      },
+      "minWeight": {
+        "eyesOnEyeBones": 1,
+        "teethUpperRowOnHead": 1,
+        "teethLowerRowOnJaw": 1,
+        "tongueOnJaw": 0.9015
+      },
+      "teeth": {
+        "upperRowVertices": 2424,
+        "lowerRowVertices": 2288,
+        "bridgeFacesBetweenRows": 20,
+        "upperRowJawMorphMm": {
+          "maxMm": 0,
+          "minMm": 0
+        },
+        "lowerRowJawOpenMm": {
+          "maxMm": 30.26,
+          "minMm": 5.58
+        }
+      },
+      "eyePivot": {
+        "leftEye": {
+          "jointToHelperSphereCenterMm": 0.56,
+          "eyeballBox": {
+            "x": 0.02,
+            "y": 0.44,
+            "widthMm": 31.46
+          }
+        },
+        "rightEye": {
+          "jointToHelperSphereCenterMm": 0.56,
+          "eyeballBox": {
+            "x": -0.02,
+            "y": 0.44,
+            "widthMm": 31.46
+          }
+        }
+      },
+      "faceLandmarksMm": {
+        "mouthCornerLeft": [
+          27.03,
+          1572.99,
+          138.93
+        ],
+        "mouthCornerRight": [
+          -27.03,
+          1572.99,
+          138.93
+        ],
+        "mouthUpper": [
+          0,
+          1575.8,
+          164.23
+        ],
+        "mouthLower": [
+          0,
+          1562.21,
+          158.66
+        ],
+        "chin": [
+          0,
+          1545.27,
+          155.03
+        ],
+        "eyeLeftInner": [
+          17.39,
+          1637.06,
+          144.35
+        ],
+        "eyeLeftOuter": [
+          44.15,
+          1637.47,
+          138.43
+        ],
+        "eyeLeftUpper": [
+          37.49,
+          1642.33,
+          145.82
+        ],
+        "eyeLeftLower": [
+          34.86,
+          1631.23,
+          144.89
+        ],
+        "browLeftInner": [
+          10.43,
+          1650.1,
+          156.04
+        ],
+        "browLeftOuter": [
+          60.7,
+          1645.99,
+          123.21
+        ],
+        "browLeftCenter": [
+          34.6,
+          1651.51,
+          151.61
+        ],
+        "eyeRightInner": [
+          -17.39,
+          1637.06,
+          144.35
+        ],
+        "eyeRightOuter": [
+          -44.15,
+          1637.47,
+          138.43
+        ],
+        "eyeRightUpper": [
+          -37.49,
+          1642.33,
+          145.82
+        ],
+        "eyeRightLower": [
+          -34.86,
+          1631.23,
+          144.89
+        ],
+        "browRightInner": [
+          -10.43,
+          1650.1,
+          156.04
+        ],
+        "browRightOuter": [
+          -60.7,
+          1645.99,
+          123.21
+        ],
+        "browRightCenter": [
+          -34.6,
+          1651.51,
+          151.61
+        ],
+        "noseTip": [
+          0,
+          1598.6,
+          176.07
+        ],
+        "forehead": [
+          0,
+          1691.35,
+          151.36
+        ]
+      },
+      "maxWeightSumError": 4.47e-8
+    },
+    "vrm": {
+      "pass": true,
+      "failures": [],
+      "facts": {
+        "humanoidBones": [
+          "chest",
+          "head",
+          "hips",
+          "leftEye",
+          "leftFoot",
+          "leftHand",
+          "leftLowerArm",
+          "leftLowerLeg",
+          "leftShoulder",
+          "leftUpperArm",
+          "leftUpperLeg",
+          "neck",
+          "rightEye",
+          "rightFoot",
+          "rightHand",
+          "rightLowerArm",
+          "rightLowerLeg",
+          "rightShoulder",
+          "rightUpperArm",
+          "rightUpperLeg",
+          "spine"
+        ],
+        "lookAt": {
+          "type": "bone",
+          "offsetFromHeadBone": [
+            0,
+            0.0389,
+            0.0834
+          ],
+          "rangeMapHorizontalInner": {
+            "inputMaxValue": 30,
+            "outputScale": 30
+          },
+          "rangeMapHorizontalOuter": {
+            "inputMaxValue": 30,
+            "outputScale": 30
+          },
+          "rangeMapVerticalDown": {
+            "inputMaxValue": 30,
+            "outputScale": 30
+          },
+          "rangeMapVerticalUp": {
+            "inputMaxValue": 30,
+            "outputScale": 30
+          },
+          "extras": {
+            "sagaDriveGazeMode": "bones",
+            "hasLeftEyeBone": true,
+            "hasRightEyeBone": true
+          }
+        },
+        "expressionPresets": [
+          "blinkLeft",
+          "blinkRight"
+        ],
+        "expressionCustomCount": 44,
+        "gazeOwners": {
+          "lookAtBone": true,
+          "eyeLookExpressions": 0,
+          "expressionLookPresets": 0
+        },
+        "binds": {
+          "jawOpen": [
+            "Body",
+            "Eyebrows",
+            "Teeth",
+            "Tongue"
+          ],
+          "tongueOut": [
+            "Tongue"
+          ],
+          "eyeBlinkLeft": [
+            "Body",
+            "Eyebrows",
+            "Eyelashes"
+          ],
+          "mouthSmileLeft": [
+            "Body",
+            "Eyebrows",
+            "Eyelashes"
+          ]
+        },
+        "meshMorphTargetCounts": {
+          "Body": 51,
+          "Eyes": 8,
+          "Teeth": 4,
+          "Tongue": 5,
+          "Eyelashes": 25,
+          "Eyebrows": 41
+        },
+        "skin": {
+          "joints": 22,
+          "maxInfluences": 4,
+          "maxWeightSumError": 4.47e-8,
+          "eyesMinOnEyeBones": 1
+        },
+        "teethRows": {
+          "headVertices": 2424,
+          "headMaxJawMm": 0,
+          "jawVertices": 2288,
+          "jawMinJawOpenMm": 5.583
+        }
+      }
+    }
+  },
+  "semanticQaV2": {
+    "note": "Anchors are topology landmarks (auto/unreviewed); only the mouth corners derive from morph peaks. Informative, not a gate.",
+    "pass": true,
+    "channelsPassed": 10,
+    "channelsFailed": [],
+    "violations": []
+  },
+  "contracts": {
+    "gaze": "eye bones (leftEye/rightEye) via VRM LookAt type bone; eyeLook* morphs stay in the asset without expressions",
+    "jaw": "morph-owned (faceunits jaw*: chin, lips, mouth floor, lower teeth, tongue move together); jaw joint skinned, never driven, not humanoid",
+    "tongueOut": "asset capability yes (custom expression on Tongue); LiveAct tracking no (not a LiveAct channel)"
+  }
+}

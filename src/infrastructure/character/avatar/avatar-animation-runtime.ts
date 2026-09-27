@@ -4,6 +4,7 @@
  *
  * Procedural allowlisted preview clips; tracks bind only to mapped SagaDriveHumanoidRigV1 bones.
  * Rigid attachment fixture follows the catalog attachment anchor.
+ * Editor preview stays in rest pose until the user picks Idle/Walk/… — no autoplay on bind.
  */
 
 import * as THREE from 'three';
@@ -142,11 +143,43 @@ export class AvatarAnimationRuntime {
   });
   private prefersReducedMotion = false;
   private disposed = false;
+  private suspended = false;
+  private resumeAction: AvatarAnimationActionId | null = null;
 
   constructor(private readonly onStateChange?: AnimationStateListener) {}
 
   setPrefersReducedMotion(value: boolean): void {
     this.prefersReducedMotion = value;
+  }
+
+  /**
+   * While suspended the mixer writes no bones: stopped actions restore the rest pose, so an
+   * external driver (LiveAct head) is not overwritten by procedural clips every frame.
+   */
+  setSuspended(suspended: boolean): void {
+    if (this.suspended === suspended) return;
+    this.suspended = suspended;
+    if (suspended) {
+      this.resumeAction = this.activeAction;
+      for (const action of this.actions.values()) {
+        action.stop();
+      }
+      this.activeAction = null;
+      this.emit('Animation pausiert — LiveAct steuert den Charakter.');
+      return;
+    }
+    const remembered = this.resumeAction;
+    this.resumeAction = null;
+    // Only resume what was playing before LiveAct — never auto-start idle after tracking ends.
+    if (remembered && getAnimationCatalogEntry(remembered)?.loop) {
+      this.play(remembered);
+    } else {
+      this.emit('AnimationRuntime bereit.');
+    }
+  }
+
+  isSuspended(): boolean {
+    return this.suspended;
   }
 
   /**
@@ -156,6 +189,7 @@ export class AvatarAnimationRuntime {
     this.disposeMixer();
     this.root = root;
     this.analysis = analysis;
+    this.resumeAction = null;
     this.support = resolveAvatarAnimationSupport({
       capabilityFlags: analysis.capabilities.flags,
       mappedBones: analysis.rig.bones,
@@ -177,10 +211,6 @@ export class AvatarAnimationRuntime {
 
     this.ensureAttachmentFixture(analysis);
     this.emit('AnimationRuntime bereit.');
-
-    if (this.support.defaultAction && !this.prefersReducedMotion) {
-      this.play(this.support.defaultAction);
-    }
   }
 
   getSupport(): AvatarAnimationSupportResult {
@@ -202,6 +232,11 @@ export class AvatarAnimationRuntime {
       this.emit('Clip fehlt im Katalog.');
       return false;
     }
+    if (this.suspended) {
+      this.resumeAction = actionId;
+      this.emit('Animation pausiert, solange LiveAct läuft.');
+      return false;
+    }
 
     const fade = resolveAnimationCrossfadeSeconds(this.prefersReducedMotion);
     const previous = this.activeAction ? this.actions.get(this.activeAction) : undefined;
@@ -220,7 +255,7 @@ export class AvatarAnimationRuntime {
   }
 
   update(delta: number): void {
-    if (this.disposed) return;
+    if (this.disposed || this.suspended) return;
     this.mixer?.update(delta);
   }
 

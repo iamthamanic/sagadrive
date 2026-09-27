@@ -3,6 +3,7 @@
  * Location: src/domains/character/domain/character.entity.ts
  */
 import type { CharacterRulesetKey, SagaDriveSkillKey } from '../../rules/sagadrive/character-creation';
+import type { SagaDriveFaceAnchorsManifestV1 } from '../avatar/face-anchor-contract';
 import type { SagaDriveAvatarMorphStateV1 } from '../avatar/morph-contract';
 
 export interface CharacterAttributesDto {
@@ -59,6 +60,12 @@ export interface CharacterAvatarDto {
   modularity?: 'modular-parts' | 'limited' | 'monolithic' | 'none';
   /** Logical starter wardrobe ids applied as basic outfit (not inventory). */
   starter_wardrobe?: readonly string[];
+  /**
+   * Manual Face Mapping bindings for this character (#persist).
+   * SagaDriveFaceAnchorsV1 — mesh triangle anchors only; never webcam landmarks.
+   * Optional; ignored by legacy readers. Wins over sibling face-anchors.json sidecar.
+   */
+  face_anchors?: SagaDriveFaceAnchorsManifestV1;
 }
 
 export type CharacterGenderReading = 'masculine-read' | 'feminine-read' | 'diverse';

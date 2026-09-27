@@ -4,6 +4,7 @@
   "baselineFile": "baseline-body.glb",
   "profile": "core-v1",
   "profileOk": true,
+  "structuralPass": true,
   "khronos": {
     "pass": true,
     "numErrors": 0,
@@ -41,6 +42,7 @@
     "mouthSmileRight"
   ],
   "gazeMode": "none",
+  "gazeModeSource": "inferred",
   "morphCount": 10,
   "usableMorphCount": 10,
   "byteCount": 3864,
@@ -59,9 +61,15 @@
     "triangleCount": 1,
     "byteCount": 916
   },
+  "faceAnchorAnatomyQa": {
+    "contractVersion": "SagaDriveFaceAnchorAnatomyQaV1",
+    "skipped": true,
+    "pass": true,
+    "reason": "no_anchors_manifest"
+  },
   "semanticQa": {
-    "contractVersion": "SagaDriveLiveActFaceSemanticQaV1",
-    "profileVersion": "liveact-face-semantic-profile-v1",
+    "contractVersion": "SagaDriveLiveActFaceSemanticQaV2",
+    "profileVersion": "liveact-face-semantic-profile-v2",
     "pass": true,
     "skipped": true,
     "skipReason": "no_anchors_manifest",

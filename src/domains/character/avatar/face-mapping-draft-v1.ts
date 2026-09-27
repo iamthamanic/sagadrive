@@ -1,8 +1,9 @@
 /**
- * SagaDriveFaceMappingDraftV1 — session-local manual face-mapping draft (#420).
+ * SagaDriveFaceMappingDraftV1 — session-local manual face-mapping draft (#420/#visual-guides).
  * Location: src/domains/character/avatar/face-mapping-draft-v1.ts
  *
  * Pure draft/status/validation for the 21 SagaDriveFaceAnchorsV1 markers.
+ * Binding DE labels are the Face-Rig Editor source of truth (inner/outer = eye corners).
  * No React / Three.js. Runtime format stays SagaDriveFaceAnchorsV1.
  */
 
@@ -30,7 +31,8 @@ export const FACE_MAPPING_MARKER_GROUPS = [
   'mouth',
   'eyeLeft',
   'eyeRight',
-  'brow',
+  'browLeft',
+  'browRight',
   'face',
 ] as const;
 
@@ -43,7 +45,7 @@ export interface FaceMappingMarkerGroupV1 {
   readonly anchorIds: readonly SagaDriveFaceAnchorId[];
 }
 
-/** Canonical UI grouping for the 21 markers. */
+/** Canonical UI grouping for the 21 markers (brow L/R split for binding labels). */
 export const FACE_MAPPING_MARKER_GROUP_DEFS: readonly FaceMappingMarkerGroupV1[] = [
   {
     id: 'mouth',
@@ -61,16 +63,14 @@ export const FACE_MAPPING_MARKER_GROUP_DEFS: readonly FaceMappingMarkerGroupV1[]
     anchorIds: ['eyeRightInner', 'eyeRightOuter', 'eyeRightUpper', 'eyeRightLower'],
   },
   {
-    id: 'brow',
-    labelDe: 'Brauen',
-    anchorIds: [
-      'browLeftInner',
-      'browLeftOuter',
-      'browLeftCenter',
-      'browRightInner',
-      'browRightOuter',
-      'browRightCenter',
-    ],
+    id: 'browLeft',
+    labelDe: 'Linke Braue',
+    anchorIds: ['browLeftInner', 'browLeftCenter', 'browLeftOuter'],
+  },
+  {
+    id: 'browRight',
+    labelDe: 'Rechte Braue',
+    anchorIds: ['browRightInner', 'browRightCenter', 'browRightOuter'],
   },
   {
     id: 'face',
@@ -79,50 +79,53 @@ export const FACE_MAPPING_MARKER_GROUP_DEFS: readonly FaceMappingMarkerGroupV1[]
   },
 ];
 
-/** German labels for marker list rows. */
+/**
+ * Binding German labels for Face-Rig Editor rows.
+ * Eye inner/outer = corners toward nose / temple (not pupil).
+ */
 export const FACE_MAPPING_ANCHOR_LABEL_DE: Readonly<Record<SagaDriveFaceAnchorId, string>> = {
-  mouthUpper: 'Oberlippe',
-  mouthLower: 'Unterlippe',
-  mouthCornerLeft: 'Mundwinkel links',
-  mouthCornerRight: 'Mundwinkel rechts',
-  eyeLeftInner: 'Auge links innen',
-  eyeLeftOuter: 'Auge links außen',
-  eyeLeftUpper: 'Auge links oben',
-  eyeLeftLower: 'Auge links unten',
-  eyeRightInner: 'Auge rechts innen',
-  eyeRightOuter: 'Auge rechts außen',
-  eyeRightUpper: 'Auge rechts oben',
-  eyeRightLower: 'Auge rechts unten',
-  browLeftInner: 'Braue links innen',
-  browLeftOuter: 'Braue links außen',
-  browLeftCenter: 'Braue links Mitte',
-  browRightInner: 'Braue rechts innen',
-  browRightOuter: 'Braue rechts außen',
-  browRightCenter: 'Braue rechts Mitte',
+  mouthUpper: 'Oberlippe Mitte',
+  mouthLower: 'Unterlippe Mitte',
+  mouthCornerLeft: 'Linker Mundwinkel',
+  mouthCornerRight: 'Rechter Mundwinkel',
+  eyeLeftInner: 'Innerer Augenwinkel',
+  eyeLeftOuter: 'Äußerer Augenwinkel',
+  eyeLeftUpper: 'Oberes Augenlid',
+  eyeLeftLower: 'Unteres Augenlid',
+  eyeRightInner: 'Innerer Augenwinkel',
+  eyeRightOuter: 'Äußerer Augenwinkel',
+  eyeRightUpper: 'Oberes Augenlid',
+  eyeRightLower: 'Unteres Augenlid',
+  browLeftInner: 'Inneres Ende',
+  browLeftOuter: 'Äußeres Ende',
+  browLeftCenter: 'Mitte',
+  browRightInner: 'Inneres Ende',
+  browRightOuter: 'Äußeres Ende',
+  browRightCenter: 'Mitte',
   noseTip: 'Nasenspitze',
-  chin: 'Kinn',
-  forehead: 'Stirn',
+  chin: 'Kinnmitte',
+  forehead: 'Stirnmitte',
 };
 
-/** Short German labels for 3D overlay (readable next to dots). */
+/** Short German labels for 3D overlay (binding semantics, compact). */
 export const FACE_MAPPING_ANCHOR_SHORT_DE: Readonly<Record<SagaDriveFaceAnchorId, string>> = {
-  mouthUpper: 'Mund ↑',
-  mouthLower: 'Mund ↓',
+  mouthUpper: 'Oberlippe',
+  mouthLower: 'Unterlippe',
   mouthCornerLeft: 'Mund L',
   mouthCornerRight: 'Mund R',
-  eyeLeftInner: 'Auge L ·',
-  eyeLeftOuter: 'Auge L ·',
-  eyeLeftUpper: 'Auge L ↑',
-  eyeLeftLower: 'Auge L ↓',
-  eyeRightInner: 'Auge R ·',
-  eyeRightOuter: 'Auge R ·',
-  eyeRightUpper: 'Auge R ↑',
-  eyeRightLower: 'Auge R ↓',
-  browLeftInner: 'Braue L ·',
-  browLeftOuter: 'Braue L ·',
+  eyeLeftInner: 'Innen L',
+  eyeLeftOuter: 'Außen L',
+  eyeLeftUpper: 'Lid ↑ L',
+  eyeLeftLower: 'Lid ↓ L',
+  eyeRightInner: 'Innen R',
+  eyeRightOuter: 'Außen R',
+  eyeRightUpper: 'Lid ↑ R',
+  eyeRightLower: 'Lid ↓ R',
+  browLeftInner: 'Braue L innen',
+  browLeftOuter: 'Braue L außen',
   browLeftCenter: 'Braue L',
-  browRightInner: 'Braue R ·',
-  browRightOuter: 'Braue R ·',
+  browRightInner: 'Braue R innen',
+  browRightOuter: 'Braue R außen',
   browRightCenter: 'Braue R',
   noseTip: 'Nase',
   chin: 'Kinn',

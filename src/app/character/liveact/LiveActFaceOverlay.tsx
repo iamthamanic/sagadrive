@@ -3,6 +3,7 @@
  * Location: src/app/character/liveact/LiveActFaceOverlay.tsx
  *
  * Projects landmarks via VideoViewportTransform (object-cover + single mirror).
+ * Default: named contours only. Full Detail: every MediaPipe landmark (+ iris highlight).
  * Optional metrics HUD; rAF draw loop — no React setState per tracking frame.
  */
 
@@ -21,9 +22,15 @@ import {
   type LiveActVideoViewportTransform,
 } from '../../../domains/character/liveact';
 
+/** MediaPipe Face Mesh iris landmark range (indices 468–477). */
+const IRIS_LANDMARK_START = 468;
+const IRIS_LANDMARK_END = 478;
+
 interface LiveActFaceOverlayProps {
   enabled: boolean;
   metricsEnabled: boolean;
+  /** Draw all tracking landmarks as dots (not only contours). */
+  fullDetail?: boolean;
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
   diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
   /** PiP <video> element for intrinsic size (object-cover source). */
@@ -69,11 +76,29 @@ function drawContours(
   drawPolyline(ctx, contours.lips, transform, true);
 }
 
+function drawAllLandmarks(
+  ctx: CanvasRenderingContext2D,
+  landmarks: readonly LiveActFaceLandmark2d[],
+  transform: LiveActVideoViewportTransform,
+): void {
+  for (let i = 0; i < landmarks.length; i += 1) {
+    const p = landmarks[i];
+    if (!p) continue;
+    const { x, y } = projectLiveActLandmarkToCanvas(p.x, p.y, transform);
+    const iris = i >= IRIS_LANDMARK_START && i < IRIS_LANDMARK_END;
+    ctx.fillStyle = iris ? 'rgba(250, 204, 21, 0.95)' : 'rgba(226, 232, 240, 0.55)';
+    ctx.beginPath();
+    ctx.arc(x, y, iris ? 2.25 : 1.15, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 function drawMetricsHud(
   ctx: CanvasRenderingContext2D,
   frame: LiveActFaceDiagnosticsFrameV1,
   diagnosticsV2: LiveActDiagnosticsV2Snapshot | null,
   width: number,
+  fullDetail: boolean,
 ): void {
   const metrics = computeLiveActFaceMetrics(frame.landmarks);
   const lines: string[] = [];
@@ -102,11 +127,19 @@ function drawMetricsHud(
     lines.push(
       `browLift L ${formatLiveActMetric(metrics.browLiftLeft)}  R ${formatLiveActMetric(metrics.browLiftRight)}`,
     );
+    if (fullDetail) {
+      lines.push(`landmarks ${frame.landmarks.length} (iris gelb)`);
+    }
 
     const retargeted = diagnosticsV2?.stages.retargeted;
     if (retargeted) {
       const active: string[] = [];
-      for (const key of ['face.jawOpen', 'face.eyeBlinkLeft', 'face.eyeBlinkRight', 'face.browInnerUp'] as const) {
+      for (const key of [
+        'face.jawOpen',
+        'face.eyeBlinkLeft',
+        'face.eyeBlinkRight',
+        'face.browInnerUp',
+      ] as const) {
         const v = retargeted[key];
         if (typeof v === 'number' && v > 0.08) {
           active.push(`${key.replace('face.', '')}=${v.toFixed(2)}`);
@@ -133,6 +166,7 @@ function drawMetricsHud(
 export function LiveActFaceOverlay({
   enabled,
   metricsEnabled,
+  fullDetail = false,
   diagnosticsRef,
   diagnosticsV2Ref,
   videoRef,
@@ -176,7 +210,13 @@ export function LiveActFaceOverlay({
           const lost =
             frame ??
             createEmptyLiveActFaceDiagnosticsFrame({ timestampMs: 0, sequence: 0 });
-          drawMetricsHud(ctx, { ...lost, trackingLost: true }, diagnosticsV2Ref.current, width);
+          drawMetricsHud(
+            ctx,
+            { ...lost, trackingLost: true },
+            diagnosticsV2Ref.current,
+            width,
+            fullDetail,
+          );
         }
         return;
       }
@@ -192,9 +232,12 @@ export function LiveActFaceOverlay({
         mirrorX: true,
       });
 
+      if (fullDetail) {
+        drawAllLandmarks(ctx, frame.landmarks, transform);
+      }
       drawContours(ctx, frame.contours, transform);
       if (metricsEnabled) {
-        drawMetricsHud(ctx, frame, diagnosticsV2Ref.current, width);
+        drawMetricsHud(ctx, frame, diagnosticsV2Ref.current, width, fullDetail);
       }
     };
 
@@ -203,7 +246,7 @@ export function LiveActFaceOverlay({
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
     };
-  }, [enabled, metricsEnabled, diagnosticsRef, diagnosticsV2Ref, videoRef]);
+  }, [enabled, metricsEnabled, fullDetail, diagnosticsRef, diagnosticsV2Ref, videoRef]);
 
   if (!enabled) return null;
 
@@ -212,6 +255,7 @@ export function LiveActFaceOverlay({
       ref={canvasRef}
       className="pointer-events-none absolute inset-0 z-10 h-full w-full"
       data-testid="liveact-face-overlay-canvas"
+      data-full-detail={fullDetail ? 'true' : 'false'}
       aria-hidden
     />
   );

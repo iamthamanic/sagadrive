@@ -9,6 +9,7 @@ import {
   LIVEACT_FACE_CHANNELS,
   type LiveActFaceChannelId,
 } from './liveact-face-contract';
+import type { LiveActGazeDrivePath } from './liveact-gaze-path';
 
 export const LIVEACT_CAPABILITIES_VERSION = 'SagaDriveLiveActCapabilitiesV1' as const;
 
@@ -34,6 +35,10 @@ export interface LiveActAvatarCapabilities {
   avatarFace: LiveActAvatarFaceChannelSupport;
   activeFaceChannelCount: number;
   totalFaceChannelCount: number;
+  /** Exclusive gaze driver discovered at bind time (#403). */
+  gazeDrivePath: LiveActGazeDrivePath;
+  /** Adapter that produced this capability snapshot. */
+  runtimeKind: 'vrm' | 'gltf';
 }
 
 /** Composed inspector matrix: Input (engine) + Avatar (asset). */
@@ -44,6 +49,8 @@ export interface LiveActCapabilitiesV1 {
   avatarFace: LiveActAvatarFaceChannelSupport;
   activeFaceChannelCount: number;
   totalFaceChannelCount: number;
+  gazeDrivePath: LiveActGazeDrivePath;
+  runtimeKind: 'vrm' | 'gltf';
 }
 
 export function createEmptyLiveActAvatarFaceSupport(): LiveActAvatarFaceChannelSupport {
@@ -71,6 +78,8 @@ export function createLiveActAvatarCapabilities(input: {
   leftEyeBone?: boolean;
   rightEyeBone?: boolean;
   avatarFace?: Partial<Record<LiveActFaceChannelId, boolean>>;
+  gazeDrivePath?: LiveActGazeDrivePath;
+  runtimeKind?: 'vrm' | 'gltf';
 }): LiveActAvatarCapabilities {
   const avatarFace = createEmptyLiveActAvatarFaceSupport() as Record<
     LiveActFaceChannelId,
@@ -91,6 +100,8 @@ export function createLiveActAvatarCapabilities(input: {
     avatarFace,
     activeFaceChannelCount: active,
     totalFaceChannelCount: LIVEACT_FACE_CHANNELS.length,
+    gazeDrivePath: input.gazeDrivePath ?? 'none',
+    runtimeKind: input.runtimeKind ?? 'gltf',
   };
 }
 
@@ -110,6 +121,8 @@ export function composeLiveActCapabilities(
     avatarFace: avatar.avatarFace,
     activeFaceChannelCount: avatar.activeFaceChannelCount,
     totalFaceChannelCount: avatar.totalFaceChannelCount,
+    gazeDrivePath: avatar.gazeDrivePath,
+    runtimeKind: avatar.runtimeKind,
   };
 }
 

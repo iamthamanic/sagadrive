@@ -4,6 +4,9 @@
  *
  * Raycasts only allowlisted avatar surface meshes (no helpers/equipment/debug).
  * Produces nodeIdentity + primitiveIndex + triangleIndex + barycentric — never world-XYZ only.
+ *
+ * Barycentric is computed against the same deformed vertex positions Three.js uses for
+ * the hit (Mesh.getVertexPosition), then clamped so draft validation never drops the point.
  */
 
 import * as THREE from 'three';
@@ -15,6 +18,7 @@ const _a = new THREE.Vector3();
 const _b = new THREE.Vector3();
 const _c = new THREE.Vector3();
 const _pointLocal = new THREE.Vector3();
+const _bary = new THREE.Vector3();
 
 const EXCLUDE_NAME_RE =
   /hair|weapon|sword|shield|helper|debug|grid|floor|axis|gizmo|outline|equipment|wearable|prop/i;
@@ -54,35 +58,23 @@ function resolvePrimitiveIndex(geometry: THREE.BufferGeometry, faceIndex: number
   return 0;
 }
 
-function computeBarycentric(
-  point: THREE.Vector3,
-  a: THREE.Vector3,
-  b: THREE.Vector3,
-  c: THREE.Vector3,
+/**
+ * Clamp + renormalize so bindings always pass SagaDriveFaceAnchorsV1 barycentric validation.
+ * Numerical noise from skinned hits must not make markers vanish as "ungültig".
+ */
+export function normalizeFaceMappingBarycentric(
+  u: number,
+  v: number,
+  w: number,
 ): { u: number; v: number; w: number } {
-  // From Real-Time Collision Detection (Ericson) — area method.
-  const v0x = b.x - a.x;
-  const v0y = b.y - a.y;
-  const v0z = b.z - a.z;
-  const v1x = c.x - a.x;
-  const v1y = c.y - a.y;
-  const v1z = c.z - a.z;
-  const v2x = point.x - a.x;
-  const v2y = point.y - a.y;
-  const v2z = point.z - a.z;
-  const d00 = v0x * v0x + v0y * v0y + v0z * v0z;
-  const d01 = v0x * v1x + v0y * v1y + v0z * v1z;
-  const d11 = v1x * v1x + v1y * v1y + v1z * v1z;
-  const d20 = v0x * v2x + v0y * v2y + v0z * v2z;
-  const d21 = v1x * v2x + v1y * v2y + v1z * v2z;
-  const denom = d00 * d11 - d01 * d01;
-  if (!Number.isFinite(denom) || Math.abs(denom) < 1e-12) {
+  let uu = Number.isFinite(u) ? Math.max(0, u) : 0;
+  let vv = Number.isFinite(v) ? Math.max(0, v) : 0;
+  let ww = Number.isFinite(w) ? Math.max(0, w) : 0;
+  const sum = uu + vv + ww;
+  if (!(sum > 1e-8)) {
     return { u: 1 / 3, v: 1 / 3, w: 1 / 3 };
   }
-  const v = (d11 * d20 - d01 * d21) / denom;
-  const w = (d00 * d21 - d01 * d20) / denom;
-  const u = 1 - v - w;
-  return { u, v, w };
+  return { u: uu / sum, v: vv / sum, w: ww / sum };
 }
 
 export interface FaceMappingRaycastHitV1 {
@@ -124,21 +116,22 @@ export function raycastFaceMappingPointer(input: {
 
   const geometry = mesh.geometry;
   if (!(geometry instanceof THREE.BufferGeometry)) return null;
-
-  const position = geometry.getAttribute('position');
-  if (!position) return null;
+  if (!geometry.getAttribute('position')) return null;
 
   const ia = hit.face.a;
   const ib = hit.face.b;
   const ic = hit.face.c;
-  _a.fromBufferAttribute(position, ia);
-  _b.fromBufferAttribute(position, ib);
-  _c.fromBufferAttribute(position, ic);
 
-  // Barycentric in local mesh space (same space as undeformed POSITION attribute).
+  // Same space as the raycast hit: deformed / skinned vertex positions.
+  mesh.getVertexPosition(ia, _a);
+  mesh.getVertexPosition(ib, _b);
+  mesh.getVertexPosition(ic, _c);
+
+  // hit.point is world-space; barycentric needs the same local/morph space as getVertexPosition.
   _pointLocal.copy(hit.point);
   mesh.worldToLocal(_pointLocal);
-  const barycentric = computeBarycentric(_pointLocal, _a, _b, _c);
+  THREE.Triangle.getBarycoord(_pointLocal, _a, _b, _c, _bary);
+  const barycentric = normalizeFaceMappingBarycentric(_bary.x, _bary.y, _bary.z);
 
   const triangleIndex = hit.faceIndex;
   const primitiveIndex = resolvePrimitiveIndex(geometry, triangleIndex);

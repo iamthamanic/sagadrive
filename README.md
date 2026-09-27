@@ -219,16 +219,15 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-09-25** — LiveAct: Kopfachsen/L/R-Spiegel/LookAt-Korrektur, gestufte Kalibrierung, Motion-Test + Peak-Export, Full-Detail-Overlay; Neutral/Gaze-Restbias offen (`agent/liveact-reference-vrm-golden-avatar`)
 - **2026-09-21** — LiveAct Face Asset Validator: Khronos + SagaDrive CLI gate (`#383`)
 - **2026-09-21** — LiveAct Face Asset Contract: `core-v1` / `full-v1` + gazeMode (`#382`)
-- **2026-09-21** — LiveAct: Input- vs Avatar-Capabilities getrennt (`composeLiveActCapabilities`, #381)
-- **2026-09-21** — LiveAct: Kameravorschau verschiebbar (Default unten links), Bones-Debug sichtbar durch Mesh, GLB Capability Input-Flags; Species-Authoring-Scripts (`feat/liveact-pip-drag-and-rig-visibility`)
+- **2026-09-21** — LiveAct: Input- vs Avatar-Capabilities getrennt (`composeLiveActCapabilities`, #381)- **2026-09-21** — LiveAct: Kameravorschau verschiebbar (Default unten links), Bones-Debug sichtbar durch Mesh, GLB Capability Input-Flags; Species-Authoring-Scripts (`feat/liveact-pip-drag-and-rig-visibility`)
 - **2026-09-20** — Human species soft-real base (Palworld×Overwatch), gender→GLB preview, MToon toggle, Meshy rigging CPU step-split (`feat/avatar-human-softreal-mtoon-meshy`)
 - **2026-09-19** — Avatar V2: Modular GLB Contract v1 (`extras.sagadrive` Rollen/Slots + Upload-Spec) (`feat/avatar-v2-modular-glb-contract`, #250)
 - **2026-09-19** — Avatar V2: Composition Contract + kanonisches Design (Source/Anatomy/Family/Modularity/Capabilities orthogonal; Legacy-DTO lesbar) (`feat/avatar-v2-composition-contract`, #249)
 - **2026-09-19** — Avatar Face Tracking: MediaPipe self-host (`public/mediapipe/**`, kein CDN), Desktop/Mobile Quality-Profile, Session/Player an gemeinsame Runtime + Cam-Singleton (#243/#244, `feat/avatar-face-tracking-selfhost-session`)
 - **2026-09-19** — Avatar 3D: provider-agnostische Generation (Meshy-Adapter, Presets Schnell/Empfohlen/Max), Advanced Settings, Master+Runtime-Pipeline; GLB/VRM-Import bis 150 MB; sheet_status-DB-Gate (`feat/provider-agnostic-avatar-3d`)
-- **2026-09-15** — NPC/Kreaturen static SVG icons (19 builtins): Cursor→PNG→VTracer wie Items; `iconKey` → `/assets/npc-creatures/{slug}.svg` (`feat/npc-creature-static-svg-icons`)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 

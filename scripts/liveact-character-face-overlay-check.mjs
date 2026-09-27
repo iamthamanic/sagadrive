@@ -46,6 +46,20 @@ check(/buildLiveActFaceLandmarksFromAnchorScreenPoints/.test(metrics), 'anchor l
 
 check(/LiveActCharacterFaceOverlay/.test(controls), 'controls compose character overlay');
 check(/characterFaceMappingAvailable/.test(controls), 'controls mapping gate');
+check(/setFaceOverlayEnabled\(true\)/.test(controls), 'Speichern enables mesh overlay');
+check(/setLiveActCharacterFaceDebugEnabled\(true\)/.test(controls), 'Speichern re-enables debug sampling');
+check(/hasLiveActCharacterFaceMapping/.test(controls), 'overlay uses live runtime mapping');
+check(/snap\.points/.test(overlay), 'overlay draws anchor points');
+check(/getLiveActCharacterFaceDebugHandle\(\)/.test(overlay), 'overlay samples viewport runtime handle');
+check(/getFaceMappingCanvasElement/.test(overlay), 'overlay sizes to WebGL canvas CSS box');
+check(/studioRuntimeRef/.test(overlay), 'overlay accepts studioRuntimeRef');
+check(/setLiveActCharacterFaceDebugEnabled/.test(read('src/app/character/avatar/AvatarPreviewExpandDialog.tsx')), 'expand dialog enables face debug');
+check(/OVERLAY_POINT_IDS/.test(debug), 'partial anchors including nose/chin/forehead');
+check(/faceOverlayEnabled && characterFaceMappingAvailable/.test(surface), 'mesh overlay independent of webcam tracking');
+check(
+  /Face Overlay[\s\S]{0,400}?disabled=\{actionsDisabled\}[\s\S]{0,200}?liveact-face-overlay-toggle/.test(settings),
+  'face overlay toggle not gated on tracking',
+);
 check(/Character geometry/.test(overlay), 'geometry HUD label');
 check(/Applied/.test(overlay), 'applied HUD section');
 check(/face\.jawOpen/.test(overlay), 'applied jawOpen');

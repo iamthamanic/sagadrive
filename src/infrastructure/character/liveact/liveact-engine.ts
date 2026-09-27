@@ -4,13 +4,18 @@
  *
  * Wraps the shared MediaPipe face source. At most one active camera/detector.
  * Legacy AvatarFaceTrackingRuntime is compatibility-only (no productive canvas consumer).
+ * RAW is the tracker's anatomical sample; everything from MAPPED on (calibration included) is in
+ * avatar orientation (LIVEACT_MIRROR_AVATAR).
  */
 
 import {
   DEFAULT_LIVEACT_LIMITS,
   LIVEACT_CALIBRATION_FRAME_TARGET,
   LIVEACT_CALIBRATION_TIMEOUT_MS,
-  applyLiveActNeutralBaseline,
+  LIVEACT_MIRROR_AVATAR,
+  LIVEACT_RANGE_CALIBRATION_STEPS,
+  LIVEACT_RANGE_STEP_MIN_FRAMES,
+  LIVEACT_RANGE_STEP_MIN_MS,
   assertLiveActFrameLocalOnly,
   applyLiveActRetargetProfile,
   DEFAULT_LIVEACT_RETARGET_PROFILE,
@@ -20,27 +25,41 @@ import {
   createLiveActCalibrationAccumulator,
   createLiveActDiagnosticsV2Snapshot,
   createLiveActInputCapabilities,
+  createLiveActRangeCalibrationAccumulator,
   createNeutralLiveActFrame,
   createUnavailableLiveActAppliedValues,
   finalizeLiveActCalibration,
+  finalizeLiveActRangeCalibration,
+  liveActNeutralCalibrationPrompt,
+  liveActRangeCalibrationStepPrompt,
+  liveActRangeStepChannels,
+  liveActRangeStepHoldMs,
   liveActStatusLabelDe,
   mapLiveActSourceSample,
+  mirrorLiveActSourceSample,
   pushLiveActCalibrationSample,
+  pushLiveActRangeCalibrationSample,
   resolveLiveActQualityProfile,
   selectPrimaryLiveActFaceIndex,
   shouldDropLiveActInferenceTick,
   shouldThrottleLiveActUiStatus,
-  smoothLiveActFrame,
   snapshotLiveActDiagnosticsV2FromFrame,
   snapshotLiveActDiagnosticsV2FromSample,
+  stepLiveActCalibratedFrame,
+  type LiveActCalibratedStepV1,
   type LiveActCalibrationAccumulator,
+  type LiveActCalibrationStepPeakV1,
   type LiveActDiagnosticsV2Snapshot,
   type LiveActFaceDiagnosticsFrameV1,
+  type LiveActFaceChannelId,
   type LiveActFrameV1,
   type LiveActInputCapabilities,
   type LiveActLimits,
   type LiveActNeutralBaselineV1,
   type LiveActQualityProfile,
+  type LiveActRangeCalibrationAccumulator,
+  type LiveActRangeCalibrationV1,
+  type LiveActRangeStepPhase,
   type LiveActRetargetProfileV1,
   type LiveActSourceSample,
   type LiveActStatus,
@@ -70,6 +89,24 @@ export interface LiveActEngineState {
   calibrationStatus: LiveActCalibrationStatus;
   calibrationMessage: string;
   hasNeutralBaseline: boolean;
+  /** Max pass succeeded — at least one face channel carries a range gain. */
+  hasRangeCalibration: boolean;
+  /** True while review phase — Weiter / Fertig unlocked. */
+  canAdvanceCalibration: boolean;
+  /** Label for the advance control while in review; null otherwise. */
+  calibrationAdvanceLabelDe: 'Weiter' | 'Fertig' | null;
+  /** armed = wait for Start; holding = countdown; review = show peaks. Null outside range steps. */
+  calibrationStepPhase: LiveActRangeStepPhase | null;
+  /** True when Start is available for the current expression. */
+  canStartCalibrationHold: boolean;
+  /** True when Wiederholen is available (review). */
+  canRetryCalibrationHold: boolean;
+  /** Peak RAW values for the focus channels of the current step (after hold). */
+  calibrationStepPeaks: readonly LiveActCalibrationStepPeakV1[];
+  /**
+   * Whole seconds left in the current hold (neutral or holding). Null when not counting down.
+   */
+  calibrationCountdownSec: number | null;
   /** Inference ticks dropped due to in-flight backpressure (UI-throttled metric). */
   droppedInferenceFrames: number;
 }
@@ -100,6 +137,7 @@ export class LiveActEngine {
   private raf = 0;
   private lastFrameAt = 0;
   private frame: LiveActFrameV1 | null = null;
+  private pipelineStep: LiveActCalibratedStepV1 | null = null;
   private sequence = 0;
   private disposed = false;
   private visibilityHandler: (() => void) | null = null;
@@ -113,12 +151,26 @@ export class LiveActEngine {
   private readonly diagnosticsV2Listeners = new Set<LiveActDiagnosticsV2Listener>();
   private diagnosticsV2: LiveActDiagnosticsV2Snapshot | null = null;
   private neutralBaseline: LiveActNeutralBaselineV1 | null = null;
+  private rangeCalibration: LiveActRangeCalibrationV1 | null = null;
   private calibrating = false;
+  private calibrationPhase: 'neutral' | 'range' = 'neutral';
   private calibrationAccumulator: LiveActCalibrationAccumulator = createLiveActCalibrationAccumulator();
+  private rangeAccumulator: LiveActRangeCalibrationAccumulator =
+    createLiveActRangeCalibrationAccumulator();
+  /** Index into LIVEACT_RANGE_CALIBRATION_STEPS while phase === 'range'. */
+  private rangeStepIndex = 0;
+  private rangeStepStartedAtMs = 0;
+  private rangeStepFrameCount = 0;
+  private rangeStepHoldMs: number = LIVEACT_RANGE_STEP_MIN_MS;
+  private rangeStepPhase: LiveActRangeStepPhase = 'armed';
+  private rangeStepPeakMax: Partial<Record<LiveActFaceChannelId, number>> = {};
+  private rangeStepPeaks: LiveActCalibrationStepPeakV1[] = [];
+  private lastEmittedCountdownSec: number | null = null;
   private calibrationStartedAtMs = 0;
   private calibrationResolve: ((result: LiveActCalibrationResult) => void) | null = null;
   private calibrationStatus: LiveActCalibrationStatus = 'idle';
   private calibrationMessage = '';
+  private canAdvanceCalibration = false;
   private startGeneration = 0;
   private inferenceInFlight = 0;
   private droppedInferenceFrames = 0;
@@ -198,6 +250,11 @@ export class LiveActEngine {
     return this.diagnosticsV2;
   }
 
+  /** Session range gains from the last successful max pass; null until then. */
+  getRangeCalibration(): LiveActRangeCalibrationV1 | null {
+    return this.rangeCalibration;
+  }
+
   getState(): LiveActEngineState {
     return {
       status: this.status,
@@ -209,6 +266,15 @@ export class LiveActEngine {
       calibrationStatus: this.calibrationStatus,
       calibrationMessage: this.calibrationMessage,
       hasNeutralBaseline: this.neutralBaseline !== null,
+      hasRangeCalibration: this.rangeCalibration !== null,
+      canAdvanceCalibration: this.computeCanAdvanceCalibration(),
+      calibrationAdvanceLabelDe: this.computeCalibrationAdvanceLabel(),
+      calibrationStepPhase:
+        this.calibrating && this.calibrationPhase === 'range' ? this.rangeStepPhase : null,
+      canStartCalibrationHold: this.computeCanStartCalibrationHold(),
+      canRetryCalibrationHold: this.computeCanRetryCalibrationHold(),
+      calibrationStepPeaks: this.rangeStepPeaks,
+      calibrationCountdownSec: this.computeCalibrationCountdownSec(),
       droppedInferenceFrames: this.droppedInferenceFrames,
     };
   }
@@ -250,7 +316,8 @@ export class LiveActEngine {
   }
 
   /**
-   * Collect 30 valid face frames within 2s; on failure the previous baseline is kept.
+   * Step 1: 30 valid neutral frames within 2 s (on failure the previous calibration is kept).
+   * Then one max-pass expression at a time; the user advances with {@link advanceCalibration}.
    */
   calibrate(): Promise<LiveActCalibrationResult> {
     if (this.disposed) {
@@ -274,12 +341,58 @@ export class LiveActEngine {
 
     return new Promise((resolve) => {
       this.calibrating = true;
+      this.calibrationPhase = 'neutral';
+      this.canAdvanceCalibration = false;
+      this.rangeStepIndex = 0;
+      this.rangeStepFrameCount = 0;
+      this.rangeStepPhase = 'armed';
+      this.rangeStepPeaks = [];
+      this.rangeStepPeakMax = {};
+      this.lastEmittedCountdownSec = Math.ceil(LIVEACT_CALIBRATION_TIMEOUT_MS / 1000);
       this.calibrationAccumulator = createLiveActCalibrationAccumulator();
       this.calibrationStartedAtMs =
         typeof performance !== 'undefined' ? performance.now() : Date.now();
       this.calibrationResolve = resolve;
-      this.setCalibrationUi('running', 'Neutral halten — Kalibrierung läuft …');
+      this.setCalibrationUi('running', liveActNeutralCalibrationPrompt());
+      this.emitStatus(true);
     });
+  }
+
+  /** Begin the countdown/hold for the current armed expression. */
+  startCalibrationHold(): void {
+    if (!this.computeCanStartCalibrationHold()) return;
+    this.rangeStepPhase = 'holding';
+    this.rangeStepFrameCount = 0;
+    this.rangeStepPeakMax = {};
+    this.rangeStepPeaks = [];
+    this.canAdvanceCalibration = false;
+    this.rangeStepStartedAtMs =
+      typeof performance !== 'undefined' ? performance.now() : Date.now();
+    this.lastEmittedCountdownSec = Math.ceil(this.rangeStepHoldMs / 1000);
+    this.emitStatus(true);
+  }
+
+  /** Discard the last hold and wait for Start again. */
+  retryCalibrationHold(): void {
+    if (!this.computeCanRetryCalibrationHold()) return;
+    this.beginRangeStep(this.rangeStepIndex);
+    this.emitStatus(true);
+  }
+
+  /**
+   * Advance from review to the next expression, or finish after the last.
+   * No-op until the hold is complete and reviewed.
+   */
+  advanceCalibration(): void {
+    if (!this.calibrating || this.calibrationPhase !== 'range') return;
+    if (!this.computeCanAdvanceCalibration()) return;
+    const next = this.rangeStepIndex + 1;
+    if (next >= LIVEACT_RANGE_CALIBRATION_STEPS.length) {
+      this.completeRangeCalibration();
+      return;
+    }
+    this.beginRangeStep(next);
+    this.emitStatus(true);
   }
 
   /** Explicit user action only — never auto-start on construct/reload. */
@@ -379,6 +492,7 @@ export class LiveActEngine {
     this.cancelLoop();
     this.cleanupMedia();
     this.frame = null;
+    this.pipelineStep = null;
     this.diagnosticsV2 = null;
     this.output?.resetLiveActPose();
     this.releaseActiveClaim();
@@ -391,9 +505,11 @@ export class LiveActEngine {
     this.startGeneration += 1;
     this.cancelCalibration('LiveAct beendet.');
     this.neutralBaseline = null;
+    this.rangeCalibration = null;
     this.cancelLoop();
     this.cleanupMedia();
     this.frame = null;
+    this.pipelineStep = null;
     this.diagnosticsV2 = null;
     this.output = null;
     this.statusListeners.clear();
@@ -470,16 +586,23 @@ export class LiveActEngine {
     diagnosticsSeed: LiveActFaceDiagnosticsFrameV1 | null,
   ): LiveActFrameV1 {
     this.sequence += 1;
-    const mapped = mapLiveActSourceSample(sample, {
+    const oriented = LIVEACT_MIRROR_AVATAR ? mirrorLiveActSourceSample(sample) : sample;
+    const mapped = mapLiveActSourceSample(oriented, {
       timestampMs,
       sequence: this.sequence,
       limits: this.limits,
     });
 
-    this.tickCalibration(sample);
+    this.tickCalibration(oriented);
 
-    const smoothed = smoothLiveActFrame(this.frame, mapped, this.limits.smooth);
-    const calibrated = applyLiveActNeutralBaseline(smoothed, this.neutralBaseline, this.limits);
+    const step = stepLiveActCalibratedFrame(
+      this.pipelineStep,
+      mapped,
+      { neutral: this.neutralBaseline, range: this.rangeCalibration },
+      this.limits,
+    );
+    this.pipelineStep = step;
+    const { smoothed, calibrated } = step;
     assertLiveActFrameLocalOnly(calibrated);
     this.frame = calibrated;
     const retargeted = applyLiveActRetargetProfile(calibrated, this.retargetProfile);
@@ -616,6 +739,11 @@ export class LiveActEngine {
     if (!this.calibrating) return;
 
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (this.calibrationPhase === 'range') {
+      this.tickRangeCalibration(sample, now);
+      return;
+    }
+    this.emitCountdownIfChanged();
     if (now - this.calibrationStartedAtMs > LIVEACT_CALIBRATION_TIMEOUT_MS) {
       this.failCalibration('Kalibrierung fehlgeschlagen — zu wenig gültige Frames.');
       return;
@@ -641,16 +769,142 @@ export class LiveActEngine {
       return;
     }
     this.neutralBaseline = next;
+    // Range gains are spans above the neutral pose — a new baseline invalidates them.
+    this.rangeCalibration = null;
+    this.calibrationPhase = 'range';
+    this.rangeAccumulator = createLiveActRangeCalibrationAccumulator();
+    this.beginRangeStep(0);
+    this.emitStatus(true);
+  }
+
+  private beginRangeStep(stepIndex: number): void {
+    this.rangeStepIndex = stepIndex;
+    this.rangeStepFrameCount = 0;
+    this.canAdvanceCalibration = false;
+    this.rangeStepHoldMs = liveActRangeStepHoldMs(stepIndex);
+    this.rangeStepPhase = 'armed';
+    this.rangeStepPeakMax = {};
+    this.rangeStepPeaks = [];
+    this.lastEmittedCountdownSec = null;
+    this.setCalibrationUi('running', liveActRangeCalibrationStepPrompt(stepIndex));
+  }
+
+  private computeCanStartCalibrationHold(): boolean {
+    return (
+      this.calibrating &&
+      this.calibrationPhase === 'range' &&
+      this.rangeStepPhase === 'armed'
+    );
+  }
+
+  private computeCanRetryCalibrationHold(): boolean {
+    return (
+      this.calibrating &&
+      this.calibrationPhase === 'range' &&
+      this.rangeStepPhase === 'review'
+    );
+  }
+
+  private computeCanAdvanceCalibration(): boolean {
+    return (
+      this.calibrating &&
+      this.calibrationPhase === 'range' &&
+      this.rangeStepPhase === 'review'
+    );
+  }
+
+  private computeCalibrationAdvanceLabel(): 'Weiter' | 'Fertig' | null {
+    if (!this.computeCanAdvanceCalibration()) return null;
+    return this.rangeStepIndex >= LIVEACT_RANGE_CALIBRATION_STEPS.length - 1
+      ? 'Fertig'
+      : 'Weiter';
+  }
+
+  private computeCalibrationCountdownSec(): number | null {
+    if (!this.calibrating || this.calibrationStatus !== 'running') return null;
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (this.calibrationPhase === 'neutral') {
+      const remaining = LIVEACT_CALIBRATION_TIMEOUT_MS - (now - this.calibrationStartedAtMs);
+      return Math.max(0, Math.ceil(remaining / 1000));
+    }
+    if (this.rangeStepPhase !== 'holding') return null;
+    const remaining = this.rangeStepHoldMs - (now - this.rangeStepStartedAtMs);
+    return Math.max(0, Math.ceil(remaining / 1000));
+  }
+
+  private emitCountdownIfChanged(): void {
+    const sec = this.computeCalibrationCountdownSec();
+    if (sec === this.lastEmittedCountdownSec) return;
+    this.lastEmittedCountdownSec = sec;
+    this.emitStatus(true);
+  }
+
+  private tickRangeCalibration(sample: LiveActSourceSample, now: number): void {
+    if (this.rangeStepPhase !== 'holding') return;
+
+    const pushed = pushLiveActRangeCalibrationSample(this.rangeAccumulator, sample, this.limits);
+    if (pushed) {
+      this.rangeStepFrameCount += 1;
+      for (const channel of liveActRangeStepChannels(this.rangeStepIndex)) {
+        const value = sample.face[channel];
+        if (typeof value !== 'number' || !Number.isFinite(value)) continue;
+        const prev = this.rangeStepPeakMax[channel] ?? 0;
+        if (value > prev) this.rangeStepPeakMax[channel] = value;
+      }
+    }
+    this.emitCountdownIfChanged();
+
+    const holdDone =
+      this.rangeStepFrameCount >= LIVEACT_RANGE_STEP_MIN_FRAMES &&
+      now - this.rangeStepStartedAtMs >= this.rangeStepHoldMs;
+
+    if (!holdDone) return;
+
+    this.rangeStepPeaks = liveActRangeStepChannels(this.rangeStepIndex).map((channel) => ({
+      channel,
+      max: Math.round((this.rangeStepPeakMax[channel] ?? 0) * 1000) / 1000,
+    }));
+    this.rangeStepPhase = 'review';
+    this.canAdvanceCalibration = true;
+    this.lastEmittedCountdownSec = 0;
+    this.emitStatus(true);
+  }
+
+  private completeRangeCalibration(): void {
+    const baseline = this.neutralBaseline;
+    const range = baseline
+      ? finalizeLiveActRangeCalibration(this.rangeAccumulator, baseline)
+      : null;
+    this.rangeCalibration = range;
     this.calibrating = false;
+    this.calibrationPhase = 'neutral';
+    this.canAdvanceCalibration = false;
+    this.rangeStepPhase = 'armed';
+    this.rangeStepPeaks = [];
+    this.lastEmittedCountdownSec = null;
     const resolve = this.calibrationResolve;
     this.calibrationResolve = null;
-    this.setCalibrationUi('success', 'Neutral-Kalibrierung gespeichert (nur diese Sitzung).');
-    resolve?.({ ok: true, messageDe: 'Neutral-Kalibrierung gespeichert.' });
+    const channelCount = range ? Object.keys(range.gain).length : 0;
+    const messageDe = range
+      ? `Kalibriert: Neutral + Maximal (${channelCount} Kanäle, nur diese Sitzung).`
+      : 'Neutral gespeichert — Maximal-Schritt ohne genug Bewegung, Ausschlag bleibt 1:1.';
+    if (!range) {
+      console.warn('[liveact] range calibration skipped', {
+        frames: this.rangeAccumulator.count,
+      });
+    }
+    this.setCalibrationUi('success', messageDe);
+    resolve?.({ ok: true, messageDe });
     this.emitStatus(true);
   }
 
   private failCalibration(messageDe: string): void {
     this.calibrating = false;
+    this.calibrationPhase = 'neutral';
+    this.canAdvanceCalibration = false;
+    this.rangeStepPhase = 'armed';
+    this.rangeStepPeaks = [];
+    this.lastEmittedCountdownSec = null;
     const resolve = this.calibrationResolve;
     this.calibrationResolve = null;
     this.setCalibrationUi('failed', messageDe);
@@ -661,6 +915,11 @@ export class LiveActEngine {
   private cancelCalibration(messageDe: string): void {
     if (!this.calibrating) return;
     this.calibrating = false;
+    this.calibrationPhase = 'neutral';
+    this.canAdvanceCalibration = false;
+    this.rangeStepPhase = 'armed';
+    this.rangeStepPeaks = [];
+    this.lastEmittedCountdownSec = null;
     const resolve = this.calibrationResolve;
     this.calibrationResolve = null;
     this.setCalibrationUi('idle', messageDe);

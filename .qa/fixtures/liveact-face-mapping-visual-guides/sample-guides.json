@@ -1,0 +1,9 @@
+{
+  "pathKinds": [
+    "eyeLeft",
+    "mouth",
+    "browLeft"
+  ],
+  "eyeSampleCount": 16,
+  "browSampleCount": 9
+}

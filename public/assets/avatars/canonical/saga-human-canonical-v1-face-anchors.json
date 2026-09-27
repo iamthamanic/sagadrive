@@ -1,0 +1,215 @@
+{
+  "contractVersion": "SagaDriveFaceAnchorsV1",
+  "anchors": {
+    "mouthUpper": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 466,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "mouthLower": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 914,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "mouthCornerLeft": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 13980,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "mouthCornerRight": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 728,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeLeftInner": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 13331,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "eyeLeftOuter": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 14818,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "eyeLeftUpper": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 13260,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "eyeLeftLower": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 23066,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "eyeRightInner": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 74,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "eyeRightOuter": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 1576,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "eyeRightUpper": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 5,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "eyeRightLower": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 9617,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "browLeftInner": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 13504,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "browLeftOuter": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 13570,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "browLeftCenter": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 13478,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "browRightInner": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 249,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "browRightOuter": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 316,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "browRightCenter": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 223,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "noseTip": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 409,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    },
+    "chin": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 9194,
+      "barycentric": {
+        "u": 0,
+        "v": 1,
+        "w": 0
+      }
+    },
+    "forehead": {
+      "nodeIdentity": "Body",
+      "primitiveIndex": 0,
+      "triangleIndex": 9348,
+      "barycentric": {
+        "u": 0,
+        "v": 0,
+        "w": 1
+      }
+    }
+  }
+}

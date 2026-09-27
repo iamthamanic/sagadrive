@@ -23,6 +23,8 @@ export type ShellViewId =
   | 'rulesets-test'
   | 'item-create'
   | 'item-detail'
+  | 'look-create'
+  | 'look-edit'
   | 'npc-creature-create'
   | 'npc-creature-edit'
   | 'saga-list'
@@ -57,6 +59,8 @@ export type ResolvedRoute =
         ShellViewId,
         | 'item-detail'
         | 'item-create'
+        | 'look-create'
+        | 'look-edit'
         | 'npc-creature-create'
         | 'npc-creature-edit'
         | 'saga-list'
@@ -70,6 +74,8 @@ export type ResolvedRoute =
     }
   | { kind: 'item-create'; typeSlug?: string }
   | { kind: 'item-detail'; itemId: string }
+  | { kind: 'look-create' }
+  | { kind: 'look-edit'; lookId: string }
   | { kind: 'npc-creature-create' }
   | { kind: 'npc-creature-edit'; definitionId: string }
   | { kind: 'saga-list' }
@@ -100,6 +106,8 @@ const VIEW_PATHS: Record<
     ShellViewId,
     | 'item-detail'
     | 'item-create'
+    | 'look-create'
+    | 'look-edit'
     | 'npc-creature-create'
     | 'npc-creature-edit'
     | 'saga-list'
@@ -185,6 +193,7 @@ export function normalizeViewId(raw: string): string {
 export function pathForView(viewId: string): string | null {
   const normalized = normalizeViewId(viewId);
   if (normalized === 'item-create') return '/items/create';
+  if (normalized === 'look-create') return '/looks/create';
   if (normalized === 'npc-creature-create') return '/npc-creatures/create';
   if (normalized === 'saga-list') return '/sagas';
   if (normalized in VIEW_PATHS) {
@@ -202,6 +211,15 @@ export function pathForItemDetail(itemId: string): string {
 export function pathForItemCreateType(typeSlug: string): string {
   const safe = encodeURIComponent(typeSlug.trim().toLowerCase());
   return `/items/create/new/${safe}`;
+}
+
+export function pathForLookCreate(): string {
+  return '/looks/create';
+}
+
+export function pathForLookEdit(lookId: string): string {
+  const safe = encodeURIComponent(lookId.trim());
+  return `/looks/${safe}`;
 }
 
 export function pathForNpcCreatureCreate(): string {
@@ -428,6 +446,27 @@ export function resolvePathname(pathname: string): ResolvedRoute {
     return { kind: 'item-detail', itemId };
   }
 
+  if (path === '/looks/create') {
+    return { kind: 'look-create' };
+  }
+
+  if (path.startsWith('/looks/create/')) {
+    return { kind: 'not-found', attemptedPath: path };
+  }
+
+  const lookMatch = path.match(/^\/looks\/([^/]+)$/);
+  if (lookMatch) {
+    const lookId = decodeSegment(lookMatch[1] ?? '').trim();
+    if (!lookId || lookId === 'create') {
+      return { kind: 'not-found', attemptedPath: path };
+    }
+    return { kind: 'look-edit', lookId };
+  }
+
+  if (path.startsWith('/looks/')) {
+    return { kind: 'not-found', attemptedPath: path };
+  }
+
   if (path === '/npc-creatures/create') {
     return { kind: 'npc-creature-create' };
   }
@@ -465,6 +504,10 @@ export function routeToShellView(route: ResolvedRoute): ShellViewId {
       return 'item-create';
     case 'item-detail':
       return 'item-detail';
+    case 'look-create':
+      return 'look-create';
+    case 'look-edit':
+      return 'look-edit';
     case 'npc-creature-create':
       return 'npc-creature-create';
     case 'npc-creature-edit':
@@ -491,6 +534,8 @@ export function knownViewIds(): string[] {
     ...Object.keys(VIEW_PATHS),
     'item-create',
     'item-detail',
+    'look-create',
+    'look-edit',
     'npc-creature-create',
     'npc-creature-edit',
     'saga-list',

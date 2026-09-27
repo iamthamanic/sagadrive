@@ -4,8 +4,57 @@
  */
 
 import * as THREE from 'three';
-import type { VRM } from '@pixiv/three-vrm';
+import {
+  VRMLookAtBoneApplier,
+  VRMLookAtExpressionApplier,
+  type VRM,
+  type VRMLookAtApplier,
+  type VRMLookAtRangeMap,
+} from '@pixiv/three-vrm';
 import type { LiveActEyeGaze, LiveActHeadPose } from '../../../domains/character/liveact';
+
+/** VRMLookAt degrees at gaze ±1 when an asset's LookAt applier exposes no range maps. */
+const LIVEACT_LOOKAT_FALLBACK_INPUT_MAX_DEG = 30;
+
+/** VRMLookAt yaw / pitch in degrees that gaze ±1 maps to, per direction. */
+export interface LiveActLookAtGazeScaleDeg {
+  horizontal: number;
+  up: number;
+  down: number;
+}
+
+function positiveOr(value: number, fallback: number): number {
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+/**
+ * Gaze ±1 reaches exactly the output the asset declares: the full eye rotation of a bone applier,
+ * weight 1 of an expression applier (expression weights saturate at 1, so an outputScale > 1
+ * would otherwise reach full weight after a fraction of the gaze range).
+ */
+export function liveActLookAtGazeScaleDeg(applier: VRMLookAtApplier): LiveActLookAtGazeScaleDeg {
+  const fallback = LIVEACT_LOOKAT_FALLBACK_INPUT_MAX_DEG;
+  const inputMax = (map: VRMLookAtRangeMap): number => positiveOr(map.inputMaxValue, fallback);
+  if (applier instanceof VRMLookAtBoneApplier) {
+    // three-vrm's bone applier reads rangeMapVerticalDown for pitch < 0 (up) and
+    // rangeMapVerticalUp for pitch > 0 (down); pinned by scripts/liveact-fidelity-check.mjs.
+    return {
+      horizontal: inputMax(applier.rangeMapHorizontalOuter),
+      up: inputMax(applier.rangeMapVerticalDown),
+      down: inputMax(applier.rangeMapVerticalUp),
+    };
+  }
+  if (applier instanceof VRMLookAtExpressionApplier) {
+    const fullWeightInput = (map: VRMLookAtRangeMap): number =>
+      inputMax(map) * Math.min(1, 1 / positiveOr(map.outputScale, 1));
+    return {
+      horizontal: fullWeightInput(applier.rangeMapHorizontalOuter),
+      up: fullWeightInput(applier.rangeMapVerticalUp),
+      down: fullWeightInput(applier.rangeMapVerticalDown),
+    };
+  }
+  return { horizontal: fallback, up: fallback, down: fallback };
+}
 
 export function applyLiveActHeadRotation(
   headBone: THREE.Object3D | null,
@@ -20,18 +69,25 @@ export function applyLiveActHeadRotation(
   headBone.quaternion.copy(restQuaternion).multiply(scratchQuaternion);
 }
 
+/**
+ * Eye-in-head gaze: the tracker reports eye rotation relative to the head, so yaw / pitch are
+ * set on VRMLookAt (head-relative, no target) instead of aiming at a fixed world point — head
+ * turns no longer counter-rotate the eyes and neutral gaze is straight ahead. Scale: see
+ * {@link liveActLookAtGazeScaleDeg}. three-vrm: +yaw looks toward +X (avatar's left), +pitch
+ * looks down.
+ */
 export function applyLiveActVrmEyeLookAt(
   vrm: VRM | undefined,
-  eyeLookTarget: THREE.Vector3,
   eyeLeft: LiveActEyeGaze,
   eyeRight: LiveActEyeGaze,
 ): void {
   const lookAt = vrm?.lookAt;
   if (!lookAt) return;
-  const avgX = (eyeLeft.x + eyeRight.x) * 0.5;
-  const avgY = (eyeLeft.y + eyeRight.y) * 0.5;
-  eyeLookTarget.set(avgX * 0.35, 1.55 + avgY * 0.2, 1.2);
-  lookAt.lookAt(eyeLookTarget);
+  const x = (eyeLeft.x + eyeRight.x) * 0.5;
+  const y = (eyeLeft.y + eyeRight.y) * 0.5;
+  const scale = liveActLookAtGazeScaleDeg(lookAt.applier);
+  lookAt.yaw = x * scale.horizontal;
+  lookAt.pitch = -y * (y >= 0 ? scale.up : scale.down);
 }
 
 export function applyLiveActEyeBoneGaze(

@@ -90,14 +90,16 @@ export function pickPrimaryMeshedNode(document, preferredNodeIdentity) {
 /**
  * @param {import('@gltf-transform/core').Primitive} prim
  */
-function headVertexIndices(prim) {
+export const DEFAULT_HEAD_CROP_HEIGHT = 0.42;
+
+function headVertexIndices(prim, headCropHeight = DEFAULT_HEAD_CROP_HEIGHT) {
   const pos = prim.getAttribute('POSITION');
   if (!pos) return [];
   const arr = pos.getArray();
   if (!arr) return [];
   let maxY = -Infinity;
   for (let i = 1; i < arr.length; i += 3) maxY = Math.max(maxY, arr[i]);
-  const yCut = maxY - 0.42;
+  const yCut = maxY - headCropHeight;
   /** @type {number[]} */
   const indices = [];
   for (let vi = 0; vi < pos.getCount(); vi += 1) {
@@ -210,7 +212,7 @@ function triangleBindingForVertex(prim, vertexIndex) {
   return { triangleIndex: 0, barycentric: { u: 1 / 3, v: 1 / 3, w: 1 / 3 } };
 }
 
-function bindingForVertex(nodeIdentity, primitiveIndex, prim, vertexIndex) {
+export function bindingForVertex(nodeIdentity, primitiveIndex, prim, vertexIndex) {
   const tri = triangleBindingForVertex(prim, vertexIndex);
   return {
     nodeIdentity,
@@ -371,7 +373,11 @@ export function mapQtMeshMarkersToTargets(markerPositions) {
  * @param {{
  *   nodeIdentity?: string;
  *   markerPositions?: Record<string, { x: number; y: number; z: number }>;
+ *   headCropHeight?: number;
  * }} opts
+ *
+ * headCropHeight: metres below the mesh top treated as head (default 0.42). Lower it for
+ * single-mesh full bodies whose shoulders/chest fall inside the default crop.
  */
 export function authorHeuristicFaceAnchorsManifest(document, opts = {}) {
   const node = pickPrimaryMeshedNode(document, opts.nodeIdentity);
@@ -386,7 +392,11 @@ export function authorHeuristicFaceAnchorsManifest(document, opts = {}) {
   const arr = pos?.getArray();
   if (!arr) throw new Error('Mesh missing POSITION');
 
-  const headVerts = headVertexIndices(prim);
+  const headCropHeight = opts.headCropHeight ?? DEFAULT_HEAD_CROP_HEIGHT;
+  if (!(headCropHeight > 0.05 && headCropHeight < 2)) {
+    throw new Error(`headCropHeight out of range (0.05–2 m): ${headCropHeight}`);
+  }
+  const headVerts = headVertexIndices(prim, headCropHeight);
   if (headVerts.length < 100) {
     throw new Error(`Head vertex sample too small: ${headVerts.length}`);
   }

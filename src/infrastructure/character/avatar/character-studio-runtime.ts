@@ -65,6 +65,7 @@ import {
 } from '../liveact/liveact-character-face-debug';
 import { listFaceAnchorsManifestUrlCandidates } from '../liveact/face-anchors-manifest-url';
 import type {
+  SagaDriveFaceAnchorId,
   SagaDriveFaceAnchorTriangleBinding,
   SagaDriveFaceAnchorsManifestV1,
 } from '../../../domains/character/avatar/face-anchor-contract';
@@ -195,6 +196,10 @@ export class CharacterStudioRuntime {
   private readonly liveActRigDebug: LiveActRigDebugController;
   private readonly liveActCharacterFaceDebug: LiveActCharacterFaceDebugController;
   private faceAnchorManifestLoadToken = 0;
+  /** Model URL whose anchors are bound; null until the current model is ready. */
+  private faceAnchorsModelUrl: string | null = null;
+  /** Last bound `avatar.face_anchors` reference — hydration can change it without a model reload. */
+  private faceAnchorsOverrideSource: SagaDriveFaceAnchorsManifestV1 | null = null;
   /** When true, LiveAct drive application is suppressed for Face Setup (#420). */
   private faceMappingAuthoringActive = false;
   private readonly faceMappingProjectScratch = new THREE.Vector3();
@@ -295,6 +300,8 @@ export class CharacterStudioRuntime {
     const version = ++this.loadVersion;
     this.currentAvatar = avatar;
     this.currentManifest = manifest;
+    // Anchors of the incoming model must not be bound onto the outgoing mesh mid-load.
+    this.faceAnchorsModelUrl = null;
 
     const safeUrl = normalizeAvatarModelUrl(url);
     if (!safeUrl) {
@@ -346,7 +353,8 @@ export class CharacterStudioRuntime {
       this.rebuildLiveActAvatarOutput();
       this.liveActRigDebug.bindModelRoot(root);
       this.liveActCharacterFaceDebug.bindModelRoot(root);
-      void this.loadFaceAnchorsManifestForModel(safeUrl);
+      this.faceAnchorsModelUrl = safeUrl;
+      this.syncCharacterFaceAnchors(this.currentAvatar ?? avatar, true);
       this.rigidEquipmentRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.skinnedWearableRuntime.bindAvatar(root, this.lastRigAnalysis);
       this.onStateChange({
@@ -454,6 +462,11 @@ export class CharacterStudioRuntime {
     return this.liveActAvatarOutput;
   }
 
+  /** Procedural clips pause while LiveAct drives this runtime so they cannot overwrite the head pose. */
+  setLiveActDriveActive(active: boolean): void {
+    this.animationRuntime.setSuspended(active);
+  }
+
   /** Asset/bone/morph inventory only — compose with engine input in app (#381). */
   getLiveActAvatarCapabilities(): LiveActAvatarCapabilities | null {
     return this.liveActAvatarOutput?.getAvatarCapabilities() ?? null;
@@ -499,7 +512,7 @@ export class CharacterStudioRuntime {
     this.liveActCharacterFaceDebug.bindManifest(manifest);
   }
 
-  /** Face Setup authoring mode: neutralize pose and suppress LiveAct drive. */
+  /** Face Setup authoring: neutralize pose, suppress LiveAct drive, frame face frontal. */
   setFaceMappingAuthoringActive(active: boolean): void {
     if (this.disposed) return;
     this.faceMappingAuthoringActive = active;
@@ -509,6 +522,12 @@ export class CharacterStudioRuntime {
       this.setLiveActCharacterFaceDebugEnabled(false);
       this.setLiveActRigDebugEnabled(false);
       this.applyCameraFrame('face');
+      // Zoom/pan allowed for precise placement; rotate stays off so marker drag wins.
+      this.applyFaceMappingOrbitMode(false);
+    } else {
+      this.controls.enableRotate = true;
+      this.controls.enabled = true;
+      this.applyOrbitLimits(this.inspectMode ? 'inspect' : 'default');
     }
   }
 
@@ -516,10 +535,83 @@ export class CharacterStudioRuntime {
     return this.faceMappingAuthoringActive;
   }
 
-  /** Disable orbit while dragging a face-mapping marker (#420 UX). */
+  /**
+   * During Face Mapping: disable rotate always; disable zoom/pan only while dragging a marker.
+   * Outside Face Mapping: toggles OrbitControls.enabled (legacy #420).
+   */
   setOrbitControlsEnabled(enabled: boolean): void {
     if (this.disposed) return;
+    if (this.faceMappingAuthoringActive) {
+      this.applyFaceMappingOrbitMode(!enabled);
+      return;
+    }
     this.controls.enabled = enabled;
+  }
+
+  /**
+   * Scroll-wheel zoom while the marker overlay owns pointer events.
+   * Positive deltaY = zoom out, negative = zoom in (browser wheel convention).
+   */
+  dollyFaceMappingCamera(deltaY: number): void {
+    if (this.disposed || !this.faceMappingAuthoringActive) return;
+    if (!Number.isFinite(deltaY) || deltaY === 0) return;
+
+    const offset = this.camera.position.clone().sub(this.controls.target);
+    const distance = offset.length();
+    if (!(distance > 1e-6)) return;
+
+    // ~10% per 100px wheel notch; clamp to face-mapping limits.
+    const factor = Math.exp(deltaY * 0.0015);
+    const minD = 0.06;
+    const maxD = 2.5;
+    const next = Math.min(maxD, Math.max(minD, distance * factor));
+    offset.multiplyScalar(next / distance);
+    this.camera.position.copy(this.controls.target).add(offset);
+    this.controls.update();
+  }
+
+  /**
+   * Screen-space pan (CSS pixels). Drag up → look higher on the face (Stirn).
+   * Moves camera + orbit target together so framing stays frontal.
+   */
+  panFaceMappingCamera(deltaXPx: number, deltaYPx: number): void {
+    if (this.disposed || !this.faceMappingAuthoringActive) return;
+    if (!Number.isFinite(deltaXPx) || !Number.isFinite(deltaYPx)) return;
+    if (deltaXPx === 0 && deltaYPx === 0) return;
+
+    const canvas = this.renderer.domElement;
+    const height = Math.max(1, canvas.clientHeight);
+    const distance = this.camera.position.distanceTo(this.controls.target);
+    const fov = THREE.MathUtils.degToRad(this.camera.fov);
+    const worldPerPixel = (2 * Math.tan(fov / 2) * distance) / height;
+
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3();
+    right.setFromMatrixColumn(this.camera.matrixWorld, 0).normalize();
+    up.setFromMatrixColumn(this.camera.matrixWorld, 1).normalize();
+
+    // Drag right → content moves right (camera left); drag up (negative deltaY) → look higher.
+    const move = right
+      .multiplyScalar(-deltaXPx * worldPerPixel)
+      .addScaledVector(up, -deltaYPx * worldPerPixel);
+
+    this.camera.position.add(move);
+    this.controls.target.add(move);
+    this.controls.update();
+  }
+
+  /** Face-mapping camera: zoom + pan, no rotate. `draggingMarker` freezes camera. */
+  private applyFaceMappingOrbitMode(draggingMarker: boolean): void {
+    this.controls.enabled = true;
+    this.controls.enableRotate = false;
+    this.controls.enableZoom = !draggingMarker;
+    this.controls.enablePan = !draggingMarker;
+    this.controls.screenSpacePanning = true;
+    this.controls.minDistance = 0.06;
+    this.controls.maxDistance = 2.5;
+    this.controls.minPolarAngle = 0.05;
+    this.controls.maxPolarAngle = Math.PI - 0.05;
+    this.controls.update();
   }
 
   /**
@@ -567,10 +659,11 @@ export class CharacterStudioRuntime {
   /** Evaluate a draft binding to world coordinates (null if unavailable). */
   evaluateFaceMappingBindingWorld(
     binding: SagaDriveFaceAnchorTriangleBinding,
+    anchorId: SagaDriveFaceAnchorId = 'noseTip',
   ): { x: number; y: number; z: number } | null {
     if (this.disposed || !this.currentRoot) return null;
     const index = buildFaceAnchorNodeIndex(this.currentRoot);
-    const result = evaluateFaceAnchorWorldPosition(index, 'noseTip', binding);
+    const result = evaluateFaceAnchorWorldPosition(index, anchorId, binding);
     if (result.status !== 'available') return null;
     return { x: result.x, y: result.y, z: result.z };
   }
@@ -708,6 +801,7 @@ export class CharacterStudioRuntime {
   applyAppearance(avatar: CharacterAvatarDto, manifest: AvatarAssetManifest): void {
     this.currentAvatar = avatar;
     this.currentManifest = manifest;
+    this.syncCharacterFaceAnchors(avatar);
     const root = this.currentRoot;
     if (!root) return;
 
@@ -918,8 +1012,32 @@ export class CharacterStudioRuntime {
     }
   }
 
-  private async loadFaceAnchorsManifestForModel(modelUrl: string): Promise<void> {
+  /**
+   * Rebinds character anchors whenever `avatar.face_anchors` changes for the loaded model
+   * (e.g. hydration of a draft whose model URL/manifest stayed the same).
+   */
+  private syncCharacterFaceAnchors(avatar: CharacterAvatarDto, force = false): void {
+    const modelUrl = this.faceAnchorsModelUrl;
+    if (!modelUrl) return;
+    const override = avatar.face_anchors ?? null;
+    if (!force && override === this.faceAnchorsOverrideSource) return;
+    this.faceAnchorsOverrideSource = override;
+    void this.loadFaceAnchorsManifestForModel(modelUrl, override);
+  }
+
+  private async loadFaceAnchorsManifestForModel(
+    modelUrl: string,
+    characterOverride: SagaDriveFaceAnchorsManifestV1 | null = null,
+  ): Promise<void> {
     const token = ++this.faceAnchorManifestLoadToken;
+    // Character-persisted anchors win over asset sidecar (#persist).
+    if (characterOverride) {
+      const parsed = parseFaceAnchorsManifestV1(characterOverride);
+      if (parsed.ok && token === this.faceAnchorManifestLoadToken) {
+        this.liveActCharacterFaceDebug.bindManifest(parsed.manifest);
+        return;
+      }
+    }
     this.liveActCharacterFaceDebug.bindManifest(null);
     const candidates = listFaceAnchorsManifestUrlCandidates(modelUrl);
     if (!candidates.length) return;
@@ -987,7 +1105,6 @@ export class CharacterStudioRuntime {
       headRestQuaternion: this.headRestQuaternion,
       headScratchEuler: this.headScratchEuler,
       headScratchQuaternion: this.headScratchQuaternion,
-      eyeLookTarget: this.eyeLookTarget,
     });
   }
 
@@ -996,6 +1113,8 @@ export class CharacterStudioRuntime {
     this.facialRuntime.resetToNeutral();
     this.liveActRigDebug.bindModelRoot(null);
     this.faceAnchorManifestLoadToken += 1;
+    this.faceAnchorsModelUrl = null;
+    this.faceAnchorsOverrideSource = null;
     this.liveActCharacterFaceDebug.bindModelRoot(null);
     this.liveActCharacterFaceDebug.bindManifest(null);
     this.liveActAvatarOutput?.dispose();

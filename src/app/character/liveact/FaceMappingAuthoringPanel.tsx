@@ -1,8 +1,9 @@
 /**
- * FaceMappingAuthoringPanel — Face Setup marker list + actions (#420).
+ * FaceMappingAuthoringPanel — Face Setup marker list + detail card + actions.
  * Location: src/app/character/liveact/FaceMappingAuthoringPanel.tsx
  *
  * Renders below the AvatarCanvas (not over the 3D face). Session-local draft only.
+ * Detail card mirrors PDF: selected feature + pulsing point synced with viewport.
  */
 
 import type { SagaDriveFaceAnchorId } from '../../../domains/character/avatar/face-anchor-contract';
@@ -15,6 +16,8 @@ import {
   type SagaDriveFaceMappingDraftV1,
 } from '../../../domains/character/avatar/face-mapping-draft-v1';
 import { Button } from '../../../shared/ui/button';
+import { FaceMappingDetailCard } from './FaceMappingDetailCard';
+import { FaceMappingFeatureIcon } from './FaceMappingFeatureIcon';
 
 interface FaceMappingAuthoringPanelProps {
   draft: SagaDriveFaceMappingDraftV1;
@@ -23,7 +26,6 @@ interface FaceMappingAuthoringPanelProps {
   onClearSelected: () => void;
   onReset: () => void;
   onCancel: () => void;
-  onApply: () => void;
 }
 
 function statusLabelDe(status: FaceMappingMarkerStatus): string {
@@ -43,7 +45,7 @@ function statusLabelDe(status: FaceMappingMarkerStatus): string {
 
 function statusClass(status: FaceMappingMarkerStatus, selected: boolean): string {
   // Selected: solid primary + white text (primary-foreground is dark on light themes).
-  if (selected) return 'border-primary bg-primary text-white';
+  if (selected) return 'border-primary bg-primary text-white ring-2 ring-primary/40';
   switch (status) {
     case 'missing':
       return 'border-white/10 bg-slate-900/80 text-slate-300';
@@ -65,9 +67,9 @@ export function FaceMappingAuthoringPanel({
   onClearSelected,
   onReset,
   onCancel,
-  onApply,
 }: FaceMappingAuthoringPanelProps) {
   const summary = validateFaceMappingDraft(draft);
+  const selectedId = draft.selectedAnchorId;
 
   return (
     <aside
@@ -96,13 +98,15 @@ export function FaceMappingAuthoringPanel({
       </div>
 
       <p className="px-3 py-1.5 text-[10px] text-slate-400">
-        Marker in der Liste wählen oder am 3D-Punkt greifen und ziehen. Labels: Mund / Auge /
-        Nase / Kinn …
+        Scroll zoomen. Auf leerer Fläche ziehen = Kamera verschieben (z. B. nach oben zur Stirn).
+        Marker greifen und setzen; Guides folgen live.
       </p>
+
+      {selectedId ? <FaceMappingDetailCard draft={draft} selectedAnchorId={selectedId} /> : null}
 
       {missMessage ? (
         <p
-          className="mx-3 mb-1 rounded-sm bg-amber-400/10 px-2 py-1 text-[10px] text-amber-100"
+          className="mx-3 mb-1 mt-2 rounded-sm bg-amber-400/10 px-2 py-1 text-[10px] text-amber-100"
           role="status"
           data-testid="face-mapping-miss"
         >
@@ -110,7 +114,7 @@ export function FaceMappingAuthoringPanel({
         </p>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2 pt-2">
         {FACE_MAPPING_MARKER_GROUP_DEFS.map((group) => (
           <div key={group.id} className="mb-2">
             <p className="px-1 pb-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">
@@ -124,12 +128,20 @@ export function FaceMappingAuthoringPanel({
                   <li key={id}>
                     <button
                       type="button"
-                      className={`flex w-full items-center justify-between gap-2 rounded-sm border px-2 py-1.5 text-left text-[11px] ${statusClass(status, selected)}`}
+                      className={`flex w-full items-center justify-between gap-2 rounded-sm border px-2 py-1.5 text-left text-[11px] ${statusClass(status, selected)} ${selected ? 'animate-pulse' : ''}`}
                       aria-pressed={selected}
                       data-testid={`face-mapping-marker-${id}`}
                       onClick={() => onSelect(id)}
                     >
-                      <span className="truncate">{FACE_MAPPING_ANCHOR_LABEL_DE[id]}</span>
+                      <span className="flex min-w-0 items-center gap-2">
+                        <FaceMappingFeatureIcon
+                          anchorId={id}
+                          size="sm"
+                          pulse={selected}
+                          className="shrink-0"
+                        />
+                        <span className="truncate">{FACE_MAPPING_ANCHOR_LABEL_DE[id]}</span>
+                      </span>
                       <span className="shrink-0 text-[10px] opacity-90">{statusLabelDe(status)}</span>
                     </button>
                   </li>
@@ -162,16 +174,10 @@ export function FaceMappingAuthoringPanel({
         >
           Reset
         </Button>
-        <Button
-          type="button"
-          size="sm"
-          className="h-8 w-full bg-primary text-white hover:bg-accent hover:text-accent-foreground"
-          onClick={onApply}
-          data-testid="face-mapping-apply"
-        >
-          Übernehmen
-        </Button>
       </div>
+      <p className="px-2 pb-2 text-[10px] text-slate-500">
+        Speichern sitzt unten am Viewport — schreibt Face Mapping auf den Charakter (danach Charakter speichern).
+      </p>
     </aside>
   );
 }

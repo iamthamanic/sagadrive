@@ -1,0 +1,30 @@
+{
+  "contractVersion": "SagaDriveHumanoidRigV1",
+  "bones": {
+    "hips": "hips",
+    "spine": "spine",
+    "chest": "chest",
+    "neck": "neck",
+    "head": "head",
+    "leftEye": "leftEye",
+    "rightEye": "rightEye",
+    "leftShoulder": "leftShoulder",
+    "leftUpperArm": "leftUpperArm",
+    "leftLowerArm": "leftLowerArm",
+    "leftHand": "leftHand",
+    "rightShoulder": "rightShoulder",
+    "rightUpperArm": "rightUpperArm",
+    "rightLowerArm": "rightLowerArm",
+    "rightHand": "rightHand",
+    "leftUpperLeg": "leftUpperLeg",
+    "leftLowerLeg": "leftLowerLeg",
+    "leftFoot": "leftFoot",
+    "rightUpperLeg": "rightUpperLeg",
+    "rightLowerLeg": "rightLowerLeg",
+    "rightFoot": "rightFoot"
+  },
+  "nonHumanoidJoints": [
+    "jaw"
+  ],
+  "note": "Joint nodes are named by VRM humanoid id; jaw is skinned but morph-owned (never a humanoid bone)."
+}

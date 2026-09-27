@@ -47,6 +47,8 @@ check(!/from ['"]react['"]/.test(draftSrc), 'draft no React');
 check(/raycastFaceMappingPointer/.test(raycastSrc), 'raycast helper');
 check(/isFaceMappingAllowlistedMesh/.test(raycastSrc), 'mesh allowlist');
 check(/barycentric/.test(raycastSrc), 'barycentric binding');
+check(/getVertexPosition/.test(raycastSrc), 'deformed vertex barycentric');
+check(/normalizeFaceMappingBarycentric/.test(raycastSrc), 'barycentric clamp/renorm');
 check(/EXCLUDE_NAME_RE|sagadriveExcludeFaceMapping/.test(raycastSrc), 'exclude helpers');
 
 check(/setFaceMappingAuthoringActive/.test(studio), 'studio authoring mode');
@@ -63,14 +65,18 @@ check(/face-mapping-panel-host/.test(surface), 'panel host under canvas');
 check(/belowViewportSlot|data-avatar-below-viewport/.test(surface), 'host slotted under 3D frame');
 check(/belowViewportSlot/.test(read('src/app/character/avatar/AvatarCanvas.tsx')), 'AvatarCanvas belowViewportSlot');
 check(/createEmptyFaceMappingDraft/.test(controls), 'draft lifecycle');
-check(/Übernehmen/.test(panel), 'apply CTA');
+check(/face-mapping-viewport-save/.test(controls), 'viewport Speichern bar');
+check(/bindFaceAnchorsManifestSession/.test(controls), 'apply binds session manifest');
+check(!/face-mapping-apply/.test(panel), 'no duplicate Speichern in panel');
+check(/Speichern sitzt unten am Viewport/.test(panel), 'panel points to viewport Speichern');
+check(/Charakter speichern/.test(panel), 'panel mentions character save');
 check(/text-white/.test(panel), 'selected marker white text');
 check(/FACE_MAPPING_ANCHOR_SHORT_DE/.test(draftSrc), 'short overlay labels');
 check(/drawLabel|FACE_MAPPING_ANCHOR_SHORT_DE/.test(layer), '3D marker labels painted');
 check(/drawModeBanner|Face Mapping/.test(layer), 'mode banner');
-check(/HIT_RADIUS_PX = 28|HIT_RADIUS_PX = 2[4-9]/.test(layer), 'generous drag hit radius');
+check(/HIT_RADIUS_PX = 3[0-9]|HIT_RADIUS_PX = 2[4-9]/.test(layer), 'generous drag hit radius');
 check(/requestAnimationFrame/.test(layer), 'imperative marker paint');
-check(/drawGuideContours|mouthUpper/.test(layer), 'lip/contour guides');
+check(/drawGuidePaths|buildFaceMappingGuidePaths/.test(layer), 'lip/contour guides');
 check(/setOrbitControlsEnabled/.test(layer) && /setOrbitControlsEnabled/.test(studio), 'drag disables orbit');
 check(!/setDraft\(/.test(layer), 'layer no draft setState');
 
@@ -92,7 +98,7 @@ await build({
   logLevel: 'silent',
 });
 const draftMod = await import(`${draftOut}?t=${Date.now()}`);
-check(draftMod.FACE_MAPPING_MARKER_GROUP_DEFS.length === 5, '5 groups');
+check(draftMod.FACE_MAPPING_MARKER_GROUP_DEFS.length === 6, '6 groups');
 const empty = draftMod.createEmptyFaceMappingDraft(null);
 check(empty.dirty === false && empty.selectedAnchorId === null, 'empty draft');
 check(draftMod.resolveFaceMappingMarkerStatus(empty, 'mouthUpper') === 'missing', 'missing status');

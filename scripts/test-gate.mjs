@@ -288,6 +288,46 @@ function checkSagaRoutingPublicIdFoundation() {
   });
 }
 
+function checkLookProfileDomain() {
+  console.log('LookProfile domain (#339): contracts, resolution, capabilities...');
+  execFileSync(process.execPath, ['scripts/look-profile-domain-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLookProfilePersistence() {
+  console.log('LookProfile persistence (#340): migration/RLS, draft validation, append-only versions...');
+  execFileSync(process.execPath, ['scripts/look-profile-persistence-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLookLibrary() {
+  console.log('Look Library browser (#343): Bibliothek › Looks UI + routes + filter domain...');
+  execFileSync(process.execPath, ['scripts/look-library-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLookWorldCapabilityStubs() {
+  console.log('Look world capability stubs (#346): reserved domains metadata + docs...');
+  execFileSync(process.execPath, ['scripts/look-world-capability-stubs-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLiveSessionRoleCapabilityContract() {
+  console.log('Live Session role/capability contract (#362): access, visibility, director...');
+  execFileSync(process.execPath, ['scripts/live-session-role-capability-contract-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -459,6 +499,56 @@ function checkLiveActFaceMappingAuthoring() {
 function checkLiveActFaceMappingManual() {
   console.log('LiveAct face mapping manual (#420): Face Setup 21 markers + raycast...');
   execFileSync(process.execPath, ['scripts/liveact-face-mapping-manual-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLiveActFaceAnchorsCharacterPersist() {
+  console.log('LiveAct face anchors character persist: avatar.face_anchors + override...');
+  execFileSync(process.execPath, ['scripts/liveact-face-anchors-character-persist-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLiveActExpandDriveBind() {
+  console.log('LiveAct expand drive bind: Setup modal XOR card bindOutput...');
+  execFileSync(process.execPath, ['scripts/liveact-expand-drive-bind-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLiveActReferenceVrmGoldenAvatar() {
+  console.log('LiveAct Golden Reference VRM (ARKit52) diagnostic path...');
+  execFileSync(process.execPath, ['scripts/liveact-reference-vrm-golden-avatar-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkSagaHumanCanonicalV1() {
+  console.log('Saga Human Canonical V1 PoC: sources, build report, sidecars, runtime isolation...');
+  execFileSync(process.execPath, ['scripts/saga-human-canonical-v1-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLiveActFidelity() {
+  console.log('LiveAct fidelity: calibration once + range gains, idle ownership, teeth binds...');
+  execFileSync(process.execPath, ['scripts/liveact-fidelity-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLiveActFaceMappingVisualGuides() {
+  console.log(
+    'LiveAct face mapping visual guides: binding labels + smooth guides + pulse/detail...',
+  );
+  execFileSync(process.execPath, ['scripts/liveact-face-mapping-visual-guides-check.mjs'], {
     cwd: root,
     stdio: 'inherit',
   });
@@ -1305,6 +1395,11 @@ checkItemInventoryWorldCatalogWire();
 checkItemEpicAcceptance();
 checkItemRoutingFoundation();
 checkSagaRoutingPublicIdFoundation();
+checkLookProfileDomain();
+checkLookProfilePersistence();
+checkLookLibrary();
+checkLookWorldCapabilityStubs();
+checkLiveSessionRoleCapabilityContract();
 checkPlayerTestSessionSecurity();
 checkPlayerTestRealtimeRuntime();
 checkPlayerTestPlayerPanel();
@@ -1348,6 +1443,12 @@ checkLiveActDiagnosticsV2();
 checkLiveActFaceAnchorsV1();
 checkLiveActFaceMappingAuthoring();
 checkLiveActFaceMappingManual();
+checkLiveActFaceAnchorsCharacterPersist();
+checkLiveActExpandDriveBind();
+checkLiveActReferenceVrmGoldenAvatar();
+checkSagaHumanCanonicalV1();
+checkLiveActFidelity();
+checkLiveActFaceMappingVisualGuides();
 checkLiveActFaceAnchorAnatomy();
 checkLiveActCameraOverlayMetrics();
 checkLiveActCharacterFaceOverlay();

@@ -8,6 +8,8 @@ export {
   pathForCharacterPublic,
   pathForItemCreateType,
   pathForItemDetail,
+  pathForLookCreate,
+  pathForLookEdit,
   pathForNpcCreatureCreate,
   pathForNpcCreatureEdit,
   pathForSagaList,

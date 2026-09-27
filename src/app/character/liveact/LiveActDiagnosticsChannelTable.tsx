@@ -4,14 +4,20 @@
  *
  * Gear-panel table (not overlaid on the face). Polls diagnosticsV2Ref via rAF
  * while visible; no setState on the LiveAct hot path when the panel is closed.
+ * The same poll accumulates per-stage peaks for webcam fidelity audits (see
+ * LiveActDiagnosticsPeakControls).
  */
 
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import {
   LIVEACT_DIAGNOSTICS_V2_SIGNAL_KEYS,
+  accumulateLiveActDiagnosticsPeaks,
+  createLiveActDiagnosticsPeaks,
+  exportLiveActDiagnosticsPeaks,
   type LiveActAppliedSignalV1,
   type LiveActDiagnosticsV2Snapshot,
 } from '../../../domains/character/liveact';
+import { LiveActDiagnosticsPeakControls } from './LiveActDiagnosticsPeakControls';
 
 interface LiveActDiagnosticsChannelTableProps {
   diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
@@ -35,6 +41,8 @@ export function LiveActDiagnosticsChannelTable({
 }: LiveActDiagnosticsChannelTableProps) {
   const [snapshot, setSnapshot] = useState<LiveActDiagnosticsV2Snapshot | null>(null);
   const rafRef = useRef(0);
+  const peaksRef = useRef(createLiveActDiagnosticsPeaks());
+  const [peakFrames, setPeakFrames] = useState(0);
 
   useEffect(() => {
     if (!active) {
@@ -44,7 +52,11 @@ export function LiveActDiagnosticsChannelTable({
     let cancelled = false;
     const tick = () => {
       if (cancelled) return;
-      setSnapshot(diagnosticsV2Ref.current);
+      const current = diagnosticsV2Ref.current;
+      if (current && accumulateLiveActDiagnosticsPeaks(peaksRef.current, current)) {
+        setPeakFrames(peaksRef.current.frames);
+      }
+      setSnapshot(current);
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -99,6 +111,14 @@ export function LiveActDiagnosticsChannelTable({
       {snapshot.trackingLost ? (
         <p className="px-1 pt-1 text-[10px] text-amber-400/90">Tracking lost → Neutral</p>
       ) : null}
+      <LiveActDiagnosticsPeakControls
+        frames={peakFrames}
+        onReset={() => {
+          peaksRef.current = createLiveActDiagnosticsPeaks();
+          setPeakFrames(0);
+        }}
+        getExportJson={() => JSON.stringify(exportLiveActDiagnosticsPeaks(peaksRef.current), null, 2)}
+      />
     </div>
   );
 }

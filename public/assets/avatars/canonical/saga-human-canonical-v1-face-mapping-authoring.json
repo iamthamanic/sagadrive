@@ -1,0 +1,10 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "auto",
+  "reviewed": false,
+  "asset": {
+    "modelPath": "public/assets/avatars/canonical/saga-human-canonical-v1.vrm",
+    "modelSha256": "4628e5edca861d7d28f1f42e4e9ddb878afadc41e33de25c881fe3d14d05f3eb"
+  },
+  "note": "Canonical topology landmarks (lash rows, eyebrow proxy, midline profile, mouthSmile peaks); unreviewed auto."
+}

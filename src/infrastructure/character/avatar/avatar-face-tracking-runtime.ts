@@ -24,6 +24,7 @@ import {
   type FaceTrackingSample,
   type FaceTrackingStatus,
 } from '../../../domains/character/avatar/face-tracking-contract';
+import { liveActHeadPoseFromFacialTransform } from '../../../domains/character/liveact';
 import {
   MEDIAPIPE_FACE_LANDMARKER_MODEL_PATH,
   MEDIAPIPE_VISION_WASM_PATH,
@@ -149,31 +150,19 @@ export async function createMediaPipeFaceTrackingDetector(
         if (shapes.length === 0) return [];
         const faces = shapes.map((shape, index) => {
           const cats = shape.categories;
-          let headYaw = 0;
-          let headPitch = 0;
-          let headRoll = 0;
-          if (profile.enableHeadPose) {
-            const matrix = result.facialTransformationMatrixes?.[index]?.data;
-            if (matrix && matrix.length >= 11) {
-              const r00 = Number(matrix[0]);
-              const r10 = Number(matrix[1]);
-              const r20 = Number(matrix[2]);
-              const r21 = Number(matrix[6]);
-              const r22 = Number(matrix[10]);
-              headYaw = Math.atan2(r10, r00);
-              headPitch = Math.atan2(-r20, Math.hypot(r21, r22));
-              headRoll = Math.atan2(r21, r22);
-            }
-          }
+          const head = profile.enableHeadPose
+            ? liveActHeadPoseFromFacialTransform(result.facialTransformationMatrixes?.[index]?.data)
+            : null;
           return {
             presence: 1,
-            headYaw,
-            headPitch,
-            headRoll,
+            headYaw: head?.yaw ?? 0,
+            headPitch: head?.pitch ?? 0,
+            headRoll: head?.roll ?? 0,
+            // Toward the user's left = left eye out, right eye in (In/Out are nose-relative).
             eyeLookX:
               scoreOf(cats, 'eyeLookOutLeft') -
               scoreOf(cats, 'eyeLookInLeft') +
-              (scoreOf(cats, 'eyeLookOutRight') - scoreOf(cats, 'eyeLookInRight')),
+              (scoreOf(cats, 'eyeLookInRight') - scoreOf(cats, 'eyeLookOutRight')),
             eyeLookY:
               scoreOf(cats, 'eyeLookUpLeft') +
               scoreOf(cats, 'eyeLookUpRight') -

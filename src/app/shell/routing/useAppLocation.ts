@@ -8,6 +8,8 @@ import {
   pathForCharacterPublic,
   pathForItemCreateType,
   pathForItemDetail,
+  pathForLookCreate,
+  pathForLookEdit,
   pathForNpcCreatureCreate,
   pathForNpcCreatureEdit,
   pathForSagaList,
@@ -75,6 +77,7 @@ export function useAppLocation() {
   const currentView: ShellViewId = routeToShellView(route);
   const itemId = route.kind === 'item-detail' ? route.itemId : null;
   const createTypeSlug = route.kind === 'item-create' ? route.typeSlug ?? null : null;
+  const lookId = route.kind === 'look-edit' ? route.lookId : null;
   const npcCreatureDefinitionId =
     route.kind === 'npc-creature-edit' ? route.definitionId : null;
   const sagaPublicId =
@@ -123,6 +126,14 @@ export function useAppLocation() {
 
   const navigateToItemCreateType = (typeSlug: string, options?: { replace?: boolean }) => {
     navigateToPath(pathForItemCreateType(typeSlug), options);
+  };
+
+  const navigateToLookCreate = (options?: { replace?: boolean }) => {
+    navigateToPath(pathForLookCreate(), options);
+  };
+
+  const navigateToLookEdit = (id: string, options?: { replace?: boolean }) => {
+    navigateToPath(pathForLookEdit(id), options);
   };
 
   const navigateToNpcCreatureCreate = (options?: { replace?: boolean }) => {
@@ -182,6 +193,7 @@ export function useAppLocation() {
     currentView,
     itemId,
     createTypeSlug,
+    lookId,
     npcCreatureDefinitionId,
     sagaPublicId,
     sessionPublicId,
@@ -190,6 +202,8 @@ export function useAppLocation() {
     navigateToView,
     navigateToItem,
     navigateToItemCreateType,
+    navigateToLookCreate,
+    navigateToLookEdit,
     navigateToNpcCreatureCreate,
     navigateToNpcCreatureEdit,
     navigateToSagaList,

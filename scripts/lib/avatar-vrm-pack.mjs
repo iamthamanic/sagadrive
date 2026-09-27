@@ -216,16 +216,38 @@ function defaultRangeMap() {
   return { inputMaxValue: 90.0, outputScale: 10.0 };
 }
 
-function buildLookAt(gazeMode, humanBones) {
+function validRangeMap(map) {
+  return (
+    map &&
+    Number.isFinite(map.inputMaxValue) &&
+    map.inputMaxValue > 0 &&
+    Number.isFinite(map.outputScale) &&
+    map.outputScale >= 0
+  );
+}
+
+/**
+ * @param {{ offsetFromHeadBone?: number[]; rangeMap?: { inputMaxValue: number; outputScale: number } } | null} overrides
+ *   Optional asset-measured LookAt values; defaults stay the UniVRM-style 90° → 10°.
+ */
+function buildLookAt(gazeMode, humanBones, overrides = null) {
   if (gazeMode !== 'bones' && gazeMode !== 'morphs') return undefined;
   const type = gazeMode === 'morphs' ? 'expression' : 'bone';
+  const offset = overrides?.offsetFromHeadBone;
+  if (offset != null && !(Array.isArray(offset) && offset.length === 3 && offset.every(Number.isFinite))) {
+    throw new Error('lookAt.offsetFromHeadBone must be [x, y, z] meters');
+  }
+  if (overrides?.rangeMap != null && !validRangeMap(overrides.rangeMap)) {
+    throw new Error('lookAt.rangeMap needs inputMaxValue > 0 and outputScale >= 0');
+  }
+  const rangeMap = () => (overrides?.rangeMap ? { ...overrides.rangeMap } : defaultRangeMap());
   return {
     type,
-    offsetFromHeadBone: [0, 0.06, 0],
-    rangeMapHorizontalInner: defaultRangeMap(),
-    rangeMapHorizontalOuter: defaultRangeMap(),
-    rangeMapVerticalDown: defaultRangeMap(),
-    rangeMapVerticalUp: defaultRangeMap(),
+    offsetFromHeadBone: offset ? [...offset] : [0, 0.06, 0],
+    rangeMapHorizontalInner: rangeMap(),
+    rangeMapHorizontalOuter: rangeMap(),
+    rangeMapVerticalDown: rangeMap(),
+    rangeMapVerticalUp: rangeMap(),
     extras: {
       sagaDriveGazeMode: gazeMode,
       hasLeftEyeBone: humanBones.leftEye != null,
@@ -299,6 +321,7 @@ export async function packAvatarVrm1(opts) {
     rigPath = null,
     metaName = null,
     licenseUrl = 'https://vrm.dev/licenses/1.0/',
+    lookAt: lookAtOverrides = null,
   } = opts;
 
   const inventory = JSON.parse(readFileSync(inventoryPath, 'utf8'));
@@ -342,7 +365,7 @@ export async function packAvatarVrm1(opts) {
     inventory.presentChannels || inventory.supportedChannels || [],
     gazeMode,
   );
-  const lookAt = buildLookAt(gazeMode, humanBones);
+  const lookAt = buildLookAt(gazeMode, humanBones, lookAtOverrides);
 
   const vrmcVrm = {
     specVersion: VRMC_VRM_SPEC_VERSION,
@@ -385,6 +408,7 @@ export async function packAvatarVrm1(opts) {
     specVersion: VRMC_VRM_SPEC_VERSION,
     gazeMode,
     lookAtType: lookAt?.type ?? null,
+    lookAtOverrides: lookAtOverrides ?? null,
     humanoidBoneCount: Object.keys(humanBones).length,
     expressionPresetCount: expressions?.preset ? Object.keys(expressions.preset).length : 0,
     expressionCustomCount: expressions?.custom ? Object.keys(expressions.custom).length : 0,

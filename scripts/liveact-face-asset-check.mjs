@@ -22,6 +22,7 @@ async function main() {
       profile: args.profile,
       outPath: args.out || undefined,
       anchorsPath: args.anchors || undefined,
+      gazeOwner: args.gazeOwner || undefined,
     });
     if (!result.ok) {
       const semanticHint =

@@ -20,12 +20,19 @@ interface LiveActPipMetricsPanelProps {
   diagnosticsRef: RefObject<LiveActFaceDiagnosticsFrameV1 | null>;
   diagnosticsV2Ref: RefObject<LiveActDiagnosticsV2Snapshot | null>;
   hasNeutralBaseline?: boolean;
+  hasRangeCalibration?: boolean;
+}
+
+function calibrationLine(hasNeutralBaseline: boolean, hasRangeCalibration: boolean): string {
+  if (!hasNeutralBaseline) return 'cal: OFF (Kalibrieren)';
+  return hasRangeCalibration ? 'cal: neutral+max' : 'cal: neutral';
 }
 
 function buildLines(
   frame: LiveActFaceDiagnosticsFrameV1 | null,
   diagnosticsV2: LiveActDiagnosticsV2Snapshot | null,
   hasNeutralBaseline: boolean,
+  hasRangeCalibration: boolean,
 ): { lines: string[]; lost: boolean } {
   if (!frame || frame.trackingLost) {
     return { lines: ['Metrics: LOST'], lost: true };
@@ -39,7 +46,7 @@ function buildLines(
   const roll = diagnosticsV2?.stages.calibrated['head.roll'];
   const bbox = metrics.bbox;
   const lines: string[] = [
-    hasNeutralBaseline ? 'cal: ON' : 'cal: OFF (run Neutral)',
+    calibrationLine(hasNeutralBaseline, hasRangeCalibration),
     bbox
       ? `bbox ${bbox.minX.toFixed(2)}–${bbox.maxX.toFixed(2)} × ${bbox.minY.toFixed(2)}–${bbox.maxY.toFixed(2)}`
       : 'bbox —',
@@ -50,12 +57,14 @@ function buildLines(
     `eye L ${formatLiveActMetric(metrics.eyeOpenLeft)} R ${formatLiveActMetric(metrics.eyeOpenRight)}`,
     `brow L ${formatLiveActMetric(metrics.browLiftLeft)} R ${formatLiveActMetric(metrics.browLiftRight)}`,
   ];
+  // Landmark metrics above are the user's own sides; retargeted channels are the avatar's
+  // (mirrored: the user's left blink is the avatar's eyeBlinkRight).
   const retargeted = diagnosticsV2?.stages.retargeted;
   if (retargeted) {
     for (const key of ['face.jawOpen', 'face.eyeBlinkLeft', 'face.eyeBlinkRight', 'face.browInnerUp'] as const) {
       const v = retargeted[key];
       if (typeof v === 'number' && v > 0.08) {
-        lines.push(`${key.replace('face.', '')}=${v.toFixed(2)}`);
+        lines.push(`Avatar ${key.replace('face.', '')}=${v.toFixed(2)}`);
       }
     }
   }
@@ -67,6 +76,7 @@ export function LiveActPipMetricsPanel({
   diagnosticsRef,
   diagnosticsV2Ref,
   hasNeutralBaseline = false,
+  hasRangeCalibration = false,
 }: LiveActPipMetricsPanelProps) {
   const listRef = useRef<HTMLUListElement>(null);
   const rafRef = useRef(0);
@@ -86,6 +96,7 @@ export function LiveActPipMetricsPanel({
         diagnosticsRef.current,
         diagnosticsV2Ref.current,
         hasNeutralBaseline,
+        hasRangeCalibration,
       );
       const list = listRef.current;
       if (list) {
@@ -113,7 +124,7 @@ export function LiveActPipMetricsPanel({
       cancelled = true;
       cancelAnimationFrame(rafRef.current);
     };
-  }, [active, diagnosticsRef, diagnosticsV2Ref, hasNeutralBaseline]);
+  }, [active, diagnosticsRef, diagnosticsV2Ref, hasNeutralBaseline, hasRangeCalibration]);
 
   if (!active) return null;
 

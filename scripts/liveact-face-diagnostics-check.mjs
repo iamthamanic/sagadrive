@@ -50,7 +50,11 @@ check(/liveact-calibration/.test(domainIndex), 'barrel exports calibration');
 
 check(/subscribeDiagnostics/.test(engine), 'engine diagnostics subscription');
 check(/calibrate\(\)/.test(engine), 'engine calibrate API');
-check(/applyLiveActNeutralBaseline/.test(engine), 'engine applies baseline');
+check(
+  /applyLiveActNeutralBaseline|stepLiveActCalibratedFrame/.test(engine) &&
+    /applyLiveActNeutralBaseline/.test(calibration),
+  'engine applies baseline',
+);
 check(/neutralBaseline = null/.test(engine), 'dispose clears baseline');
 
 check(/LiveActFaceDetectResult/.test(source), 'detect returns samples + diagnostics');
@@ -65,7 +69,7 @@ check(/subscribeDiagnostics/.test(hook), 'hook binds diagnostics ref');
 check(/calibrateNeutral/.test(hook), 'hook exposes calibrate');
 check(/canCalibrate/.test(hook), 'hook calibrate guard');
 
-check(/Kamera-PiP \+ Character-Mesh/.test(settings), 'face overlay enabled copy DE');
+check(/Mesh-Anker am Charakter/.test(settings), 'face overlay enabled copy DE');
 check(/liveact-calibrate/.test(settings), 'calibrate control');
 check(!/Bald \(3\/7\)/.test(settings), 'face overlay no longer stub');
 

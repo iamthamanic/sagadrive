@@ -5,7 +5,11 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { completeSpeciesBasics, openBlankCharacterEditor } from './helpers/character-editor';
+import {
+  completeSpeciesBasics,
+  openAvatarPreviewLiveActSettings,
+  openBlankCharacterEditor,
+} from './helpers/character-editor';
 
 const EVIDENCE = '.qa/evidence/liveact-viewport-smoke';
 
@@ -28,9 +32,7 @@ test('Character Editor LiveAct gear toggles with fake camera', async ({ page }) 
   await openBlankCharacterEditor(page);
   await completeSpeciesBasics(page);
 
-  const gear = page.getByTestId('avatar-preview-settings');
-  await expect(gear).toBeVisible({ timeout: 20_000 });
-  await gear.click();
+  await openAvatarPreviewLiveActSettings(page);
 
   const trackingToggle = page.getByTestId('liveact-tracking-toggle');
   const pipToggle = page.getByTestId('liveact-camera-preview-toggle');
@@ -42,7 +44,6 @@ test('Character Editor LiveAct gear toggles with fake camera', async ({ page }) 
   await expect(faceOverlayToggle).toBeVisible();
   await expect(metricsToggle).toBeVisible();
   await expect(bonesToggle).toBeVisible();
-  await expect(page.getByTestId('liveact-calibrate')).toBeVisible();
 
   const webglSurface = page.locator('[data-avatar-use-webgl="true"]').first();
   const hasWebGl = await webglSurface
@@ -73,6 +74,9 @@ test('Character Editor LiveAct gear toggles with fake camera', async ({ page }) 
   await pipToggle.click();
 
   await expect(page.getByTestId('liveact-status-block')).toBeVisible();
+  // Kalibrieren only after tracking is active (canCalibrate gate).
+  await expect(page.getByTestId('liveact-calibrate')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId('liveact-motion-test')).toBeVisible();
 
   await page.screenshot({
     path: path.join(EVIDENCE, '01-liveact-gear-3d.png'),
