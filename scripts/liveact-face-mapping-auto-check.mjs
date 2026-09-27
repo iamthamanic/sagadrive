@@ -204,6 +204,10 @@ const surfMod = await import(`${surfOut}?t=${Date.now()}`);
 check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Eyes') === 'eyeball', 'Eyes → eyeball');
 check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Eyelashes') === 'eyelash', 'Eyelashes → eyelash');
 check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Head') === 'face_skin', 'Head → face_skin');
+check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Helmet') === 'equipment', 'Helmet → equipment');
+check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Headwear') === 'equipment', 'Headwear → equipment (not face_skin)');
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'equipment'), 'mouth on helmet = mismatch');
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('forehead', 'equipment'), 'forehead on headwear = mismatch');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftOuter', 'eyeball'), 'canthus on eyeball = mismatch');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftUpper', 'eyeball'), 'lid on eyeball = mismatch');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'hair'), 'mouth on hair = mismatch');
@@ -443,6 +447,20 @@ const reviewedRef = autoMod.freezeFaceMappingGroundTruthReference({
 });
 check(reviewedRef.validForGroundTruthComparison === true, 'D: 21 reviewed → valid GT');
 check(reviewedRef.status === 'reviewed_manual_complete', 'D: status reviewed_manual_complete');
+
+// D2) 21 reviewed but one screen missing → false
+const screensMissingOne = { ...gtScreens };
+delete screensMissingOne.noseTip;
+const refMissingScreen = autoMod.freezeFaceMappingGroundTruthReference({
+  draft: gtDraft,
+  meta: reviewedMeta,
+  screenCoords: screensMissingOne,
+});
+check(
+  refMissingScreen.validForGroundTruthComparison === false,
+  'D2: 21 reviewed but missing screen → not valid GT',
+);
+check(refMissingScreen.status === 'reviewed_manual_complete', 'D2: status still reviewed_manual_complete');
 
 // E) 21 auto/unreviewed → unreviewed_auto / false
 const autoUnreviewedMeta = Object.fromEntries(

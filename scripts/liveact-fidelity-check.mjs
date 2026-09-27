@@ -669,8 +669,9 @@ check(/liveact-calibrate-advance-pip/.test(pip), 'Weiter control in PiP');
 check(/setLiveActDriveActive\(output !== null\)/.test(viewer), 'viewer suspends idle on bind');
 check(/setLiveActDriveActive\(false\)/.test(viewer), 'viewer resumes idle on unbind');
 check(
-  /setLiveActDriveActive\(active: boolean\)[\s\S]{0,120}animationRuntime\.setSuspended\(active\)/.test(studio),
-  'studio runtime forwards drive state to animation runtime',
+  /syncAnimationSuspendReasons|liveActDriveSuspendReason[\s\S]{0,200}faceMappingSuspendReason/.test(studio) &&
+    /setLiveActDriveActive\(active: boolean\)[\s\S]{0,200}liveActDriveSuspendReason/.test(studio),
+  'studio runtime merges LiveAct + Face Mapping suspend reasons independently',
 );
 check(/liveact-calibration-prompt/.test(pip), 'PiP shows calibration prompt');
 check(/calibrationRunning=\{liveAct\.calibrationStatus === 'running'\}/.test(controls), 'prompt wiring');

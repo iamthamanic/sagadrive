@@ -46,7 +46,29 @@ export function classifyFaceMappingSurfaceFromNodeIdentity(
   const hasAny = (...cands: string[]): boolean => cands.some((c) => has(c));
 
   if (hasAny('helper', 'debug', 'gizmo', 'null', 'empty')) return 'helper';
-  if (hasAny('weapon', 'equip', 'equipment', 'armor', 'accessory', 'gear')) return 'equipment';
+  // Head equipment before face_skin — "Headwear" must not match via includes('head').
+  if (
+    hasAny(
+      'weapon',
+      'equip',
+      'equipment',
+      'armor',
+      'accessory',
+      'gear',
+      'helmet',
+      'helm',
+      'headwear',
+      'hat',
+      'visor',
+      'mask',
+      'crown',
+      'hood',
+    ) ||
+    joined.includes('helmet') ||
+    joined.includes('headwear')
+  ) {
+    return 'equipment';
+  }
   if (hasAny('eyelash', 'lash', 'eyelashes', 'lashes') || joined.includes('eyelash') || joined.includes('lash')) {
     return 'eyelash';
   }

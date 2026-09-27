@@ -501,7 +501,8 @@ export type FaceMappingScreenCoordMap = Readonly<
 
 /**
  * Freeze a draft as ground-truth reference for auto comparison.
- * valid=true only when all 21 anchors are bound AND each has reviewed=true.
+ * valid=true only when all 21 anchors are bound, each has reviewed=true,
+ * AND each has a finite frozen screen coordinate (projectable on current frame).
  * source alone (manual / manual_override / auto) never grants GT without reviewed.
  */
 export function freezeFaceMappingGroundTruthReference(input: {
@@ -515,6 +516,7 @@ export function freezeFaceMappingGroundTruthReference(input: {
   const anchors: FaceMappingGroundTruthReferenceAnchorV1[] = [];
   let boundCount = 0;
   let gtCount = 0;
+  let projectedCount = 0;
   let autoUnreviewedBound = 0;
 
   for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
@@ -528,6 +530,11 @@ export function freezeFaceMappingGroundTruthReference(input: {
     if (source === 'auto' && !reviewed) autoUnreviewedBound += 1;
 
     const screenRaw = input.screenCoords[id];
+    const hasScreen =
+      screenRaw != null &&
+      Number.isFinite(screenRaw.x) &&
+      Number.isFinite(screenRaw.y);
+    if (hasScreen) projectedCount += 1;
     anchors.push({
       anchorId: id,
       binding: {
@@ -536,11 +543,11 @@ export function freezeFaceMappingGroundTruthReference(input: {
         triangleIndex: binding.triangleIndex,
         barycentric: { ...binding.barycentric },
       },
-      screen: screenRaw
+      screen: hasScreen
         ? {
-            x: screenRaw.x,
-            y: screenRaw.y,
-            ...(screenRaw.meshLabel != null ? { meshLabel: screenRaw.meshLabel } : {}),
+            x: screenRaw!.x,
+            y: screenRaw!.y,
+            ...(screenRaw!.meshLabel != null ? { meshLabel: screenRaw!.meshLabel } : {}),
           }
         : null,
       source,
@@ -548,14 +555,16 @@ export function freezeFaceMappingGroundTruthReference(input: {
     });
   }
 
+  const expected = SAGA_DRIVE_FACE_ANCHOR_IDS.length;
   let status: FaceMappingGroundTruthReferenceStatusV1;
   let validForGroundTruthComparison = false;
 
   if (boundCount === 0) {
     status = 'missing_reviewed_ground_truth';
-  } else if (gtCount === SAGA_DRIVE_FACE_ANCHOR_IDS.length) {
+  } else if (gtCount === expected) {
     status = 'reviewed_manual_complete';
-    validForGroundTruthComparison = true;
+    // All reviewed AND every anchor has a finite frozen screen coord.
+    validForGroundTruthComparison = projectedCount === expected;
   } else if (gtCount > 0) {
     status = 'partial_reviewed_manual';
   } else if (autoUnreviewedBound > 0) {

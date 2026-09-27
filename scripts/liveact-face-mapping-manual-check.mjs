@@ -52,6 +52,8 @@ check(/normalizeFaceMappingBarycentric/.test(raycastSrc), 'barycentric clamp/ren
 check(/EXCLUDE_NAME_RE|sagadriveExcludeFaceMapping/.test(raycastSrc), 'exclude helpers');
 
 check(/setFaceMappingAuthoringActive/.test(studio), 'studio authoring mode');
+check(/faceMappingSuspendReason/.test(studio), 'authoring suspend reason independent of LiveAct');
+check(/syncAnimationSuspendReasons/.test(studio), 'merged animation suspend reasons');
 check(/raycastFaceMappingAtCanvas/.test(studio), 'studio raycast API');
 check(/bindFaceAnchorsManifestSession/.test(studio), 'session bind');
 check(/getFaceAnchorsManifest/.test(studio), 'get manifest');

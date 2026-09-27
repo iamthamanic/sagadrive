@@ -202,6 +202,9 @@ export class CharacterStudioRuntime {
   private faceAnchorsOverrideSource: SagaDriveFaceAnchorsManifestV1 | null = null;
   /** When true, LiveAct drive application is suppressed for Face Setup (#420). */
   private faceMappingAuthoringActive = false;
+  /** Independent suspend reasons — either keeps procedural clips paused. */
+  private liveActDriveSuspendReason = false;
+  private faceMappingSuspendReason = false;
   private readonly faceMappingProjectScratch = new THREE.Vector3();
 
   constructor(
@@ -464,7 +467,18 @@ export class CharacterStudioRuntime {
 
   /** Procedural clips pause while LiveAct drives this runtime so they cannot overwrite the head pose. */
   setLiveActDriveActive(active: boolean): void {
-    this.animationRuntime.setSuspended(active);
+    this.liveActDriveSuspendReason = active;
+    this.syncAnimationSuspendReasons();
+  }
+
+  /**
+   * Merge independent suspension reasons so LiveAct cleanup cannot resume clips
+   * while Face Mapping authoring still needs a frozen pose.
+   */
+  private syncAnimationSuspendReasons(): void {
+    this.animationRuntime.setSuspended(
+      this.liveActDriveSuspendReason || this.faceMappingSuspendReason,
+    );
   }
 
   /** Asset/bone/morph inventory only — compose with engine input in app (#381). */
@@ -516,8 +530,9 @@ export class CharacterStudioRuntime {
   setFaceMappingAuthoringActive(active: boolean): void {
     if (this.disposed) return;
     this.faceMappingAuthoringActive = active;
-    // Freeze procedural clips so GT projection and Auto capture share one pose.
-    this.animationRuntime.setSuspended(active);
+    // Independent of LiveAct drive — cleanup must not unsuspend while authoring.
+    this.faceMappingSuspendReason = active;
+    this.syncAnimationSuspendReasons();
     if (active) {
       this.resetLiveActPose();
       this.resetFaceTrackingPose();
