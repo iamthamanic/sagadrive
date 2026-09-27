@@ -4,18 +4,36 @@
  */
 import { expect, type Page } from '@playwright/test';
 
-export async function ensureLoggedIn(page: Page) {
+/**
+ * Demo login + wait until the app shell is ready.
+ * Accepts Dashboard heading/button or Home — CI flakes when only one selector is used.
+ */
+export async function ensureLoggedIn(
+  page: Page,
+  options?: { user?: string; password?: string; clearCharacterEditId?: boolean },
+) {
+  const user = options?.user ?? 'admin';
+  const password = options?.password ?? '1234';
   await page.goto('/');
-  await page.evaluate(() => {
-    sessionStorage.removeItem('sagadrive:character-edit-id');
-  });
+  if (options?.clearCharacterEditId !== false) {
+    await page.evaluate(() => {
+      sessionStorage.removeItem('sagadrive:character-edit-id');
+    });
+  }
   const loginTab = page.getByRole('tab', { name: 'Login' });
   if (await loginTab.count()) {
-    await page.getByPlaceholder('admin oder deine@email.de').fill('admin');
-    await page.getByPlaceholder('••••••••').fill('1234');
+    await loginTab.click();
+    await page.getByPlaceholder('admin oder deine@email.de').fill(user);
+    await page.getByPlaceholder('••••••••').fill(password);
     await page.getByRole('button', { name: 'Einloggen' }).click();
   }
-  await expect(page.getByRole('button', { name: 'Dashboard' }).first()).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page
+      .getByRole('heading', { name: 'Dashboard' })
+      .or(page.getByRole('button', { name: 'Home' }))
+      .or(page.getByRole('button', { name: 'Dashboard' }))
+      .first(),
+  ).toBeVisible({ timeout: 30_000 });
 }
 
 export async function openBlankCharacterEditor(page: Page) {

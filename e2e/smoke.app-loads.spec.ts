@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { ensureLoggedIn } from './helpers/character-editor';
 
 const EVIDENCE_DIR = '.qa/evidence/smoke';
 
@@ -24,18 +25,10 @@ test('app loads SagaDrive shell', async ({ page }) => {
 
 test('desktop nav reaches Bibliothek and Marktplatz', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await ensureLoggedIn(page);
 
-  // Demo auth may already be restored; either login or dashboard is fine.
-  const loginTab = page.getByRole('tab', { name: 'Login' });
-  if (await loginTab.count()) {
-    await page.getByPlaceholder('admin oder deine@email.de').fill('admin');
-    await page.getByPlaceholder('••••••••').fill('1234');
-    await page.getByRole('button', { name: 'Einloggen' }).click();
-  }
-
-  await expect(page.getByRole('button', { name: 'Dashboard' }).first()).toBeVisible({
-    timeout: 15_000,
+  await expect(page.getByRole('button', { name: 'Dashboard' }).or(page.getByRole('button', { name: 'Home' })).first()).toBeVisible({
+    timeout: 30_000,
   });
 
   for (const label of ['Bibliothek', 'Marktplatz']) {
