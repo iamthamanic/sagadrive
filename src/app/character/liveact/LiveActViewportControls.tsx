@@ -267,17 +267,13 @@ export function LiveActViewportControls({
     autoSessionTokenRef.current += 1;
     const token = autoSessionTokenRef.current;
 
+    // Drop prior proposal immediately — never pair a new GT freeze with a stale Auto session.
+    lastAutoSessionRef.current = null;
+    autoBindingsRef.current = null;
+    setAutoCoords({});
+
     // Same face-frame camera for GT freeze and Auto capture (no zoom/pan mismatch).
     runtime.applyFaceMappingAutoCameraState();
-
-    // Freeze GT reference BEFORE async work — never use post-auto draft as manualScreen.
-    groundTruthReferenceRef.current = freezeFaceMappingGroundTruthReference({
-      draft: seedDraft,
-      meta: authoringMetaRef.current,
-      screenCoords: projectManualCoords(runtime, seedDraft),
-    });
-    setGroundTruthValid(groundTruthReferenceRef.current.validForGroundTruthComparison);
-    setReferenceStatus(groundTruthReferenceRef.current.status);
 
     setAutoBusy(true);
     setMissMessage(null);
@@ -298,6 +294,16 @@ export function LiveActViewportControls({
         return;
       }
       try {
+        // Freeze GT screen coords on the same pose/frame as capture (after await).
+        runtime.applyFaceMappingAutoCameraState();
+        groundTruthReferenceRef.current = freezeFaceMappingGroundTruthReference({
+          draft: seedDraft,
+          meta: authoringMetaRef.current,
+          screenCoords: projectManualCoords(runtime, seedDraft),
+        });
+        setGroundTruthValid(groundTruthReferenceRef.current.validForGroundTruthComparison);
+        setReferenceStatus(groundTruthReferenceRef.current.status);
+
         const frame = runtime.captureFaceMappingAutoFrame();
         if (!ownsSession()) return;
         if (!frame) {

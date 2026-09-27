@@ -702,7 +702,8 @@ export function buildFaceMappingCompareExport(input: {
   outlierMedianFactor?: number;
   nowIso?: string;
 }): FaceMappingCompareExportV1 {
-  const valid = input.reference?.validForGroundTruthComparison === true;
+  const valid =
+    input.reference?.validForGroundTruthComparison === true && input.autoSession != null;
   const referenceStatus = input.reference?.status ?? null;
   const factor = input.outlierMedianFactor ?? 3;
   const faceWidth = input.faceWidthPx;

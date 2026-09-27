@@ -491,6 +491,16 @@ if (session.anchors.find((a) => a.anchorId === 'noseTip')?.screenX != null) {
   check(noseDelta != null && noseDelta > 0, `immutable ref yields non-zero delta (got ${noseDelta})`);
 }
 
+const compareNoAuto = autoMod.buildFaceMappingCompareExport({
+  reference: immutableRef,
+  autoSession: null,
+});
+check(
+  compareNoAuto.validForGroundTruthComparison === false,
+  'compare invalid without auto session even if GT reviewed',
+);
+check(compareNoAuto.comparison == null, 'no comparison when auto session missing');
+
 const compareInvalid = autoMod.buildFaceMappingCompareExport({
   reference: unreviewedRef,
   autoSession: session,

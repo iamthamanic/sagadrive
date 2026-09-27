@@ -318,7 +318,7 @@ export function FaceMappingAuthoringPanel({
               size="sm"
               variant="outline"
               className="h-8 shrink-0 border-white/15 text-[11px]"
-              disabled={summary.setCount === 0 && !hasAnyAuto}
+              disabled={autoBusy || (summary.setCount === 0 && !hasAnyAuto)}
               onClick={() => void copyJson()}
               data-testid="face-mapping-copy-json"
               title="GT-Referenz + Auto-Vorschlag als Compare-JSON kopieren"
@@ -397,7 +397,7 @@ export function FaceMappingAuthoringPanel({
             size="sm"
             variant="outline"
             className="h-8 w-full border-white/15 text-[11px]"
-            disabled={summary.setCount === 0 && !hasAnyAuto}
+            disabled={autoBusy || (summary.setCount === 0 && !hasAnyAuto)}
             onClick={() => void copyJson()}
             data-testid="face-mapping-copy-json"
             title="GT-Referenz + Auto-Vorschlag als Compare-JSON kopieren"

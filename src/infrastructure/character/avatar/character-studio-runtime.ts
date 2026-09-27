@@ -516,6 +516,8 @@ export class CharacterStudioRuntime {
   setFaceMappingAuthoringActive(active: boolean): void {
     if (this.disposed) return;
     this.faceMappingAuthoringActive = active;
+    // Freeze procedural clips so GT projection and Auto capture share one pose.
+    this.animationRuntime.setSuspended(active);
     if (active) {
       this.resetLiveActPose();
       this.resetFaceTrackingPose();
