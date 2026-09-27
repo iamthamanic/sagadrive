@@ -12,6 +12,7 @@ import { AuthGate, Layout, ViewLoadingFallback, useAppLocation } from './app/she
 import { Dashboard } from './app/dashboard';
 import { Toaster } from './shared/ui/sonner';
 import { NotFoundPlaceholder, ItemWorkbenchScreen } from './app/items';
+import { LookCreateScreen, LookEditScreen } from './app/look';
 import { NpcCreatureCreateScreen, NpcCreatureEditorScreen } from './app/npc-creature';
 import { SagaResourceScreen } from './app/project';
 import { SessionResourceScreen } from './app/session';
@@ -72,11 +73,14 @@ function AppShell() {
     currentView,
     itemId,
     createTypeSlug,
+    lookId,
     npcCreatureDefinitionId,
     route,
     navigateToView,
     navigateToItem,
     navigateToItemCreateType,
+    navigateToLookCreate,
+    navigateToLookEdit,
     navigateToNpcCreatureCreate,
     navigateToNpcCreatureEdit,
   } = useAppLocation();
@@ -88,6 +92,8 @@ function AppShell() {
   const layoutView =
     currentView === 'item-create'
     || currentView === 'item-detail'
+    || currentView === 'look-create'
+    || currentView === 'look-edit'
     || currentView === 'npc-creature-create'
     || currentView === 'npc-creature-edit'
     || currentView === 'saga-list'
@@ -138,6 +144,8 @@ function AppShell() {
             <Library
               onNavigate={handleNavigate}
               onNavigateToItem={navigateToItem}
+              onNavigateToLookCreate={navigateToLookCreate}
+              onNavigateToLookEdit={navigateToLookEdit}
               onNavigateToNpcCreate={navigateToNpcCreatureCreate}
               onNavigateToNpcEdit={navigateToNpcCreatureEdit}
               onNavigateToCharacterEditor={() => handleNavigate('character-editor')}
@@ -195,6 +203,18 @@ function AppShell() {
             itemId={itemId}
             onBack={() => handleNavigate('library')}
             onNavigateToItem={(id) => navigateToItem(id, { replace: true })}
+          />
+        );
+      case 'look-create':
+        return (
+          <LookCreateScreen onBack={() => handleNavigate('library')} />
+        );
+      case 'look-edit':
+        return (
+          <LookEditScreen
+            key={lookId ?? 'missing'}
+            lookId={lookId ?? ''}
+            onBack={() => handleNavigate('library')}
           />
         );
       case 'npc-creature-create':

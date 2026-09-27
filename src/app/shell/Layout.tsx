@@ -37,6 +37,8 @@ const VIEW_LABELS: Record<string, string> = {
   gamemaster: 'Spielleitung',
   'item-create': 'Neues Item',
   'item-detail': 'Item',
+  'look-create': 'Look erstellen',
+  'look-edit': 'Look bearbeiten',
   'npc-creature-create': 'Figur erstellen',
   'npc-creature-edit': 'Statblock Editor',
   'not-found': 'Nicht gefunden',
