@@ -75,3 +75,6 @@ assets/species-3d/**/*.glb
 public/assets/avatars/reference/*.vrm
 # Saga Human Canonical V1 PoC VRM (~10MB, deterministic) — npm run build:saga-human-canonical-v1
 public/assets/avatars/canonical/*.vrm
+
+# Local daily release-readiness state (OpenClaw/runtime only)
+.qa/release/runtime/
