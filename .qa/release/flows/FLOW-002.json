@@ -1,0 +1,30 @@
+{
+  "id": "FLOW-002",
+  "title": "Human Performance → Character → Remote Player",
+  "requiredFrom": "R1",
+  "preconditions": [
+    "Player A und B in derselben Session",
+    "A hat kompatiblen Avatar"
+  ],
+  "steps": [
+    "A aktiviert LiveAct",
+    "A kalibriert",
+    "A bewegt Kopf/Blick/Mund/Brauen und blinzelt unilateral",
+    "B beobachtet A's Avatar",
+    "A trennt kurz Verbindung und joint erneut"
+  ],
+  "passCriteria": [
+    "B erkennt A's Performance",
+    "Keine L/R-Inversion",
+    "Kein störendes Jitter",
+    "Reconnect/Late Join sauber"
+  ],
+  "requiredGates": [
+    "LIVEACT-020",
+    "MEDIA-001",
+    "LIVEACT-014",
+    "LIVEACT-015",
+    "LIVEACT-016",
+    "LIVEACT-017"
+  ]
+}
