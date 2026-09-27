@@ -1,0 +1,2689 @@
+{
+  "schemaVersion": 1,
+  "repository": "iamthamanic/sagadrive",
+  "generatedStatusPath": ".qa/release/STATUS.md",
+  "runtimeStatePath": ".qa/release/runtime/latest.json",
+  "statuses": [
+    "PASS",
+    "FAIL",
+    "BLOCKED",
+    "NOT_RUN",
+    "STALE",
+    "N/A"
+  ],
+  "milestones": [
+    {
+      "id": "R0",
+      "title": "R0 – Reveal",
+      "meaning": "Wir können SagaDrive öffentlich zeigen",
+      "order": 0
+    },
+    {
+      "id": "R1",
+      "title": "R1 – Closed Alpha",
+      "meaning": "Fremde Gruppen können wirklich spielen",
+      "order": 1
+    },
+    {
+      "id": "R2",
+      "title": "R2 – Public Beta",
+      "meaning": "Jeder kann selbstständig starten",
+      "order": 2
+    },
+    {
+      "id": "R3",
+      "title": "R3 – Paid Acquisition",
+      "meaning": "Wir können Geld in User Acquisition stecken",
+      "order": 3
+    }
+  ],
+  "rules": {
+    "cumulativeMilestones": true,
+    "progressFormula": "PASS required gates / total required gates",
+    "releaseRule": "READY only if every required blocking gate is PASS or N/A",
+    "issueClosedIsEvidenceOnly": true,
+    "humanEvidenceMustPinCommit": true
+  },
+  "gates": [
+    {
+      "id": "SESSION-001",
+      "area": "session",
+      "title": "Session sicher erstellen und per Code/Link beitreten",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        296
+      ],
+      "dependsOn": [],
+      "flows": [
+        "FLOW-001",
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 296
+        }
+      ]
+    },
+    {
+      "id": "SESSION-002",
+      "area": "session",
+      "title": "Leave/Rejoin und Session-Lifecycle funktionieren",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        296
+      ],
+      "dependsOn": [
+        "SESSION-001"
+      ],
+      "flows": [
+        "FLOW-001",
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 296
+        }
+      ]
+    },
+    {
+      "id": "SESSION-003",
+      "area": "session",
+      "title": "Authoritativer Realtime-State mit Revisionen",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        297
+      ],
+      "dependsOn": [
+        "SESSION-001"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 297
+        }
+      ]
+    },
+    {
+      "id": "SESSION-004",
+      "area": "session",
+      "title": "Reconnect/Resync stellt denselben State wieder her",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        297
+      ],
+      "dependsOn": [
+        "SESSION-003"
+      ],
+      "flows": [
+        "FLOW-001",
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 297
+        }
+      ]
+    },
+    {
+      "id": "SESSION-005",
+      "area": "session",
+      "title": "Rollen/Capabilities/Visibility serverseitig getrennt",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        362
+      ],
+      "dependsOn": [
+        "SESSION-001"
+      ],
+      "flows": [
+        "FLOW-004",
+        "FLOW-005"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 362
+        }
+      ]
+    },
+    {
+      "id": "SESSION-006",
+      "area": "session",
+      "title": "60–90-Minuten Golden Run ohne Dev/DB-Intervention",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        377,
+        378
+      ],
+      "dependsOn": [
+        "SESSION-001",
+        "SESSION-004"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 377
+        },
+        {
+          "type": "issue_closed",
+          "issue": 378
+        },
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/FLOW-003/evidence.json",
+          "relevantPaths": [
+            "src/app/session",
+            "src/domains/session",
+            "src/infrastructure/session",
+            "supabase/migrations"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SESSION-007",
+      "area": "session",
+      "title": "Pause/Resume über Folgesession ohne State-Verlust",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        374,
+        378
+      ],
+      "dependsOn": [
+        "SESSION-004"
+      ],
+      "flows": [
+        "FLOW-003",
+        "FLOW-006"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 374
+        },
+        {
+          "type": "issue_closed",
+          "issue": 378
+        }
+      ]
+    },
+    {
+      "id": "RULES-001",
+      "area": "rules",
+      "title": "Standardcheck autoritativ nach SagaDrive Core",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        299
+      ],
+      "dependsOn": [],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 299
+        }
+      ]
+    },
+    {
+      "id": "RULES-002",
+      "area": "rules",
+      "title": "Vorteil/Nachteil und Drive-Reroll funktionieren",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        299
+      ],
+      "dependsOn": [
+        "RULES-001"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 299
+        }
+      ]
+    },
+    {
+      "id": "RULES-003",
+      "area": "rules",
+      "title": "Drive/Momentum im Live-Spiel sichtbar und konsistent",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        299
+      ],
+      "dependsOn": [
+        "RULES-001"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 299
+        }
+      ]
+    },
+    {
+      "id": "COMBAT-001",
+      "area": "combat",
+      "title": "Encounter start/end, Initiative und Turnorder",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        300
+      ],
+      "dependsOn": [],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 300
+        }
+      ]
+    },
+    {
+      "id": "COMBAT-002",
+      "area": "combat",
+      "title": "Damage/Healing/Conditions persistieren und synchronisieren",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        300
+      ],
+      "dependsOn": [
+        "COMBAT-001"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 300
+        }
+      ]
+    },
+    {
+      "id": "COMBAT-003",
+      "area": "combat",
+      "title": "Downed/Stabilisierung/Tod vollständig im Runtime-State",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        373
+      ],
+      "dependsOn": [
+        "COMBAT-002"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 373
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-001",
+      "area": "liveact",
+      "title": "Lokale Kamera/MediaPipe Runtime startet und stoppt sauber",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        328,
+        329,
+        335
+      ],
+      "dependsOn": [],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 328
+        },
+        {
+          "type": "issue_closed",
+          "issue": 329
+        },
+        {
+          "type": "issue_closed",
+          "issue": 335
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-002",
+      "area": "liveact",
+      "title": "Neutral- und Range-Kalibrierung funktioniert",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        331,
+        443
+      ],
+      "dependsOn": [
+        "LIVEACT-001"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 331
+        },
+        {
+          "type": "issue_closed",
+          "issue": 443
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-003",
+      "area": "liveact",
+      "title": "Head yaw/pitch/roll stimmt anatomisch",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        443
+      ],
+      "dependsOn": [
+        "LIVEACT-002"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 443
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-004",
+      "area": "liveact",
+      "title": "Gaze folgt ohne L/R-Inversion",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        443,
+        424
+      ],
+      "dependsOn": [
+        "LIVEACT-002"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 443
+        },
+        {
+          "type": "issue_closed",
+          "issue": 424
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-005",
+      "area": "liveact",
+      "title": "Left Blink wirkt links am Character",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        422,
+        423,
+        424
+      ],
+      "dependsOn": [
+        "LIVEACT-002"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 422
+        },
+        {
+          "type": "issue_closed",
+          "issue": 423
+        },
+        {
+          "type": "issue_closed",
+          "issue": 424
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-006",
+      "area": "liveact",
+      "title": "Right Blink wirkt rechts am Character",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        422,
+        423,
+        424
+      ],
+      "dependsOn": [
+        "LIVEACT-002"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 422
+        },
+        {
+          "type": "issue_closed",
+          "issue": 423
+        },
+        {
+          "type": "issue_closed",
+          "issue": 424
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-007",
+      "area": "liveact",
+      "title": "Jaw/Mouth Open öffnet sichtbar den Character-Mund",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        422,
+        423,
+        424
+      ],
+      "dependsOn": [
+        "LIVEACT-002"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 422
+        },
+        {
+          "type": "issue_closed",
+          "issue": 423
+        },
+        {
+          "type": "issue_closed",
+          "issue": 424
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-008",
+      "area": "liveact",
+      "title": "Smile/Mouth-Corners bewegen semantisch korrekt",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        422,
+        423,
+        424
+      ],
+      "dependsOn": [
+        "LIVEACT-002"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 422
+        },
+        {
+          "type": "issue_closed",
+          "issue": 423
+        },
+        {
+          "type": "issue_closed",
+          "issue": 424
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-009",
+      "area": "liveact",
+      "title": "Brow-Bewegung ist funktional korrekt",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        422,
+        423,
+        424
+      ],
+      "dependsOn": [
+        "LIVEACT-002"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 422
+        },
+        {
+          "type": "issue_closed",
+          "issue": 423
+        },
+        {
+          "type": "issue_closed",
+          "issue": 424
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-010",
+      "area": "liveact",
+      "title": "21 Face Anchors besitzen reviewed Ground Truth",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        420,
+        421
+      ],
+      "dependsOn": [],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 420
+        },
+        {
+          "type": "issue_closed",
+          "issue": 421
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-011",
+      "area": "liveact",
+      "title": "Functional Face QA besteht auf reviewed Anchors",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        422
+      ],
+      "dependsOn": [
+        "LIVEACT-010"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 422
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-012",
+      "area": "liveact",
+      "title": "Human Male Asset besteht Structural/Anatomy/Semantic/Functional QA",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        423
+      ],
+      "dependsOn": [
+        "LIVEACT-011"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 423
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-013",
+      "area": "liveact",
+      "title": "Human Female Asset besteht Structural/Anatomy/Semantic/Functional QA",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        423
+      ],
+      "dependsOn": [
+        "LIVEACT-011"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 423
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-014",
+      "area": "liveact",
+      "title": "Remote Clients sehen LiveAct Head/Eyes/Face",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        364
+      ],
+      "dependsOn": [
+        "MEDIA-001",
+        "LIVEACT-012",
+        "LIVEACT-013"
+      ],
+      "flows": [
+        "FLOW-002",
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 364
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-015",
+      "area": "liveact",
+      "title": "Remote LiveAct Late Join funktioniert",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        364
+      ],
+      "dependsOn": [
+        "LIVEACT-014"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 364
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-016",
+      "area": "liveact",
+      "title": "Remote LiveAct Reconnect stellt State sauber her",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        364
+      ],
+      "dependsOn": [
+        "LIVEACT-014"
+      ],
+      "flows": [
+        "FLOW-002",
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 364
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-017",
+      "area": "liveact",
+      "title": "Tracking-Lost/Stop/Model-Swap hinterlässt keinen stale State",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        424,
+        364
+      ],
+      "dependsOn": [
+        "LIVEACT-014"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 424
+        },
+        {
+          "type": "issue_closed",
+          "issue": 364
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-018",
+      "area": "liveact",
+      "title": "30-Minuten Drift-/Stabilitätstest bestanden",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        424
+      ],
+      "dependsOn": [
+        "LIVEACT-012",
+        "LIVEACT-013"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/LIVEACT-018/evidence.json",
+          "relevantPaths": [
+            "src/domains/character/liveact",
+            "src/infrastructure/character/liveact",
+            "src/app/character/liveact"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-019",
+      "area": "liveact",
+      "title": "LiveAct Performance Budget auf Zielhardware bestanden",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        335,
+        424
+      ],
+      "dependsOn": [
+        "LIVEACT-001"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 335
+        },
+        {
+          "type": "issue_closed",
+          "issue": 424
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-020",
+      "area": "liveact",
+      "title": "Human Fidelity Sign-off: Performance wirkt wie reale Person",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        424
+      ],
+      "dependsOn": [
+        "LIVEACT-003",
+        "LIVEACT-004",
+        "LIVEACT-005",
+        "LIVEACT-006",
+        "LIVEACT-007",
+        "LIVEACT-008",
+        "LIVEACT-009"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/LIVEACT-020/evidence.json",
+          "relevantPaths": [
+            "src/domains/character/liveact",
+            "src/infrastructure/character/liveact",
+            "src/app/character/liveact",
+            "public/assets/avatars"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "LIVEACT-021",
+      "area": "liveact",
+      "title": "Premium Fidelity V2 ist perceptual benchmarked",
+      "requiredFrom": "R2",
+      "blocking": false,
+      "linkedIssues": [
+        442
+      ],
+      "dependsOn": [
+        "LIVEACT-020"
+      ],
+      "flows": [],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 442
+        }
+      ]
+    },
+    {
+      "id": "MEDIA-001",
+      "area": "media",
+      "title": "Self-hosted WebRTC/SFU Media Plane verfügbar",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        363
+      ],
+      "dependsOn": [
+        "SESSION-005"
+      ],
+      "flows": [
+        "FLOW-002",
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 363
+        }
+      ]
+    },
+    {
+      "id": "MEDIA-002",
+      "area": "media",
+      "title": "Mikrofon publish/subscribe integriert",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        363
+      ],
+      "dependsOn": [
+        "MEDIA-001"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 363
+        }
+      ]
+    },
+    {
+      "id": "MEDIA-003",
+      "area": "media",
+      "title": "Kamera publish/subscribe integriert",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        363
+      ],
+      "dependsOn": [
+        "MEDIA-001"
+      ],
+      "flows": [
+        "FLOW-003",
+        "FLOW-004"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 363
+        }
+      ]
+    },
+    {
+      "id": "MEDIA-004",
+      "area": "media",
+      "title": "Permission denied/degraded media blockiert Gameplay nicht",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        363
+      ],
+      "dependsOn": [
+        "MEDIA-001"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 363
+        }
+      ]
+    },
+    {
+      "id": "MEDIA-005",
+      "area": "media",
+      "title": "Viewer ist receive-only und Token server-authoritativ",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        363,
+        370
+      ],
+      "dependsOn": [
+        "MEDIA-001",
+        "SESSION-005"
+      ],
+      "flows": [
+        "FLOW-004"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 363
+        },
+        {
+          "type": "issue_closed",
+          "issue": 370
+        }
+      ]
+    },
+    {
+      "id": "MEDIA-006",
+      "area": "media",
+      "title": "Keine Raw Media/Poseframes werden persistent gespeichert",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        363,
+        364
+      ],
+      "dependsOn": [
+        "MEDIA-001"
+      ],
+      "flows": [
+        "FLOW-002"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 363
+        },
+        {
+          "type": "issue_closed",
+          "issue": 364
+        }
+      ]
+    },
+    {
+      "id": "SCENE-001",
+      "area": "scene",
+      "title": "Gemeinsamer Scene-State wird realtime geteilt",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        301
+      ],
+      "dependsOn": [
+        "SESSION-003"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 301
+        }
+      ]
+    },
+    {
+      "id": "SCENE-002",
+      "area": "scene",
+      "title": "Scene Runtime V2 referenziert Location/Environment/Actors/Look",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        366
+      ],
+      "dependsOn": [
+        "SCENE-001",
+        "PROGRAM-001"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 366
+        }
+      ]
+    },
+    {
+      "id": "SCENE-003",
+      "area": "scene",
+      "title": "Live Stage rendert Characters als primäre Experience",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        366,
+        368
+      ],
+      "dependsOn": [
+        "SCENE-002"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 366
+        },
+        {
+          "type": "issue_closed",
+          "issue": 368
+        }
+      ]
+    },
+    {
+      "id": "SCENE-004",
+      "area": "scene",
+      "title": "Remote LiveAct-Avatare erscheinen im Live Stage",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        364,
+        366,
+        368
+      ],
+      "dependsOn": [
+        "LIVEACT-014",
+        "SCENE-003"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 364
+        },
+        {
+          "type": "issue_closed",
+          "issue": 366
+        },
+        {
+          "type": "issue_closed",
+          "issue": 368
+        }
+      ]
+    },
+    {
+      "id": "SCENE-005",
+      "area": "scene",
+      "title": "GM kann Scene wechseln ohne Session-/LiveAct-Verlust",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        366,
+        369
+      ],
+      "dependsOn": [
+        "SCENE-002"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 366
+        },
+        {
+          "type": "issue_closed",
+          "issue": 369
+        }
+      ]
+    },
+    {
+      "id": "SCENE-006",
+      "area": "scene",
+      "title": "2D/neutral fallback funktioniert bei fehlendem 3D/Look/LiveAct",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        366
+      ],
+      "dependsOn": [
+        "SCENE-002"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 366
+        }
+      ]
+    },
+    {
+      "id": "SCENE-007",
+      "area": "scene",
+      "title": "Mindestens drei release-quality Demo-Szenen verfügbar",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        377
+      ],
+      "dependsOn": [],
+      "flows": [],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/SCENE-007/evidence.json",
+          "relevantPaths": [
+            "src/app/session",
+            "public",
+            "assets"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SCENE-008",
+      "area": "scene",
+      "title": "Art Direction der sichtbaren Demo-Szenen human-sign-off",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [
+        "SCENE-007"
+      ],
+      "flows": [],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/SCENE-008/evidence.json",
+          "relevantPaths": [
+            "public",
+            "assets",
+            "src/app/session"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SCENE-009",
+      "area": "scene",
+      "title": "Audio cues/soundscape Metadaten sind scene-semantisch integriert",
+      "requiredFrom": "R2",
+      "blocking": false,
+      "linkedIssues": [
+        366
+      ],
+      "dependsOn": [
+        "SCENE-002"
+      ],
+      "flows": [],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 366
+        }
+      ]
+    },
+    {
+      "id": "PLAYER-UX-001",
+      "area": "player-ux",
+      "title": "Live Stage ist primäre Player-Oberfläche",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        368
+      ],
+      "dependsOn": [
+        "PROGRAM-001",
+        "SCENE-003"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 368
+        }
+      ]
+    },
+    {
+      "id": "PLAYER-UX-002",
+      "area": "player-ux",
+      "title": "Check/Drive/Inventory/Conditions in max. zwei Interaktionen erreichbar",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        368
+      ],
+      "dependsOn": [
+        "PLAYER-UX-001"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 368
+        }
+      ]
+    },
+    {
+      "id": "PLAYER-UX-003",
+      "area": "player-ux",
+      "title": "Standardmodus zeigt keine Debug-/Authoring-Controls",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        368
+      ],
+      "dependsOn": [],
+      "flows": [],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/PLAYER-UX-003/evidence.json",
+          "relevantPaths": [
+            "src/app/session",
+            "src/app/character/liveact"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "PLAYER-UX-004",
+      "area": "player-ux",
+      "title": "Invite-Link bis spielbereit Median <=2m / P90 <=4m",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [
+        "SESSION-001",
+        "MEDIA-001"
+      ],
+      "flows": [
+        "FLOW-001"
+      ],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/PLAYER-UX-004/evidence.json",
+          "relevantPaths": [
+            "src/app/session",
+            "src/app/shell"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "PLAYER-UX-005",
+      "area": "player-ux",
+      "title": "Desktop/Tablet/Mobile Kernaktionen ohne drag-only nutzbar",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        368,
+        372
+      ],
+      "dependsOn": [
+        "PLAYER-UX-001"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 368
+        },
+        {
+          "type": "issue_closed",
+          "issue": 372
+        }
+      ]
+    },
+    {
+      "id": "PLAYER-UX-006",
+      "area": "player-ux",
+      "title": "Externe Nutzer verstehen Session ohne Architekturerklärung",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        304
+      ],
+      "dependsOn": [
+        "SESSION-006"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/PLAYER-UX-006/evidence.json",
+          "relevantPaths": [
+            "src/app/session",
+            "src/app/shell"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "GM-UX-001",
+      "area": "gm-ux",
+      "title": "GM Control Room komponiert Players/NPCs/Scenes/Checks/Combat",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        369
+      ],
+      "dependsOn": [
+        "SCENE-002"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 369
+        }
+      ]
+    },
+    {
+      "id": "GM-UX-002",
+      "area": "gm-ux",
+      "title": "Generische GM Actions decken unerwartete Spieleraktionen ab",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        371
+      ],
+      "dependsOn": [
+        "GM-UX-001"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 371
+        }
+      ]
+    },
+    {
+      "id": "GM-UX-003",
+      "area": "gm-ux",
+      "title": "GM kann Reveal zielgerichtet veröffentlichen",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        367,
+        371
+      ],
+      "dependsOn": [
+        "SESSION-005"
+      ],
+      "flows": [
+        "FLOW-003",
+        "FLOW-004"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 367
+        },
+        {
+          "type": "issue_closed",
+          "issue": 371
+        }
+      ]
+    },
+    {
+      "id": "GM-UX-004",
+      "area": "gm-ux",
+      "title": "GM kann Item geben/entfernen ohne Raw JSON",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        371,
+        372
+      ],
+      "dependsOn": [
+        "GM-UX-002"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 371
+        },
+        {
+          "type": "issue_closed",
+          "issue": 372
+        }
+      ]
+    },
+    {
+      "id": "GM-UX-005",
+      "area": "gm-ux",
+      "title": "View-as-Player ist read-only Projektion ohne Rechtewechsel",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        369
+      ],
+      "dependsOn": [
+        "GM-UX-001",
+        "SESSION-005"
+      ],
+      "flows": [],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 369
+        }
+      ]
+    },
+    {
+      "id": "PROGRAM-001",
+      "area": "program",
+      "title": "Control-freier Program Output ist eigenständiger State",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        365
+      ],
+      "dependsOn": [
+        "SESSION-005"
+      ],
+      "flows": [
+        "FLOW-004",
+        "FLOW-005"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 365
+        }
+      ]
+    },
+    {
+      "id": "PROGRAM-002",
+      "area": "program",
+      "title": "Program Output ist fullscreen/16:9 ohne private UI",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        365
+      ],
+      "dependsOn": [
+        "PROGRAM-001"
+      ],
+      "flows": [
+        "FLOW-004"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 365
+        }
+      ]
+    },
+    {
+      "id": "PROGRAM-003",
+      "area": "program",
+      "title": "Private Player-/GM-Informationen können Program nicht leaken",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        365,
+        367
+      ],
+      "dependsOn": [
+        "PROGRAM-001",
+        "SESSION-005"
+      ],
+      "flows": [
+        "FLOW-004"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 365
+        },
+        {
+          "type": "issue_closed",
+          "issue": 367
+        }
+      ]
+    },
+    {
+      "id": "VIEWER-001",
+      "area": "viewer",
+      "title": "Viewer kann join/rejoin/reconnect ohne Character",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        370
+      ],
+      "dependsOn": [
+        "SESSION-005",
+        "PROGRAM-001"
+      ],
+      "flows": [
+        "FLOW-004"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 370
+        }
+      ]
+    },
+    {
+      "id": "VIEWER-002",
+      "area": "viewer",
+      "title": "Viewer sieht nur Program + erlaubten Session-Kontext",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        370
+      ],
+      "dependsOn": [
+        "VIEWER-001",
+        "PROGRAM-003"
+      ],
+      "flows": [
+        "FLOW-004"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 370
+        }
+      ]
+    },
+    {
+      "id": "VIEWER-003",
+      "area": "viewer",
+      "title": "Viewer kann keine Gameplay-/Presentation-Mutations ausführen",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        370,
+        378
+      ],
+      "dependsOn": [
+        "VIEWER-001"
+      ],
+      "flows": [
+        "FLOW-004"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 370
+        },
+        {
+          "type": "issue_closed",
+          "issue": 378
+        }
+      ]
+    },
+    {
+      "id": "DIRECTOR-001",
+      "area": "director",
+      "title": "Director Runtime ist von Gameplay-Rechten getrennt",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        375
+      ],
+      "dependsOn": [
+        "SESSION-005",
+        "PROGRAM-001"
+      ],
+      "flows": [
+        "FLOW-005"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 375
+        }
+      ]
+    },
+    {
+      "id": "DIRECTOR-002",
+      "area": "director",
+      "title": "Automatic Mode mappt Session Events deterministisch auf Cues",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        375
+      ],
+      "dependsOn": [
+        "DIRECTOR-001"
+      ],
+      "flows": [
+        "FLOW-005"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 375
+        }
+      ]
+    },
+    {
+      "id": "DIRECTOR-003",
+      "area": "director",
+      "title": "Manual Take/Override gewinnt immer gegen Automatic Mode",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        375,
+        376
+      ],
+      "dependsOn": [
+        "DIRECTOR-002"
+      ],
+      "flows": [
+        "FLOW-005"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 375
+        },
+        {
+          "type": "issue_closed",
+          "issue": 376
+        }
+      ]
+    },
+    {
+      "id": "DIRECTOR-004",
+      "area": "director",
+      "title": "Director Control Room besitzt Preview/Program/Sources/Cues",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        376
+      ],
+      "dependsOn": [
+        "DIRECTOR-001"
+      ],
+      "flows": [
+        "FLOW-005"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 376
+        }
+      ]
+    },
+    {
+      "id": "RECORDING-001",
+      "area": "recording",
+      "title": "Clean Program Feed kann extern direkt aufgenommen werden",
+      "requiredFrom": "R2",
+      "blocking": false,
+      "linkedIssues": [],
+      "dependsOn": [
+        "PROGRAM-002"
+      ],
+      "flows": [
+        "FLOW-005"
+      ],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/RECORDING-001/evidence.json",
+          "relevantPaths": [
+            "src/app/session"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KNOWLEDGE-001",
+      "area": "knowledge",
+      "title": "Public/GM-only/discovered/character-specific serverseitig getrennt",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        367
+      ],
+      "dependsOn": [
+        "SESSION-005"
+      ],
+      "flows": [
+        "FLOW-003",
+        "FLOW-004"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 367
+        }
+      ]
+    },
+    {
+      "id": "WORLD-001",
+      "area": "world",
+      "title": "Adventure Definition und Runtime State getrennt",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        374
+      ],
+      "dependsOn": [
+        "SESSION-003"
+      ],
+      "flows": [
+        "FLOW-003",
+        "FLOW-006"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 374
+        }
+      ]
+    },
+    {
+      "id": "WORLD-002",
+      "area": "world",
+      "title": "Relationships/Consequences/Escalation persistieren versioniert",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        374
+      ],
+      "dependsOn": [
+        "WORLD-001"
+      ],
+      "flows": [
+        "FLOW-003",
+        "FLOW-006"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 374
+        }
+      ]
+    },
+    {
+      "id": "WORLD-003",
+      "area": "world",
+      "title": "Folgesession lädt persistente Konsequenzen korrekt",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        374,
+        378
+      ],
+      "dependsOn": [
+        "WORLD-002",
+        "SESSION-007"
+      ],
+      "flows": [
+        "FLOW-006"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 374
+        },
+        {
+          "type": "issue_closed",
+          "issue": 378
+        }
+      ]
+    },
+    {
+      "id": "INVENTORY-001",
+      "area": "inventory",
+      "title": "Live Pickup/Transfer/Equip/Consume ist authoritativ",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        372
+      ],
+      "dependsOn": [],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 372
+        }
+      ]
+    },
+    {
+      "id": "INVENTORY-002",
+      "area": "inventory",
+      "title": "Inventory State bleibt nach Reconnect konsistent",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        372,
+        378
+      ],
+      "dependsOn": [
+        "INVENTORY-001",
+        "SESSION-004"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 372
+        },
+        {
+          "type": "issue_closed",
+          "issue": 378
+        }
+      ]
+    },
+    {
+      "id": "AI-001",
+      "area": "ai",
+      "title": "AI erhält aktuellen Character-/Scene-/World-Kontext",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [
+        "WORLD-001",
+        "SCENE-002"
+      ],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "AI-002",
+      "area": "ai",
+      "title": "NPC Memory ist persistent und sessionübergreifend",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [
+        "WORLD-002"
+      ],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "AI-003",
+      "area": "ai",
+      "title": "AI kann keine World Truth ungeprüft autoritativ überschreiben",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [
+        "AI-001"
+      ],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "AI-004",
+      "area": "ai",
+      "title": "GM kann AI-Vorschläge ablehnen/überschreiben",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [
+        "AI-001"
+      ],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "AI-005",
+      "area": "ai",
+      "title": "AI-Kontext bleibt nach Reload/Folgesession konsistent",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [
+        "AI-002",
+        "WORLD-003"
+      ],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "SEC-001",
+      "area": "security",
+      "title": "Unauthorized Session/Character/NPC writes werden abgewiesen",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        303,
+        378
+      ],
+      "dependsOn": [
+        "SESSION-005"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 303
+        },
+        {
+          "type": "issue_closed",
+          "issue": 378
+        }
+      ]
+    },
+    {
+      "id": "SEC-002",
+      "area": "security",
+      "title": "Viewer/Director Capability kann nicht clientseitig gefälscht werden",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        362,
+        378
+      ],
+      "dependsOn": [
+        "SESSION-005"
+      ],
+      "flows": [
+        "FLOW-004",
+        "FLOW-005"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 362
+        },
+        {
+          "type": "issue_closed",
+          "issue": 378
+        }
+      ]
+    },
+    {
+      "id": "SEC-003",
+      "area": "security",
+      "title": "Private Knowledge/Secrets werden nicht nur per CSS versteckt",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        367,
+        378
+      ],
+      "dependsOn": [
+        "KNOWLEDGE-001"
+      ],
+      "flows": [
+        "FLOW-004"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 367
+        },
+        {
+          "type": "issue_closed",
+          "issue": 378
+        }
+      ]
+    },
+    {
+      "id": "STAB-001",
+      "area": "stability",
+      "title": "Multi-user E2E + Security Gate ist grün",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        303
+      ],
+      "dependsOn": [],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 303
+        }
+      ]
+    },
+    {
+      "id": "STAB-002",
+      "area": "stability",
+      "title": "Golden multi-role E2E Gate ist grün",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        378
+      ],
+      "dependsOn": [
+        "SESSION-006"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "issue_closed",
+          "issue": 378
+        }
+      ]
+    },
+    {
+      "id": "STAB-003",
+      "area": "stability",
+      "title": "60-Minuten Session ohne Blocker auf mehreren Clients human getestet",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        304
+      ],
+      "dependsOn": [],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/STAB-003/evidence.json",
+          "relevantPaths": [
+            "src/app/session",
+            "src/domains/session",
+            "src/infrastructure/session"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ANALYTICS-001",
+      "area": "analytics",
+      "title": "Analytics Event landing_view messbar",
+      "requiredFrom": "R3",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-002",
+      "area": "analytics",
+      "title": "Analytics Event signup messbar",
+      "requiredFrom": "R3",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-003",
+      "area": "analytics",
+      "title": "Analytics Event invite_opened messbar",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-004",
+      "area": "analytics",
+      "title": "Analytics Event character_selected messbar",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-005",
+      "area": "analytics",
+      "title": "Analytics Event liveact_started messbar",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-006",
+      "area": "analytics",
+      "title": "Analytics Event liveact_calibrated messbar",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-007",
+      "area": "analytics",
+      "title": "Analytics Event session_joined messbar",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-008",
+      "area": "analytics",
+      "title": "Analytics Event first_player_action messbar",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-009",
+      "area": "analytics",
+      "title": "Analytics Event first_check messbar",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-010",
+      "area": "analytics",
+      "title": "Analytics Event 15_min_active messbar",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-011",
+      "area": "analytics",
+      "title": "Analytics Event session_completed messbar",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-012",
+      "area": "analytics",
+      "title": "Analytics Event second_session_started messbar",
+      "requiredFrom": "R3",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "ANALYTICS-013",
+      "area": "analytics",
+      "title": "Analytics Event invite_sent messbar",
+      "requiredFrom": "R3",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "HUMAN-001",
+      "area": "human-test",
+      "title": "Dogfood Test 1: GM + 1 Player / 30 Minuten bestanden",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [
+        304
+      ],
+      "dependsOn": [],
+      "flows": [],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/HUMAN-001/evidence.json",
+          "relevantPaths": [
+            "src/app/session"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "HUMAN-002",
+      "area": "human-test",
+      "title": "Dogfood Test 2: GM + 3–4 Player / 60–90 Minuten bestanden",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [
+        304
+      ],
+      "dependsOn": [
+        "HUMAN-001"
+      ],
+      "flows": [
+        "FLOW-003"
+      ],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/HUMAN-002/evidence.json",
+          "relevantPaths": [
+            "src/app/session"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "HUMAN-003",
+      "area": "human-test",
+      "title": "Externer Player-Test: Nutzer wollen freiwillig eine zweite Session",
+      "requiredFrom": "R2",
+      "blocking": true,
+      "linkedIssues": [
+        304
+      ],
+      "dependsOn": [
+        "HUMAN-002"
+      ],
+      "flows": [],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/HUMAN-003/evidence.json",
+          "relevantPaths": [
+            "src/app/session",
+            "src/app/shell"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MKT-001",
+      "area": "marketing",
+      "title": "Echter 20-Sekunden-Gameplay-Clip erklärt Produkt ohne Voiceover",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [
+        "LIVEACT-020",
+        "PROGRAM-002"
+      ],
+      "flows": [],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/MKT-001/evidence.json",
+          "relevantPaths": [
+            "src/app/session",
+            "src/app/character/liveact",
+            "public",
+            "assets"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MKT-002",
+      "area": "marketing",
+      "title": "Claim 'Your character moves with you' ist durch LiveAct-Gates gedeckt",
+      "requiredFrom": "R0",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [
+        "LIVEACT-003",
+        "LIVEACT-004",
+        "LIVEACT-005",
+        "LIVEACT-006",
+        "LIVEACT-007",
+        "LIVEACT-008",
+        "LIVEACT-009",
+        "LIVEACT-020"
+      ],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "MKT-003",
+      "area": "marketing",
+      "title": "Claim 'Play live together as your characters' ist durch Remote-Gates gedeckt",
+      "requiredFrom": "R1",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [
+        "MEDIA-001",
+        "LIVEACT-014",
+        "FLOW-002"
+      ],
+      "flows": [],
+      "verification": []
+    },
+    {
+      "id": "MKT-004",
+      "area": "marketing",
+      "title": "Paid Acquisition nur bei messbarer Second-Session-Retention",
+      "requiredFrom": "R3",
+      "blocking": true,
+      "linkedIssues": [],
+      "dependsOn": [
+        "ANALYTICS-012",
+        "HUMAN-003"
+      ],
+      "flows": [],
+      "verification": [
+        {
+          "type": "human_evidence",
+          "path": ".qa/release/evidence/MKT-004/evidence.json",
+          "relevantPaths": []
+        }
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "FLOW-001",
+      "title": "Player tritt einer Session bei",
+      "requiredFrom": "R1",
+      "preconditions": [
+        "GM hat eine Session erstellt",
+        "Player besitzt einen erlaubten Character",
+        "Invite/Session-Code ist gültig"
+      ],
+      "steps": [
+        "Invite/Code öffnen",
+        "Session erkennen",
+        "Character bestätigen",
+        "Kamera/Mikrofon erlauben oder bewusst ablehnen",
+        "LiveAct optional kalibrieren",
+        "Live Stage betreten"
+      ],
+      "passCriteria": [
+        "Kein DB-/Console-Eingriff",
+        "Kein Architekturwissen nötig",
+        "R2: Median invite→ready <=2 min, P90 <=4 min"
+      ],
+      "requiredGates": [
+        "SESSION-001",
+        "SESSION-002",
+        "SESSION-004"
+      ]
+    },
+    {
+      "id": "FLOW-002",
+      "title": "Human Performance → Character → Remote Player",
+      "requiredFrom": "R1",
+      "preconditions": [
+        "Player A und B in derselben Session",
+        "A hat kompatiblen Avatar"
+      ],
+      "steps": [
+        "A aktiviert LiveAct",
+        "A kalibriert",
+        "A bewegt Kopf/Blick/Mund/Brauen und blinzelt unilateral",
+        "B beobachtet A's Avatar",
+        "A trennt kurz Verbindung und joint erneut"
+      ],
+      "passCriteria": [
+        "B erkennt A's Performance",
+        "Keine L/R-Inversion",
+        "Kein störendes Jitter",
+        "Reconnect/Late Join sauber"
+      ],
+      "requiredGates": [
+        "LIVEACT-020",
+        "MEDIA-001",
+        "LIVEACT-014",
+        "LIVEACT-015",
+        "LIVEACT-016",
+        "LIVEACT-017"
+      ]
+    },
+    {
+      "id": "FLOW-003",
+      "title": "Golden Run – vollständiger 60–90-Minuten-One-Shot",
+      "requiredFrom": "R1",
+      "preconditions": [
+        "1 GM",
+        "3–4 Player",
+        "Dornhain/Golden Adventure instanziert",
+        "Keine Dev-Konsole/DB als geplanter Teil des Runs"
+      ],
+      "steps": [
+        "Session starten",
+        "Player joinen",
+        "LiveAct/Media aktivieren",
+        "Social Scene",
+        "unerwartete freie Aktion adjudizieren",
+        "Check + Drive",
+        "Scene wechseln",
+        "World Consequence setzen",
+        "Combat",
+        "Inventory-Aktion",
+        "Reconnect erzwingen",
+        "optional Viewer join",
+        "Pause/Resume/Complete"
+      ],
+      "passCriteria": [
+        "0 P0",
+        "0 Datenverlust",
+        "0 Permission Leak",
+        "0 State Divergence",
+        "keine Entwicklerintervention außer dokumentiertem Recovery",
+        "60–90 Minuten vollständig spielbar"
+      ],
+      "requiredGates": [
+        "SESSION-006",
+        "RULES-001",
+        "RULES-002",
+        "COMBAT-001",
+        "COMBAT-002",
+        "LIVEACT-014",
+        "MEDIA-002",
+        "SCENE-005",
+        "PLAYER-UX-001",
+        "GM-UX-002",
+        "WORLD-002",
+        "STAB-003"
+      ]
+    },
+    {
+      "id": "FLOW-004",
+      "title": "Viewer schaut sicher zu",
+      "requiredFrom": "R1",
+      "preconditions": [
+        "Session läuft",
+        "Viewer ist authentifiziert und eingeladen"
+      ],
+      "steps": [
+        "Viewer joint",
+        "Program Output laden",
+        "öffentliche Reveals ansehen",
+        "versuchen Gameplay zu mutieren"
+      ],
+      "passCriteria": [
+        "Nur Program/erlaubter Kontext sichtbar",
+        "Keine Secrets/private Daten",
+        "Mutation wird serverseitig abgewiesen"
+      ],
+      "requiredGates": [
+        "PROGRAM-001",
+        "PROGRAM-003",
+        "VIEWER-001",
+        "VIEWER-002",
+        "VIEWER-003",
+        "SEC-002",
+        "SEC-003"
+      ]
+    },
+    {
+      "id": "FLOW-005",
+      "title": "Director steuert Preview/Program",
+      "requiredFrom": "R2",
+      "preconditions": [
+        "User besitzt Director-Capability",
+        "Session liefert Program Sources"
+      ],
+      "steps": [
+        "Preview Source wählen",
+        "Take auslösen",
+        "Automatic Mode aktivieren",
+        "Session Event erzeugen",
+        "manuell übersteuern"
+      ],
+      "passCriteria": [
+        "Preview verändert Program nicht vor Take",
+        "Automatic Cue deterministisch",
+        "Manual Override gewinnt",
+        "keine Gameplay-Rechte durch Director"
+      ],
+      "requiredGates": [
+        "DIRECTOR-001",
+        "DIRECTOR-002",
+        "DIRECTOR-003",
+        "DIRECTOR-004"
+      ]
+    },
+    {
+      "id": "FLOW-006",
+      "title": "Konsequenzen überleben die Session",
+      "requiredFrom": "R2",
+      "preconditions": [
+        "Session 1 hat relevante World-State-Konsequenz erzeugt"
+      ],
+      "steps": [
+        "Session pausieren/beenden",
+        "neue/fortgesetzte Session öffnen",
+        "betroffenen NPC/Ort/State prüfen"
+      ],
+      "passCriteria": [
+        "Konsequenz unverändert vorhanden",
+        "Definitionen wurden nicht mutiert",
+        "autorisierte Projektionen bleiben korrekt"
+      ],
+      "requiredGates": [
+        "SESSION-007",
+        "WORLD-001",
+        "WORLD-002",
+        "WORLD-003"
+      ]
+    }
+  ],
+  "marketingClaims": [
+    {
+      "id": "CLAIM-001",
+      "text": "Your character moves with you.",
+      "requires": [
+        "LIVEACT-003",
+        "LIVEACT-004",
+        "LIVEACT-005",
+        "LIVEACT-006",
+        "LIVEACT-007",
+        "LIVEACT-008",
+        "LIVEACT-009",
+        "LIVEACT-020"
+      ]
+    },
+    {
+      "id": "CLAIM-002",
+      "text": "Play live together as your characters.",
+      "requires": [
+        "MEDIA-001",
+        "LIVEACT-014",
+        "LIVEACT-015",
+        "FLOW-002"
+      ]
+    },
+    {
+      "id": "CLAIM-003",
+      "text": "A live story you perform together.",
+      "requires": [
+        "FLOW-003",
+        "PROGRAM-002",
+        "MKT-001"
+      ]
+    }
+  ]
+}
