@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Input } from '../../shared/ui/input';
-import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package, Users } from 'lucide-react';
+import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package, Users, Palette } from 'lucide-react';
 import { useCharacterSummaries, CreateCharacterEntryDialog, setCharacterEditorBootstrap } from '../character';
 import type { CharacterSummaryVm } from '../../domains/character';
 import { resolveAvatarSurfaceView } from '../../domains/character/avatar';
@@ -28,6 +28,12 @@ const ItemLibraryBrowser = lazy(() =>
   })),
 );
 
+const LookLibraryBrowser = lazy(() =>
+  import('./looks').then((module) => ({
+    default: module.LookLibraryBrowser,
+  })),
+);
+
 const NpcCreatureLibraryBrowser = lazy(() =>
   import('./npc-creatures').then((module) => ({
     default: module.NpcCreatureLibraryBrowser,
@@ -37,12 +43,16 @@ const NpcCreatureLibraryBrowser = lazy(() =>
 interface LibraryProps {
   onNavigate: (view: string) => void;
   onNavigateToItem: (itemId: string) => void;
+  onNavigateToLookCreate?: () => void;
+  onNavigateToLookEdit?: (lookId: string) => void;
   onNavigateToNpcCreate?: () => void;
   onNavigateToNpcEdit?: (definitionId: string) => void;
   onNavigateToCharacterEditor?: () => void;
+  /** When false, Looks tab hides create/edit/duplicate/archive. Default true. */
+  canMutateLooks?: boolean;
 }
 
-type LibraryTab = 'characters' | 'npcs' | 'adventures' | 'worlds' | 'items';
+type LibraryTab = 'characters' | 'npcs' | 'adventures' | 'worlds' | 'items' | 'looks';
 
 const SPECIES_DEVELOPMENT_MODE_LABELS = {
   explicit: 'Explizit',
@@ -64,9 +74,12 @@ const PROJECT_STATUS_LABELS: Record<ProjectSummaryVm['status'], string> = {
 export function Library({
   onNavigate,
   onNavigateToItem,
+  onNavigateToLookCreate,
+  onNavigateToLookEdit,
   onNavigateToNpcCreate,
   onNavigateToNpcEdit,
   onNavigateToCharacterEditor,
+  canMutateLooks = true,
 }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<LibraryTab>('characters');
@@ -91,6 +104,7 @@ export function Library({
     deleteWorld,
   } = useWorldProfiles({ enabled: visitedTabs.has('worlds') });
   const itemsTabVisited = visitedTabs.has('items');
+  const looksTabVisited = visitedTabs.has('looks');
   const npcsTabVisited = visitedTabs.has('npcs');
 
   const gmProjects = projects.filter(
@@ -118,6 +132,22 @@ export function Library({
       return;
     }
     onNavigate('npc-creature-create');
+  };
+
+  const handleLookCreate = () => {
+    if (onNavigateToLookCreate) {
+      onNavigateToLookCreate();
+      return;
+    }
+    onNavigate('look-create');
+  };
+
+  const handleLookEdit = (lookId: string) => {
+    if (onNavigateToLookEdit) {
+      onNavigateToLookEdit(lookId);
+      return;
+    }
+    console.warn('[library] onNavigateToLookEdit is not wired; cannot open look', lookId);
   };
 
   const handleDeleteCharacter = async (id: string, name: string) => {
@@ -367,11 +397,11 @@ export function Library({
         <div className="min-w-0">
           <h1 className="text-xl md:text-2xl">Meine Bibliothek</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Verwalte deine Charaktere, NPCs & Kreaturen, Abenteuer, Welten und Gegenstände
+            Verwalte deine Charaktere, NPCs & Kreaturen, Abenteuer, Welten, Gegenstände und Looks
           </p>
         </div>
 
-        {activeTab !== 'items' && activeTab !== 'npcs' ? (
+        {activeTab !== 'items' && activeTab !== 'npcs' && activeTab !== 'looks' ? (
           <div className="relative min-w-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -384,7 +414,7 @@ export function Library({
         ) : null}
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="@container w-full min-w-0">
-          <TabsList className="grid h-auto w-full max-w-full min-w-0 grid-cols-2 gap-1 @[36rem]:grid-cols-3 @[52rem]:grid-cols-5">
+          <TabsList className="grid h-auto w-full max-w-full min-w-0 grid-cols-2 gap-1 @[36rem]:grid-cols-3 @[60rem]:grid-cols-6">
             <TabsTrigger
               value="characters"
               className="min-h-11 min-w-0 max-w-full px-2 text-xs sm:text-sm"
@@ -419,6 +449,13 @@ export function Library({
             >
               <Package className="mr-1.5 size-4 shrink-0 sm:mr-2" />
               <span className="truncate">Items</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="looks"
+              className="min-h-11 min-w-0 max-w-full px-2 text-xs sm:text-sm"
+            >
+              <Palette className="mr-1.5 size-4 shrink-0 sm:mr-2" />
+              <span className="truncate">Looks</span>
             </TabsTrigger>
           </TabsList>
 
@@ -560,6 +597,25 @@ export function Library({
                   enabled={itemsTabVisited}
                   onCreateItem={() => onNavigate('item-create')}
                   onOpenItem={onNavigateToItem}
+                />
+              </Suspense>
+            ) : null}
+          </TabsContent>
+
+          <TabsContent value="looks" className="min-w-0 space-y-4">
+            {looksTabVisited ? (
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                  </div>
+                }
+              >
+                <LookLibraryBrowser
+                  enabled={looksTabVisited}
+                  canMutate={canMutateLooks}
+                  onCreateLook={handleLookCreate}
+                  onEditLook={handleLookEdit}
                 />
               </Suspense>
             ) : null}

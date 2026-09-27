@@ -304,6 +304,14 @@ function checkLookProfilePersistence() {
   });
 }
 
+function checkLookLibrary() {
+  console.log('Look Library browser (#343): Bibliothek › Looks UI + routes + filter domain...');
+  execFileSync(process.execPath, ['scripts/look-library-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveSessionRoleCapabilityContract() {
   console.log('Live Session role/capability contract (#362): access, visibility, director...');
   execFileSync(process.execPath, ['scripts/live-session-role-capability-contract-check.mjs'], {
@@ -1381,6 +1389,7 @@ checkItemRoutingFoundation();
 checkSagaRoutingPublicIdFoundation();
 checkLookProfileDomain();
 checkLookProfilePersistence();
+checkLookLibrary();
 checkLiveSessionRoleCapabilityContract();
 checkPlayerTestSessionSecurity();
 checkPlayerTestRealtimeRuntime();
