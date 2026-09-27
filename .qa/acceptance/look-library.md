@@ -35,7 +35,7 @@ Ergänze die SagaDrive-Bibliothek um den Bereich „Looks“. Nutzer können ihr
 ## Composition Gate
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-look-library.md`
-- HEAD: df328f763bdf5e1d2ab1a59bfa501e4f25ea9f76
+- HEAD: d4303e8c7690fa71e852a8ff3884add3d5328eb1
 
 ## Implementation Notes
 - Domain filter: `src/domains/look/library-query.ts`
