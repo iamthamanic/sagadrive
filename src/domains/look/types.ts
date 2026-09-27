@@ -78,6 +78,28 @@ export type LookReference = {
   /** Opaque URI or library resource id — domain does not fetch. */
   readonly uri: string;
   readonly label?: string;
+  /** Optional blend weight in [0, 1]. */
+  readonly weight?: number;
+};
+
+/** Persisted lifecycle for a LookProfile row. */
+export const LOOK_PROFILE_STATUSES = ['active', 'archived'] as const;
+
+export type LookProfileStatus = (typeof LOOK_PROFILE_STATUSES)[number];
+
+export type LookProfileRecord = {
+  readonly profile: LookProfile;
+  readonly status: LookProfileStatus;
+  readonly current: LookProfileVersion;
+};
+
+export type LookProfileWriteDraft = {
+  readonly displayName: string;
+  readonly source: LookSource;
+  readonly references: readonly LookReference[];
+  readonly capabilities: readonly LookCapability[];
+  readonly executionModes: readonly LookExecutionMode[];
+  readonly ownerScope?: LookScope;
 };
 
 export type LookProfileVersion = {
