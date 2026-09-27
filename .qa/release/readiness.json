@@ -2424,7 +2424,11 @@
         "LIVEACT-020"
       ],
       "flows": [],
-      "verification": []
+      "verification": [
+        {
+          "type": "derived"
+        }
+      ]
     },
     {
       "id": "MKT-003",
@@ -2439,7 +2443,11 @@
         "FLOW-002"
       ],
       "flows": [],
-      "verification": []
+      "verification": [
+        {
+          "type": "derived"
+        }
+      ]
     },
     {
       "id": "MKT-004",
