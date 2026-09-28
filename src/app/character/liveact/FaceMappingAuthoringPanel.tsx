@@ -412,7 +412,7 @@ export function FaceMappingAuthoringPanel({
                     disabled={disabled}
                     aria-pressed={active}
                     data-testid={`face-mapping-view-${opt.id}`}
-                    className={`h-7 flex-1 rounded-sm text-[10px] ${
+                    className={`h-11 min-h-[44px] flex-1 rounded-sm text-[10px] ${
                       active
                         ? 'bg-cyan-500/30 text-cyan-50'
                         : 'text-slate-400 hover:bg-amber-500/15 hover:text-amber-100 disabled:opacity-40'
