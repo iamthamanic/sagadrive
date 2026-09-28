@@ -463,6 +463,9 @@ export function LiveActViewportControls({
 
   useEffect(() => {
     return () => {
+      // Unmount (expand Setup swap / dialog close) must invalidate in-flight Auto like closeFaceMapping.
+      autoSessionTokenRef.current += 1;
+      faceMappingOpenRef.current = false;
       studioRuntimeRef?.current?.setFaceMappingAuthoringActive(false);
     };
   }, [studioRuntimeRef]);

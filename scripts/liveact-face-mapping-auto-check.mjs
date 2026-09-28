@@ -258,6 +258,12 @@ check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyeball'), 'lid 
 check(/projectAutoCoordsFromBindings|projectWorldToFaceMappingCanvas/.test(controls), 'auto coords reprojected with camera');
 check(/autoSessionTokenRef\.current \+= 1/.test(controls), 'token monotonic bump on open');
 check(!/autoSessionTokenRef\.current = 0/.test(controls), 'token never reset to zero');
+check(
+  /return \(\) => \{[\s\S]*autoSessionTokenRef\.current \+= 1[\s\S]*faceMappingOpenRef\.current = false/.test(
+    controls,
+  ),
+  'unmount invalidates auto session token',
+);
 
 const pipeOut = join(runsDir, 'liveact-face-mapping-auto-pipeline-bundle.mjs');
 await build({
