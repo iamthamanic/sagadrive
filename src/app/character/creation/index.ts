@@ -17,3 +17,4 @@ export { SelectedSpeciesChip } from './SelectedSpeciesChip';
 export { SpeciesCarousel } from './SpeciesCarousel';
 export { SpeciesTraitsPanel } from './SpeciesTraitsPanel';
 export { CreateCharacterEntryDialog } from './CreateCharacterEntryDialog';
+export { StartingTemplatePicker } from './StartingTemplatePicker';

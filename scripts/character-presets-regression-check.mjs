@@ -28,6 +28,8 @@ const types = read('src/domains/character/contracts/character-preset.types.ts');
 const service = read('src/infrastructure/character/character-preset-service.ts');
 const panel = read('src/app/character/progression/CharacterPresetPanel.tsx');
 const dialog = read('src/app/character/creation/CreateCharacterEntryDialog.tsx');
+const startingTemplatePicker = read('src/app/character/creation/StartingTemplatePicker.tsx');
+const bootstrap = read('src/app/character/shared/characterEditorBootstrap.ts');
 const editor = [
   read('src/app/character/edit/CharacterEditor.tsx'),
   read('src/app/character/edit/useCharacterAvatarEditor.ts'),
@@ -80,16 +82,24 @@ requireMatch(panel, /disabled/, 'marketplace button disabled');
 requireMatch(panel, /Speichere den Charakter zuerst/, 'unsaved character guidance');
 
 requireMatch(dialog, /Eigenen Charakter erstellen/, 'own character create card');
-requireMatch(dialog, /Preset wählen/, 'preset choose card');
+requireMatch(dialog, /Vorlage wählen/, 'vorlage choose card');
 requireMatch(dialog, /Noch keine Presets/, 'empty presets state');
-requireMatch(dialog, /SagaDrive-Presets bald/, 'system presets stub section');
+requireMatch(dialog, /StartingTemplatePicker/, 'starting template picker mounted');
+requireMatch(dialog, /kind:\s*'starting-template'/, 'starting-template bootstrap handoff');
+requireMatch(dialog, /Deine Presets/, 'user presets section');
 requireMatch(dialog, /Level /, 'version level picker');
 requireMatch(dialog, /setCharacterEditorBootstrap/, 'bootstrap wiring from dialog');
 requireMatch(dialog, /assertValidSnapshot/, 'assert before bootstrap handoff');
+requireMatch(startingTemplatePicker, /SagaDrive-Starttemplates/, 'system starttemplates section');
+requireMatch(startingTemplatePicker, /listSagaDriveStartingTemplates/, 'catalog list in picker');
+requireMatch(bootstrap, /kind: 'starting-template'/, 'bootstrap union includes starting-template');
 
 requireMatch(editor, /value="settings"/, 'Einstellungen editor tab');
 requireMatch(editor, /CharacterPresetPanel/, 'preset panel mounted');
 requireMatch(editor, /takeCharacterEditorBootstrap/, 'bootstrap consume');
+requireMatch(editor, /kind === 'starting-template'/, 'starting-template bootstrap consume');
+requireMatch(editor, /getSagaDriveStartingTemplate/, 'catalog resolve for starttemplate');
+requireMatch(editor, /validateSagaDriveStartingTemplate/, 'fail-closed starttemplate validate');
 requireMatch(editor, /assertValidSnapshot/, 'assert before editor hydrate');
 requireMatch(editor, /normalizeSafeUrl/, 'portrait bootstrap URL sanitize');
 requireMatch(editor, /updateCharacter\(savedCharacterId/, 'update existing character on save');
@@ -98,6 +108,7 @@ rejectMatch(editor, /snapshot\.freeSkillRanks/, 'preset hydration still reads sn
 rejectMatch(editor, /payload\.freeSkillRanks/, 'hydrateEditor still has freeSkillRanks override');
 rejectMatch(editor, /freeSkillRanks\?:\s*Partial/, 'hydrateEditor payload still declares freeSkillRanks override');
 rejectMatch(editor, /freeSkillRanks,\s*\n\s*skills: finalSkillRanks/, 'preset snapshot builder still writes top-level freeSkillRanks');
+rejectMatch(dialog, /SagaDrive-Presets bald/, 'old system presets stub must be gone');
 
 requireMatch(library, /CreateCharacterEntryDialog/, 'library create dialog');
 requireMatch(dashboard, /CreateCharacterEntryDialog/, 'dashboard create dialog');
