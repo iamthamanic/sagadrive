@@ -73,7 +73,10 @@ check(/listFaceMappingRaycastCandidates/.test(read('src/infrastructure/character
 check(/manual-check|raycastFaceMappingPointer/.test(read('scripts/liveact-face-mapping-manual-check.mjs')), 'manual still uses first-hit raycast');
 check(/captureFaceMappingAutoFrame/.test(studio), 'studio capture');
 check(/face-mapping-overlay-view-mode|face-mapping-view-both/.test(panel), 'overlay view mode toggle');
-check(/min-h-\[44px\]/.test(panel) && /face-mapping-view-draft/.test(panel), 'overlay view options ≥44px touch');
+check(
+  /face-mapping-overlay-view-mode[\s\S]*?h-11 min-h-\[44px\]/.test(panel),
+  'overlay view options ≥44px touch',
+);
 check(/FaceMappingOverlayViewMode|viewMode|autoBindingsRef/.test(layer), 'marker layer view mode');
 check(/drawAutoGhosts|AUTO_STROKE|viewModeRef/.test(layer), 'auto ghost draw');
 check(/stringifyFaceMappingCompareExport|buildFaceMappingCompareExport/.test(autoDomain), 'compare export builder');
