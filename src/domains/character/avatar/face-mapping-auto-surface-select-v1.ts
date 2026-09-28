@@ -48,9 +48,12 @@ export interface FaceMappingSurfaceSelectResultV1 {
 /**
  * Depth gate: allow a later hit only if it is close behind the nearest hit.
  * Avoids mapping through the eyeball onto the far side of the head.
+ *
+ * Prefer face-scale (`faceWidthWorld`); never scale by camera-to-surface distance
+ * (that would accept rear-head Body hits when the face camera is far away).
  */
 export function resolveFaceMappingSurfaceSelectMaxDepthDelta(
-  firstDistance: number,
+  _firstDistance: number,
   options?: { faceWidthWorld?: number | null },
 ): number {
   const faceW =
@@ -59,10 +62,12 @@ export function resolveFaceMappingSurfaceSelectMaxDepthDelta(
     options.faceWidthWorld > 1e-6
       ? options.faceWidthWorld
       : null;
-  const fromFace = faceW != null ? faceW * 0.08 : 0;
-  const fromFirst = Math.max(0, firstDistance) * 0.35;
-  // Typical face-scale absolute floor (~8mm) so near-zero first hits still allow eyelid skin.
-  return Math.max(0.008, fromFace, fromFirst);
+  if (faceW != null) {
+    // ~8% of face width — eyelid/skin sheet thickness, not skull depth.
+    return Math.max(0.008, faceW * 0.08);
+  }
+  // Absolute fallback for human-scale assets (~1.5 cm).
+  return 0.015;
 }
 
 /**

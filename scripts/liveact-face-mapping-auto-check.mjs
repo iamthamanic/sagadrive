@@ -346,7 +346,7 @@ eyesMesh.name = 'Eyes';
 const bodyGeom = new THREE.BufferGeometry();
 bodyGeom.setAttribute(
   'position',
-  new THREE.BufferAttribute(new Float32Array([-1, -1, -0.02, 1, -1, -0.02, 0, 1, -0.02]), 3),
+  new THREE.BufferAttribute(new Float32Array([-1, -1, 0.04, 1, -1, 0.04, 0, 1, 0.04]), 3),
 );
 bodyGeom.setIndex([0, 1, 2]);
 const bodyMesh = new THREE.Mesh(bodyGeom, new THREE.MeshBasicMaterial());
@@ -406,6 +406,15 @@ const farSelect = selectMod.selectFaceMappingSurfaceAwareCandidate(
 );
 check(farSelect.selectedIndex == null, 'far Body behind Eyes rejected');
 check(farSelect.strategy === 'depth_rejected_only', 'strategy depth_rejected_only');
+check(
+  selectMod.resolveFaceMappingSurfaceSelectMaxDepthDelta(2.5) <= 0.02,
+  'depth gate ignores large camera distance (absolute face-scale fallback)',
+);
+check(
+  selectMod.resolveFaceMappingSurfaceSelectMaxDepthDelta(0.05, { faceWidthWorld: 0.2 }) ===
+    Math.max(0.008, 0.2 * 0.08),
+  'depth gate uses face width when provided',
+);
 
 // Pipeline with mocked canonical-style candidates (Eyes then Body close behind).
 const mockCanonicalCandidates = [

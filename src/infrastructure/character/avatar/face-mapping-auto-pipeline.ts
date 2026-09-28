@@ -153,6 +153,27 @@ export function runFaceMappingAutoPipeline(
       ) || null;
   }
 
+  let faceWidthWorld = input.faceWidthWorld ?? null;
+  if (
+    faceWidthWorld == null &&
+    leftOuter?.available &&
+    rightOuter?.available
+  ) {
+    const lHits = listRaycastCandidates(
+      leftOuter.x * canvasWidth,
+      leftOuter.y * canvasHeight,
+    );
+    const rHits = listRaycastCandidates(
+      rightOuter.x * canvasWidth,
+      rightOuter.y * canvasHeight,
+    );
+    const lp = lHits[0]?.worldPoint;
+    const rp = rHits[0]?.worldPoint;
+    if (lp && rp) {
+      faceWidthWorld = Math.hypot(lp.x - rp.x, lp.y - rp.y, lp.z - rp.z);
+    }
+  }
+
   const anchors: FaceMappingAutoAnchorResultV1[] = [];
   let mapped = 0;
 
@@ -209,7 +230,7 @@ export function runFaceMappingAutoPipeline(
         const attempt = trySelectFromCandidates(
           cands,
           sample.anchorId,
-          input.faceWidthWorld,
+          faceWidthWorld,
         );
         if (attempt.candidate) {
           const snapDistancePx = Math.hypot(off.dx, off.dy);
@@ -278,7 +299,7 @@ export function runFaceMappingAutoPipeline(
     const primary = trySelectFromCandidates(
       primaryCandidates,
       sample.anchorId,
-      input.faceWidthWorld,
+      faceWidthWorld,
     );
     const primaryEvidence: FaceMappingAutoSurfaceSelectionEvidenceV1 = {
       ...primary.evidence,
@@ -321,7 +342,7 @@ export function runFaceMappingAutoPipeline(
       const attempt = trySelectFromCandidates(
         cands,
         sample.anchorId,
-        input.faceWidthWorld,
+        faceWidthWorld,
       );
       if (attempt.candidate) {
         const snapDistancePx = Math.hypot(off.dx, off.dy);
