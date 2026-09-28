@@ -3,11 +3,15 @@
  * Location: src/infrastructure/character/liveact/mediapipe-sagadrive-face-anchor-map-v1.ts
  *
  * Provider-specific indices stay in infrastructure. Domain only sees SagaDriveFaceAnchorId.
+ * Semantics: .qa/design/liveact-face-anchor-semantics-v1.md (SagaDriveFaceAnchorSemanticsV1).
+ *
  * Left/Right = anatomical (subject's left/right), matching FaceLandmarker topology:
  * FACE_LANDMARKS_LEFT_EYE = 263,362,386… ; FACE_LANDMARKS_RIGHT_EYE = 33,133,159…
  *
  * Do NOT use LIVEACT_FACE_METRIC_LANDMARK_INDICES.*Left for left anchors — those names are
  * historically inverted vs official MediaPipe LEFT/RIGHT topology.
+ *
+ * Derived samples (midpoint/centroid) are topology-justified, never asset GT pixels.
  *
  * Known V1 limits (not solved here — Epic #442): no full lip/lid/cheek/nasolabial/iris curves.
  */
@@ -17,7 +21,7 @@ import type { SagaDriveFaceAnchorId } from '../../../domains/character/avatar/fa
 export const MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_VERSION =
   'MediaPipeSagaDriveFaceAnchorMapV1' as const;
 
-export type MediaPipeFaceAnchorSampleKind = 'single' | 'centroid';
+export type MediaPipeFaceAnchorSampleKind = 'single' | 'centroid' | 'midpoint';
 
 export interface MediaPipeFaceAnchorMapEntryV1 {
   readonly anchorId: SagaDriveFaceAnchorId;
@@ -54,53 +58,64 @@ export function mediapipeAnatomicalLeftLandmarkIndicesForTests(): readonly numbe
     380,
     373,
     336, // brow left inner
-    334, // brow left center
+    334, // brow left (in LEFT_EYEBROW centroid set)
     300, // brow left outer
+    296,
+    295,
+    293,
+    285,
+    283,
+    282,
+    276,
   ] as const;
 }
 
 /**
  * Versioned table: exactly the 21 SagaDriveFaceAnchorsV1 slots.
- * Hardcoded indices aligned to official MediaPipe LEFT/RIGHT contour sets.
+ * Indices from FaceLandmarker FACE_LANDMARKS_* connection sets (tasks-vision).
  */
 export const MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1: readonly MediaPipeFaceAnchorMapEntryV1[] = [
   {
     anchorId: 'noseTip',
     landmarkIndices: [1],
     kind: 'single',
-    rationale: 'Face Mesh tip of nose (stable midline).',
+    rationale: 'Face Mesh tip of nose (stable midline). Keep unless new evidence.',
     expectedRegion: 'midline',
     laterality: 'center',
   },
   {
     anchorId: 'chin',
-    landmarkIndices: [152],
-    kind: 'single',
-    rationale: 'Face Mesh chin bottom midpoint.',
+    landmarkIndices: [175, 199],
+    kind: 'midpoint',
+    rationale:
+      'Chin pad center: midpoint of tesselation chin-pad landmarks 175+199 — not FACE_OVAL bottom 152.',
     expectedRegion: 'midline',
     laterality: 'center',
   },
   {
     anchorId: 'forehead',
-    landmarkIndices: [10],
-    kind: 'single',
-    rationale: 'Face Mesh mid-forehead / upper face oval (not iris).',
+    landmarkIndices: [151, 10],
+    kind: 'midpoint',
+    rationale:
+      'Visible forehead center: midpoint of mid-forehead 151 and oval-top 10 — not hairline-only 10.',
     expectedRegion: 'midline',
     laterality: 'center',
   },
   {
     anchorId: 'mouthUpper',
-    landmarkIndices: [13],
-    kind: 'single',
-    rationale: 'Upper lip outer center (Face Mesh lips contour).',
+    landmarkIndices: [0, 13],
+    kind: 'midpoint',
+    rationale:
+      'Upper lip body: midpoint of outer upper lip 0 and inner upper 13 (FACE_LANDMARKS_LIPS). Not seam-only 13.',
     expectedRegion: 'mouth',
     laterality: 'center',
   },
   {
     anchorId: 'mouthLower',
-    landmarkIndices: [14],
-    kind: 'single',
-    rationale: 'Lower lip outer center (Face Mesh lips contour).',
+    landmarkIndices: [14, 17],
+    kind: 'midpoint',
+    rationale:
+      'Lower lip body: midpoint of inner lower 14 and outer lower 17 (FACE_LANDMARKS_LIPS). Not seam-only 14.',
     expectedRegion: 'mouth',
     laterality: 'center',
   },
@@ -205,10 +220,10 @@ export const MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1: readonly MediaPipeFaceAncho
   },
   {
     anchorId: 'browLeftCenter',
-    landmarkIndices: [334],
-    kind: 'single',
+    landmarkIndices: [296, 334, 282],
+    kind: 'centroid',
     rationale:
-      "Subject's left brow mid — FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW (334).",
+      "Visible left brow centerline mid — centroid of LEFT_EYEBROW mid-arc 296/334/282 (between inner 336 and outer 300).",
     expectedRegion: 'brow_left',
     laterality: 'left',
   },
@@ -232,10 +247,10 @@ export const MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1: readonly MediaPipeFaceAncho
   },
   {
     anchorId: 'browRightCenter',
-    landmarkIndices: [105],
-    kind: 'single',
+    landmarkIndices: [66, 105, 52],
+    kind: 'centroid',
     rationale:
-      "Subject's right brow mid — FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW (105).",
+      "Visible right brow centerline mid — centroid of RIGHT_EYEBROW mid-arc 66/105/52 (between inner 107 and outer 70).",
     expectedRegion: 'brow_right',
     laterality: 'right',
   },
@@ -307,6 +322,7 @@ export function resolveMediaPipeAnchorSample(
       laterality: entry.laterality,
     };
   }
+  // single / midpoint / centroid all use equal-weight mean of present indices.
   let x = 0;
   let y = 0;
   for (const p of points) {

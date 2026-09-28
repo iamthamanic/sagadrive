@@ -15,6 +15,10 @@ import {
   type SagaDriveFaceAnchorsManifestV1,
   validateFaceAnchorTriangleBinding,
 } from './face-anchor-contract';
+import {
+  classifyFaceMappingSurfaceFromNodeIdentity,
+  isFaceMappingSurfaceSemanticsOk,
+} from './face-mapping-surface-semantics-v1';
 
 export const FACE_MAPPING_DRAFT_CONTRACT_VERSION = 'SagaDriveFaceMappingDraftV1' as const;
 
@@ -209,6 +213,8 @@ export function resolveFaceMappingMarkerStatus(
   if (binding == null) return 'missing';
   const validation = validateFaceAnchorTriangleBinding(binding, anchorId);
   if (!validation.ok) return 'invalid';
+  const surfaceClass = classifyFaceMappingSurfaceFromNodeIdentity(binding.nodeIdentity);
+  if (!isFaceMappingSurfaceSemanticsOk(anchorId, surfaceClass)) return 'invalid';
   if (options?.reviewedAnchorIds?.has(anchorId)) return 'reviewed';
   return 'set';
 }

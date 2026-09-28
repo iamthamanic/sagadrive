@@ -20,6 +20,7 @@ export const FACE_MAPPING_SURFACE_CLASSES_V1 = [
   'hair',
   'equipment',
   'helper',
+  'oral_interior',
   'unknown',
 ] as const;
 
@@ -105,6 +106,30 @@ export function classifyFaceMappingSurfaceFromNodeIdentity(
     return 'eyeball';
   }
   if (hasAny('hair', 'scalp', 'wig', 'fringe', 'bangs') || joined.includes('hair')) return 'hair';
+  // Oral interior before face_skin — teeth/tongue must never fall through as unknown→allowed.
+  if (
+    hasAny(
+      'teeth',
+      'tooth',
+      'tongue',
+      'gum',
+      'gums',
+      'denture',
+      'palate',
+      'uvula',
+      'oral',
+    ) ||
+    joined.includes('teeth') ||
+    joined.includes('tooth') ||
+    joined.includes('tongue') ||
+    joined.includes('oral') ||
+    joined.includes('innermouth') ||
+    joined.includes('mouth_interior') ||
+    joined.includes('mouthinterior') ||
+    joined.includes('inner_mouth')
+  ) {
+    return 'oral_interior';
+  }
   if (
     hasAny('face', 'skin', 'head', 'body', 'cheek', 'jaw', 'forehead', 'nose', 'mouth', 'lip') ||
     joined.includes('face') ||
@@ -165,6 +190,7 @@ export function expectedFaceMappingSurfaceClasses(
 /**
  * Ok when actual class is among expected for the anchor.
  * Rules: eye canthus/lids on eyeball/eyelash = NOT ok; mouth/nose/chin on non-face_skin = NOT ok.
+ * `oral_interior` is never allowed for any SagaDriveFaceAnchorV1.
  * `unknown` is allowed only when the anchor expects `face_skin` (provisional unlabeled body mesh —
  * e.g. `*_mesh`, HighRes skins without semantic tokens). Known-bad classes still reject.
  */
@@ -172,6 +198,7 @@ export function isFaceMappingSurfaceSemanticsOk(
   anchorId: SagaDriveFaceAnchorId,
   actualClass: FaceMappingSurfaceClassV1,
 ): boolean {
+  if (actualClass === 'oral_interior') return false;
   const expected = expectedFaceMappingSurfaceClasses(anchorId);
   if (expected.includes(actualClass)) return true;
   if (actualClass === 'unknown' && expected.includes('face_skin')) return true;

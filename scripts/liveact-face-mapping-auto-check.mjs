@@ -138,6 +138,14 @@ check(/face-mapping-viewport-cancel/.test(controls), 'Cancel remains available d
 check(/Valid hit only|leave last binding/.test(layer), 'drag keeps last valid comment');
 check(/MediaPipe|mouthCornerLeft|291/.test(design), 'design map table');
 check(/Auto Mapping|IMAGE|Ground Truth|validForGroundTruthComparison/.test(acceptance), 'acceptance');
+const semanticsDesign = read('.qa/design/liveact-face-anchor-semantics-v1.md');
+check(/SagaDriveFaceAnchorSemanticsV1|mouthUpper|chin pad|oral_interior/.test(semanticsDesign), 'semantics V1 design contract');
+check(/kind: 'midpoint'|midpoint/.test(mapSrc), 'map supports midpoint derived samples');
+check(/oral_interior/.test(read('src/domains/character/avatar/face-mapping-surface-semantics-v1.ts')), 'oral_interior surface class');
+check(/same_ray_expanded_depth|resolveFaceMappingSameRayExpandedMaxDepthDelta/.test(read('src/domains/character/avatar/face-mapping-auto-surface-select-v1.ts')), 'same-ray expanded depth before snap');
+check(/countsAsGroundTruthAnchor/.test(autoDomain), 'GT requires surface-valid binding helper');
+check(/isFaceMappingSurfaceSemanticsOk/.test(read('src/domains/character/avatar/face-mapping-draft-v1.ts')), 'marker invalid on bad surface');
+check(/Eyes\/Eyelashes\/Teeth|ungültig/.test(panel), 'GT UI mentions invalid surfaces');
 
 const runsDir = join(root, '.qa/runs');
 const fixturesDir = join(root, '.qa/fixtures/liveact-face-mapping-auto');
@@ -190,29 +198,53 @@ check(leftTestIdx.includes(291) && leftTestIdx.includes(263), 'left test helper 
 // Do NOT derive X from entry.laterality — that would circularly test our own metadata.
 const landmarks = Array.from({ length: 478 }, () => ({ x: 0.5, y: 0.5, z: 0 }));
 const ANAT_LEFT = new Set(leftTestIdx);
-const ANAT_RIGHT = new Set([61, 33, 133, 159, 158, 157, 145, 144, 153, 107, 105, 70]);
+const ANAT_RIGHT = new Set([
+  61, 33, 133, 159, 158, 157, 145, 144, 153, 107, 105, 70,
+  46, 52, 53, 55, 63, 65, 66, // RIGHT_EYEBROW full set
+]);
 for (let i = 0; i < 478; i += 1) {
   if (ANAT_LEFT.has(i)) landmarks[i] = { x: 0.72 + (i % 5) * 0.001, y: 0.45, z: 0 };
   else if (ANAT_RIGHT.has(i)) landmarks[i] = { x: 0.28 + (i % 5) * 0.001, y: 0.45, z: 0 };
 }
-// Midline / mouth centers
+// Midline / mouth lip body / chin pad / forehead (semantics V1 — not seam-only 13/14 or oval 152/10 alone)
 for (const [idx, y] of [
-  [1, 0.48],
-  [13, 0.62],
-  [14, 0.68],
-  [10, 0.18],
-  [152, 0.82],
+  [1, 0.48], // noseTip
+  [0, 0.58], // upper lip outer
+  [13, 0.62], // upper lip inner
+  [14, 0.66], // lower lip inner
+  [17, 0.7], // lower lip outer
+  [10, 0.12], // oval top / hairline
+  [151, 0.22], // mid forehead
+  [152, 0.9], // oval bottom (must NOT be chin sample alone)
+  [175, 0.8], // chin pad
+  [199, 0.82], // chin pad
 ]) {
   landmarks[idx] = { x: 0.5, y, z: 0 };
 }
-// Lid centroids need their indices present
-for (const idx of [386, 385, 387, 374, 380, 373, 336, 334, 300]) {
-  if (!landmarks[idx] || landmarks[idx].x === 0.5) {
-    landmarks[idx] = { x: 0.72 + (idx % 3) * 0.001, y: idx >= 336 ? 0.32 : 0.4, z: 0 };
-  }
+// Lid + LEFT_EYEBROW: place brow centerline with outer < center < inner in image X
+// (anatomical left = high X on unmirrored frontal: outer temple lower X than glabella inner).
+for (const idx of [386, 385, 387, 374, 380, 373]) {
+  landmarks[idx] = { x: 0.72 + (idx % 3) * 0.001, y: 0.4, z: 0 };
 }
-for (const idx of [159, 158, 157, 145, 144, 153, 107, 105, 70]) {
-  landmarks[idx] = { x: 0.28 + (idx % 3) * 0.001, y: idx <= 70 || idx >= 105 ? 0.32 : 0.4, z: 0 };
+landmarks[300] = { x: 0.68, y: 0.32, z: 0 }; // outer (temple)
+landmarks[296] = { x: 0.71, y: 0.31, z: 0 };
+landmarks[334] = { x: 0.73, y: 0.30, z: 0 };
+landmarks[282] = { x: 0.74, y: 0.31, z: 0 };
+landmarks[336] = { x: 0.76, y: 0.32, z: 0 }; // inner (glabella)
+for (const idx of [295, 293, 285, 283, 276]) {
+  landmarks[idx] = { x: 0.72 + (idx % 5) * 0.002, y: 0.32, z: 0 };
+}
+// RIGHT_EYEBROW centerline: outer 70 (low X) → center → inner 107 (higher toward midline)
+for (const idx of [159, 158, 157, 145, 144, 153]) {
+  landmarks[idx] = { x: 0.28 + (idx % 3) * 0.001, y: 0.4, z: 0 };
+}
+landmarks[70] = { x: 0.24, y: 0.32, z: 0 };
+landmarks[66] = { x: 0.26, y: 0.31, z: 0 };
+landmarks[105] = { x: 0.27, y: 0.30, z: 0 };
+landmarks[52] = { x: 0.275, y: 0.31, z: 0 };
+landmarks[107] = { x: 0.29, y: 0.32, z: 0 };
+for (const idx of [46, 53, 55, 63, 65]) {
+  landmarks[idx] = { x: 0.26 + (idx % 5) * 0.002, y: 0.32, z: 0 };
 }
 
 const samples = mapMod.resolveAllMediaPipeAnchorSamples(landmarks);
@@ -220,6 +252,55 @@ check(samples.every((s) => s.available), 'all 21 samples available from syntheti
 const sampleLeft = samples.find((s) => s.anchorId === 'mouthCornerLeft');
 const sampleRight = samples.find((s) => s.anchorId === 'mouthCornerRight');
 check(sampleLeft.x > sampleRight.x, 'L/R: anatomical left (291) has higher image x than right (61)');
+
+// Semantic regression: mouth lip body separation, chin/forehead vs oval extremes, brow centerline
+const mouthU = samples.find((s) => s.anchorId === 'mouthUpper');
+const mouthL = samples.find((s) => s.anchorId === 'mouthLower');
+check(mouthU.y < mouthL.y, 'mouthUpper.y < mouthLower.y (lip body midpoints)');
+check(Math.abs(mouthU.y - mouthL.y) > 0.02, 'mouth upper/lower not collapsed to inner seam');
+check(
+  Math.abs(mouthU.y - (0.58 + 0.62) / 2) < 1e-6 && Math.abs(mouthL.y - (0.66 + 0.7) / 2) < 1e-6,
+  'mouth samples are midpoints of outer/inner lip landmarks',
+);
+const chinS = samples.find((s) => s.anchorId === 'chin');
+const foreheadS = samples.find((s) => s.anchorId === 'forehead');
+check(chinS.y < landmarks[152].y, 'chin pad sample above FACE_OVAL bottom 152');
+check(foreheadS.y > landmarks[10].y, 'forehead sample below hairline-only 10');
+check(foreheadS.y < mouthU.y && chinS.y > mouthL.y, 'midline order: forehead < mouth < chin');
+const browLI = samples.find((s) => s.anchorId === 'browLeftInner');
+const browLC = samples.find((s) => s.anchorId === 'browLeftCenter');
+const browLO = samples.find((s) => s.anchorId === 'browLeftOuter');
+const browMinX = Math.min(browLI.x, browLO.x);
+const browMaxX = Math.max(browLI.x, browLO.x);
+check(browLC.x >= browMinX - 1e-6 && browLC.x <= browMaxX + 1e-6, 'browLeftCenter between inner/outer in X');
+const mouthEntryU = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'mouthUpper');
+const mouthEntryL = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'mouthLower');
+check(
+  mouthEntryU.kind === 'midpoint' &&
+    mouthEntryU.landmarkIndices.includes(0) &&
+    mouthEntryU.landmarkIndices.includes(13) &&
+    !mouthEntryU.landmarkIndices.every((i) => i === 13),
+  'mouthUpper is midpoint 0+13 not single 13',
+);
+check(
+  mouthEntryL.kind === 'midpoint' &&
+    mouthEntryL.landmarkIndices.includes(14) &&
+    mouthEntryL.landmarkIndices.includes(17),
+  'mouthLower is midpoint 14+17 not single 14',
+);
+const chinEntry = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'chin');
+check(!chinEntry.landmarkIndices.includes(152), 'chin not oval-bottom 152');
+check(chinEntry.landmarkIndices.includes(175) && chinEntry.landmarkIndices.includes(199), 'chin uses 175+199');
+const mpLeftBrow = connectionIndices(FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW);
+const browCenterEntry = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'browLeftCenter');
+check(
+  browCenterEntry.kind === 'centroid' &&
+    browCenterEntry.landmarkIndices.length >= 3 &&
+    browCenterEntry.landmarkIndices.every((i) => mpLeftBrow.has(i)) &&
+    !browCenterEntry.landmarkIndices.includes(336) &&
+    !browCenterEntry.landmarkIndices.includes(300),
+  'browLeftCenter mid-arc centroid ⊆ LEFT_EYEBROW (not endpoints alone)',
+);
 
 const autoOut = join(runsDir, 'liveact-face-mapping-auto-domain-bundle.mjs');
 await build({
@@ -295,6 +376,12 @@ check(
 );
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyelash'), 'lid on eyelash = mismatch (#421 fail-closed)');
 check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftLower', 'eyeball'), 'lid on eyeball = mismatch');
+check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Teeth') === 'oral_interior', 'Teeth → oral_interior');
+check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Tongue') === 'oral_interior', 'Tongue → oral_interior');
+check(surfMod.classifyFaceMappingSurfaceFromNodeIdentity('Gums') === 'oral_interior', 'Gums → oral_interior');
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('mouthUpper', 'oral_interior'), 'mouth rejects oral_interior');
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('noseTip', 'oral_interior'), 'nose rejects oral_interior');
+check(!surfMod.isFaceMappingSurfaceSemanticsOk('eyeLeftInner', 'oral_interior'), 'eye rejects oral_interior');
 check(/projectAutoCoordsFromBindings|projectWorldToFaceMappingCanvas/.test(controls), 'auto coords reprojected with camera');
 check(/autoSessionTokenRef\.current \+= 1/.test(controls), 'token monotonic bump on open');
 check(!/autoSessionTokenRef\.current = 0/.test(controls), 'token never reset to zero');
@@ -464,6 +551,23 @@ check(
   selectMod.resolveFaceMappingSurfaceSelectMaxDepthDelta(0.05, { faceWidthWorld: 0.2 }) ===
     Math.max(0.008, 0.2 * 0.08),
   'depth gate uses face width when provided',
+);
+
+// Prefer original screen ray with expanded depth before snap (eye lid evidence).
+const midSelect = selectMod.selectFaceMappingSurfaceAwareCandidate(
+  [
+    { order: 0, distance: 0.05, nodeIdentity: 'Eyes' },
+    { order: 1, distance: 0.05 + 0.025, nodeIdentity: 'Body' },
+  ],
+  'eyeLeftUpper',
+  { faceWidthWorld: 0.15 },
+);
+check(midSelect.selectedIndex === 1, 'same-ray expanded depth selects Body');
+check(midSelect.strategy === 'same_ray_expanded_depth', 'strategy same_ray_expanded_depth');
+check(
+  selectMod.resolveFaceMappingSameRayExpandedMaxDepthDelta({ faceWidthWorld: 0.15 }) ===
+    Math.max(0.02, 0.15 * 0.2),
+  'expanded depth uses ~20% face width',
 );
 
 // Pipeline with mocked canonical-style candidates (Eyes then Body close behind).
@@ -719,6 +823,49 @@ const reviewedRef = autoMod.freezeFaceMappingGroundTruthReference({
 });
 check(reviewedRef.validForGroundTruthComparison === true, 'D: 21 reviewed → valid GT');
 check(reviewedRef.status === 'reviewed_manual_complete', 'D: status reviewed_manual_complete');
+
+// Surface-invalid eye bindings cannot be normative GT even when reviewed.
+const eyesDraft = fillAllBindings(draftMod.createEmptyFaceMappingDraft(null));
+const eyesBound = draftMod.setFaceMappingDraftBinding(eyesDraft, 'eyeLeftOuter', {
+  nodeIdentity: 'Eyes',
+  primitiveIndex: 0,
+  triangleIndex: 0,
+  barycentric: { u: 0.34, v: 0.33, w: 0.33 },
+});
+const eyesRef = autoMod.freezeFaceMappingGroundTruthReference({
+  draft: eyesBound,
+  meta: reviewedMeta,
+  screenCoords: gtScreens,
+});
+check(eyesRef.validForGroundTruthComparison === false, 'Eyes binding → not valid GT');
+check(eyesRef.status === 'partial_reviewed_manual', 'Eyes binding → partial GT status');
+check(
+  autoMod.countsAsGroundTruthAnchor({
+    anchorId: 'eyeLeftOuter',
+    binding: eyesBound.anchors.eyeLeftOuter,
+    meta: reviewedMeta.eyeLeftOuter,
+  }) === false,
+  'countsAsGroundTruthAnchor rejects eyeball surface',
+);
+check(
+  autoMod.countsAsGroundTruthAnchor({
+    anchorId: 'mouthUpper',
+    binding: gtDraft.anchors.mouthUpper,
+    meta: reviewedMeta.mouthUpper,
+  }) === true,
+  'countsAsGroundTruthAnchor accepts HeadMesh face_skin',
+);
+
+const teethDraft = draftMod.setFaceMappingDraftBinding(gtDraft, 'mouthUpper', {
+  nodeIdentity: 'Teeth',
+  primitiveIndex: 0,
+  triangleIndex: 0,
+  barycentric: { u: 0.34, v: 0.33, w: 0.33 },
+});
+check(
+  draftMod.resolveFaceMappingMarkerStatus(teethDraft, 'mouthUpper') === 'invalid',
+  'Teeth mouth binding → marker invalid',
+);
 
 // Provenance: auto+reviewed and reviewed without reviewedAt are NOT GT.
 check(

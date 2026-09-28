@@ -315,8 +315,9 @@ export function FaceMappingAuthoringPanel({
           role="status"
           data-testid="face-mapping-gt-needs-review-banner"
         >
-          Ground Truth gilt erst nach explizitem Review aller 21 Marker („Als Ground Truth
-          markieren“) — source=manual allein reicht nicht.
+          Ground Truth gilt erst nach explizitem Review aller 21 Marker auf erlaubten Surfaces
+          („Als Ground Truth markieren“) — Eyes/Eyelashes/Teeth zählen nicht; ungültige Marker
+          in der Liste prüfen.
         </p>
       ) : null}
 

@@ -33,6 +33,7 @@ export interface FaceMappingSurfaceSelectCandidateDiagV1 {
 
 export type FaceMappingSurfaceSelectStrategyV1 =
   | 'first_allowed_depth_gated'
+  | 'same_ray_expanded_depth'
   | 'none_allowed'
   | 'depth_rejected_only'
   | 'empty';
@@ -71,12 +72,40 @@ export function resolveFaceMappingSurfaceSelectMaxDepthDelta(
 }
 
 /**
+ * Expanded same-ray depth gate: prefer an allowed hit on the **original** MediaPipe
+ * screen ray over screen-snap that moves the anatomical target (#421 eye evidence).
+ * Still face-scale (~20% face width) — not through-head.
+ */
+export function resolveFaceMappingSameRayExpandedMaxDepthDelta(
+  options?: { faceWidthWorld?: number | null },
+): number {
+  const faceW =
+    options?.faceWidthWorld != null &&
+    Number.isFinite(options.faceWidthWorld) &&
+    options.faceWidthWorld > 1e-6
+      ? options.faceWidthWorld
+      : null;
+  if (faceW != null) {
+    return Math.max(0.02, faceW * 0.2);
+  }
+  return 0.04;
+}
+
+/**
  * Select first semantically allowed candidate within the depth gate of hits[0].
+ * When the strict gate only finds allowed hits slightly deeper (`depth_rejected_only`),
+ * retry once with an expanded face-scale gate so Auto keeps the original screen point
+ * instead of immediately screen-snapping (eye lid evidence).
  */
 export function selectFaceMappingSurfaceAwareCandidate(
   candidates: readonly FaceMappingSurfaceSelectCandidateInputV1[],
   anchorId: SagaDriveFaceAnchorId,
-  options?: { faceWidthWorld?: number | null; maxDepthDelta?: number },
+  options?: {
+    faceWidthWorld?: number | null;
+    maxDepthDelta?: number;
+    /** When true (default), expand depth once before returning depth_rejected_only. */
+    allowSameRayExpandedDepth?: boolean;
+  },
 ): FaceMappingSurfaceSelectResultV1 {
   if (candidates.length === 0) {
     return {
@@ -94,43 +123,65 @@ export function selectFaceMappingSurfaceAwareCandidate(
       faceWidthWorld: options?.faceWidthWorld,
     });
 
-  const diags: FaceMappingSurfaceSelectCandidateDiagV1[] = [];
-  let selectedIndex: number | null = null;
-  let sawAllowedBeyondDepth = false;
+  const runPass = (
+    gate: number,
+    strategyOnHit: FaceMappingSurfaceSelectStrategyV1,
+  ): FaceMappingSurfaceSelectResultV1 => {
+    const diags: FaceMappingSurfaceSelectCandidateDiagV1[] = [];
+    let selectedIndex: number | null = null;
+    let sawAllowedBeyondDepth = false;
 
-  for (let i = 0; i < candidates.length; i += 1) {
-    const c = candidates[i]!;
-    const surfaceClass = classifyFaceMappingSurfaceFromNodeIdentity(c.nodeIdentity);
-    const allowed = isFaceMappingSurfaceSemanticsOk(anchorId, surfaceClass);
-    const depthDeltaFromFirst = Math.max(0, c.distance - firstDistance);
-    diags.push({
-      order: c.order,
-      distance: c.distance,
-      nodeIdentity: c.nodeIdentity,
-      surfaceClass,
-      allowed,
-      depthDeltaFromFirst,
+    for (let i = 0; i < candidates.length; i += 1) {
+      const c = candidates[i]!;
+      const surfaceClass = classifyFaceMappingSurfaceFromNodeIdentity(c.nodeIdentity);
+      const allowed = isFaceMappingSurfaceSemanticsOk(anchorId, surfaceClass);
+      const depthDeltaFromFirst = Math.max(0, c.distance - firstDistance);
+      diags.push({
+        order: c.order,
+        distance: c.distance,
+        nodeIdentity: c.nodeIdentity,
+        surfaceClass,
+        allowed,
+        depthDeltaFromFirst,
+      });
+      if (!allowed || selectedIndex != null) continue;
+      if (depthDeltaFromFirst <= gate) {
+        selectedIndex = i;
+      } else {
+        sawAllowedBeyondDepth = true;
+      }
+    }
+
+    let strategy: FaceMappingSurfaceSelectStrategyV1;
+    if (selectedIndex != null) strategy = strategyOnHit;
+    else if (sawAllowedBeyondDepth) strategy = 'depth_rejected_only';
+    else if (diags.some((d) => d.allowed)) strategy = 'depth_rejected_only';
+    else strategy = 'none_allowed';
+
+    return {
+      selectedIndex,
+      strategy,
+      candidates: diags,
+      maxDepthDelta: gate,
+    };
+  };
+
+  const strict = runPass(maxDepthDelta, 'first_allowed_depth_gated');
+  if (strict.selectedIndex != null) return strict;
+
+  const allowExpand = options?.allowSameRayExpandedDepth !== false;
+  if (allowExpand && strict.strategy === 'depth_rejected_only' && options?.maxDepthDelta == null) {
+    const expanded = resolveFaceMappingSameRayExpandedMaxDepthDelta({
+      faceWidthWorld: options?.faceWidthWorld,
     });
-    if (!allowed || selectedIndex != null) continue;
-    if (depthDeltaFromFirst <= maxDepthDelta) {
-      selectedIndex = i;
-    } else {
-      sawAllowedBeyondDepth = true;
+    if (expanded > maxDepthDelta + 1e-9) {
+      const second = runPass(expanded, 'same_ray_expanded_depth');
+      if (second.selectedIndex != null) return second;
+      return { ...strict, candidates: second.candidates, maxDepthDelta: expanded };
     }
   }
 
-  let strategy: FaceMappingSurfaceSelectStrategyV1;
-  if (selectedIndex != null) strategy = 'first_allowed_depth_gated';
-  else if (sawAllowedBeyondDepth) strategy = 'depth_rejected_only';
-  else if (diags.some((d) => d.allowed)) strategy = 'depth_rejected_only';
-  else strategy = 'none_allowed';
-
-  return {
-    selectedIndex,
-    strategy,
-    candidates: diags,
-    maxDepthDelta,
-  };
+  return strict;
 }
 
 export type FaceMappingScreenSnapBiasV1 = 'up' | 'down' | 'radial';

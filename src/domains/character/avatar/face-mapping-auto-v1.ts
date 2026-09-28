@@ -76,6 +76,7 @@ export interface FaceMappingAutoAnchorResultV1 {
 export interface FaceMappingAutoSurfaceSelectionEvidenceV1 {
   readonly strategy:
     | 'first_allowed_depth_gated'
+    | 'same_ray_expanded_depth'
     | 'screen_snap'
     | 'none_allowed'
     | 'depth_rejected_only'
@@ -412,9 +413,11 @@ export function isUsableFaceMappingAutoSessionForCompare(
 }
 
 /**
- * An anchor counts as Ground Truth only when explicitly human-reviewed with valid provenance.
- * Requires: reviewed=true, source manual|manual_override, reviewedAt canonical V1 ISO-UTC.
- * Never: source=auto + reviewed, or reviewed without valid reviewedAt.
+ * An anchor counts as Ground Truth only when explicitly human-reviewed with valid provenance
+ * AND a semantically allowed binding surface for that anchorId.
+ * Requires: reviewed=true, source manual|manual_override, reviewedAt canonical V1 ISO-UTC,
+ * binding present with surface semantics OK.
+ * Never: source=auto + reviewed, or reviewed without valid reviewedAt, or Eyes/Eyelashes/Teeth GT.
  * reviewedAt must pass `isValidFaceMappingReviewedAtV1` (not permissive Date.parse).
  */
 export function countsAsGroundTruthMeta(
@@ -424,6 +427,20 @@ export function countsAsGroundTruthMeta(
   if (meta.reviewed !== true) return false;
   if (meta.source !== 'manual' && meta.source !== 'manual_override') return false;
   return isValidFaceMappingReviewedAtV1(meta.reviewedAt);
+}
+
+/**
+ * Full GT eligibility for one bound anchor: provenance + surface semantics (#421 live evidence).
+ */
+export function countsAsGroundTruthAnchor(input: {
+  readonly anchorId: SagaDriveFaceAnchorId;
+  readonly binding: SagaDriveFaceAnchorTriangleBinding | null | undefined;
+  readonly meta: FaceMappingAnchorAuthoringMetaV1 | undefined;
+}): boolean {
+  if (!input.binding) return false;
+  if (!countsAsGroundTruthMeta(input.meta)) return false;
+  const surfaceClass = classifyFaceMappingSurfaceFromNodeIdentity(input.binding.nodeIdentity);
+  return isFaceMappingSurfaceSemanticsOk(input.anchorId, surfaceClass);
 }
 
 /**
@@ -610,9 +627,11 @@ export type FaceMappingScreenCoordMap = Readonly<
 
 /**
  * Freeze a draft as ground-truth reference for auto comparison.
- * valid=true only when all 21 anchors are bound, each has reviewed=true,
+ * valid=true only when all 21 anchors are bound, each has reviewed=true with
+ * manual|manual_override + valid reviewedAt, each has semantic surface OK,
  * AND each has a finite frozen screen coordinate (projectable on current frame).
  * source alone (manual / manual_override / auto) never grants GT without reviewed.
+ * Eyes/Eyelashes/Teeth/Tongue bindings never count as normative GT.
  */
 export function freezeFaceMappingGroundTruthReference(input: {
   draft: SagaDriveFaceMappingDraftV1;
@@ -635,7 +654,7 @@ export function freezeFaceMappingGroundTruthReference(input: {
     const m = input.meta[id];
     const source: FaceMappingAuthoringSource = m?.source ?? 'auto';
     const reviewed = m?.reviewed === true;
-    if (countsAsGroundTruthMeta(m)) gtCount += 1;
+    if (countsAsGroundTruthAnchor({ anchorId: id, binding, meta: m })) gtCount += 1;
     if (source === 'auto' && !reviewed) autoUnreviewedBound += 1;
 
     const screenRaw = input.screenCoords[id];
@@ -672,7 +691,7 @@ export function freezeFaceMappingGroundTruthReference(input: {
     status = 'missing_reviewed_ground_truth';
   } else if (gtCount === expected) {
     status = 'reviewed_manual_complete';
-    // All reviewed AND every anchor has a finite frozen screen coord.
+    // All reviewed+surface-ok AND every anchor has a finite frozen screen coord.
     validForGroundTruthComparison = projectedCount === expected;
   } else if (gtCount > 0) {
     status = 'partial_reviewed_manual';
