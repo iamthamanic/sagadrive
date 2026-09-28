@@ -814,6 +814,27 @@ const hair = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
 hair.name = 'Hair_Front';
 check(!rayMod.isFaceMappingAllowlistedMesh(hair), 'hair excluded from auto raycast path');
 
+// Generic leaf under rigid-/skinned- equipment roots must not bind as face skin.
+const rigidRoot = new THREE.Group();
+rigidRoot.name = 'rigid-helmet-1';
+const helmetChild = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
+helmetChild.name = 'Mesh';
+rigidRoot.add(helmetChild);
+const skinnedRoot = new THREE.Group();
+skinnedRoot.name = 'skinned-goggles-1';
+const goggleChild = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
+goggleChild.name = 'Mesh';
+skinnedRoot.add(goggleChild);
+const bodyOk = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
+bodyOk.name = 'Body';
+check(!rayMod.isFaceMappingAllowlistedMesh(helmetChild), 'generic Mesh under rigid-* excluded');
+check(!rayMod.isFaceMappingAllowlistedMesh(goggleChild), 'generic Mesh under skinned-* excluded');
+check(rayMod.isFaceMappingAllowlistedMesh(bodyOk), 'Body without equipment ancestor still allowlisted');
+check(
+  rayMod.isUnderFaceMappingExcludedAncestor(helmetChild),
+  'isUnderFaceMappingExcludedAncestor detects rigid-*',
+);
+
 writeFileSync(
   join(fixturesDir, 'synthetic-landmarks-summary.json'),
   `${JSON.stringify(

@@ -26,6 +26,30 @@ const _bary = new THREE.Vector3();
 const EXCLUDE_NAME_RE =
   /hair|weapon|sword|shield|helper|debug|grid|floor|axis|gizmo|outline|equipment|wearable|prop/i;
 
+/** Runtime equipment/wearable roots from AvatarRigidEquipmentRuntime / AvatarSkinnedWearableRuntime. */
+function isFaceMappingExcludedEquipmentAncestorName(name: string): boolean {
+  const n = name.trim();
+  if (!n) return false;
+  if (n === 'saga-rigid-equipment' || n === 'saga-skinned-wearables') return true;
+  if (n.startsWith('rigid-') || n.startsWith('skinned-')) return true;
+  return EXCLUDE_NAME_RE.test(n);
+}
+
+/**
+ * True when this object or any ancestor is equipment/wearable/helper.
+ * Leaf meshes often have generic names (`Mesh`) under `rigid-*` / `skinned-*` roots.
+ */
+export function isUnderFaceMappingExcludedAncestor(object: THREE.Object3D): boolean {
+  let cur: THREE.Object3D | null = object;
+  while (cur) {
+    if (cur.userData?.sagadriveExcludeFaceMapping === true) return true;
+    if (cur.userData?.isHelper === true) return true;
+    if (isFaceMappingExcludedEquipmentAncestorName(cur.name)) return true;
+    cur = cur.parent;
+  }
+  return false;
+}
+
 export function isFaceMappingAllowlistedMesh(object: THREE.Object3D): object is THREE.Mesh {
   if (!(object instanceof THREE.Mesh)) return false;
   if (!object.visible) return false;
@@ -33,8 +57,7 @@ export function isFaceMappingAllowlistedMesh(object: THREE.Object3D): object is 
   const name = object.name.trim();
   if (!name) return false;
   if (EXCLUDE_NAME_RE.test(name)) return false;
-  if (object.userData?.sagadriveExcludeFaceMapping === true) return false;
-  if (object.userData?.isHelper === true) return false;
+  if (isUnderFaceMappingExcludedAncestor(object)) return false;
   const geom = object.geometry;
   if (!(geom instanceof THREE.BufferGeometry)) return false;
   if (!geom.getAttribute('position')) return false;
