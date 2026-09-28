@@ -1,5 +1,5 @@
 /**
- * CreateCharacterEntryDialog — Two-card create chooser: own character vs preset version.
+ * CreateCharacterEntryDialog — Two-card create chooser: own character vs Vorlage (system + user presets).
  * Location: src/app/character/creation/CreateCharacterEntryDialog.tsx
  */
 import { useEffect, useState } from 'react';
@@ -16,6 +16,8 @@ import {
 import { clearCharacterEditorBootstrap, setCharacterEditorBootstrap } from '../shared/characterEditorBootstrap';
 import { assertValidSnapshot, characterPresetService } from '../../../infrastructure/character/character-preset-service';
 import type { CharacterPresetVm } from '../../../domains/character/contracts/character-preset.types';
+import type { SagaDriveStartingTemplateKey } from '../../../domains/rules/sagadrive/starting-templates';
+import { StartingTemplatePicker } from './StartingTemplatePicker';
 
 type CreateStep = 'chooser' | 'presets' | 'versions';
 
@@ -71,6 +73,15 @@ export function CreateCharacterEntryDialog({
     await loadPresets();
   };
 
+  const handleStartingTemplate = (templateKey: SagaDriveStartingTemplateKey) => {
+    setCharacterEditorBootstrap({
+      kind: 'starting-template',
+      templateKey,
+    });
+    onOpenChange(false);
+    onNavigateToEditor();
+  };
+
   const handleSelectVersion = (preset: CharacterPresetVm, level: number) => {
     const version = preset.versions.find((entry) => entry.level === level);
     if (!version) {
@@ -98,12 +109,12 @@ export function CreateCharacterEntryDialog({
         <DialogHeader>
           <DialogTitle>
             {step === 'chooser' && 'Charakter erstellen'}
-            {step === 'presets' && 'Preset wählen'}
+            {step === 'presets' && 'Vorlage wählen'}
             {step === 'versions' && (selectedPreset?.displayName ?? 'Version wählen')}
           </DialogTitle>
           <DialogDescription>
             {step === 'chooser' && 'Starte mit einem leeren Bogen oder übernehme ein gespeichertes Preset.'}
-            {step === 'presets' && 'Eigene Presets oder bald SagaDrive-Presets.'}
+            {step === 'presets' && 'SagaDrive-Starttemplate oder eigenes Preset verwenden.'}
             {step === 'versions' && 'Wähle eine Level-Version — es wird ein neuer Charakter geöffnet.'}
           </DialogDescription>
         </DialogHeader>
@@ -129,8 +140,8 @@ export function CreateCharacterEntryDialog({
             >
               {loading ? <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden /> : <Sparkles className="h-8 w-8 text-primary" aria-hidden />}
               <div className="space-y-1">
-                <p className="text-lg font-semibold">Preset wählen</p>
-                <p className="text-sm text-muted-foreground">Aus gespeicherten Charakter-Snapshots.</p>
+                <p className="text-lg font-semibold">Vorlage wählen</p>
+                <p className="text-sm text-muted-foreground">SagaDrive-Starttemplate oder eigenes Preset verwenden.</p>
               </div>
             </button>
           </div>
@@ -138,6 +149,7 @@ export function CreateCharacterEntryDialog({
 
         {step === 'presets' && (
           <div className="space-y-4">
+            <StartingTemplatePicker onSelect={handleStartingTemplate} />
             <div className="space-y-2">
               <p className="text-sm font-medium">Deine Presets</p>
               {presets.length === 0 ? (
@@ -167,10 +179,6 @@ export function CreateCharacterEntryDialog({
                   ))}
                 </ul>
               )}
-            </div>
-            <div className="rounded-xl border border-dashed border-border bg-muted/10 p-4">
-              <p className="text-sm font-medium text-muted-foreground">SagaDrive-Presets bald</p>
-              <p className="mt-1 text-xs text-muted-foreground">System-Presets folgen in einem späteren Update.</p>
             </div>
             <div className="flex justify-between">
               <Button type="button" variant="outline" onClick={() => setStep('chooser')}>Zurück</Button>

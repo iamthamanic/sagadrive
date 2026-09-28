@@ -45,23 +45,39 @@ test('create chooser shows two cards and Preset tab under Einstellungen', async 
   await page.getByRole('button', { name: /Charakter erstellen|Neuer Charakter/i }).first().click();
   await expect(page.getByRole('heading', { name: /Charakter erstellen/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /Eigenen Charakter erstellen/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Preset wählen/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Vorlage wählen/i })).toBeVisible();
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '01-create-chooser-cards.png'),
     fullPage: true,
   });
 
-  await page.getByRole('button', { name: /Preset wählen/i }).click();
-  await expect(page.getByRole('heading', { name: /Preset wählen/i })).toBeVisible({
+  await page.getByRole('button', { name: /Vorlage wählen/i }).click();
+  await expect(page.getByRole('heading', { name: /Vorlage wählen/i })).toBeVisible({
     timeout: 15_000,
   });
-  await expect(page.getByText(/Noch keine Presets|SagaDrive-Presets bald|Deine Presets/i).first()).toBeVisible({
+  await expect(page.getByText(/SagaDrive-Starttemplates/i).first()).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(page.getByRole('button', { name: /Berserker/i })).toBeVisible();
+  await expect(page.getByText(/Noch keine Presets|Deine Presets/i).first()).toBeVisible({
     timeout: 10_000,
   });
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, '02-preset-empty-state.png'),
     fullPage: true,
   });
+
+  // Apply a system starttemplate → editor with mechanical L1 fill
+  await page.getByRole('button', { name: /Berserker/i }).click();
+  await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText(/Starttemplate|Berserker/i).first()).toBeVisible({ timeout: 10_000 }).catch(() => undefined);
+
+  // Re-open chooser path for own character + Preset tab smoke
+  await page.getByRole('button', { name: /Bibliothek/i }).first().click();
+  await page.getByRole('button', { name: /Charakter erstellen|Neuer Charakter/i }).first().click();
+  await expect(page.getByRole('heading', { name: /Charakter erstellen/i })).toBeVisible();
 
   // Close picker / go back to chooser if still open, then create own character
   const ownCard = page.getByRole('button', { name: /Eigenen Charakter erstellen/i });

@@ -64,6 +64,10 @@ import type { CharacterPresetReleaseMode, CharacterPresetSnapshot } from '../../
 import { buildSagaDriveDerivedStatCards } from './map-derived-stat-cards';
 import { getSagaDriveBackgroundTemplate } from '../../../domains/rules/sagadrive/background-templates';
 import {
+  getSagaDriveStartingTemplate,
+  validateSagaDriveStartingTemplate,
+} from '../../../domains/rules/sagadrive/starting-templates';
+import {
   SAGA_DRIVE_ATTRIBUTE_ADVANCE_LEVELS,
   SAGA_DRIVE_ATTRIBUTE_BONUS_CAP,
   SAGA_DRIVE_START_ATTRIBUTE_BONUS_BUDGET,
@@ -733,6 +737,55 @@ export function CharacterEditor() {
         portraitUrl: snapshot.portrait_url,
         successMessage: 'Preset geladen — neuer Charakter im Editor.',
       });
+      return;
+    }
+
+    if (bootstrap?.kind === 'starting-template') {
+      bootstrapAppliedRef.current = true;
+      const catalogEntry = getSagaDriveStartingTemplate(bootstrap.templateKey);
+      if (!catalogEntry) {
+        console.error('Starting-template bootstrap rejected: unknown key', bootstrap.templateKey);
+        toast.error(`Unbekanntes Starttemplate: ${bootstrap.templateKey}`);
+        clearCharacterEditorBootstrap();
+        return;
+      }
+      const validation = validateSagaDriveStartingTemplate(catalogEntry);
+      if (validation.ok === false) {
+        console.error('Starting-template bootstrap rejected:', validation.message);
+        toast.error(validation.message);
+        clearCharacterEditorBootstrap();
+        return;
+      }
+      const template = validation.template;
+      const background = getSagaDriveBackgroundTemplate(template.backgroundTemplateId);
+      if (!background) {
+        console.error('Starting-template background missing:', template.backgroundTemplateId);
+        toast.error('Starttemplate-Hintergrund ungültig.');
+        clearCharacterEditorBootstrap();
+        return;
+      }
+      setCharacterLevel(1);
+      setCharacterArchetype(template.archetype);
+      setEssenceProfile(template.essence);
+      setBaseAttributes({ ...template.attributes });
+      setAttributeAdvances({});
+      setFreeSkillRanks({ ...template.freeSkillRanks });
+      setArchetypeTrainingSkill(template.archetypeTrainingSkill);
+      setBackgroundTemplateId(template.backgroundTemplateId);
+      setBackgroundName(background.name);
+      setBackgroundSkillPool([
+        background.skillPool[0],
+        background.skillPool[1],
+        background.skillPool[2],
+        background.skillPool[3],
+      ]);
+      setBackgroundSkillPoints({ ...template.backgroundSkillPoints });
+      setSkillAdvances([]);
+      setSpecializationSkill(template.backgroundSpecialization.skill);
+      setSpecializationName(template.backgroundSpecialization.name);
+      setSpecializations([template.backgroundSpecialization]);
+      clearCharacterEditorBootstrap();
+      toast.success(`Starttemplate „${template.labelDe}“ geladen — mechanischer Level-1-Build.`);
       return;
     }
 
