@@ -320,6 +320,14 @@ function checkLookWorldCapabilityStubs() {
   });
 }
 
+function checkCharacterStartingTemplatesDesignV1() {
+  console.log('Character starting templates design V1 (#465): ten Level-1 build contracts...');
+  execFileSync(process.execPath, ['scripts/character-starting-templates-design-v1-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkReleaseReadinessContract() {
   console.log('Release readiness contract: IDs, dependencies, flows, milestones...');
   execFileSync(process.execPath, ['scripts/release-readiness.mjs', '--validate-only'], {
@@ -1407,6 +1415,7 @@ checkLookProfileDomain();
 checkLookProfilePersistence();
 checkLookLibrary();
 checkLookWorldCapabilityStubs();
+checkCharacterStartingTemplatesDesignV1();
 checkReleaseReadinessContract();
 checkLiveSessionRoleCapabilityContract();
 checkPlayerTestSessionSecurity();
