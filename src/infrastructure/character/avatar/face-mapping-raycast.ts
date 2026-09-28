@@ -26,18 +26,23 @@ const _bary = new THREE.Vector3();
 const EXCLUDE_NAME_RE =
   /hair|weapon|sword|shield|helper|debug|grid|floor|axis|gizmo|outline|equipment|wearable|prop/i;
 
-/** Runtime equipment/wearable roots from AvatarRigidEquipmentRuntime / AvatarSkinnedWearableRuntime. */
+/**
+ * Precise SagaDrive equipment/wearable runtime roots only.
+ * Do NOT apply EXCLUDE_NAME_RE here — fuzzy substrings on ancestors falsely reject
+ * imported hierarchies like Character_Hair → Body or Chair → Body.
+ */
 function isFaceMappingExcludedEquipmentAncestorName(name: string): boolean {
   const n = name.trim();
   if (!n) return false;
   if (n === 'saga-rigid-equipment' || n === 'saga-skinned-wearables') return true;
   if (n.startsWith('rigid-') || n.startsWith('skinned-')) return true;
-  return EXCLUDE_NAME_RE.test(n);
+  return false;
 }
 
 /**
- * True when this object or any ancestor is equipment/wearable/helper.
- * Leaf meshes often have generic names (`Mesh`) under `rigid-*` / `skinned-*` roots.
+ * True when this object or any ancestor is a known equipment/wearable runtime root
+ * or carries an explicit exclude/helper marker.
+ * Leaf name policy (hair/weapon/…) is applied separately on the candidate mesh.
  */
 export function isUnderFaceMappingExcludedAncestor(object: THREE.Object3D): boolean {
   let cur: THREE.Object3D | null = object;

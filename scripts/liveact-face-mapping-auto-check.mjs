@@ -930,8 +930,50 @@ check(typeof evalReport.summary.medianErrorPx === 'number', 'median error presen
 const hair = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
 hair.name = 'Hair_Front';
 check(!rayMod.isFaceMappingAllowlistedMesh(hair), 'hair excluded from auto raycast path');
+const weaponLeaf = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
+weaponLeaf.name = 'Weapon_Sword';
+check(!rayMod.isFaceMappingAllowlistedMesh(weaponLeaf), 'weapon leaf still excluded by leaf policy');
 
-// Generic leaf under rigid-/skinned- equipment roots must not bind as face skin.
+function bodyUnderNamedParent(parentName) {
+  const parent = new THREE.Group();
+  parent.name = parentName;
+  const body = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
+  body.name = 'Body';
+  parent.add(body);
+  return body;
+}
+
+// Broad ancestor substrings must NOT exclude legitimate Body meshes.
+check(
+  rayMod.isFaceMappingAllowlistedMesh(bodyUnderNamedParent('Character_Hair')),
+  'Body under Character_Hair allowlisted',
+);
+check(
+  rayMod.isFaceMappingAllowlistedMesh(bodyUnderNamedParent('PropsRoot')),
+  'Body under PropsRoot allowlisted',
+);
+check(
+  rayMod.isFaceMappingAllowlistedMesh(bodyUnderNamedParent('Chair')),
+  'Body under Chair allowlisted (no fuzzy hair substring)',
+);
+const scene = new THREE.Group();
+scene.name = 'Scene';
+const character = new THREE.Group();
+character.name = 'Character';
+const nestedBody = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
+nestedBody.name = 'Body';
+character.add(nestedBody);
+scene.add(character);
+check(rayMod.isFaceMappingAllowlistedMesh(nestedBody), 'Body under Scene/Character allowlisted');
+
+// Precise SagaDrive equipment roots + explicit markers still exclude descendants.
+const sagaRigid = new THREE.Group();
+sagaRigid.name = 'saga-rigid-equipment';
+const rigidMesh = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
+rigidMesh.name = 'Mesh';
+sagaRigid.add(rigidMesh);
+check(!rayMod.isFaceMappingAllowlistedMesh(rigidMesh), 'Mesh under saga-rigid-equipment excluded');
+
 const rigidRoot = new THREE.Group();
 rigidRoot.name = 'rigid-helmet-1';
 const helmetChild = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
@@ -942,14 +984,46 @@ skinnedRoot.name = 'skinned-goggles-1';
 const goggleChild = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
 goggleChild.name = 'Mesh';
 skinnedRoot.add(goggleChild);
+const sagaSkin = new THREE.Group();
+sagaSkin.name = 'saga-skinned-wearables';
+const skinMesh = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
+skinMesh.name = 'Mesh';
+sagaSkin.add(skinMesh);
 const bodyOk = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
 bodyOk.name = 'Body';
 check(!rayMod.isFaceMappingAllowlistedMesh(helmetChild), 'generic Mesh under rigid-* excluded');
 check(!rayMod.isFaceMappingAllowlistedMesh(goggleChild), 'generic Mesh under skinned-* excluded');
+check(!rayMod.isFaceMappingAllowlistedMesh(skinMesh), 'Mesh under saga-skinned-wearables excluded');
 check(rayMod.isFaceMappingAllowlistedMesh(bodyOk), 'Body without equipment ancestor still allowlisted');
 check(
   rayMod.isUnderFaceMappingExcludedAncestor(helmetChild),
   'isUnderFaceMappingExcludedAncestor detects rigid-*',
+);
+
+const excludeParent = new THREE.Group();
+excludeParent.name = 'Outfit';
+excludeParent.userData = { sagadriveExcludeFaceMapping: true };
+const excludeChild = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
+excludeChild.name = 'Body';
+excludeParent.add(excludeChild);
+check(!rayMod.isFaceMappingAllowlistedMesh(excludeChild), 'Body under sagadriveExcludeFaceMapping excluded');
+
+const helperParent = new THREE.Group();
+helperParent.name = 'HelperRoot';
+helperParent.userData = { isHelper: true };
+const helperChild = new THREE.Mesh(geom.clone(), new THREE.MeshBasicMaterial());
+helperChild.name = 'Body';
+helperParent.add(helperChild);
+check(!rayMod.isFaceMappingAllowlistedMesh(helperChild), 'Body under isHelper ancestor excluded');
+
+// Fuzzy ancestor names must not trip isUnderFaceMappingExcludedAncestor.
+check(
+  !rayMod.isUnderFaceMappingExcludedAncestor(bodyUnderNamedParent('Character_Hair')),
+  'Character_Hair is not an equipment ancestor',
+);
+check(
+  !rayMod.isUnderFaceMappingExcludedAncestor(bodyUnderNamedParent('Chair')),
+  'Chair is not an equipment ancestor',
 );
 
 writeFileSync(
