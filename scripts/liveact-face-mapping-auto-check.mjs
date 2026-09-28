@@ -67,7 +67,15 @@ check(/selectFaceMappingSurfaceAwareCandidate/.test(pipeSrc), 'pipeline surface-
 check(/screen_snap|buildFaceMappingScreenSnapOffsets/.test(pipeSrc), 'pipeline screen snap fallback');
 check(!/minAvailability/.test(autoDomain), 'dead minAvailability option removed');
 check(/countsAsGroundTruthMeta/.test(autoDomain), 'GT provenance helper exported/used');
+check(/isValidFaceMappingReviewedAtV1/.test(autoDomain), 'strict reviewedAt V1 helper');
+check(!/Date\.parse\(meta\.reviewedAt\)/.test(autoDomain), 'GT does not use permissive Date.parse');
 check(/reviewedAt/.test(autoDomain) && /manual_override/.test(autoDomain), 'GT requires reviewedAt + manual source');
+check(
+  /face-mapping-copy-json[\s\S]*?h-11 min-h-\[44px\]|h-11 min-h-\[44px\][\s\S]*?face-mapping-copy-json/.test(
+    panel,
+  ),
+  'Auto JSON export ≥44px touch',
+);
 check(/Mouth Upper\/Lower|#422 Verification|jawOpen/.test(acceptance), 'mouth functional QA deferred to #422');
 check(/listFaceMappingRaycastCandidates/.test(read('src/infrastructure/character/avatar/face-mapping-raycast.ts')), 'ordered candidates API');
 check(/manual-check|raycastFaceMappingPointer/.test(read('scripts/liveact-face-mapping-manual-check.mjs')), 'manual still uses first-hit raycast');
@@ -747,6 +755,59 @@ const inventedReviewed = autoMod.createEmptyAnchorAuthoringMeta(gtDraft, {
 check(
   inventedReviewed.noseTip?.reviewed !== true,
   'defaultReviewed without reviewedAt stays unreviewed',
+);
+
+// Strict reviewedAt V1: canonical UTC with milliseconds only (writer = toISOString).
+check(
+  autoMod.isValidFaceMappingReviewedAtV1('2026-09-28T08:54:12.123Z') === true,
+  'canonical reviewedAt with ms is valid',
+);
+check(
+  autoMod.countsAsGroundTruthMeta({
+    source: 'manual',
+    reviewed: true,
+    reviewedAt: '2026-09-28T08:54:12.123Z',
+  }) === true,
+  'canonical reviewedAt yields GT',
+);
+for (const bad of [
+  '09/28/2026',
+  '0',
+  'Sun, 28 Sep 2026 08:54:12 GMT',
+  '2026-09-28',
+  '2026-09-28T08:54:12Z',
+  '2026-13-28T08:54:12.123Z',
+  '2026-09-31T08:54:12.123Z',
+  '',
+]) {
+  check(
+    autoMod.isValidFaceMappingReviewedAtV1(bad) === false,
+    `reviewedAt invalid: ${JSON.stringify(bad)}`,
+  );
+  check(
+    autoMod.countsAsGroundTruthMeta({
+      source: 'manual',
+      reviewed: true,
+      reviewedAt: bad,
+    }) === false,
+    `non-ISO reviewedAt is not GT: ${JSON.stringify(bad)}`,
+  );
+}
+check(autoMod.isValidFaceMappingReviewedAtV1(undefined) === false, 'reviewedAt undefined invalid');
+check(
+  autoMod.createEmptyAnchorAuthoringMeta(gtDraft, {
+    defaultReviewed: true,
+    reviewedAt: '09/28/2026',
+  }).noseTip?.reviewed !== true,
+  'createEmpty rejects Date.parse-permissive reviewedAt',
+);
+check(
+  autoMod.markAllBoundFaceMappingAnchorsAsReviewedManual(
+    {},
+    gtDraft,
+    '09/28/2026',
+  ).noseTip?.reviewed !== true,
+  'markAllBound fails closed on non-canonical nowIso',
 );
 
 // D2) 21 reviewed but one screen missing → false

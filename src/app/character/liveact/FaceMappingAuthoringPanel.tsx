@@ -349,7 +349,7 @@ export function FaceMappingAuthoringPanel({
               type="button"
               size="sm"
               variant="outline"
-              className="h-8 shrink-0 border-white/15 text-[11px]"
+              className="h-11 min-h-[44px] shrink-0 border-white/15 text-[11px]"
               disabled={autoBusy || !hasAnyAuto || !getAutoExportJson}
               onClick={() => void copyAutoJson()}
               data-testid="face-mapping-copy-json"
@@ -450,7 +450,7 @@ export function FaceMappingAuthoringPanel({
             type="button"
             size="sm"
             variant="outline"
-            className="h-8 w-full border-white/15 text-[11px]"
+            className="h-11 min-h-[44px] w-full border-white/15 text-[11px]"
             disabled={autoBusy || !hasAnyAuto || !getAutoExportJson}
             onClick={() => void copyAutoJson()}
             data-testid="face-mapping-copy-json"

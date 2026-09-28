@@ -121,7 +121,7 @@ export function createEmptyAnchorAuthoringMeta(
   options?: {
     defaultSource?: FaceMappingAuthoringSource;
     defaultReviewed?: boolean;
-    /** Required when defaultReviewed=true (ISO timestamp). */
+    /** Required when defaultReviewed=true (canonical V1 ISO-UTC reviewedAt). */
     reviewedAt?: string;
   },
 ): FaceMappingDraftAuthoringMeta {
@@ -129,11 +129,8 @@ export function createEmptyAnchorAuthoringMeta(
   const wantReviewed =
     source === 'auto' ? false : (options?.defaultReviewed ?? false);
   const reviewedAt = options?.reviewedAt;
-  // Never invent reviewed GT without a timestamp — fail closed to unreviewed.
-  const reviewed =
-    wantReviewed &&
-    typeof reviewedAt === 'string' &&
-    Number.isFinite(Date.parse(reviewedAt));
+  // Never invent reviewed GT without a canonical V1 reviewedAt — fail closed to unreviewed.
+  const reviewed = wantReviewed && isValidFaceMappingReviewedAtV1(reviewedAt);
   const meta: FaceMappingDraftAuthoringMeta = {};
   for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
     if (draft.anchors[id]) {
@@ -157,6 +154,43 @@ export function isProtectedFaceMappingAnchor(
   if (!meta) return false;
   if (meta.reviewed === true) return true;
   return meta.source === 'manual' || meta.source === 'manual_override';
+}
+
+/**
+ * Canonical V1 reviewedAt: UTC ISO with milliseconds, matching `Date.prototype.toISOString()`.
+ * Example: `2026-09-28T08:54:12.123Z`
+ *
+ * Rejects locale/RFC/`Date.parse`-permissive forms. No host-dependent parsing.
+ */
+const FACE_MAPPING_REVIEWED_AT_V1_RE =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/;
+
+export function isValidFaceMappingReviewedAtV1(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length === 0) return false;
+  const m = FACE_MAPPING_REVIEWED_AT_V1_RE.exec(value);
+  if (!m) return false;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const hour = Number(m[4]);
+  const minute = Number(m[5]);
+  const second = Number(m[6]);
+  const ms = Number(m[7]);
+  // Round-trip via UTC components — rejects impossible calendar dates (Sep 31, month 13, …).
+  const dt = new Date(Date.UTC(year, month - 1, day, hour, minute, second, ms));
+  if (
+    dt.getUTCFullYear() !== year ||
+    dt.getUTCMonth() !== month - 1 ||
+    dt.getUTCDate() !== day ||
+    dt.getUTCHours() !== hour ||
+    dt.getUTCMinutes() !== minute ||
+    dt.getUTCSeconds() !== second ||
+    dt.getUTCMilliseconds() !== ms
+  ) {
+    return false;
+  }
+  // Must equal the canonical writer form (`new Date().toISOString()`).
+  return dt.toISOString() === value;
 }
 
 /**
@@ -274,12 +308,14 @@ export function markFaceMappingAnchorManual(
  * Mark every bound anchor as reviewed manual ground truth.
  * Auto → manual_override (never auto+reviewed — forbidden by authoring contract).
  * Existing manual / manual_override keep their source; missing meta → manual.
+ * `nowIso` must be canonical V1 (`isValidFaceMappingReviewedAtV1`); otherwise meta is unchanged.
  */
 export function markAllBoundFaceMappingAnchorsAsReviewedManual(
   meta: FaceMappingDraftAuthoringMeta,
   draft: SagaDriveFaceMappingDraftV1,
   nowIso: string,
 ): FaceMappingDraftAuthoringMeta {
+  if (!isValidFaceMappingReviewedAtV1(nowIso)) return meta;
   const next: FaceMappingDraftAuthoringMeta = { ...meta };
   for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
     if (!draft.anchors[id]) continue;
@@ -377,8 +413,9 @@ export function isUsableFaceMappingAutoSessionForCompare(
 
 /**
  * An anchor counts as Ground Truth only when explicitly human-reviewed with valid provenance.
- * Requires: reviewed=true, source manual|manual_override, reviewedAt parseable ISO.
- * Never: source=auto + reviewed, or reviewed without reviewedAt.
+ * Requires: reviewed=true, source manual|manual_override, reviewedAt canonical V1 ISO-UTC.
+ * Never: source=auto + reviewed, or reviewed without valid reviewedAt.
+ * reviewedAt must pass `isValidFaceMappingReviewedAtV1` (not permissive Date.parse).
  */
 export function countsAsGroundTruthMeta(
   meta: FaceMappingAnchorAuthoringMetaV1 | undefined,
@@ -386,8 +423,7 @@ export function countsAsGroundTruthMeta(
   if (!meta) return false;
   if (meta.reviewed !== true) return false;
   if (meta.source !== 'manual' && meta.source !== 'manual_override') return false;
-  if (typeof meta.reviewedAt !== 'string' || !meta.reviewedAt.trim()) return false;
-  return Number.isFinite(Date.parse(meta.reviewedAt));
+  return isValidFaceMappingReviewedAtV1(meta.reviewedAt);
 }
 
 /**

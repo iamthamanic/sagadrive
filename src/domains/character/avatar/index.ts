@@ -832,6 +832,7 @@ export {
   isUsableFaceMappingAutoSessionForCompare,
   isFaceMappingSaveDisabled,
   isProtectedFaceMappingAnchor,
+  isValidFaceMappingReviewedAtV1,
   markAllBoundFaceMappingAnchorsAsReviewedManual,
   markFaceMappingAnchorManual,
   resetFaceMappingDraftAndMeta,
