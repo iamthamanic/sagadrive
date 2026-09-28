@@ -74,21 +74,21 @@ export function resolveFaceMappingSurfaceSelectMaxDepthDelta(
 /**
  * Expanded same-ray depth gate: prefer an allowed hit on the **original** MediaPipe
  * screen ray over screen-snap that moves the anatomical target (#421 eye evidence).
- * Still face-scale (~20% face width) — not through-head.
+ *
+ * Only when a measured `faceWidthWorld` is available — pure proportion of face scale,
+ * no absolute floors. Returns null when face width is missing/invalid (skip expand).
  */
 export function resolveFaceMappingSameRayExpandedMaxDepthDelta(
   options?: { faceWidthWorld?: number | null },
-): number {
+): number | null {
   const faceW =
     options?.faceWidthWorld != null &&
     Number.isFinite(options.faceWidthWorld) &&
     options.faceWidthWorld > 1e-6
       ? options.faceWidthWorld
       : null;
-  if (faceW != null) {
-    return Math.max(0.02, faceW * 0.2);
-  }
-  return 0.04;
+  if (faceW == null) return null;
+  return faceW * 0.2;
 }
 
 /**
@@ -174,7 +174,8 @@ export function selectFaceMappingSurfaceAwareCandidate(
     const expanded = resolveFaceMappingSameRayExpandedMaxDepthDelta({
       faceWidthWorld: options?.faceWidthWorld,
     });
-    if (expanded > maxDepthDelta + 1e-9) {
+    // Expand only with measured face scale — never invent an absolute world meter gate.
+    if (expanded != null && expanded > maxDepthDelta + 1e-9) {
       const second = runPass(expanded, 'same_ray_expanded_depth');
       if (second.selectedIndex != null) return second;
       return { ...strict, candidates: second.candidates, maxDepthDelta: expanded };

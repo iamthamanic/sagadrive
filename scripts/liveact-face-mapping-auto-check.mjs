@@ -78,7 +78,12 @@ check(
 );
 check(/Mouth Upper\/Lower|#422 Verification|jawOpen/.test(acceptance), 'mouth functional QA deferred to #422');
 check(/listFaceMappingRaycastCandidates/.test(read('src/infrastructure/character/avatar/face-mapping-raycast.ts')), 'ordered candidates API');
-check(/manual-check|raycastFaceMappingPointer/.test(read('scripts/liveact-face-mapping-manual-check.mjs')), 'manual still uses first-hit raycast');
+check(
+  /selectFaceMappingSurfaceAwareCandidate|manual eyeUpper/.test(
+    read('scripts/liveact-face-mapping-manual-check.mjs'),
+  ),
+  'manual surface-aware regression wired',
+);
 check(/captureFaceMappingAutoFrame/.test(studio), 'studio capture');
 check(/face-mapping-overlay-view-mode|face-mapping-view-both/.test(panel), 'overlay view mode toggle');
 check(
@@ -136,6 +141,18 @@ check(
 );
 check(/face-mapping-viewport-cancel/.test(controls), 'Cancel remains available during auto');
 check(/Valid hit only|leave last binding/.test(layer), 'drag keeps last valid comment');
+check(
+  /raycastFaceMappingAtCanvas\([\s\S]*anchorId/.test(layer),
+  'manual click/drag pass anchorId for surface-aware select',
+);
+check(
+  /selectFaceMappingSurfaceAwareCandidate/.test(studio),
+  'studio manual raycast uses surface-aware select',
+);
+check(
+  !/screen_snap|buildFaceMappingScreenSnapOffsets/.test(layer),
+  'manual layer has no screen-snap',
+);
 check(/MediaPipe|mouthCornerLeft|291/.test(design), 'design map table');
 check(/Auto Mapping|IMAGE|Ground Truth|validForGroundTruthComparison/.test(acceptance), 'acceptance');
 const semanticsDesign = read('.qa/design/liveact-face-anchor-semantics-v1.md');
@@ -221,28 +238,28 @@ for (const [idx, y] of [
 ]) {
   landmarks[idx] = { x: 0.5, y, z: 0 };
 }
-// Lid + LEFT_EYEBROW: place brow centerline with outer < center < inner in image X
-// (anatomical left = high X on unmirrored frontal: outer temple lower X than glabella inner).
+// Lid + brows: unmirrored MediaPipe anatomy —
+// LEFT (high-X side): temple outer has highest X, glabella inner lower toward midline.
+// RIGHT (low-X side): temple outer has lowest X, glabella inner higher toward midline.
 for (const idx of [386, 385, 387, 374, 380, 373]) {
   landmarks[idx] = { x: 0.72 + (idx % 3) * 0.001, y: 0.4, z: 0 };
 }
-landmarks[300] = { x: 0.68, y: 0.32, z: 0 }; // outer (temple)
-landmarks[296] = { x: 0.71, y: 0.31, z: 0 };
+landmarks[300] = { x: 0.78, y: 0.32, z: 0 }; // left outer (temple, lateral)
+landmarks[296] = { x: 0.75, y: 0.31, z: 0 };
 landmarks[334] = { x: 0.73, y: 0.30, z: 0 };
-landmarks[282] = { x: 0.74, y: 0.31, z: 0 };
-landmarks[336] = { x: 0.76, y: 0.32, z: 0 }; // inner (glabella)
+landmarks[282] = { x: 0.72, y: 0.31, z: 0 };
+landmarks[336] = { x: 0.7, y: 0.32, z: 0 }; // left inner (glabella)
 for (const idx of [295, 293, 285, 283, 276]) {
-  landmarks[idx] = { x: 0.72 + (idx % 5) * 0.002, y: 0.32, z: 0 };
+  landmarks[idx] = { x: 0.74 + (idx % 5) * 0.002, y: 0.32, z: 0 };
 }
-// RIGHT_EYEBROW centerline: outer 70 (low X) → center → inner 107 (higher toward midline)
 for (const idx of [159, 158, 157, 145, 144, 153]) {
   landmarks[idx] = { x: 0.28 + (idx % 3) * 0.001, y: 0.4, z: 0 };
 }
-landmarks[70] = { x: 0.24, y: 0.32, z: 0 };
-landmarks[66] = { x: 0.26, y: 0.31, z: 0 };
+landmarks[70] = { x: 0.22, y: 0.32, z: 0 }; // right outer (temple)
+landmarks[66] = { x: 0.25, y: 0.31, z: 0 };
 landmarks[105] = { x: 0.27, y: 0.30, z: 0 };
-landmarks[52] = { x: 0.275, y: 0.31, z: 0 };
-landmarks[107] = { x: 0.29, y: 0.32, z: 0 };
+landmarks[52] = { x: 0.28, y: 0.31, z: 0 };
+landmarks[107] = { x: 0.3, y: 0.32, z: 0 }; // right inner (glabella)
 for (const idx of [46, 53, 55, 63, 65]) {
   landmarks[idx] = { x: 0.26 + (idx % 5) * 0.002, y: 0.32, z: 0 };
 }
@@ -270,9 +287,39 @@ check(foreheadS.y < mouthU.y && chinS.y > mouthL.y, 'midline order: forehead < m
 const browLI = samples.find((s) => s.anchorId === 'browLeftInner');
 const browLC = samples.find((s) => s.anchorId === 'browLeftCenter');
 const browLO = samples.find((s) => s.anchorId === 'browLeftOuter');
-const browMinX = Math.min(browLI.x, browLO.x);
-const browMaxX = Math.max(browLI.x, browLO.x);
-check(browLC.x >= browMinX - 1e-6 && browLC.x <= browMaxX + 1e-6, 'browLeftCenter between inner/outer in X');
+const browRI = samples.find((s) => s.anchorId === 'browRightInner');
+const browRC = samples.find((s) => s.anchorId === 'browRightCenter');
+const browRO = samples.find((s) => s.anchorId === 'browRightOuter');
+// Unmirrored MediaPipe anatomy (do NOT read map.laterality for expected direction):
+// LEFT side = high image X → outer(temple) > center > inner(glabella).
+// RIGHT side = low image X → outer(temple) < center < inner(glabella).
+check(
+  browLO.x > browLC.x && browLC.x > browLI.x,
+  'LEFT brow outer→center→inner orientation (unmirrored)',
+);
+check(
+  browRO.x < browRC.x && browRC.x < browRI.x,
+  'RIGHT brow outer→center→inner orientation (unmirrored)',
+);
+// Swap detection: if map indices for left inner/outer were swapped, orientation fails above.
+const mpLeftBrow = connectionIndices(FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW);
+const leftOuterIdx = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find(
+  (e) => e.anchorId === 'browLeftOuter',
+).landmarkIndices[0];
+const leftInnerIdx = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find(
+  (e) => e.anchorId === 'browLeftInner',
+).landmarkIndices[0];
+check(mpLeftBrow.has(leftOuterIdx) && mpLeftBrow.has(leftInnerIdx), 'LEFT brow endpoints ∈ LEFT_EYEBROW');
+check(leftOuterIdx === 300 && leftInnerIdx === 336, 'LEFT brow outer=300 inner=336 (MediaPipe topology)');
+const mpRightBrow = connectionIndices(FaceLandmarker.FACE_LANDMARKS_RIGHT_EYEBROW);
+const rightOuterIdx = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find(
+  (e) => e.anchorId === 'browRightOuter',
+).landmarkIndices[0];
+const rightInnerIdx = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find(
+  (e) => e.anchorId === 'browRightInner',
+).landmarkIndices[0];
+check(mpRightBrow.has(rightOuterIdx) && mpRightBrow.has(rightInnerIdx), 'RIGHT brow endpoints ∈ RIGHT_EYEBROW');
+check(rightOuterIdx === 70 && rightInnerIdx === 107, 'RIGHT brow outer=70 inner=107 (MediaPipe topology)');
 const mouthEntryU = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'mouthUpper');
 const mouthEntryL = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'mouthLower');
 check(
@@ -291,7 +338,6 @@ check(
 const chinEntry = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'chin');
 check(!chinEntry.landmarkIndices.includes(152), 'chin not oval-bottom 152');
 check(chinEntry.landmarkIndices.includes(175) && chinEntry.landmarkIndices.includes(199), 'chin uses 175+199');
-const mpLeftBrow = connectionIndices(FaceLandmarker.FACE_LANDMARKS_LEFT_EYEBROW);
 const browCenterEntry = mapMod.MEDIAPIPE_SAGADRIVE_FACE_ANCHOR_MAP_V1.find((e) => e.anchorId === 'browLeftCenter');
 check(
   browCenterEntry.kind === 'centroid' &&
@@ -565,10 +611,33 @@ const midSelect = selectMod.selectFaceMappingSurfaceAwareCandidate(
 check(midSelect.selectedIndex === 1, 'same-ray expanded depth selects Body');
 check(midSelect.strategy === 'same_ray_expanded_depth', 'strategy same_ray_expanded_depth');
 check(
-  selectMod.resolveFaceMappingSameRayExpandedMaxDepthDelta({ faceWidthWorld: 0.15 }) ===
-    Math.max(0.02, 0.15 * 0.2),
-  'expanded depth uses ~20% face width',
+  selectMod.resolveFaceMappingSameRayExpandedMaxDepthDelta({ faceWidthWorld: 0.15 }) === 0.15 * 0.2,
+  'A: expanded gate = faceWidth * 0.2 (no absolute floor)',
 );
+check(
+  selectMod.resolveFaceMappingSameRayExpandedMaxDepthDelta({ faceWidthWorld: 0.01 }) === 0.01 * 0.2,
+  'B: tiny faceWidth → tiny gate (no 0.02 floor)',
+);
+check(
+  selectMod.resolveFaceMappingSameRayExpandedMaxDepthDelta({ faceWidthWorld: null }) === null,
+  'C: null faceWidth → no expanded depth',
+);
+check(
+  selectMod.resolveFaceMappingSameRayExpandedMaxDepthDelta({}) === null,
+  'C: missing faceWidth → no expanded depth',
+);
+const noExpandSelect = selectMod.selectFaceMappingSurfaceAwareCandidate(
+  [
+    { order: 0, distance: 0.05, nodeIdentity: 'Eyes' },
+    { order: 1, distance: 0.05 + 0.025, nodeIdentity: 'Body' },
+  ],
+  'eyeLeftUpper',
+  { faceWidthWorld: null },
+);
+check(noExpandSelect.selectedIndex == null, 'C: without faceWidth no expanded hit');
+check(noExpandSelect.strategy === 'depth_rejected_only', 'C: stays depth_rejected_only without faceWidth');
+// D already covered by farSelect above
+// E = midSelect with faceWidthWorld
 
 // Pipeline with mocked canonical-style candidates (Eyes then Body close behind).
 const mockCanonicalCandidates = [

@@ -193,6 +193,59 @@ check(
   'barycentric present',
 );
 
+check(/selectFaceMappingSurfaceAwareCandidate/.test(studio), 'studio wires surface-aware manual select');
+check(
+  /raycastFaceMappingAtCanvas\([\s\S]*\{ anchorId/.test(layer) ||
+    /raycastFaceMappingAtCanvas\([\s\S]*anchorId:/.test(layer),
+  'click/drag pass anchorId',
+);
+check(!/buildFaceMappingScreenSnapOffsets|screen_snap/.test(layer), 'manual path has no screen-snap');
+
+const selectOut = join(runsDir, 'liveact-face-mapping-manual-surface-select-bundle.mjs');
+await build({
+  entryPoints: [join(root, 'src/domains/character/avatar/face-mapping-auto-surface-select-v1.ts')],
+  bundle: true,
+  format: 'esm',
+  platform: 'neutral',
+  outfile: selectOut,
+  logLevel: 'silent',
+});
+const selectMod = await import(`${selectOut}?t=${Date.now()}`);
+
+function pickManual(anchorId, candidates, faceWidthWorld = 0.2) {
+  const selection = selectMod.selectFaceMappingSurfaceAwareCandidate(
+    candidates,
+    anchorId,
+    { faceWidthWorld },
+  );
+  if (selection.selectedIndex == null) return null;
+  return candidates[selection.selectedIndex];
+}
+
+const eyeUpperHit = pickManual('eyeLeftUpper', [
+  { order: 0, distance: 0.04, nodeIdentity: 'Eyes' },
+  { order: 1, distance: 0.045, nodeIdentity: 'Body' },
+]);
+check(eyeUpperHit?.nodeIdentity === 'Body', 'manual eyeUpper: Eyes then Body → Body');
+
+const eyeLowerHit = pickManual('eyeLeftLower', [
+  { order: 0, distance: 0.04, nodeIdentity: 'Eyelashes' },
+  { order: 1, distance: 0.045, nodeIdentity: 'Body' },
+]);
+check(eyeLowerHit?.nodeIdentity === 'Body', 'manual eyeLower: Eyelashes then Body → Body');
+
+const mouthHit = pickManual('mouthUpper', [
+  { order: 0, distance: 0.04, nodeIdentity: 'Teeth' },
+  { order: 1, distance: 0.045, nodeIdentity: 'Body' },
+]);
+check(mouthHit?.nodeIdentity === 'Body', 'manual mouth: Teeth then Body → Body');
+
+const farReject = pickManual('eyeLeftUpper', [
+  { order: 0, distance: 0.04, nodeIdentity: 'Eyes' },
+  { order: 1, distance: 0.9, nodeIdentity: 'Body' },
+]);
+check(farReject == null, 'rejected front + far Body → no binding');
+
 writeFileSync(
   join(root, '.qa/fixtures/liveact-face-mapping-manual/sample-binding.json'),
   `${JSON.stringify(hit.binding, null, 2)}\n`,

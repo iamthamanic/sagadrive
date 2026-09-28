@@ -169,7 +169,8 @@ function hitToCandidate(
 
 /**
  * Ordered (near→far) allowlisted intersections for one canvas pointer.
- * Shared path for Manual (take [0]) and Auto (semantic select among candidates).
+ * Shared path for Manual and Auto — both pass candidates through surface-aware select.
+ * Manual: first allowed on same ray (no screen-snap). Auto: may expand depth / snap.
  */
 export function listFaceMappingRaycastCandidates(input: {
   camera: THREE.Camera;
@@ -200,7 +201,7 @@ export function listFaceMappingRaycastCandidates(input: {
 
 /**
  * Convert canvas-local pointer coords to a triangle binding on allowlisted meshes.
- * Default = first (nearest) hit — Manual Mapping behavior.
+ * Default = first (nearest) hit. Prefer `selectCandidate` for Manual/Auto surface-aware select.
  */
 export function raycastFaceMappingPointer(input: {
   camera: THREE.Camera;

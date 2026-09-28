@@ -516,7 +516,7 @@ export function FaceMappingMarkerLayer({
       if (Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) dragMoved = true;
       if (!dragMoved) return;
       const { x, y } = canvasXY(event, rt);
-      const hit = rt.raycastFaceMappingAtCanvas(x, y);
+      const hit = rt.raycastFaceMappingAtCanvas(x, y, { anchorId: draggingId });
       if (hit) onPlaceRef.current(draggingId, hit.binding);
       event.preventDefault();
     };
@@ -580,7 +580,7 @@ export function FaceMappingMarkerLayer({
       const anchorId = draft.selectedAnchorId;
       if (!anchorId || wasGrab || moved) return;
       const { x, y } = canvasXY(event, rt);
-      const hit = rt.raycastFaceMappingAtCanvas(x, y);
+      const hit = rt.raycastFaceMappingAtCanvas(x, y, { anchorId });
       onPlaceRef.current(anchorId, hit?.binding ?? null);
       event.preventDefault();
       event.stopPropagation();

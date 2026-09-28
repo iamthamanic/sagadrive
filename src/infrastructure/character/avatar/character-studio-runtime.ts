@@ -79,6 +79,7 @@ import {
   type FaceMappingRaycastCandidateV1,
   type FaceMappingRaycastHitV1,
 } from './face-mapping-raycast';
+import { selectFaceMappingSurfaceAwareCandidate } from '../../../domains/character/avatar/face-mapping-auto-surface-select-v1';
 
 export type { LiveActCharacterFaceDebugHandle, FaceMappingRaycastHitV1 };
 import type { AvatarEquipmentVisual } from '../../../domains/character/avatar';
@@ -635,13 +636,22 @@ export class CharacterStudioRuntime {
 
   /**
    * Raycast canvas-local pointer to a triangle binding on allowlisted avatar meshes.
-   * Manual Mapping: nearest hit.
+   * Manual Mapping: same screen ray → surface-aware first allowed hit (no screen-snap).
+   * When `anchorId` is omitted, falls back to nearest hit (legacy).
    */
-  raycastFaceMappingAtCanvas(canvasX: number, canvasY: number): FaceMappingRaycastHitV1 | null {
+  raycastFaceMappingAtCanvas(
+    canvasX: number,
+    canvasY: number,
+    options?: {
+      readonly anchorId?: SagaDriveFaceAnchorId;
+      readonly faceWidthWorld?: number | null;
+    },
+  ): FaceMappingRaycastHitV1 | null {
     if (this.disposed || !this.currentRoot) return null;
     const canvas = this.renderer.domElement;
     const width = Math.max(1, Math.round(canvas.clientWidth));
     const height = Math.max(1, Math.round(canvas.clientHeight));
+    const anchorId = options?.anchorId;
     return raycastFaceMappingPointer({
       camera: this.camera,
       root: this.currentRoot,
@@ -649,6 +659,21 @@ export class CharacterStudioRuntime {
       canvasHeight: height,
       canvasX,
       canvasY,
+      selectCandidate: anchorId
+        ? (candidates) => {
+            const selection = selectFaceMappingSurfaceAwareCandidate(
+              candidates.map((c) => ({
+                order: c.order,
+                distance: c.distance,
+                nodeIdentity: c.nodeIdentity,
+              })),
+              anchorId,
+              { faceWidthWorld: options?.faceWidthWorld ?? null },
+            );
+            if (selection.selectedIndex == null) return null;
+            return candidates[selection.selectedIndex] ?? null;
+          }
+        : undefined,
     });
   }
 
