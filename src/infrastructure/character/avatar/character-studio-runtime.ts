@@ -79,7 +79,10 @@ import {
   type FaceMappingRaycastCandidateV1,
   type FaceMappingRaycastHitV1,
 } from './face-mapping-raycast';
-import { selectFaceMappingSurfaceAwareCandidate } from '../../../domains/character/avatar/face-mapping-auto-surface-select-v1';
+import {
+  computeFaceMappingFaceWidthWorld,
+  selectFaceMappingSurfaceAwareCandidate,
+} from '../../../domains/character/avatar/face-mapping-auto-surface-select-v1';
 
 export type { LiveActCharacterFaceDebugHandle, FaceMappingRaycastHitV1 };
 import type { AvatarEquipmentVisual } from '../../../domains/character/avatar';
@@ -635,9 +638,46 @@ export class CharacterStudioRuntime {
   }
 
   /**
+   * Shared Face Mapping world scale (Manual + Auto): interocular distance between
+   * anatomical outer canthi in world space.
+   *
+   * Prefer evaluated draft bindings; else first allowlisted ray hits at canvas points
+   * (Auto MediaPipe outer-eye samples). Returns null when scale cannot be measured.
+   */
+  resolveFaceMappingFaceWidthWorld(input?: {
+    readonly leftOuterBinding?: SagaDriveFaceAnchorTriangleBinding | null;
+    readonly rightOuterBinding?: SagaDriveFaceAnchorTriangleBinding | null;
+    readonly leftOuterCanvas?: { readonly x: number; readonly y: number } | null;
+    readonly rightOuterCanvas?: { readonly x: number; readonly y: number } | null;
+  }): number | null {
+    if (this.disposed || !this.currentRoot) return null;
+
+    const leftBinding = input?.leftOuterBinding ?? null;
+    const rightBinding = input?.rightOuterBinding ?? null;
+    if (leftBinding && rightBinding) {
+      const lp = this.evaluateFaceMappingBindingWorld(leftBinding, 'eyeLeftOuter');
+      const rp = this.evaluateFaceMappingBindingWorld(rightBinding, 'eyeRightOuter');
+      const fromBindings = computeFaceMappingFaceWidthWorld(lp, rp);
+      if (fromBindings != null) return fromBindings;
+    }
+
+    const leftCanvas = input?.leftOuterCanvas ?? null;
+    const rightCanvas = input?.rightOuterCanvas ?? null;
+    if (leftCanvas && rightCanvas) {
+      const lHits = this.listFaceMappingRaycastCandidatesAtCanvas(leftCanvas.x, leftCanvas.y);
+      const rHits = this.listFaceMappingRaycastCandidatesAtCanvas(rightCanvas.x, rightCanvas.y);
+      const lp = lHits[0]?.worldPoint ?? null;
+      const rp = rHits[0]?.worldPoint ?? null;
+      return computeFaceMappingFaceWidthWorld(lp, rp);
+    }
+
+    return null;
+  }
+
+  /**
    * Raycast canvas-local pointer to a triangle binding on allowlisted avatar meshes.
-   * Manual Mapping: same screen ray → surface-aware first allowed hit (no screen-snap).
-   * When `anchorId` is omitted, falls back to nearest hit (legacy).
+   * Manual Mapping: same screen ray → scale-aware strict surface select (no screen-snap,
+   * no expanded pass). When `anchorId` is omitted, falls back to nearest hit (legacy).
    */
   raycastFaceMappingAtCanvas(
     canvasX: number,
@@ -645,6 +685,9 @@ export class CharacterStudioRuntime {
     options?: {
       readonly anchorId?: SagaDriveFaceAnchorId;
       readonly faceWidthWorld?: number | null;
+      /** Draft outer-eye bindings used when faceWidthWorld is omitted. */
+      readonly leftOuterBinding?: SagaDriveFaceAnchorTriangleBinding | null;
+      readonly rightOuterBinding?: SagaDriveFaceAnchorTriangleBinding | null;
     },
   ): FaceMappingRaycastHitV1 | null {
     if (this.disposed || !this.currentRoot) return null;
@@ -652,6 +695,13 @@ export class CharacterStudioRuntime {
     const width = Math.max(1, Math.round(canvas.clientWidth));
     const height = Math.max(1, Math.round(canvas.clientHeight));
     const anchorId = options?.anchorId;
+    const faceWidthWorld =
+      options?.faceWidthWorld !== undefined
+        ? options.faceWidthWorld
+        : this.resolveFaceMappingFaceWidthWorld({
+            leftOuterBinding: options?.leftOuterBinding,
+            rightOuterBinding: options?.rightOuterBinding,
+          });
     return raycastFaceMappingPointer({
       camera: this.camera,
       root: this.currentRoot,
@@ -668,7 +718,10 @@ export class CharacterStudioRuntime {
                 nodeIdentity: c.nodeIdentity,
               })),
               anchorId,
-              { faceWidthWorld: options?.faceWidthWorld ?? null },
+              {
+                faceWidthWorld,
+                allowSameRayExpandedDepth: false,
+              },
             );
             if (selection.selectedIndex == null) return null;
             return candidates[selection.selectedIndex] ?? null;

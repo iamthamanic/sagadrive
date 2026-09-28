@@ -145,9 +145,11 @@ check(
   /raycastFaceMappingAtCanvas\([\s\S]*anchorId/.test(layer),
   'manual click/drag pass anchorId for surface-aware select',
 );
+check(/resolveFaceMappingFaceWidthWorld/.test(studio), 'shared face-width API on studio runtime');
+check(/computeFaceMappingFaceWidthWorld/.test(pipeSrc), 'auto pipeline uses shared face-width helper');
 check(
-  /selectFaceMappingSurfaceAwareCandidate/.test(studio),
-  'studio manual raycast uses surface-aware select',
+  /allowSameRayExpandedDepth:\s*false/.test(studio),
+  'manual raycast disables expanded depth pass',
 );
 check(
   !/screen_snap|buildFaceMappingScreenSnapOffsets/.test(layer),
@@ -571,6 +573,7 @@ const lidSelect = selectMod.selectFaceMappingSurfaceAwareCandidate(
     nodeIdentity: c.nodeIdentity,
   })),
   'eyeLeftUpper',
+  { faceWidthWorld: 0.2 },
 );
 check(lidSelect.selectedIndex != null, 'lid selects allowed hit behind Eyes');
 check(
@@ -586,17 +589,23 @@ const farSelect = selectMod.selectFaceMappingSurfaceAwareCandidate(
     { order: 1, distance: 0.8, nodeIdentity: 'Body' },
   ],
   'eyeLeftUpper',
+  { faceWidthWorld: 0.2 },
 );
 check(farSelect.selectedIndex == null, 'far Body behind Eyes rejected');
 check(farSelect.strategy === 'depth_rejected_only', 'strategy depth_rejected_only');
 check(
-  selectMod.resolveFaceMappingSurfaceSelectMaxDepthDelta(2.5) <= 0.02,
-  'depth gate ignores large camera distance (absolute face-scale fallback)',
+  selectMod.resolveFaceMappingSurfaceSelectMaxDepthDelta(2.5) === null,
+  'without faceWidth → null (no absolute world-unit gate)',
 );
 check(
   selectMod.resolveFaceMappingSurfaceSelectMaxDepthDelta(0.05, { faceWidthWorld: 0.2 }) ===
-    Math.max(0.008, 0.2 * 0.08),
-  'depth gate uses face width when provided',
+    0.2 * selectMod.FACE_MAPPING_SURFACE_SELECT_STRICT_FACE_WIDTH_RATIO,
+  'strict gate = faceWidth * 0.08 (no absolute floor)',
+);
+check(
+  selectMod.resolveFaceMappingSurfaceSelectMaxDepthDelta(0.05, { faceWidthWorld: 0.01 }) ===
+    0.01 * selectMod.FACE_MAPPING_SURFACE_SELECT_STRICT_FACE_WIDTH_RATIO,
+  'tiny faceWidth → tiny strict gate (no 0.008 floor)',
 );
 
 // Prefer original screen ray with expanded depth before snap (eye lid evidence).
@@ -634,11 +643,45 @@ const noExpandSelect = selectMod.selectFaceMappingSurfaceAwareCandidate(
   'eyeLeftUpper',
   { faceWidthWorld: null },
 );
-check(noExpandSelect.selectedIndex == null, 'C: without faceWidth no expanded hit');
+check(noExpandSelect.selectedIndex == null, 'C: without faceWidth no deeper hit');
 check(noExpandSelect.strategy === 'depth_rejected_only', 'C: stays depth_rejected_only without faceWidth');
-// D already covered by farSelect above
-// E = midSelect with faceWidthWorld
 
+// Scale invariance: same relative geometry at 0.1x / 1x / 10x → same selection.
+for (const scale of [0.1, 1, 10]) {
+  const faceW = 0.2 * scale;
+  const base = 1 * scale;
+  const nearGap = faceW * 0.05; // 5% < strict 8%
+  const near = selectMod.selectFaceMappingSurfaceAwareCandidate(
+    [
+      { order: 0, distance: base, nodeIdentity: 'Eyes' },
+      { order: 1, distance: base + nearGap, nodeIdentity: 'Body' },
+    ],
+    'eyeLeftUpper',
+    { faceWidthWorld: faceW, allowSameRayExpandedDepth: false },
+  );
+  check(
+    near.selectedIndex === 1 && near.candidates[1].nodeIdentity === 'Body',
+    `scale ${scale}x: 5% gap → Body (strict)`,
+  );
+  const farGap = faceW * 0.5; // 50% > expanded 20%
+  const far = selectMod.selectFaceMappingSurfaceAwareCandidate(
+    [
+      { order: 0, distance: base, nodeIdentity: 'Eyes' },
+      { order: 1, distance: base + farGap, nodeIdentity: 'Body' },
+    ],
+    'eyeLeftUpper',
+    { faceWidthWorld: faceW },
+  );
+  check(far.selectedIndex == null, `scale ${scale}x: 50% gap → reject`);
+}
+check(
+  selectMod.computeFaceMappingFaceWidthWorld({ x: 0, y: 0, z: 0 }, { x: 0.2, y: 0, z: 0 }) === 0.2,
+  'computeFaceMappingFaceWidthWorld hypot',
+);
+check(
+  selectMod.computeFaceMappingFaceWidthWorld(null, { x: 1, y: 0, z: 0 }) === null,
+  'computeFaceMappingFaceWidthWorld null on missing point',
+);
 // Pipeline with mocked canonical-style candidates (Eyes then Body close behind).
 const mockCanonicalCandidates = [
   {
@@ -687,6 +730,7 @@ const mockedSession = pipeMod.runFaceMappingAutoPipeline({
   faceCount: 1,
   canvasWidth: 200,
   canvasHeight: 200,
+  faceWidthWorld: 0.2,
   listRaycastCandidates: (_x, _y) => mockCanonicalCandidates,
 });
 for (const id of [
@@ -718,6 +762,7 @@ const lashSession = pipeMod.runFaceMappingAutoPipeline({
   faceCount: 1,
   canvasWidth: 200,
   canvasHeight: 200,
+  faceWidthWorld: 0.2,
   listRaycastCandidates: () => eyelashThenBody,
 });
 const lower = lashSession.anchors.find((a) => a.anchorId === 'eyeLeftLower');

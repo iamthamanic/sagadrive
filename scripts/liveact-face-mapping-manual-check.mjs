@@ -216,7 +216,7 @@ function pickManual(anchorId, candidates, faceWidthWorld = 0.2) {
   const selection = selectMod.selectFaceMappingSurfaceAwareCandidate(
     candidates,
     anchorId,
-    { faceWidthWorld },
+    { faceWidthWorld, allowSameRayExpandedDepth: false },
   );
   if (selection.selectedIndex == null) return null;
   return candidates[selection.selectedIndex];
@@ -245,6 +245,44 @@ const farReject = pickManual('eyeLeftUpper', [
   { order: 1, distance: 0.9, nodeIdentity: 'Body' },
 ]);
 check(farReject == null, 'rejected front + far Body → no binding');
+
+const noScaleReject = pickManual(
+  'eyeLeftUpper',
+  [
+    { order: 0, distance: 0.04, nodeIdentity: 'Eyes' },
+    { order: 1, distance: 0.045, nodeIdentity: 'Body' },
+  ],
+  null,
+);
+check(noScaleReject == null, 'face scale unavailable + Eyes vor Body → Manual fail closed');
+
+check(/resolveFaceMappingFaceWidthWorld|leftOuterBinding/.test(studio), 'manual scale from shared face-width API');
+check(/allowSameRayExpandedDepth:\s*false/.test(studio), 'manual disables expanded pass');
+check(/leftOuterBinding|eyeLeftOuter/.test(layer), 'click/drag pass outer-eye bindings for scale');
+
+// Scale invariance (manual strict-only): 0.1x / 1x / 10x
+for (const scale of [0.1, 1, 10]) {
+  const faceW = 0.2 * scale;
+  const base = 1 * scale;
+  const near = pickManual(
+    'eyeLeftUpper',
+    [
+      { order: 0, distance: base, nodeIdentity: 'Eyes' },
+      { order: 1, distance: base + faceW * 0.05, nodeIdentity: 'Body' },
+    ],
+    faceW,
+  );
+  check(near?.nodeIdentity === 'Body', `manual scale ${scale}x: 5% gap → Body`);
+  const far = pickManual(
+    'eyeLeftUpper',
+    [
+      { order: 0, distance: base, nodeIdentity: 'Eyes' },
+      { order: 1, distance: base + faceW * 0.5, nodeIdentity: 'Body' },
+    ],
+    faceW,
+  );
+  check(far == null, `manual scale ${scale}x: 50% gap → reject`);
+}
 
 writeFileSync(
   join(root, '.qa/fixtures/liveact-face-mapping-manual/sample-binding.json'),

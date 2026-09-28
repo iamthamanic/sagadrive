@@ -14,6 +14,7 @@ import type {
 import { FACE_MAPPING_AUTO_CONTRACT_VERSION } from '../../../domains/character/avatar/face-mapping-auto-v1';
 import {
   buildFaceMappingScreenSnapOffsets,
+  computeFaceMappingFaceWidthWorld,
   faceMappingScreenSnapBiasForAnchor,
   selectFaceMappingSurfaceAwareCandidate,
 } from '../../../domains/character/avatar/face-mapping-auto-surface-select-v1';
@@ -167,11 +168,10 @@ export function runFaceMappingAutoPipeline(
       rightOuter.x * canvasWidth,
       rightOuter.y * canvasHeight,
     );
-    const lp = lHits[0]?.worldPoint;
-    const rp = rHits[0]?.worldPoint;
-    if (lp && rp) {
-      faceWidthWorld = Math.hypot(lp.x - rp.x, lp.y - rp.y, lp.z - rp.z);
-    }
+    faceWidthWorld = computeFaceMappingFaceWidthWorld(
+      lHits[0]?.worldPoint ?? null,
+      rHits[0]?.worldPoint ?? null,
+    );
   }
 
   const anchors: FaceMappingAutoAnchorResultV1[] = [];

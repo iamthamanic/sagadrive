@@ -804,7 +804,10 @@ export {
 } from './face-mapping-guide-geometry';
 export {
   FACE_MAPPING_AUTO_SURFACE_SELECT_VERSION,
+  FACE_MAPPING_SURFACE_SELECT_STRICT_FACE_WIDTH_RATIO,
+  FACE_MAPPING_SURFACE_SELECT_EXPANDED_FACE_WIDTH_RATIO,
   buildFaceMappingScreenSnapOffsets,
+  computeFaceMappingFaceWidthWorld,
   faceMappingScreenSnapBiasForAnchor,
   resolveFaceMappingSurfaceSelectMaxDepthDelta,
   resolveFaceMappingSameRayExpandedMaxDepthDelta,

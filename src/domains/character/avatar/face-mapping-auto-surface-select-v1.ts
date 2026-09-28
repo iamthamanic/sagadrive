@@ -4,6 +4,9 @@
  *
  * Pure domain: pick the first geometrically plausible candidate whose surface class is
  * allowed for the anchor. Does not invent bindings — infrastructure supplies ordered hits.
+ *
+ * Depth gates are **only** proportional to measured faceWidthWorld (interocular world).
+ * No absolute world-unit floors — asset scale must not change selection semantics.
  */
 
 import type { SagaDriveFaceAnchorId } from './face-anchor-contract';
@@ -15,6 +18,12 @@ import {
 
 export const FACE_MAPPING_AUTO_SURFACE_SELECT_VERSION =
   'SagaDriveFaceMappingAutoSurfaceSelectV1' as const;
+
+/** Strict same-ray gate as fraction of measured face width (~eyelid/skin sheet). */
+export const FACE_MAPPING_SURFACE_SELECT_STRICT_FACE_WIDTH_RATIO = 0.08 as const;
+
+/** Auto-only expanded same-ray gate as fraction of measured face width. */
+export const FACE_MAPPING_SURFACE_SELECT_EXPANDED_FACE_WIDTH_RATIO = 0.2 as const;
 
 export interface FaceMappingSurfaceSelectCandidateInputV1 {
   readonly order: number;
@@ -42,60 +51,88 @@ export interface FaceMappingSurfaceSelectResultV1 {
   readonly selectedIndex: number | null;
   readonly strategy: FaceMappingSurfaceSelectStrategyV1;
   readonly candidates: readonly FaceMappingSurfaceSelectCandidateDiagV1[];
-  /** Absolute depth gate used (world units). */
+  /** Depth gate used (world units). 0 when no face scale — front-only / fail-closed. */
   readonly maxDepthDelta: number;
 }
 
+export interface FaceMappingWorldPoint3 {
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+}
+
 /**
- * Depth gate: allow a later hit only if it is close behind the nearest hit.
- * Avoids mapping through the eyeball onto the far side of the head.
- *
- * Prefer face-scale (`faceWidthWorld`); never scale by camera-to-surface distance
- * (that would accept rear-head Body hits when the face camera is far away).
+ * Shared face-mapping world scale: Euclidean distance between outer-canthus world points.
+ * Returns null when either point is missing or distance is non-finite / too small.
+ */
+export function computeFaceMappingFaceWidthWorld(
+  leftOuter: FaceMappingWorldPoint3 | null | undefined,
+  rightOuter: FaceMappingWorldPoint3 | null | undefined,
+): number | null {
+  if (!leftOuter || !rightOuter) return null;
+  if (
+    !Number.isFinite(leftOuter.x) ||
+    !Number.isFinite(leftOuter.y) ||
+    !Number.isFinite(leftOuter.z) ||
+    !Number.isFinite(rightOuter.x) ||
+    !Number.isFinite(rightOuter.y) ||
+    !Number.isFinite(rightOuter.z)
+  ) {
+    return null;
+  }
+  const d = Math.hypot(
+    leftOuter.x - rightOuter.x,
+    leftOuter.y - rightOuter.y,
+    leftOuter.z - rightOuter.z,
+  );
+  if (!Number.isFinite(d) || d <= 1e-6) return null;
+  return d;
+}
+
+function resolveValidFaceWidthWorld(
+  faceWidthWorld: number | null | undefined,
+): number | null {
+  if (
+    faceWidthWorld != null &&
+    Number.isFinite(faceWidthWorld) &&
+    faceWidthWorld > 1e-6
+  ) {
+    return faceWidthWorld;
+  }
+  return null;
+}
+
+/**
+ * Strict depth gate — only when measured faceWidthWorld is available.
+ * Returns null when scale is unknown (caller must fail-closed for deeper hits).
  */
 export function resolveFaceMappingSurfaceSelectMaxDepthDelta(
   _firstDistance: number,
   options?: { faceWidthWorld?: number | null },
-): number {
-  const faceW =
-    options?.faceWidthWorld != null &&
-    Number.isFinite(options.faceWidthWorld) &&
-    options.faceWidthWorld > 1e-6
-      ? options.faceWidthWorld
-      : null;
-  if (faceW != null) {
-    // ~8% of face width — eyelid/skin sheet thickness, not skull depth.
-    return Math.max(0.008, faceW * 0.08);
-  }
-  // Absolute fallback for human-scale assets (~1.5 cm).
-  return 0.015;
+): number | null {
+  const faceW = resolveValidFaceWidthWorld(options?.faceWidthWorld);
+  if (faceW == null) return null;
+  return faceW * FACE_MAPPING_SURFACE_SELECT_STRICT_FACE_WIDTH_RATIO;
 }
 
 /**
- * Expanded same-ray depth gate: prefer an allowed hit on the **original** MediaPipe
- * screen ray over screen-snap that moves the anatomical target (#421 eye evidence).
- *
- * Only when a measured `faceWidthWorld` is available — pure proportion of face scale,
- * no absolute floors. Returns null when face width is missing/invalid (skip expand).
+ * Expanded same-ray depth gate (Auto only) — proportional to face width.
+ * Returns null when face width is missing/invalid (skip expand).
  */
 export function resolveFaceMappingSameRayExpandedMaxDepthDelta(
   options?: { faceWidthWorld?: number | null },
 ): number | null {
-  const faceW =
-    options?.faceWidthWorld != null &&
-    Number.isFinite(options.faceWidthWorld) &&
-    options.faceWidthWorld > 1e-6
-      ? options.faceWidthWorld
-      : null;
+  const faceW = resolveValidFaceWidthWorld(options?.faceWidthWorld);
   if (faceW == null) return null;
-  return faceW * 0.2;
+  return faceW * FACE_MAPPING_SURFACE_SELECT_EXPANDED_FACE_WIDTH_RATIO;
 }
 
 /**
  * Select first semantically allowed candidate within the depth gate of hits[0].
- * When the strict gate only finds allowed hits slightly deeper (`depth_rejected_only`),
- * retry once with an expanded face-scale gate so Auto keeps the original screen point
- * instead of immediately screen-snapping (eye lid evidence).
+ *
+ * With face scale: strict proportional gate; Auto may expand once (same ray).
+ * Without face scale: only a front-hit that is already allowed (gate 0) — never pick a
+ * deeper layer using absolute world meters. Manual should pass allowSameRayExpandedDepth=false.
  */
 export function selectFaceMappingSurfaceAwareCandidate(
   candidates: readonly FaceMappingSurfaceSelectCandidateInputV1[],
@@ -103,7 +140,7 @@ export function selectFaceMappingSurfaceAwareCandidate(
   options?: {
     faceWidthWorld?: number | null;
     maxDepthDelta?: number;
-    /** When true (default), expand depth once before returning depth_rejected_only. */
+    /** When true (default), Auto may expand depth once. Manual must set false. */
     allowSameRayExpandedDepth?: boolean;
   },
 ): FaceMappingSurfaceSelectResultV1 {
@@ -117,11 +154,15 @@ export function selectFaceMappingSurfaceAwareCandidate(
   }
 
   const firstDistance = candidates[0]?.distance ?? 0;
-  const maxDepthDelta =
-    options?.maxDepthDelta ??
-    resolveFaceMappingSurfaceSelectMaxDepthDelta(firstDistance, {
-      faceWidthWorld: options?.faceWidthWorld,
-    });
+  const faceW = resolveValidFaceWidthWorld(options?.faceWidthWorld);
+  const resolvedStrict =
+    options?.maxDepthDelta != null && Number.isFinite(options.maxDepthDelta)
+      ? options.maxDepthDelta
+      : resolveFaceMappingSurfaceSelectMaxDepthDelta(firstDistance, {
+          faceWidthWorld: faceW,
+        });
+  // No absolute world-unit fallback — without scale only accept depthDelta === 0.
+  const maxDepthDelta = resolvedStrict ?? 0;
 
   const runPass = (
     gate: number,
@@ -170,11 +211,15 @@ export function selectFaceMappingSurfaceAwareCandidate(
   if (strict.selectedIndex != null) return strict;
 
   const allowExpand = options?.allowSameRayExpandedDepth !== false;
-  if (allowExpand && strict.strategy === 'depth_rejected_only' && options?.maxDepthDelta == null) {
+  if (
+    allowExpand &&
+    faceW != null &&
+    strict.strategy === 'depth_rejected_only' &&
+    options?.maxDepthDelta == null
+  ) {
     const expanded = resolveFaceMappingSameRayExpandedMaxDepthDelta({
-      faceWidthWorld: options?.faceWidthWorld,
+      faceWidthWorld: faceW,
     });
-    // Expand only with measured face scale — never invent an absolute world meter gate.
     if (expanded != null && expanded > maxDepthDelta + 1e-9) {
       const second = runPass(expanded, 'same_ray_expanded_depth');
       if (second.selectedIndex != null) return second;
