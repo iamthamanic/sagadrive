@@ -6,7 +6,7 @@
  * Smooth eye/mouth contours + brow curves from domain guide geometry.
  * Selected marker pulses; overlay owns pointer events so orbit cannot steal drags.
  * Valid hit only — leave last binding (drag updates only on allowlisted raycast hits).
- * View mode: draft (amber) / auto ghost (cyan) / both (#421 compare).
+ * View mode: draft (amber/reviewed green) / auto ghost (cyan) / both (#421 compare).
  */
 
 import { useEffect, useRef, type RefObject } from 'react';
@@ -15,6 +15,7 @@ import {
   type SagaDriveFaceAnchorId,
   type SagaDriveFaceAnchorTriangleBinding,
 } from '../../../domains/character/avatar/face-anchor-contract';
+import type { FaceMappingDraftAuthoringMeta } from '../../../domains/character/avatar/face-mapping-auto-v1';
 import {
   FACE_MAPPING_ANCHOR_SHORT_DE,
   resolveFaceMappingMarkerStatus,
@@ -33,6 +34,11 @@ interface FaceMappingMarkerLayerProps {
   autoBindingsRef?: RefObject<
     Partial<Record<SagaDriveFaceAnchorId, SagaDriveFaceAnchorTriangleBinding>> | null
   >;
+  /**
+   * Authoring provenance (same source as the marker list). Read each paint so
+   * “Als Ground Truth markieren” flips canvas markers to reviewed/green immediately.
+   */
+  getAuthoringMeta?: () => FaceMappingDraftAuthoringMeta;
   /** What to draw on the 3D overlay. */
   viewMode?: FaceMappingOverlayViewMode;
   /** When false, pan/select only — no draft place/drag (e.g. while autoBusy). */
@@ -238,6 +244,7 @@ export function FaceMappingMarkerLayer({
   draftRef,
   studioRuntimeRef,
   autoBindingsRef,
+  getAuthoringMeta,
   viewMode = 'draft',
   editingAllowed: editingAllowedProp = true,
   onSelectAnchor,
@@ -252,6 +259,8 @@ export function FaceMappingMarkerLayer({
   viewModeRef.current = viewMode;
   const editingAllowedPropRef = useRef(editingAllowedProp);
   editingAllowedPropRef.current = editingAllowedProp;
+  const getAuthoringMetaRef = useRef(getAuthoringMeta);
+  getAuthoringMetaRef.current = getAuthoringMeta;
 
   useEffect(() => {
     if (!active) return;
@@ -318,10 +327,20 @@ export function FaceMappingMarkerLayer({
       const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 220);
 
       if (showDraft) {
+        // Same reviewed provenance as the marker list (meta[id].reviewed === true).
+        const reviewedAnchorIds = new Set<SagaDriveFaceAnchorId>();
+        const meta = getAuthoringMetaRef.current?.();
+        if (meta) {
+          for (const id of Object.keys(meta) as SagaDriveFaceAnchorId[]) {
+            if (meta[id]?.reviewed === true) reviewedAnchorIds.add(id);
+          }
+        }
         for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
           const pt = draftScreen[id];
           if (!pt || draft.selectedAnchorId === id) continue;
-          const status = resolveFaceMappingMarkerStatus(draft, id);
+          const status = resolveFaceMappingMarkerStatus(draft, id, {
+            reviewedAnchorIds,
+          });
           ctx.beginPath();
           ctx.arc(pt.x, pt.y, DOT_RADIUS, 0, Math.PI * 2);
           ctx.fillStyle = STATUS_FILL[status];

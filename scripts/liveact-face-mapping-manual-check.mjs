@@ -112,6 +112,30 @@ const withBinding = draftMod.setFaceMappingDraftBinding(empty, 'mouthUpper', {
   barycentric: { u: 0.5, v: 0.25, w: 0.25 },
 });
 check(draftMod.resolveFaceMappingMarkerStatus(withBinding, 'mouthUpper') === 'set', 'set status');
+check(
+  draftMod.resolveFaceMappingMarkerStatus(withBinding, 'mouthUpper', {
+    reviewedAnchorIds: new Set(['mouthUpper']),
+  }) === 'reviewed',
+  'set + reviewedAnchorIds → reviewed',
+);
+check(
+  draftMod.resolveFaceMappingMarkerStatus(withBinding, 'mouthUpper', {
+    reviewedAnchorIds: new Set(),
+  }) === 'set',
+  'set + empty reviewed set stays set',
+);
+check(/STATUS_FILL\.reviewed|reviewed: 'rgba\(34, 197, 94/.test(layer), 'canvas reviewed fill defined');
+check(/getAuthoringMeta/.test(layer), 'canvas layer accepts authoring meta');
+check(
+  /resolveFaceMappingMarkerStatus\(draft, id, \{[\s\S]*reviewedAnchorIds/.test(layer),
+  'canvas resolves status with reviewedAnchorIds',
+);
+check(
+  /FaceMappingMarkerLayer[\s\S]*getAuthoringMeta=\{\(\) => authoringMetaRef\.current\}/.test(
+    controls,
+  ),
+  'controls pass authoringMetaRef into canvas layer',
+);
 const manifest = draftMod.faceMappingDraftToManifest(withBinding);
 check(manifest.anchors.mouthUpper?.nodeIdentity === 'Face', 'manifest has mouthUpper');
 check(Object.keys(manifest.anchors).length === 1, 'only set anchors exported');

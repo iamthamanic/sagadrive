@@ -683,6 +683,7 @@ export function LiveActViewportControls({
           draftRef={draftRef}
           studioRuntimeRef={studioRuntimeRef}
           autoBindingsRef={autoBindingsRef}
+          getAuthoringMeta={() => authoringMetaRef.current}
           viewMode={overlayViewMode}
           editingAllowed={!autoBusy}
           onSelectAnchor={onSelectAnchor}
