@@ -61,7 +61,16 @@ check(/runningMode: 'VIDEO'/.test(videoSrc), 'VIDEO source unchanged');
 check(!/runningMode: 'IMAGE'/.test(videoSrc), 'VIDEO source not IMAGE');
 
 check(/runFaceMappingAutoPipeline/.test(pipeSrc), 'pipeline');
-check(/raycastFaceMappingPointer|raycast\(/.test(pipeSrc), 'reuses raycast path');
+check(/listRaycastCandidates|listFaceMappingRaycastCandidates/.test(pipeSrc), 'reuses ordered raycast candidates');
+check(/listFaceMappingRaycastCandidatesAtCanvas/.test(controls), 'controls list candidates for Auto');
+check(/selectFaceMappingSurfaceAwareCandidate/.test(pipeSrc), 'pipeline surface-aware select');
+check(/screen_snap|buildFaceMappingScreenSnapOffsets/.test(pipeSrc), 'pipeline screen snap fallback');
+check(!/minAvailability/.test(autoDomain), 'dead minAvailability option removed');
+check(/countsAsGroundTruthMeta/.test(autoDomain), 'GT provenance helper exported/used');
+check(/reviewedAt/.test(autoDomain) && /manual_override/.test(autoDomain), 'GT requires reviewedAt + manual source');
+check(/Mouth Upper\/Lower|#422 Verification|jawOpen/.test(acceptance), 'mouth functional QA deferred to #422');
+check(/listFaceMappingRaycastCandidates/.test(read('src/infrastructure/character/avatar/face-mapping-raycast.ts')), 'ordered candidates API');
+check(/manual-check|raycastFaceMappingPointer/.test(read('scripts/liveact-face-mapping-manual-check.mjs')), 'manual still uses first-hit raycast');
 check(/captureFaceMappingAutoFrame/.test(studio), 'studio capture');
 check(/face-mapping-overlay-view-mode|face-mapping-view-both/.test(panel), 'overlay view mode toggle');
 check(/FaceMappingOverlayViewMode|viewMode|autoBindingsRef/.test(layer), 'marker layer view mode');
@@ -92,7 +101,13 @@ check(/surface_mismatch/.test(autoDomain), 'surface_mismatch outcome');
 check(/Only explicit Clear removes provenance/.test(controls), 'miss click keeps provenance');
 check(/min-h-\[44px\]/.test(panel), 'auto button 44px touch target');
 check(/face-mapping-mark-ground-truth/.test(panel), 'mark GT button');
-check(/getCompareExportJson/.test(controls) && /getCompareExportJson/.test(panel), 'compare from frozen GT');
+check(/GT JSON kopiert|Als Ground Truth markieren und GT-JSON/.test(panel), 'GT mark copies GT JSON');
+check(/getAutoExportJson/.test(controls) && /getAutoExportJson/.test(panel), 'Auto JSON export from session');
+check(/Auto JSON|Nur Auto-Mapping/.test(panel), 'Auto JSON button copy');
+check(/stringifyFaceMappingGroundTruthReference/.test(autoDomain), 'GT stringify');
+check(/stringifyFaceMappingAutoSessionExport/.test(autoDomain), 'Auto session stringify');
+check(!/GT-Referenz \+ Auto-Vorschlag als Compare-JSON/.test(panel), 'no mixed compare clipboard copy');
+check(/stringifyFaceMappingCompareExport/.test(autoDomain), 'compare builder kept in domain');
 check(/editingAllowed=\{!autoBusy\}/.test(controls), 'edits locked while auto busy');
 check(/Valid hit only|leave last binding/.test(layer), 'drag keeps last valid comment');
 check(/MediaPipe|mouthCornerLeft|291/.test(design), 'design map table');
@@ -280,12 +295,22 @@ camera.position.set(0, 0, 3);
 camera.lookAt(0, 0, 0);
 camera.updateProjectionMatrix();
 
+const listCandidates = (x, y) =>
+  rayMod.listFaceMappingRaycastCandidates({
+    camera,
+    root: rootObj,
+    canvasWidth: 200,
+    canvasHeight: 200,
+    canvasX: x,
+    canvasY: y,
+  });
+
 const noFace = pipeMod.runFaceMappingAutoPipeline({
   landmarks: [],
   faceCount: 0,
   canvasWidth: 200,
   canvasHeight: 200,
-  raycast: () => null,
+  listRaycastCandidates: () => [],
 });
 check(noFace.status === 'no_face', '0 faces → no_face');
 
@@ -294,7 +319,7 @@ const multi = pipeMod.runFaceMappingAutoPipeline({
   faceCount: 2,
   canvasWidth: 200,
   canvasHeight: 200,
-  raycast: () => null,
+  listRaycastCandidates: () => [],
 });
 check(multi.status === 'multi_face', '>1 face → multi_face');
 
@@ -303,19 +328,188 @@ const session = pipeMod.runFaceMappingAutoPipeline({
   faceCount: 1,
   canvasWidth: 200,
   canvasHeight: 200,
-  raycast: (x, y) =>
-    rayMod.raycastFaceMappingPointer({
-      camera,
-      root: rootObj,
-      canvasWidth: 200,
-      canvasHeight: 200,
-      canvasX: x,
-      canvasY: y,
-    }),
+  listRaycastCandidates: listCandidates,
 });
 check(session.anchors.length === 21, 'pipeline returns 21 rows');
 const mapped = session.anchors.filter((a) => a.outcome === 'mapped').length;
 check(mapped >= 10, `pipeline maps majority (got ${mapped})`);
+
+// Layered Eyes (near) + Body (far): lid Auto must pick Body within depth gate, not eyeball.
+const eyeGeom = new THREE.BufferGeometry();
+eyeGeom.setAttribute(
+  'position',
+  new THREE.BufferAttribute(new Float32Array([-0.4, -0.4, 0.05, 0.4, -0.4, 0.05, 0, 0.4, 0.05]), 3),
+);
+eyeGeom.setIndex([0, 1, 2]);
+const eyesMesh = new THREE.Mesh(eyeGeom, new THREE.MeshBasicMaterial());
+eyesMesh.name = 'Eyes';
+const bodyGeom = new THREE.BufferGeometry();
+bodyGeom.setAttribute(
+  'position',
+  new THREE.BufferAttribute(new Float32Array([-1, -1, -0.02, 1, -1, -0.02, 0, 1, -0.02]), 3),
+);
+bodyGeom.setIndex([0, 1, 2]);
+const bodyMesh = new THREE.Mesh(bodyGeom, new THREE.MeshBasicMaterial());
+bodyMesh.name = 'Body';
+const layeredRoot = new THREE.Group();
+layeredRoot.add(eyesMesh);
+layeredRoot.add(bodyMesh);
+layeredRoot.updateMatrixWorld(true);
+
+const layeredCandidates = rayMod.listFaceMappingRaycastCandidates({
+  camera,
+  root: layeredRoot,
+  canvasWidth: 200,
+  canvasHeight: 200,
+  canvasX: 100,
+  canvasY: 100,
+});
+check(layeredCandidates.length >= 2, `layered ray has ≥2 hits (got ${layeredCandidates.length})`);
+check(layeredCandidates[0].nodeIdentity === 'Eyes', 'first layered hit is Eyes');
+check(
+  layeredCandidates.some((c) => c.nodeIdentity === 'Body'),
+  'Body exists behind Eyes on same ray',
+);
+
+const selectOut = join(runsDir, 'liveact-face-mapping-auto-surface-select-bundle.mjs');
+await build({
+  entryPoints: [join(root, 'src/domains/character/avatar/face-mapping-auto-surface-select-v1.ts')],
+  bundle: true,
+  format: 'esm',
+  platform: 'neutral',
+  outfile: selectOut,
+  logLevel: 'silent',
+});
+const selectMod = await import(`${selectOut}?t=${Date.now()}`);
+const lidSelect = selectMod.selectFaceMappingSurfaceAwareCandidate(
+  layeredCandidates.map((c) => ({
+    order: c.order,
+    distance: c.distance,
+    nodeIdentity: c.nodeIdentity,
+  })),
+  'eyeLeftUpper',
+);
+check(lidSelect.selectedIndex != null, 'lid selects allowed hit behind Eyes');
+check(
+  lidSelect.candidates[lidSelect.selectedIndex].nodeIdentity === 'Body',
+  'lid selects Body not Eyes',
+);
+check(lidSelect.strategy === 'first_allowed_depth_gated', 'depth-gated first allowed');
+
+// Far Body behind Eyes must be rejected (not through-the-head).
+const farSelect = selectMod.selectFaceMappingSurfaceAwareCandidate(
+  [
+    { order: 0, distance: 0.05, nodeIdentity: 'Eyes' },
+    { order: 1, distance: 0.8, nodeIdentity: 'Body' },
+  ],
+  'eyeLeftUpper',
+);
+check(farSelect.selectedIndex == null, 'far Body behind Eyes rejected');
+check(farSelect.strategy === 'depth_rejected_only', 'strategy depth_rejected_only');
+
+// Pipeline with mocked canonical-style candidates (Eyes then Body close behind).
+const mockCanonicalCandidates = [
+  {
+    order: 0,
+    distance: 0.04,
+    nodeIdentity: 'Eyes',
+    triangleIndex: 0,
+    binding: {
+      nodeIdentity: 'Eyes',
+      primitiveIndex: 0,
+      triangleIndex: 0,
+      barycentric: { u: 0.34, v: 0.33, w: 0.33 },
+    },
+    worldPoint: { x: 0, y: 0.1, z: 0.04 },
+  },
+  {
+    order: 1,
+    distance: 0.045,
+    nodeIdentity: 'Body',
+    triangleIndex: 1,
+    binding: {
+      nodeIdentity: 'Body',
+      primitiveIndex: 0,
+      triangleIndex: 1,
+      barycentric: { u: 0.34, v: 0.33, w: 0.33 },
+    },
+    worldPoint: { x: 0, y: 0.1, z: 0.02 },
+  },
+];
+const eyelashThenBody = [
+  {
+    ...mockCanonicalCandidates[0],
+    nodeIdentity: 'Eyelashes',
+    binding: {
+      nodeIdentity: 'Eyelashes',
+      primitiveIndex: 0,
+      triangleIndex: 0,
+      barycentric: { u: 0.34, v: 0.33, w: 0.33 },
+    },
+  },
+  mockCanonicalCandidates[1],
+];
+
+const mockedSession = pipeMod.runFaceMappingAutoPipeline({
+  landmarks,
+  faceCount: 1,
+  canvasWidth: 200,
+  canvasHeight: 200,
+  listRaycastCandidates: (_x, _y) => mockCanonicalCandidates,
+});
+for (const id of [
+  'eyeLeftUpper',
+  'eyeLeftLower',
+  'eyeRightOuter',
+  'eyeRightUpper',
+  'eyeRightLower',
+]) {
+  const row = mockedSession.anchors.find((a) => a.anchorId === id);
+  check(row?.outcome === 'mapped', `${id} mapped via surface-aware select (got ${row?.outcome})`);
+  check(row?.meshNodeIdentity === 'Body', `${id} on Body not Eyes (got ${row?.meshNodeIdentity})`);
+  check(
+    row?.surfaceSelection?.candidates?.length >= 2,
+    `${id} exposes ≥2 ray candidates`,
+  );
+  check(
+    row?.surfaceSelection?.candidates?.[0]?.nodeIdentity === 'Eyes',
+    `${id} first candidate Eyes`,
+  );
+  check(
+    row?.surfaceSelection?.strategy === 'first_allowed_depth_gated',
+    `${id} strategy depth-gated`,
+  );
+}
+
+const lashSession = pipeMod.runFaceMappingAutoPipeline({
+  landmarks,
+  faceCount: 1,
+  canvasWidth: 200,
+  canvasHeight: 200,
+  listRaycastCandidates: () => eyelashThenBody,
+});
+const lower = lashSession.anchors.find((a) => a.anchorId === 'eyeLeftLower');
+check(lower?.outcome === 'mapped', 'lower lid mapped behind Eyelashes');
+check(lower?.meshNodeIdentity === 'Body', 'lower lid Body behind Eyelashes');
+
+const rejectOnlyEyes = pipeMod.runFaceMappingAutoPipeline({
+  landmarks,
+  faceCount: 1,
+  canvasWidth: 200,
+  canvasHeight: 200,
+  listRaycastCandidates: () => [mockCanonicalCandidates[0]],
+});
+const rejectRow = rejectOnlyEyes.anchors.find((a) => a.anchorId === 'eyeLeftUpper');
+check(
+  rejectRow?.outcome === 'surface_mismatch' || rejectRow?.outcome === 'mapped',
+  'Eyes-only ray either mismatches or snaps',
+);
+if (rejectRow?.outcome === 'surface_mismatch') {
+  check(
+    rejectRow.surfaceSelection?.candidates?.[0]?.allowed === false,
+    'Eyes-only first candidate not allowed for lid',
+  );
+}
 
 const draftOut = join(runsDir, 'liveact-face-mapping-draft-bundle.mjs');
 await build({
@@ -452,6 +646,43 @@ const reviewedRef = autoMod.freezeFaceMappingGroundTruthReference({
 });
 check(reviewedRef.validForGroundTruthComparison === true, 'D: 21 reviewed → valid GT');
 check(reviewedRef.status === 'reviewed_manual_complete', 'D: status reviewed_manual_complete');
+
+// Provenance: auto+reviewed and reviewed without reviewedAt are NOT GT.
+check(
+  autoMod.countsAsGroundTruthMeta({
+    source: 'auto',
+    reviewed: true,
+    reviewedAt: '2026-09-25T00:00:00.000Z',
+  }) === false,
+  'auto+reviewed is not GT',
+);
+check(
+  autoMod.countsAsGroundTruthMeta({ source: 'manual', reviewed: true }) === false,
+  'reviewed without reviewedAt is not GT',
+);
+check(
+  autoMod.countsAsGroundTruthMeta({
+    source: 'manual',
+    reviewed: true,
+    reviewedAt: 'not-a-date',
+  }) === false,
+  'invalid reviewedAt is not GT',
+);
+check(
+  autoMod.countsAsGroundTruthMeta({
+    source: 'manual_override',
+    reviewed: true,
+    reviewedAt: '2026-09-25T00:00:00.000Z',
+  }) === true,
+  'manual_override+reviewed+reviewedAt is GT',
+);
+const inventedReviewed = autoMod.createEmptyAnchorAuthoringMeta(gtDraft, {
+  defaultReviewed: true,
+});
+check(
+  inventedReviewed.noseTip?.reviewed !== true,
+  'defaultReviewed without reviewedAt stays unreviewed',
+);
 
 // D2) 21 reviewed but one screen missing → false
 const screensMissingOne = { ...gtScreens };

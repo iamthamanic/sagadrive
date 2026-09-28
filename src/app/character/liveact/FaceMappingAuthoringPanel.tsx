@@ -6,7 +6,7 @@
  * Detail card mirrors PDF: selected feature + pulsing point synced with viewport.
  * Auto Mapping (#421) proposes anchors; never auto-publishes.
  * Marker rows show draft screen coords and last Auto proposal side-by-side.
- * Compare JSON comes from parent frozen GT reference — never freeze current draft at copy time.
+ * „Als Ground Truth markieren“ freezes GT and copies GT JSON; „Auto JSON“ copies Auto only.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -58,16 +58,16 @@ interface FaceMappingAuthoringPanelProps {
   onReset: () => void;
   onCancel: () => void;
   onAutoMapping?: () => void;
-  /** Mark all bound anchors as reviewed manual GT. */
-  onMarkAllReviewed?: () => void;
+  /**
+   * Mark bound anchors as reviewed GT and return frozen GT JSON for clipboard.
+   * Returns null if freeze failed.
+   */
+  onMarkAllReviewed?: () => string | null;
   /** From last frozen GT reference (before auto). */
   groundTruthValid?: boolean | null;
   referenceStatus?: string | null;
-  /**
-   * Parent builds compare from frozen GT reference + last auto session —
-   * never freeze current draft as reference at copy time.
-   */
-  getCompareExportJson?: () => string;
+  /** Last Auto Mapping session only — not GT, not compare. */
+  getAutoExportJson?: () => string | null;
   /** Optional authoring provenance for fallback display (source per anchor). */
   getAuthoringMeta?: () => Readonly<
     Partial<Record<SagaDriveFaceAnchorId, { source: string; confidence?: number; reviewed?: boolean }>>
@@ -198,14 +198,16 @@ export function FaceMappingAuthoringPanel({
   onMarkAllReviewed,
   groundTruthValid = null,
   referenceStatus = null,
-  getCompareExportJson,
+  getAutoExportJson,
   getAuthoringMeta,
 }: FaceMappingAuthoringPanelProps) {
   const summary = validateFaceMappingDraft(draft);
   const selectedId = draft.selectedAnchorId;
   const hasAnyAuto = Object.keys(autoCoords).length > 0;
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [autoCopyState, setAutoCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [gtCopyState, setGtCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const gtCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Derive reviewed marker IDs from provenance so rows show "reviewed", not only "gesetzt".
   let reviewedAnchorIds: ReadonlySet<SagaDriveFaceAnchorId> | undefined;
@@ -221,25 +223,43 @@ export function FaceMappingAuthoringPanel({
   useEffect(
     () => () => {
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      if (gtCopyTimerRef.current) clearTimeout(gtCopyTimerRef.current);
     },
     [],
   );
 
-  const copyJson = async () => {
+  const copyAutoJson = async () => {
     try {
-      if (!getCompareExportJson) {
-        setCopyState('failed');
+      const json = getAutoExportJson?.() ?? null;
+      if (!json) {
+        setAutoCopyState('failed');
         return;
       }
-      const json = getCompareExportJson();
       await navigator.clipboard.writeText(json);
-      setCopyState('copied');
+      setAutoCopyState('copied');
     } catch (error) {
-      console.warn('[face-mapping] compare JSON clipboard failed', error);
-      setCopyState('failed');
+      console.warn('[face-mapping] Auto JSON clipboard failed', error);
+      setAutoCopyState('failed');
     }
     if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
-    copyTimerRef.current = setTimeout(() => setCopyState('idle'), 2000);
+    copyTimerRef.current = setTimeout(() => setAutoCopyState('idle'), 2000);
+  };
+
+  const markGroundTruthAndCopy = async () => {
+    try {
+      const json = onMarkAllReviewed?.() ?? null;
+      if (!json) {
+        setGtCopyState('failed');
+        return;
+      }
+      await navigator.clipboard.writeText(json);
+      setGtCopyState('copied');
+    } catch (error) {
+      console.warn('[face-mapping] GT JSON clipboard failed', error);
+      setGtCopyState('failed');
+    }
+    if (gtCopyTimerRef.current) clearTimeout(gtCopyTimerRef.current);
+    gtCopyTimerRef.current = setTimeout(() => setGtCopyState('idle'), 2500);
   };
 
   return (
@@ -330,16 +350,16 @@ export function FaceMappingAuthoringPanel({
               size="sm"
               variant="outline"
               className="h-8 shrink-0 border-white/15 text-[11px]"
-              disabled={autoBusy || (summary.setCount === 0 && !hasAnyAuto)}
-              onClick={() => void copyJson()}
+              disabled={autoBusy || !hasAnyAuto || !getAutoExportJson}
+              onClick={() => void copyAutoJson()}
               data-testid="face-mapping-copy-json"
-              title="GT-Referenz + Auto-Vorschlag als Compare-JSON kopieren"
+              title="Nur Auto-Mapping-Vorschlag als JSON kopieren"
             >
-              {copyState === 'copied'
-                ? 'Kopiert'
-                : copyState === 'failed'
+              {autoCopyState === 'copied'
+                ? 'Auto kopiert'
+                : autoCopyState === 'failed'
                   ? 'Fehlgeschlagen'
-                  : 'JSON kopieren'}
+                  : 'Auto JSON'}
             </Button>
           </div>
           {onMarkAllReviewed ? (
@@ -349,11 +369,15 @@ export function FaceMappingAuthoringPanel({
               variant="outline"
               className="h-11 min-h-[44px] w-full text-[11px]"
               disabled={autoBusy || summary.setCount === 0}
-              onClick={onMarkAllReviewed}
+              onClick={() => void markGroundTruthAndCopy()}
               data-testid="face-mapping-mark-ground-truth"
-              title="Alle gesetzten Marker als reviewed manual Ground Truth markieren"
+              title="Als Ground Truth markieren und GT-JSON in die Zwischenablage kopieren"
             >
-              Als Ground Truth markieren
+              {gtCopyState === 'copied'
+                ? 'GT JSON kopiert'
+                : gtCopyState === 'failed'
+                  ? 'GT fehlgeschlagen'
+                  : 'Als Ground Truth markieren'}
             </Button>
           ) : null}
           {onOverlayViewModeChange ? (
@@ -404,22 +428,6 @@ export function FaceMappingAuthoringPanel({
         </div>
       ) : (
         <div className="flex flex-col gap-1.5 border-b border-white/10 px-2 pb-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-8 w-full border-white/15 text-[11px]"
-            disabled={autoBusy || (summary.setCount === 0 && !hasAnyAuto)}
-            onClick={() => void copyJson()}
-            data-testid="face-mapping-copy-json"
-            title="GT-Referenz + Auto-Vorschlag als Compare-JSON kopieren"
-          >
-            {copyState === 'copied'
-              ? 'Kopiert'
-              : copyState === 'failed'
-                ? 'Fehlgeschlagen'
-                : 'JSON kopieren'}
-          </Button>
           {onMarkAllReviewed ? (
             <Button
               type="button"
@@ -427,13 +435,33 @@ export function FaceMappingAuthoringPanel({
               variant="outline"
               className="h-11 min-h-[44px] w-full text-[11px]"
               disabled={autoBusy || summary.setCount === 0}
-              onClick={onMarkAllReviewed}
+              onClick={() => void markGroundTruthAndCopy()}
               data-testid="face-mapping-mark-ground-truth"
-              title="Alle gesetzten Marker als reviewed manual Ground Truth markieren"
+              title="Als Ground Truth markieren und GT-JSON in die Zwischenablage kopieren"
             >
-              Als Ground Truth markieren
+              {gtCopyState === 'copied'
+                ? 'GT JSON kopiert'
+                : gtCopyState === 'failed'
+                  ? 'GT fehlgeschlagen'
+                  : 'Als Ground Truth markieren'}
             </Button>
           ) : null}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 w-full border-white/15 text-[11px]"
+            disabled={autoBusy || !hasAnyAuto || !getAutoExportJson}
+            onClick={() => void copyAutoJson()}
+            data-testid="face-mapping-copy-json"
+            title="Nur Auto-Mapping-Vorschlag als JSON kopieren"
+          >
+            {autoCopyState === 'copied'
+              ? 'Auto kopiert'
+              : autoCopyState === 'failed'
+                ? 'Fehlgeschlagen'
+                : 'Auto JSON'}
+          </Button>
         </div>
       )}
 

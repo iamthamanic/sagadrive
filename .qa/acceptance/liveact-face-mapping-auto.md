@@ -10,8 +10,9 @@ Auto Mapping rendert den Character frontal, erkennt Face-Landmarks mit einem **g
 - [x] Definierte MediaPipe-Indizes/Centroids → dieselbe `raycastFaceMappingPointer`-Pipeline → Draft-Bindings.
 - [x] Anatomical L/R aligned to `FaceLandmarker.FACE_LANDMARKS_LEFT_EYE` / `RIGHT_EYE` (left mouth=291, left outer eye=263).
 - [x] Auto-Marker `source=auto`; manuelle Korrektur → `manual_override`; erneutes Auto überschreibt Protected nicht ohne Confirm/Replace.
-- [x] Immutable Ground-Truth freeze **before** Auto; `validForGroundTruthComparison` only when all 21 are `reviewed=true` (source alone insufficient).
+- [x] Immutable Ground-Truth freeze **before** Auto; `validForGroundTruthComparison` only when all 21 are `reviewed=true` with `source` manual|manual_override **and** valid `reviewedAt` (source alone / auto+reviewed insufficient).
 - [x] Surface-semantics: lids/canthus allow eyelid_or_skin|face_skin; eyeball **and** eyelash rejected for lids (#421).
+- [x] Surface-aware Auto raycast: ordered candidates → depth-gated first allowed hit; optional local screen snap (IOD-normalized). Diagnostics on each Auto anchor.
 - [x] Async stale-result protection (session token) + edits locked while `autoBusy`.
 - [x] 0-face / multi-face / partial → verständlicher Status; kein Auto-Publish.
 - [x] Touched files: typed-strict (keine Escape-Hatches).
@@ -22,9 +23,12 @@ Auto Mapping rendert den Character frontal, erkennt Face-Landmarks mit einem **g
 - [x] Unreviewed auto sidecar/draft → `unreviewed_auto`, **kein** Auto-vs-Manual Qualitäts-PASS / keine 0px-Illusion.
 - [x] Auto-vs-Manual Eval mit median/p95/max nur bei gültiger GT; Threshold-Status `needs-calibration` (nicht normativ).
 - [x] Independent L/R check via MediaPipe topology (not map laterality metadata).
+- [x] Far Body hits behind Eyes (through-head) stay rejected via depth gate.
+- [x] Mouth Upper/Lower MediaPipe 13/14 kept; near-coincident closed-mouth bindings alone are not a #421 failure — **#422 Verification Point**: under jawOpen/speech, do Upper/Lower separate correctly on face_skin?
+- [x] Brow hits on `Eyebrows` vs `Body` both allowed when policy allows — **#422 Verification Point**: co-deformation under brow expressions.
 
-## Out of scope (Epic #442)
-Dense Landmark Runtime, PerformanceFaceV2, Iris-Gaze Solver, neue Morphs, Speech Fidelity.
+## Out of scope (Epic #442 / #422)
+Dense Landmark Runtime, PerformanceFaceV2, Iris-Gaze Solver, neue Morphs, Speech Fidelity, Functional Face QA (expression deformation).
 
 ## Composition Gate
 - Expected: SKIPPED (single-hop render → detect → session draft; no fan-out)

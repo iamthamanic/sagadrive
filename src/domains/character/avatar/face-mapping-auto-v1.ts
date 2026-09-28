@@ -69,6 +69,34 @@ export interface FaceMappingAutoAnchorResultV1 {
   readonly screenY: number | null;
   readonly meshNodeIdentity: string | null;
   readonly laterality: 'left' | 'right' | 'center' | null;
+  /** Ordered ray candidates + selection strategy (Auto diagnostics; optional). */
+  readonly surfaceSelection?: FaceMappingAutoSurfaceSelectionEvidenceV1 | null;
+}
+
+export interface FaceMappingAutoSurfaceSelectionEvidenceV1 {
+  readonly strategy:
+    | 'first_allowed_depth_gated'
+    | 'screen_snap'
+    | 'none_allowed'
+    | 'depth_rejected_only'
+    | 'empty'
+    | 'raycast_miss';
+  readonly originalScreenX: number;
+  readonly originalScreenY: number;
+  readonly resolvedScreenX: number | null;
+  readonly resolvedScreenY: number | null;
+  readonly snapDistancePx: number | null;
+  readonly normalizedSnapDistance: number | null;
+  readonly maxDepthDelta: number | null;
+  readonly selectedSurface: string | null;
+  readonly candidates: readonly {
+    readonly order: number;
+    readonly distance: number;
+    readonly nodeIdentity: string;
+    readonly surfaceClass: FaceMappingSurfaceClassV1;
+    readonly allowed: boolean;
+    readonly depthDeltaFromFirst: number;
+  }[];
 }
 
 export interface FaceMappingAutoSessionResultV1 {
@@ -90,15 +118,28 @@ export interface FaceMappingAutoSessionResultV1 {
  */
 export function createEmptyAnchorAuthoringMeta(
   draft: SagaDriveFaceMappingDraftV1,
-  options?: { defaultSource?: FaceMappingAuthoringSource; defaultReviewed?: boolean },
+  options?: {
+    defaultSource?: FaceMappingAuthoringSource;
+    defaultReviewed?: boolean;
+    /** Required when defaultReviewed=true (ISO timestamp). */
+    reviewedAt?: string;
+  },
 ): FaceMappingDraftAuthoringMeta {
   const source = options?.defaultSource ?? 'manual';
-  const reviewed =
+  const wantReviewed =
     source === 'auto' ? false : (options?.defaultReviewed ?? false);
+  const reviewedAt = options?.reviewedAt;
+  // Never invent reviewed GT without a timestamp — fail closed to unreviewed.
+  const reviewed =
+    wantReviewed &&
+    typeof reviewedAt === 'string' &&
+    Number.isFinite(Date.parse(reviewedAt));
   const meta: FaceMappingDraftAuthoringMeta = {};
   for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
     if (draft.anchors[id]) {
-      meta[id] = { source, reviewed };
+      meta[id] = reviewed
+        ? { source, reviewed: true, reviewedAt: reviewedAt! }
+        : { source, reviewed: false };
     }
   }
   return meta;
@@ -132,8 +173,6 @@ export function clearFaceMappingAuthoringMetaForAnchor(
 export interface ApplyAutoMappingOptions {
   /** When true, overwrite protected manual / manual_override / reviewed anchors. */
   readonly replaceProtected: boolean;
-  /** Landmark availability below this → low_confidence (still may bind). */
-  readonly minAvailability?: number;
 }
 
 export interface ApplyAutoMappingResult {
@@ -148,6 +187,7 @@ export interface ApplyAutoMappingResult {
 /**
  * Merge auto proposals into a draft. Never sets reviewed=true.
  * Protected anchors are skipped unless replaceProtected — only when draft binding exists AND meta protected.
+ * Landmark availability is gated in the Auto pipeline (`low_confidence`); apply trusts session outcomes.
  */
 export function applyAutoMappingToDraft(
   draft: SagaDriveFaceMappingDraftV1,
@@ -155,7 +195,6 @@ export function applyAutoMappingToDraft(
   metaIn: FaceMappingDraftAuthoringMeta,
   options: ApplyAutoMappingOptions,
 ): ApplyAutoMappingResult {
-  const minAvailability = options.minAvailability ?? 0.5;
   let draftNext = draft;
   const meta: FaceMappingDraftAuthoringMeta = { ...metaIn };
   let appliedCount = 0;
@@ -168,19 +207,13 @@ export function applyAutoMappingToDraft(
     if (
       row.outcome === 'raycast_miss' ||
       row.outcome === 'missing_landmark' ||
-      row.outcome === 'surface_mismatch'
+      row.outcome === 'surface_mismatch' ||
+      row.outcome === 'low_confidence'
     ) {
       missCount += 1;
     }
 
     if (!row.binding || row.outcome !== 'mapped') continue;
-    if (
-      row.landmarkAvailability != null &&
-      row.landmarkAvailability < minAvailability &&
-      row.outcome === 'mapped'
-    ) {
-      // Treat as mapped but still apply — UI can show amber via confidence.
-    }
 
     const existingBinding = draftNext.anchors[row.anchorId];
     const existingMeta = meta[row.anchorId];
@@ -332,12 +365,18 @@ export function isUsableFaceMappingAutoSessionForCompare(
 }
 
 /**
- * An anchor counts as Ground Truth only when explicitly human-reviewed.
- * `source=manual` / `manual_override` alone is NOT enough — reviewed must be true.
+ * An anchor counts as Ground Truth only when explicitly human-reviewed with valid provenance.
+ * Requires: reviewed=true, source manual|manual_override, reviewedAt parseable ISO.
+ * Never: source=auto + reviewed, or reviewed without reviewedAt.
  */
-function countsAsGroundTruthMeta(meta: FaceMappingAnchorAuthoringMetaV1 | undefined): boolean {
+export function countsAsGroundTruthMeta(
+  meta: FaceMappingAnchorAuthoringMetaV1 | undefined,
+): boolean {
   if (!meta) return false;
-  return meta.reviewed === true;
+  if (meta.reviewed !== true) return false;
+  if (meta.source !== 'manual' && meta.source !== 'manual_override') return false;
+  if (typeof meta.reviewedAt !== 'string' || !meta.reviewedAt.trim()) return false;
+  return Number.isFinite(Date.parse(meta.reviewedAt));
 }
 
 /**
@@ -915,4 +954,30 @@ export function stringifyFaceMappingCompareExport(
   input: Parameters<typeof buildFaceMappingCompareExport>[0],
 ): string {
   return `${JSON.stringify(buildFaceMappingCompareExport(input), null, 2)}\n`;
+}
+
+/** Clipboard/disk export of a frozen Ground Truth reference (manual reviewed anchors). */
+export function stringifyFaceMappingGroundTruthReference(
+  reference: FaceMappingGroundTruthReferenceV1,
+): string {
+  return `${JSON.stringify(reference, null, 2)}\n`;
+}
+
+export const FACE_MAPPING_AUTO_SESSION_EXPORT_KIND =
+  'SagaDriveFaceMappingAutoSessionExportV1' as const;
+
+/** Clipboard/disk export of the last Auto Mapping proposal only (not GT, not compare). */
+export function stringifyFaceMappingAutoSessionExport(
+  session: FaceMappingAutoSessionResultV1,
+  options?: { nowIso?: string },
+): string {
+  return `${JSON.stringify(
+    {
+      kind: FACE_MAPPING_AUTO_SESSION_EXPORT_KIND,
+      exportedAt: options?.nowIso ?? new Date().toISOString(),
+      session,
+    },
+    null,
+    2,
+  )}\n`;
 }

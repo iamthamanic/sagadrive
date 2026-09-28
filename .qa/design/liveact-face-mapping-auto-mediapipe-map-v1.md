@@ -58,10 +58,26 @@ See `face-mapping-surface-semantics-v1.ts` — provider-neutral class from node 
 ## Ground-truth compare
 
 - Freeze reference **before** Auto apply (`freezeFaceMappingGroundTruthReference`)
-- `validForGroundTruthComparison=true` **only** when all 21 anchors are bound **and** each has `reviewed=true`
-- `source=manual` / `manual_override` alone is **not** enough
-- Mark GT via UI → sets `reviewed=true` (auto → `manual_override`) for all bound anchors
+- `validForGroundTruthComparison=true` **only** when all 21 anchors are bound **and** each has `reviewed=true` **and** `source` is `manual`|`manual_override` **and** `reviewedAt` is a valid ISO timestamp
+- `source=manual` / `manual_override` alone is **not** enough; `auto+reviewed` is never GT
+- Mark GT via UI → sets `reviewed=true` (auto → `manual_override`) for all bound anchors + copies GT JSON
 - Unreviewed auto sidecar → `unreviewed_auto` / not valid
+
+## Surface-aware Auto raycast (#421)
+
+Shared `listFaceMappingRaycastCandidates` (ordered near→far). Manual still uses first hit.
+
+Auto:
+
+1. Classify each candidate; `isFaceMappingSurfaceSemanticsOk(anchorId, class)`
+2. Take first allowed hit within a **depth gate** of the nearest hit (no through-head Body)
+3. Else small **screen snap** biased by lid/canthus, radius ~0.12× interocular px
+4. Else `surface_mismatch` with candidate diagnostics on the Auto session export
+
+## #422 Verification Points (not done in #421)
+
+- Mouth Upper/Lower under `jawOpen` / speech: do 13/14 bindings separate correctly on face_skin?
+- Brow `Eyebrows` vs `Body` co-deformation under brow expressions
 
 ## Known V1 limits (Epic #442 later)
 

@@ -34,7 +34,8 @@ import {
   isProtectedFaceMappingAnchor,
   markAllBoundFaceMappingAnchorsAsReviewedManual,
   markFaceMappingAnchorManual,
-  stringifyFaceMappingCompareExport,
+  stringifyFaceMappingAutoSessionExport,
+  stringifyFaceMappingGroundTruthReference,
   type FaceMappingAutoSessionResultV1,
   type FaceMappingDraftAuthoringMeta,
   type FaceMappingGroundTruthReferenceV1,
@@ -351,7 +352,8 @@ export function LiveActViewportControls({
           faceCount: detected.faceCount,
           canvasWidth: frame.canvasWidth,
           canvasHeight: frame.canvasHeight,
-          raycast: (x, y) => runtime.raycastFaceMappingAtCanvas(x, y),
+          listRaycastCandidates: (x, y) =>
+            runtime.listFaceMappingRaycastCandidatesAtCanvas(x, y),
         });
 
         if (!ownsSession()) {
@@ -392,19 +394,17 @@ export function LiveActViewportControls({
     }
   }, [autoBusy, studioRuntimeRef]);
 
-  const getCompareExportJson = useCallback(() => {
-    return stringifyFaceMappingCompareExport({
-      reference: groundTruthReferenceRef.current,
-      autoSession: lastAutoSessionRef.current,
-      draftAfter: draftRef.current ?? undefined,
-      metaAfter: authoringMetaRef.current,
-    });
+  const getAutoExportJson = useCallback(() => {
+    const session = lastAutoSessionRef.current;
+    if (!session) return null;
+    return stringifyFaceMappingAutoSessionExport(session);
   }, []);
 
-  const onMarkAllReviewed = useCallback(() => {
+  /** Mark reviewed GT, freeze reference, return GT JSON for clipboard (null on failure). */
+  const onMarkAllReviewed = useCallback((): string | null => {
     const current = draftRef.current;
     const runtime = studioRuntimeRef?.current;
-    if (!current) return;
+    if (!current || !runtime) return null;
     const nowIso = new Date().toISOString();
     authoringMetaRef.current = markAllBoundFaceMappingAnchorsAsReviewedManual(
       authoringMetaRef.current,
@@ -416,17 +416,16 @@ export function LiveActViewportControls({
     autoBindingsRef.current = null;
     setAutoCoords({});
     setAutoStatusMessage(null);
-    if (runtime) {
-      runtime.applyFaceMappingAutoCameraState();
-      groundTruthReferenceRef.current = freezeFaceMappingGroundTruthReference({
-        draft: current,
-        meta: authoringMetaRef.current,
-        screenCoords: projectManualCoords(runtime, current),
-        nowIso,
-      });
-      setGroundTruthValid(groundTruthReferenceRef.current.validForGroundTruthComparison);
-      setReferenceStatus(groundTruthReferenceRef.current.status);
-    }
+    runtime.applyFaceMappingAutoCameraState();
+    groundTruthReferenceRef.current = freezeFaceMappingGroundTruthReference({
+      draft: current,
+      meta: authoringMetaRef.current,
+      screenCoords: projectManualCoords(runtime, current),
+      nowIso,
+    });
+    setGroundTruthValid(groundTruthReferenceRef.current.validForGroundTruthComparison);
+    setReferenceStatus(groundTruthReferenceRef.current.status);
+    return stringifyFaceMappingGroundTruthReference(groundTruthReferenceRef.current);
   }, [studioRuntimeRef]);
 
   useEffect(() => {
@@ -571,7 +570,7 @@ export function LiveActViewportControls({
         onMarkAllReviewed={onMarkAllReviewed}
         groundTruthValid={groundTruthValid}
         referenceStatus={referenceStatus}
-        getCompareExportJson={getCompareExportJson}
+        getAutoExportJson={getAutoExportJson}
         getAuthoringMeta={() => authoringMetaRef.current}
       />
     ) : null;

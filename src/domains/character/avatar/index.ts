@@ -803,6 +803,18 @@ export {
   type FaceMappingGuidePoint2,
 } from './face-mapping-guide-geometry';
 export {
+  FACE_MAPPING_AUTO_SURFACE_SELECT_VERSION,
+  buildFaceMappingScreenSnapOffsets,
+  faceMappingScreenSnapBiasForAnchor,
+  resolveFaceMappingSurfaceSelectMaxDepthDelta,
+  selectFaceMappingSurfaceAwareCandidate,
+  type FaceMappingScreenSnapBiasV1,
+  type FaceMappingSurfaceSelectCandidateDiagV1,
+  type FaceMappingSurfaceSelectCandidateInputV1,
+  type FaceMappingSurfaceSelectResultV1,
+  type FaceMappingSurfaceSelectStrategyV1,
+} from './face-mapping-auto-surface-select-v1';
+export {
   FACE_MAPPING_AUTO_CONTRACT_VERSION,
   FACE_MAPPING_AUTO_EVAL_THRESHOLD_STATUS,
   FACE_MAPPING_AUTO_ANCHOR_OUTCOMES,
@@ -813,6 +825,7 @@ export {
   applyAutoMappingToDraft,
   buildFaceMappingCompareExport,
   clearFaceMappingAuthoringMetaForAnchor,
+  countsAsGroundTruthMeta,
   createEmptyAnchorAuthoringMeta,
   evaluateAutoVsManualScreenPoints,
   freezeFaceMappingGroundTruthReference,
@@ -822,6 +835,9 @@ export {
   markFaceMappingAnchorManual,
   resetFaceMappingDraftAndMeta,
   stringifyFaceMappingCompareExport,
+  stringifyFaceMappingGroundTruthReference,
+  stringifyFaceMappingAutoSessionExport,
+  FACE_MAPPING_AUTO_SESSION_EXPORT_KIND,
   type ApplyAutoMappingOptions,
   type ApplyAutoMappingResult,
   type FaceMappingAnchorAuthoringMetaV1,

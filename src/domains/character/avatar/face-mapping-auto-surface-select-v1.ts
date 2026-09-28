@@ -1,0 +1,190 @@
+/**
+ * Face-mapping Auto surface-aware hit selection (#421).
+ * Location: src/domains/character/avatar/face-mapping-auto-surface-select-v1.ts
+ *
+ * Pure domain: pick the first geometrically plausible candidate whose surface class is
+ * allowed for the anchor. Does not invent bindings — infrastructure supplies ordered hits.
+ */
+
+import type { SagaDriveFaceAnchorId } from './face-anchor-contract';
+import {
+  classifyFaceMappingSurfaceFromNodeIdentity,
+  isFaceMappingSurfaceSemanticsOk,
+  type FaceMappingSurfaceClassV1,
+} from './face-mapping-surface-semantics-v1';
+
+export const FACE_MAPPING_AUTO_SURFACE_SELECT_VERSION =
+  'SagaDriveFaceMappingAutoSurfaceSelectV1' as const;
+
+export interface FaceMappingSurfaceSelectCandidateInputV1 {
+  readonly order: number;
+  readonly distance: number;
+  readonly nodeIdentity: string;
+}
+
+export interface FaceMappingSurfaceSelectCandidateDiagV1 {
+  readonly order: number;
+  readonly distance: number;
+  readonly nodeIdentity: string;
+  readonly surfaceClass: FaceMappingSurfaceClassV1;
+  readonly allowed: boolean;
+  readonly depthDeltaFromFirst: number;
+}
+
+export type FaceMappingSurfaceSelectStrategyV1 =
+  | 'first_allowed_depth_gated'
+  | 'none_allowed'
+  | 'depth_rejected_only'
+  | 'empty';
+
+export interface FaceMappingSurfaceSelectResultV1 {
+  readonly selectedIndex: number | null;
+  readonly strategy: FaceMappingSurfaceSelectStrategyV1;
+  readonly candidates: readonly FaceMappingSurfaceSelectCandidateDiagV1[];
+  /** Absolute depth gate used (world units). */
+  readonly maxDepthDelta: number;
+}
+
+/**
+ * Depth gate: allow a later hit only if it is close behind the nearest hit.
+ * Avoids mapping through the eyeball onto the far side of the head.
+ */
+export function resolveFaceMappingSurfaceSelectMaxDepthDelta(
+  firstDistance: number,
+  options?: { faceWidthWorld?: number | null },
+): number {
+  const faceW =
+    options?.faceWidthWorld != null &&
+    Number.isFinite(options.faceWidthWorld) &&
+    options.faceWidthWorld > 1e-6
+      ? options.faceWidthWorld
+      : null;
+  const fromFace = faceW != null ? faceW * 0.08 : 0;
+  const fromFirst = Math.max(0, firstDistance) * 0.35;
+  // Typical face-scale absolute floor (~8mm) so near-zero first hits still allow eyelid skin.
+  return Math.max(0.008, fromFace, fromFirst);
+}
+
+/**
+ * Select first semantically allowed candidate within the depth gate of hits[0].
+ */
+export function selectFaceMappingSurfaceAwareCandidate(
+  candidates: readonly FaceMappingSurfaceSelectCandidateInputV1[],
+  anchorId: SagaDriveFaceAnchorId,
+  options?: { faceWidthWorld?: number | null; maxDepthDelta?: number },
+): FaceMappingSurfaceSelectResultV1 {
+  if (candidates.length === 0) {
+    return {
+      selectedIndex: null,
+      strategy: 'empty',
+      candidates: [],
+      maxDepthDelta: 0,
+    };
+  }
+
+  const firstDistance = candidates[0]?.distance ?? 0;
+  const maxDepthDelta =
+    options?.maxDepthDelta ??
+    resolveFaceMappingSurfaceSelectMaxDepthDelta(firstDistance, {
+      faceWidthWorld: options?.faceWidthWorld,
+    });
+
+  const diags: FaceMappingSurfaceSelectCandidateDiagV1[] = [];
+  let selectedIndex: number | null = null;
+  let sawAllowedBeyondDepth = false;
+
+  for (let i = 0; i < candidates.length; i += 1) {
+    const c = candidates[i]!;
+    const surfaceClass = classifyFaceMappingSurfaceFromNodeIdentity(c.nodeIdentity);
+    const allowed = isFaceMappingSurfaceSemanticsOk(anchorId, surfaceClass);
+    const depthDeltaFromFirst = Math.max(0, c.distance - firstDistance);
+    diags.push({
+      order: c.order,
+      distance: c.distance,
+      nodeIdentity: c.nodeIdentity,
+      surfaceClass,
+      allowed,
+      depthDeltaFromFirst,
+    });
+    if (!allowed || selectedIndex != null) continue;
+    if (depthDeltaFromFirst <= maxDepthDelta) {
+      selectedIndex = i;
+    } else {
+      sawAllowedBeyondDepth = true;
+    }
+  }
+
+  let strategy: FaceMappingSurfaceSelectStrategyV1;
+  if (selectedIndex != null) strategy = 'first_allowed_depth_gated';
+  else if (sawAllowedBeyondDepth) strategy = 'depth_rejected_only';
+  else if (diags.some((d) => d.allowed)) strategy = 'depth_rejected_only';
+  else strategy = 'none_allowed';
+
+  return {
+    selectedIndex,
+    strategy,
+    candidates: diags,
+    maxDepthDelta,
+  };
+}
+
+export type FaceMappingScreenSnapBiasV1 = 'up' | 'down' | 'radial';
+
+/** Preferred local search bias for lid/canthus screen snap. */
+export function faceMappingScreenSnapBiasForAnchor(
+  anchorId: SagaDriveFaceAnchorId,
+): FaceMappingScreenSnapBiasV1 {
+  if (anchorId === 'eyeLeftUpper' || anchorId === 'eyeRightUpper') return 'up';
+  if (anchorId === 'eyeLeftLower' || anchorId === 'eyeRightLower') return 'down';
+  return 'radial';
+}
+
+/**
+ * Small neighborhood offsets in canvas px, ordered by preferred lid/canthus bias.
+ * Radius scales with interocular distance (fallback when iod unknown).
+ */
+export function buildFaceMappingScreenSnapOffsets(input: {
+  bias: FaceMappingScreenSnapBiasV1;
+  interocularPx: number | null;
+}): readonly { readonly dx: number; readonly dy: number }[] {
+  const iod =
+    input.interocularPx != null &&
+    Number.isFinite(input.interocularPx) &&
+    input.interocularPx > 1
+      ? input.interocularPx
+      : 80;
+  const step = Math.max(2, iod * 0.04);
+  const maxR = Math.max(6, iod * 0.12);
+  const out: { dx: number; dy: number }[] = [];
+  const push = (dx: number, dy: number) => {
+    if (dx === 0 && dy === 0) return;
+    out.push({ dx, dy });
+  };
+
+  // Preferred axis first (screen Y grows downward).
+  if (input.bias === 'up') {
+    for (let r = step; r <= maxR + 1e-6; r += step) push(0, -r);
+    for (let r = step; r <= maxR + 1e-6; r += step) {
+      push(-r * 0.5, -r);
+      push(r * 0.5, -r);
+    }
+  } else if (input.bias === 'down') {
+    for (let r = step; r <= maxR + 1e-6; r += step) push(0, r);
+    for (let r = step; r <= maxR + 1e-6; r += step) {
+      push(-r * 0.5, r);
+      push(r * 0.5, r);
+    }
+  } else {
+    for (let r = step; r <= maxR + 1e-6; r += step) {
+      push(-r, 0);
+      push(r, 0);
+      push(0, -r);
+      push(0, r);
+      push(-r * 0.7, -r * 0.7);
+      push(r * 0.7, -r * 0.7);
+      push(-r * 0.7, r * 0.7);
+      push(r * 0.7, r * 0.7);
+    }
+  }
+  return out;
+}

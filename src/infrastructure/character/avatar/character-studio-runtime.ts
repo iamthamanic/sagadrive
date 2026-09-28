@@ -74,7 +74,9 @@ import {
   evaluateFaceAnchorWorldPosition,
 } from './face-anchor-runtime';
 import {
+  listFaceMappingRaycastCandidates,
   raycastFaceMappingPointer,
+  type FaceMappingRaycastCandidateV1,
   type FaceMappingRaycastHitV1,
 } from './face-mapping-raycast';
 
@@ -633,6 +635,7 @@ export class CharacterStudioRuntime {
 
   /**
    * Raycast canvas-local pointer to a triangle binding on allowlisted avatar meshes.
+   * Manual Mapping: nearest hit.
    */
   raycastFaceMappingAtCanvas(canvasX: number, canvasY: number): FaceMappingRaycastHitV1 | null {
     if (this.disposed || !this.currentRoot) return null;
@@ -640,6 +643,25 @@ export class CharacterStudioRuntime {
     const width = Math.max(1, Math.round(canvas.clientWidth));
     const height = Math.max(1, Math.round(canvas.clientHeight));
     return raycastFaceMappingPointer({
+      camera: this.camera,
+      root: this.currentRoot,
+      canvasWidth: width,
+      canvasHeight: height,
+      canvasX,
+      canvasY,
+    });
+  }
+
+  /** Ordered allowlisted hits for Auto surface-aware selection (#421). */
+  listFaceMappingRaycastCandidatesAtCanvas(
+    canvasX: number,
+    canvasY: number,
+  ): FaceMappingRaycastCandidateV1[] {
+    if (this.disposed || !this.currentRoot) return [];
+    const canvas = this.renderer.domElement;
+    const width = Math.max(1, Math.round(canvas.clientWidth));
+    const height = Math.max(1, Math.round(canvas.clientHeight));
+    return listFaceMappingRaycastCandidates({
       camera: this.camera,
       root: this.currentRoot,
       canvasWidth: width,
