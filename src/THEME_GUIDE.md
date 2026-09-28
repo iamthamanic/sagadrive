@@ -2,7 +2,13 @@
 
 ## Status
 
-Diese Datei ist die kanonische Designsystem-Referenz fuer SagaDrive. Fuer AI-/Figma-Make-Generierung gilt zusaetzlich `src/guidelines/Guidelines.md`. Die technische Source of Truth sind die Theme-Tokens in `src/styles/globals.css` und die Primitives unter `src/shared/ui/`.
+Diese Datei ist die kanonische visuelle Designsystem-Referenz fuer SagaDrive. Fuer AI-/Figma-Make-Generierung gilt zusaetzlich `src/guidelines/Guidelines.md`. Die technische Source of Truth sind die Theme-Tokens in `src/styles/globals.css` und die Primitives unter `src/shared/ui/`.
+
+Produktverhalten ist separat verbindlich definiert:
+- `docs/concepts/conductor-experience-contract.md` fuer Performance Mode, Live-Steuerung, Responsivitaet, Motion, Command Depth und Mastery.
+- `docs/concepts/imagination-first-visualization-contract.md` fuer Scenes, Program/Viewer, 2D/3D, Visual Authority, Progressive Materialization und Imagination Preservation.
+
+Diese Experience-Vertraege sind keine optionalen Designhinweise. Relevante UI-/Visualisierungsfeatures muessen ihre Gates erfuellen oder eine explizite Abweichung dokumentieren.
 
 ## Design Read
 

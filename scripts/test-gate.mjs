@@ -312,6 +312,14 @@ function checkLookLibrary() {
   });
 }
 
+function checkLookWorldCapabilityStubs() {
+  console.log('Look world capability stubs (#346): reserved domains metadata + docs...');
+  execFileSync(process.execPath, ['scripts/look-world-capability-stubs-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkReleaseReadinessContract() {
   console.log('Release readiness contract: IDs, dependencies, flows, milestones...');
   execFileSync(process.execPath, ['scripts/release-readiness.mjs', '--validate-only'], {
@@ -1398,6 +1406,7 @@ checkSagaRoutingPublicIdFoundation();
 checkLookProfileDomain();
 checkLookProfilePersistence();
 checkLookLibrary();
+checkLookWorldCapabilityStubs();
 checkReleaseReadinessContract();
 checkLiveSessionRoleCapabilityContract();
 checkPlayerTestSessionSecurity();
