@@ -31,6 +31,7 @@ import {
   clearFaceMappingAuthoringMetaForAnchor,
   createEmptyAnchorAuthoringMeta,
   freezeFaceMappingGroundTruthReference,
+  isFaceMappingSaveDisabled,
   isProtectedFaceMappingAnchor,
   markAllBoundFaceMappingAnchorsAsReviewedManual,
   markFaceMappingAnchorManual,
@@ -240,9 +241,18 @@ export function LiveActViewportControls({
     const runtime = studioRuntimeRef?.current;
     const current = draftRef.current;
     if (!runtime || !current) return;
-    // An empty/invalid manifest would win over and suppress the asset sidecar anchors.
+    // Defense-in-depth: never persist/close while Auto Mapping is in flight.
     const validation = validateFaceMappingDraft(current);
-    if (!validation.ok) {
+    if (
+      isFaceMappingSaveDisabled({
+        autoBusy,
+        draftValid: validation.ok,
+      })
+    ) {
+      if (autoBusy) {
+        console.warn('[face-mapping] Speichern blocked — Auto Mapping running');
+        return;
+      }
       console.warn('[face-mapping] Speichern blocked — draft not valid', validation);
       setMissMessage(faceMappingSaveBlockedMessage(validation));
       return;
@@ -255,7 +265,7 @@ export function LiveActViewportControls({
     closeFaceMapping();
     // Authoring forced debug off — turn sampling back on for the mesh overlay.
     runtime.setLiveActCharacterFaceDebugEnabled(true);
-  }, [closeFaceMapping, liveAct, onFaceAnchorsCommitted, studioRuntimeRef]);
+  }, [autoBusy, closeFaceMapping, liveAct, onFaceAnchorsCommitted, studioRuntimeRef]);
 
   const openFaceMapping = useCallback(() => {
     const runtime = studioRuntimeRef?.current;
@@ -702,11 +712,16 @@ export function LiveActViewportControls({
             size="sm"
             className="h-8 shrink-0 bg-primary text-white hover:bg-accent hover:text-accent-foreground"
             onClick={applyFaceMapping}
-            disabled={!draftValidation?.ok}
+            disabled={isFaceMappingSaveDisabled({
+              autoBusy,
+              draftValid: draftValidation?.ok === true,
+            })}
             title={
-              draftValidation && !draftValidation.ok
-                ? faceMappingSaveBlockedMessage(draftValidation)
-                : undefined
+              autoBusy
+                ? 'Auto Mapping läuft — Speichern erst danach'
+                : draftValidation && !draftValidation.ok
+                  ? faceMappingSaveBlockedMessage(draftValidation)
+                  : undefined
             }
             data-testid="face-mapping-viewport-save"
           >

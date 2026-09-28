@@ -113,6 +113,20 @@ check(/stringifyFaceMappingAutoSessionExport/.test(autoDomain), 'Auto session st
 check(!/GT-Referenz \+ Auto-Vorschlag als Compare-JSON/.test(panel), 'no mixed compare clipboard copy');
 check(/stringifyFaceMappingCompareExport/.test(autoDomain), 'compare builder kept in domain');
 check(/editingAllowed=\{!autoBusy\}/.test(controls), 'edits locked while auto busy');
+check(/isFaceMappingSaveDisabled/.test(controls), 'save gate helper used in controls');
+check(
+  /isFaceMappingSaveDisabled\(\{[\s\S]*autoBusy[\s\S]*draftValid/.test(controls),
+  'Speichern disabled via isFaceMappingSaveDisabled(autoBusy, draftValid)',
+);
+check(
+  /Speichern blocked — Auto Mapping running/.test(controls),
+  'applyFaceMapping fail-closed while autoBusy',
+);
+check(
+  !/disabled=\{!draftValidation\?\.ok\}/.test(controls),
+  'Speichern no longer only gated on draftValidation',
+);
+check(/face-mapping-viewport-cancel/.test(controls), 'Cancel remains available during auto');
 check(/Valid hit only|leave last binding/.test(layer), 'drag keeps last valid comment');
 check(/MediaPipe|mouthCornerLeft|291/.test(design), 'design map table');
 check(/Auto Mapping|IMAGE|Ground Truth|validForGroundTruthComparison/.test(acceptance), 'acceptance');
@@ -209,6 +223,24 @@ await build({
   logLevel: 'silent',
 });
 const autoMod = await import(`${autoOut}?t=${Date.now()}`);
+
+// Save gate: Auto busy blocks Speichern even when draft is valid; idle + valid enables.
+check(
+  autoMod.isFaceMappingSaveDisabled({ autoBusy: true, draftValid: true }) === true,
+  'Save disabled while autoBusy (draft valid)',
+);
+check(
+  autoMod.isFaceMappingSaveDisabled({ autoBusy: true, draftValid: false }) === true,
+  'Save disabled while autoBusy (draft invalid)',
+);
+check(
+  autoMod.isFaceMappingSaveDisabled({ autoBusy: false, draftValid: false }) === true,
+  'Save disabled when draft invalid and idle',
+);
+check(
+  autoMod.isFaceMappingSaveDisabled({ autoBusy: false, draftValid: true }) === false,
+  'Save enabled when Auto idle and draft valid',
+);
 
 const surfOut = join(runsDir, 'liveact-face-mapping-surface-semantics-bundle.mjs');
 await build({

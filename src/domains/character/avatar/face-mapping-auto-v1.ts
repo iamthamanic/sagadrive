@@ -159,6 +159,17 @@ export function isProtectedFaceMappingAnchor(
   return meta.source === 'manual' || meta.source === 'manual_override';
 }
 
+/**
+ * Viewport Speichern gate (#421): blocked while Auto Mapping runs or draft is invalid.
+ * UI `disabled` and `applyFaceMapping` must both honor this — do not persist/close mid-auto.
+ */
+export function isFaceMappingSaveDisabled(input: {
+  autoBusy: boolean;
+  draftValid: boolean;
+}): boolean {
+  return input.autoBusy === true || input.draftValid !== true;
+}
+
 /** Remove authoring meta for one anchor (e.g. after clear). */
 export function clearFaceMappingAuthoringMetaForAnchor(
   meta: FaceMappingDraftAuthoringMeta,

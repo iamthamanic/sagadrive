@@ -830,6 +830,7 @@ export {
   evaluateAutoVsManualScreenPoints,
   freezeFaceMappingGroundTruthReference,
   isUsableFaceMappingAutoSessionForCompare,
+  isFaceMappingSaveDisabled,
   isProtectedFaceMappingAnchor,
   markAllBoundFaceMappingAnchorsAsReviewedManual,
   markFaceMappingAnchorManual,
