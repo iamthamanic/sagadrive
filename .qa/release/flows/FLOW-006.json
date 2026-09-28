@@ -1,0 +1,24 @@
+{
+  "id": "FLOW-006",
+  "title": "Konsequenzen überleben die Session",
+  "requiredFrom": "R2",
+  "preconditions": [
+    "Session 1 hat relevante World-State-Konsequenz erzeugt"
+  ],
+  "steps": [
+    "Session pausieren/beenden",
+    "neue/fortgesetzte Session öffnen",
+    "betroffenen NPC/Ort/State prüfen"
+  ],
+  "passCriteria": [
+    "Konsequenz unverändert vorhanden",
+    "Definitionen wurden nicht mutiert",
+    "autorisierte Projektionen bleiben korrekt"
+  ],
+  "requiredGates": [
+    "SESSION-007",
+    "WORLD-001",
+    "WORLD-002",
+    "WORLD-003"
+  ]
+}

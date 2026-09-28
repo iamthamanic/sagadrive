@@ -1,0 +1,29 @@
+{
+  "id": "FLOW-004",
+  "title": "Viewer schaut sicher zu",
+  "requiredFrom": "R1",
+  "preconditions": [
+    "Session läuft",
+    "Viewer ist authentifiziert und eingeladen"
+  ],
+  "steps": [
+    "Viewer joint",
+    "Program Output laden",
+    "öffentliche Reveals ansehen",
+    "versuchen Gameplay zu mutieren"
+  ],
+  "passCriteria": [
+    "Nur Program/erlaubter Kontext sichtbar",
+    "Keine Secrets/private Daten",
+    "Mutation wird serverseitig abgewiesen"
+  ],
+  "requiredGates": [
+    "PROGRAM-001",
+    "PROGRAM-003",
+    "VIEWER-001",
+    "VIEWER-002",
+    "VIEWER-003",
+    "SEC-002",
+    "SEC-003"
+  ]
+}
