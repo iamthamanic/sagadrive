@@ -1,6 +1,6 @@
 # Composition Gate — character-starting-templates-v1
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: f3b96b0ded6cb4db8c2ef45a92f49457403742c4
 - Date: 2026-09-28
 - Verdict: CLEAR
 
