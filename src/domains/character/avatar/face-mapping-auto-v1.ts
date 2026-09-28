@@ -416,7 +416,14 @@ export function evaluateAutoVsManualScreenPoints(input: {
 
     let screenErrorPx: number | null = null;
     let normalizedFaceError: number | null = null;
-    if (manual && auto?.screenX != null && auto.screenY != null) {
+    // Only mapped bindings contribute error stats — landmark screen targets without a hit
+    // would inflate median/p95 with points that were never applied.
+    if (
+      manual &&
+      autoPresent &&
+      auto?.screenX != null &&
+      auto.screenY != null
+    ) {
       screenErrorPx = Math.hypot(auto.screenX - manual.x, auto.screenY - manual.y);
       errors.push(screenErrorPx);
       if (faceWidth && faceWidth > 1e-6) {
@@ -424,15 +431,17 @@ export function evaluateAutoVsManualScreenPoints(input: {
       }
     }
 
-    // L/R check: left anchors should have smaller screen X than paired right when both auto present.
+    // L/R check: only when both sides mapped with usable screen coords.
     let lateralityOk: boolean | null = null;
     if (id.endsWith('Left') || id.includes('Left')) {
       const rightId = id.replace('Left', 'Right') as SagaDriveFaceAnchorId;
       const leftAuto = auto;
       const rightAuto = autoById.get(rightId);
       if (
-        leftAuto?.screenX != null &&
-        rightAuto?.screenX != null &&
+        leftAuto?.binding &&
+        rightAuto?.binding &&
+        leftAuto.screenX != null &&
+        rightAuto.screenX != null &&
         Number.isFinite(leftAuto.screenX) &&
         Number.isFinite(rightAuto.screenX)
       ) {
@@ -828,13 +837,16 @@ export function buildFaceMappingCompareExport(input: {
             barycentric: { ...auto.binding.barycentric },
           }
         : null,
-      screen: screenFromCoords(
-        input.proposalScreens,
-        id,
-        auto?.screenX ?? null,
-        auto?.screenY ?? null,
-        meshNodeIdentity,
-      ),
+      // Unmapped outcomes keep landmark screenX/Y for diagnostics only — never as compare screens.
+      screen: hasBinding
+        ? screenFromCoords(
+            input.proposalScreens,
+            id,
+            auto?.screenX ?? null,
+            auto?.screenY ?? null,
+            meshNodeIdentity,
+          )
+        : null,
       source: 'auto',
       confidence: auto?.confidence ?? null,
       outcome: auto?.outcome ?? null,
@@ -863,7 +875,7 @@ export function buildFaceMappingCompareExport(input: {
       const prop = proposalScreenById.get(id);
       let screenErrorPx: number | null = null;
       let normalizedFaceError: number | null = null;
-      if (ref?.screen && prop?.screen) {
+      if (ref?.screen && prop?.binding && prop.screen) {
         screenErrorPx = Math.hypot(prop.screen.x - ref.screen.x, prop.screen.y - ref.screen.y);
         errors.push(screenErrorPx);
         if (faceWidth && faceWidth > 1e-6) {
@@ -874,10 +886,10 @@ export function buildFaceMappingCompareExport(input: {
       let lateralityOk: boolean | null = null;
       if (id.endsWith('Left') || id.includes('Left')) {
         const rightId = id.replace('Left', 'Right') as SagaDriveFaceAnchorId;
-        const leftScreen = prop?.screen;
-        const rightScreen = proposalScreenById.get(rightId)?.screen;
-        if (leftScreen && rightScreen) {
-          lateralityOk = leftScreen.x > rightScreen.x;
+        const leftProp = prop;
+        const rightProp = proposalScreenById.get(rightId);
+        if (leftProp?.binding && rightProp?.binding && leftProp.screen && rightProp.screen) {
+          lateralityOk = leftProp.screen.x > rightProp.screen.x;
           if (!lateralityOk) lrSwaps += 1;
         }
       }

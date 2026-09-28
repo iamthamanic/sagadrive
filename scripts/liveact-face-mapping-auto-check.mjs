@@ -522,6 +522,20 @@ if (rejectRow?.outcome === 'surface_mismatch') {
     rejectRow.surfaceSelection?.candidates?.[0]?.allowed === false,
     'Eyes-only first candidate not allowed for lid',
   );
+  const mismatchCompare = autoMod.buildFaceMappingCompareExport({
+    reference: null,
+    autoSession: rejectOnlyEyes,
+  });
+  const lidProp = mismatchCompare.proposal?.anchors?.find((a) => a.anchorId === 'eyeLeftUpper');
+  check(lidProp?.binding == null, 'surface_mismatch proposal has no binding');
+  check(lidProp?.screen == null, 'surface_mismatch proposal screen omitted from compare');
+  const mismatchEval = autoMod.evaluateAutoVsManualScreenPoints({
+    manualScreen: { eyeLeftUpper: { x: 10, y: 10 } },
+    autoSession: rejectOnlyEyes,
+  });
+  const lidEval = mismatchEval.rows.find((r) => r.anchorId === 'eyeLeftUpper');
+  check(lidEval?.screenErrorPx == null, 'unmapped lid not counted in eval errors');
+  check(lidEval?.autoPresent === false, 'unmapped lid autoPresent false');
 }
 
 const draftOut = join(runsDir, 'liveact-face-mapping-draft-bundle.mjs');

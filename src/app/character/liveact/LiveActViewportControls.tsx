@@ -68,10 +68,12 @@ function autoCoordsFromSession(
 ): Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>> {
   const out: Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>> = {};
   for (const row of session.anchors) {
+    const mapped = row.outcome === 'mapped' && Boolean(row.binding);
     out[row.anchorId] = {
       outcome: row.outcome,
-      x: row.screenX,
-      y: row.screenY,
+      // Unbound outcomes: no screen point (avoid stale landmark vs Draft deltas after pan/zoom).
+      x: mapped ? row.screenX : null,
+      y: mapped ? row.screenY : null,
       meshLabel: row.binding ? meshLabelFromBinding(row.binding) : row.meshNodeIdentity,
     };
   }
@@ -119,20 +121,21 @@ function projectAutoCoordsFromBindings(
 ): Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>> {
   const out: Partial<Record<SagaDriveFaceAnchorId, FaceMappingAutoCoordV1>> = {};
   for (const row of session.anchors) {
-    const binding = bindings[row.anchorId] ?? row.binding;
-    let x = row.screenX;
-    let y = row.screenY;
-    let meshLabel: string | null = row.binding
-      ? meshLabelFromBinding(row.binding)
-      : row.meshNodeIdentity;
+    const binding =
+      row.outcome === 'mapped'
+        ? (bindings[row.anchorId] ?? row.binding ?? null)
+        : null;
+    let x: number | null = null;
+    let y: number | null = null;
+    let meshLabel: string | null = row.meshNodeIdentity;
     if (binding) {
+      meshLabel = meshLabelFromBinding(binding);
       const world = runtime.evaluateFaceMappingBindingWorld(binding, row.anchorId);
       if (world) {
         const screen = runtime.projectWorldToFaceMappingCanvas(world.x, world.y, world.z);
         if (screen) {
           x = screen.x;
           y = screen.y;
-          meshLabel = meshLabelFromBinding(binding);
         }
       }
     }
