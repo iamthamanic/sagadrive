@@ -6,7 +6,7 @@
  * Proves Semantic PASS / Functional FAIL with deliberate wrong morphs.
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -434,7 +434,7 @@ check(
     'diagnostic stale auto reports anchors mismatch',
   );
   try {
-    unlinkSync(staleAutoPath);
+    rmSync(tmpDir, { recursive: true, force: true });
   } catch {
     /* ignore */
   }
@@ -462,13 +462,32 @@ check(
     'malformed_authoring_provenance',
   );
   try {
-    unlinkSync(badPath);
+    rmSync(tmpDir, { recursive: true, force: true });
   } catch {
     /* ignore */
   }
 }
 
-// Without anchors → Functional N/A skip (morph inventory / structural gates remain valid)
+// Explicit authoringPath that does not exist → fail-closed (even diagnostic)
+{
+  const glbPath = join(fixtureDir, 'functional-ok.glb');
+  const missingPath = join(fixtureDir, 'does-not-exist-authoring.json');
+  const missingExplicit = await validateLiveActFaceAsset({
+    inputPath: glbPath,
+    baselinePath,
+    profile: 'core-v1',
+    anchorsPath,
+    authoringPath: missingPath,
+    functionalMode: 'diagnostic',
+  });
+  check(missingExplicit.ok === false, 'missing explicit authoringPath fails diagnostic');
+  check(
+    (missingExplicit.inventory.functionalQa?.violations || []).some((v) =>
+      String(v).includes('authoring_path_not_found'),
+    ),
+    'authoring_path_not_found',
+  );
+}
 {
   const glbPath = join(fixtureDir, 'functional-ok.glb');
   const noAnchorsPublish = await validateLiveActFaceAsset({

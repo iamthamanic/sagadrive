@@ -734,14 +734,23 @@ export async function validateLiveActFaceFunctionalQa(document, opts) {
 
   let authoring = opts.authoring ?? null;
   let authoringLoadError = /** @type {string|null} */ (null);
+  const explicitAuthoringPath =
+    typeof opts.authoringPath === 'string' && opts.authoringPath.trim()
+      ? opts.authoringPath.trim()
+      : null;
   if (authoring == null) {
     const path =
-      opts.authoringPath ||
+      explicitAuthoringPath ||
       (opts.anchorsPath ? faceMappingAuthoringPathBesideAnchors(opts.anchorsPath) : null);
     if (path) {
       try {
         if (!existsSync(path)) {
-          authoring = null;
+          // Explicit --authoring path that is missing is fail-closed (not a silent skip).
+          if (explicitAuthoringPath) {
+            authoringLoadError = `authoring_path_not_found:${explicitAuthoringPath}`;
+          } else {
+            authoring = null;
+          }
         } else {
           authoring = JSON.parse(readFileSync(path, 'utf8'));
         }
