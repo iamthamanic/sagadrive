@@ -6,7 +6,8 @@
  * Proves Semantic PASS / Functional FAIL with deliberate wrong morphs.
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -410,7 +411,8 @@ check(
 // Diagnostic mode + auto sidecar with stale anchorsSha256 → still block (fingerprint before skip)
 {
   const glbPath = join(fixtureDir, 'functional-ok.glb');
-  const staleAutoPath = join(fixtureDir, 'functional-diag-stale-auto-authoring.json');
+  const tmpDir = mkdtempSync(join(tmpdir(), 'liveact-face-functional-'));
+  const staleAutoPath = join(tmpDir, 'functional-diag-stale-auto-authoring.json');
   const staleAuto = await writeAuthoring(glbPath, {
     reviewed: false,
     source: 'auto',
@@ -431,12 +433,18 @@ check(
     (diagStale.inventory.functionalQa?.violations || []).includes('anchors_sha256_mismatch'),
     'diagnostic stale auto reports anchors mismatch',
   );
+  try {
+    unlinkSync(staleAutoPath);
+  } catch {
+    /* ignore */
+  }
 }
 
 // Malformed authoring JSON → fail-closed even in diagnostic
 {
   const glbPath = join(fixtureDir, 'functional-ok.glb');
-  const badPath = join(fixtureDir, 'functional-malformed-authoring.json');
+  const tmpDir = mkdtempSync(join(tmpdir(), 'liveact-face-functional-'));
+  const badPath = join(tmpDir, 'functional-malformed-authoring.json');
   writeFileSync(badPath, '{not-json');
   const badParse = await validateLiveActFaceAsset({
     inputPath: glbPath,
@@ -453,6 +461,11 @@ check(
     ),
     'malformed_authoring_provenance',
   );
+  try {
+    unlinkSync(badPath);
+  } catch {
+    /* ignore */
+  }
 }
 
 // Without anchors → Functional N/A skip (morph inventory / structural gates remain valid)
@@ -584,6 +597,7 @@ check(slightOpen.inventory.functionalQa?.pass === true, 'slight open neutral sti
   });
   // overwrite authoring with invalid timestamp
   const authoringPath = join(fixtureDir, 'functional-bad-reviewed-at-authoring.json');
+  const invPath = join(fixtureDir, 'functional-bad-reviewed-at-inventory.json');
   const raw = JSON.parse(readFileSync(authoringPath, 'utf8'));
   raw.reviewedAt = 'not-a-date';
   writeFileSync(authoringPath, `${JSON.stringify(raw, null, 2)}\n`);
@@ -593,12 +607,15 @@ check(slightOpen.inventory.functionalQa?.pass === true, 'slight open neutral sti
     profile: 'core-v1',
     anchorsPath,
     authoringPath,
+    outPath: invPath,
   });
+  writeFileSync(invPath, `${JSON.stringify(bad.inventory, null, 2)}\n`);
   check(bad.ok === false, 'invalid reviewedAt blocks');
   check(
     (bad.inventory.functionalQa?.violations || []).some((v) => String(v).includes('reviewed')),
     'invalid reviewedAt violation',
   );
+  check(bad.inventory.functionalQa?.pass === false, 'invalid reviewedAt inventory pass=false');
 }
 
 // CLI with authoring
