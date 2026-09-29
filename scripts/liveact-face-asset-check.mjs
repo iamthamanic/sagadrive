@@ -25,6 +25,7 @@ async function main() {
       anchorsPath: args.anchors || undefined,
       authoringPath: args.authoring || undefined,
       gazeOwner: args.gazeOwner || undefined,
+      functionalMode: args.functionalMode || undefined,
     });
     if (!result.ok) {
       const semanticHint =

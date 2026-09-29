@@ -407,6 +407,51 @@ check(
 const slightOpen = await runCase('functional-slight-open', 'slightOpenNeutral');
 check(slightOpen.inventory.functionalQa?.pass === true, 'slight open neutral still passes jawOpen delta');
 
+// Missing authoring in publish mode → blocked (P1)
+{
+  const glbPath = join(fixtureDir, 'functional-ok.glb');
+  const missingAuth = await validateLiveActFaceAsset({
+    inputPath: glbPath,
+    baselinePath,
+    profile: 'core-v1',
+    anchorsPath,
+  });
+  check(missingAuth.ok === false, 'missing authoring blocks publish gate');
+  check(
+    missingAuth.inventory.functionalQa?.blockedByGroundTruth === true,
+    'missing authoring blockedByGroundTruth',
+  );
+  check(
+    (missingAuth.inventory.functionalQa?.violations || []).includes('missing_authoring_provenance'),
+    'missing_authoring_provenance',
+  );
+}
+
+// Invalid reviewedAt
+{
+  const badAt = await runCase('functional-bad-reviewed-at', 'good', {
+    reviewed: true,
+    source: 'manual',
+  });
+  // overwrite authoring with invalid timestamp
+  const authoringPath = join(fixtureDir, 'functional-bad-reviewed-at-authoring.json');
+  const raw = JSON.parse(readFileSync(authoringPath, 'utf8'));
+  raw.reviewedAt = 'not-a-date';
+  writeFileSync(authoringPath, `${JSON.stringify(raw, null, 2)}\n`);
+  const bad = await validateLiveActFaceAsset({
+    inputPath: join(fixtureDir, 'functional-bad-reviewed-at.glb'),
+    baselinePath,
+    profile: 'core-v1',
+    anchorsPath,
+    authoringPath,
+  });
+  check(bad.ok === false, 'invalid reviewedAt blocks');
+  check(
+    (bad.inventory.functionalQa?.violations || []).some((v) => String(v).includes('reviewed')),
+    'invalid reviewedAt violation',
+  );
+}
+
 // CLI with authoring
 execFileSync(
   process.execPath,

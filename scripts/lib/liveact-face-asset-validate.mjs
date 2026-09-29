@@ -364,31 +364,17 @@ export async function validateLiveActFaceAsset(opts) {
       channels: {},
     };
   } else {
-    const explicitAuthoring = Boolean(opts.authoringPath);
-    const siblingAuthoring = faceMappingAuthoringPathBesideAnchors(opts.anchorsPath);
-    let authoringPath = opts.authoringPath || null;
-    if (!authoringPath) {
-      try {
-        readFileSync(siblingAuthoring);
-        authoringPath = siblingAuthoring;
-      } catch {
-        authoringPath = null;
-      }
-    }
-    if (!authoringPath) {
-      // Prerequisites absent — skip Functional QA (do not treat anchors alone as reviewed GT).
-      functionalQa = functionalQaSkippedResult('no_authoring_provenance');
-    } else {
-      functionalQa = await validateLiveActFaceFunctionalQa(document, {
-        anchorsPath: opts.anchorsPath,
-        authoringPath,
-        inputPath: opts.inputPath,
-        inputBytes,
-        usableChannels: usableNames,
-        mode: opts.functionalMode === 'diagnostic' ? 'diagnostic' : 'publish',
-      });
-      void explicitAuthoring;
-    }
+    const authoringPath =
+      opts.authoringPath || faceMappingAuthoringPathBesideAnchors(opts.anchorsPath);
+    // Publish mode: missing reviewed GT is blocking (design #422). Diagnostic mode may skip.
+    functionalQa = await validateLiveActFaceFunctionalQa(document, {
+      anchorsPath: opts.anchorsPath,
+      authoringPath,
+      inputPath: opts.inputPath,
+      inputBytes,
+      usableChannels: usableNames,
+      mode: opts.functionalMode === 'diagnostic' ? 'diagnostic' : 'publish',
+    });
   }
 
   const functionalBlocks = !functionalQa.skipped && functionalQa.pass === false;
@@ -474,6 +460,7 @@ export function parseFaceAssetCheckArgs(argv) {
     anchors: null,
     authoring: null,
     gazeOwner: null,
+    functionalMode: null,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
@@ -484,14 +471,22 @@ export function parseFaceAssetCheckArgs(argv) {
     else if (a === '--anchors') args.anchors = argv[++i];
     else if (a === '--authoring') args.authoring = argv[++i];
     else if (a === '--gaze-owner') args.gazeOwner = argv[++i];
+    else if (a === '--functional-mode') args.functionalMode = argv[++i];
   }
   if (!args.input || !args.baseline) {
     throw new Error(
-      'Usage: --input <glb> --baseline <glb> --profile <core-v1|full-v1> [--anchors <face-anchors.json>] [--authoring <face-mapping-authoring.json>] [--gaze-owner bones|morphs] --out <json>',
+      'Usage: --input <glb> --baseline <glb> --profile <core-v1|full-v1> [--anchors <face-anchors.json>] [--authoring <face-mapping-authoring.json>] [--functional-mode publish|diagnostic] [--gaze-owner bones|morphs] --out <json>',
     );
   }
   if (args.gazeOwner != null && args.gazeOwner !== 'bones' && args.gazeOwner !== 'morphs') {
     throw new Error('--gaze-owner must be bones or morphs');
+  }
+  if (
+    args.functionalMode != null &&
+    args.functionalMode !== 'publish' &&
+    args.functionalMode !== 'diagnostic'
+  ) {
+    throw new Error('--functional-mode must be publish or diagnostic');
   }
   if (args.profile !== 'core-v1' && args.profile !== 'full-v1') {
     throw new Error('--profile must be core-v1 or full-v1');

@@ -69,7 +69,7 @@ Author `face-anchors.json` per run with `liveact-face-anchor-author.mjs` (**head
 4. Semantic Morph QA V2 (`liveact-face-asset-check.mjs --anchors …`)
 5. **Functional Face QA V1** (`SagaDriveLiveActFaceFunctionalQaV1` — `--authoring` or sibling `face-mapping-authoring.json`)
 
-Semantic QA is blocked unless Anatomy QA passes. Functional QA is blocked unless reviewed Ground Truth identity matches the input asset (topology/sha fingerprint). Missing authoring sidecar skips Functional QA (anchors alone are never treated as reviewed GT).
+Semantic QA is blocked unless Anatomy QA passes. Functional QA in **publish** mode is blocked when reviewed authoring provenance is missing or fails identity/fingerprint checks. Use `functionalMode: 'diagnostic'` only for semantic-only lab checks — never for publish eligibility. Anchors alone are never treated as reviewed GT.
 
 ### Sidecar versioning (browser)
 

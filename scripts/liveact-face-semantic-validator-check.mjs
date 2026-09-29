@@ -242,6 +242,7 @@ const passResult = await validateLiveActFaceAsset({
   baselinePath,
   profile: 'core-v1',
   anchorsPath,
+  functionalMode: 'diagnostic',
   outPath: join(fixtureDir, 'face-inventory-semantic-ok.json'),
 });
 check(passResult.ok === true, 'semantic fixture passes');
@@ -254,6 +255,7 @@ const failResult = await validateLiveActFaceAsset({
   baselinePath,
   profile: 'core-v1',
   anchorsPath,
+  functionalMode: 'diagnostic',
 });
 check(failResult.ok === false, 'leaky jawOpen fails overall');
 check(failResult.inventory.sagaDrive.errors.includes('semantic_qa_failed'), 'semantic error surfaced');
@@ -266,6 +268,7 @@ const wrongSide = await validateLiveActFaceAsset({
   baselinePath,
   profile: 'core-v1',
   anchorsPath,
+  functionalMode: 'diagnostic',
 });
 check(wrongSide.ok === false, 'asymmetric blink fail');
 check(wrongSide.inventory.semanticQa?.channels?.eyeBlinkLeft?.pass === false, 'blinkLeft fail detail');
@@ -282,6 +285,8 @@ execFileSync(
     'core-v1',
     '--anchors',
     anchorsPath,
+    '--functional-mode',
+    'diagnostic',
     '--out',
     join(fixtureDir, 'cli-semantic-out.json'),
   ],
