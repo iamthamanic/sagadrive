@@ -6,7 +6,8 @@
  * Detail card mirrors PDF: selected feature + pulsing point synced with viewport.
  * Auto Mapping (#421) proposes anchors; never auto-publishes.
  * Marker rows show draft screen coords and last Auto proposal side-by-side.
- * „Als Ground Truth markieren“ freezes GT and copies GT JSON; „Auto JSON“ copies Auto only.
+ * „Als Ground Truth markieren“ freezes GT; clipboard copy is best-effort (reported separately).
+ * „Auto JSON“ copies Auto only.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -24,6 +25,11 @@ import { Button } from '../../../shared/ui/button';
 import { FaceMappingDetailCard } from './FaceMappingDetailCard';
 import { FaceMappingFeatureIcon } from './FaceMappingFeatureIcon';
 import type { FaceMappingOverlayViewMode } from './FaceMappingMarkerLayer';
+import {
+  faceMappingGtMarkCopyLabelDe,
+  runFaceMappingGtMarkAndCopy,
+  type FaceMappingGtMarkCopyResult,
+} from './face-mapping-gt-mark-copy';
 
 /** Canvas CSS pixels for a placed (draft/current) marker. */
 export interface FaceMappingManualCoordV1 {
@@ -205,7 +211,7 @@ export function FaceMappingAuthoringPanel({
   const selectedId = draft.selectedAnchorId;
   const hasAnyAuto = Object.keys(autoCoords).length > 0;
   const [autoCopyState, setAutoCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
-  const [gtCopyState, setGtCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [gtCopyState, setGtCopyState] = useState<'idle' | FaceMappingGtMarkCopyResult>('idle');
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gtCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -246,18 +252,11 @@ export function FaceMappingAuthoringPanel({
   };
 
   const markGroundTruthAndCopy = async () => {
-    try {
-      const json = onMarkAllReviewed?.() ?? null;
-      if (!json) {
-        setGtCopyState('failed');
-        return;
-      }
-      await navigator.clipboard.writeText(json);
-      setGtCopyState('copied');
-    } catch (error) {
-      console.warn('[face-mapping] GT JSON clipboard failed', error);
-      setGtCopyState('failed');
-    }
+    const result = await runFaceMappingGtMarkAndCopy({
+      mark: () => onMarkAllReviewed?.() ?? null,
+      writeText: (text) => navigator.clipboard.writeText(text),
+    });
+    setGtCopyState(result);
     if (gtCopyTimerRef.current) clearTimeout(gtCopyTimerRef.current);
     gtCopyTimerRef.current = setTimeout(() => setGtCopyState('idle'), 2500);
   };
@@ -374,11 +373,9 @@ export function FaceMappingAuthoringPanel({
               data-testid="face-mapping-mark-ground-truth"
               title="Als Ground Truth markieren und GT-JSON in die Zwischenablage kopieren"
             >
-              {gtCopyState === 'copied'
-                ? 'GT JSON kopiert'
-                : gtCopyState === 'failed'
-                  ? 'GT fehlgeschlagen'
-                  : 'Als Ground Truth markieren'}
+              {gtCopyState === 'idle'
+                ? 'Als Ground Truth markieren'
+                : faceMappingGtMarkCopyLabelDe(gtCopyState)}
             </Button>
           ) : null}
           {onOverlayViewModeChange ? (
@@ -440,11 +437,9 @@ export function FaceMappingAuthoringPanel({
               data-testid="face-mapping-mark-ground-truth"
               title="Als Ground Truth markieren und GT-JSON in die Zwischenablage kopieren"
             >
-              {gtCopyState === 'copied'
-                ? 'GT JSON kopiert'
-                : gtCopyState === 'failed'
-                  ? 'GT fehlgeschlagen'
-                  : 'Als Ground Truth markieren'}
+              {gtCopyState === 'idle'
+                ? 'Als Ground Truth markieren'
+                : faceMappingGtMarkCopyLabelDe(gtCopyState)}
             </Button>
           ) : null}
           <Button

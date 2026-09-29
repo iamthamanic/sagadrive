@@ -16,6 +16,7 @@ import { planRigidEquipmentAttaches } from '../../../domains/character/avatar';
 import type { AvatarRigAnalysisResult } from '../../../domains/character/avatar';
 import { parseItemModel3dAssetKey } from '../../../domains/items/model3d-assets';
 import { normalizeSafeUrl } from '../../../domains/character/use-cases/avatar-presets';
+import { beginFaceMappingBaseFaceCaptureVisibility } from './face-mapping-base-face-capture-visibility';
 
 const MAX_CACHED_GLBS = 8;
 
@@ -47,6 +48,40 @@ export class AvatarRigidEquipmentRuntime {
 
   getGroup(): THREE.Group {
     return this.group;
+  }
+
+  /**
+   * Temporarily hide attached rigid equipment and reveal hideTargets for MediaPipe capture.
+   * Returns restore() — call in finally. Does not mutate visuals/traits/inventory.
+   */
+  beginFaceMappingBaseFaceCapture(): () => void {
+    const hide: THREE.Object3D[] = [this.group];
+    const reveal: THREE.Object3D[] = [];
+    for (const entry of this.attached.values()) {
+      hide.push(entry.root);
+      for (const target of entry.hideTargets) {
+        reveal.push(target);
+      }
+    }
+    return beginFaceMappingBaseFaceCaptureVisibility({ hide, reveal });
+  }
+
+  /**
+   * Test seam (#421): register a synthetic attached root without GLTF load.
+   * Production Auto Mapping never calls this.
+   */
+  attachSyntheticForFaceMappingCaptureTest(params: {
+    readonly instanceId: string;
+    readonly root: THREE.Object3D;
+    readonly hideTargets?: readonly THREE.Object3D[];
+  }): void {
+    this.detach(params.instanceId);
+    this.attached.set(params.instanceId, {
+      instanceId: params.instanceId,
+      root: params.root,
+      hideTargets: [...(params.hideTargets ?? [])],
+      generation: this.generation,
+    });
   }
 
   setUrlResolver(resolveUrl: ResolveRigidEquipmentUrl): void {

@@ -94,6 +94,7 @@ import {
   AvatarSkinnedWearableRuntime,
   type ResolveSkinnedWearableUrl,
 } from './avatar-skinned-wearable-runtime';
+import { beginFaceMappingBaseFaceCaptureVisibility } from './face-mapping-base-face-capture-visibility';
 
 export type AvatarRuntimeState =
   | { status: 'loading'; message: string }
@@ -805,6 +806,9 @@ export class CharacterStudioRuntime {
    * Deterministic frontal capture for Auto Mapping (#421).
    * Neutral pose + face camera frame; returns a 2D canvas copy (no upload/persist).
    * CSS size matches Manual Mapping raycast coordinates.
+   *
+   * Temporarily hides face-mapping-excluded runtime equipment so MediaPipe sees the
+   * same uncovered base face the raycast binds against. Visibility is always restored.
    */
   captureFaceMappingAutoFrame(): {
     image: HTMLCanvasElement;
@@ -812,21 +816,48 @@ export class CharacterStudioRuntime {
     canvasHeight: number;
   } | null {
     if (this.disposed || !this.currentRoot) return null;
-    this.applyFaceMappingAutoCameraState();
-    this.renderer.render(this.scene, this.camera);
 
-    const src = this.renderer.domElement;
-    const canvasWidth = Math.max(1, Math.round(src.clientWidth));
-    const canvasHeight = Math.max(1, Math.round(src.clientHeight));
-    if (!(src.width > 0) || !(src.height > 0)) return null;
+    const restoreRigid = this.rigidEquipmentRuntime.beginFaceMappingBaseFaceCapture();
+    const restoreSkinned = this.skinnedWearableRuntime.beginFaceMappingBaseFaceCapture();
+    const restoreExcludedMarkers = this.beginFaceMappingExcludedMarkerCapture(this.currentRoot);
+    try {
+      this.applyFaceMappingAutoCameraState();
+      this.renderer.render(this.scene, this.camera);
 
-    const image = document.createElement('canvas');
-    image.width = src.width;
-    image.height = src.height;
-    const ctx = image.getContext('2d');
-    if (!ctx) return null;
-    ctx.drawImage(src, 0, 0);
-    return { image, canvasWidth, canvasHeight };
+      const src = this.renderer.domElement;
+      const canvasWidth = Math.max(1, Math.round(src.clientWidth));
+      const canvasHeight = Math.max(1, Math.round(src.clientHeight));
+      if (!(src.width > 0) || !(src.height > 0)) return null;
+
+      const image = document.createElement('canvas');
+      image.width = src.width;
+      image.height = src.height;
+      const ctx = image.getContext('2d');
+      if (!ctx) return null;
+      ctx.drawImage(src, 0, 0);
+      return { image, canvasWidth, canvasHeight };
+    } finally {
+      restoreExcludedMarkers();
+      restoreSkinned();
+      restoreRigid();
+    }
+  }
+
+  /**
+   * Hide objects explicitly marked sagadriveExcludeFaceMapping for one capture frame.
+   * Complements rigid/skinned runtime groups (same exclude contract as raycast).
+   */
+  private beginFaceMappingExcludedMarkerCapture(root: THREE.Object3D): () => void {
+    const hide: THREE.Object3D[] = [];
+    root.traverse((obj) => {
+      if (obj.userData?.sagadriveExcludeFaceMapping === true) {
+        hide.push(obj);
+      }
+    });
+    if (hide.length === 0) {
+      return () => undefined;
+    }
+    return beginFaceMappingBaseFaceCaptureVisibility({ hide, reveal: [] });
   }
 
   /**

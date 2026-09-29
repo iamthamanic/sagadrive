@@ -85,6 +85,11 @@ check(
   'manual surface-aware regression wired',
 );
 check(/captureFaceMappingAutoFrame/.test(studio), 'studio capture');
+check(/beginFaceMappingBaseFaceCapture/.test(studio), 'studio hides equipment for capture');
+check(
+  /restoreExcludedMarkers\(\)[\s\S]*restoreSkinned\(\)[\s\S]*restoreRigid\(\)/.test(studio),
+  'studio capture restores visibility in finally',
+);
 check(/face-mapping-overlay-view-mode|face-mapping-view-both/.test(panel), 'overlay view mode toggle');
 check(
   /face-mapping-overlay-view-mode[\s\S]*?h-11 min-h-\[44px\]/.test(panel),
@@ -118,7 +123,7 @@ check(/surface_mismatch/.test(autoDomain), 'surface_mismatch outcome');
 check(/Only explicit Clear removes provenance/.test(controls), 'miss click keeps provenance');
 check(/min-h-\[44px\]/.test(panel), 'auto button 44px touch target');
 check(/face-mapping-mark-ground-truth/.test(panel), 'mark GT button');
-check(/GT JSON kopiert|Als Ground Truth markieren und GT-JSON/.test(panel), 'GT mark copies GT JSON');
+check(/GT markiert & kopiert|Als Ground Truth markieren und GT-JSON|runFaceMappingGtMarkAndCopy/.test(panel), 'GT mark copies GT JSON separately');
 check(/getAutoExportJson/.test(controls) && /getAutoExportJson/.test(panel), 'Auto JSON export from session');
 check(/Auto JSON|Nur Auto-Mapping/.test(panel), 'Auto JSON button copy');
 check(/stringifyFaceMappingGroundTruthReference/.test(autoDomain), 'GT stringify');
