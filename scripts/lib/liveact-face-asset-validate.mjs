@@ -13,6 +13,11 @@ import {
 } from './liveact-face-semantic-validate.mjs';
 import { validateFaceAnchorAnatomyFile } from './liveact-face-anchor-anatomy-validate.mjs';
 import { FACE_ANCHOR_ANATOMY_QA_CONTRACT_VERSION } from './liveact-face-anchor-anatomy-profile-v1.mjs';
+import {
+  functionalQaSkippedResult,
+  validateLiveActFaceFunctionalQa,
+} from './liveact-face-functional-validate.mjs';
+import { faceMappingAuthoringPathBesideAnchors } from './liveact-face-mapping-authoring.mjs';
 
 export const FACE_INVENTORY_VERSION = 'SagaDriveLiveActFaceInventoryV1';
 
@@ -209,7 +214,16 @@ function khronosOk(report) {
 }
 
 /**
- * @param {{ inputPath: string, baselinePath: string, profile: 'core-v1'|'full-v1', outPath?: string, anchorsPath?: string, gazeOwner?: 'bones'|'morphs' }} opts
+ * @param {{
+ *   inputPath: string;
+ *   baselinePath: string;
+ *   profile: 'core-v1'|'full-v1';
+ *   outPath?: string;
+ *   anchorsPath?: string;
+ *   authoringPath?: string;
+ *   gazeOwner?: 'bones'|'morphs';
+ *   functionalMode?: 'publish'|'diagnostic';
+ * }} opts
  */
 export async function validateLiveActFaceAsset(opts) {
   if (opts.gazeOwner != null && opts.gazeOwner !== 'bones' && opts.gazeOwner !== 'morphs') {
@@ -258,6 +272,7 @@ export async function validateLiveActFaceAsset(opts) {
       triangleCount: 0,
       baselineStats: null,
       semanticQa: semanticQaSkippedResult('glb_parse_failed'),
+      functionalQa: functionalQaSkippedResult('glb_parse_failed'),
     };
     if (opts.outPath) writeFileSync(opts.outPath, JSON.stringify(inventory, null, 2));
     return { ok: false, inventory };
@@ -333,6 +348,60 @@ export async function validateLiveActFaceAsset(opts) {
   if (semanticBlocks && !sagaErrors.includes('semantic_qa_failed')) {
     sagaErrors.push('semantic_qa_failed');
   }
+
+  /** @type {unknown} */
+  let functionalQa;
+  if (!opts.anchorsPath) {
+    functionalQa = functionalQaSkippedResult('no_anchors_manifest');
+  } else if (sagaErrors.includes('face_anchor_anatomy_failed')) {
+    functionalQa = {
+      contractVersion: 'SagaDriveLiveActFaceFunctionalQaV1',
+      profileVersion: 'liveact-face-functional-profile-v1',
+      pass: false,
+      skipped: false,
+      blockedByGroundTruth: false,
+      violations: ['blocked_by_invalid_face_anchors'],
+      channels: {},
+    };
+  } else {
+    const explicitAuthoring = Boolean(opts.authoringPath);
+    const siblingAuthoring = faceMappingAuthoringPathBesideAnchors(opts.anchorsPath);
+    let authoringPath = opts.authoringPath || null;
+    if (!authoringPath) {
+      try {
+        readFileSync(siblingAuthoring);
+        authoringPath = siblingAuthoring;
+      } catch {
+        authoringPath = null;
+      }
+    }
+    if (!authoringPath) {
+      // Prerequisites absent — skip Functional QA (do not treat anchors alone as reviewed GT).
+      functionalQa = functionalQaSkippedResult('no_authoring_provenance');
+    } else {
+      functionalQa = await validateLiveActFaceFunctionalQa(document, {
+        anchorsPath: opts.anchorsPath,
+        authoringPath,
+        inputPath: opts.inputPath,
+        inputBytes,
+        usableChannels: usableNames,
+        mode: opts.functionalMode === 'diagnostic' ? 'diagnostic' : 'publish',
+      });
+      void explicitAuthoring;
+    }
+  }
+
+  const functionalBlocks = !functionalQa.skipped && functionalQa.pass === false;
+  if (functionalBlocks) {
+    if (functionalQa.blockedByGroundTruth) {
+      if (!sagaErrors.includes('functional_qa_blocked_by_ground_truth')) {
+        sagaErrors.push('functional_qa_blocked_by_ground_truth');
+      }
+    } else if (!sagaErrors.includes('functional_qa_failed')) {
+      sagaErrors.push('functional_qa_failed');
+    }
+  }
+
   const sagaPass =
     !gaze.error &&
     (khronosPass &&
@@ -341,7 +410,8 @@ export async function validateLiveActFaceAsset(opts) {
       preservationErrors.length === 0 &&
       !missingRequired.some((id) => emptyMorphs.includes(id))) &&
     !sagaErrors.includes('face_anchor_anatomy_failed') &&
-    !semanticBlocks;
+    !semanticBlocks &&
+    !functionalBlocks;
 
   const inventory = {
     version: FACE_INVENTORY_VERSION,
@@ -388,6 +458,7 @@ export async function validateLiveActFaceAsset(opts) {
         reason: 'no_anchors_manifest',
       }),
     semanticQa,
+    functionalQa,
   };
 
   if (opts.outPath) writeFileSync(opts.outPath, JSON.stringify(inventory, null, 2));
@@ -395,7 +466,15 @@ export async function validateLiveActFaceAsset(opts) {
 }
 
 export function parseFaceAssetCheckArgs(argv) {
-  const args = { input: null, baseline: null, profile: 'core-v1', out: null, anchors: null, gazeOwner: null };
+  const args = {
+    input: null,
+    baseline: null,
+    profile: 'core-v1',
+    out: null,
+    anchors: null,
+    authoring: null,
+    gazeOwner: null,
+  };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--input') args.input = argv[++i];
@@ -403,11 +482,12 @@ export function parseFaceAssetCheckArgs(argv) {
     else if (a === '--profile') args.profile = argv[++i];
     else if (a === '--out') args.out = argv[++i];
     else if (a === '--anchors') args.anchors = argv[++i];
+    else if (a === '--authoring') args.authoring = argv[++i];
     else if (a === '--gaze-owner') args.gazeOwner = argv[++i];
   }
   if (!args.input || !args.baseline) {
     throw new Error(
-      'Usage: --input <glb> --baseline <glb> --profile <core-v1|full-v1> [--anchors <face-anchors.json>] [--gaze-owner bones|morphs] --out <json>',
+      'Usage: --input <glb> --baseline <glb> --profile <core-v1|full-v1> [--anchors <face-anchors.json>] [--authoring <face-mapping-authoring.json>] [--gaze-owner bones|morphs] --out <json>',
     );
   }
   if (args.gazeOwner != null && args.gazeOwner !== 'bones' && args.gazeOwner !== 'morphs') {

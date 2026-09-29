@@ -1,0 +1,11 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "manual",
+  "reviewed": true,
+  "reviewedAt": "2026-09-29T10:00:00.000Z",
+  "asset": {
+    "modelPath": "functional-brow-down.glb",
+    "topologyFingerprint": "v63:t21:m1",
+    "modelSha256": "1233d12eb718741c3a1cea9c1263c29a6707772543207c89a9a378fe554bffda"
+  }
+}

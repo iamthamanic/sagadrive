@@ -145,6 +145,8 @@ check(typeof ok.inventory.byteCount === 'number', 'byteCount');
 check(typeof ok.inventory.triangleCount === 'number', 'triangleCount');
 check(ok.inventory.semanticQa?.skipped === true, 'semantic skipped without anchors');
 check(ok.inventory.semanticQa?.pass === true, 'semantic skip does not fail gate');
+check(ok.inventory.functionalQa?.skipped === true, 'functional skipped without anchors');
+check(ok.inventory.functionalQa?.pass === true, 'functional skip does not fail gate');
 
 const missing = await validateLiveActFaceAsset({
   inputPath: missingMorphPath,

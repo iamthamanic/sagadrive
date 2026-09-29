@@ -1,0 +1,215 @@
+{
+  "contractVersion": "SagaDriveFaceAnchorsV1",
+  "anchors": {
+    "mouthUpper": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 0,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "mouthLower": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 1,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "mouthCornerLeft": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 2,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "mouthCornerRight": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 3,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeLeftInner": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 4,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeLeftOuter": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 5,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeLeftUpper": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 6,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeLeftLower": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 7,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeRightInner": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 8,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeRightOuter": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 9,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeRightUpper": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 10,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "eyeRightLower": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 11,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "browLeftInner": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 12,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "browLeftOuter": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 13,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "browLeftCenter": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 14,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "browRightInner": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 15,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "browRightOuter": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 16,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "browRightCenter": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 17,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "noseTip": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 18,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "chin": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 19,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    },
+    "forehead": {
+      "nodeIdentity": "FaceMesh",
+      "primitiveIndex": 0,
+      "triangleIndex": 20,
+      "barycentric": {
+        "u": 1,
+        "v": 0,
+        "w": 0
+      }
+    }
+  }
+}
