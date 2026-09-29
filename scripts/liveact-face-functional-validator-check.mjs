@@ -388,6 +388,25 @@ check(
   'auto proposal blocked',
 );
 
+// Diagnostic mode: auto/unreviewed sidecar → skip Functional QA (do not fail semantic-only callers)
+{
+  const glbPath = join(fixtureDir, 'functional-auto.glb');
+  const diag = await validateLiveActFaceAsset({
+    inputPath: glbPath,
+    baselinePath,
+    profile: 'core-v1',
+    anchorsPath,
+    authoringPath: join(fixtureDir, 'functional-auto-authoring.json'),
+    functionalMode: 'diagnostic',
+  });
+  check(diag.inventory.functionalQa?.skipped === true, 'diagnostic skips auto authoring');
+  check(diag.inventory.functionalQa?.pass !== false || diag.inventory.functionalQa?.skipped === true, 'diagnostic not hard-fail');
+  check(
+    !((diag.inventory.sagaDrive?.errors || []).includes('functional_qa_blocked_by_ground_truth')),
+    'diagnostic does not report GT block error',
+  );
+}
+
 // 9) fingerprint mismatch
 const mismatch = await runCase('functional-topo-mismatch', 'good', {
   topologyFingerprint: 'v0:t0:m0',

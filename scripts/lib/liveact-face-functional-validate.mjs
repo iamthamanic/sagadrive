@@ -687,6 +687,11 @@ export async function validateLiveActFaceFunctionalQa(document, opts) {
     document,
   });
   if (!gt.ok) {
+    // Diagnostic: auto/unreviewed sidecar must not fail callers that only asked for Semantic QA.
+    // Publish: still fail-closed. Fingerprint/stale mismatches stay blocking in both modes.
+    if (mode === 'diagnostic' && gt.reason === 'unreviewed_or_auto') {
+      return skipped(gt.reason || 'unreviewed_or_auto');
+    }
     return {
       contractVersion: FACE_FUNCTIONAL_QA_CONTRACT_VERSION,
       profileVersion: FACE_FUNCTIONAL_PROFILE_VERSION,
