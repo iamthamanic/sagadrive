@@ -44,10 +44,44 @@ export interface FaceMappingAuthoringValidationIssue {
     | 'contract_version_mismatch'
     | 'invalid_source'
     | 'reviewed_without_timestamp'
+    | 'invalid_reviewed_at'
     | 'auto_marked_reviewed'
     | 'missing_model_path'
     | 'not_object';
   readonly detail: string;
+}
+
+/**
+ * Canonical V1 reviewedAt: UTC ISO with milliseconds (`Date.prototype.toISOString()`).
+ * Fail-closed — rejects impossible calendar dates (no permissive Date.parse alone).
+ */
+const FACE_MAPPING_REVIEWED_AT_V1_RE =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/;
+
+export function isValidFaceMappingReviewedAtV1(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length === 0) return false;
+  const m = FACE_MAPPING_REVIEWED_AT_V1_RE.exec(value);
+  if (!m) return false;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const hour = Number(m[4]);
+  const minute = Number(m[5]);
+  const second = Number(m[6]);
+  const ms = Number(m[7]);
+  const dt = new Date(Date.UTC(year, month - 1, day, hour, minute, second, ms));
+  if (
+    dt.getUTCFullYear() !== year ||
+    dt.getUTCMonth() !== month - 1 ||
+    dt.getUTCDate() !== day ||
+    dt.getUTCHours() !== hour ||
+    dt.getUTCMinutes() !== minute ||
+    dt.getUTCSeconds() !== second ||
+    dt.getUTCMilliseconds() !== ms
+  ) {
+    return false;
+  }
+  return dt.toISOString() === value;
 }
 
 export interface FaceMappingAuthoringValidationResult {
@@ -61,6 +95,7 @@ export function isFaceMappingAuthoringSource(value: string): value is FaceMappin
 
 /**
  * Fail-closed: heuristic/auto may never appear as reviewed ground truth.
+ * Requires canonical V1 reviewedAt (ISO-UTC with milliseconds).
  */
 export function isReviewedFaceMappingGroundTruth(
   authoring: SagaDriveFaceMappingAuthoringV1 | null | undefined,
@@ -69,7 +104,8 @@ export function isReviewedFaceMappingGroundTruth(
   if (authoring.contractVersion !== FACE_MAPPING_AUTHORING_CONTRACT_VERSION) return false;
   if (!authoring.reviewed) return false;
   if (authoring.source === 'auto') return false;
-  return authoring.source === 'manual' || authoring.source === 'manual_override';
+  if (!(authoring.source === 'manual' || authoring.source === 'manual_override')) return false;
+  return isValidFaceMappingReviewedAtV1(authoring.reviewedAt);
 }
 
 export function validateFaceMappingAuthoringV1(
@@ -107,6 +143,11 @@ export function validateFaceMappingAuthoringV1(
     issues.push({
       code: 'reviewed_without_timestamp',
       detail: 'reviewed=true requires reviewedAt ISO timestamp.',
+    });
+  } else if (reviewed && !isValidFaceMappingReviewedAtV1(record.reviewedAt)) {
+    issues.push({
+      code: 'invalid_reviewed_at',
+      detail: 'reviewedAt must be canonical UTC ISO with milliseconds (…Z).',
     });
   }
 

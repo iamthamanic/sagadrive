@@ -61,6 +61,8 @@ for (const p of pairs) {
     baselinePath: join(root, p.baseline),
     profile: 'core-v1',
     anchorsPath: join(root, p.anchors),
+    // Semantic/anatomy repro only — Functional QA needs reviewed GT (#422); diagnostic skips block.
+    functionalMode: 'diagnostic',
     outPath,
   });
   writeFileSync(outPath, `${JSON.stringify(result.inventory, null, 2)}\n`);

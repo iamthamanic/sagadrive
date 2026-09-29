@@ -182,12 +182,14 @@ async function main() {
   if (!bound.ok) throw new Error(`face anchors do not bind: ${(bound.errors ?? []).join(', ')}`);
 
   // Semantic QA V2 on topology anchors (only mouth corners come from morph peaks) → reported, not gating.
+  // Auto/unreviewed authoring: Functional QA stays diagnostic (#422 publish needs reviewed GT).
   const semantic = await validateLiveActFaceAsset({
     inputPath: facePath,
     baselinePath: basePath,
     profile: 'full-v1',
     anchorsPath: join(root, ANCHORS_REL),
     gazeOwner: 'bones',
+    functionalMode: 'diagnostic',
   });
   const sq = semantic.inventory.semanticQa ?? {};
   const channelResults = Object.entries(sq.channels ?? {});

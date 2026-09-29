@@ -36,15 +36,18 @@ export function isValidFaceMappingReviewedAtV1(value) {
   const second = Number(m[6]);
   const ms = Number(m[7]);
   const dt = new Date(Date.UTC(year, month - 1, day, hour, minute, second, ms));
-  return (
-    dt.getUTCFullYear() === year &&
-    dt.getUTCMonth() === month - 1 &&
-    dt.getUTCDate() === day &&
-    dt.getUTCHours() === hour &&
-    dt.getUTCMinutes() === minute &&
-    dt.getUTCSeconds() === second &&
-    dt.getUTCMilliseconds() === ms
-  );
+  if (
+    dt.getUTCFullYear() !== year ||
+    dt.getUTCMonth() !== month - 1 ||
+    dt.getUTCDate() !== day ||
+    dt.getUTCHours() !== hour ||
+    dt.getUTCMinutes() !== minute ||
+    dt.getUTCSeconds() !== second ||
+    dt.getUTCMilliseconds() !== ms
+  ) {
+    return false;
+  }
+  return dt.toISOString() === value;
 }
 
 /**
