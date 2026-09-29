@@ -81,11 +81,17 @@ Runtime bindings stay in `SagaDriveFaceAnchorsV1`. Authoring provenance is a **s
 
 - Path: `face-mapping-authoring.json` next to `face-anchors.json` (or `{stem}-face-mapping-authoring.json` next to `{stem}-face-anchors.json`)
 - Contract: `src/domains/character/avatar/face-mapping-authoring-contract.ts`
-- Fields: `source: auto | manual | manual_override`, `reviewed`, `asset.modelPath` (+ optional sha256 / topologyFingerprint / cacheBust)
+- Fields: `source: auto | manual | manual_override`, `reviewed`, `asset.modelPath` (+ optional `modelSha256` / `anchorsSha256` / `topologyFingerprint` / `cacheBust`)
 
-**Policy:** Heuristic/auto output is proposal-only (`source: auto`, `reviewed: false`). Publish-/QA-helpers (`isReviewedFaceMappingGroundTruth`) treat only `manual` / `manual_override` with `reviewed: true` as production ground truth. `auto` + `reviewed: true` is invalid (fail-closed).
+**Policy:** Heuristic/auto output is proposal-only (`source: auto`, `reviewed: false`). Publish-/QA-helpers (`isReviewedFaceMappingGroundTruth`) treat only `manual` / `manual_override` with `reviewed: true` **and** canonical `reviewedAt` (UTC ISO with milliseconds) as production ground truth. `auto` + `reviewed: true` is invalid (fail-closed).
 
-Functional Face QA (#422) additionally requires at least one strong fingerprint (`asset.topologyFingerprint` and/or `asset.modelSha256`) that matches the validated GLB. Insufficient or mismatched fingerprints block Functional QA (fail-closed). No m5/f5 filename exceptions.
+Functional Face QA (#422) additionally requires:
+
+1. `asset.anchorsSha256` matching the validated `face-anchors.json` bytes (binds reviewed provenance to the mapping, not only the mesh)
+2. at least one strong mesh fingerprint (`asset.topologyFingerprint` and/or `asset.modelSha256`) matching the validated GLB
+3. path identity: full/run-relative path match, **or** basename-only plus exact `modelSha256` (basename alone is not enough across run dirs)
+
+Insufficient or mismatched fingerprints block Functional QA (fail-closed). No m5/f5 filename exceptions.
 
 ### Functional Face QA (`SagaDriveLiveActFaceFunctionalQaV1`)
 

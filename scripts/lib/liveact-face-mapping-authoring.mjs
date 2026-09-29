@@ -125,7 +125,7 @@ export function validateFaceMappingAuthoringV1(raw) {
 
 /**
  * Build unreviewed auto provenance for heuristic authoring exports.
- * @param {{ modelPath: string; modelSha256?: string; topologyFingerprint?: string; cacheBust?: string; note?: string }} input
+ * @param {{ modelPath: string; modelSha256?: string; anchorsSha256?: string; topologyFingerprint?: string; cacheBust?: string; note?: string }} input
  */
 export function createAutoUnreviewedFaceMappingAuthoring(input) {
   return {
@@ -135,6 +135,7 @@ export function createAutoUnreviewedFaceMappingAuthoring(input) {
     asset: {
       modelPath: input.modelPath,
       ...(input.modelSha256 ? { modelSha256: input.modelSha256 } : {}),
+      ...(input.anchorsSha256 ? { anchorsSha256: input.anchorsSha256 } : {}),
       ...(input.topologyFingerprint ? { topologyFingerprint: input.topologyFingerprint } : {}),
       ...(input.cacheBust ? { cacheBust: input.cacheBust } : {}),
     },

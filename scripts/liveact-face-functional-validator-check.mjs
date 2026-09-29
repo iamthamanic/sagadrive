@@ -261,7 +261,7 @@ async function makeBaselineGlb() {
 
 /**
  * @param {string} glbPath
- * @param {{ reviewed?: boolean; source?: string; topologyFingerprint?: string|null; modelSha256?: string|null; modelPath?: string }} opts
+ * @param {{ reviewed?: boolean; source?: string; topologyFingerprint?: string|null; modelSha256?: string|null; anchorsSha256?: string|null; modelPath?: string; omitAnchorsSha?: boolean }} opts
  */
 async function writeAuthoring(glbPath, opts = {}) {
   const bytes = readFileSync(glbPath);
@@ -274,6 +274,10 @@ async function writeAuthoring(glbPath, opts = {}) {
     opts.modelSha256 === null
       ? undefined
       : opts.modelSha256 || createHash('sha256').update(bytes).digest('hex');
+  const anchorsSha =
+    opts.omitAnchorsSha || opts.anchorsSha256 === null
+      ? undefined
+      : opts.anchorsSha256 || createHash('sha256').update(readFileSync(anchorsPath)).digest('hex');
   const authoring = {
     contractVersion: FACE_MAPPING_AUTHORING_CONTRACT_VERSION,
     source: opts.source || 'manual',
@@ -283,6 +287,7 @@ async function writeAuthoring(glbPath, opts = {}) {
       modelPath: opts.modelPath || basename(glbPath),
       ...(topo ? { topologyFingerprint: topo } : {}),
       ...(sha ? { modelSha256: sha } : {}),
+      ...(anchorsSha ? { anchorsSha256: anchorsSha } : {}),
     },
   };
   if (opts.reviewed === false) {
@@ -397,10 +402,37 @@ check(
 const insuff = await runCase('functional-insuff-fp', 'good', {
   topologyFingerprint: null,
   modelSha256: null,
+  omitAnchorsSha: true,
 });
 check(
   (insuff.inventory.functionalQa?.violations || []).includes('insufficient_fingerprint'),
   'insufficient fingerprint blocked',
+);
+check(
+  (insuff.inventory.functionalQa?.violations || []).includes('anchors_sha256_required'),
+  'anchors sha required',
+);
+
+// stale / remapped anchors fingerprint
+const staleAnchors = await runCase('functional-stale-anchors', 'good', {
+  anchorsSha256: '0'.repeat(64),
+});
+check(staleAnchors.inventory.functionalQa?.blockedByGroundTruth === true, 'stale anchors blocked');
+check(
+  (staleAnchors.inventory.functionalQa?.violations || []).includes('anchors_sha256_mismatch'),
+  'anchors_sha256_mismatch',
+);
+
+// basename-only path without model sha → blocked (cross-run collision)
+const baseNoSha = await runCase('functional-basename-no-sha', 'good', {
+  modelPath: 'functional-basename-no-sha.glb',
+  modelSha256: null,
+});
+check(
+  (baseNoSha.inventory.functionalQa?.violations || []).includes(
+    'asset_model_path_basename_requires_sha256',
+  ),
+  `basename without sha blocked (${(baseNoSha.inventory.functionalQa?.violations || []).join(',')})`,
 );
 
 // 10) slight open neutral still judged by delta

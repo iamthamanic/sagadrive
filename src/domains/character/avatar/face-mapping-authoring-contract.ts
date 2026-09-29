@@ -17,6 +17,11 @@ export interface FaceMappingAuthoringAssetFingerprintV1 {
   readonly modelPath: string;
   /** Optional content checksum of the mesh asset when known offline. */
   readonly modelSha256?: string;
+  /**
+   * SHA-256 of the reviewed `face-anchors.json` bytes (hex).
+   * Functional QA publish gate requires this so remapped anchors cannot reuse stale reviewed provenance.
+   */
+  readonly anchorsSha256?: string;
   /** Optional topology fingerprint (e.g. vertex/triangle counts). */
   readonly topologyFingerprint?: string;
   /** Cache-bust token mirrored from the published model URL (`?v=`). */
@@ -168,6 +173,7 @@ export function validateFaceMappingAuthoringV1(
 export function createAutoUnreviewedFaceMappingAuthoring(input: {
   modelPath: string;
   modelSha256?: string;
+  anchorsSha256?: string;
   topologyFingerprint?: string;
   cacheBust?: string;
   note?: string;
@@ -179,6 +185,7 @@ export function createAutoUnreviewedFaceMappingAuthoring(input: {
     asset: {
       modelPath: input.modelPath,
       ...(input.modelSha256 ? { modelSha256: input.modelSha256 } : {}),
+      ...(input.anchorsSha256 ? { anchorsSha256: input.anchorsSha256 } : {}),
       ...(input.topologyFingerprint ? { topologyFingerprint: input.topologyFingerprint } : {}),
       ...(input.cacheBust ? { cacheBust: input.cacheBust } : {}),
     },

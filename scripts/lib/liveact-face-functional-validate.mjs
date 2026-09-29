@@ -124,6 +124,139 @@ export function computeFaceAssetSha256Hex(bytes) {
 }
 
 /**
+ * Normalize paths for identity compare (POSIX separators, no trailing slash).
+ * @param {string} value
+ */
+function normalizeModelPathForCompare(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/^\.\//, '')
+    .replace(/\/+$/, '');
+}
+
+/**
+ * Strong path identity: exact match or one path ends with the other as a full suffix
+ * that includes at least one directory segment (rejects basename-only collisions).
+ * @param {string} modelPath
+ * @param {string} inputPath
+ */
+export function isStrongFaceAssetPathMatch(modelPath, inputPath) {
+  const a = normalizeModelPathForCompare(modelPath);
+  const b = normalizeModelPathForCompare(inputPath);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (a.includes('/') && b.endsWith(`/${a}`)) return true;
+  if (b.includes('/') && a.endsWith(`/${b}`)) return true;
+  return false;
+}
+
+/**
+ * Reviewed GT + asset/topology/anchors identity gate.
+ * @param {{
+ *   authoring: unknown;
+ *   inputPath: string;
+ *   inputBytes: Uint8Array|Buffer;
+ *   anchorsBytes: Uint8Array|Buffer;
+ *   document: import('@gltf-transform/core').Document;
+ * }} opts
+ */
+export function evaluateReviewedGroundTruthGate(opts) {
+  /** @type {string[]} */
+  const violations = [];
+  const validation = validateFaceMappingAuthoringV1(opts.authoring);
+  if (!validation.ok) {
+    return {
+      ok: false,
+      blockedByGroundTruth: true,
+      violations: validation.issues.map((i) => `authoring:${i.code}`),
+      reason: 'malformed_provenance',
+    };
+  }
+  if (!isReviewedFaceMappingGroundTruth(opts.authoring)) {
+    const record = /** @type {Record<string, unknown>} */ (opts.authoring);
+    if (record.source === 'auto') {
+      violations.push('auto_proposal_not_ground_truth');
+    } else if (record.reviewed !== true) {
+      violations.push('unreviewed_mapping');
+    } else {
+      violations.push('not_reviewed_ground_truth');
+    }
+    return {
+      ok: false,
+      blockedByGroundTruth: true,
+      violations,
+      reason: 'unreviewed_or_auto',
+    };
+  }
+
+  const record = /** @type {Record<string, unknown>} */ (opts.authoring);
+  const asset = /** @type {Record<string, unknown>} */ (record.asset);
+  const modelPath = String(asset.modelPath || '').trim();
+  const strongPath = isStrongFaceAssetPathMatch(modelPath, opts.inputPath);
+  const basenameOnly =
+    !strongPath &&
+    Boolean(modelPath) &&
+    basename(normalizeModelPathForCompare(modelPath)) ===
+      basename(normalizeModelPathForCompare(opts.inputPath));
+
+  const topo = computeFaceAssetTopologyFingerprint(opts.document);
+  const topoFp = typeof asset.topologyFingerprint === 'string' ? asset.topologyFingerprint.trim() : '';
+  const shaFp = typeof asset.modelSha256 === 'string' ? asset.modelSha256.trim().toLowerCase() : '';
+  const anchorsFp =
+    typeof asset.anchorsSha256 === 'string' ? asset.anchorsSha256.trim().toLowerCase() : '';
+
+  if (!strongPath && !basenameOnly) {
+    violations.push('asset_model_path_mismatch');
+  }
+  // Basename-only collision across run dirs is accepted only with an exact model content hash.
+  if (basenameOnly && !shaFp) {
+    violations.push('asset_model_path_basename_requires_sha256');
+  }
+
+  if (!anchorsFp) {
+    violations.push('insufficient_fingerprint');
+    violations.push('anchors_sha256_required');
+  } else {
+    const actualAnchors = computeFaceAssetSha256Hex(opts.anchorsBytes);
+    if (anchorsFp !== actualAnchors) violations.push('anchors_sha256_mismatch');
+  }
+
+  if (!topoFp && !shaFp) {
+    violations.push('insufficient_fingerprint');
+  }
+  if (topoFp && topoFp !== topo) {
+    violations.push('topology_fingerprint_mismatch');
+  }
+  if (shaFp) {
+    const actual = computeFaceAssetSha256Hex(opts.inputBytes);
+    if (shaFp !== actual) violations.push('model_sha256_mismatch');
+  }
+
+  const unique = [...new Set(violations)];
+  if (unique.length) {
+    return {
+      ok: false,
+      blockedByGroundTruth: true,
+      violations: unique,
+      reason: unique.includes('insufficient_fingerprint') || unique.includes('anchors_sha256_required')
+        ? 'insufficient_fingerprint'
+        : unique.includes('anchors_sha256_mismatch')
+          ? 'stale_or_mismatched_anchors'
+          : 'asset_or_topology_mismatch',
+      topologyFingerprint: topo,
+    };
+  }
+  return {
+    ok: true,
+    blockedByGroundTruth: false,
+    violations: [],
+    reason: null,
+    topologyFingerprint: topo,
+  };
+}
+
+/**
  * Resolve morph target index by extras.targetNames on a primitive (or mesh extras).
  * @param {import('@gltf-transform/core').Primitive} prim
  * @param {import('@gltf-transform/core').Mesh | null | undefined} mesh
@@ -271,91 +404,6 @@ export function computeFunctionalMetricsFromAnchors(P, frame) {
 
 function round4(n) {
   return n == null || !Number.isFinite(n) ? null : +Number(n).toFixed(4);
-}
-
-/**
- * Reviewed GT + asset/topology identity gate.
- * @param {{
- *   authoring: unknown;
- *   inputPath: string;
- *   inputBytes: Uint8Array|Buffer;
- *   document: import('@gltf-transform/core').Document;
- * }} opts
- */
-export function evaluateReviewedGroundTruthGate(opts) {
-  /** @type {string[]} */
-  const violations = [];
-  const validation = validateFaceMappingAuthoringV1(opts.authoring);
-  if (!validation.ok) {
-    return {
-      ok: false,
-      blockedByGroundTruth: true,
-      violations: validation.issues.map((i) => `authoring:${i.code}`),
-      reason: 'malformed_provenance',
-    };
-  }
-  if (!isReviewedFaceMappingGroundTruth(opts.authoring)) {
-    const record = /** @type {Record<string, unknown>} */ (opts.authoring);
-    if (record.source === 'auto') {
-      violations.push('auto_proposal_not_ground_truth');
-    } else if (record.reviewed !== true) {
-      violations.push('unreviewed_mapping');
-    } else {
-      violations.push('not_reviewed_ground_truth');
-    }
-    return {
-      ok: false,
-      blockedByGroundTruth: true,
-      violations,
-      reason: 'unreviewed_or_auto',
-    };
-  }
-
-  const record = /** @type {Record<string, unknown>} */ (opts.authoring);
-  const asset = /** @type {Record<string, unknown>} */ (record.asset);
-  const modelPath = String(asset.modelPath || '').trim();
-  const inputBase = basename(opts.inputPath);
-  const pathOk =
-    modelPath === opts.inputPath ||
-    modelPath === inputBase ||
-    modelPath.endsWith(`/${inputBase}`) ||
-    basename(modelPath) === inputBase;
-  if (!pathOk) {
-    violations.push('asset_model_path_mismatch');
-  }
-
-  const topo = computeFaceAssetTopologyFingerprint(opts.document);
-  const topoFp = typeof asset.topologyFingerprint === 'string' ? asset.topologyFingerprint.trim() : '';
-  const shaFp = typeof asset.modelSha256 === 'string' ? asset.modelSha256.trim().toLowerCase() : '';
-  if (!topoFp && !shaFp) {
-    violations.push('insufficient_fingerprint');
-  }
-  if (topoFp && topoFp !== topo) {
-    violations.push('topology_fingerprint_mismatch');
-  }
-  if (shaFp) {
-    const actual = computeFaceAssetSha256Hex(opts.inputBytes);
-    if (shaFp !== actual) violations.push('model_sha256_mismatch');
-  }
-
-  if (violations.length) {
-    return {
-      ok: false,
-      blockedByGroundTruth: true,
-      violations,
-      reason: violations.includes('insufficient_fingerprint')
-        ? 'insufficient_fingerprint'
-        : 'asset_or_topology_mismatch',
-      topologyFingerprint: topo,
-    };
-  }
-  return {
-    ok: true,
-    blockedByGroundTruth: false,
-    violations: [],
-    reason: null,
-    topologyFingerprint: topo,
-  };
 }
 
 /**
@@ -547,8 +595,10 @@ export async function validateLiveActFaceFunctionalQa(document, opts) {
   });
 
   let anchorsRaw;
+  let anchorsBytes;
   try {
-    anchorsRaw = JSON.parse(readFileSync(opts.anchorsPath, 'utf8'));
+    anchorsBytes = readFileSync(opts.anchorsPath);
+    anchorsRaw = JSON.parse(anchorsBytes.toString('utf8'));
   } catch {
     return {
       contractVersion: FACE_FUNCTIONAL_QA_CONTRACT_VERSION,
@@ -633,6 +683,7 @@ export async function validateLiveActFaceFunctionalQa(document, opts) {
     authoring,
     inputPath: opts.inputPath,
     inputBytes: opts.inputBytes,
+    anchorsBytes,
     document,
   });
   if (!gt.ok) {
