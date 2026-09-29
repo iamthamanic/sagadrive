@@ -85,10 +85,11 @@ check(
   'manual surface-aware regression wired',
 );
 check(/captureFaceMappingAutoFrame/.test(studio), 'studio capture');
+check(/withFaceMappingBaseFaceCapture/.test(studio), 'studio nestable base-face capture scope');
 check(/beginFaceMappingBaseFaceCapture/.test(studio), 'studio hides equipment for capture');
 check(
-  /restoreExcludedMarkers\(\)[\s\S]*restoreSkinned\(\)[\s\S]*restoreRigid\(\)/.test(studio),
-  'studio capture restores visibility in finally',
+  /withFaceMappingBaseFaceCapture/.test(controls),
+  'controls keep base-face scope through Auto raycasts',
 );
 check(/face-mapping-overlay-view-mode|face-mapping-view-both/.test(panel), 'overlay view mode toggle');
 check(

@@ -46,14 +46,21 @@ const skinnedSrc = readFileSync(
 );
 
 check(/beginFaceMappingBaseFaceCapture/.test(studio), 'studio calls equipment begin capture');
+check(/withFaceMappingBaseFaceCapture/.test(studio), 'studio nestable base-face scope');
 check(
-  /const restoreRigid[\s\S]*try[\s\S]*finally[\s\S]*restoreExcludedMarkers\(\)[\s\S]*restoreSkinned\(\)[\s\S]*restoreRigid\(\)/.test(
+  /faceMappingBaseFaceCaptureDepth[\s\S]*endFaceMappingBaseFaceCaptureScope|endFaceMappingBaseFaceCaptureScope[\s\S]*faceMappingBaseFaceCaptureDepth/.test(
     studio,
   ),
-  'studio finally restores excluded+skinned+rigid',
+  'studio restores only on outermost scope exit',
 );
 check(/beginFaceMappingBaseFaceCaptureVisibility/.test(rigidSrc), 'rigid uses shared visibility helper');
 check(/beginFaceMappingBaseFaceCaptureVisibility/.test(skinnedSrc), 'skinned uses shared visibility helper');
+check(
+  /withFaceMappingBaseFaceCapture/.test(
+    readFileSync(join(root, 'src/app/character/liveact/LiveActViewportControls.tsx'), 'utf8'),
+  ),
+  'controls keep base-face scope through Auto raycasts',
+);
 
 const { withFaceMappingBaseFaceCaptureVisibility, beginFaceMappingBaseFaceCaptureVisibility } =
   await loadModule(
@@ -139,6 +146,55 @@ const { AvatarSkinnedWearableRuntime } = await loadModule(
   restore();
   check(mask.visible === true, 'C: skinned wearable restored visible');
   check(face.visible === false, 'C: base head restored hidden by mask');
+}
+
+// C2) nested scope: base stays revealed after inner capture restore until outer exits (Auto raycast window)
+{
+  const avatar = new THREE.Object3D();
+  const face = new THREE.Object3D();
+  face.name = 'head_geo';
+  face.userData.sdBodyRegion = 'head';
+  face.visible = true;
+  avatar.add(face);
+  const mask = new THREE.Object3D();
+  mask.name = 'skinned-mask-nested';
+  mask.visible = true;
+  avatar.add(mask);
+
+  const skinned = new AvatarSkinnedWearableRuntime();
+  skinned.bindAvatar(avatar, null);
+  skinned.attachSyntheticForFaceMappingCaptureTest({
+    instanceId: 'mask-nested',
+    root: mask,
+    maskRegions: ['head'],
+  });
+
+  // Simulate nestable runtime depth: outer begin, inner begin+end (capture), raycast still sees face.
+  const hide = [skinned.getGroup(), mask];
+  const reveal = [face];
+  let outerRestore = null;
+  let depth = 0;
+  const begin = () => {
+    if (depth === 0) {
+      outerRestore = beginFaceMappingBaseFaceCaptureVisibility({ hide, reveal });
+    }
+    depth += 1;
+  };
+  const end = () => {
+    depth = Math.max(0, depth - 1);
+    if (depth === 0 && outerRestore) {
+      outerRestore();
+      outerRestore = null;
+    }
+  };
+
+  begin(); // outer Auto scope
+  begin(); // inner capture
+  check(face.visible === true && mask.visible === false, 'C2: during nested capture base revealed');
+  end(); // capture returns — must NOT restore yet
+  check(face.visible === true && mask.visible === false, 'C2: after inner exit base still revealed for raycast');
+  end(); // outer Auto scope
+  check(face.visible === false && mask.visible === true, 'C2: after outer exit equipment/mask restored');
 }
 
 // D) capture throws → visibility still restored

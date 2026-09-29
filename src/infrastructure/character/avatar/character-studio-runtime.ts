@@ -209,6 +209,9 @@ export class CharacterStudioRuntime {
   private faceAnchorsOverrideSource: SagaDriveFaceAnchorsManifestV1 | null = null;
   /** When true, LiveAct drive application is suppressed for Face Setup (#420). */
   private faceMappingAuthoringActive = false;
+  /** Nested base-face capture scopes (equipment hidden / masked bases revealed). */
+  private faceMappingBaseFaceCaptureDepth = 0;
+  private faceMappingBaseFaceCaptureRestore: (() => void) | null = null;
   /** Independent suspend reasons — either keeps procedural clips paused. */
   private liveActDriveSuspendReason = false;
   private faceMappingSuspendReason = false;
@@ -803,12 +806,55 @@ export class CharacterStudioRuntime {
   }
 
   /**
+   * Run fn with face-mapping-excluded equipment hidden and masked base surfaces revealed.
+   * Nestable: visibility is restored only when the outermost scope exits (always in finally).
+   * Use around MediaPipe capture AND subsequent Auto raycasts so 2D detection and 3D binding
+   * see the same uncovered base face.
+   */
+  withFaceMappingBaseFaceCapture<T>(fn: () => T): T {
+    this.beginFaceMappingBaseFaceCaptureScope();
+    try {
+      return fn();
+    } finally {
+      this.endFaceMappingBaseFaceCaptureScope();
+    }
+  }
+
+  private beginFaceMappingBaseFaceCaptureScope(): void {
+    if (this.faceMappingBaseFaceCaptureDepth === 0) {
+      if (!this.currentRoot || this.disposed) {
+        this.faceMappingBaseFaceCaptureRestore = () => undefined;
+      } else {
+        const restoreRigid = this.rigidEquipmentRuntime.beginFaceMappingBaseFaceCapture();
+        const restoreSkinned = this.skinnedWearableRuntime.beginFaceMappingBaseFaceCapture();
+        const restoreExcludedMarkers = this.beginFaceMappingExcludedMarkerCapture(this.currentRoot);
+        this.faceMappingBaseFaceCaptureRestore = () => {
+          restoreExcludedMarkers();
+          restoreSkinned();
+          restoreRigid();
+        };
+      }
+    }
+    this.faceMappingBaseFaceCaptureDepth += 1;
+  }
+
+  private endFaceMappingBaseFaceCaptureScope(): void {
+    this.faceMappingBaseFaceCaptureDepth = Math.max(0, this.faceMappingBaseFaceCaptureDepth - 1);
+    if (this.faceMappingBaseFaceCaptureDepth === 0 && this.faceMappingBaseFaceCaptureRestore) {
+      const restore = this.faceMappingBaseFaceCaptureRestore;
+      this.faceMappingBaseFaceCaptureRestore = null;
+      restore();
+    }
+  }
+
+  /**
    * Deterministic frontal capture for Auto Mapping (#421).
    * Neutral pose + face camera frame; returns a 2D canvas copy (no upload/persist).
    * CSS size matches Manual Mapping raycast coordinates.
    *
-   * Temporarily hides face-mapping-excluded runtime equipment so MediaPipe sees the
-   * same uncovered base face the raycast binds against. Visibility is always restored.
+   * Opens a nestable base-face visibility scope for the render. Prefer wrapping the full
+   * Auto Mapping capture+raycast flow in `withFaceMappingBaseFaceCapture` so raycasts still
+   * see the uncovered face after this method returns.
    */
   captureFaceMappingAutoFrame(): {
     image: HTMLCanvasElement;
@@ -817,10 +863,7 @@ export class CharacterStudioRuntime {
   } | null {
     if (this.disposed || !this.currentRoot) return null;
 
-    const restoreRigid = this.rigidEquipmentRuntime.beginFaceMappingBaseFaceCapture();
-    const restoreSkinned = this.skinnedWearableRuntime.beginFaceMappingBaseFaceCapture();
-    const restoreExcludedMarkers = this.beginFaceMappingExcludedMarkerCapture(this.currentRoot);
-    try {
+    return this.withFaceMappingBaseFaceCapture(() => {
       this.applyFaceMappingAutoCameraState();
       this.renderer.render(this.scene, this.camera);
 
@@ -836,11 +879,7 @@ export class CharacterStudioRuntime {
       if (!ctx) return null;
       ctx.drawImage(src, 0, 0);
       return { image, canvasWidth, canvasHeight };
-    } finally {
-      restoreExcludedMarkers();
-      restoreSkinned();
-      restoreRigid();
-    }
+    });
   }
 
   /**

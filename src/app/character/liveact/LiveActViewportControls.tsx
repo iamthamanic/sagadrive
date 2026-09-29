@@ -353,26 +353,37 @@ export function LiveActViewportControls({
         setGroundTruthValid(groundTruthReferenceRef.current.validForGroundTruthComparison);
         setReferenceStatus(groundTruthReferenceRef.current.status);
 
-        const frame = runtime.captureFaceMappingAutoFrame();
-        if (!ownsSession()) return;
-        if (!frame) {
-          setAutoStatusMessage('Character-Render für Auto Mapping fehlgeschlagen.');
-          return;
-        }
-        const detected = landmarker.detect(frame.image);
-        const session = runFaceMappingAutoPipeline({
-          landmarks: detected.landmarks,
-          faceCount: detected.faceCount,
-          canvasWidth: frame.canvasWidth,
-          canvasHeight: frame.canvasHeight,
-          listRaycastCandidates: (x, y) =>
-            runtime.listFaceMappingRaycastCandidatesAtCanvas(x, y),
+        // Keep base-face visibility through capture AND Auto raycasts (nested with capture).
+        const autoResult = runtime.withFaceMappingBaseFaceCapture(() => {
+          const frame = runtime.captureFaceMappingAutoFrame();
+          if (!ownsSession()) return null;
+          if (!frame) {
+            return { kind: 'no_frame' as const };
+          }
+          const detected = landmarker.detect(frame.image);
+          const session = runFaceMappingAutoPipeline({
+            landmarks: detected.landmarks,
+            faceCount: detected.faceCount,
+            canvasWidth: frame.canvasWidth,
+            canvasHeight: frame.canvasHeight,
+            listRaycastCandidates: (x, y) =>
+              runtime.listFaceMappingRaycastCandidatesAtCanvas(x, y),
+          });
+          return { kind: 'ok' as const, session };
         });
 
         if (!ownsSession()) {
           return;
         }
+        if (!autoResult) {
+          return;
+        }
+        if (autoResult.kind === 'no_frame') {
+          setAutoStatusMessage('Character-Render für Auto Mapping fehlgeschlagen.');
+          return;
+        }
 
+        const session = autoResult.session;
         const applied = applyAutoMappingToDraft(
           draftRef.current!,
           session,
