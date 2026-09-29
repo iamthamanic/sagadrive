@@ -17,7 +17,6 @@ import {
   functionalQaSkippedResult,
   validateLiveActFaceFunctionalQa,
 } from './liveact-face-functional-validate.mjs';
-import { faceMappingAuthoringPathBesideAnchors } from './liveact-face-mapping-authoring.mjs';
 
 export const FACE_INVENTORY_VERSION = 'SagaDriveLiveActFaceInventoryV1';
 
@@ -366,12 +365,11 @@ export async function validateLiveActFaceAsset(opts) {
       channels: {},
     };
   } else {
-    const authoringPath =
-      opts.authoringPath || faceMappingAuthoringPathBesideAnchors(opts.anchorsPath);
-    // Publish mode: missing reviewed GT is blocking (design #422). Diagnostic mode may skip.
+    // Only forward an explicit authoringPath. Sibling discovery stays inside Functional QA
+    // so a missing sibling is "no provenance" (not authoring_path_not_found).
     functionalQa = await validateLiveActFaceFunctionalQa(document, {
       anchorsPath: opts.anchorsPath,
-      authoringPath,
+      ...(opts.authoringPath ? { authoringPath: opts.authoringPath } : {}),
       inputPath: opts.inputPath,
       inputBytes,
       usableChannels: usableNames,
