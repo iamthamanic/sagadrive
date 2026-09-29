@@ -152,6 +152,53 @@ export function isStrongFaceAssetPathMatch(modelPath, inputPath) {
 }
 
 /**
+ * Soft identity checks: only flag mismatches when fingerprint fields are present.
+ * Used for unreviewed/auto sidecars so stale fingerprints stay blocking in diagnostic mode.
+ * @param {{
+ *   asset: Record<string, unknown>;
+ *   inputPath: string;
+ *   inputBytes: Uint8Array|Buffer;
+ *   anchorsBytes: Uint8Array|Buffer;
+ *   document: import('@gltf-transform/core').Document;
+ * }} opts
+ */
+function collectPresentFingerprintMismatches(opts) {
+  /** @type {string[]} */
+  const violations = [];
+  const modelPath = String(opts.asset.modelPath || '').trim();
+  const strongPath = isStrongFaceAssetPathMatch(modelPath, opts.inputPath);
+  const basenameOnly =
+    !strongPath &&
+    Boolean(modelPath) &&
+    basename(normalizeModelPathForCompare(modelPath)) ===
+      basename(normalizeModelPathForCompare(opts.inputPath));
+
+  const topo = computeFaceAssetTopologyFingerprint(opts.document);
+  const topoFp =
+    typeof opts.asset.topologyFingerprint === 'string' ? opts.asset.topologyFingerprint.trim() : '';
+  const shaFp =
+    typeof opts.asset.modelSha256 === 'string' ? opts.asset.modelSha256.trim().toLowerCase() : '';
+  const anchorsFp =
+    typeof opts.asset.anchorsSha256 === 'string' ? opts.asset.anchorsSha256.trim().toLowerCase() : '';
+
+  if (modelPath && !strongPath && !basenameOnly) {
+    violations.push('asset_model_path_mismatch');
+  }
+  if (topoFp && topoFp !== topo) {
+    violations.push('topology_fingerprint_mismatch');
+  }
+  if (shaFp) {
+    const actual = computeFaceAssetSha256Hex(opts.inputBytes);
+    if (shaFp !== actual) violations.push('model_sha256_mismatch');
+  }
+  if (anchorsFp) {
+    const actualAnchors = computeFaceAssetSha256Hex(opts.anchorsBytes);
+    if (anchorsFp !== actualAnchors) violations.push('anchors_sha256_mismatch');
+  }
+  return { violations: [...new Set(violations)], topologyFingerprint: topo };
+}
+
+/**
  * Reviewed GT + asset/topology/anchors identity gate.
  * @param {{
  *   authoring: unknown;
@@ -182,11 +229,34 @@ export function evaluateReviewedGroundTruthGate(opts) {
     } else {
       violations.push('not_reviewed_ground_truth');
     }
+    const asset =
+      record.asset && typeof record.asset === 'object' && !Array.isArray(record.asset)
+        ? /** @type {Record<string, unknown>} */ (record.asset)
+        : {};
+    const soft = collectPresentFingerprintMismatches({
+      asset,
+      inputPath: opts.inputPath,
+      inputBytes: opts.inputBytes,
+      anchorsBytes: opts.anchorsBytes,
+      document: opts.document,
+    });
+    if (soft.violations.length) {
+      return {
+        ok: false,
+        blockedByGroundTruth: true,
+        violations: [...new Set([...violations, ...soft.violations])],
+        reason: soft.violations.includes('anchors_sha256_mismatch')
+          ? 'stale_or_mismatched_anchors'
+          : 'asset_or_topology_mismatch',
+        topologyFingerprint: soft.topologyFingerprint,
+      };
+    }
     return {
       ok: false,
       blockedByGroundTruth: true,
       violations,
       reason: 'unreviewed_or_auto',
+      topologyFingerprint: soft.topologyFingerprint,
     };
   }
 
@@ -394,12 +464,12 @@ export function computeFunctionalMetricsFromAnchors(P, frame) {
       ? dist(P.eyeRightUpper, P.eyeRightLower) / eyeWR
       : null;
   const browInnerLiftL =
-    P.browLeftInner && P.eyeLeftInner && eyeWL > T.eps
-      ? dot(sub(P.browLeftInner, P.eyeLeftInner), frame.up) / eyeWL
+    P.browLeftInner && P.eyeLeftInner && frame.eyeWidthL0 > T.eps
+      ? dot(sub(P.browLeftInner, P.eyeLeftInner), frame.up) / frame.eyeWidthL0
       : null;
   const browInnerLiftR =
-    P.browRightInner && P.eyeRightInner && eyeWR > T.eps
-      ? dot(sub(P.browRightInner, P.eyeRightInner), frame.up) / eyeWR
+    P.browRightInner && P.eyeRightInner && frame.eyeWidthR0 > T.eps
+      ? dot(sub(P.browRightInner, P.eyeRightInner), frame.up) / frame.eyeWidthR0
       : null;
   const mouthWidth = mouthW;
   return {
@@ -413,8 +483,9 @@ export function computeFunctionalMetricsFromAnchors(P, frame) {
   };
 }
 
-function round4(n) {
-  return n == null || !Number.isFinite(n) ? null : +Number(n).toFixed(4);
+function roundEvidence(n) {
+  // Enough digits that serialized inventory can reproduce near-threshold pass/fail decisions.
+  return n == null || !Number.isFinite(n) ? null : +Number(n).toFixed(8);
 }
 
 /**
@@ -438,7 +509,7 @@ function evaluateChannel(channel, neutral, posed, Pn, Pp, frame) {
   const posedMetrics = {};
 
   const copyMetric = (key, src, dest) => {
-    dest[key] = round4(src?.[key] ?? null);
+    dest[key] = roundEvidence(src?.[key] ?? null);
   };
 
   if (channel === 'jawOpen') {
@@ -449,7 +520,7 @@ function evaluateChannel(channel, neutral, posed, Pn, Pp, frame) {
     copyMetric('mouthGap', neutral, neutralMetrics);
     copyMetric('mouthGap', posed, posedMetrics);
     const gapDelta = (posed?.mouthGap ?? 0) - (neutral?.mouthGap ?? 0);
-    deltas.mouthGap = round4(gapDelta);
+    deltas.mouthGap = roundEvidence(gapDelta);
     if (!(gapDelta >= th.minMouthGapDelta)) violations.push('jawOpen_mouth_gap_delta_below');
 
     const noseDisp =
@@ -458,10 +529,10 @@ function evaluateChannel(channel, neutral, posed, Pn, Pp, frame) {
       Pn.forehead && Pp.forehead
         ? dist(Pn.forehead, Pp.forehead) / frame.faceHeight
         : Number.POSITIVE_INFINITY;
-    deltas.noseTipDispFaceH = round4(noseDisp);
-    deltas.foreheadDispFaceH = round4(foreheadDisp);
-    posedMetrics.noseTipDispFaceH = round4(noseDisp);
-    posedMetrics.foreheadDispFaceH = round4(foreheadDisp);
+    deltas.noseTipDispFaceH = roundEvidence(noseDisp);
+    deltas.foreheadDispFaceH = roundEvidence(foreheadDisp);
+    posedMetrics.noseTipDispFaceH = roundEvidence(noseDisp);
+    posedMetrics.foreheadDispFaceH = roundEvidence(foreheadDisp);
     if (!(noseDisp <= th.maxNoseTipDispFaceH)) violations.push('jawOpen_nose_leakage');
     if (!(foreheadDisp <= th.maxForeheadDispFaceH)) violations.push('jawOpen_forehead_leakage');
   } else if (channel === 'eyeBlinkLeft' || channel === 'eyeBlinkRight') {
@@ -473,10 +544,10 @@ function evaluateChannel(channel, neutral, posed, Pn, Pp, frame) {
     thresholds.maxOpenRatio = th.maxOpenRatio;
     thresholds.minOpenDrop = th.minOpenDrop;
     thresholds.maxOppositeRelChange = th.maxOppositeRelChange;
-    neutralMetrics.eyeOpenPrimary = round4(primaryN);
-    posedMetrics.eyeOpenPrimary = round4(primaryP);
-    neutralMetrics.eyeOpenOpposite = round4(oppN);
-    posedMetrics.eyeOpenOpposite = round4(oppP);
+    neutralMetrics.eyeOpenPrimary = roundEvidence(primaryN);
+    posedMetrics.eyeOpenPrimary = roundEvidence(primaryP);
+    neutralMetrics.eyeOpenOpposite = roundEvidence(oppN);
+    posedMetrics.eyeOpenOpposite = roundEvidence(oppP);
     const drop = (primaryN ?? 0) - (primaryP ?? 0);
     const ratio =
       primaryN != null && primaryN > T.eps && primaryP != null ? primaryP / primaryN : Number.POSITIVE_INFINITY;
@@ -484,9 +555,9 @@ function evaluateChannel(channel, neutral, posed, Pn, Pp, frame) {
       oppN != null && oppN > T.eps && oppP != null
         ? Math.abs(oppP - oppN) / Math.max(oppN, T.eps)
         : Number.POSITIVE_INFINITY;
-    deltas.openDrop = round4(drop);
-    deltas.openRatio = round4(ratio);
-    deltas.oppositeRelChange = round4(oppRel);
+    deltas.openDrop = roundEvidence(drop);
+    deltas.openRatio = roundEvidence(ratio);
+    deltas.oppositeRelChange = roundEvidence(oppRel);
     if (!(ratio <= th.maxOpenRatio)) violations.push(`${channel}_open_ratio_above`);
     if (!(drop >= th.minOpenDrop)) violations.push(`${channel}_open_drop_below`);
     if (!(oppRel <= th.maxOppositeRelChange)) violations.push(`${channel}_opposite_crosstalk`);
@@ -501,9 +572,9 @@ function evaluateChannel(channel, neutral, posed, Pn, Pp, frame) {
     const dL = (posed?.browInnerLiftL ?? 0) - (neutral?.browInnerLiftL ?? 0);
     const dR = (posed?.browInnerLiftR ?? 0) - (neutral?.browInnerLiftR ?? 0);
     const mean = (dL + dR) / 2;
-    deltas.browInnerLiftL = round4(dL);
-    deltas.browInnerLiftR = round4(dR);
-    deltas.meanLiftDelta = round4(mean);
+    deltas.browInnerLiftL = roundEvidence(dL);
+    deltas.browInnerLiftR = roundEvidence(dR);
+    deltas.meanLiftDelta = roundEvidence(mean);
     if (!(mean >= th.minMeanLiftDelta)) violations.push('browInnerUp_mean_lift_below');
     if (dL < -th.maxDownwardPerSide) violations.push('browInnerUp_left_downward');
     if (dR < -th.maxDownwardPerSide) violations.push('browInnerUp_right_downward');
@@ -528,14 +599,14 @@ function evaluateChannel(channel, neutral, posed, Pn, Pp, frame) {
       const cornerOut = dot(dTarget, outDir) / frame.mouthWidth0;
       const cornerMotion = len(dTarget) / frame.mouthWidth0;
       const oppUp = dot(dOpp, frame.up) / frame.mouthWidth0;
-      deltas.cornerUp = round4(cornerUp);
-      deltas.cornerOut = round4(cornerOut);
-      deltas.cornerMotion = round4(cornerMotion);
-      deltas.oppositeCornerUp = round4(oppUp);
-      deltas.upAdvantage = round4(cornerUp - oppUp);
-      posedMetrics.cornerUp = round4(cornerUp);
-      posedMetrics.cornerOut = round4(cornerOut);
-      posedMetrics.cornerMotion = round4(cornerMotion);
+      deltas.cornerUp = roundEvidence(cornerUp);
+      deltas.cornerOut = roundEvidence(cornerOut);
+      deltas.cornerMotion = roundEvidence(cornerMotion);
+      deltas.oppositeCornerUp = roundEvidence(oppUp);
+      deltas.upAdvantage = roundEvidence(cornerUp - oppUp);
+      posedMetrics.cornerUp = roundEvidence(cornerUp);
+      posedMetrics.cornerOut = roundEvidence(cornerOut);
+      posedMetrics.cornerMotion = roundEvidence(cornerMotion);
       if (!(cornerUp >= th.minCornerUp)) violations.push(`${channel}_corner_up_below`);
       if (!(cornerMotion >= th.minCornerMotion)) violations.push(`${channel}_corner_motion_below`);
       if (!(cornerUp - oppUp >= th.minUpAdvantageOverOpposite)) {
@@ -550,15 +621,15 @@ function evaluateChannel(channel, neutral, posed, Pn, Pp, frame) {
     copyMetric('mouthGap', neutral, neutralMetrics);
     copyMetric('mouthGap', posed, posedMetrics);
     const ratio = posed?.mouthWidthRatio;
-    deltas.mouthWidthRatio = round4(ratio);
-    deltas.mouthGap = round4((posed?.mouthGap ?? 0) - (neutral?.mouthGap ?? 0));
+    deltas.mouthWidthRatio = roundEvidence(ratio);
+    deltas.mouthGap = roundEvidence((posed?.mouthGap ?? 0) - (neutral?.mouthGap ?? 0));
     // Diagnostic: forward protrusion of mouth midpoint
     if (Pn.mouthUpper && Pn.mouthLower && Pp.mouthUpper && Pp.mouthLower) {
       const midN = scale(add(Pn.mouthUpper, Pn.mouthLower), 0.5);
       const midP = scale(add(Pp.mouthUpper, Pp.mouthLower), 0.5);
-      deltas.forwardProtrusion = round4(dot(sub(midP, midN), frame.forward) / frame.mouthWidth0);
+      deltas.forwardProtrusion = roundEvidence(dot(sub(midP, midN), frame.forward) / frame.mouthWidth0);
     }
-    posedMetrics.mouthWidthRatio = round4(ratio);
+    posedMetrics.mouthWidthRatio = roundEvidence(ratio);
     if (!(ratio != null && ratio <= th.maxMouthWidthRatio)) {
       violations.push('mouthPucker_width_ratio_above');
     }
@@ -786,12 +857,12 @@ export async function validateLiveActFaceFunctionalQa(document, opts) {
     violations: unique,
     channels,
     neutralShared: {
-      mouthGap: round4(neutralMetrics?.mouthGap),
-      eyeOpenL: round4(neutralMetrics?.eyeOpenL),
-      eyeOpenR: round4(neutralMetrics?.eyeOpenR),
-      browInnerLiftL: round4(neutralMetrics?.browInnerLiftL),
-      browInnerLiftR: round4(neutralMetrics?.browInnerLiftR),
-      mouthWidth: round4(neutralMetrics?.mouthWidth),
+      mouthGap: roundEvidence(neutralMetrics?.mouthGap),
+      eyeOpenL: roundEvidence(neutralMetrics?.eyeOpenL),
+      eyeOpenR: roundEvidence(neutralMetrics?.eyeOpenR),
+      browInnerLiftL: roundEvidence(neutralMetrics?.browInnerLiftL),
+      browInnerLiftR: roundEvidence(neutralMetrics?.browInnerLiftR),
+      mouthWidth: roundEvidence(neutralMetrics?.mouthWidth),
     },
     groundTruth: {
       reason: null,

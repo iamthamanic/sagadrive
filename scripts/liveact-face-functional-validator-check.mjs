@@ -407,6 +407,32 @@ check(
   );
 }
 
+// Diagnostic mode + auto sidecar with stale anchorsSha256 → still block (fingerprint before skip)
+{
+  const glbPath = join(fixtureDir, 'functional-ok.glb');
+  const staleAutoPath = join(fixtureDir, 'functional-diag-stale-auto-authoring.json');
+  const staleAuto = await writeAuthoring(glbPath, {
+    reviewed: false,
+    source: 'auto',
+    anchorsSha256: '0'.repeat(64),
+  });
+  writeFileSync(staleAutoPath, `${JSON.stringify(staleAuto, null, 2)}\n`);
+  const diagStale = await validateLiveActFaceAsset({
+    inputPath: glbPath,
+    baselinePath,
+    profile: 'core-v1',
+    anchorsPath,
+    authoringPath: staleAutoPath,
+    functionalMode: 'diagnostic',
+  });
+  check(diagStale.ok === false, 'diagnostic stale auto still fails');
+  check(diagStale.inventory.functionalQa?.skipped !== true, 'diagnostic stale auto not skipped');
+  check(
+    (diagStale.inventory.functionalQa?.violations || []).includes('anchors_sha256_mismatch'),
+    'diagnostic stale auto reports anchors mismatch',
+  );
+}
+
 // Malformed authoring JSON → fail-closed even in diagnostic
 {
   const glbPath = join(fixtureDir, 'functional-ok.glb');
