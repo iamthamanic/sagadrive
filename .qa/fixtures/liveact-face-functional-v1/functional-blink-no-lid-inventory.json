@@ -408,12 +408,12 @@
           "eyeOpenOpposite": 0.4238
         },
         "posedMetrics": {
-          "eyeOpenPrimary": 0.4238,
+          "eyeOpenPrimary": 0.3862,
           "eyeOpenOpposite": 0.4238
         },
         "deltas": {
-          "openDrop": 0,
-          "openRatio": 1,
+          "openDrop": 0.0377,
+          "openRatio": 0.9112,
           "oppositeRelChange": 0
         },
         "thresholds": {
@@ -526,12 +526,12 @@
         },
         "posedMetrics": {
           "mouthWidth": 0.46,
-          "mouthGap": 0.3396,
+          "mouthGap": 0.5167,
           "mouthWidthRatio": 0.6571
         },
         "deltas": {
           "mouthWidthRatio": 0.6571,
-          "mouthGap": 0.0507,
+          "mouthGap": 0.2278,
           "forwardProtrusion": 0.0429
         },
         "thresholds": {

@@ -6,6 +6,7 @@
   "asset": {
     "modelPath": "functional-blink-both.glb",
     "topologyFingerprint": "v63:t21:m1",
-    "modelSha256": "814cfa3a206b41d980fb769b1ee6af63f43b8d274b881188c70d14b0fe713dbf"
+    "modelSha256": "814cfa3a206b41d980fb769b1ee6af63f43b8d274b881188c70d14b0fe713dbf",
+    "anchorsSha256": "33bb2385452acb501db21aa3af4d574048cdc97cd8df1fdc1b6fe1144cb1e805"
   }
 }

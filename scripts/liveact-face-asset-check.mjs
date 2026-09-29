@@ -17,6 +17,12 @@ import {
 async function main() {
   try {
     const args = parseFaceAssetCheckArgs(process.argv.slice(2));
+    if (args.authoring && !args.anchors) {
+      throw new Error('Face Functional publish requires --anchors when --authoring is set');
+    }
+    if (args.functionalMode === 'publish' && !args.anchors) {
+      throw new Error('Face Functional publish mode requires --anchors');
+    }
     const result = await validateLiveActFaceAsset({
       inputPath: args.input,
       baselinePath: args.baseline,

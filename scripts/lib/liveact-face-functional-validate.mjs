@@ -8,7 +8,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import { parseManifestEnvelope, validateFaceAnchorsAgainstDocument } from './liveact-face-anchor-validate.mjs';
 import {
@@ -370,27 +370,38 @@ export function resolveFaceAnchorPositionsPosed(document, anchors, morphName, we
  */
 export function computeFunctionalMetricsFromAnchors(P, frame) {
   if (!frame) return null;
-  const mouthW = frame.mouthWidth0;
-  const mouthGap =
-    P.mouthUpper && P.mouthLower ? dist(P.mouthUpper, P.mouthLower) / mouthW : null;
-  const eyeOpenL =
-    P.eyeLeftUpper && P.eyeLeftLower ? dist(P.eyeLeftUpper, P.eyeLeftLower) / frame.eyeWidthL0 : null;
-  const eyeOpenR =
-    P.eyeRightUpper && P.eyeRightLower
-      ? dist(P.eyeRightUpper, P.eyeRightLower) / frame.eyeWidthR0
-      : null;
-  const browInnerLiftL =
-    P.browLeftInner && P.eyeLeftInner
-      ? dot(sub(P.browLeftInner, P.eyeLeftInner), frame.up) / frame.eyeWidthL0
-      : null;
-  const browInnerLiftR =
-    P.browRightInner && P.eyeRightInner
-      ? dot(sub(P.browRightInner, P.eyeRightInner), frame.up) / frame.eyeWidthR0
-      : null;
-  const mouthWidth =
+  // Aperture ratios use the *current* feature widths (matches liveact-face-metrics.ts).
+  // mouthWidthRatio / smile norms still use neutral mouthWidth0 from the face frame.
+  const mouthW0 = frame.mouthWidth0;
+  const mouthW =
     P.mouthCornerLeft && P.mouthCornerRight
       ? dist(P.mouthCornerLeft, P.mouthCornerRight)
+      : mouthW0;
+  const eyeWL =
+    P.eyeLeftInner && P.eyeLeftOuter ? dist(P.eyeLeftInner, P.eyeLeftOuter) : frame.eyeWidthL0;
+  const eyeWR =
+    P.eyeRightInner && P.eyeRightOuter ? dist(P.eyeRightInner, P.eyeRightOuter) : frame.eyeWidthR0;
+  const mouthGap =
+    P.mouthUpper && P.mouthLower && mouthW > T.eps
+      ? dist(P.mouthUpper, P.mouthLower) / mouthW
       : null;
+  const eyeOpenL =
+    P.eyeLeftUpper && P.eyeLeftLower && eyeWL > T.eps
+      ? dist(P.eyeLeftUpper, P.eyeLeftLower) / eyeWL
+      : null;
+  const eyeOpenR =
+    P.eyeRightUpper && P.eyeRightLower && eyeWR > T.eps
+      ? dist(P.eyeRightUpper, P.eyeRightLower) / eyeWR
+      : null;
+  const browInnerLiftL =
+    P.browLeftInner && P.eyeLeftInner && eyeWL > T.eps
+      ? dot(sub(P.browLeftInner, P.eyeLeftInner), frame.up) / eyeWL
+      : null;
+  const browInnerLiftR =
+    P.browRightInner && P.eyeRightInner && eyeWR > T.eps
+      ? dot(sub(P.browRightInner, P.eyeRightInner), frame.up) / eyeWR
+      : null;
+  const mouthWidth = mouthW;
   return {
     mouthGap,
     eyeOpenL,
@@ -398,7 +409,7 @@ export function computeFunctionalMetricsFromAnchors(P, frame) {
     browInnerLiftL,
     browInnerLiftR,
     mouthWidth,
-    mouthWidthRatio: mouthWidth != null ? mouthWidth / mouthW : null,
+    mouthWidthRatio: mouthWidth != null ? mouthWidth / mouthW0 : null,
   };
 }
 
@@ -651,17 +662,35 @@ export async function validateLiveActFaceFunctionalQa(document, opts) {
   }
 
   let authoring = opts.authoring ?? null;
+  let authoringLoadError = /** @type {string|null} */ (null);
   if (authoring == null) {
     const path =
       opts.authoringPath ||
       (opts.anchorsPath ? faceMappingAuthoringPathBesideAnchors(opts.anchorsPath) : null);
     if (path) {
       try {
-        authoring = JSON.parse(readFileSync(path, 'utf8'));
-      } catch {
+        if (!existsSync(path)) {
+          authoring = null;
+        } else {
+          authoring = JSON.parse(readFileSync(path, 'utf8'));
+        }
+      } catch (err) {
+        authoringLoadError = err instanceof Error ? err.message : String(err);
         authoring = null;
       }
     }
+  }
+
+  if (authoringLoadError) {
+    return {
+      contractVersion: FACE_FUNCTIONAL_QA_CONTRACT_VERSION,
+      profileVersion: FACE_FUNCTIONAL_PROFILE_VERSION,
+      pass: false,
+      skipped: false,
+      blockedByGroundTruth: true,
+      violations: ['malformed_authoring_provenance', `authoring_load:${authoringLoadError}`],
+      channels: emptyChannels,
+    };
   }
 
   if (authoring == null) {

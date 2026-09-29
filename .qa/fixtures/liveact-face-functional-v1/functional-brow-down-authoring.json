@@ -6,6 +6,7 @@
   "asset": {
     "modelPath": "functional-brow-down.glb",
     "topologyFingerprint": "v63:t21:m1",
-    "modelSha256": "1233d12eb718741c3a1cea9c1263c29a6707772543207c89a9a378fe554bffda"
+    "modelSha256": "1233d12eb718741c3a1cea9c1263c29a6707772543207c89a9a378fe554bffda",
+    "anchorsSha256": "33bb2385452acb501db21aa3af4d574048cdc97cd8df1fdc1b6fe1144cb1e805"
   }
 }

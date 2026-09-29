@@ -373,7 +373,9 @@
     "skipped": false,
     "blockedByGroundTruth": true,
     "violations": [
-      "insufficient_fingerprint"
+      "asset_model_path_basename_requires_sha256",
+      "insufficient_fingerprint",
+      "anchors_sha256_required"
     ],
     "channels": {},
     "groundTruth": {

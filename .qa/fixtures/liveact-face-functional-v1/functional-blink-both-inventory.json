@@ -524,12 +524,12 @@
         },
         "posedMetrics": {
           "mouthWidth": 0.46,
-          "mouthGap": 0.3396,
+          "mouthGap": 0.5167,
           "mouthWidthRatio": 0.6571
         },
         "deltas": {
           "mouthWidthRatio": 0.6571,
-          "mouthGap": 0.0507,
+          "mouthGap": 0.2278,
           "forwardProtrusion": 0.0429
         },
         "thresholds": {

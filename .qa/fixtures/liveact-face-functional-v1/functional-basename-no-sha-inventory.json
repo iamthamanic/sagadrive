@@ -1,6 +1,6 @@
 {
   "version": "SagaDriveLiveActFaceInventoryV1",
-  "input": "functional-ok.glb",
+  "input": "functional-basename-no-sha.glb",
   "baselineFile": "baseline-body.glb",
   "profile": "core-v1",
   "profileOk": true,
@@ -11,8 +11,10 @@
     "numWarnings": 0
   },
   "sagaDrive": {
-    "pass": true,
-    "errors": [],
+    "pass": false,
+    "errors": [
+      "functional_qa_blocked_by_ground_truth"
+    ],
     "missingRequired": [],
     "emptyMorphs": [],
     "preservationErrors": []
@@ -367,181 +369,15 @@
   "functionalQa": {
     "contractVersion": "SagaDriveLiveActFaceFunctionalQaV1",
     "profileVersion": "liveact-face-functional-profile-v1",
-    "pass": true,
+    "pass": false,
     "skipped": false,
-    "blockedByGroundTruth": false,
-    "violations": [],
-    "channels": {
-      "jawOpen": {
-        "pass": true,
-        "poseWeight": 1,
-        "neutralMetrics": {
-          "mouthGap": 0.2889
-        },
-        "posedMetrics": {
-          "mouthGap": 0.4859,
-          "noseTipDispFaceH": 0,
-          "foreheadDispFaceH": 0
-        },
-        "deltas": {
-          "mouthGap": 0.197,
-          "noseTipDispFaceH": 0,
-          "foreheadDispFaceH": 0
-        },
-        "thresholds": {
-          "minMouthGapDelta": 0.06,
-          "maxNoseTipDispFaceH": 0.04,
-          "maxForeheadDispFaceH": 0.025
-        },
-        "violations": []
-      },
-      "eyeBlinkLeft": {
-        "pass": true,
-        "poseWeight": 1,
-        "neutralMetrics": {
-          "eyeOpenPrimary": 0.4238,
-          "eyeOpenOpposite": 0.4238
-        },
-        "posedMetrics": {
-          "eyeOpenPrimary": 0.1334,
-          "eyeOpenOpposite": 0.4238
-        },
-        "deltas": {
-          "openDrop": 0.2905,
-          "openRatio": 0.3147,
-          "oppositeRelChange": 0
-        },
-        "thresholds": {
-          "maxOpenRatio": 0.65,
-          "minOpenDrop": 0.05,
-          "maxOppositeRelChange": 0.2
-        },
-        "violations": []
-      },
-      "eyeBlinkRight": {
-        "pass": true,
-        "poseWeight": 1,
-        "neutralMetrics": {
-          "eyeOpenPrimary": 0.4238,
-          "eyeOpenOpposite": 0.4238
-        },
-        "posedMetrics": {
-          "eyeOpenPrimary": 0.1334,
-          "eyeOpenOpposite": 0.4238
-        },
-        "deltas": {
-          "openDrop": 0.2905,
-          "openRatio": 0.3147,
-          "oppositeRelChange": 0
-        },
-        "thresholds": {
-          "maxOpenRatio": 0.65,
-          "minOpenDrop": 0.05,
-          "maxOppositeRelChange": 0.2
-        },
-        "violations": []
-      },
-      "browInnerUp": {
-        "pass": true,
-        "poseWeight": 1,
-        "neutralMetrics": {
-          "browInnerLiftL": 0.6326,
-          "browInnerLiftR": 0.6326
-        },
-        "posedMetrics": {
-          "browInnerLiftL": 0.8013,
-          "browInnerLiftR": 0.8013
-        },
-        "deltas": {
-          "browInnerLiftL": 0.1687,
-          "browInnerLiftR": 0.1687,
-          "meanLiftDelta": 0.1687
-        },
-        "thresholds": {
-          "minMeanLiftDelta": 0.03,
-          "maxDownwardPerSide": 0.01
-        },
-        "violations": []
-      },
-      "mouthSmileLeft": {
-        "pass": true,
-        "poseWeight": 1,
-        "neutralMetrics": {},
-        "posedMetrics": {
-          "cornerUp": 0.1429,
-          "cornerOut": 0.0286,
-          "cornerMotion": 0.1485
-        },
-        "deltas": {
-          "cornerUp": 0.1429,
-          "cornerOut": 0.0286,
-          "cornerMotion": 0.1485,
-          "oppositeCornerUp": 0,
-          "upAdvantage": 0.1429
-        },
-        "thresholds": {
-          "minCornerUp": 0.025,
-          "minCornerMotion": 0.03,
-          "minUpAdvantageOverOpposite": 0.015
-        },
-        "violations": []
-      },
-      "mouthSmileRight": {
-        "pass": true,
-        "poseWeight": 1,
-        "neutralMetrics": {},
-        "posedMetrics": {
-          "cornerUp": 0.1429,
-          "cornerOut": 0.0286,
-          "cornerMotion": 0.1485
-        },
-        "deltas": {
-          "cornerUp": 0.1429,
-          "cornerOut": 0.0286,
-          "cornerMotion": 0.1485,
-          "oppositeCornerUp": 0,
-          "upAdvantage": 0.1429
-        },
-        "thresholds": {
-          "minCornerUp": 0.025,
-          "minCornerMotion": 0.03,
-          "minUpAdvantageOverOpposite": 0.015
-        },
-        "violations": []
-      },
-      "mouthPucker": {
-        "pass": true,
-        "poseWeight": 1,
-        "neutralMetrics": {
-          "mouthWidth": 0.7,
-          "mouthGap": 0.2889
-        },
-        "posedMetrics": {
-          "mouthWidth": 0.46,
-          "mouthGap": 0.5167,
-          "mouthWidthRatio": 0.6571
-        },
-        "deltas": {
-          "mouthWidthRatio": 0.6571,
-          "mouthGap": 0.2278,
-          "forwardProtrusion": 0.0429
-        },
-        "thresholds": {
-          "maxMouthWidthRatio": 0.92
-        },
-        "violations": []
-      }
-    },
-    "neutralShared": {
-      "mouthGap": 0.2889,
-      "eyeOpenL": 0.4238,
-      "eyeOpenR": 0.4238,
-      "browInnerLiftL": 0.6326,
-      "browInnerLiftR": 0.6326,
-      "mouthWidth": 0.7
-    },
+    "blockedByGroundTruth": true,
+    "violations": [
+      "asset_model_path_basename_requires_sha256"
+    ],
+    "channels": {},
     "groundTruth": {
-      "reason": null,
+      "reason": "asset_or_topology_mismatch",
       "topologyFingerprint": "v63:t21:m1"
     }
   }

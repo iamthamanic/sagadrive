@@ -407,6 +407,65 @@ check(
   );
 }
 
+// Malformed authoring JSON → fail-closed even in diagnostic
+{
+  const glbPath = join(fixtureDir, 'functional-ok.glb');
+  const badPath = join(fixtureDir, 'functional-malformed-authoring.json');
+  writeFileSync(badPath, '{not-json');
+  const badParse = await validateLiveActFaceAsset({
+    inputPath: glbPath,
+    baselinePath,
+    profile: 'core-v1',
+    anchorsPath,
+    authoringPath: badPath,
+    functionalMode: 'diagnostic',
+  });
+  check(badParse.ok === false, 'malformed authoring fails diagnostic');
+  check(
+    (badParse.inventory.functionalQa?.violations || []).some((v) =>
+      String(v).includes('malformed_authoring'),
+    ),
+    'malformed_authoring_provenance',
+  );
+}
+
+// Publish without anchors → Functional N/A skip (morph inventory only); face publish must pass --anchors
+{
+  const glbPath = join(fixtureDir, 'functional-ok.glb');
+  const noAnchors = await validateLiveActFaceAsset({
+    inputPath: glbPath,
+    baselinePath,
+    profile: 'core-v1',
+  });
+  check(noAnchors.ok === true, 'morph-only without anchors still structurally OK');
+  check(noAnchors.inventory.functionalQa?.skipped === true, 'functional skipped without anchors');
+}
+
+// Authoring without anchors on CLI → reject (publish pairing)
+{
+  let cliFailed = false;
+  try {
+    execFileSync(
+      process.execPath,
+      [
+        join(root, 'scripts/liveact-face-asset-check.mjs'),
+        '--input',
+        join(fixtureDir, 'functional-ok.glb'),
+        '--baseline',
+        baselinePath,
+        '--profile',
+        'core-v1',
+        '--authoring',
+        join(fixtureDir, 'functional-ok-authoring.json'),
+      ],
+      { cwd: root, stdio: 'pipe' },
+    );
+  } catch {
+    cliFailed = true;
+  }
+  check(cliFailed, 'CLI authoring without anchors fails');
+}
+
 // 9) fingerprint mismatch
 const mismatch = await runCase('functional-topo-mismatch', 'good', {
   topologyFingerprint: 'v0:t0:m0',
