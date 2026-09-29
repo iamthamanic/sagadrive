@@ -455,16 +455,29 @@ check(
   );
 }
 
-// Publish without anchors → Functional N/A skip (morph inventory only); face publish must pass --anchors
+// Without anchors → Functional N/A skip (morph inventory / structural gates remain valid)
 {
   const glbPath = join(fixtureDir, 'functional-ok.glb');
-  const noAnchors = await validateLiveActFaceAsset({
+  const noAnchorsPublish = await validateLiveActFaceAsset({
     inputPath: glbPath,
     baselinePath,
     profile: 'core-v1',
   });
-  check(noAnchors.ok === true, 'morph-only without anchors still structurally OK');
-  check(noAnchors.inventory.functionalQa?.skipped === true, 'functional skipped without anchors');
+  check(noAnchorsPublish.ok === true, 'morph-only without anchors still structurally OK');
+  check(noAnchorsPublish.inventory.functionalQa?.skipped === true, 'functional skipped without anchors');
+  check(
+    (noAnchorsPublish.inventory.functionalQa?.violations || []).includes('no_anchors_manifest'),
+    'no_anchors_manifest skip reason',
+  );
+
+  const noAnchorsDiag = await validateLiveActFaceAsset({
+    inputPath: glbPath,
+    baselinePath,
+    profile: 'core-v1',
+    functionalMode: 'diagnostic',
+  });
+  check(noAnchorsDiag.ok === true, 'diagnostic morph-only without anchors still OK');
+  check(noAnchorsDiag.inventory.functionalQa?.skipped === true, 'functional skipped without anchors in diagnostic');
 }
 
 // Authoring without anchors on CLI → reject (publish pairing)

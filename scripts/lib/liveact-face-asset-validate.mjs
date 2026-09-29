@@ -352,8 +352,8 @@ export async function validateLiveActFaceAsset(opts) {
   /** @type {unknown} */
   let functionalQa;
   if (!opts.anchorsPath) {
-    // Morph-inventory / structural-only calls have no face mapping — Functional N/A.
-    // Face publish must pass --anchors (+ reviewed authoring); CLI enforces that pairing.
+    // No anchors → Functional N/A (same as Semantic). Morph-inventory / structural gates remain valid.
+    // Publish face eligibility that needs Functional QA must pass --anchors + reviewed authoring.
     functionalQa = functionalQaSkippedResult('no_anchors_manifest');
   } else if (sagaErrors.includes('face_anchor_anatomy_failed')) {
     functionalQa = {
