@@ -666,6 +666,14 @@ function checkLiveActFaceSemanticValidator() {
   });
 }
 
+function checkLiveActFaceFunctionalValidator() {
+  console.log('LiveAct face functional validator (#422): reviewed GT morph function QA...');
+  execFileSync(process.execPath, ['scripts/liveact-face-functional-validator-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceAuthoringQtmesh() {
   console.log('LiveAct face authoring qtmesh adapter (#384): fake CLI + report gates...');
   execFileSync(process.execPath, ['scripts/liveact-face-authoring-qtmesh-check.mjs'], {
@@ -1511,6 +1519,7 @@ checkLiveActCapabilityOwnership();
 checkLiveActFaceAssetContract();
 checkLiveActFaceAssetValidator();
 checkLiveActFaceSemanticValidator();
+checkLiveActFaceFunctionalValidator();
 checkLiveActFaceAuthoringQtmesh();
 checkLiveActRetargetProfile();
 checkLiveActFacialFidelityV2();

@@ -138,6 +138,20 @@ check(
   'auto_marked_reviewed issue',
 );
 
+check(domainMod.isValidFaceMappingReviewedAtV1('2026-09-22T00:00:00.000Z') === true, 'canonical reviewedAt valid');
+check(domainMod.isValidFaceMappingReviewedAtV1('not-a-date') === false, 'invalid reviewedAt rejected');
+const badReviewedAt = {
+  ...reviewedManual,
+  reviewedAt: 'not-a-date',
+};
+check(!domainMod.isReviewedFaceMappingGroundTruth(badReviewedAt), 'invalid reviewedAt is not GT');
+const badReviewedAtValidation = domainMod.validateFaceMappingAuthoringV1(badReviewedAt);
+check(!badReviewedAtValidation.ok, 'validator rejects invalid reviewedAt');
+check(
+  badReviewedAtValidation.issues.some((i) => i.code === 'invalid_reviewed_at'),
+  'invalid_reviewed_at issue',
+);
+
 // Offline mirror parity
 const offlineAuto = createAutoUnreviewedFaceMappingAuthoring({
   modelPath: 'assets/species-3d/human/runs/x/face.glb',

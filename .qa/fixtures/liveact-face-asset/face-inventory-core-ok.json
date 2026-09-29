@@ -76,5 +76,16 @@
     "channels": {},
     "combinations": {},
     "violations": []
+  },
+  "functionalQa": {
+    "contractVersion": "SagaDriveLiveActFaceFunctionalQaV1",
+    "profileVersion": "liveact-face-functional-profile-v1",
+    "pass": true,
+    "skipped": true,
+    "blockedByGroundTruth": false,
+    "violations": [
+      "no_anchors_manifest"
+    ],
+    "channels": {}
   }
 }

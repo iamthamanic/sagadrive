@@ -1,0 +1,12 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "manual",
+  "reviewed": true,
+  "reviewedAt": "2026-09-29T10:00:00.000Z",
+  "asset": {
+    "modelPath": "functional-blink-no-lid.glb",
+    "topologyFingerprint": "v63:t21:m1",
+    "modelSha256": "a5f1bb4ac40e31324f2948386dbeb1d3f766e6fe0930a79afc856d8f71e65dfb",
+    "anchorsSha256": "33bb2385452acb501db21aa3af4d574048cdc97cd8df1fdc1b6fe1144cb1e805"
+  }
+}

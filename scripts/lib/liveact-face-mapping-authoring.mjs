@@ -19,7 +19,39 @@ export function isFaceMappingAuthoringSource(value) {
 }
 
 /**
- * Fail-closed: only manual / manual_override with reviewed=true counts as publish ground truth.
+ * Canonical V1 reviewedAt: UTC ISO with milliseconds (`Date.prototype.toISOString()`).
+ * Fail-closed — rejects impossible calendar dates (no permissive Date.parse alone).
+ * @param {unknown} value
+ * @returns {value is string}
+ */
+export function isValidFaceMappingReviewedAtV1(value) {
+  if (typeof value !== 'string' || value.length === 0) return false;
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/.exec(value);
+  if (!m) return false;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const hour = Number(m[4]);
+  const minute = Number(m[5]);
+  const second = Number(m[6]);
+  const ms = Number(m[7]);
+  const dt = new Date(Date.UTC(year, month - 1, day, hour, minute, second, ms));
+  if (
+    dt.getUTCFullYear() !== year ||
+    dt.getUTCMonth() !== month - 1 ||
+    dt.getUTCDate() !== day ||
+    dt.getUTCHours() !== hour ||
+    dt.getUTCMinutes() !== minute ||
+    dt.getUTCSeconds() !== second ||
+    dt.getUTCMilliseconds() !== ms
+  ) {
+    return false;
+  }
+  return dt.toISOString() === value;
+}
+
+/**
+ * Fail-closed: only manual / manual_override with reviewed=true and valid reviewedAt.
  * @param {unknown} authoring
  */
 export function isReviewedFaceMappingGroundTruth(authoring) {
@@ -28,7 +60,8 @@ export function isReviewedFaceMappingGroundTruth(authoring) {
   if (record.contractVersion !== FACE_MAPPING_AUTHORING_CONTRACT_VERSION) return false;
   if (record.reviewed !== true) return false;
   if (record.source === 'auto') return false;
-  return record.source === 'manual' || record.source === 'manual_override';
+  if (!(record.source === 'manual' || record.source === 'manual_override')) return false;
+  return isValidFaceMappingReviewedAtV1(record.reviewedAt);
 }
 
 /**
@@ -70,6 +103,11 @@ export function validateFaceMappingAuthoringV1(raw) {
       code: 'reviewed_without_timestamp',
       detail: 'reviewed=true requires reviewedAt ISO timestamp.',
     });
+  } else if (reviewed && !isValidFaceMappingReviewedAtV1(record.reviewedAt)) {
+    issues.push({
+      code: 'invalid_reviewed_at',
+      detail: 'reviewedAt must be canonical UTC ISO with milliseconds (…Z).',
+    });
   }
 
   const asset = record.asset;
@@ -87,7 +125,7 @@ export function validateFaceMappingAuthoringV1(raw) {
 
 /**
  * Build unreviewed auto provenance for heuristic authoring exports.
- * @param {{ modelPath: string; modelSha256?: string; topologyFingerprint?: string; cacheBust?: string; note?: string }} input
+ * @param {{ modelPath: string; modelSha256?: string; anchorsSha256?: string; topologyFingerprint?: string; cacheBust?: string; note?: string }} input
  */
 export function createAutoUnreviewedFaceMappingAuthoring(input) {
   return {
@@ -97,6 +135,7 @@ export function createAutoUnreviewedFaceMappingAuthoring(input) {
     asset: {
       modelPath: input.modelPath,
       ...(input.modelSha256 ? { modelSha256: input.modelSha256 } : {}),
+      ...(input.anchorsSha256 ? { anchorsSha256: input.anchorsSha256 } : {}),
       ...(input.topologyFingerprint ? { topologyFingerprint: input.topologyFingerprint } : {}),
       ...(input.cacheBust ? { cacheBust: input.cacheBust } : {}),
     },

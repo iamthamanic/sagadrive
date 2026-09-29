@@ -4,7 +4,7 @@
 **Licenses / notices:** `FACE-AUTHORING-THIRD-PARTY.md`  
 **Pinned upstream:** `fernandotonon/QtMeshEditor` @ `8720dc91bd7426908b9218673fbd74d544dd908c`  
 **SagaDrive contract:** `SagaDriveLiveActFaceAssetV1` (`core-v1` / `full-v1`) — #382  
-**Validator:** `scripts/liveact-face-asset-check.mjs` — #383 (+ semantic V2 #401 with `--anchors`)  
+**Validator:** `scripts/liveact-face-asset-check.mjs` — #383 (+ semantic V2 #401 with `--anchors`; + functional V1 #422 with `--authoring`)  
 
 QtMeshEditor is **not** a runtime dependency. Domain code must not name QtMeshEditor / ICT-FaceKit / Blender / Faceit.
 
@@ -65,9 +65,13 @@ Author `face-anchors.json` per run with `liveact-face-anchor-author.mjs` (**head
 
 1. topology (`liveact-face-anchor-validate`)
 2. **Anatomy QA** (`SagaDriveFaceAnchorAnatomyQaV1` / `liveact-face-anchor-anatomy-check.mjs`)
-3. Semantic Morph QA V2 (`liveact-face-asset-check.mjs --anchors …`)
+3. reviewed Ground Truth (`SagaDriveFaceMappingAuthoringV1` — see below)
+4. Semantic Morph QA V2 (`liveact-face-asset-check.mjs --anchors …`)
+5. **Functional Face QA V1** (`SagaDriveLiveActFaceFunctionalQaV1` — `--authoring` or sibling `face-mapping-authoring.json`)
 
-Semantic QA is blocked unless Anatomy QA passes.
+Semantic QA is blocked unless Anatomy QA passes. Functional QA in **publish** mode is blocked when reviewed authoring provenance is missing or fails identity/fingerprint checks. Use `functionalMode: 'diagnostic'` / `--functional-mode diagnostic` only for semantic-only lab checks — never for publish eligibility. Anchors alone are never treated as reviewed GT.
+
+CLI pairing: `--authoring` requires `--anchors`. Morph-inventory calls without `--anchors` skip Functional QA (`no_anchors_manifest`). Explicit `--functional-mode publish` also requires `--anchors`.
 
 ### Sidecar versioning (browser)
 
@@ -79,9 +83,34 @@ Runtime bindings stay in `SagaDriveFaceAnchorsV1`. Authoring provenance is a **s
 
 - Path: `face-mapping-authoring.json` next to `face-anchors.json` (or `{stem}-face-mapping-authoring.json` next to `{stem}-face-anchors.json`)
 - Contract: `src/domains/character/avatar/face-mapping-authoring-contract.ts`
-- Fields: `source: auto | manual | manual_override`, `reviewed`, `asset.modelPath` (+ optional sha256 / topologyFingerprint / cacheBust)
+- Fields: `source: auto | manual | manual_override`, `reviewed`, `asset.modelPath` (+ optional `modelSha256` / `anchorsSha256` / `topologyFingerprint` / `cacheBust`)
 
-**Policy:** Heuristic/auto output is proposal-only (`source: auto`, `reviewed: false`). Publish-/QA-helpers (`isReviewedFaceMappingGroundTruth`) treat only `manual` / `manual_override` with `reviewed: true` as production ground truth. `auto` + `reviewed: true` is invalid (fail-closed).
+**Policy:** Heuristic/auto output is proposal-only (`source: auto`, `reviewed: false`). Publish-/QA-helpers (`isReviewedFaceMappingGroundTruth`) treat only `manual` / `manual_override` with `reviewed: true` **and** canonical `reviewedAt` (UTC ISO with milliseconds) as production ground truth. `auto` + `reviewed: true` is invalid (fail-closed).
+
+Functional Face QA (#422) additionally requires:
+
+1. `asset.anchorsSha256` matching the validated `face-anchors.json` bytes (binds reviewed provenance to the mapping, not only the mesh)
+2. at least one strong mesh fingerprint (`asset.topologyFingerprint` and/or `asset.modelSha256`) matching the validated GLB
+3. path identity: full/run-relative path match, **or** basename-only plus exact `modelSha256` (basename alone is not enough across run dirs)
+
+Insufficient or mismatched fingerprints block Functional QA (fail-closed). No m5/f5 filename exceptions.
+
+### Functional Face QA (`SagaDriveLiveActFaceFunctionalQaV1`)
+
+Offline, browser-independent. Profile: `liveact-face-functional-profile-v1`.
+
+For each required channel (`jawOpen`, `eyeBlinkLeft/Right`, `browInnerUp`, `mouthSmileLeft/Right`, `mouthPucker`):
+
+- resolve reviewed triangle/barycentric anchors at neutral
+- apply isolated morph weight `1.0` to bound vertices (document not mutated)
+- assert normalized geometry deltas (mouthGap, eyeOpen, browInnerLift, smile corner, mouth width)
+
+Inventory / run ledger field `functionalQa`:
+
+- `contractVersion`, `profileVersion`, `pass`, `skipped`, `blockedByGroundTruth`, `violations`
+- per channel: `pass`, `neutralMetrics`, `posedMetrics`, `deltas`, `thresholds`, `violations`, `poseWeight`
+
+No aggregate magic score.
 
 ---
 
@@ -94,7 +123,7 @@ Minimum in `run.json`:
 - `faceTemplate.provider` / `license` / `checksum`
 - `input` / `output` path + checksum
 - `faceRig.shapeCount` / `fitResidual` / `gazeMode` / profiles
-- `validation` Khronos + SagaDrive (+ `semanticQa` when `face-anchors.json` present)
+- `validation` Khronos + SagaDrive (+ `semanticQa` when `face-anchors.json` present; + `functionalQa` when reviewed authoring provenance is present)
 - `beforeAfter` bytes/triangles/morphs/skins/bones/materials/textures
 
 Example: `human/runs/quality-20260921-m5-face1/`.
