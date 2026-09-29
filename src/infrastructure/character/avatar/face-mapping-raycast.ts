@@ -1,9 +1,12 @@
 /**
- * face-mapping-raycast — pointer → SagaDriveFaceAnchorsV1 triangle binding (#420).
+ * face-mapping-raycast — pointer → SagaDriveFaceAnchorsV1 triangle binding (#420/#421).
  * Location: src/infrastructure/character/avatar/face-mapping-raycast.ts
  *
  * Raycasts only allowlisted avatar surface meshes (no helpers/equipment/debug).
  * Produces nodeIdentity + primitiveIndex + triangleIndex + barycentric — never world-XYZ only.
+ *
+ * Returns ordered intersection candidates (near→far). Manual uses first hit; Auto may select
+ * a later semantically allowed hit via the shared candidate list (no second binding engine).
  *
  * Barycentric is computed against the same deformed vertex positions Three.js uses for
  * the hit (Mesh.getVertexPosition), then clamped so draft validation never drops the point.
@@ -23,6 +26,35 @@ const _bary = new THREE.Vector3();
 const EXCLUDE_NAME_RE =
   /hair|weapon|sword|shield|helper|debug|grid|floor|axis|gizmo|outline|equipment|wearable|prop/i;
 
+/**
+ * Precise SagaDrive equipment/wearable runtime roots only.
+ * Do NOT apply EXCLUDE_NAME_RE here — fuzzy substrings on ancestors falsely reject
+ * imported hierarchies like Character_Hair → Body or Chair → Body.
+ */
+function isFaceMappingExcludedEquipmentAncestorName(name: string): boolean {
+  const n = name.trim();
+  if (!n) return false;
+  if (n === 'saga-rigid-equipment' || n === 'saga-skinned-wearables') return true;
+  if (n.startsWith('rigid-') || n.startsWith('skinned-')) return true;
+  return false;
+}
+
+/**
+ * True when this object or any ancestor is a known equipment/wearable runtime root
+ * or carries an explicit exclude/helper marker.
+ * Leaf name policy (hair/weapon/…) is applied separately on the candidate mesh.
+ */
+export function isUnderFaceMappingExcludedAncestor(object: THREE.Object3D): boolean {
+  let cur: THREE.Object3D | null = object;
+  while (cur) {
+    if (cur.userData?.sagadriveExcludeFaceMapping === true) return true;
+    if (cur.userData?.isHelper === true) return true;
+    if (isFaceMappingExcludedEquipmentAncestorName(cur.name)) return true;
+    cur = cur.parent;
+  }
+  return false;
+}
+
 export function isFaceMappingAllowlistedMesh(object: THREE.Object3D): object is THREE.Mesh {
   if (!(object instanceof THREE.Mesh)) return false;
   if (!object.visible) return false;
@@ -30,8 +62,7 @@ export function isFaceMappingAllowlistedMesh(object: THREE.Object3D): object is 
   const name = object.name.trim();
   if (!name) return false;
   if (EXCLUDE_NAME_RE.test(name)) return false;
-  if (object.userData?.sagadriveExcludeFaceMapping === true) return false;
-  if (object.userData?.isHelper === true) return false;
+  if (isUnderFaceMappingExcludedAncestor(object)) return false;
   const geom = object.geometry;
   if (!(geom instanceof THREE.BufferGeometry)) return false;
   if (!geom.getAttribute('position')) return false;
@@ -82,32 +113,19 @@ export interface FaceMappingRaycastHitV1 {
   readonly worldPoint: { readonly x: number; readonly y: number; readonly z: number };
 }
 
-/**
- * Convert canvas-local pointer coords to a triangle binding on allowlisted meshes.
- * @param canvasX CSS pixel X relative to canvas left
- * @param canvasY CSS pixel Y relative to canvas top
- */
-export function raycastFaceMappingPointer(input: {
-  camera: THREE.Camera;
-  root: THREE.Object3D;
-  canvasWidth: number;
-  canvasHeight: number;
-  canvasX: number;
-  canvasY: number;
-}): FaceMappingRaycastHitV1 | null {
-  const { camera, root, canvasWidth, canvasHeight, canvasX, canvasY } = input;
-  if (canvasWidth <= 0 || canvasHeight <= 0) return null;
+/** One ordered intersection along the ray (near → far). Binding built like Manual Mapping. */
+export interface FaceMappingRaycastCandidateV1 extends FaceMappingRaycastHitV1 {
+  readonly order: number;
+  readonly distance: number;
+  readonly nodeIdentity: string;
+  readonly triangleIndex: number;
+}
 
-  _pointerNdc.x = (canvasX / canvasWidth) * 2 - 1;
-  _pointerNdc.y = -(canvasY / canvasHeight) * 2 + 1;
-  _raycaster.setFromCamera(_pointerNdc, camera);
-
-  const meshes = collectFaceMappingRaycastMeshes(root);
-  if (meshes.length === 0) return null;
-
-  const hits = _raycaster.intersectObjects(meshes, false);
-  const hit = hits[0];
-  if (!hit || !(hit.object instanceof THREE.Mesh)) return null;
+function hitToCandidate(
+  hit: THREE.Intersection,
+  order: number,
+): FaceMappingRaycastCandidateV1 | null {
+  if (!(hit.object instanceof THREE.Mesh)) return null;
   if (typeof hit.faceIndex !== 'number' || hit.faceIndex < 0 || !hit.face) return null;
 
   const mesh = hit.object;
@@ -122,12 +140,10 @@ export function raycastFaceMappingPointer(input: {
   const ib = hit.face.b;
   const ic = hit.face.c;
 
-  // Same space as the raycast hit: deformed / skinned vertex positions.
   mesh.getVertexPosition(ia, _a);
   mesh.getVertexPosition(ib, _b);
   mesh.getVertexPosition(ic, _c);
 
-  // hit.point is world-space; barycentric needs the same local/morph space as getVertexPosition.
   _pointLocal.copy(hit.point);
   mesh.worldToLocal(_pointLocal);
   THREE.Triangle.getBarycoord(_pointLocal, _a, _b, _c, _bary);
@@ -137,6 +153,10 @@ export function raycastFaceMappingPointer(input: {
   const primitiveIndex = resolvePrimitiveIndex(geometry, triangleIndex);
 
   return {
+    order,
+    distance: hit.distance,
+    nodeIdentity,
+    triangleIndex,
     binding: {
       nodeIdentity,
       primitiveIndex,
@@ -144,5 +164,68 @@ export function raycastFaceMappingPointer(input: {
       barycentric,
     },
     worldPoint: { x: hit.point.x, y: hit.point.y, z: hit.point.z },
+  };
+}
+
+/**
+ * Ordered (near→far) allowlisted intersections for one canvas pointer.
+ * Shared path for Manual and Auto — both pass candidates through surface-aware select.
+ * Manual: first allowed on same ray (no screen-snap). Auto: may expand depth / snap.
+ */
+export function listFaceMappingRaycastCandidates(input: {
+  camera: THREE.Camera;
+  root: THREE.Object3D;
+  canvasWidth: number;
+  canvasHeight: number;
+  canvasX: number;
+  canvasY: number;
+}): FaceMappingRaycastCandidateV1[] {
+  const { camera, root, canvasWidth, canvasHeight, canvasX, canvasY } = input;
+  if (canvasWidth <= 0 || canvasHeight <= 0) return [];
+
+  _pointerNdc.x = (canvasX / canvasWidth) * 2 - 1;
+  _pointerNdc.y = -(canvasY / canvasHeight) * 2 + 1;
+  _raycaster.setFromCamera(_pointerNdc, camera);
+
+  const meshes = collectFaceMappingRaycastMeshes(root);
+  if (meshes.length === 0) return [];
+
+  const hits = _raycaster.intersectObjects(meshes, false);
+  const out: FaceMappingRaycastCandidateV1[] = [];
+  for (let i = 0; i < hits.length; i += 1) {
+    const candidate = hitToCandidate(hits[i]!, i);
+    if (candidate) out.push(candidate);
+  }
+  return out;
+}
+
+/**
+ * Convert canvas-local pointer coords to a triangle binding on allowlisted meshes.
+ * Default = first (nearest) hit. Prefer `selectCandidate` for Manual/Auto surface-aware select.
+ */
+export function raycastFaceMappingPointer(input: {
+  camera: THREE.Camera;
+  root: THREE.Object3D;
+  canvasWidth: number;
+  canvasHeight: number;
+  canvasX: number;
+  canvasY: number;
+  /**
+   * Optional Auto selector over ordered candidates.
+   * Return the chosen candidate (or null to miss). Defaults to first hit.
+   */
+  selectCandidate?: (
+    candidates: readonly FaceMappingRaycastCandidateV1[],
+  ) => FaceMappingRaycastCandidateV1 | null;
+}): FaceMappingRaycastHitV1 | null {
+  const candidates = listFaceMappingRaycastCandidates(input);
+  if (candidates.length === 0) return null;
+  const selected = input.selectCandidate
+    ? input.selectCandidate(candidates)
+    : (candidates[0] ?? null);
+  if (!selected) return null;
+  return {
+    binding: selected.binding,
+    worldPoint: selected.worldPoint,
   };
 }

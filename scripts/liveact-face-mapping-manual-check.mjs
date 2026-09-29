@@ -52,6 +52,8 @@ check(/normalizeFaceMappingBarycentric/.test(raycastSrc), 'barycentric clamp/ren
 check(/EXCLUDE_NAME_RE|sagadriveExcludeFaceMapping/.test(raycastSrc), 'exclude helpers');
 
 check(/setFaceMappingAuthoringActive/.test(studio), 'studio authoring mode');
+check(/faceMappingSuspendReason/.test(studio), 'authoring suspend reason independent of LiveAct');
+check(/syncAnimationSuspendReasons/.test(studio), 'merged animation suspend reasons');
 check(/raycastFaceMappingAtCanvas/.test(studio), 'studio raycast API');
 check(/bindFaceAnchorsManifestSession/.test(studio), 'session bind');
 check(/getFaceAnchorsManifest/.test(studio), 'get manifest');
@@ -110,6 +112,30 @@ const withBinding = draftMod.setFaceMappingDraftBinding(empty, 'mouthUpper', {
   barycentric: { u: 0.5, v: 0.25, w: 0.25 },
 });
 check(draftMod.resolveFaceMappingMarkerStatus(withBinding, 'mouthUpper') === 'set', 'set status');
+check(
+  draftMod.resolveFaceMappingMarkerStatus(withBinding, 'mouthUpper', {
+    reviewedAnchorIds: new Set(['mouthUpper']),
+  }) === 'reviewed',
+  'set + reviewedAnchorIds → reviewed',
+);
+check(
+  draftMod.resolveFaceMappingMarkerStatus(withBinding, 'mouthUpper', {
+    reviewedAnchorIds: new Set(),
+  }) === 'set',
+  'set + empty reviewed set stays set',
+);
+check(/STATUS_FILL\.reviewed|reviewed: 'rgba\(34, 197, 94/.test(layer), 'canvas reviewed fill defined');
+check(/getAuthoringMeta/.test(layer), 'canvas layer accepts authoring meta');
+check(
+  /resolveFaceMappingMarkerStatus\(draft, id, \{[\s\S]*reviewedAnchorIds/.test(layer),
+  'canvas resolves status with reviewedAnchorIds',
+);
+check(
+  /FaceMappingMarkerLayer[\s\S]*getAuthoringMeta=\{\(\) => authoringMetaRef\.current\}/.test(
+    controls,
+  ),
+  'controls pass authoringMetaRef into canvas layer',
+);
 const manifest = draftMod.faceMappingDraftToManifest(withBinding);
 check(manifest.anchors.mouthUpper?.nodeIdentity === 'Face', 'manifest has mouthUpper');
 check(Object.keys(manifest.anchors).length === 1, 'only set anchors exported');
@@ -166,6 +192,97 @@ check(
     typeof hit.binding.barycentric.w === 'number',
   'barycentric present',
 );
+
+check(/selectFaceMappingSurfaceAwareCandidate/.test(studio), 'studio wires surface-aware manual select');
+check(
+  /raycastFaceMappingAtCanvas\([\s\S]*\{ anchorId/.test(layer) ||
+    /raycastFaceMappingAtCanvas\([\s\S]*anchorId:/.test(layer),
+  'click/drag pass anchorId',
+);
+check(!/buildFaceMappingScreenSnapOffsets|screen_snap/.test(layer), 'manual path has no screen-snap');
+
+const selectOut = join(runsDir, 'liveact-face-mapping-manual-surface-select-bundle.mjs');
+await build({
+  entryPoints: [join(root, 'src/domains/character/avatar/face-mapping-auto-surface-select-v1.ts')],
+  bundle: true,
+  format: 'esm',
+  platform: 'neutral',
+  outfile: selectOut,
+  logLevel: 'silent',
+});
+const selectMod = await import(`${selectOut}?t=${Date.now()}`);
+
+function pickManual(anchorId, candidates, faceWidthWorld = 0.2) {
+  const selection = selectMod.selectFaceMappingSurfaceAwareCandidate(
+    candidates,
+    anchorId,
+    { faceWidthWorld, allowSameRayExpandedDepth: false },
+  );
+  if (selection.selectedIndex == null) return null;
+  return candidates[selection.selectedIndex];
+}
+
+const eyeUpperHit = pickManual('eyeLeftUpper', [
+  { order: 0, distance: 0.04, nodeIdentity: 'Eyes' },
+  { order: 1, distance: 0.045, nodeIdentity: 'Body' },
+]);
+check(eyeUpperHit?.nodeIdentity === 'Body', 'manual eyeUpper: Eyes then Body → Body');
+
+const eyeLowerHit = pickManual('eyeLeftLower', [
+  { order: 0, distance: 0.04, nodeIdentity: 'Eyelashes' },
+  { order: 1, distance: 0.045, nodeIdentity: 'Body' },
+]);
+check(eyeLowerHit?.nodeIdentity === 'Body', 'manual eyeLower: Eyelashes then Body → Body');
+
+const mouthHit = pickManual('mouthUpper', [
+  { order: 0, distance: 0.04, nodeIdentity: 'Teeth' },
+  { order: 1, distance: 0.045, nodeIdentity: 'Body' },
+]);
+check(mouthHit?.nodeIdentity === 'Body', 'manual mouth: Teeth then Body → Body');
+
+const farReject = pickManual('eyeLeftUpper', [
+  { order: 0, distance: 0.04, nodeIdentity: 'Eyes' },
+  { order: 1, distance: 0.9, nodeIdentity: 'Body' },
+]);
+check(farReject == null, 'rejected front + far Body → no binding');
+
+const noScaleReject = pickManual(
+  'eyeLeftUpper',
+  [
+    { order: 0, distance: 0.04, nodeIdentity: 'Eyes' },
+    { order: 1, distance: 0.045, nodeIdentity: 'Body' },
+  ],
+  null,
+);
+check(noScaleReject == null, 'face scale unavailable + Eyes vor Body → Manual fail closed');
+
+check(/resolveFaceMappingFaceWidthWorld|leftOuterBinding/.test(studio), 'manual scale from shared face-width API');
+check(/allowSameRayExpandedDepth:\s*false/.test(studio), 'manual disables expanded pass');
+check(/leftOuterBinding|eyeLeftOuter/.test(layer), 'click/drag pass outer-eye bindings for scale');
+
+// Scale invariance (manual strict-only): 0.1x / 1x / 10x
+for (const scale of [0.1, 1, 10]) {
+  const faceW = 0.2 * scale;
+  const base = 1 * scale;
+  const near = pickManual(
+    'eyeLeftUpper',
+    [
+      { order: 0, distance: base, nodeIdentity: 'Eyes' },
+      { order: 1, distance: base + faceW * 0.05, nodeIdentity: 'Body' },
+    ],
+    faceW,
+  );
+  check(near?.nodeIdentity === 'Body', `manual scale ${scale}x: 5% gap → Body`);
+  const far = pickManual(
+    'eyeLeftUpper',
+    [
+      { order: 0, distance: base, nodeIdentity: 'Eyes' },
+      { order: 1, distance: base + faceW * 0.5, nodeIdentity: 'Body' },
+    ],
+    faceW,
+  );
+  check(far == null, `manual scale ${scale}x: 50% gap → reject`);
+}
 
 writeFileSync(
   join(root, '.qa/fixtures/liveact-face-mapping-manual/sample-binding.json'),

@@ -21,6 +21,7 @@ import {
 } from '../../../domains/character/avatar';
 import { parseItemModel3dAssetKey } from '../../../domains/items/model3d-assets';
 import { normalizeSafeUrl } from '../../../domains/character/use-cases/avatar-presets';
+import { beginFaceMappingBaseFaceCaptureVisibility } from './face-mapping-base-face-capture-visibility';
 
 const MAX_CACHED = 6;
 
@@ -54,6 +55,38 @@ export class AvatarSkinnedWearableRuntime {
 
   getGroup(): THREE.Group {
     return this.group;
+  }
+
+  /**
+   * Temporarily hide attached skinned wearables and reveal masked base regions for MediaPipe capture.
+   * Returns restore() — call in finally. Does not mutate visuals/traits/inventory.
+   */
+  beginFaceMappingBaseFaceCapture(): () => void {
+    const hide: THREE.Object3D[] = [this.group];
+    for (const entry of this.attached.values()) {
+      hide.push(entry.root);
+    }
+    const reveal = this.collectMaskedBaseSurfacesForCapture();
+    return beginFaceMappingBaseFaceCaptureVisibility({ hide, reveal });
+  }
+
+  /**
+   * Test seam (#421): register a synthetic skinned root + region mask without GLTF load.
+   * Production Auto Mapping never calls this.
+   */
+  attachSyntheticForFaceMappingCaptureTest(params: {
+    readonly instanceId: string;
+    readonly root: THREE.Object3D;
+    readonly maskRegions: readonly string[];
+  }): void {
+    this.detach(params.instanceId);
+    this.applyMask(params.maskRegions);
+    this.attached.set(params.instanceId, {
+      instanceId: params.instanceId,
+      root: params.root,
+      maskRegions: params.maskRegions,
+      generation: this.generation,
+    });
   }
 
   setUrlResolver(resolveUrl: ResolveSkinnedWearableUrl): void {
@@ -234,6 +267,35 @@ export class AvatarSkinnedWearableRuntime {
       }
     });
     return found;
+  }
+
+  /** Base meshes currently hidden by active body-region masks (for capture reveal). */
+  private collectMaskedBaseSurfacesForCapture(): THREE.Object3D[] {
+    if (!this.avatarRoot) return [];
+    const counts = this.regionMask.snapshot().counts;
+    const wanted = new Set(
+      Object.entries(counts)
+        .filter(([, count]) => (count ?? 0) > 0)
+        .map(([region]) => region.toLowerCase()),
+    );
+    if (wanted.size === 0) return [];
+    const out: THREE.Object3D[] = [];
+    this.avatarRoot.traverse((obj) => {
+      if (obj === this.group || obj.parent === this.group) return;
+      if (obj.name.startsWith('skinned-') || obj.name === 'saga-skinned-wearables') return;
+      if (obj.name.startsWith('rigid-') || obj.name === 'saga-rigid-equipment') return;
+      const tagged =
+        typeof obj.userData.sdBodyRegion === 'string'
+          ? String(obj.userData.sdBodyRegion).toLowerCase()
+          : null;
+      const name = obj.name.toLowerCase();
+      const match =
+        (tagged && wanted.has(tagged)) ||
+        [...wanted].some((h) => h !== 'none' && name.includes(h));
+      if (!match) return;
+      out.push(obj);
+    });
+    return out;
   }
 
   private applyMask(regions: readonly string[]): void {

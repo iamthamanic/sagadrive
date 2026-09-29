@@ -528,6 +528,30 @@ function checkLiveActFaceMappingManual() {
   });
 }
 
+function checkLiveActFaceMappingAuto() {
+  console.log('LiveAct face mapping auto (#421): IMAGE MediaPipe + shared raycast...');
+  execFileSync(process.execPath, ['scripts/liveact-face-mapping-auto-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLiveActFaceMappingAutoCaptureVisibility() {
+  console.log('LiveAct face mapping auto capture visibility (#421 P2): hide equipment for MediaPipe...');
+  execFileSync(process.execPath, ['scripts/liveact-face-mapping-auto-capture-visibility-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkLiveActFaceMappingGtMarkCopy() {
+  console.log('LiveAct face mapping GT mark vs clipboard (#421 P3)...');
+  execFileSync(process.execPath, ['scripts/liveact-face-mapping-gt-mark-copy-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceAnchorsCharacterPersist() {
   console.log('LiveAct face anchors character persist: avatar.face_anchors + override...');
   execFileSync(process.execPath, ['scripts/liveact-face-anchors-character-persist-check.mjs'], {
@@ -1470,6 +1494,9 @@ checkLiveActDiagnosticsV2();
 checkLiveActFaceAnchorsV1();
 checkLiveActFaceMappingAuthoring();
 checkLiveActFaceMappingManual();
+checkLiveActFaceMappingAuto();
+checkLiveActFaceMappingAutoCaptureVisibility();
+checkLiveActFaceMappingGtMarkCopy();
 checkLiveActFaceAnchorsCharacterPersist();
 checkLiveActExpandDriveBind();
 checkLiveActReferenceVrmGoldenAvatar();

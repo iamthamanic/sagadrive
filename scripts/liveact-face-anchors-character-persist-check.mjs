@@ -56,7 +56,15 @@ check(!/loadFaceAnchorsManifestForModel\(safeUrl, avatar\.face_anchors/.test(stu
 
 // PR #440 review: empty / invalid drafts must not become an override (P2).
 check(/validateFaceMappingDraft\(current\)/.test(controls), 'Speichern validates the draft');
-check(/disabled=\{!draftValidation\?\.ok\}/.test(controls), 'Speichern disabled for invalid drafts');
+check(
+  /isFaceMappingSaveDisabled\(\{[\s\S]*autoBusy[\s\S]*draftValid:\s*draftValidation\?\.ok === true/.test(
+    controls,
+  ) ||
+    /isFaceMappingSaveDisabled\(\{[\s\S]*draftValid:\s*draftValidation\?\.ok === true[\s\S]*autoBusy/.test(
+      controls,
+    ),
+  'Speichern disabled for invalid drafts (and while autoBusy)',
+);
 
 // PR #440 review: every topology-changing path clears anchors (P2).
 const bodyConversion = hook.match(/const applyBodyConversion = [\s\S]*?\n {2}\};/)?.[0] ?? '';

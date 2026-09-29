@@ -82,6 +82,7 @@ export function AvatarSurfaceViewer({
   const studioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
   const expandStudioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
   const [faceMappingPanelHost, setFaceMappingPanelHost] = useState<HTMLDivElement | null>(null);
+  const [settingsStickyHost, setSettingsStickyHost] = useState<HTMLDivElement | null>(null);
   const [modelEpoch, setModelEpoch] = useState(0);
   const [faceAnchorEpoch, setFaceAnchorEpoch] = useState(0);
   const [previewExpandOpen, setPreviewExpandOpen] = useState(false);
@@ -275,6 +276,18 @@ export function AvatarSurfaceViewer({
     >
       {show3d && avatar ? (
         <div className="relative w-full">
+          {isEditorSurface && !previewExpandOpen ? (
+            <div
+              className="pointer-events-none sticky top-3 z-30 flex h-0 justify-end overflow-visible pr-3 pt-3"
+              data-avatar-preview-settings-sticky-bar="true"
+            >
+              <div
+                ref={setSettingsStickyHost}
+                className="pointer-events-auto relative"
+                data-testid="avatar-preview-settings-sticky-host"
+              />
+            </div>
+          ) : null}
           <AvatarCanvas
             avatar={avatar}
             canvasRef={canvasRef}
@@ -316,6 +329,7 @@ export function AvatarSurfaceViewer({
                   characterFaceMappingAvailable={characterFaceMappingAvailable}
                   studioRuntimeRef={studioRuntimeRef}
                   faceMappingPanelHost={faceMappingPanelHost}
+                  settingsStickyHost={settingsStickyHost}
                   onExpandPreview={() => setPreviewExpandOpen(true)}
                   onFaceAnchorsCommitted={handleFaceAnchorsCommitted}
                 />
@@ -328,6 +342,18 @@ export function AvatarSurfaceViewer({
         </div>
       ) : (
         <div className="relative h-full w-full">
+          {isEditorSurface && !previewExpandOpen ? (
+            <div
+              className="pointer-events-none sticky top-3 z-30 flex h-0 justify-end overflow-visible pr-3 pt-3"
+              data-avatar-preview-settings-sticky-bar="true"
+            >
+              <div
+                ref={setSettingsStickyHost}
+                className="pointer-events-auto relative"
+                data-testid="avatar-preview-settings-sticky-host"
+              />
+            </div>
+          ) : null}
           {view.portraitUrl && !imageFailed ? (
             <img
               src={view.portraitUrl}
@@ -351,6 +377,7 @@ export function AvatarSurfaceViewer({
               liveAct={liveAct}
               capabilities={null}
               characterFaceMappingAvailable={false}
+              settingsStickyHost={settingsStickyHost}
               onExpandPreview={() => setPreviewExpandOpen(true)}
               onFaceAnchorsCommitted={handleFaceAnchorsCommitted}
             />

@@ -219,10 +219,12 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
-- **2026-09-25** — LiveAct: Kopfachsen/L/R-Spiegel/LookAt-Korrektur, gestufte Kalibrierung, Motion-Test + Peak-Export, Full-Detail-Overlay; Neutral/Gaze-Restbias offen (`agent/liveact-reference-vrm-golden-avatar`)
+- **2026-09-25** — LiveAct Face Setup 3/6: Auto Mapping (MediaPipe IMAGE + shared mesh raycast → proposed draft; #421)
+- **2026-09-25** — LiveAct: Kopfachsen/L/R-Spiegel/LookAt-Korrektur, gestufte Kalibrierung, Motion-Test + Peak-Export, Full-Detail-Overlay; Neutral/Gaze-Restbias offen (`#443`)
 - **2026-09-21** — LiveAct Face Asset Validator: Khronos + SagaDrive CLI gate (`#383`)
 - **2026-09-21** — LiveAct Face Asset Contract: `core-v1` / `full-v1` + gazeMode (`#382`)
-- **2026-09-21** — LiveAct: Input- vs Avatar-Capabilities getrennt (`composeLiveActCapabilities`, #381)- **2026-09-21** — LiveAct: Kameravorschau verschiebbar (Default unten links), Bones-Debug sichtbar durch Mesh, GLB Capability Input-Flags; Species-Authoring-Scripts (`feat/liveact-pip-drag-and-rig-visibility`)
+- **2026-09-21** — LiveAct: Input- vs Avatar-Capabilities getrennt (`composeLiveActCapabilities`, #381)
+- **2026-09-21** — LiveAct: Kameravorschau verschiebbar (Default unten links), Bones-Debug sichtbar durch Mesh, GLB Capability Input-Flags; Species-Authoring-Scripts (`feat/liveact-pip-drag-and-rig-visibility`)
 - **2026-09-20** — Human species soft-real base (Palworld×Overwatch), gender→GLB preview, MToon toggle, Meshy rigging CPU step-split (`feat/avatar-human-softreal-mtoon-meshy`)
 - **2026-09-19** — Avatar V2: Modular GLB Contract v1 (`extras.sagadrive` Rollen/Slots + Upload-Spec) (`feat/avatar-v2-modular-glb-contract`, #250)
 - **2026-09-19** — Avatar V2: Composition Contract + kanonisches Design (Source/Anatomy/Family/Modularity/Capabilities orthogonal; Legacy-DTO lesbar) (`feat/avatar-v2-composition-contract`, #249)

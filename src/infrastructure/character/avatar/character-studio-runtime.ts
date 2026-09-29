@@ -74,9 +74,15 @@ import {
   evaluateFaceAnchorWorldPosition,
 } from './face-anchor-runtime';
 import {
+  listFaceMappingRaycastCandidates,
   raycastFaceMappingPointer,
+  type FaceMappingRaycastCandidateV1,
   type FaceMappingRaycastHitV1,
 } from './face-mapping-raycast';
+import {
+  computeFaceMappingFaceWidthWorld,
+  selectFaceMappingSurfaceAwareCandidate,
+} from '../../../domains/character/avatar/face-mapping-auto-surface-select-v1';
 
 export type { LiveActCharacterFaceDebugHandle, FaceMappingRaycastHitV1 };
 import type { AvatarEquipmentVisual } from '../../../domains/character/avatar';
@@ -88,6 +94,7 @@ import {
   AvatarSkinnedWearableRuntime,
   type ResolveSkinnedWearableUrl,
 } from './avatar-skinned-wearable-runtime';
+import { beginFaceMappingBaseFaceCaptureVisibility } from './face-mapping-base-face-capture-visibility';
 
 export type AvatarRuntimeState =
   | { status: 'loading'; message: string }
@@ -202,6 +209,12 @@ export class CharacterStudioRuntime {
   private faceAnchorsOverrideSource: SagaDriveFaceAnchorsManifestV1 | null = null;
   /** When true, LiveAct drive application is suppressed for Face Setup (#420). */
   private faceMappingAuthoringActive = false;
+  /** Nested base-face capture scopes (equipment hidden / masked bases revealed). */
+  private faceMappingBaseFaceCaptureDepth = 0;
+  private faceMappingBaseFaceCaptureRestore: (() => void) | null = null;
+  /** Independent suspend reasons — either keeps procedural clips paused. */
+  private liveActDriveSuspendReason = false;
+  private faceMappingSuspendReason = false;
   private readonly faceMappingProjectScratch = new THREE.Vector3();
 
   constructor(
@@ -464,7 +477,18 @@ export class CharacterStudioRuntime {
 
   /** Procedural clips pause while LiveAct drives this runtime so they cannot overwrite the head pose. */
   setLiveActDriveActive(active: boolean): void {
-    this.animationRuntime.setSuspended(active);
+    this.liveActDriveSuspendReason = active;
+    this.syncAnimationSuspendReasons();
+  }
+
+  /**
+   * Merge independent suspension reasons so LiveAct cleanup cannot resume clips
+   * while Face Mapping authoring still needs a frozen pose.
+   */
+  private syncAnimationSuspendReasons(): void {
+    this.animationRuntime.setSuspended(
+      this.liveActDriveSuspendReason || this.faceMappingSuspendReason,
+    );
   }
 
   /** Asset/bone/morph inventory only — compose with engine input in app (#381). */
@@ -516,6 +540,9 @@ export class CharacterStudioRuntime {
   setFaceMappingAuthoringActive(active: boolean): void {
     if (this.disposed) return;
     this.faceMappingAuthoringActive = active;
+    // Independent of LiveAct drive — cleanup must not unsuspend while authoring.
+    this.faceMappingSuspendReason = active;
+    this.syncAnimationSuspendReasons();
     if (active) {
       this.resetLiveActPose();
       this.resetFaceTrackingPose();
@@ -615,14 +642,108 @@ export class CharacterStudioRuntime {
   }
 
   /**
-   * Raycast canvas-local pointer to a triangle binding on allowlisted avatar meshes.
+   * Shared Face Mapping world scale (Manual + Auto): interocular distance between
+   * anatomical outer canthi in world space.
+   *
+   * Prefer evaluated draft bindings; else first allowlisted ray hits at canvas points
+   * (Auto MediaPipe outer-eye samples). Returns null when scale cannot be measured.
    */
-  raycastFaceMappingAtCanvas(canvasX: number, canvasY: number): FaceMappingRaycastHitV1 | null {
+  resolveFaceMappingFaceWidthWorld(input?: {
+    readonly leftOuterBinding?: SagaDriveFaceAnchorTriangleBinding | null;
+    readonly rightOuterBinding?: SagaDriveFaceAnchorTriangleBinding | null;
+    readonly leftOuterCanvas?: { readonly x: number; readonly y: number } | null;
+    readonly rightOuterCanvas?: { readonly x: number; readonly y: number } | null;
+  }): number | null {
+    if (this.disposed || !this.currentRoot) return null;
+
+    const leftBinding = input?.leftOuterBinding ?? null;
+    const rightBinding = input?.rightOuterBinding ?? null;
+    if (leftBinding && rightBinding) {
+      const lp = this.evaluateFaceMappingBindingWorld(leftBinding, 'eyeLeftOuter');
+      const rp = this.evaluateFaceMappingBindingWorld(rightBinding, 'eyeRightOuter');
+      const fromBindings = computeFaceMappingFaceWidthWorld(lp, rp);
+      if (fromBindings != null) return fromBindings;
+    }
+
+    const leftCanvas = input?.leftOuterCanvas ?? null;
+    const rightCanvas = input?.rightOuterCanvas ?? null;
+    if (leftCanvas && rightCanvas) {
+      const lHits = this.listFaceMappingRaycastCandidatesAtCanvas(leftCanvas.x, leftCanvas.y);
+      const rHits = this.listFaceMappingRaycastCandidatesAtCanvas(rightCanvas.x, rightCanvas.y);
+      const lp = lHits[0]?.worldPoint ?? null;
+      const rp = rHits[0]?.worldPoint ?? null;
+      return computeFaceMappingFaceWidthWorld(lp, rp);
+    }
+
+    return null;
+  }
+
+  /**
+   * Raycast canvas-local pointer to a triangle binding on allowlisted avatar meshes.
+   * Manual Mapping: same screen ray → scale-aware strict surface select (no screen-snap,
+   * no expanded pass). When `anchorId` is omitted, falls back to nearest hit (legacy).
+   */
+  raycastFaceMappingAtCanvas(
+    canvasX: number,
+    canvasY: number,
+    options?: {
+      readonly anchorId?: SagaDriveFaceAnchorId;
+      readonly faceWidthWorld?: number | null;
+      /** Draft outer-eye bindings used when faceWidthWorld is omitted. */
+      readonly leftOuterBinding?: SagaDriveFaceAnchorTriangleBinding | null;
+      readonly rightOuterBinding?: SagaDriveFaceAnchorTriangleBinding | null;
+    },
+  ): FaceMappingRaycastHitV1 | null {
     if (this.disposed || !this.currentRoot) return null;
     const canvas = this.renderer.domElement;
     const width = Math.max(1, Math.round(canvas.clientWidth));
     const height = Math.max(1, Math.round(canvas.clientHeight));
+    const anchorId = options?.anchorId;
+    const faceWidthWorld =
+      options?.faceWidthWorld !== undefined
+        ? options.faceWidthWorld
+        : this.resolveFaceMappingFaceWidthWorld({
+            leftOuterBinding: options?.leftOuterBinding,
+            rightOuterBinding: options?.rightOuterBinding,
+          });
     return raycastFaceMappingPointer({
+      camera: this.camera,
+      root: this.currentRoot,
+      canvasWidth: width,
+      canvasHeight: height,
+      canvasX,
+      canvasY,
+      selectCandidate: anchorId
+        ? (candidates) => {
+            const selection = selectFaceMappingSurfaceAwareCandidate(
+              candidates.map((c) => ({
+                order: c.order,
+                distance: c.distance,
+                nodeIdentity: c.nodeIdentity,
+              })),
+              anchorId,
+              {
+                faceWidthWorld,
+                allowSameRayExpandedDepth: false,
+              },
+            );
+            if (selection.selectedIndex == null) return null;
+            return candidates[selection.selectedIndex] ?? null;
+          }
+        : undefined,
+    });
+  }
+
+  /** Ordered allowlisted hits for Auto surface-aware selection (#421). */
+  listFaceMappingRaycastCandidatesAtCanvas(
+    canvasX: number,
+    canvasY: number,
+  ): FaceMappingRaycastCandidateV1[] {
+    if (this.disposed || !this.currentRoot) return [];
+    const canvas = this.renderer.domElement;
+    const width = Math.max(1, Math.round(canvas.clientWidth));
+    const height = Math.max(1, Math.round(canvas.clientHeight));
+    return listFaceMappingRaycastCandidates({
       camera: this.camera,
       root: this.currentRoot,
       canvasWidth: width,
@@ -670,6 +791,112 @@ export class CharacterStudioRuntime {
 
   getFaceMappingCanvasElement(): HTMLCanvasElement {
     return this.renderer.domElement;
+  }
+
+  /**
+   * Shared camera/pose state for Auto Mapping capture + GT screen freeze (#421).
+   * Keeps reference and proposal projections on the same face frame.
+   */
+  applyFaceMappingAutoCameraState(): void {
+    if (this.disposed) return;
+    this.resetLiveActPose();
+    this.resetFaceTrackingPose();
+    this.applyCameraFrame('face');
+    this.controls.update();
+  }
+
+  /**
+   * Run fn with face-mapping-excluded equipment hidden and masked base surfaces revealed.
+   * Nestable: visibility is restored only when the outermost scope exits (always in finally).
+   * Use around MediaPipe capture AND subsequent Auto raycasts so 2D detection and 3D binding
+   * see the same uncovered base face.
+   */
+  withFaceMappingBaseFaceCapture<T>(fn: () => T): T {
+    this.beginFaceMappingBaseFaceCaptureScope();
+    try {
+      return fn();
+    } finally {
+      this.endFaceMappingBaseFaceCaptureScope();
+    }
+  }
+
+  private beginFaceMappingBaseFaceCaptureScope(): void {
+    if (this.faceMappingBaseFaceCaptureDepth === 0) {
+      if (!this.currentRoot || this.disposed) {
+        this.faceMappingBaseFaceCaptureRestore = () => undefined;
+      } else {
+        const restoreRigid = this.rigidEquipmentRuntime.beginFaceMappingBaseFaceCapture();
+        const restoreSkinned = this.skinnedWearableRuntime.beginFaceMappingBaseFaceCapture();
+        const restoreExcludedMarkers = this.beginFaceMappingExcludedMarkerCapture(this.currentRoot);
+        this.faceMappingBaseFaceCaptureRestore = () => {
+          restoreExcludedMarkers();
+          restoreSkinned();
+          restoreRigid();
+        };
+      }
+    }
+    this.faceMappingBaseFaceCaptureDepth += 1;
+  }
+
+  private endFaceMappingBaseFaceCaptureScope(): void {
+    this.faceMappingBaseFaceCaptureDepth = Math.max(0, this.faceMappingBaseFaceCaptureDepth - 1);
+    if (this.faceMappingBaseFaceCaptureDepth === 0 && this.faceMappingBaseFaceCaptureRestore) {
+      const restore = this.faceMappingBaseFaceCaptureRestore;
+      this.faceMappingBaseFaceCaptureRestore = null;
+      restore();
+    }
+  }
+
+  /**
+   * Deterministic frontal capture for Auto Mapping (#421).
+   * Neutral pose + face camera frame; returns a 2D canvas copy (no upload/persist).
+   * CSS size matches Manual Mapping raycast coordinates.
+   *
+   * Opens a nestable base-face visibility scope for the render. Prefer wrapping the full
+   * Auto Mapping capture+raycast flow in `withFaceMappingBaseFaceCapture` so raycasts still
+   * see the uncovered face after this method returns.
+   */
+  captureFaceMappingAutoFrame(): {
+    image: HTMLCanvasElement;
+    canvasWidth: number;
+    canvasHeight: number;
+  } | null {
+    if (this.disposed || !this.currentRoot) return null;
+
+    return this.withFaceMappingBaseFaceCapture(() => {
+      this.applyFaceMappingAutoCameraState();
+      this.renderer.render(this.scene, this.camera);
+
+      const src = this.renderer.domElement;
+      const canvasWidth = Math.max(1, Math.round(src.clientWidth));
+      const canvasHeight = Math.max(1, Math.round(src.clientHeight));
+      if (!(src.width > 0) || !(src.height > 0)) return null;
+
+      const image = document.createElement('canvas');
+      image.width = src.width;
+      image.height = src.height;
+      const ctx = image.getContext('2d');
+      if (!ctx) return null;
+      ctx.drawImage(src, 0, 0);
+      return { image, canvasWidth, canvasHeight };
+    });
+  }
+
+  /**
+   * Hide objects explicitly marked sagadriveExcludeFaceMapping for one capture frame.
+   * Complements rigid/skinned runtime groups (same exclude contract as raycast).
+   */
+  private beginFaceMappingExcludedMarkerCapture(root: THREE.Object3D): () => void {
+    const hide: THREE.Object3D[] = [];
+    root.traverse((obj) => {
+      if (obj.userData?.sagadriveExcludeFaceMapping === true) {
+        hide.push(obj);
+      }
+    });
+    if (hide.length === 0) {
+      return () => undefined;
+    }
+    return beginFaceMappingBaseFaceCaptureVisibility({ hide, reveal: [] });
   }
 
   /**
