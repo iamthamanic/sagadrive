@@ -1,6 +1,6 @@
 # Composition Gate — e2e-auth-bootstrap-stability
 
-- HEAD_SHA: de94e2adb37f9f71acb9fb370fabe851ad7ee73f
+- HEAD_SHA: af6aa1922b8eb93c601f1a081932b87c42c3ab18
 - Date: 2026-09-30
 - Verdict: SKIPPED
 
