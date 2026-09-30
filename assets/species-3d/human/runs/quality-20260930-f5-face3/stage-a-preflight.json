@@ -1,0 +1,89 @@
+{
+  "contractVersion": "SagaDriveLiveActHumanGroundTruthRepairPreflightV1",
+  "stage": "A",
+  "issue": 423,
+  "runId": "quality-20260930-f5-face3",
+  "createdAt": "2026-09-30T07:00:00.000Z",
+  "status": "awaiting_human_review",
+  "reviewed": false,
+  "reauthoringRequired": null,
+  "functionalQa": null,
+  "notes": [
+    "Stage A preflight only. Not reviewed. Not Functional-PASS. Not published.",
+    "Historic face1/face2 runs are immutable evidence and must not be mutated.",
+    "Ground Truth must be authored against the exact QA/pack candidate GLB below — never against the VRM byte stream."
+  ],
+  "candidate": {
+    "path": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb",
+    "sha256": "a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c",
+    "bytes": 38402848,
+    "morphCount": 51,
+    "topologyFingerprint": "v147707:t214973:m1",
+    "requiredFunctionalChannelsPresent": [
+      "jawOpen",
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
+      "browInnerUp",
+      "mouthSmileLeft",
+      "mouthSmileRight",
+      "mouthPucker"
+    ],
+    "selectionRationale": "This public face1 GLB is the validated first-party fallback that face2 VRM packing used as input (vrm-pack.json inputSha256 matches). face2 ledger states GLB morphs unchanged from face1; run-local face1 authoring GLB (~112MB) is not present in the repo. Same morph geometry that will be measured by Functional QA and later packed into any face3 VRM."
+  },
+  "baselineBody": {
+    "path": "public/assets/avatars/species/human-female-quality-20260921-f5.glb",
+    "sha256": "ca1d79b37c94d0aa3acab339afee3c36ed6af781fc7bca3a2a22b2a9e8071c8d",
+    "bytes": 90360696,
+    "morphCount": 0,
+    "topologyFingerprint": "v147707:t214973:m1",
+    "role": "PBR body baseline / QtMesh FaceRig input (no morphs)"
+  },
+  "historicFaceRigSource": {
+    "path": "assets/species-3d/human/runs/quality-20260921-f5-face1/human-female-quality-20260921-f5-face1.glb",
+    "ledgerChecksum": "6cae825f18e5bbfb8b02ea1bef1a4ec9352e06e4ab08eb1c6c1085f2c8291cca",
+    "ledgerBytes": 112038664,
+    "presentInRepo": false,
+    "note": "face2 run.json output points here; file was not retained in git (size). Public face1 GLB is the shipped tex≤2048 morph carrier."
+  },
+  "currentPublic": {
+    "vrm": {
+      "path": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm",
+      "sha256": "929d711ac4695ece95a71b0ed9964bbf0a95064be5dae1a66b9b55e2c5c7cd4d",
+      "bytes": 38408828,
+      "morphCount": 51,
+      "topologyFingerprint": "v147707:t214973:m1"
+    },
+    "glbFallback": {
+      "path": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb",
+      "sha256": "a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c",
+      "bytes": 38402848
+    },
+    "faceAnchorsSidecar": "public/assets/avatars/species/human-female-quality-20260921-f5-face1-face-anchors.json",
+    "faceMappingAuthoringSidecar": null,
+    "note": "No reviewed face-mapping-authoring sidecar next to public anchors today."
+  },
+  "resolver": {
+    "file": "src/domains/character/avatar/species-template-models-v1.ts",
+    "entry": "human / feminine-read",
+    "url": "/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm?v=quality5-face2-vrm2",
+    "cacheBust": "quality5-face2-vrm2"
+  },
+  "historicEvidence": {
+    "face2Run": "assets/species-3d/human/runs/quality-20260921-f5-face2/run.json",
+    "face2PublishNote": "face2 anatomic anchors + VRM dual-blink; GLB morphs unchanged from face1.",
+    "face2VrmPackInputGlb": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb",
+    "face2VrmPackInputSha256": "a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c"
+  },
+  "expectedHumanExports": {
+    "faceAnchors": "assets/species-3d/human/runs/quality-20260930-f5-face3/face-anchors.json",
+    "faceMappingAuthoring": "assets/species-3d/human/runs/quality-20260930-f5-face3/face-mapping-authoring.json",
+    "requirements": [
+      "Load exact candidate GLB path in Face Setup (not the VRM).",
+      "Correct/verify all 21 anchors on allowed surfaces.",
+      "Mark Ground Truth reviewed (manual | manual_override).",
+      "Export both files into this run directory with those exact filenames.",
+      "authoring.asset.modelPath / modelSha256 / topologyFingerprint / anchorsSha256 must match this candidate.",
+      "Do not convert auto proposals to reviewed by editing JSON."
+    ]
+  }
+}
