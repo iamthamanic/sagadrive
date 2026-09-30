@@ -337,6 +337,19 @@ const ruleset = {
 
 ## Development Workflow
 
+### Branch hygiene (mandatory)
+
+- `main` is the only long-lived branch.
+- Feature/fix/chore branches are temporary and must represent active work only.
+- Create work branches from current `main`; do not reuse a previously merged branch.
+- A branch may exist without an open PR only while the linked issue is actively being worked (for example a staged asset-review stop). Open the PR once the change is reviewable.
+- Merged same-repository PR head branches are deleted automatically by `.github/workflows/branch-hygiene.yml`.
+- Closed/superseded branches must be deleted once their useful work is confirmed in `main` or explicitly replaced elsewhere.
+- Never keep historical branches merely as archives; Git history and merged PRs are the archive.
+- Never auto-delete a branch with unique unmerged commits unless it is explicitly verified as superseded.
+- After a merge, agents should treat the merged branch as disposable and continue from a fresh branch off current `main`.
+
+
 ### Context compact & long queues (mandatory)
 
 Auto-compact mid-ticket is **unreliable**. Do **not** wait for the window to hard-fail, and do **not** stop the queue for a manual `/compact` prompt.
