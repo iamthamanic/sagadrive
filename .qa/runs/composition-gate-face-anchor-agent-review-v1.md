@@ -1,6 +1,6 @@
 # Composition Gate — face-anchor-agent-review-v1
 
-- WORKTREE: uncommitted contract slice on feat/face-anchor-agent-review-v1 (base 2aec8c8)
+- HEAD_SHA: 52173b5a621407fa4443ddeaf1afe887d3a3b77e
 - Date: 2026-09-30
 - Verdict: SKIPPED
 
