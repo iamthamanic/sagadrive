@@ -1,28 +1,16 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { ensureLoggedIn } from './helpers/auth';
 
 const EVIDENCE_DIR = '.qa/evidence/item-routing-foundation';
-
-async function ensureLoggedIn(page: import('@playwright/test').Page) {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
-  const loginTab = page.getByRole('tab', { name: 'Login' });
-  if (await loginTab.count()) {
-    await page.getByPlaceholder('admin oder deine@email.de').fill('admin');
-    await page.getByPlaceholder('••••••••').fill('1234');
-    await page.getByRole('button', { name: 'Einloggen' }).click();
-  }
-  await expect(page.getByRole('button', { name: 'Dashboard' }).first()).toBeVisible({
-    timeout: 15_000,
-  });
-}
 
 test.beforeAll(() => {
   fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
 });
 
 test('library URL is reload-stable', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   await ensureLoggedIn(page);
   await page.getByRole('button', { name: 'Bibliothek' }).first().click();
   await expect(page).toHaveURL(/\/library$/);
@@ -36,6 +24,7 @@ test('library URL is reload-stable', async ({ page }) => {
 });
 
 test('item create workbench and detail routes are addressable', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   await ensureLoggedIn(page);
   await page.goto('/items/create');
   await expect(page.locator('[data-item-workbench="landing"]').first()).toBeVisible();

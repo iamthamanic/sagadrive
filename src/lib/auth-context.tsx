@@ -150,12 +150,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isLocalAdminShortcut(email, password)) {
       window.localStorage.setItem(LOCAL_ADMIN_STORAGE_KEY, 'true');
       try {
-        // Real session against the local GoTrue user: requests then pass RLS as
+        // Real session against GoTrue when reachable: requests then pass RLS as
         // `authenticated` with a stable UUID instead of the anon role.
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: LOCAL_ADMIN_EMAIL,
-          password: LOCAL_ADMIN_PASSWORD,
-        });
+        // Bound by AUTH_SESSION_TIMEOUT_MS so CI/runner latency cannot hang LoginScreen
+        // past the Local-Admin app-level fallback (same budget as session bootstrap).
+        const loginResult = await raceWithTimeoutOrSymbol(
+          supabase.auth.signInWithPassword({
+            email: LOCAL_ADMIN_EMAIL,
+            password: LOCAL_ADMIN_PASSWORD,
+          }),
+          AUTH_SESSION_TIMEOUT_MS,
+        );
+        if (isTimedOut(loginResult)) {
+          throw new Error('local GoTrue login timeout');
+        }
+        const { data, error } = loginResult;
         if (error) throw error;
         if (data.user) {
           setUser(data.user);
