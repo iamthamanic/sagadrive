@@ -221,21 +221,26 @@ test('4 timeout → logout → late success must not resurrect Admin', async ({ 
   await logoutViaUi(page);
 
   hold.release();
-  await page.waitForTimeout(3_000);
+  await expect
+    .poll(async () => {
+      const token = await hasSupabaseAuthToken(page);
+      const mail = await readStoredAuthEmail(page);
+      const flag = await page.evaluate((k) => localStorage.getItem(k), LOCAL_ADMIN_STORAGE_KEY);
+      return { token, mail, flag };
+    }, { timeout: 5_000 })
+    .toEqual({ token: false, mail: null, flag: null });
 
   await expect(page.getByRole('tab', { name: 'Login' })).toBeVisible();
   await expect(dashboardReadyLocator(page)).toHaveCount(0);
-  const hasToken = await hasSupabaseAuthToken(page);
-  const email = await readStoredAuthEmail(page);
-  const localFlag = await page.evaluate((k) => localStorage.getItem(k), LOCAL_ADMIN_STORAGE_KEY);
 
-  const report = { hasToken, email, localFlag, events };
+  const report = {
+    hasToken: await hasSupabaseAuthToken(page),
+    email: await readStoredAuthEmail(page),
+    localFlag: await page.evaluate((k) => localStorage.getItem(k), LOCAL_ADMIN_STORAGE_KEY),
+    events,
+  };
   fs.writeFileSync(path.join(EVIDENCE, 'case-4-logout-late.json'), `${JSON.stringify(report, null, 2)}\n`);
   await page.screenshot({ path: path.join(EVIDENCE, 'case-4.png'), fullPage: true });
-
-  expect(localFlag).not.toBe('true');
-  expect(hasToken).toBe(false);
-  expect(email).toBeNull();
 });
 
 test('5 timeout → different user login → late admin must not replace user', async ({ page }) => {

@@ -124,9 +124,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session?.user) return;
-      if (!isSeededLocalAdminUser(session.user)) return;
-      await supabase.auth.signOut({ scope: 'local' });
+      if (session?.user && isSeededLocalAdminUser(session.user)) {
+        await supabase.auth.signOut({ scope: 'local' });
+      }
+      // Fake/partial GoTrue payloads may leave auth-token crumbs that getSession
+      // does not surface — clear only seeded Local Admin identities.
+      try {
+        for (let i = window.localStorage.length - 1; i >= 0; i -= 1) {
+          const key = window.localStorage.key(i);
+          if (!key || !key.includes('auth-token')) continue;
+          const raw = window.localStorage.getItem(key);
+          if (!raw) continue;
+          try {
+            const parsed = JSON.parse(raw) as { user?: { id?: string; email?: string } };
+            if (
+              parsed?.user?.email === LOCAL_ADMIN_EMAIL ||
+              parsed?.user?.id === LOCAL_ADMIN_USER_ID
+            ) {
+              window.localStorage.removeItem(key);
+            }
+          } catch {
+            /* ignore malformed */
+          }
+        }
+      } catch {
+        /* ignore storage access */
+      }
     } catch (error) {
       console.warn('[auth] stale Local Admin session cleanup failed:', error);
     } finally {
@@ -144,6 +167,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isLiveGeneration(generation) && !fallbackGenerationsRef.current.has(generation);
         if (liveSuccess) return;
         if (result.error || !result.data?.user) return;
+        // GoTrue has no AbortSignal — the client may persist the session when the
+        // promise settles, possibly after an earlier SIGNED_IN scrub. Scrub twice.
+        await discardStaleLocalAdminSession();
+        await new Promise((resolve) => setTimeout(resolve, 50));
         await discardStaleLocalAdminSession();
       })
       .catch(() => {
@@ -248,7 +275,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         if (current === null && !expectingGoTrue) {
-          void discardStaleLocalAdminSession();
+          void (async () => {
+            await discardStaleLocalAdminSession();
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            await discardStaleLocalAdminSession();
+          })();
           return;
         }
       }
