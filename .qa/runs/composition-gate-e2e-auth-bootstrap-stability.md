@@ -1,6 +1,6 @@
 # Composition Gate — e2e-auth-bootstrap-stability
 
-- WORKTREE: fix/e2e-auth-bootstrap-stability (base 2aec8c8)
+- HEAD_SHA: 3d72830381cb6634b1aacff769999c5577921bad
 - Date: 2026-09-30
 - Verdict: SKIPPED
 
