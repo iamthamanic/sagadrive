@@ -1,9 +1,10 @@
 /**
- * SagaDriveFaceMappingAuthoringV1 — provenance / review metadata for face anchors (#419).
+ * SagaDriveFaceMappingAuthoringV1 — provenance / review metadata for face anchors (#419 + agent review).
  * Location: src/domains/character/avatar/face-mapping-authoring-contract.ts
  *
- * Separate from SagaDriveFaceAnchorsV1 runtime bindings. Heuristic/auto proposals are never
- * reviewed ground truth unless explicitly marked. Pure domain — no React / Three.js.
+ * Separate from SagaDriveFaceAnchorsV1 runtime bindings.
+ * Mapping `source` (how anchors were produced) ≠ `reviewStatus` (who accepted GT).
+ * Pure domain — no React / Three.js.
  */
 
 export const FACE_MAPPING_AUTHORING_CONTRACT_VERSION = 'SagaDriveFaceMappingAuthoringV1' as const;
@@ -11,6 +12,15 @@ export const FACE_MAPPING_AUTHORING_CONTRACT_VERSION = 'SagaDriveFaceMappingAuth
 export const FACE_MAPPING_AUTHORING_SOURCES = ['auto', 'manual', 'manual_override'] as const;
 
 export type FaceMappingAuthoringSource = (typeof FACE_MAPPING_AUTHORING_SOURCES)[number];
+
+/** Who accepted the mapping as publish/QA ground truth. Distinct from `source`. */
+export const FACE_MAPPING_REVIEW_STATUSES = [
+  'unreviewed',
+  'agent_reviewed',
+  'human_reviewed',
+] as const;
+
+export type FaceMappingReviewStatus = (typeof FACE_MAPPING_REVIEW_STATUSES)[number];
 
 export interface FaceMappingAuthoringAssetFingerprintV1 {
   /** Public or run-relative model path (allowlisted), without scheme. */
@@ -28,18 +38,40 @@ export interface FaceMappingAuthoringAssetFingerprintV1 {
   readonly cacheBust?: string;
 }
 
+/**
+ * Compact pointer to a completed `face-anchor-agent-review-v1` ledger.
+ * Full pass reports live under the run evidence directory — not in this sidecar.
+ */
+export interface FaceMappingAgentReviewProvenanceV1 {
+  readonly protocolVersion: 'face-anchor-agent-review-v1';
+  /** SHA-256 of the evidence manifest JSON bytes. */
+  readonly evidenceManifestSha256: string;
+  readonly requiredPasses: 5;
+  readonly completedPasses: number;
+  readonly aggregationPass: boolean;
+  /** ISO-UTC with milliseconds when aggregation finalized. */
+  readonly aggregatedAt: string;
+}
+
 export interface SagaDriveFaceMappingAuthoringV1 {
   readonly contractVersion: typeof FACE_MAPPING_AUTHORING_CONTRACT_VERSION;
-  /** How the anchors were produced. */
+  /** How the anchors were produced (auto / human authoring). Never use `manual` to fake agent review. */
   readonly source: FaceMappingAuthoringSource;
   /**
-   * True only after human review accepted the mapping for publish/QA.
-   * Heuristic/auto output must stay false.
+   * Legacy boolean mirror of review acceptance.
+   * Prefer `reviewStatus`. When absent, migrate: reviewed+manual* → human_reviewed.
    */
   readonly reviewed: boolean;
+  /**
+   * Explicit review kind. Required for new agent-reviewed runs.
+   * Legacy human GT may omit this and be resolved via {@link resolveFaceMappingReviewStatus}.
+   */
+  readonly reviewStatus?: FaceMappingReviewStatus;
   readonly asset: FaceMappingAuthoringAssetFingerprintV1;
-  /** ISO timestamp when reviewed (required when reviewed=true). */
+  /** ISO timestamp when reviewed (required when reviewed=true / non-unreviewed). */
   readonly reviewedAt?: string;
+  /** Present when reviewStatus=agent_reviewed. */
+  readonly agentReview?: FaceMappingAgentReviewProvenanceV1;
   /** Free-form note for ledger / run.json. */
   readonly note?: string;
 }
@@ -48,9 +80,15 @@ export interface FaceMappingAuthoringValidationIssue {
   readonly code:
     | 'contract_version_mismatch'
     | 'invalid_source'
+    | 'invalid_review_status'
     | 'reviewed_without_timestamp'
     | 'invalid_reviewed_at'
     | 'auto_marked_reviewed'
+    | 'agent_review_requires_provenance'
+    | 'agent_review_incomplete'
+    | 'manual_source_fakes_agent_review'
+    | 'human_reviewed_requires_manual_source'
+    | 'reviewed_status_mismatch'
     | 'missing_model_path'
     | 'not_object';
   readonly detail: string;
@@ -98,19 +136,90 @@ export function isFaceMappingAuthoringSource(value: string): value is FaceMappin
   return (FACE_MAPPING_AUTHORING_SOURCES as readonly string[]).includes(value);
 }
 
+export function isFaceMappingReviewStatus(value: string): value is FaceMappingReviewStatus {
+  return (FACE_MAPPING_REVIEW_STATUSES as readonly string[]).includes(value);
+}
+
 /**
- * Fail-closed: heuristic/auto may never appear as reviewed ground truth.
- * Requires canonical V1 reviewedAt (ISO-UTC with milliseconds).
+ * Resolve review status with controlled legacy migration.
+ * Never upgrades unreviewed → agent_reviewed.
+ */
+export function resolveFaceMappingReviewStatus(
+  authoring: SagaDriveFaceMappingAuthoringV1 | null | undefined,
+): FaceMappingReviewStatus {
+  if (!authoring) return 'unreviewed';
+  if (authoring.reviewStatus && isFaceMappingReviewStatus(authoring.reviewStatus)) {
+    return authoring.reviewStatus;
+  }
+  // Legacy: reviewed + manual* ⇒ human_reviewed. Never treat as agent_reviewed.
+  if (
+    authoring.reviewed === true &&
+    (authoring.source === 'manual' || authoring.source === 'manual_override') &&
+    isValidFaceMappingReviewedAtV1(authoring.reviewedAt)
+  ) {
+    return 'human_reviewed';
+  }
+  return 'unreviewed';
+}
+
+function isValidAgentReviewProvenance(value: unknown): value is FaceMappingAgentReviewProvenanceV1 {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const r = value as Record<string, unknown>;
+  if (r.protocolVersion !== 'face-anchor-agent-review-v1') return false;
+  if (typeof r.evidenceManifestSha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(r.evidenceManifestSha256)) {
+    return false;
+  }
+  if (r.requiredPasses !== 5) return false;
+  if (typeof r.completedPasses !== 'number' || r.completedPasses !== 5) return false;
+  if (r.aggregationPass !== true) return false;
+  return isValidFaceMappingReviewedAtV1(r.aggregatedAt);
+}
+
+/**
+ * Publish/QA ground truth: human_reviewed (legacy-compatible) OR agent_reviewed with provenance.
+ * JSON-only `reviewed:true` without reviewStatus/provenance is not agent GT.
  */
 export function isReviewedFaceMappingGroundTruth(
   authoring: SagaDriveFaceMappingAuthoringV1 | null | undefined,
 ): boolean {
   if (!authoring) return false;
   if (authoring.contractVersion !== FACE_MAPPING_AUTHORING_CONTRACT_VERSION) return false;
+  const status = resolveFaceMappingReviewStatus(authoring);
+  if (status === 'unreviewed') return false;
   if (!authoring.reviewed) return false;
-  if (authoring.source === 'auto') return false;
-  if (!(authoring.source === 'manual' || authoring.source === 'manual_override')) return false;
-  return isValidFaceMappingReviewedAtV1(authoring.reviewedAt);
+  if (!isValidFaceMappingReviewedAtV1(authoring.reviewedAt)) return false;
+
+  if (status === 'human_reviewed') {
+    if (authoring.source === 'auto') return false;
+    if (!(authoring.source === 'manual' || authoring.source === 'manual_override')) return false;
+    return true;
+  }
+
+  if (status === 'agent_reviewed') {
+    // Must not invent human source to fake agent path.
+    if (authoring.source === 'manual' || authoring.source === 'manual_override') {
+      // Allowed only if reviewStatus is explicitly agent_reviewed AND provenance present —
+      // but product rule: source=manual must NOT be used to pretend agent review.
+      return false;
+    }
+    if (authoring.source !== 'auto') return false;
+    return isValidAgentReviewProvenance(authoring.agentReview);
+  }
+
+  return false;
+}
+
+/**
+ * Refuse applying agent review when existing GT is human_reviewed.
+ */
+export function canApplyAgentReviewToAuthoring(
+  existing: SagaDriveFaceMappingAuthoringV1 | null | undefined,
+): { ok: true } | { ok: false; reason: 'human_reviewed_immutable' } {
+  if (!existing) return { ok: true };
+  if (resolveFaceMappingReviewStatus(existing) === 'human_reviewed') {
+    return { ok: false, reason: 'human_reviewed_immutable' };
+  }
+  return { ok: true };
 }
 
 export function validateFaceMappingAuthoringV1(
@@ -137,14 +246,76 @@ export function validateFaceMappingAuthoringV1(
     });
   }
 
-  const reviewed = record.reviewed === true;
-  if (reviewed && source === 'auto') {
+  const hasExplicitStatus =
+    typeof record.reviewStatus === 'string' && record.reviewStatus.length > 0;
+  if (hasExplicitStatus && !isFaceMappingReviewStatus(String(record.reviewStatus))) {
     issues.push({
-      code: 'auto_marked_reviewed',
-      detail: 'Auto/heuristic mappings cannot be reviewed ground truth.',
+      code: 'invalid_review_status',
+      detail: 'reviewStatus must be unreviewed | agent_reviewed | human_reviewed.',
     });
   }
-  if (reviewed && (typeof record.reviewedAt !== 'string' || !record.reviewedAt.trim())) {
+
+  const reviewed = record.reviewed === true;
+  const statusRaw = hasExplicitStatus
+    ? (record.reviewStatus as FaceMappingReviewStatus)
+    : null;
+
+  // Legacy auto+reviewed without agent path.
+  if (reviewed && source === 'auto' && statusRaw !== 'agent_reviewed') {
+    issues.push({
+      code: 'auto_marked_reviewed',
+      detail: 'Auto mappings cannot be human GT; use reviewStatus=agent_reviewed with provenance.',
+    });
+  }
+
+  if (statusRaw === 'agent_reviewed') {
+    if (source === 'manual' || source === 'manual_override') {
+      issues.push({
+        code: 'manual_source_fakes_agent_review',
+        detail: 'source=manual must not be used to pretend agent review.',
+      });
+    }
+    if (!isValidAgentReviewProvenance(record.agentReview)) {
+      issues.push({
+        code: 'agent_review_requires_provenance',
+        detail: 'agent_reviewed requires complete face-anchor-agent-review-v1 provenance.',
+      });
+    } else if (
+      (record.agentReview as FaceMappingAgentReviewProvenanceV1).completedPasses !== 5 ||
+      (record.agentReview as FaceMappingAgentReviewProvenanceV1).aggregationPass !== true
+    ) {
+      issues.push({
+        code: 'agent_review_incomplete',
+        detail: 'agent review must have 5/5 completed passes and aggregationPass=true.',
+      });
+    }
+    if (!reviewed) {
+      issues.push({
+        code: 'reviewed_status_mismatch',
+        detail: 'reviewStatus=agent_reviewed requires reviewed=true.',
+      });
+    }
+  }
+
+  if (statusRaw === 'human_reviewed') {
+    if (!(source === 'manual' || source === 'manual_override')) {
+      issues.push({
+        code: 'human_reviewed_requires_manual_source',
+        detail: 'human_reviewed requires source manual | manual_override.',
+      });
+    }
+    if (!reviewed) {
+      issues.push({
+        code: 'reviewed_status_mismatch',
+        detail: 'reviewStatus=human_reviewed requires reviewed=true.',
+      });
+    }
+  }
+
+  if (
+    reviewed &&
+    (typeof record.reviewedAt !== 'string' || !record.reviewedAt.trim())
+  ) {
     issues.push({
       code: 'reviewed_without_timestamp',
       detail: 'reviewed=true requires reviewedAt ISO timestamp.',
@@ -182,12 +353,49 @@ export function createAutoUnreviewedFaceMappingAuthoring(input: {
     contractVersion: FACE_MAPPING_AUTHORING_CONTRACT_VERSION,
     source: 'auto',
     reviewed: false,
+    reviewStatus: 'unreviewed',
     asset: {
       modelPath: input.modelPath,
       ...(input.modelSha256 ? { modelSha256: input.modelSha256 } : {}),
       ...(input.anchorsSha256 ? { anchorsSha256: input.anchorsSha256 } : {}),
       ...(input.topologyFingerprint ? { topologyFingerprint: input.topologyFingerprint } : {}),
       ...(input.cacheBust ? { cacheBust: input.cacheBust } : {}),
+    },
+    ...(input.note ? { note: input.note } : {}),
+  };
+}
+
+/** Build agent_reviewed authoring after successful 5/5 aggregation (source stays auto). */
+export function createAgentReviewedFaceMappingAuthoring(input: {
+  modelPath: string;
+  modelSha256: string;
+  anchorsSha256: string;
+  topologyFingerprint: string;
+  evidenceManifestSha256: string;
+  aggregatedAt: string;
+  cacheBust?: string;
+  note?: string;
+}): SagaDriveFaceMappingAuthoringV1 {
+  return {
+    contractVersion: FACE_MAPPING_AUTHORING_CONTRACT_VERSION,
+    source: 'auto',
+    reviewed: true,
+    reviewStatus: 'agent_reviewed',
+    reviewedAt: input.aggregatedAt,
+    asset: {
+      modelPath: input.modelPath,
+      modelSha256: input.modelSha256,
+      anchorsSha256: input.anchorsSha256,
+      topologyFingerprint: input.topologyFingerprint,
+      ...(input.cacheBust ? { cacheBust: input.cacheBust } : {}),
+    },
+    agentReview: {
+      protocolVersion: 'face-anchor-agent-review-v1',
+      evidenceManifestSha256: input.evidenceManifestSha256,
+      requiredPasses: 5,
+      completedPasses: 5,
+      aggregationPass: true,
+      aggregatedAt: input.aggregatedAt,
     },
     ...(input.note ? { note: input.note } : {}),
   };

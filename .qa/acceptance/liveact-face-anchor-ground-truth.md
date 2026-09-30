@@ -8,7 +8,7 @@ Model-URL und Face-Anchor-Sidecar bleiben versionskonsistent (`?v=`). Heuristisc
 ## Happy Path
 - [x] `listFaceAnchorsManifestUrlCandidates()` kopiert den Cache-Bust-Query auf Stem- und Generic-Sidecar.
 - [x] `SagaDriveFaceMappingAuthoringV1` dokumentiert `source: auto|manual|manual_override`, `reviewed`, Asset/Topology-Fingerprint.
-- [x] `isReviewedFaceMappingGroundTruth()` fail-closed: nur `manual` / `manual_override` + `reviewed=true`.
+- [x] `isReviewedFaceMappingGroundTruth()` fail-closed: `human_reviewed` (manual*) **or** `agent_reviewed` with `face-anchor-agent-review-v1` provenance.
 - [x] Heuristic author schreibt sibling `face-mapping-authoring.json` als `auto` + `reviewed=false`.
 - [x] `FACE-AUTHORING.md` dokumentiert Review-Policy.
 - [x] Touched TS: typed-strict, keine Escape-Hatches.

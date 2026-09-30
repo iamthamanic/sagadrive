@@ -33,7 +33,15 @@ Create separate 21/21 human-reviewed Ground Truth for m5 and f5, run the current
 - #424 explicitly requires Functional Asset PASS before retarget tuning.
 
 ## Essential sequencing constraint
-Human review cannot be synthesized by an agent.
+Human review remains a valid Ground-Truth path and cannot be replaced or downgraded by agents.
+
+Additionally, `face-anchor-agent-review-v1` may produce `agent_reviewed` Ground Truth only when:
+
+- deterministic technical gates PASS,
+- multi-view labeled screenshot evidence exists for the candidate fingerprints,
+- five independent visual agent passes unanimously PASS (5/5, no majority voting).
+
+Any conflict ⇒ `human_review_required` (stop for human).
 
 Therefore #423 is intentionally a **two-stage implementation**:
 
@@ -42,9 +50,9 @@ Stage A — agent/preflight
   inspect current m5/f5 candidates
   prepare exact review targets + run dirs
   prove current candidate identity
-  STOP for human review
+  STOP for human review OR run face-anchor-agent-review-v1
 
-Stage B — after user supplies reviewed exports
+Stage B — after valid GT (human_reviewed OR agent_reviewed)
   ingest reviewed GT
   validate provenance/fingerprints
   run full QA
@@ -61,7 +69,7 @@ Stage B — after user supplies reviewed exports
       publish only after all gates pass
 ```
 
-No code path may silently replace the human-review stop with auto anchors.
+No code path may silently replace a review stop with auto anchors lacking provenance.
 
 ---
 

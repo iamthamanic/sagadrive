@@ -520,6 +520,14 @@ function checkLiveActFaceMappingAuthoring() {
   });
 }
 
+function checkFaceAnchorAgentReview() {
+  console.log('Face anchor agent review v1: 5/5 visual + evidence + deterministic gates...');
+  execFileSync(process.execPath, ['scripts/face-anchor-agent-review-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceMappingManual() {
   console.log('LiveAct face mapping manual (#420): Face Setup 21 markers + raycast...');
   execFileSync(process.execPath, ['scripts/liveact-face-mapping-manual-check.mjs'], {
@@ -1501,6 +1509,7 @@ checkLiveActFaceDiagnostics();
 checkLiveActDiagnosticsV2();
 checkLiveActFaceAnchorsV1();
 checkLiveActFaceMappingAuthoring();
+checkFaceAnchorAgentReview();
 checkLiveActFaceMappingManual();
 checkLiveActFaceMappingAuto();
 checkLiveActFaceMappingAutoCaptureVisibility();

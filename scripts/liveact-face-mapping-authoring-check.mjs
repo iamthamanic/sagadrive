@@ -60,9 +60,11 @@ check(/faceMappingAuthoringPathBesideAnchors/.test(authorLib), 'sibling authorin
 check(/isReviewedFaceMappingGroundTruth/.test(authoringLib), 'offline helper present');
 
 check(/SagaDriveFaceMappingAuthoringV1|face-mapping-authoring/.test(faceAuthoringDoc), 'FACE-AUTHORING docs');
-check(/reviewed|Ground[- ]Truth|unreviewed/i.test(faceAuthoringDoc), 'review policy docs');
+check(/reviewed|Ground[- ]Truth|unreviewed|agent_reviewed/i.test(faceAuthoringDoc), 'review policy docs');
 check(/checkLiveActFaceMappingAuthoring|liveact-face-mapping-authoring-check/.test(gate), 'test-gate wiring');
 check(/SagaDriveFaceMappingAuthoringV1/.test(acceptance), 'acceptance references contract');
+check(/createAgentReviewedFaceMappingAuthoring|agent_reviewed|reviewStatus/.test(domain), 'agent review fields');
+check(/canApplyAgentReviewToAuthoring/.test(domain), 'human immutable helper');
 
 // --- Runtime: cache-bust regression ---
 const runsDir = join(root, '.qa/runs');
@@ -130,12 +132,36 @@ const reviewedManual = {
 check(domainMod.isReviewedFaceMappingGroundTruth(reviewedManual), 'manual reviewed is ground truth');
 
 const autoReviewedIllegal = { ...auto, reviewed: true, reviewedAt: '2026-09-22T00:00:00.000Z' };
-check(!domainMod.isReviewedFaceMappingGroundTruth(autoReviewedIllegal), 'auto+reviewed never ground truth');
+check(!domainMod.isReviewedFaceMappingGroundTruth(autoReviewedIllegal), 'auto+reviewed without agent path never ground truth');
 const autoReviewedValidation = domainMod.validateFaceMappingAuthoringV1(autoReviewedIllegal);
-check(!autoReviewedValidation.ok, 'validator rejects auto reviewed');
+check(!autoReviewedValidation.ok, 'validator rejects auto reviewed without agent_reviewed');
 check(
   autoReviewedValidation.issues.some((i) => i.code === 'auto_marked_reviewed'),
   'auto_marked_reviewed issue',
+);
+
+const agentSha = 'a'.repeat(64);
+const agentGt = domainMod.createAgentReviewedFaceMappingAuthoring({
+  modelPath: 'public/assets/avatars/species/human-m5-face1.vrm',
+  modelSha256: agentSha,
+  anchorsSha256: agentSha,
+  topologyFingerprint: 'v1:t1:m1',
+  evidenceManifestSha256: agentSha,
+  aggregatedAt: '2026-09-22T00:00:00.000Z',
+});
+check(domainMod.isReviewedFaceMappingGroundTruth(agentGt), 'agent_reviewed with provenance is GT');
+check(domainMod.validateFaceMappingAuthoringV1(agentGt).ok, 'agent authoring validates');
+check(
+  domainMod.canApplyAgentReviewToAuthoring(reviewedManual).ok === false,
+  'human_reviewed immutable vs agent',
+);
+check(
+  domainMod.resolveFaceMappingReviewStatus(reviewedManual) === 'human_reviewed' ||
+    domainMod.resolveFaceMappingReviewStatus({
+      ...reviewedManual,
+      reviewStatus: 'human_reviewed',
+    }) === 'human_reviewed',
+  'human review status resolves',
 );
 
 check(domainMod.isValidFaceMappingReviewedAtV1('2026-09-22T00:00:00.000Z') === true, 'canonical reviewedAt valid');
