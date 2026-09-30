@@ -1,7 +1,7 @@
 # Review Ticket — library-adventure-gm-teilnehmen
 
 - BASE_SHA: 2aec8c83f000286f4b1ed9ab1984b7f15548e2b4 (origin/main)
-- HEAD_SHA: WORKTREE → stamped after commit
+- HEAD_SHA: 8acadc1cffad37b6928702359b3f2847d967f64d
 - Date: 2026-09-30
 - Verdict: **ACCEPT**
 

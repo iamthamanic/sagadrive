@@ -1,6 +1,6 @@
 # Composition Gate — library-adventure-gm-teilnehmen
 
-- HEAD_SHA: WORKTREE (pre-commit; Library.tsx only)
+- HEAD_SHA: 8acadc1cffad37b6928702359b3f2847d967f64d
 - Date: 2026-09-30
 - Verdict: SKIPPED
 
