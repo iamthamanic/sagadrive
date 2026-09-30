@@ -1,0 +1,13 @@
+{
+  "clickLatencyMs": 33,
+  "dashboardMs": 110,
+  "authRequests": [
+    {
+      "url": "http://localhost:8000/auth/v1/token?grant_type=password",
+      "started": 1790770686758,
+      "finished": 1790770686847,
+      "status": 200,
+      "durationMs": 89
+    }
+  ]
+}

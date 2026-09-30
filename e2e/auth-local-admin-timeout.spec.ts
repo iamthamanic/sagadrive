@@ -1,11 +1,12 @@
 /**
- * Local Admin + GoTrue timeout contract — behavioral cases A–E.
+ * Local Admin + GoTrue timeout / stale-attempt contract — behavioral cases.
  * Location: e2e/auth-local-admin-timeout.spec.ts
  *
- * Proves Local Admin shortcut bounds GoTrue with AUTH_SESSION_TIMEOUT_MS and
- * falls back to app-level admin without hanging LoginScreen.
+ * Proves Local Admin shortcut bounds GoTrue with AUTH_SESSION_TIMEOUT_MS, falls
+ * back without hanging, and rejects late GoTrue success after timeout/logout/
+ * newer attempts (no privilege resurrection).
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page, type Route } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { dashboardReadyLocator, ensureLoggedIn } from './helpers/auth';
@@ -27,7 +28,25 @@ async function fillCredentials(page: Page, user: string, password: string) {
   await page.getByPlaceholder('••••••••').fill(password);
 }
 
-async function readAuthProvider(page: Page): Promise<string | null> {
+async function hasSupabaseAuthToken(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key || !key.includes('auth-token')) continue;
+      const raw = localStorage.getItem(key);
+      if (!raw || raw === 'null') continue;
+      try {
+        const parsed = JSON.parse(raw) as { access_token?: string; user?: unknown };
+        if (parsed?.access_token || parsed?.user) return true;
+      } catch {
+        /* ignore */
+      }
+    }
+    return false;
+  });
+}
+
+async function readStoredAuthEmail(page: Page): Promise<string | null> {
   return page.evaluate(() => {
     try {
       for (let i = 0; i < localStorage.length; i += 1) {
@@ -35,11 +54,8 @@ async function readAuthProvider(page: Page): Promise<string | null> {
         if (!key || !key.includes('auth-token')) continue;
         const raw = localStorage.getItem(key);
         if (!raw) continue;
-        const parsed = JSON.parse(raw) as {
-          user?: { app_metadata?: { provider?: string }; email?: string };
-        };
-        const provider = parsed?.user?.app_metadata?.provider;
-        if (provider) return provider;
+        const parsed = JSON.parse(raw) as { user?: { email?: string } };
+        if (parsed?.user?.email) return parsed.user.email;
       }
     } catch {
       /* ignore */
@@ -48,49 +64,93 @@ async function readAuthProvider(page: Page): Promise<string | null> {
   });
 }
 
-test.beforeAll(() => {
-  fs.mkdirSync(EVIDENCE, { recursive: true });
-});
+async function logoutViaUi(page: Page) {
+  const logout = page.getByRole('button', { name: 'Abmelden' }).first();
+  await expect(logout).toBeVisible({ timeout: 5_000 });
+  await logout.click();
+  await expect(page.getByRole('tab', { name: 'Login' })).toBeVisible({ timeout: 5_000 });
+}
 
-test('A: GoTrue reachable → Local Admin uses real session when available', async ({ page }) => {
-  // Do not intercept — local stack or remote may respond.
-  await ensureLoggedIn(page, { readyTimeoutMs: 10_000 });
-  await expect(dashboardReadyLocator(page)).toBeVisible();
-  const localFlag = await page.evaluate((k) => localStorage.getItem(k), LOCAL_ADMIN_STORAGE_KEY);
-  expect(localFlag).toBe('true');
-  const provider = await readAuthProvider(page);
-  // Real JWT → email/provider from GoTrue; offline fallback leaves no supabase auth-token.
-  // Either path is valid when stack is up or down — Dashboard must be ready.
-  fs.writeFileSync(
-    path.join(EVIDENCE, 'case-a.json'),
-    `${JSON.stringify({ provider, localFlag }, null, 2)}\n`,
-  );
-  await page.screenshot({ path: path.join(EVIDENCE, 'case-a-dashboard.png'), fullPage: true });
-});
+function buildFakeGoTrueSession(user: {
+  id: string;
+  email: string;
+  provider?: string;
+}) {
+  const now = Math.floor(Date.now() / 1000);
+  return {
+    access_token: `e2e-${user.email}-access`,
+    token_type: 'bearer',
+    expires_in: 3600,
+    expires_at: now + 3600,
+    refresh_token: `e2e-${user.email}-refresh`,
+    user: {
+      id: user.id,
+      aud: 'authenticated',
+      role: 'authenticated',
+      email: user.email,
+      app_metadata: {
+        provider: user.provider ?? 'email',
+        providers: [user.provider ?? 'email'],
+      },
+      user_metadata: {},
+      identities: [],
+      created_at: new Date().toISOString(),
+    },
+  };
+}
 
-test('B: GoTrue fails immediately → Local Admin fallback → Dashboard', async ({ page }) => {
-  await page.route('**/*', async (route) => {
+/**
+ * Hold the first Local Admin password grant, then fulfill a successful GoTrue
+ * session (deterministic late success — no dependency on live GoTrue).
+ */
+async function installLateAdminSuccessHold(page: Page): Promise<{ release: () => void }> {
+  let releaseFn: (() => void) | null = null;
+  const held = new Promise<void>((resolve) => {
+    releaseFn = resolve;
+  });
+  let heldOnce = false;
+
+  await page.route('**/*', async (route: Route) => {
     const req = route.request();
-    if (req.method() === 'POST' && isGoTrueToken(req.url())) {
-      await route.abort('failed');
+    if (req.method() === 'POST' && isGoTrueToken(req.url()) && !heldOnce) {
+      heldOnce = true;
+      await held;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(
+          buildFakeGoTrueSession({
+            id: '00000000-0000-4000-8000-000000000001',
+            email: 'admin@sagadrive.local',
+            provider: 'email',
+          }),
+        ),
+      });
       return;
     }
     await route.continue();
   });
 
-  const t0 = Date.now();
-  await fillCredentials(page, 'admin', '1234');
-  await page.getByRole('button', { name: 'Einloggen' }).click();
-  await expect(dashboardReadyLocator(page)).toBeVisible({ timeout: 5_000 });
-  const elapsed = Date.now() - t0;
-  expect(elapsed).toBeLessThan(5_000);
-  const localFlag = await page.evaluate((k) => localStorage.getItem(k), LOCAL_ADMIN_STORAGE_KEY);
-  expect(localFlag).toBe('true');
-  fs.writeFileSync(path.join(EVIDENCE, 'case-b.json'), `${JSON.stringify({ elapsedMs: elapsed }, null, 2)}\n`);
-  await page.screenshot({ path: path.join(EVIDENCE, 'case-b-dashboard.png'), fullPage: true });
+  return {
+    release: () => {
+      releaseFn?.();
+    },
+  };
+}
+
+test.beforeAll(() => {
+  fs.mkdirSync(EVIDENCE, { recursive: true });
 });
 
-test('C: GoTrue hangs past AUTH_SESSION_TIMEOUT_MS → fallback → Dashboard', async ({ page }) => {
+test('1 fast GoTrue success: Local Admin authenticates', async ({ page }) => {
+  await ensureLoggedIn(page, { readyTimeoutMs: 10_000 });
+  await expect(dashboardReadyLocator(page)).toBeVisible();
+  const localFlag = await page.evaluate((k) => localStorage.getItem(k), LOCAL_ADMIN_STORAGE_KEY);
+  expect(localFlag).toBe('true');
+  await page.screenshot({ path: path.join(EVIDENCE, 'case-1-dashboard.png'), fullPage: true });
+});
+
+test('2 timeout fallback: GoTrue hang → Local Admin fallback', async ({ page }) => {
   let release: (() => void) | null = null;
   const held = new Promise<void>((resolve) => {
     release = resolve;
@@ -113,18 +173,206 @@ test('C: GoTrue hangs past AUTH_SESSION_TIMEOUT_MS → fallback → Dashboard', 
     timeout: AUTH_SESSION_TIMEOUT_MS + 2_500,
   });
   const elapsed = Date.now() - t0;
-  // Must not wait for the artificial hang (would be >> timeout).
   expect(elapsed).toBeLessThan(AUTH_SESSION_TIMEOUT_MS + 2_500);
   expect(elapsed).toBeGreaterThanOrEqual(AUTH_SESSION_TIMEOUT_MS - 200);
   fs.writeFileSync(
-    path.join(EVIDENCE, 'case-c.json'),
+    path.join(EVIDENCE, 'case-2.json'),
     `${JSON.stringify({ elapsedMs: elapsed, authTimeoutMs: AUTH_SESSION_TIMEOUT_MS }, null, 2)}\n`,
   );
-  await page.screenshot({ path: path.join(EVIDENCE, 'case-c-dashboard.png'), fullPage: true });
   release?.();
 });
 
-test('D: non-Local-Admin login does not use Local Admin fallback', async ({ page }) => {
+test('3 timeout → late success must not uncontrolled overwrite fallback', async ({ page }) => {
+  const hold = await installLateAdminSuccessHold(page);
+  await fillCredentials(page, 'admin', '1234');
+  await page.getByRole('button', { name: 'Einloggen' }).click();
+  await expect(dashboardReadyLocator(page)).toBeVisible({
+    timeout: AUTH_SESSION_TIMEOUT_MS + 2_500,
+  });
+
+  hold.release();
+  await page.waitForTimeout(2_500);
+  await expect(dashboardReadyLocator(page)).toBeVisible();
+  // Fallback stays authenticated; late JWT may be scrubbed — must not bounce to login.
+  await expect(page.getByRole('tab', { name: 'Login' })).toHaveCount(0);
+  const report = {
+    hasAuthToken: await hasSupabaseAuthToken(page),
+    email: await readStoredAuthEmail(page),
+    localFlag: await page.evaluate((k) => localStorage.getItem(k), LOCAL_ADMIN_STORAGE_KEY),
+  };
+  fs.writeFileSync(path.join(EVIDENCE, 'case-3-late-success.json'), `${JSON.stringify(report, null, 2)}\n`);
+  await page.screenshot({ path: path.join(EVIDENCE, 'case-3.png'), fullPage: true });
+});
+
+test('4 timeout → logout → late success must not resurrect Admin', async ({ page }) => {
+  const hold = await installLateAdminSuccessHold(page);
+  const events: string[] = [];
+  page.on('console', (msg) => {
+    if (msg.text().includes('AUTHENTICATED') || msg.text().includes('SIGNED')) {
+      events.push(msg.text());
+    }
+  });
+
+  await fillCredentials(page, 'admin', '1234');
+  await page.getByRole('button', { name: 'Einloggen' }).click();
+  await expect(dashboardReadyLocator(page)).toBeVisible({
+    timeout: AUTH_SESSION_TIMEOUT_MS + 2_500,
+  });
+  await logoutViaUi(page);
+
+  hold.release();
+  await page.waitForTimeout(3_000);
+
+  await expect(page.getByRole('tab', { name: 'Login' })).toBeVisible();
+  await expect(dashboardReadyLocator(page)).toHaveCount(0);
+  const hasToken = await hasSupabaseAuthToken(page);
+  const email = await readStoredAuthEmail(page);
+  const localFlag = await page.evaluate((k) => localStorage.getItem(k), LOCAL_ADMIN_STORAGE_KEY);
+
+  const report = { hasToken, email, localFlag, events };
+  fs.writeFileSync(path.join(EVIDENCE, 'case-4-logout-late.json'), `${JSON.stringify(report, null, 2)}\n`);
+  await page.screenshot({ path: path.join(EVIDENCE, 'case-4.png'), fullPage: true });
+
+  expect(localFlag).not.toBe('true');
+  expect(hasToken).toBe(false);
+  expect(email).toBeNull();
+});
+
+test('5 timeout → different user login → late admin must not replace user', async ({ page }) => {
+  let releaseAdmin: (() => void) | null = null;
+  const adminHeld = new Promise<void>((resolve) => {
+    releaseAdmin = resolve;
+  });
+  let adminHoldUsed = false;
+  const otherEmail = 'someone@example.com';
+  const otherUserId = '11111111-1111-4111-8111-111111111111';
+
+  await page.route('**/*', async (route) => {
+    const req = route.request();
+    if (req.method() !== 'POST' || !isGoTrueToken(req.url())) {
+      await route.continue();
+      return;
+    }
+    const postData = req.postData() || '';
+    const isAdminGrant =
+      postData.includes('admin%40sagadrive.local') || postData.includes('admin@sagadrive.local');
+    const isOtherGrant =
+      postData.includes('someone%40example.com') || postData.includes(otherEmail);
+
+    if (isAdminGrant && !adminHoldUsed) {
+      adminHoldUsed = true;
+      await adminHeld;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(
+          buildFakeGoTrueSession({
+            id: '00000000-0000-4000-8000-000000000001',
+            email: 'admin@sagadrive.local',
+            provider: 'email',
+          }),
+        ),
+      });
+      return;
+    }
+    if (isOtherGrant) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(
+          buildFakeGoTrueSession({
+            id: otherUserId,
+            email: otherEmail,
+            provider: 'email',
+          }),
+        ),
+      });
+      return;
+    }
+    await route.continue();
+  });
+
+  await fillCredentials(page, 'admin', '1234');
+  await page.getByRole('button', { name: 'Einloggen' }).click();
+  await expect(dashboardReadyLocator(page)).toBeVisible({
+    timeout: AUTH_SESSION_TIMEOUT_MS + 2_500,
+  });
+  await logoutViaUi(page);
+
+  await fillCredentials(page, otherEmail, 'other-password');
+  await page.getByRole('button', { name: 'Einloggen' }).click();
+  await expect(dashboardReadyLocator(page)).toBeVisible({ timeout: 8_000 });
+
+  releaseAdmin?.();
+  await page.waitForTimeout(3_000);
+
+  // Newer user must remain authenticated — not replaced by late admin, not bounced to login.
+  await expect(dashboardReadyLocator(page)).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Login' })).toHaveCount(0);
+  const email = await readStoredAuthEmail(page);
+  expect(email).not.toBe('admin@sagadrive.local');
+  fs.writeFileSync(
+    path.join(EVIDENCE, 'case-5-different-user.json'),
+    `${JSON.stringify({ email, otherEmail }, null, 2)}\n`,
+  );
+});
+
+test('6 overlapping Local Admin attempts: newest wins; stale late success discarded', async ({
+  page,
+}) => {
+  const releases: Array<() => void> = [];
+  let tokenIndex = 0;
+
+  await page.route('**/*', async (route) => {
+    const req = route.request();
+    if (req.method() === 'POST' && isGoTrueToken(req.url())) {
+      const idx = tokenIndex;
+      tokenIndex += 1;
+      if (idx === 0) {
+        // First attempt: hold until release, then late admin success.
+        await new Promise<void>((resolve) => {
+          releases[0] = resolve;
+        });
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(
+            buildFakeGoTrueSession({
+              id: '00000000-0000-4000-8000-000000000001',
+              email: 'admin@sagadrive.local',
+              provider: 'email',
+            }),
+          ),
+        });
+        return;
+      }
+      // Newer attempts: fail fast so second login uses fallback quickly.
+      await route.abort('failed');
+      return;
+    }
+    await route.continue();
+  });
+
+  await fillCredentials(page, 'admin', '1234');
+  await page.getByRole('button', { name: 'Einloggen' }).click();
+  await expect(dashboardReadyLocator(page)).toBeVisible({
+    timeout: AUTH_SESSION_TIMEOUT_MS + 2_500,
+  });
+  await logoutViaUi(page);
+
+  // Second Local Admin login (newest generation) → fallback after abort.
+  await fillCredentials(page, 'admin', '1234');
+  await page.getByRole('button', { name: 'Einloggen' }).click();
+  await expect(dashboardReadyLocator(page)).toBeVisible({ timeout: 5_000 });
+
+  // Release stale first attempt late success.
+  releases[0]?.();
+  await page.waitForTimeout(2_500);
+  await expect(dashboardReadyLocator(page)).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Login' })).toHaveCount(0);
+});
+
+test('7 non-Local-Admin login does not use Local Admin fallback', async ({ page }) => {
   await page.route('**/*', async (route) => {
     const req = route.request();
     if (req.method() === 'POST' && isGoTrueToken(req.url())) {
@@ -140,20 +388,17 @@ test('D: non-Local-Admin login does not use Local Admin fallback', async ({ page
 
   await fillCredentials(page, 'someone@example.com', 'wrong-password');
   await page.getByRole('button', { name: 'Einloggen' }).click();
-  // Stay on login — no Dashboard via admin fallback.
   await expect(page.getByRole('tab', { name: 'Login' })).toBeVisible({ timeout: 5_000 });
   await expect(dashboardReadyLocator(page)).toHaveCount(0);
   const localFlag = await page.evaluate((k) => localStorage.getItem(k), LOCAL_ADMIN_STORAGE_KEY);
   expect(localFlag).not.toBe('true');
-  await page.screenshot({ path: path.join(EVIDENCE, 'case-d-login.png'), fullPage: true });
 });
 
-test('E: existing Local Admin storage bootstraps without hanging', async ({ page }) => {
+test('8 session bootstrap with Local Admin storage remains regressionsfrei', async ({ page }) => {
   await page.addInitScript((key) => {
     localStorage.setItem(key, 'true');
   }, LOCAL_ADMIN_STORAGE_KEY);
 
-  // Delay getSession/token so bootstrap must use timeout path.
   await page.route('**/*', async (route) => {
     const req = route.request();
     const url = req.url();
@@ -172,6 +417,22 @@ test('E: existing Local Admin storage bootstraps without hanging', async ({ page
   });
   const elapsed = Date.now() - t0;
   expect(elapsed).toBeLessThan(AUTH_SESSION_TIMEOUT_MS + 3_000);
-  fs.writeFileSync(path.join(EVIDENCE, 'case-e.json'), `${JSON.stringify({ elapsedMs: elapsed }, null, 2)}\n`);
-  await page.screenshot({ path: path.join(EVIDENCE, 'case-e-dashboard.png'), fullPage: true });
+  fs.writeFileSync(path.join(EVIDENCE, 'case-8.json'), `${JSON.stringify({ elapsedMs: elapsed }, null, 2)}\n`);
+});
+
+test('B immediate GoTrue fail → Local Admin fallback', async ({ page }) => {
+  await page.route('**/*', async (route) => {
+    const req = route.request();
+    if (req.method() === 'POST' && isGoTrueToken(req.url())) {
+      await route.abort('failed');
+      return;
+    }
+    await route.continue();
+  });
+
+  const t0 = Date.now();
+  await fillCredentials(page, 'admin', '1234');
+  await page.getByRole('button', { name: 'Einloggen' }).click();
+  await expect(dashboardReadyLocator(page)).toBeVisible({ timeout: 5_000 });
+  expect(Date.now() - t0).toBeLessThan(5_000);
 });

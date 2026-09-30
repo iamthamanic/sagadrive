@@ -1,0 +1,51 @@
+[
+  {
+    "t": 1790770679984,
+    "label": "console",
+    "type": "error",
+    "text": "Failed to load resource: net::ERR_NAME_NOT_RESOLVED"
+  },
+  {
+    "t": 1790770679984,
+    "label": "console",
+    "type": "error",
+    "text": "❌ DevTrack: Error: TypeError: Failed to fetch\n    at sendLog (http://localhost:3004/src/lib/devtrack.ts:25:30)\n    at initDevTrack (http://localhost:3004/src/lib/devtrack.ts:125:3)\n    at http://localhost:3004/src/App.tsx:62:66"
+  },
+  {
+    "t": 1790770680402,
+    "label": "console",
+    "type": "error",
+    "text": "Failed to load resource: net::ERR_NAME_NOT_RESOLVED"
+  },
+  {
+    "t": 1790770680402,
+    "label": "console",
+    "type": "error",
+    "text": "❌ DevTrack: Error: TypeError: Failed to fetch\n    at sendLog (http://localhost:3004/src/lib/devtrack.ts:25:30)\n    at HTMLDocument.handleClick (http://localhost:3004/src/lib/devtrack.ts:105:11)"
+  },
+  {
+    "t": 1790770680417,
+    "label": "before_einloggen_click"
+  },
+  {
+    "t": 1790770680457,
+    "label": "gotrue_token_start",
+    "url": "http://localhost:8000/auth/v1/token?grant_type=password"
+  },
+  {
+    "t": 1790770680458,
+    "label": "after_einloggen_click_returned"
+  },
+  {
+    "t": 1790770682469,
+    "label": "after_auth_timeout_budget",
+    "dashboardVisibleEarly": false,
+    "elapsedMs": 2052
+  },
+  {
+    "t": 1790770686040,
+    "label": "after_5s_total",
+    "dashboardVisibleLate": false,
+    "elapsedMs": 5623
+  }
+]
