@@ -1,6 +1,7 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { ensureLoggedIn } from './helpers/auth';
 
 const EVIDENCE_DIR = '.qa/evidence/library-entity-browser';
 
@@ -66,16 +67,6 @@ const MOCK_MEMBERS: Record<string, StoredMember[]> = {
   ],
 };
 
-async function ensureLoggedIn(page: Page) {
-  await page.goto('/');
-  const loginTab = page.getByRole('tab', { name: 'Login' });
-  if (await loginTab.count()) {
-    await page.getByPlaceholder('admin oder deine@email.de').fill('admin');
-    await page.getByPlaceholder('••••••••').fill('1234');
-    await page.getByRole('button', { name: 'Einloggen' }).click();
-  }
-  await expect(page.getByRole('button', { name: 'Dashboard' }).first()).toBeVisible({ timeout: 15_000 });
-}
 
 function json(route: Route, value: unknown, status = 200) {
   return route.fulfill({

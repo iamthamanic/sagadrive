@@ -7,26 +7,10 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { ensureLoggedIn } from './helpers/auth';
 
 const EVIDENCE_DIR = '.qa/evidence/inventory-v2-integration';
 
-async function ensureLoggedIn(page: Page) {
-  // Dashboard nav is desktop-chrome; authenticate wide, then callers may resize.
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
-  await page.evaluate(() => {
-    sessionStorage.removeItem('sagadrive:character-edit-id');
-  });
-  const loginTab = page.getByRole('tab', { name: 'Login' });
-  if (await loginTab.count()) {
-    await page.getByPlaceholder('admin oder deine@email.de').fill('admin');
-    await page.getByPlaceholder('••••••••').fill('1234');
-    await page.getByRole('button', { name: 'Einloggen' }).click();
-  }
-  await expect(page.getByRole('button', { name: 'Dashboard' }).first()).toBeVisible({
-    timeout: 30_000,
-  });
-}
 
 async function openNewCharacterInventory(page: Page) {
   const createViaEmptyState = page.getByRole('button', { name: 'Charakter erstellen' });

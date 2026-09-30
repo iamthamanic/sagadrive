@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { ensureLoggedIn } from './helpers/auth';
 
 /**
  * E2E: NPC promotion + controller UI hooks (#200).
@@ -9,22 +10,6 @@ import path from 'node:path';
 
 const EVIDENCE_DIR = '.qa/evidence/npc-creature-promotion-controller';
 
-async function ensureLoggedIn(page: Page) {
-  await page.goto('/');
-  const loginTab = page.getByRole('tab', { name: 'Login' });
-  if (await loginTab.count()) {
-    await page.getByPlaceholder('admin oder deine@email.de').fill('admin');
-    await page.getByPlaceholder('••••••••').fill('1234');
-    await page.getByRole('button', { name: 'Einloggen' }).click();
-  }
-  await expect(
-    page
-      .getByRole('heading', { name: 'Dashboard' })
-      .or(page.getByRole('button', { name: 'Home' }))
-      .or(page.getByRole('button', { name: 'Dashboard' }))
-      .first(),
-  ).toBeVisible({ timeout: 15_000 });
-}
 
 async function openNpcsTab(page: Page) {
   await page.getByRole('button', { name: 'Bibliothek' }).first().click();
