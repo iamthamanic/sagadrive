@@ -64,6 +64,7 @@ jobs:
             //   from the implementation shipped by merged #84.
             const verifiedSuperseded = new Set([
               'agent/face-anchors-character-persist',
+              'agent/face-mapping-close-zoom',
               'agent/preview-settings-nested-dropdown',
               'feat/attribute-bonus-progression',
               'feat/background-training-selection-ci',
