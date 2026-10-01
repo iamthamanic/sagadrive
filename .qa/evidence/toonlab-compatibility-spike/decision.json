@@ -1,0 +1,30 @@
+{
+  "verdict": "BLOCKED",
+  "findings": [
+    {
+      "id": "three-peer-gap",
+      "severity": "blocker",
+      "detail": "SagaDrive three@0.183.2 does not satisfy ToonLab peer ^0.185.1."
+    },
+    {
+      "id": "vrm-peer-gap",
+      "severity": "blocker",
+      "detail": "SagaDrive @pixiv/three-vrm@3.5.1 does not satisfy ToonLab peer ^3.5.4."
+    },
+    {
+      "id": "react-peer-gap",
+      "severity": "risk",
+      "detail": "Package peers react ^19.0.0; host is 18.3.1. Avatar runtime is React-free, but installing ToonLab as a dep still advertises the peer conflict."
+    },
+    {
+      "id": "renderer-mismatch",
+      "severity": "blocker",
+      "detail": "CharacterStudioRuntime uses THREE.WebGLRenderer + MToon/GLSL. ToonLab 0.5 is TSL/NodeMaterial WebGPU-first with GLSL path removed — not a drop-in on the current avatar renderer."
+    },
+    {
+      "id": "mtoon-parallel-path",
+      "severity": "info",
+      "detail": "SagaDrive already has an allowlisted MToon style profile. ToonLab must not silently replace that contract; Look runtime (#342) should keep provider-neutral adapters."
+    }
+  ]
+}

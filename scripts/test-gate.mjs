@@ -376,6 +376,14 @@ function checkLiveSessionMediaPlane() {
   });
 }
 
+function checkToonLabCompatibilitySpike() {
+  console.log('ToonLab compatibility spike (#341): peers, fixtures, BLOCKED decision...');
+  execFileSync(process.execPath, ['scripts/toonlab-compatibility-spike-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1487,6 +1495,7 @@ checkLookProfileDomain();
 checkLookProfilePersistence();
 checkLookLibrary();
 checkLookWorldCapabilityStubs();
+checkToonLabCompatibilitySpike();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();
