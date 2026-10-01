@@ -1,0 +1,14 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "manual_override",
+  "reviewed": true,
+  "reviewStatus": "human_reviewed",
+  "reviewedAt": "2026-10-01T08:45:52.999Z",
+  "asset": {
+    "modelPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-jawopen1.glb",
+    "modelSha256": "fdffea65effff020d6f2f04a33e78ab3224254edde00c889aa790182bd3e738f",
+    "anchorsSha256": "89bbcd8b6ba49bbd0c0a8424127617316e406b3974863e06dfd2568129bd9f5e",
+    "topologyFingerprint": "v147707:t214973:m1"
+  },
+  "note": "GT carry-forward after jawOpen1 morph-only rewrite; groundTruthCarryForward=true; sourceCandidate=a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c; targetCandidate=fdffea65effff020d6f2f04a33e78ab3224254edde00c889aa790182bd3e738f; priorAgentReview=assets/species-3d/human/runs/quality-20260930-f5-face3/agent-review"
+}

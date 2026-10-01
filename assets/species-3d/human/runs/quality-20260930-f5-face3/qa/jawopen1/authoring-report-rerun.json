@@ -1,0 +1,53 @@
+{
+  "contractVersion": "SagaDriveLiveActFaceFunctionalMorphAuthorV1",
+  "profileVersion": "liveact-face-functional-morph-author-profile-v1",
+  "channel": "jawOpen",
+  "inputPath": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb",
+  "outputPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen1/rerun.glb",
+  "anchorsPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/face-anchors.json",
+  "authoringPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/face-mapping-authoring.json",
+  "inputSha256": "a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c",
+  "outputSha256": "fdffea65effff020d6f2f04a33e78ab3224254edde00c889aa790182bd3e738f",
+  "topologyFingerprint": "v147707:t214973:m1",
+  "anchorsSha256": "89bbcd8b6ba49bbd0c0a8424127617316e406b3974863e06dfd2568129bd9f5e",
+  "groundTruth": {
+    "ok": true,
+    "reason": null,
+    "reviewStatus": "agent_reviewed"
+  },
+  "beforeJawOpenMorphSha256": "0915f0de848970a69f6b362d3149e231c0c02ecba38b044fee56596a9794de55",
+  "afterJawOpenMorphSha256": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
+  "deterministicRerunMorphSha256": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
+  "morphsUnchangedExceptChannel": true,
+  "morphCount": 51,
+  "changedMorphs": [
+    "jawOpen"
+  ],
+  "channelStats": {
+    "morphIndex": 24,
+    "nodeIdentity": "human-female-quality-20260921-f5_mesh",
+    "primitiveIndex": 0,
+    "vertexCount": 147707,
+    "affectedVertices": 21841,
+    "maxWeight": 1,
+    "meanWeightAffected": 0.296547897075614,
+    "maxDisplacement": 0.06798605312724147,
+    "meanDisplacementAffected": 0.02016112108535429,
+    "amp": 0.06595615955587539,
+    "faceHeight": 0.34713768187302835,
+    "morphPositionSha256": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
+    "mouthGapNeutral": 0.5785999504024656,
+    "mouthGapJawOpen1": 1.7262476141061796,
+    "mouthGapDelta": 1.1476476637037138,
+    "displacements": {
+      "mouthUpper": 0,
+      "mouthLower": 0.0679860516553569,
+      "chin": 0.0679860516553569,
+      "noseTip": 0,
+      "forehead": 0,
+      "mouthCornerLeft": 0.04835021499542554,
+      "mouthCornerRight": 0.049015362146536005
+    }
+  },
+  "authoredAt": "2026-10-01T11:32:02.230Z"
+}

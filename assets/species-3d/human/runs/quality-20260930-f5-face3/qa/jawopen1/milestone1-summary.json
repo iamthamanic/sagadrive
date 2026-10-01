@@ -1,0 +1,35 @@
+{
+  "id": "f5",
+  "inputSha": "a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c",
+  "outputSha": "fdffea65effff020d6f2f04a33e78ab3224254edde00c889aa790182bd3e738f",
+  "topology": "v147707:t214973:m1",
+  "beforeMouthGapDelta": -0.18896196,
+  "afterMouthGapDelta": 1.14764766,
+  "required": 0.06,
+  "jawOpenPass": true,
+  "jawOpenViolations": [],
+  "noseDisp": 0,
+  "foreheadDisp": 0,
+  "upperDisp": 0,
+  "lowerDisp": 0.0679860516553569,
+  "chinDisp": 0.0679860516553569,
+  "affected": 21841,
+  "morphHash": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
+  "rerunHash": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
+  "morphRegressionOnlyJawOpen": true,
+  "morphCount": 51,
+  "structuralPass": false,
+  "structuralErrors": [
+    "functional_qa_failed"
+  ],
+  "semanticPass": true,
+  "semanticViolations": [],
+  "anatomyPass": true,
+  "anatomyDetail": {
+    "pass": true,
+    "errors": []
+  },
+  "gtCarryForward": true,
+  "overallAssetOk": false,
+  "overallFunctionalPass": false
+}
