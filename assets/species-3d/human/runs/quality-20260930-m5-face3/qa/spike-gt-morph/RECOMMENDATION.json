@@ -1,0 +1,14 @@
+{
+  "contractVersion": "SagaDrive423SolutionSpikeV1",
+  "recommendation": "B_shell_plus_C_rewrite_seven_channels",
+  "confidencePercent": 90,
+  "implementReady": true,
+  "jawOpenProof": {
+    "m5": { "before": -0.00049, "after": 0.07405, "required": 0.06 },
+    "f5": { "before": -0.00863, "after": 0.07694, "required": 0.06 },
+    "metricsFile": "jawopen-prototype-v3-metrics.json"
+  },
+  "optionA": "infeasible_without_qtmesh_fork",
+  "residualRisk": "blink/smile side-isolation not yet spike-proven; first implement milestone",
+  "designPath": ".qa/design/liveact-human-ground-truth-repair.md#gt-aware-functional-morph-authoring"
+}

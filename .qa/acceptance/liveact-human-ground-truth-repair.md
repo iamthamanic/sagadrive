@@ -28,6 +28,13 @@ Reviewed Ground Truth for m5/f5, then Functional Face QA; reauthor via QtMesh on
 - [x] f5 minimal confirm: same class.
 - Evidence: `assets/species-3d/human/runs/quality-20260930-m5-face3/qa/debug-jawopen/ROOT-CAUSE.md`
 
+## Solution Spike (no production code)
+- [x] Options A/B/C compared; Option A infeasible (FaceRig CLI has no external marker input).
+- [x] Recommended: FaceRig base + GT-aware rewrite of the seven Functional channels.
+- [x] jawOpen offline prototype: m5 −0.00049 → +0.074; f5 −0.00863 → +0.077 (both ≥0.06; upper stable; nose/forehead leak 0).
+- [x] Design updated: `.qa/design/liveact-human-ground-truth-repair.md` § GT-aware Functional Morph Authoring.
+- `/implement ready: YES`
+
 ## Implementation Notes
 **STOP (Stage B):** Existing QtMesh FaceRig recipe deterministically regenerates the same morph deltas as the failing face1 candidates. Blink/brow anchors receive no (or negligible) morph displacement; jaw/smile/pucker fail Functional metrics. Publish forbidden until a non-identical, functionally correct morph authoring path exists (out of #423 Scope B without new DCC pipeline).
 

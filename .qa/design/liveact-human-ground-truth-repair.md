@@ -487,4 +487,135 @@ Architecture/foundations:
 - No external dependency or undocumented external algorithm is required.
 
 ## Ready for implementation?
-YES, but implementation must respect the explicit Stage A human-review stop. The agent cannot truthfully complete #423 in one uninterrupted run unless valid reviewed m5 and f5 exports already exist.
+Stage A Ground Truth is satisfied (`agent_reviewed` for m5/f5).
+
+Stage B Functional repair is **not** achievable by re-running the existing QtMesh FaceRig recipe alone (see Root Cause + debug evidence). Implementation of **GT-aware Functional Morph Authoring** (below) is required before Functional PASS / VRM publish.
+
+`/implement ready: YES` for that authoring slice — jawOpen offline proof passed on m5 and f5 without hardcoded vertex IDs. Remaining channels follow the same module contract; blink/smile side-isolation is the main residual risk and must be proven in the first implement milestone.
+
+---
+
+# GT-aware Functional Morph Authoring
+
+## Root Cause (proven)
+The wired QtMesh FaceRig path (`qtmesh facerig <file> [-o] [--max-shapes] [--max-residual] [--json]` + `QTMESH_FACERIG_MARKER_SIM=2`) is a **deterministic ICT-template morph generator**. It:
+
+- never receives SagaDrive `face-anchors.json` (`buildFacerigArgv` has no anchor flag; CLI has no marker-file input — binary usage string evidence);
+- drives 13 internal ICT markers / proportional defaults;
+- regenerates face1-identical morph POSITION buffers for m5/f5 face3;
+- creates real morphs that still fail Functional QA at reviewed anchors (e.g. jawOpen chin Δ=0, parallel lip translation).
+
+Exporter/canonicalize preserve intentional shape-key edits (mutation Case A). Failure is authoring geometry vs GT, not packaging.
+
+Evidence: `assets/species-3d/human/runs/quality-20260930-m5-face3/qa/debug-jawopen/ROOT-CAUSE.md`.
+
+## Chosen architecture
+**Option B shell + Option C rewrite for the seven required channels** (YAGNI hybrid):
+
+```text
+baseline / face candidate GLB
+      ↓
+QtMesh FaceRig base (optional keep for non-required ~44 morphs)
+      ↓
+GT-aware functional morph authoring  ← NEW single module
+  (rewrite ONLY: jawOpen, eyeBlinkLeft/Right, browInnerUp,
+   mouthSmileLeft/Right, mouthPucker)
+      ↓
+canonicalize + Structural/Anatomy/Semantic/Functional/Combination QA
+      ↓
+VRM pack + resolver (only if functionalQa.pass === true)
+```
+
+- **Not Option A:** FaceRig CLI cannot consume external SagaDrive markers without forking/patching QtMeshEditor (out of scope; high coupling).
+- **Not full Option C for all 51:** YAGNI — only seven Functional-required channels need GT-correct deltas; keep FaceRig inventory for the rest unless Semantic/Functional demands otherwise.
+- **Not additive-only Option B:** f5 spike showed FaceRig jawOpen nose/forehead leakage survives additive repair; **per-channel rewrite** of the seven targets is required.
+
+## Module boundary (one design decision)
+One offline lib owns GT→delta authoring:
+
+`scripts/lib/liveact-face-functional-morph-author.mjs`
+
+(+ thin CLI `scripts/liveact-face-functional-morph-author.mjs`)
+
+Responsibility: given Document + reviewed `SagaDriveFaceAnchorsV1` + channel contracts → rewrite named morph POSITION accessors. No runtime imports. No threshold-lock loops against the validator.
+
+QA (`liveact-face-functional-validate.mjs`) stays an independent consumer.
+
+## Inputs / Outputs
+**Inputs**
+- glTF Document (post-FaceRig or existing face GLB with named morphs)
+- reviewed `face-anchors.json` (21 barycentric bindings)
+- channel id ∈ required seven
+- face frame derived from anchors (up/forward/faceHeight) — reuse Functional QA frame helpers where possible
+
+**Outputs**
+- mutated morph target POSITION for that channel only
+- evidence JSON: affected vertex count, max weight, anchor displacements, pre/post gap (or channel metrics), morph buffer sha
+
+## Channel contracts (authoring goals ≠ copying QA thresholds as loop)
+Each channel declares:
+- `targetAnchors` / `fixedAnchors`
+- `side` (`left|right|center|bilateral`)
+- `desiredDisplacement` in face-local frame (normalized by faceHeight)
+- `falloff` (euclidean from anchors; optional soft midplane gates)
+- `forbiddenRegions` (nose/forehead/opposite-eye etc.)
+- acceptance **intent** documented; Functional QA remains the gate
+
+Example jawOpen (spike-proven):
+- move: mouthLower + chin neighborhoods downward (−up) with slight −forward
+- fix: mouthUpper, noseTip, forehead (weight→0)
+- rewrite entire `jawOpen` accessor (clear ICT leakage)
+
+## Spike proof (temporary, not production assets)
+`qa/spike-gt-morph/jawopen-prototype-v3-metrics.json`:
+
+| Asset | mouthGapΔ before | after | ≥0.06 | upper stable | nose/forehead leak |
+|-------|------------------|-------|-------|--------------|--------------------|
+| m5 | −0.00049 | **+0.074** | PASS | yes | 0 / 0 |
+| f5 | −0.00863 | **+0.077** | PASS | yes | 0 / 0 |
+
+No hardcoded vertex indices; neighborhoods from reviewed anchors + faceHeight-scaled radii.
+
+## Failure modes
+- Topology/anchor fingerprint mismatch → fail closed (no silent GT apply)
+- Missing morph name → fail (do not invent Shape_N)
+- Channel cannot meet geometric intent within maxAmp → fail authoring step (do not loosen QA)
+- Side leakage on unilateral channels → fail before publish
+
+## QA gates (unchanged order)
+Structural → topology/binding → Anatomy → GT validity → Semantic → Functional → Combination → pack contracts.
+
+## Scope / Non-scope
+**In:** offline GT-aware rewrite of seven morphs; run ledger; immutable face3 publish when PASS; resolver sync.
+
+**Out:** QtMesh fork; new DCC; runtime gain/deadZone (#424); Perfect Fidelity V2; generic sculpt engine; asset filename exceptions.
+
+## Migration from current FaceRig path
+1. Keep `liveact-face-authoring-qtmesh.mjs` as optional base inventory producer (or reuse existing face1 morph inventory as base bytes).
+2. Insert functional morph author step before canonicalize / inventory.
+3. Record `faceAuthoringProvider` trail: `qtmesh-facerig+gt-functional-morph-author-v1`.
+4. Do not claim FaceRig alone repaired Functional QA.
+
+## Rollback
+Omit GT author step → previous FaceRig-only GLB (known Functional FAIL). Public/resolver unchanged until PASS.
+
+## Files for `/implement`
+**New**
+- `scripts/lib/liveact-face-functional-morph-author.mjs`
+- `scripts/liveact-face-functional-morph-author.mjs`
+- `scripts/liveact-face-functional-morph-author-check.mjs` (fixtures + jawOpen contract check)
+- optional: `scripts/lib/liveact-face-functional-morph-profile-v1.mjs` (channel contracts)
+
+**Reuse**
+- `scripts/lib/liveact-face-functional-validate.mjs` (frame/metrics patterns — do not import as authoring oracle loop)
+- `scripts/lib/liveact-face-semantic-validate.mjs` region classifier ideas (neighborhoods)
+- `scripts/lib/liveact-face-anchor-*.mjs` binding resolve
+- `scripts/lib/liveact-face-authoring-qtmesh.mjs` canonicalize
+- `scripts/lib/avatar-vrm-pack.mjs`
+- `src/domains/character/avatar/species-template-models-v1.ts` (publish only)
+
+**Deps:** none new.
+
+**Size:** one focused offline author module + CLI + check + run orchestration; no UI.
+
+**Tests:** unit fixtures for jawOpen gap/stability; extend per channel; full asset check on m5/f5; test-gate wiring; no production publish inside unit tests.
