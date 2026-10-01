@@ -83,9 +83,33 @@ Runtime bindings stay in `SagaDriveFaceAnchorsV1`. Authoring provenance is a **s
 
 - Path: `face-mapping-authoring.json` next to `face-anchors.json` (or `{stem}-face-mapping-authoring.json` next to `{stem}-face-anchors.json`)
 - Contract: `src/domains/character/avatar/face-mapping-authoring-contract.ts`
-- Fields: `source: auto | manual | manual_override`, `reviewed`, `asset.modelPath` (+ optional `modelSha256` / `anchorsSha256` / `topologyFingerprint` / `cacheBust`)
+- Mapping **source** (how anchors were produced): `auto | manual | manual_override`
+- Review **status** (who accepted GT): `unreviewed | agent_reviewed | human_reviewed` (legacy: omit `reviewStatus` + `manual*` + `reviewed=true` ⇒ `human_reviewed`)
 
-**Policy:** Heuristic/auto output is proposal-only (`source: auto`, `reviewed: false`). Publish-/QA-helpers (`isReviewedFaceMappingGroundTruth`) treat only `manual` / `manual_override` with `reviewed: true` **and** canonical `reviewedAt` (UTC ISO with milliseconds) as production ground truth. `auto` + `reviewed: true` is invalid (fail-closed).
+**Policy:**
+
+- Heuristic/auto output is proposal-only (`source: auto`, `reviewed: false`, `reviewStatus: unreviewed`).
+- Publish-/QA-helpers (`isReviewedFaceMappingGroundTruth`) accept Ground Truth when:
+  - **`human_reviewed`**: `source` is `manual` / `manual_override`, `reviewed: true`, canonical `reviewedAt` (UTC ISO with ms); **or**
+  - **`agent_reviewed`**: `source` stays `auto`, full `face-anchor-agent-review-v1` provenance (5/5 visual passes + screenshot evidence + deterministic gates), `reviewed: true`.
+- `source=manual` must **not** be used to pretend agent review.
+- Agent review must **never** overwrite an existing `human_reviewed` mapping.
+- Bare `reviewed: true` without `reviewStatus` / provenance is **not** agent GT (fail-closed). Legacy human sidecars without `reviewStatus` remain valid via controlled migration.
+
+### Agent review protocol (`face-anchor-agent-review-v1`)
+
+Domain: `src/domains/character/avatar/face-anchor-agent-review-v1.ts`. Evidence under each run:
+
+`assets/species-3d/human/runs/<run>/agent-review/evidence/`
+
+Required before `agent_reviewed`:
+
+1. Deterministic gates PASS (21/21 anchors, surfaces, fingerprints, anatomy, L/R, …)
+2. Multi-view Playwright screenshots (frontal, ±35° yaw, pitch up/down, eyes/brows + mouth/nose close-ups) with labeled markers
+3. Five independent visual review passes (fresh context each; no cross-leak; no majority voting)
+4. Aggregator confirms 5/5 PASS for every anchor — any `uncertain` / `fail` / `needsHuman` ⇒ `human_review_required`
+
+JSON/numeric data alone cannot mark a mapping agent-reviewed.
 
 Functional Face QA (#422) additionally requires:
 

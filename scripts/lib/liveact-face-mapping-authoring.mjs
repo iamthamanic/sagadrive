@@ -1,14 +1,23 @@
 /**
- * liveact-face-mapping-authoring — offline mirror of SagaDriveFaceMappingAuthoringV1 (#419).
+ * liveact-face-mapping-authoring — offline mirror of SagaDriveFaceMappingAuthoringV1 (#419 + agent review).
  * Location: scripts/lib/liveact-face-mapping-authoring.mjs
  *
  * Keep in sync with src/domains/character/avatar/face-mapping-authoring-contract.ts.
- * Heuristic/auto output is never reviewed ground truth.
+ * Mapping source ≠ reviewStatus. Human review stays valid; agent_reviewed needs provenance.
  */
+
+import { existsSync } from 'node:fs';
+import { isAbsolute, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { verifyCompletedAgentReviewLedger } from './face-anchor-agent-review-orchestrate.mjs';
+
+const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
 export const FACE_MAPPING_AUTHORING_CONTRACT_VERSION = 'SagaDriveFaceMappingAuthoringV1';
 
 export const FACE_MAPPING_AUTHORING_SOURCES = ['auto', 'manual', 'manual_override'];
+
+export const FACE_MAPPING_REVIEW_STATUSES = ['unreviewed', 'agent_reviewed', 'human_reviewed'];
 
 /**
  * @param {string} value
@@ -19,8 +28,15 @@ export function isFaceMappingAuthoringSource(value) {
 }
 
 /**
+ * @param {string} value
+ * @returns {value is 'unreviewed' | 'agent_reviewed' | 'human_reviewed'}
+ */
+export function isFaceMappingReviewStatus(value) {
+  return FACE_MAPPING_REVIEW_STATUSES.includes(value);
+}
+
+/**
  * Canonical V1 reviewedAt: UTC ISO with milliseconds (`Date.prototype.toISOString()`).
- * Fail-closed — rejects impossible calendar dates (no permissive Date.parse alone).
  * @param {unknown} value
  * @returns {value is string}
  */
@@ -51,7 +67,45 @@ export function isValidFaceMappingReviewedAtV1(value) {
 }
 
 /**
- * Fail-closed: only manual / manual_override with reviewed=true and valid reviewedAt.
+ * @param {unknown} value
+ */
+function isValidAgentReviewProvenance(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const r = /** @type {Record<string, unknown>} */ (value);
+  if (r.protocolVersion !== 'face-anchor-agent-review-v1') return false;
+  if (typeof r.evidenceManifestSha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(r.evidenceManifestSha256)) {
+    return false;
+  }
+  if (r.requiredPasses !== 5) return false;
+  if (typeof r.completedPasses !== 'number' || r.completedPasses !== 5) return false;
+  if (r.aggregationPass !== true) return false;
+  if (typeof r.ledgerDir !== 'string' || !r.ledgerDir.trim()) return false;
+  return isValidFaceMappingReviewedAtV1(r.aggregatedAt);
+}
+
+/**
+ * @param {unknown} authoring
+ * @returns {'unreviewed' | 'agent_reviewed' | 'human_reviewed'}
+ */
+export function resolveFaceMappingReviewStatus(authoring) {
+  if (!authoring || typeof authoring !== 'object') return 'unreviewed';
+  const record = /** @type {Record<string, unknown>} */ (authoring);
+  if (typeof record.reviewStatus === 'string' && isFaceMappingReviewStatus(record.reviewStatus)) {
+    return record.reviewStatus;
+  }
+  if (
+    record.reviewed === true &&
+    (record.source === 'manual' || record.source === 'manual_override') &&
+    isValidFaceMappingReviewedAtV1(record.reviewedAt)
+  ) {
+    return 'human_reviewed';
+  }
+  return 'unreviewed';
+}
+
+/**
+ * Publish/QA ground truth: human_reviewed (legacy) OR agent_reviewed with full provenance
+ * AND a verifiable on-disk agent-review ledger (fail closed against hand-written JSON).
  * @param {unknown} authoring
  */
 export function isReviewedFaceMappingGroundTruth(authoring) {
@@ -59,9 +113,45 @@ export function isReviewedFaceMappingGroundTruth(authoring) {
   const record = /** @type {Record<string, unknown>} */ (authoring);
   if (record.contractVersion !== FACE_MAPPING_AUTHORING_CONTRACT_VERSION) return false;
   if (record.reviewed !== true) return false;
-  if (record.source === 'auto') return false;
-  if (!(record.source === 'manual' || record.source === 'manual_override')) return false;
-  return isValidFaceMappingReviewedAtV1(record.reviewedAt);
+  if (!isValidFaceMappingReviewedAtV1(record.reviewedAt)) return false;
+  const status = resolveFaceMappingReviewStatus(authoring);
+  if (status === 'unreviewed') return false;
+  if (status === 'human_reviewed') {
+    if (record.source === 'auto') return false;
+    return record.source === 'manual' || record.source === 'manual_override';
+  }
+  if (status === 'agent_reviewed') {
+    if (record.source === 'manual' || record.source === 'manual_override') return false;
+    if (record.source !== 'auto') return false;
+    if (!isValidAgentReviewProvenance(record.agentReview)) return false;
+    const agentReview = /** @type {Record<string, unknown>} */ (record.agentReview);
+    const asset = /** @type {Record<string, unknown>} */ (record.asset || {});
+    const ledgerRaw = String(agentReview.ledgerDir || '');
+    const ledgerDir = isAbsolute(ledgerRaw) ? ledgerRaw : resolve(REPO_ROOT, ledgerRaw);
+    if (!existsSync(ledgerDir)) return false;
+    const verified = verifyCompletedAgentReviewLedger({
+      ledgerDir,
+      expectedEvidenceManifestSha256: String(agentReview.evidenceManifestSha256),
+      expectedModelSha256: typeof asset.modelSha256 === 'string' ? asset.modelSha256 : undefined,
+      expectedAnchorsSha256: typeof asset.anchorsSha256 === 'string' ? asset.anchorsSha256 : undefined,
+      expectedTopologyFingerprint:
+        typeof asset.topologyFingerprint === 'string' ? asset.topologyFingerprint : undefined,
+    });
+    return verified.ok;
+  }
+  return false;
+}
+
+/**
+ * @param {unknown} existing
+ * @returns {{ ok: true } | { ok: false; reason: 'human_reviewed_immutable' }}
+ */
+export function canApplyAgentReviewToAuthoring(existing) {
+  if (!existing) return { ok: true };
+  if (resolveFaceMappingReviewStatus(existing) === 'human_reviewed') {
+    return { ok: false, reason: 'human_reviewed_immutable' };
+  }
+  return { ok: true };
 }
 
 /**
@@ -91,13 +181,63 @@ export function validateFaceMappingAuthoringV1(raw) {
     });
   }
 
-  const reviewed = record.reviewed === true;
-  if (reviewed && source === 'auto') {
+  const hasExplicitStatus =
+    typeof record.reviewStatus === 'string' && record.reviewStatus.length > 0;
+  if (hasExplicitStatus && !isFaceMappingReviewStatus(String(record.reviewStatus))) {
     issues.push({
-      code: 'auto_marked_reviewed',
-      detail: 'Auto/heuristic mappings cannot be reviewed ground truth.',
+      code: 'invalid_review_status',
+      detail: 'reviewStatus must be unreviewed | agent_reviewed | human_reviewed.',
     });
   }
+
+  const reviewed = record.reviewed === true;
+  const statusRaw = hasExplicitStatus
+    ? /** @type {'unreviewed' | 'agent_reviewed' | 'human_reviewed'} */ (record.reviewStatus)
+    : null;
+
+  if (reviewed && source === 'auto' && statusRaw !== 'agent_reviewed') {
+    issues.push({
+      code: 'auto_marked_reviewed',
+      detail: 'Auto mappings cannot be human GT; use reviewStatus=agent_reviewed with provenance.',
+    });
+  }
+
+  if (statusRaw === 'agent_reviewed') {
+    if (source === 'manual' || source === 'manual_override') {
+      issues.push({
+        code: 'manual_source_fakes_agent_review',
+        detail: 'source=manual must not be used to pretend agent review.',
+      });
+    }
+    if (!isValidAgentReviewProvenance(record.agentReview)) {
+      issues.push({
+        code: 'agent_review_requires_provenance',
+        detail: 'agent_reviewed requires complete face-anchor-agent-review-v1 provenance.',
+      });
+    }
+    if (!reviewed) {
+      issues.push({
+        code: 'reviewed_status_mismatch',
+        detail: 'reviewStatus=agent_reviewed requires reviewed=true.',
+      });
+    }
+  }
+
+  if (statusRaw === 'human_reviewed') {
+    if (!(source === 'manual' || source === 'manual_override')) {
+      issues.push({
+        code: 'human_reviewed_requires_manual_source',
+        detail: 'human_reviewed requires source manual | manual_override.',
+      });
+    }
+    if (!reviewed) {
+      issues.push({
+        code: 'reviewed_status_mismatch',
+        detail: 'reviewStatus=human_reviewed requires reviewed=true.',
+      });
+    }
+  }
+
   if (reviewed && (typeof record.reviewedAt !== 'string' || !record.reviewedAt.trim())) {
     issues.push({
       code: 'reviewed_without_timestamp',
@@ -124,7 +264,6 @@ export function validateFaceMappingAuthoringV1(raw) {
 }
 
 /**
- * Build unreviewed auto provenance for heuristic authoring exports.
  * @param {{ modelPath: string; modelSha256?: string; anchorsSha256?: string; topologyFingerprint?: string; cacheBust?: string; note?: string }} input
  */
 export function createAutoUnreviewedFaceMappingAuthoring(input) {
@@ -132,12 +271,53 @@ export function createAutoUnreviewedFaceMappingAuthoring(input) {
     contractVersion: FACE_MAPPING_AUTHORING_CONTRACT_VERSION,
     source: 'auto',
     reviewed: false,
+    reviewStatus: 'unreviewed',
     asset: {
       modelPath: input.modelPath,
       ...(input.modelSha256 ? { modelSha256: input.modelSha256 } : {}),
       ...(input.anchorsSha256 ? { anchorsSha256: input.anchorsSha256 } : {}),
       ...(input.topologyFingerprint ? { topologyFingerprint: input.topologyFingerprint } : {}),
       ...(input.cacheBust ? { cacheBust: input.cacheBust } : {}),
+    },
+    ...(input.note ? { note: input.note } : {}),
+  };
+}
+
+/**
+ * @param {{
+ *   modelPath: string;
+ *   modelSha256: string;
+ *   anchorsSha256: string;
+ *   topologyFingerprint: string;
+ *   evidenceManifestSha256: string;
+ *   aggregatedAt: string;
+ *   ledgerDir: string;
+ *   cacheBust?: string;
+ *   note?: string;
+ * }} input
+ */
+export function createAgentReviewedFaceMappingAuthoring(input) {
+  return {
+    contractVersion: FACE_MAPPING_AUTHORING_CONTRACT_VERSION,
+    source: 'auto',
+    reviewed: true,
+    reviewStatus: 'agent_reviewed',
+    reviewedAt: input.aggregatedAt,
+    asset: {
+      modelPath: input.modelPath,
+      modelSha256: input.modelSha256,
+      anchorsSha256: input.anchorsSha256,
+      topologyFingerprint: input.topologyFingerprint,
+      ...(input.cacheBust ? { cacheBust: input.cacheBust } : {}),
+    },
+    agentReview: {
+      protocolVersion: 'face-anchor-agent-review-v1',
+      evidenceManifestSha256: input.evidenceManifestSha256,
+      requiredPasses: 5,
+      completedPasses: 5,
+      aggregationPass: true,
+      aggregatedAt: input.aggregatedAt,
+      ledgerDir: input.ledgerDir,
     },
     ...(input.note ? { note: input.note } : {}),
   };
