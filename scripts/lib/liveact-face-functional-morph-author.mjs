@@ -3,7 +3,8 @@
  * Location: scripts/lib/liveact-face-functional-morph-author.mjs
  *
  * Design decision: from reviewed semantic anchors + mesh topology, deterministically
- * rewrite named SagaDrive face morph POSITION accessors. Milestone 1: jawOpen only.
+ * rewrite named SagaDrive face morph POSITION accessors.
+ * Milestone 1: jawOpen. Milestone 2: eyeBlinkLeft / eyeBlinkRight.
  *
  * Does not import Functional QA thresholds as an optimization loop.
  * Domain/runtime code must not import this module.
@@ -17,6 +18,8 @@ import { parseManifestEnvelope, validateFaceAnchorsAgainstDocument } from './liv
 import { resolveFaceAnchorPositions } from './liveact-face-anchor-anatomy-validate.mjs';
 import { findNodeByIdentity } from './liveact-face-anchor-glb.mjs';
 import {
+  EYE_BLINK_LEFT_AUTHOR_CONTRACT_V1,
+  EYE_BLINK_RIGHT_AUTHOR_CONTRACT_V1,
   FACE_FUNCTIONAL_MORPH_AUTHOR_CONTRACT_VERSION,
   FACE_FUNCTIONAL_MORPH_AUTHOR_PROFILE_VERSION,
   FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1,
@@ -240,6 +243,219 @@ function rewriteJawOpenMorph(document, anchors, contract) {
 }
 
 /**
+ * Unilateral blink falloff in [0,1]. Highest near primary lids; opposite eye forced 0.
+ * @param {{ x: number; y: number; z: number }} p
+ * @param {Record<string, { x: number; y: number; z: number }>} refs
+ * @param {ReturnType<typeof buildFaceLocalFrame>} frame
+ * @param {typeof EYE_BLINK_LEFT_AUTHOR_CONTRACT_V1} contract
+ */
+export function computeEyeBlinkVertexWeight(p, refs, frame, contract) {
+  if (!frame) return 0;
+  const faceH = frame.faceHeight;
+  const rMove = faceH * contract.moveRadiusFaceH;
+  const wUpper = Math.max(0, 1 - dist3(p, refs.upper) / rMove) ** 1.2;
+  const wLower = Math.max(0, 1 - dist3(p, refs.lower) / (rMove * 1.05)) ** 1.15;
+  const wInner = Math.max(0, 1 - dist3(p, refs.inner) / (rMove * 1.15)) ** 1.1;
+  const wOuter = Math.max(0, 1 - dist3(p, refs.outer) / (rMove * 1.15)) ** 1.1;
+  let w = Math.max(wUpper, wLower, wInner * 0.85, wOuter * 0.85);
+
+  // Side isolation via face midplane (left = +frame.left). Soft band near centerline.
+  const mid = refs.noseTip;
+  const sideDot =
+    (p.x - mid.x) * frame.left.x + (p.y - mid.y) * frame.left.y + (p.z - mid.z) * frame.left.z;
+  const soft = faceH * contract.midplaneSoftFaceH;
+  if (contract.side === 'left') {
+    if (sideDot < 0) return 0;
+    if (sideDot < soft) w *= sideDot / soft;
+  } else {
+    if (sideDot > 0) return 0;
+    if (sideDot > -soft) w *= -sideDot / soft;
+  }
+
+  // Opposite lid region hard kill
+  const rKill = faceH * 0.12;
+  if (dist3(p, refs.oppUpper) < rKill) return 0;
+  if (dist3(p, refs.oppLower) < rKill) return 0;
+  if (dist3(p, refs.oppInner) < rKill * 1.15) return 0;
+  if (dist3(p, refs.oppOuter) < rKill * 1.15) return 0;
+
+  // Mouth / chin stay out of blink
+  if (refs.mouthUpper && dist3(p, refs.mouthUpper) < faceH * 0.12) w *= 0.05;
+  if (refs.chin && dist3(p, refs.chin) < faceH * 0.18) w *= 0.02;
+
+  return Math.max(0, Math.min(1, w));
+}
+
+/**
+ * @param {import('@gltf-transform/core').Document} document
+ * @param {Record<string, unknown>} anchors
+ * @param {typeof EYE_BLINK_LEFT_AUTHOR_CONTRACT_V1} contract
+ */
+function rewriteEyeBlinkMorph(document, anchors, contract) {
+  const sampleBinding = /** @type {Record<string, unknown>} */ (anchors[contract.upperAnchor]);
+  const nodeIdentity = String(sampleBinding?.nodeIdentity || '').trim();
+  const node = findNodeByIdentity(document, nodeIdentity);
+  const mesh = node?.getMesh();
+  if (!mesh) {
+    throw new Error(`${contract.morphName} author: meshed node missing for ${nodeIdentity || '(empty)'}`);
+  }
+  const primIndex = typeof sampleBinding.primitiveIndex === 'number' ? sampleBinding.primitiveIndex : 0;
+  const prim = mesh.listPrimitives()[primIndex];
+  if (!prim) throw new Error(`${contract.morphName} author: primitive ${primIndex} missing`);
+
+  const morphIndex = findNamedMorphTargetIndex(prim, mesh, contract.morphName);
+  if (morphIndex < 0) throw new Error(`${contract.morphName} author: morph target missing`);
+  const target = prim.listTargets()[morphIndex];
+  const morphPos = target.getAttribute('POSITION');
+  const basePos = prim.getAttribute('POSITION');
+  if (!morphPos || !basePos) throw new Error(`${contract.morphName} author: POSITION accessors missing`);
+
+  const neutral = resolveFaceAnchorPositions(document, anchors);
+  for (const id of contract.requiredAnchors) {
+    if (!neutral[id]) throw new Error(`${contract.morphName} author: required anchor unresolved: ${id}`);
+  }
+  const frame = buildFaceLocalFrame(neutral);
+  if (!frame) throw new Error(`${contract.morphName} author: face local frame incomplete`);
+
+  const upper = neutral[contract.upperAnchor];
+  const lower = neutral[contract.lowerAnchor];
+  const refs = {
+    upper,
+    lower,
+    inner: neutral[contract.innerAnchor],
+    outer: neutral[contract.outerAnchor],
+    oppUpper: neutral[contract.oppositeUpper],
+    oppLower: neutral[contract.oppositeLower],
+    oppInner: neutral[contract.oppositeInner],
+    oppOuter: neutral[contract.oppositeOuter],
+    noseTip: neutral.noseTip,
+    forehead: neutral.forehead,
+    mouthUpper: neutral.mouthUpper,
+    chin: neutral.chin,
+  };
+
+  const aperture = dist3(upper, lower);
+  if (!(aperture > 1e-8)) throw new Error(`${contract.morphName} author: zero lid aperture`);
+  const closeLen = Math.hypot(lower.x - upper.x, lower.y - upper.y, lower.z - upper.z);
+  const closeDir = {
+    x: (lower.x - upper.x) / closeLen,
+    y: (lower.y - upper.y) / closeLen,
+    z: (lower.z - upper.z) / closeLen,
+  };
+  const ampUpper = aperture * contract.upperCloseFraction;
+  const ampLower = aperture * contract.lowerCloseFraction;
+
+  const n = basePos.getCount();
+  const arr = new Float32Array(n * 3); // full rewrite — discard ICT deltas
+  let affected = 0;
+  let maxW = 0;
+  let sumW = 0;
+  let maxDisp = 0;
+  let sumDisp = 0;
+  const el = [0, 0, 0];
+  for (let i = 0; i < n; i += 1) {
+    basePos.getElement(i, el);
+    const p = { x: el[0], y: el[1], z: el[2] };
+    const w = computeEyeBlinkVertexWeight(p, refs, frame, contract);
+    if (w <= 1e-8) continue;
+    affected += 1;
+    maxW = Math.max(maxW, w);
+    sumW += w;
+
+    // Blend upper-closure vs lower-closure by proximity (deterministic).
+    const dU = dist3(p, upper);
+    const dL = dist3(p, lower);
+    const upperBias = dL + 1e-8;
+    const lowerBias = dU + 1e-8;
+    const sumBias = upperBias + lowerBias;
+    const kUpper = upperBias / sumBias;
+    const kLower = lowerBias / sumBias;
+
+    const dx =
+      closeDir.x * ampUpper * w * kUpper + -closeDir.x * ampLower * w * kLower;
+    const dy =
+      closeDir.y * ampUpper * w * kUpper + -closeDir.y * ampLower * w * kLower;
+    const dz =
+      closeDir.z * ampUpper * w * kUpper + -closeDir.z * ampLower * w * kLower;
+    arr[i * 3] = dx;
+    arr[i * 3 + 1] = dy;
+    arr[i * 3 + 2] = dz;
+    const d = Math.hypot(dx, dy, dz);
+    maxDisp = Math.max(maxDisp, d);
+    sumDisp += d;
+  }
+  morphPos.setArray(arr);
+
+  const posed = resolveFaceAnchorPositionsPosed(document, anchors, contract.morphName, 1);
+  const metricsN = computeFunctionalMetricsFromAnchors(neutral, frame);
+  const metricsP = computeFunctionalMetricsFromAnchors(posed, frame);
+  const primaryN = contract.side === 'left' ? metricsN?.eyeOpenL : metricsN?.eyeOpenR;
+  const primaryP = contract.side === 'left' ? metricsP?.eyeOpenL : metricsP?.eyeOpenR;
+  const oppN = contract.side === 'left' ? metricsN?.eyeOpenR : metricsN?.eyeOpenL;
+  const oppP = contract.side === 'left' ? metricsP?.eyeOpenR : metricsP?.eyeOpenL;
+  const openDrop = (primaryN ?? 0) - (primaryP ?? 0);
+  const openRatio =
+    primaryN != null && primaryN > 1e-8 && primaryP != null ? primaryP / primaryN : null;
+  const oppositeRelChange =
+    oppN != null && oppN > 1e-8 && oppP != null ? Math.abs(oppP - oppN) / Math.max(oppN, 1e-8) : null;
+
+  const disp = (id) => {
+    const a = neutral[id];
+    const b = posed[id];
+    if (!a || !b) return null;
+    return dist3(a, b);
+  };
+
+  return {
+    morphIndex,
+    nodeIdentity,
+    primitiveIndex: primIndex,
+    vertexCount: n,
+    affectedVertices: affected,
+    maxWeight: maxW,
+    meanWeightAffected: affected ? sumW / affected : 0,
+    maxDisplacement: maxDisp,
+    meanDisplacementAffected: affected ? sumDisp / affected : 0,
+    ampUpper,
+    ampLower,
+    aperture,
+    faceHeight: frame.faceHeight,
+    morphPositionSha256: hashMorphPositionArray(arr),
+    eyeOpenNeutral: primaryN ?? null,
+    eyeOpenPosed: primaryP ?? null,
+    openDrop,
+    openRatio,
+    oppositeRelChange,
+    displacements: {
+      [contract.upperAnchor]: disp(contract.upperAnchor),
+      [contract.lowerAnchor]: disp(contract.lowerAnchor),
+      [contract.oppositeUpper]: disp(contract.oppositeUpper),
+      [contract.oppositeLower]: disp(contract.oppositeLower),
+      noseTip: disp('noseTip'),
+      forehead: disp('forehead'),
+    },
+  };
+}
+
+/**
+ * @param {string} channel
+ * @param {import('@gltf-transform/core').Document} document
+ * @param {Record<string, unknown>} anchors
+ */
+function rewriteChannelMorph(channel, document, anchors) {
+  if (channel === 'jawOpen') {
+    return rewriteJawOpenMorph(document, anchors, JAW_OPEN_AUTHOR_CONTRACT_V1);
+  }
+  if (channel === 'eyeBlinkLeft') {
+    return rewriteEyeBlinkMorph(document, anchors, EYE_BLINK_LEFT_AUTHOR_CONTRACT_V1);
+  }
+  if (channel === 'eyeBlinkRight') {
+    return rewriteEyeBlinkMorph(document, anchors, EYE_BLINK_RIGHT_AUTHOR_CONTRACT_V1);
+  }
+  throw new Error(`unsupported_channel:${channel}`);
+}
+
+/**
  * @param {{
  *   inputPath: string;
  *   outputPath: string;
@@ -297,17 +513,10 @@ export async function authorLiveActFunctionalMorph(opts) {
 
   const beforeHashes = hashAllMorphPositionBuffers(document);
   const beforeJaw = beforeHashes.get('jawOpen') || null;
+  const beforeChannel = beforeHashes.get(channel) || null;
 
-  let channelStats;
-  if (channel === 'jawOpen') {
-    channelStats = rewriteJawOpenMorph(
-      document,
-      /** @type {Record<string, unknown>} */ (anchorsEnvelope.anchors),
-      JAW_OPEN_AUTHOR_CONTRACT_V1,
-    );
-  } else {
-    throw new Error(`unsupported_channel:${channel}`);
-  }
+  const anchorsRecord = /** @type {Record<string, unknown>} */ (anchorsEnvelope.anchors);
+  const channelStats = rewriteChannelMorph(channel, document, anchorsRecord);
 
   const afterHashes = hashAllMorphPositionBuffers(document);
   /** @type {string[]} */
@@ -330,15 +539,12 @@ export async function authorLiveActFunctionalMorph(opts) {
 
   // Determinism: re-author from the same input in-memory once more and compare morph hash.
   const doc2 = await io.readBinary(inputBytes);
-  const stats2 = rewriteJawOpenMorph(
-    doc2,
-    /** @type {Record<string, unknown>} */ (anchorsEnvelope.anchors),
-    JAW_OPEN_AUTHOR_CONTRACT_V1,
-  );
+  const stats2 = rewriteChannelMorph(channel, doc2, anchorsRecord);
   if (stats2.morphPositionSha256 !== channelStats.morphPositionSha256) {
-    throw new Error('jawOpen_author_nondeterministic_morph_hash');
+    throw new Error(`${channel}_author_nondeterministic_morph_hash`);
   }
 
+  const afterJaw = afterHashes.get('jawOpen') || null;
   const report = {
     contractVersion: FACE_FUNCTIONAL_MORPH_AUTHOR_CONTRACT_VERSION,
     profileVersion: FACE_FUNCTIONAL_MORPH_AUTHOR_PROFILE_VERSION,
@@ -356,8 +562,12 @@ export async function authorLiveActFunctionalMorph(opts) {
       reason: gt.reason || null,
       reviewStatus: authoring.reviewStatus || null,
     },
+    beforeChannelMorphSha256: beforeChannel,
+    afterChannelMorphSha256: channelStats.morphPositionSha256,
+    // Preserve Milestone-1 report keys for jawOpen callers / regression tooling.
     beforeJawOpenMorphSha256: beforeJaw,
-    afterJawOpenMorphSha256: channelStats.morphPositionSha256,
+    afterJawOpenMorphSha256: channel === 'jawOpen' ? channelStats.morphPositionSha256 : afterJaw,
+    jawOpenMorphUnchanged: channel === 'jawOpen' ? false : beforeJaw === afterJaw,
     deterministicRerunMorphSha256: stats2.morphPositionSha256,
     morphsUnchangedExceptChannel: true,
     morphCount: afterHashes.size,

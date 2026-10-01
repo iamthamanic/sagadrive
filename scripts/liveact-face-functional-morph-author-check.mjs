@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * liveact-face-functional-morph-author-check — behavioral checks for GT-aware jawOpen author (#423).
+ * liveact-face-functional-morph-author-check — behavioral checks for GT-aware morph author (#423).
  * Location: scripts/liveact-face-functional-morph-author-check.mjs
  *
+ * Milestone 1: jawOpen. Milestone 2: eyeBlinkLeft / eyeBlinkRight + jawOpen hash immutability.
  * Uses synthetic fixtures (not production assets). No QA threshold mutation.
  */
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -58,7 +59,13 @@ async function buildFixtureGlb() {
   // Anchor landmarks (face-like layout, Y up, Z forward)
   addTri(0, 1.7, 0.2, 'forehead');
   addTri(-0.12, 1.55, 0.18, 'eyeLeftOuter');
+  addTri(-0.06, 1.55, 0.2, 'eyeLeftInner');
+  addTri(-0.09, 1.58, 0.19, 'eyeLeftUpper');
+  addTri(-0.09, 1.52, 0.19, 'eyeLeftLower');
   addTri(0.12, 1.55, 0.18, 'eyeRightOuter');
+  addTri(0.06, 1.55, 0.2, 'eyeRightInner');
+  addTri(0.09, 1.58, 0.19, 'eyeRightUpper');
+  addTri(0.09, 1.52, 0.19, 'eyeRightLower');
   addTri(0, 1.45, 0.22, 'noseTip');
   addTri(0, 1.32, 0.2, 'mouthUpper');
   addTri(0, 1.26, 0.2, 'mouthLower');
@@ -72,6 +79,16 @@ async function buildFixtureGlb() {
       const y = 1.12 + yi * 0.025;
       const z = 0.15 + (yi < 3 ? 0.02 : 0);
       addTri(x, y, z, null);
+    }
+  }
+  // Dense left/right lid neighborhoods for blink falloff
+  for (const side of [-1, 1]) {
+    for (let yi = 0; yi < 5; yi += 1) {
+      for (let xi = 0; xi < 4; xi += 1) {
+        const x = side * (0.06 + xi * 0.02);
+        const y = 1.5 + yi * 0.02;
+        addTri(x, y, 0.19, null);
+      }
     }
   }
   // Upper-face filler near nose/forehead (should stay ~0 under jawOpen)
@@ -153,14 +170,8 @@ async function buildFixtureGlb() {
       barycentric: { u: 1, v: 0, w: 0 },
     };
   }
-  // Fill remaining required-ish ids if missing (map extras to nearest)
+  // Fill remaining brow ids if missing (map extras to nearest)
   for (const id of [
-    'eyeLeftInner',
-    'eyeLeftUpper',
-    'eyeLeftLower',
-    'eyeRightInner',
-    'eyeRightUpper',
-    'eyeRightLower',
     'browLeftInner',
     'browLeftOuter',
     'browLeftCenter',
@@ -220,9 +231,11 @@ async function writeBundle(dir, glbBytes, anchors, assetOverride = {}) {
 
 async function main() {
   check(
-    FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.length === 1 &&
-      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1[0] === 'jawOpen',
-    'Milestone 1 supports only jawOpen',
+    FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('jawOpen') &&
+      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('eyeBlinkLeft') &&
+      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('eyeBlinkRight') &&
+      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.length === 3,
+    'Milestone 2 supports jawOpen + eyeBlinkLeft/Right only',
   );
   check(
     FACE_FUNCTIONAL_MORPH_AUTHOR_CONTRACT_VERSION.startsWith('SagaDrive'),
@@ -299,6 +312,60 @@ async function main() {
     check(
       (r1.channelStats.displacements.forehead || 0) / r1.channelStats.faceHeight <= 0.025,
       'forehead displacement within Functional jawOpen leakage bound',
+    );
+
+    // --- Milestone 2: blink on top of jawOpen output; jawOpen hash immutable ---
+    const jawAuth = await writeBundle(join(work, 'jaw-out'), readFileSync(out1), fixture.anchors);
+    const blinkLOut = join(work, 'blinkL.glb');
+    const blinkL = await authorLiveActFunctionalMorph({
+      inputPath: jawAuth.glbPath,
+      outputPath: blinkLOut,
+      anchorsPath: jawAuth.anchorsPath,
+      authoringPath: jawAuth.authoringPath,
+      channel: 'eyeBlinkLeft',
+    });
+    check(blinkL.channel === 'eyeBlinkLeft', 'authors eyeBlinkLeft');
+    check(blinkL.channelStats.affectedVertices > 0, 'blinkL affects vertices');
+    check((blinkL.channelStats.openDrop || 0) >= 0.05, 'blinkL openDrop >= 0.05');
+    check((blinkL.channelStats.openRatio ?? 1) <= 0.65, 'blinkL openRatio <= 0.65');
+    check((blinkL.channelStats.oppositeRelChange ?? 1) <= 0.2, 'blinkL opposite crosstalk <= 0.2');
+    check(blinkL.jawOpenMorphUnchanged === true, 'blinkL leaves jawOpen morph unchanged');
+    check(
+      blinkL.afterJawOpenMorphSha256 === r1.afterJawOpenMorphSha256,
+      'blinkL preserves Milestone-1 jawOpen morph hash',
+    );
+    check(
+      blinkL.changedMorphs.length === 1 && blinkL.changedMorphs[0] === 'eyeBlinkLeft',
+      'blinkL only changes eyeBlinkLeft',
+    );
+
+    const blinkLAuth = await writeBundle(join(work, 'blinkL-auth'), readFileSync(blinkLOut), fixture.anchors);
+    const blinkROut = join(work, 'blinkR.glb');
+    const blinkR = await authorLiveActFunctionalMorph({
+      inputPath: blinkLAuth.glbPath,
+      outputPath: blinkROut,
+      anchorsPath: blinkLAuth.anchorsPath,
+      authoringPath: blinkLAuth.authoringPath,
+      channel: 'eyeBlinkRight',
+    });
+    check(blinkR.channel === 'eyeBlinkRight', 'authors eyeBlinkRight');
+    check((blinkR.channelStats.openDrop || 0) >= 0.05, 'blinkR openDrop >= 0.05');
+    check((blinkR.channelStats.openRatio ?? 1) <= 0.65, 'blinkR openRatio <= 0.65');
+    check((blinkR.channelStats.oppositeRelChange ?? 1) <= 0.2, 'blinkR opposite crosstalk <= 0.2');
+    check(
+      blinkR.afterJawOpenMorphSha256 === r1.afterJawOpenMorphSha256,
+      'blinkR preserves Milestone-1 jawOpen morph hash',
+    );
+    const blinkR2 = await authorLiveActFunctionalMorph({
+      inputPath: blinkLAuth.glbPath,
+      outputPath: join(work, 'blinkR2.glb'),
+      anchorsPath: blinkLAuth.anchorsPath,
+      authoringPath: blinkLAuth.authoringPath,
+      channel: 'eyeBlinkRight',
+    });
+    check(
+      blinkR.afterChannelMorphSha256 === blinkR2.afterChannelMorphSha256,
+      'blinkR deterministic morph hash',
     );
 
     let rejected = false;
@@ -404,7 +471,7 @@ async function main() {
         outputPath: join(goodDir, 'bad-channel.glb'),
         anchorsPath: good.anchorsPath,
         authoringPath: good.authoringPath,
-        channel: 'eyeBlinkLeft',
+        channel: 'browInnerUp',
       });
     } catch (err) {
       rejected = String(err.message || err).includes('unsupported_channel');

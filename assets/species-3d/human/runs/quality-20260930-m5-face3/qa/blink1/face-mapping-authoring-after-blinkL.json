@@ -1,0 +1,14 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "manual_override",
+  "reviewed": true,
+  "reviewStatus": "human_reviewed",
+  "reviewedAt": "2026-10-01T08:45:52.989Z",
+  "asset": {
+    "modelPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/blink1/_tmp-blinkL.glb",
+    "modelSha256": "2feef0af67b7b35fff580f7d3b097ea6bdc649784e267536c2d42b5d14873901",
+    "anchorsSha256": "2b7e9967aed0577bb3c628bfe1cc5272a7cc184f78b9cdf32793d9fb3b865a96",
+    "topologyFingerprint": "v133002:t215832:m1"
+  },
+  "note": "GT carry-forward after eyeBlinkLeft; source=c610d9fccd6bc06c97cc4b8d8352006c0af6fa79be45eb31d1f5141706b55afa; target=2feef0af67b7b35fff580f7d3b097ea6bdc649784e267536c2d42b5d14873901"
+}

@@ -11,8 +11,15 @@ export const FACE_FUNCTIONAL_MORPH_AUTHOR_CONTRACT_VERSION =
 export const FACE_FUNCTIONAL_MORPH_AUTHOR_PROFILE_VERSION =
   'liveact-face-functional-morph-author-profile-v1';
 
-/** Channels supported by this authoring profile (Milestone 1: jawOpen only). */
-export const FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1 = Object.freeze(['jawOpen']);
+/**
+ * Channels supported by this authoring profile.
+ * Milestone 1: jawOpen. Milestone 2: + eyeBlinkLeft / eyeBlinkRight.
+ */
+export const FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1 = Object.freeze([
+  'jawOpen',
+  'eyeBlinkLeft',
+  'eyeBlinkRight',
+]);
 
 /**
  * @typedef {{
@@ -50,4 +57,86 @@ export const JAW_OPEN_AUTHOR_CONTRACT_V1 = Object.freeze({
   ampFaceH: 0.19,
   /** Slight retract along −forward while opening. */
   backBias: 0.25,
+});
+
+/**
+ * @typedef {{
+ *   side: 'left' | 'right';
+ *   morphName: 'eyeBlinkLeft' | 'eyeBlinkRight';
+ *   upperAnchor: string;
+ *   lowerAnchor: string;
+ *   innerAnchor: string;
+ *   outerAnchor: string;
+ *   oppositeUpper: string;
+ *   oppositeLower: string;
+ *   oppositeInner: string;
+ *   oppositeOuter: string;
+ *   requiredAnchors: string[];
+ *   moveRadiusFaceH: number;
+ *   upperCloseFraction: number;
+ *   lowerCloseFraction: number;
+ *   midplaneSoftFaceH: number;
+ * }} EyeBlinkAuthorContract
+ */
+
+/** Shared geometry for unilateral blink (side-specific anchors differ). */
+const EYE_BLINK_SHARED = Object.freeze({
+  moveRadiusFaceH: 0.085,
+  upperCloseFraction: 0.62,
+  lowerCloseFraction: 0.24,
+  midplaneSoftFaceH: 0.02,
+});
+
+/** @type {Readonly<EyeBlinkAuthorContract>} */
+export const EYE_BLINK_LEFT_AUTHOR_CONTRACT_V1 = Object.freeze({
+  side: 'left',
+  morphName: 'eyeBlinkLeft',
+  upperAnchor: 'eyeLeftUpper',
+  lowerAnchor: 'eyeLeftLower',
+  innerAnchor: 'eyeLeftInner',
+  outerAnchor: 'eyeLeftOuter',
+  oppositeUpper: 'eyeRightUpper',
+  oppositeLower: 'eyeRightLower',
+  oppositeInner: 'eyeRightInner',
+  oppositeOuter: 'eyeRightOuter',
+  requiredAnchors: Object.freeze([
+    'eyeLeftUpper',
+    'eyeLeftLower',
+    'eyeLeftInner',
+    'eyeLeftOuter',
+    'eyeRightUpper',
+    'eyeRightLower',
+    'eyeRightInner',
+    'eyeRightOuter',
+    'noseTip',
+    'forehead',
+  ]),
+  ...EYE_BLINK_SHARED,
+});
+
+/** @type {Readonly<EyeBlinkAuthorContract>} */
+export const EYE_BLINK_RIGHT_AUTHOR_CONTRACT_V1 = Object.freeze({
+  side: 'right',
+  morphName: 'eyeBlinkRight',
+  upperAnchor: 'eyeRightUpper',
+  lowerAnchor: 'eyeRightLower',
+  innerAnchor: 'eyeRightInner',
+  outerAnchor: 'eyeRightOuter',
+  oppositeUpper: 'eyeLeftUpper',
+  oppositeLower: 'eyeLeftLower',
+  oppositeInner: 'eyeLeftInner',
+  oppositeOuter: 'eyeLeftOuter',
+  requiredAnchors: Object.freeze([
+    'eyeLeftUpper',
+    'eyeLeftLower',
+    'eyeLeftInner',
+    'eyeLeftOuter',
+    'eyeRightUpper',
+    'eyeRightLower',
+    'eyeRightInner',
+    'eyeRightOuter',
+    'noseTip',
+    'forehead',
+  ]),
+  ...EYE_BLINK_SHARED,
 });

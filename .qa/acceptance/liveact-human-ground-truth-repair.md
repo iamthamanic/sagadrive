@@ -30,6 +30,25 @@ Reviewed Ground Truth for m5/f5, then Functional Face QA; repair morphs with GT-
 - [x] Andere Morph Targets unverändert (Hash-Regression; 50/51 unchanged)
 - [x] Noch **kein** Publish / Resolver / VRM (andere 6 Channels bleiben rot)
 
+## Milestone: GT-aware Blink production authoring (`eyeBlinkLeft` / `eyeBlinkRight`)
+
+### Preconditions
+- Milestone 1 complete (`a50ef23` baseline); jawOpen Functional PASS on m5/f5
+- jawOpen morph buffer hashes immutable regression baseline recorded
+- m5/f5 reviewed GT gültig; FaceRig base + jawOpen1 candidates present
+
+### Postconditions (m5 AND f5)
+- [x] `eyeBlinkLeft` und `eyeBlinkRight` aus reviewed GT / topology-derived lid neighborhoods neu authored
+- [x] Alter ICT Blink-Morph je Channel vollständig ersetzt (kein additiver Rest)
+- [x] Keine hardcodierten Asset-/Vertex-IDs / Filename-Hacks / gender branches
+- [x] Neutral geometry unverändert
+- [x] Functional QA `eyeBlinkLeft` + `eyeBlinkRight` PASS (authoritative)
+- [x] Opposite-eye crosstalk innerhalb bestehender Functional-Grenzen (0)
+- [x] jawOpen Morph Buffer Hash unverändert vs Milestone-1 Baseline
+- [x] jawOpen Functional weiterhin PASS
+- [x] Deterministisch; nur die authored Blink-Channels ändern sich gegenüber Input
+- [x] Noch **kein** Publish / Resolver / VRM (brow/smile/pucker dürfen rot bleiben)
+
 ## Edge Cases
 - [x] No threshold / gain / deadZone / filename validator exceptions.
 - [x] GT carry-forward invariant: neutral topology + bound triangle positions unchanged (21/21) after reauthor.
@@ -55,21 +74,32 @@ Reviewed Ground Truth for m5/f5, then Functional Face QA; repair morphs with GT-
 - `/implement ready: YES`
 
 ## Implementation Notes
-**Milestone 1 (jawOpen only) PASS for m5 and f5.**
+**Milestone 1 (jawOpen only) PASS for m5 and f5.** Baseline commit `a50ef23` — immutable; do not re-author.
 
 Module: `scripts/lib/liveact-face-functional-morph-author.mjs` (+ profile, CLI, behavioral check).
-Architecture: FaceRig base morphs → GT-aware full rewrite of `jawOpen` only → Functional QA authoritative.
+Architecture: FaceRig base morphs → GT-aware full rewrite of required channels → Functional QA authoritative.
 
 | Asset | input SHA (16) | output SHA (16) | before gapΔ | after gapΔ | jawOpen |
 |-------|----------------|-----------------|-------------|------------|---------|
 | m5 | `134f5137019ec5b2` | `c610d9fccd6bc06c` | ≈ −0.00049 | +0.914 | PASS |
 | f5 | `a003a7acb04aa0bf` | `fdffea65effff020` | ≈ −0.00863 | +1.148 | PASS |
 
-Evidence:
-- `…/m5-face3/qa/jawopen1/` and `…/f5-face3/qa/jawopen1/` (authoring reports, carry-forward, functional-qa, morph-regression, summaries)
-- Stage candidates: `*-face3-jawopen1.glb` (not published; historical face1 untouched)
+Evidence: `…/{m5,f5}-face3/qa/jawopen1/`
 
-Blink / other channels / VRM / resolver / #424: **not started**.
+**Milestone 2 (eyeBlinkLeft / eyeBlinkRight) PASS for m5 and f5.**
+
+Supported channels: `jawOpen`, `eyeBlinkLeft`, `eyeBlinkRight`.
+jawOpen morph buffer hash **identical** to Milestone-1 baseline on both assets.
+Input: `*-face3-jawopen1.glb` → Output: `*-face3-blink1.glb` (historical face1 untouched).
+
+| Asset | jawOpen hash immutable | blinkL PASS | blinkR PASS | opposite crosstalk |
+|-------|------------------------|-------------|-------------|--------------------|
+| m5 | yes (`28d455fd…`) | yes | yes | 0 |
+| f5 | yes (`6beab681…`) | yes | yes | 0 |
+
+Evidence: `…/{m5,f5}-face3/qa/blink1/`
+
+brow / smile / pucker / VRM / resolver / #424: **not started**.
 
 ## Screenshots
 | Step | Filename |
