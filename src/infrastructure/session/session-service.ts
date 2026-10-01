@@ -5,6 +5,10 @@
  * No Hosted make-server URLs; no client-generated session codes.
  */
 import { supabase } from '../../lib/supabase';
+import {
+  isLocalAdminSession,
+  LOCAL_ADMIN_USER_ID,
+} from '../../lib/localAdmin';
 import type {
   SessionDto,
   SessionVm,
@@ -38,9 +42,9 @@ class SessionService {
   private readonly playersTableName = 'session_players';
 
   /**
-   * Prefer getSession (storage) over getUser (network JWT validation) so
-   * client-side joins work when a session is planted/restored but GoTrue
-   * user introspection is unavailable (local e2e / offline fallback).
+   * Prefer getSession (storage) over getUser (network JWT validation). Fall back
+   * to the Local Admin offline identity when AuthContext is authenticated without
+   * a GoTrue JWT (CI Browser E2E / timeout fallback).
    */
   private async requireAuthUser(): Promise<{ id: string }> {
     const {
@@ -52,6 +56,10 @@ class SessionService {
       data: { user },
     } = await supabase.auth.getUser();
     if (user?.id) return user;
+
+    if (isLocalAdminSession()) {
+      return { id: LOCAL_ADMIN_USER_ID };
+    }
 
     throw new Error('User not authenticated');
   }

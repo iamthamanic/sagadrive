@@ -10,8 +10,6 @@ import { ensureLoggedIn } from './helpers/auth';
 const EVIDENCE_DIR = '.qa/evidence/library-adventure-teilnehmen';
 
 const LOCAL_ADMIN_USER_ID = '00000000-0000-4000-8000-000000000001';
-/** Must NOT be the seeded Local Admin — auth bootstrap scrubs that JWT after timeout/fallback. */
-const JOIN_USER_ID = '11111111-1111-4111-8111-111111111111';
 
 const MOCK_PROJECT = {
   id: 'proj-teilnehmen-1',
@@ -91,89 +89,6 @@ async function stubLibraryProjects(page: Page) {
   });
 }
 
-/**
- * Plant a non-admin GoTrue session so joinSession's getUser() succeeds under
- * Local Admin offline fallback (seeded-admin JWTs are intentionally scrubbed).
- */
-async function plantAuthSessionForJoin(page: Page) {
-  await page.route('**/auth/v1/user**', async (route) => {
-    if (route.request().method() === 'GET') {
-      await json(route, {
-        id: JOIN_USER_ID,
-        aud: 'authenticated',
-        role: 'authenticated',
-        email: 'player-e2e@example.com',
-        app_metadata: { provider: 'email' },
-        user_metadata: {},
-        created_at: '2026-01-01T00:00:00.000Z',
-      });
-      return;
-    }
-    await route.fallback();
-  });
-
-  // Block password re-login so bootstrap keeps the planted session path.
-  await page.route('**/auth/v1/token**', async (route) => {
-    await route.fulfill({
-      status: 400,
-      contentType: 'application/json',
-      body: JSON.stringify({ error: 'e2e_block_password_login', error_description: 'blocked' }),
-    });
-  });
-
-  const wroteKey = await page.evaluate((userId) => {
-    // Drop Local Admin offline flag so bootstrap trusts the planted GoTrue session.
-    localStorage.removeItem('sagadrive-local-admin-session');
-
-    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/g, '');
-    const payload = btoa(
-      JSON.stringify({
-        sub: userId,
-        role: 'authenticated',
-        aud: 'authenticated',
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        email: 'player-e2e@example.com',
-      }),
-    )
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/g, '');
-    const accessToken = `${header}.${payload}.e2e-sig`;
-
-    const session = {
-      access_token: accessToken,
-      refresh_token: 'e2e-fake-refresh-token',
-      expires_in: 3600,
-      expires_at: Math.floor(Date.now() / 1000) + 3600,
-      token_type: 'bearer',
-      user: {
-        id: userId,
-        aud: 'authenticated',
-        role: 'authenticated',
-        email: 'player-e2e@example.com',
-        app_metadata: { provider: 'email' },
-        user_metadata: {},
-        created_at: '2026-01-01T00:00:00.000Z',
-      },
-    };
-    const key = 'sb-localhost-auth-token';
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const existing = localStorage.key(i);
-      if (existing && existing.includes('auth-token')) {
-        localStorage.setItem(existing, JSON.stringify(session));
-        return existing;
-      }
-    }
-    localStorage.setItem(key, JSON.stringify(session));
-    return key;
-  }, JOIN_USER_ID);
-
-  expect(wroteKey).toBeTruthy();
-}
-
 test.beforeAll(() => {
   fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
 });
@@ -225,17 +140,6 @@ test('successful player join routes to live player surface (not gamemaster)', as
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await ensureLoggedIn(page);
-  await plantAuthSessionForJoin(page);
-  await page.reload();
-  await expect(
-    page.getByRole('heading', { name: 'Dashboard' }).or(page.getByRole('button', { name: 'Home' })).first(),
-  ).toBeVisible({ timeout: 30_000 });
-
-  await expect
-    .poll(async () =>
-      page.evaluate(() => Object.keys(localStorage).some((k) => k.includes('auth-token'))),
-    )
-    .toBe(true);
 
   await page.goto(
     `/session-join?project_id=${MOCK_PROJECT.id}&saga=${MOCK_PROJECT.public_id}&intent=join`,
