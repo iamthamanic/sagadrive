@@ -20,6 +20,8 @@ export const FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1 = Object.freeze([
   'eyeBlinkLeft',
   'eyeBlinkRight',
   'browInnerUp',
+  'mouthSmileLeft',
+  'mouthSmileRight',
 ]);
 
 /**
@@ -168,4 +170,71 @@ export const BROW_INNER_UP_AUTHOR_CONTRACT_V1 = Object.freeze({
   moveRadiusFaceH: 0.14,
   ampEyeW: 0.14,
   outerFalloffScale: 0.35,
+});
+
+/**
+ * @typedef {{
+ *   side: 'left' | 'right';
+ *   morphName: 'mouthSmileLeft' | 'mouthSmileRight';
+ *   targetCorner: string;
+ *   oppositeCorner: string;
+ *   requiredAnchors: string[];
+ *   moveRadiusFaceH: number;
+ *   ampMouthW: number;
+ *   upBias: number;
+ *   outBias: number;
+ *   midplaneSoftFaceH: number;
+ * }} MouthSmileAuthorContract
+ */
+
+const MOUTH_SMILE_SHARED = Object.freeze({
+  moveRadiusFaceH: 0.12,
+  ampMouthW: 0.09,
+  upBias: 1.0,
+  outBias: 0.55,
+  midplaneSoftFaceH: 0.025,
+});
+
+/** @type {Readonly<MouthSmileAuthorContract>} */
+export const MOUTH_SMILE_LEFT_AUTHOR_CONTRACT_V1 = Object.freeze({
+  side: 'left',
+  morphName: 'mouthSmileLeft',
+  targetCorner: 'mouthCornerLeft',
+  oppositeCorner: 'mouthCornerRight',
+  requiredAnchors: Object.freeze([
+    'mouthCornerLeft',
+    'mouthCornerRight',
+    'mouthUpper',
+    'mouthLower',
+    'chin',
+    'noseTip',
+    'forehead',
+    'eyeLeftOuter',
+    'eyeRightOuter',
+    'browLeftInner',
+    'browRightInner',
+  ]),
+  ...MOUTH_SMILE_SHARED,
+});
+
+/** @type {Readonly<MouthSmileAuthorContract>} */
+export const MOUTH_SMILE_RIGHT_AUTHOR_CONTRACT_V1 = Object.freeze({
+  side: 'right',
+  morphName: 'mouthSmileRight',
+  targetCorner: 'mouthCornerRight',
+  oppositeCorner: 'mouthCornerLeft',
+  requiredAnchors: Object.freeze([
+    'mouthCornerLeft',
+    'mouthCornerRight',
+    'mouthUpper',
+    'mouthLower',
+    'chin',
+    'noseTip',
+    'forehead',
+    'eyeLeftOuter',
+    'eyeRightOuter',
+    'browLeftInner',
+    'browRightInner',
+  ]),
+  ...MOUTH_SMILE_SHARED,
 });

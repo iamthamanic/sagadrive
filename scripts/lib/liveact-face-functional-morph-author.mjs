@@ -4,7 +4,7 @@
  *
  * Design decision: from reviewed semantic anchors + mesh topology, deterministically
  * rewrite named SagaDrive face morph POSITION accessors.
- * Milestone 1: jawOpen. Milestone 2: blinks. Milestone 3: browInnerUp.
+ * Milestone 1: jawOpen. Milestone 2: blinks. Milestone 3: browInnerUp. Milestone 4: smiles.
  *
  * Does not import Functional QA thresholds as an optimization loop.
  * Domain/runtime code must not import this module.
@@ -25,6 +25,8 @@ import {
   FACE_FUNCTIONAL_MORPH_AUTHOR_PROFILE_VERSION,
   FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1,
   JAW_OPEN_AUTHOR_CONTRACT_V1,
+  MOUTH_SMILE_LEFT_AUTHOR_CONTRACT_V1,
+  MOUTH_SMILE_RIGHT_AUTHOR_CONTRACT_V1,
 } from './liveact-face-functional-morph-profile-v1.mjs';
 import {
   buildFaceLocalFrame,
@@ -635,6 +637,188 @@ function rewriteBrowInnerUpMorph(document, anchors, contract) {
 }
 
 /**
+ * Unilateral smile falloff in [0,1]. Strongest near target mouth corner; opposite + upper face protected.
+ * @param {{ x: number; y: number; z: number }} p
+ * @param {Record<string, { x: number; y: number; z: number }>} refs
+ * @param {ReturnType<typeof buildFaceLocalFrame>} frame
+ * @param {typeof MOUTH_SMILE_LEFT_AUTHOR_CONTRACT_V1} contract
+ */
+export function computeMouthSmileVertexWeight(p, refs, frame, contract) {
+  if (!frame) return 0;
+  const faceH = frame.faceHeight;
+  const r = faceH * contract.moveRadiusFaceH;
+  const wCorner = Math.max(0, 1 - dist3(p, refs.target) / r) ** 1.2;
+  const wUpper = Math.max(0, 1 - dist3(p, refs.mouthUpper) / (r * 1.35)) ** 1.1 * 0.25;
+  const wLower = Math.max(0, 1 - dist3(p, refs.mouthLower) / (r * 1.25)) ** 1.1 * 0.35;
+  let w = Math.max(wCorner, wUpper, wLower);
+
+  const mid = refs.noseTip;
+  const sideDot =
+    (p.x - mid.x) * frame.left.x + (p.y - mid.y) * frame.left.y + (p.z - mid.z) * frame.left.z;
+  const soft = faceH * contract.midplaneSoftFaceH;
+  if (contract.side === 'left') {
+    if (sideDot < 0) return 0;
+    if (sideDot < soft) w *= sideDot / soft;
+  } else {
+    if (sideDot > 0) return 0;
+    if (sideDot > -soft) w *= -sideDot / soft;
+  }
+
+  const rKill = faceH * 0.1;
+  if (dist3(p, refs.opposite) < rKill) return 0;
+  if (dist3(p, refs.noseTip) < faceH * 0.1) return 0;
+  if (dist3(p, refs.forehead) < faceH * 0.2) return 0;
+  if (refs.browLeftInner && dist3(p, refs.browLeftInner) < faceH * 0.12) w *= 0.05;
+  if (refs.browRightInner && dist3(p, refs.browRightInner) < faceH * 0.12) w *= 0.05;
+  if (refs.eyeLeftOuter && dist3(p, refs.eyeLeftOuter) < faceH * 0.1) w *= 0.08;
+  if (refs.eyeRightOuter && dist3(p, refs.eyeRightOuter) < faceH * 0.1) w *= 0.08;
+  // Chin: soft protect — smile may nudge nearby skin but not translate chin anchor
+  if (refs.chin && dist3(p, refs.chin) < faceH * 0.08) w *= 0.15;
+
+  return Math.max(0, Math.min(1, w));
+}
+
+/**
+ * @param {import('@gltf-transform/core').Document} document
+ * @param {Record<string, unknown>} anchors
+ * @param {typeof MOUTH_SMILE_LEFT_AUTHOR_CONTRACT_V1} contract
+ */
+function rewriteMouthSmileMorph(document, anchors, contract) {
+  const neutralPre = resolveFaceAnchorPositions(document, anchors);
+  for (const id of contract.requiredAnchors) {
+    if (!neutralPre[id]) throw new Error(`${contract.morphName} author: required anchor unresolved: ${id}`);
+  }
+
+  const sampleBinding = /** @type {Record<string, unknown>} */ (anchors[contract.targetCorner]);
+  const nodeIdentity = String(sampleBinding?.nodeIdentity || '').trim();
+  const node = findNodeByIdentity(document, nodeIdentity);
+  const mesh = node?.getMesh();
+  if (!mesh) {
+    throw new Error(`${contract.morphName} author: meshed node missing for ${nodeIdentity || '(empty)'}`);
+  }
+  const primIndex = typeof sampleBinding.primitiveIndex === 'number' ? sampleBinding.primitiveIndex : 0;
+  const prim = mesh.listPrimitives()[primIndex];
+  if (!prim) throw new Error(`${contract.morphName} author: primitive ${primIndex} missing`);
+
+  const morphIndex = findNamedMorphTargetIndex(prim, mesh, contract.morphName);
+  if (morphIndex < 0) throw new Error(`${contract.morphName} author: morph target missing`);
+  const target = prim.listTargets()[morphIndex];
+  const morphPos = target.getAttribute('POSITION');
+  const basePos = prim.getAttribute('POSITION');
+  if (!morphPos || !basePos) throw new Error(`${contract.morphName} author: POSITION accessors missing`);
+
+  const neutral = neutralPre;
+  const frame = buildFaceLocalFrame(neutral);
+  if (!frame) throw new Error(`${contract.morphName} author: face local frame incomplete`);
+
+  const outDir =
+    contract.side === 'left'
+      ? frame.left
+      : { x: -frame.left.x, y: -frame.left.y, z: -frame.left.z };
+  const dx0 = frame.up.x * contract.upBias + outDir.x * contract.outBias;
+  const dy0 = frame.up.y * contract.upBias + outDir.y * contract.outBias;
+  const dz0 = frame.up.z * contract.upBias + outDir.z * contract.outBias;
+  const dLen = Math.hypot(dx0, dy0, dz0) || 1;
+  const dir = { x: dx0 / dLen, y: dy0 / dLen, z: dz0 / dLen };
+  const amp = frame.mouthWidth0 * contract.ampMouthW;
+
+  const refs = {
+    target: neutral[contract.targetCorner],
+    opposite: neutral[contract.oppositeCorner],
+    mouthUpper: neutral.mouthUpper,
+    mouthLower: neutral.mouthLower,
+    chin: neutral.chin,
+    noseTip: neutral.noseTip,
+    forehead: neutral.forehead,
+    browLeftInner: neutral.browLeftInner,
+    browRightInner: neutral.browRightInner,
+    eyeLeftOuter: neutral.eyeLeftOuter,
+    eyeRightOuter: neutral.eyeRightOuter,
+  };
+
+  const n = basePos.getCount();
+  const arr = new Float32Array(n * 3);
+  let affected = 0;
+  let maxW = 0;
+  let sumW = 0;
+  let maxDisp = 0;
+  let sumDisp = 0;
+  const el = [0, 0, 0];
+  for (let i = 0; i < n; i += 1) {
+    basePos.getElement(i, el);
+    const p = { x: el[0], y: el[1], z: el[2] };
+    const w = computeMouthSmileVertexWeight(p, refs, frame, contract);
+    if (w <= 1e-8) continue;
+    affected += 1;
+    maxW = Math.max(maxW, w);
+    sumW += w;
+    const dx = dir.x * amp * w;
+    const dy = dir.y * amp * w;
+    const dz = dir.z * amp * w;
+    arr[i * 3] = dx;
+    arr[i * 3 + 1] = dy;
+    arr[i * 3 + 2] = dz;
+    const d = Math.hypot(dx, dy, dz);
+    maxDisp = Math.max(maxDisp, d);
+    sumDisp += d;
+  }
+  morphPos.setArray(arr);
+
+  const posed = resolveFaceAnchorPositionsPosed(document, anchors, contract.morphName, 1);
+  const tn = neutral[contract.targetCorner];
+  const tp = posed[contract.targetCorner];
+  const on = neutral[contract.oppositeCorner];
+  const op = posed[contract.oppositeCorner];
+  const dTarget = { x: tp.x - tn.x, y: tp.y - tn.y, z: tp.z - tn.z };
+  const dOpp = { x: op.x - on.x, y: op.y - on.y, z: op.z - on.z };
+  const cornerUp =
+    (dTarget.x * frame.up.x + dTarget.y * frame.up.y + dTarget.z * frame.up.z) / frame.mouthWidth0;
+  const cornerOut =
+    (dTarget.x * outDir.x + dTarget.y * outDir.y + dTarget.z * outDir.z) / frame.mouthWidth0;
+  const cornerMotion = Math.hypot(dTarget.x, dTarget.y, dTarget.z) / frame.mouthWidth0;
+  const oppUp = (dOpp.x * frame.up.x + dOpp.y * frame.up.y + dOpp.z * frame.up.z) / frame.mouthWidth0;
+
+  const disp = (id) => {
+    const a = neutral[id];
+    const b = posed[id];
+    if (!a || !b) return null;
+    return dist3(a, b);
+  };
+
+  return {
+    morphIndex,
+    nodeIdentity,
+    primitiveIndex: primIndex,
+    vertexCount: n,
+    affectedVertices: affected,
+    maxWeight: maxW,
+    meanWeightAffected: affected ? sumW / affected : 0,
+    maxDisplacement: maxDisp,
+    meanDisplacementAffected: affected ? sumDisp / affected : 0,
+    amp,
+    mouthWidth0: frame.mouthWidth0,
+    faceHeight: frame.faceHeight,
+    morphPositionSha256: hashMorphPositionArray(arr),
+    cornerUp,
+    cornerOut,
+    cornerMotion,
+    oppositeCornerUp: oppUp,
+    upAdvantage: cornerUp - oppUp,
+    displacements: {
+      [contract.targetCorner]: disp(contract.targetCorner),
+      [contract.oppositeCorner]: disp(contract.oppositeCorner),
+      mouthUpper: disp('mouthUpper'),
+      mouthLower: disp('mouthLower'),
+      chin: disp('chin'),
+      noseTip: disp('noseTip'),
+      forehead: disp('forehead'),
+      browLeftInner: disp('browLeftInner'),
+      browRightInner: disp('browRightInner'),
+    },
+  };
+}
+
+/**
  * @param {string} channel
  * @param {import('@gltf-transform/core').Document} document
  * @param {Record<string, unknown>} anchors
@@ -651,6 +835,12 @@ function rewriteChannelMorph(channel, document, anchors) {
   }
   if (channel === 'browInnerUp') {
     return rewriteBrowInnerUpMorph(document, anchors, BROW_INNER_UP_AUTHOR_CONTRACT_V1);
+  }
+  if (channel === 'mouthSmileLeft') {
+    return rewriteMouthSmileMorph(document, anchors, MOUTH_SMILE_LEFT_AUTHOR_CONTRACT_V1);
+  }
+  if (channel === 'mouthSmileRight') {
+    return rewriteMouthSmileMorph(document, anchors, MOUTH_SMILE_RIGHT_AUTHOR_CONTRACT_V1);
   }
   throw new Error(`unsupported_channel:${channel}`);
 }

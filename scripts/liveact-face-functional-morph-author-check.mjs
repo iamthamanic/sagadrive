@@ -240,8 +240,10 @@ async function main() {
       FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('eyeBlinkLeft') &&
       FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('eyeBlinkRight') &&
       FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('browInnerUp') &&
-      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.length === 4,
-    'Milestone 3 supports jawOpen + blinks + browInnerUp only',
+      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('mouthSmileLeft') &&
+      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('mouthSmileRight') &&
+      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.length === 6,
+    'Milestone 4 supports jaw/blink/brow/smile L+R only',
   );
   check(
     FACE_FUNCTIONAL_MORPH_AUTHOR_CONTRACT_VERSION.startsWith('SagaDrive'),
@@ -424,6 +426,60 @@ async function main() {
       'brow deterministic morph hash',
     );
 
+    // --- Milestone 4: smiles on brow stack; prior morph hashes immutable ---
+    const browAuth = await writeBundle(join(work, 'brow-auth'), readFileSync(browOut), fixture.anchors);
+    const smileLOut = join(work, 'smileL.glb');
+    const smileL = await authorLiveActFunctionalMorph({
+      inputPath: browAuth.glbPath,
+      outputPath: smileLOut,
+      anchorsPath: browAuth.anchorsPath,
+      authoringPath: browAuth.authoringPath,
+      channel: 'mouthSmileLeft',
+    });
+    check(smileL.channel === 'mouthSmileLeft', 'authors mouthSmileLeft');
+    check((smileL.channelStats.cornerUp || 0) >= 0.025, 'smileL cornerUp >= 0.025');
+    check((smileL.channelStats.cornerMotion || 0) >= 0.03, 'smileL cornerMotion >= 0.03');
+    check((smileL.channelStats.upAdvantage || 0) >= 0.015, 'smileL upAdvantage >= 0.015');
+    check(
+      smileL.afterJawOpenMorphSha256 === r1.afterJawOpenMorphSha256,
+      'smileL preserves jawOpen morph hash',
+    );
+    const smileLDoc = await io.readBinary(readFileSync(smileLOut));
+    const smileLHashes = hashAllMorphPositionBuffers(smileLDoc);
+    const browHashesAfter = hashAllMorphPositionBuffers(await io.readBinary(readFileSync(browOut)));
+    check(
+      smileLHashes.get('browInnerUp') === browHashesAfter.get('browInnerUp'),
+      'smileL preserves browInnerUp hash',
+    );
+    check(
+      smileLHashes.get('eyeBlinkLeft') === browHashesAfter.get('eyeBlinkLeft'),
+      'smileL preserves eyeBlinkLeft hash',
+    );
+
+    const smileLAuth = await writeBundle(join(work, 'smileL-auth'), readFileSync(smileLOut), fixture.anchors);
+    const smileR = await authorLiveActFunctionalMorph({
+      inputPath: smileLAuth.glbPath,
+      outputPath: join(work, 'smileR.glb'),
+      anchorsPath: smileLAuth.anchorsPath,
+      authoringPath: smileLAuth.authoringPath,
+      channel: 'mouthSmileRight',
+    });
+    check(smileR.channel === 'mouthSmileRight', 'authors mouthSmileRight');
+    check((smileR.channelStats.cornerUp || 0) >= 0.025, 'smileR cornerUp >= 0.025');
+    check((smileR.channelStats.cornerMotion || 0) >= 0.03, 'smileR cornerMotion >= 0.03');
+    check((smileR.channelStats.upAdvantage || 0) >= 0.015, 'smileR upAdvantage >= 0.015');
+    const smileR2 = await authorLiveActFunctionalMorph({
+      inputPath: smileLAuth.glbPath,
+      outputPath: join(work, 'smileR2.glb'),
+      anchorsPath: smileLAuth.anchorsPath,
+      authoringPath: smileLAuth.authoringPath,
+      channel: 'mouthSmileRight',
+    });
+    check(
+      smileR.afterChannelMorphSha256 === smileR2.afterChannelMorphSha256,
+      'smileR deterministic morph hash',
+    );
+
     let rejected = false;
     try {
       const unrevDir = join(work, 'unreviewed');
@@ -527,7 +583,7 @@ async function main() {
         outputPath: join(goodDir, 'bad-channel.glb'),
         anchorsPath: good.anchorsPath,
         authoringPath: good.authoringPath,
-        channel: 'mouthSmileLeft',
+        channel: 'mouthPucker',
       });
     } catch (err) {
       rejected = String(err.message || err).includes('unsupported_channel');

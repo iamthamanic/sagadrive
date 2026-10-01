@@ -1,0 +1,14 @@
+{
+  "assetId": "m5",
+  "oldPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-brow1.glb",
+  "newPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-smile1.glb",
+  "oldSha256": "c555672ba322ddf8a92e070191885bb182dcafcc93fe4d8df43709207509c96d",
+  "newSha256": "cf79bbf1bf28e20d2668f16e54211fcf20606056d3a6e4593e073b8d02760586",
+  "oldTopology": "v133002:t215832:m1",
+  "newTopology": "v133002:t215832:m1",
+  "topologyMatch": true,
+  "groundTruthCarryForward": true,
+  "anchorInvariantPassCount": 21,
+  "anchorInvariantCount": 21,
+  "checkedAt": "2026-10-01T12:15:02.019Z"
+}

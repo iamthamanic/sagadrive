@@ -67,6 +67,24 @@ Reviewed Ground Truth for m5/f5, then Functional Face QA; repair morphs with GT-
 - [x] Combination probes (brow+blink, brow+jaw) ohne Regression
 - [x] Noch **kein** Publish / Resolver / VRM (smile/pucker dürfen rot bleiben)
 
+## Milestone: GT-aware mouthSmileLeft / mouthSmileRight production authoring
+
+### Preconditions
+- Milestone 3 complete (fachliche Baseline `8c832ac`, branch rebased on `origin/main`)
+- jawOpen + blinks + browInnerUp Functional PASS; morph hashes immutable
+- m5/f5 reviewed GT with mouth corner anchors
+
+### Postconditions (m5 AND f5)
+- [x] korrekter Mouth Corner bewegt sich funktional nach oben/lateral
+- [x] Gegenseite bleibt bei unilateralem Smile weitgehend isoliert
+- [x] alter ICT Smile Morph vollständig ersetzt
+- [x] Nose/Brow/Eyes/Chin protected
+- [x] jawOpen / blinks / browInnerUp Morph Hashes unverändert
+- [x] Neutral Mesh unverändert
+- [x] Functional QA mouthSmileLeft + mouthSmileRight PASS
+- [x] deterministisch; nur 6/51 Morphs vs FaceRig Base geändert
+- [x] Noch **kein** Publish / VRM (pucker darf rot bleiben)
+
 ## Edge Cases
 - [x] No threshold / gain / deadZone / filename validator exceptions.
 - [x] GT carry-forward invariant: neutral topology + bound triangle positions unchanged (21/21) after reauthor.
@@ -109,20 +127,22 @@ Evidence: `…/{m5,f5}-face3/qa/jawopen1/`
 Supported channels after M2: `jawOpen`, `eyeBlinkLeft`, `eyeBlinkRight`.
 Evidence: `…/{m5,f5}-face3/qa/blink1/`
 
-**Milestone 3 (browInnerUp) PASS for m5 and f5.**
+**Milestone 3 (browInnerUp) PASS.** Fachliche Baseline `8c832ac` (rebased → `7a8476b`).
 
-Supported channels: `jawOpen`, `eyeBlinkLeft`, `eyeBlinkRight`, `browInnerUp`.
-Prior morph hashes (jaw + blinks) **identical** to Milestone-2 baseline.
-Input: `*-face3-blink1.glb` → Output: `*-face3-brow1.glb`.
+**Milestone 4 (mouthSmileLeft / mouthSmileRight) PASS for m5 and f5.**
 
-| Asset | before meanLift | after meanLift | brow PASS | jaw/blink hashes |
-|-------|-----------------|----------------|-----------|------------------|
-| m5 | 0 | +0.140 | yes | unchanged |
-| f5 | 0 | +0.140 | yes | unchanged |
+Supported channels: jawOpen, blinks, browInnerUp, mouthSmileLeft, mouthSmileRight.
+Prior morph hashes (jaw/blink/brow) **identical** to Milestone-3 baseline.
+Input: `*-face3-brow1.glb` → Output: `*-face3-smile1.glb`.
 
-Evidence: `…/{m5,f5}-face3/qa/brow1/`
+| Asset | smileL cornerUp | smileR cornerUp | opp isolation | PASS |
+|-------|-----------------|-----------------|---------------|------|
+| m5 | +0.079 | +0.079 | 0 | yes |
+| f5 | +0.079 | +0.079 | 0 | yes |
 
-smile / pucker / VRM / resolver / #424: **not started**.
+Evidence: `…/{m5,f5}-face3/qa/smile1/`
+
+pucker / VRM / resolver / #424: **not started**.
 
 ## Screenshots
 | Step | Filename |
