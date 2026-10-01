@@ -1,0 +1,19 @@
+{
+  "anchorCount": 21,
+  "anchorsStructurallyValid": true,
+  "barycentricAllValid": true,
+  "primitiveNodeAllValid": true,
+  "allowedAvatarSurfaceOnly": true,
+  "noHairSurface": true,
+  "noEquipmentSurface": true,
+  "noHelperDebugSurface": true,
+  "topologyFingerprintMatch": true,
+  "assetShaMatch": true,
+  "anatomyValidatorPass": true,
+  "leftRightSemanticsPlausible": true,
+  "symmetryPlausibleWhereApplicable": true,
+  "modelSha256": "134f5137019ec5b26abd977459bd510b763f080c111da3d6ab4f92cb3aaa33ff",
+  "anchorsSha256": "2b7e9967aed0577bb3c628bfe1cc5272a7cc184f78b9cdf32793d9fb3b865a96",
+  "topologyFingerprint": "v133002:t215832:m1",
+  "candidateModelPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb"
+}

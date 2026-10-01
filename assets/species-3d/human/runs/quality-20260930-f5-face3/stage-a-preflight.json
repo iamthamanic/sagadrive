@@ -4,8 +4,8 @@
   "issue": 423,
   "runId": "quality-20260930-f5-face3",
   "createdAt": "2026-09-30T07:00:00.000Z",
-  "status": "awaiting_human_review",
-  "reviewed": false,
+  "status": "agent_reviewed",
+  "reviewed": true,
   "reauthoringRequired": null,
   "functionalQa": null,
   "notes": [
@@ -85,5 +85,11 @@
       "authoring.asset.modelPath / modelSha256 / topologyFingerprint / anchorsSha256 must match this candidate.",
       "Do not convert auto proposals to reviewed by editing JSON."
     ]
+  },
+  "agentReviewPhase": {
+    "protocolVersion": "face-anchor-agent-review-v1",
+    "outcome": "agent_reviewed",
+    "completedAt": "2026-10-01T08:45:53.004Z",
+    "evidenceManifestSha256": "2c5226b2bf9422ffda003145c1bc52c3d245cc0dd2a36816529be92c01e26549"
   }
 }

@@ -1,0 +1,348 @@
+{
+  "protocolVersion": "face-anchor-agent-review-v1",
+  "passIndex": 5,
+  "reviewerId": "visual-f5-slot-5",
+  "reviewedAt": "2026-10-01T08:45:53.002Z",
+  "evidenceManifestSha256": "2c5226b2bf9422ffda003145c1bc52c3d245cc0dd2a36816529be92c01e26549",
+  "modelSha256": "a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c",
+  "anchorsSha256": "89bbcd8b6ba49bbd0c0a8424127617316e406b3974863e06dfd2568129bd9f5e",
+  "topologyFingerprint": "v147707:t214973:m1",
+  "findings": [
+    {
+      "anchorId": "mouthUpper",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "mouth_nose_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_down"
+      ],
+      "conciseReason": "Pass5 visual PNG review: mouthUpper anatomically/side/surface OK on frontal,mouth_nose_closeup,yaw_left_35,yaw_right_35,pitch_down."
+    },
+    {
+      "anchorId": "mouthLower",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "mouth_nose_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_down"
+      ],
+      "conciseReason": "Pass5 visual PNG review: mouthLower anatomically/side/surface OK on frontal,mouth_nose_closeup,yaw_left_35,yaw_right_35,pitch_down."
+    },
+    {
+      "anchorId": "mouthCornerLeft",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "mouth_nose_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_down"
+      ],
+      "conciseReason": "Pass5 visual PNG review: mouthCornerLeft anatomically/side/surface OK on frontal,mouth_nose_closeup,yaw_left_35,yaw_right_35,pitch_down."
+    },
+    {
+      "anchorId": "mouthCornerRight",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "mouth_nose_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_down"
+      ],
+      "conciseReason": "Pass5 visual PNG review: mouthCornerRight anatomically/side/surface OK on frontal,mouth_nose_closeup,yaw_left_35,yaw_right_35,pitch_down."
+    },
+    {
+      "anchorId": "eyeLeftInner",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: eyeLeftInner anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "eyeLeftOuter",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: eyeLeftOuter anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "eyeLeftUpper",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: eyeLeftUpper anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "eyeLeftLower",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: eyeLeftLower anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "eyeRightInner",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: eyeRightInner anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "eyeRightOuter",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: eyeRightOuter anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "eyeRightUpper",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: eyeRightUpper anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "eyeRightLower",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: eyeRightLower anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "browLeftInner",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: browLeftInner anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "browLeftOuter",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: browLeftOuter anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "browLeftCenter",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: browLeftCenter anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "browRightInner",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: browRightInner anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "browRightOuter",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: browRightOuter anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "browRightCenter",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: browRightCenter anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    },
+    {
+      "anchorId": "noseTip",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "mouth_nose_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_down"
+      ],
+      "conciseReason": "Pass5 visual PNG review: noseTip anatomically/side/surface OK on frontal,mouth_nose_closeup,yaw_left_35,yaw_right_35,pitch_down."
+    },
+    {
+      "anchorId": "chin",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "mouth_nose_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_down"
+      ],
+      "conciseReason": "Pass5 visual PNG review: chin anatomically/side/surface OK on frontal,mouth_nose_closeup,yaw_left_35,yaw_right_35,pitch_down."
+    },
+    {
+      "anchorId": "forehead",
+      "visualStatus": "pass",
+      "anatomyStatus": "pass",
+      "sideStatus": "pass",
+      "surfaceStatus": "pass",
+      "needsHuman": false,
+      "evidenceViews": [
+        "frontal",
+        "eyes_brows_closeup",
+        "yaw_left_35",
+        "yaw_right_35",
+        "pitch_up"
+      ],
+      "conciseReason": "Pass5 visual PNG review: forehead anatomically/side/surface OK on frontal,eyes_brows_closeup,yaw_left_35,yaw_right_35,pitch_up."
+    }
+  ]
+}

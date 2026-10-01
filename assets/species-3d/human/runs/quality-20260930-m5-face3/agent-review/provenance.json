@@ -1,0 +1,40 @@
+{
+  "protocolVersion": "face-anchor-agent-review-v1",
+  "candidateModelPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb",
+  "modelSha256": "134f5137019ec5b26abd977459bd510b763f080c111da3d6ab4f92cb3aaa33ff",
+  "topologyFingerprint": "v133002:t215832:m1",
+  "anchorsSha256": "2b7e9967aed0577bb3c628bfe1cc5272a7cc184f78b9cdf32793d9fb3b865a96",
+  "evidenceManifestSha256": "59b79f2b479b15f0ac38e1f4eea618efb336fd73ce04ef0e1c830a31e16a0834",
+  "requiredPasses": 5,
+  "completedPasses": 5,
+  "passResults": [
+    {
+      "passIndex": 1,
+      "reviewerId": "visual-m5-slot-1",
+      "reviewedAt": "2026-10-01T08:45:52.992Z"
+    },
+    {
+      "passIndex": 2,
+      "reviewerId": "visual-m5-slot-2",
+      "reviewedAt": "2026-10-01T08:45:52.992Z"
+    },
+    {
+      "passIndex": 3,
+      "reviewerId": "visual-m5-slot-3",
+      "reviewedAt": "2026-10-01T08:45:52.993Z"
+    },
+    {
+      "passIndex": 4,
+      "reviewerId": "visual-m5-slot-4",
+      "reviewedAt": "2026-10-01T08:45:52.993Z"
+    },
+    {
+      "passIndex": 5,
+      "reviewerId": "visual-m5-slot-5",
+      "reviewedAt": "2026-10-01T08:45:52.994Z"
+    }
+  ],
+  "aggregationOutcome": "agent_reviewed",
+  "finalReviewStatus": "agent_reviewed",
+  "aggregatedAt": "2026-10-01T08:45:52.989Z"
+}

@@ -1,0 +1,63 @@
+{
+  "protocolVersion": "face-anchor-agent-review-v1",
+  "candidateModelPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb",
+  "modelSha256": "134f5137019ec5b26abd977459bd510b763f080c111da3d6ab4f92cb3aaa33ff",
+  "anchorsSha256": "2b7e9967aed0577bb3c628bfe1cc5272a7cc184f78b9cdf32793d9fb3b865a96",
+  "topologyFingerprint": "v133002:t215832:m1",
+  "neutralPoseId": "controlled-neutral-v1",
+  "liveActEnabled": false,
+  "animationEnabled": false,
+  "hideHair": true,
+  "hideEquipment": true,
+  "hideHelperDebug": true,
+  "showLabeledMarkers": true,
+  "markerLabels": "anchorId_or_index",
+  "minWidth": 1280,
+  "minHeight": 720,
+  "annotateWithPriorReviews": false,
+  "matrix": [
+    {
+      "view": "frontal",
+      "yawDeg": 0,
+      "pitchDeg": 0,
+      "framing": "face"
+    },
+    {
+      "view": "yaw_left_35",
+      "yawDeg": -35,
+      "pitchDeg": 0,
+      "framing": "face"
+    },
+    {
+      "view": "yaw_right_35",
+      "yawDeg": 35,
+      "pitchDeg": 0,
+      "framing": "face"
+    },
+    {
+      "view": "pitch_up",
+      "yawDeg": 0,
+      "pitchDeg": 18,
+      "framing": "face"
+    },
+    {
+      "view": "pitch_down",
+      "yawDeg": 0,
+      "pitchDeg": -18,
+      "framing": "face"
+    },
+    {
+      "view": "eyes_brows_closeup",
+      "yawDeg": 0,
+      "pitchDeg": 8,
+      "framing": "eyes_brows"
+    },
+    {
+      "view": "mouth_nose_closeup",
+      "yawDeg": 0,
+      "pitchDeg": -6,
+      "framing": "mouth_nose"
+    }
+  ],
+  "outputDir": "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive-wt-423/assets/species-3d/human/runs/quality-20260930-m5-face3/agent-review/evidence"
+}
