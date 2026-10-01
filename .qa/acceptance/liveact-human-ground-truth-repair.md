@@ -287,7 +287,7 @@ Evidence: `…/{m5,f5}-face3/qa/pucker1/`
 
 ## Composition Gate
 - Verdict: CLEAR
-- HEAD_SHA: WORKTREE (pre-commit final publish)
+- HEAD_SHA: 8ef781bdf532d5d6c187a6e3961c7e811e3c4d61
 - Event: Final Coupled-Shell face3 GLB/VRM published and resolved for human LiveAct templates
 - Hop chain: reviewed GT → surface ownership → coupled-shell resolution → functional morph authoring → final GLB → VRM pack → public `*-face3.{glb,vrm}` → `species-template-models-v1` resolver (`?v=quality5-face3-coupled1`) → runtime loader → LiveAct consumption
 - Simulations: N-actors (m5+f5 same contract, no asset branches) pass; invalid/missing (generic `*-m5/f5.glb` fallback preserved; face1 historical) pass; two consumers (cache-bust identity pins same SHA) pass
