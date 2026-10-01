@@ -5,6 +5,7 @@
  * Design decision: from reviewed semantic anchors + mesh topology, deterministically
  * rewrite named SagaDrive face morph POSITION accessors.
  * Milestone 1: jawOpen. Milestone 2: blinks. Milestone 3: browInnerUp. Milestone 4: smiles.
+ * Milestone 5: mouthPucker.
  *
  * Does not import Functional QA thresholds as an optimization loop.
  * Domain/runtime code must not import this module.
@@ -25,6 +26,7 @@ import {
   FACE_FUNCTIONAL_MORPH_AUTHOR_PROFILE_VERSION,
   FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1,
   JAW_OPEN_AUTHOR_CONTRACT_V1,
+  MOUTH_PUCKER_AUTHOR_CONTRACT_V1,
   MOUTH_SMILE_LEFT_AUTHOR_CONTRACT_V1,
   MOUTH_SMILE_RIGHT_AUTHOR_CONTRACT_V1,
 } from './liveact-face-functional-morph-profile-v1.mjs';
@@ -819,6 +821,256 @@ function rewriteMouthSmileMorph(document, anchors, contract) {
 }
 
 /**
+ * Bilateral pucker falloff in [0,1]. Strongest at mouth corners + lip perimeter; protected regions killed.
+ * @param {{ x: number; y: number; z: number }} p
+ * @param {Record<string, { x: number; y: number; z: number }>} refs
+ * @param {ReturnType<typeof buildFaceLocalFrame>} frame
+ * @param {typeof MOUTH_PUCKER_AUTHOR_CONTRACT_V1} contract
+ */
+export function computeMouthPuckerVertexWeight(p, refs, frame, contract) {
+  if (!frame) return 0;
+  const faceH = frame.faceHeight;
+  const r = faceH * contract.moveRadiusFaceH;
+  const wL = Math.max(0, 1 - dist3(p, refs.mouthCornerLeft) / r) ** 1.15;
+  const wR = Math.max(0, 1 - dist3(p, refs.mouthCornerRight) / r) ** 1.15;
+  const wUpper = Math.max(0, 1 - dist3(p, refs.mouthUpper) / (r * 1.2)) ** 1.1 * 0.7;
+  const wLower = Math.max(0, 1 - dist3(p, refs.mouthLower) / (r * 1.2)) ** 1.1 * 0.7;
+  let w = Math.max(wL, wR, wUpper, wLower);
+
+  // Hard protect nose / forehead / upper face; soft protect chin & eyes/brows.
+  if (dist3(p, refs.noseTip) < faceH * 0.11) return 0;
+  if (dist3(p, refs.forehead) < faceH * 0.22) return 0;
+  if (refs.chin && dist3(p, refs.chin) < faceH * 0.09) w *= 0.12;
+  if (refs.browLeftInner && dist3(p, refs.browLeftInner) < faceH * 0.13) w *= 0.04;
+  if (refs.browRightInner && dist3(p, refs.browRightInner) < faceH * 0.13) w *= 0.04;
+  if (refs.eyeLeftOuter && dist3(p, refs.eyeLeftOuter) < faceH * 0.11) w *= 0.06;
+  if (refs.eyeRightOuter && dist3(p, refs.eyeRightOuter) < faceH * 0.11) w *= 0.06;
+
+  return Math.max(0, Math.min(1, w));
+}
+
+/**
+ * Full rewrite of mouthPucker: both corners inward toward mouth center + local lip compaction.
+ * @param {import('@gltf-transform/core').Document} document
+ * @param {Record<string, unknown>} anchors
+ * @param {typeof MOUTH_PUCKER_AUTHOR_CONTRACT_V1} contract
+ */
+function rewriteMouthPuckerMorph(document, anchors, contract = MOUTH_PUCKER_AUTHOR_CONTRACT_V1) {
+  const neutralPre = resolveFaceAnchorPositions(document, anchors);
+  for (const id of contract.requiredAnchors) {
+    if (!neutralPre[id]) throw new Error(`${contract.morphName} author: required anchor unresolved: ${id}`);
+  }
+
+  const sampleBinding = /** @type {Record<string, unknown>} */ (anchors.mouthCornerLeft);
+  const nodeIdentity = String(sampleBinding?.nodeIdentity || '').trim();
+  const node = findNodeByIdentity(document, nodeIdentity);
+  const mesh = node?.getMesh();
+  if (!mesh) {
+    throw new Error(`${contract.morphName} author: meshed node missing for ${nodeIdentity || '(empty)'}`);
+  }
+  const primIndex = typeof sampleBinding.primitiveIndex === 'number' ? sampleBinding.primitiveIndex : 0;
+  const prim = mesh.listPrimitives()[primIndex];
+  if (!prim) throw new Error(`${contract.morphName} author: primitive ${primIndex} missing`);
+
+  const morphIndex = findNamedMorphTargetIndex(prim, mesh, contract.morphName);
+  if (morphIndex < 0) throw new Error(`${contract.morphName} author: morph target missing`);
+  const target = prim.listTargets()[morphIndex];
+  const morphPos = target.getAttribute('POSITION');
+  const basePos = prim.getAttribute('POSITION');
+  if (!morphPos || !basePos) throw new Error(`${contract.morphName} author: POSITION accessors missing`);
+
+  const neutral = neutralPre;
+  const frame = buildFaceLocalFrame(neutral);
+  if (!frame) throw new Error(`${contract.morphName} author: face local frame incomplete`);
+
+  const L = neutral.mouthCornerLeft;
+  const R = neutral.mouthCornerRight;
+  const U = neutral.mouthUpper;
+  const Lo = neutral.mouthLower;
+  const mouthCenter = {
+    x: (L.x + R.x + U.x + Lo.x) / 4,
+    y: (L.y + R.y + U.y + Lo.y) / 4,
+    z: (L.z + R.z + U.z + Lo.z) / 4,
+  };
+  const mouthMid = {
+    x: (L.x + R.x) / 2,
+    y: (L.y + R.y) / 2,
+    z: (L.z + R.z) / 2,
+  };
+
+  const amp = frame.mouthWidth0 * contract.ampMouthW;
+  const forwardAmp = frame.mouthWidth0 * contract.forwardAmpMouthW;
+  const left = frame.left;
+  const up = frame.up;
+  const forward = frame.forward;
+
+  const refs = {
+    mouthCornerLeft: L,
+    mouthCornerRight: R,
+    mouthUpper: U,
+    mouthLower: Lo,
+    chin: neutral.chin,
+    noseTip: neutral.noseTip,
+    forehead: neutral.forehead,
+    browLeftInner: neutral.browLeftInner,
+    browRightInner: neutral.browRightInner,
+    eyeLeftOuter: neutral.eyeLeftOuter,
+    eyeRightOuter: neutral.eyeRightOuter,
+  };
+
+  const n = basePos.getCount();
+  const arr = new Float32Array(n * 3);
+  let affected = 0;
+  let maxW = 0;
+  let sumW = 0;
+  let maxDisp = 0;
+  let sumDisp = 0;
+  const el = [0, 0, 0];
+  const halfW = Math.max(frame.mouthWidth0 * 0.45, 1e-6);
+
+  for (let i = 0; i < n; i += 1) {
+    basePos.getElement(i, el);
+    const p = { x: el[0], y: el[1], z: el[2] };
+    const w = computeMouthPuckerVertexWeight(p, refs, frame, contract);
+    if (w <= 1e-8) continue;
+
+    // Lateral: move toward midplane along face-left (inward for both corners).
+    const sideDot =
+      (p.x - mouthMid.x) * left.x + (p.y - mouthMid.y) * left.y + (p.z - mouthMid.z) * left.z;
+    const sideAbs = Math.abs(sideDot);
+    const sideSign = sideAbs < 1e-12 ? 0 : sideDot > 0 ? 1 : -1;
+    const latScale = Math.min(1, sideAbs / halfW);
+    const inwardAmt = amp * w * latScale;
+
+    // Local forward for lip compaction (stronger near upper/lower than far-cheek).
+    const lipNear =
+      Math.max(
+        Math.max(0, 1 - dist3(p, U) / (frame.faceHeight * contract.moveRadiusFaceH * 1.3)),
+        Math.max(0, 1 - dist3(p, Lo) / (frame.faceHeight * contract.moveRadiusFaceH * 1.3)),
+        Math.max(0, 1 - dist3(p, L) / (frame.faceHeight * contract.moveRadiusFaceH)),
+        Math.max(0, 1 - dist3(p, R) / (frame.faceHeight * contract.moveRadiusFaceH)),
+      ) ** 1.05;
+    const fwdAmt = forwardAmp * w * lipNear;
+
+    // Mild attract toward mouthCenter (non-lateral) for contour compaction — damped.
+    const toCx = mouthCenter.x - p.x;
+    const toCy = mouthCenter.y - p.y;
+    const toCz = mouthCenter.z - p.z;
+    const toLen = Math.hypot(toCx, toCy, toCz) || 1;
+    const compactAmt = amp * 0.18 * w * (1 - latScale);
+
+    let dx = -sideSign * left.x * inwardAmt + forward.x * fwdAmt + (toCx / toLen) * compactAmt;
+    let dy = -sideSign * left.y * inwardAmt + forward.y * fwdAmt + (toCy / toLen) * compactAmt;
+    let dz = -sideSign * left.z * inwardAmt + forward.z * fwdAmt + (toCz / toLen) * compactAmt;
+
+    // Kill most vertical component so pucker is width/protrusion-led.
+    const alongUp = dx * up.x + dy * up.y + dz * up.z;
+    dx -= up.x * alongUp * (1 - contract.verticalDamp);
+    dy -= up.y * alongUp * (1 - contract.verticalDamp);
+    dz -= up.z * alongUp * (1 - contract.verticalDamp);
+
+    affected += 1;
+    maxW = Math.max(maxW, w);
+    sumW += w;
+    arr[i * 3] = dx;
+    arr[i * 3 + 1] = dy;
+    arr[i * 3 + 2] = dz;
+    const d = Math.hypot(dx, dy, dz);
+    maxDisp = Math.max(maxDisp, d);
+    sumDisp += d;
+  }
+  morphPos.setArray(arr);
+
+  const posed = resolveFaceAnchorPositionsPosed(document, anchors, contract.morphName, 1);
+  const metricsN = computeFunctionalMetricsFromAnchors(neutral, frame);
+  const metricsP = computeFunctionalMetricsFromAnchors(posed, frame);
+  const width0 = metricsN?.mouthWidth ?? frame.mouthWidth0;
+  const widthP = metricsP?.mouthWidth ?? null;
+  const widthRatio = width0 && widthP != null ? widthP / width0 : null;
+
+  const dCorner = (id) => {
+    const a = neutral[id];
+    const b = posed[id];
+    if (!a || !b) return null;
+    return { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z };
+  };
+  const dL = dCorner('mouthCornerLeft');
+  const dR = dCorner('mouthCornerRight');
+  // Inward = component toward midplane (opposite of outward along left for left corner).
+  const leftInward =
+    dL != null ? -(dL.x * left.x + dL.y * left.y + dL.z * left.z) / frame.mouthWidth0 : null;
+  const rightInward =
+    dR != null ? (dR.x * left.x + dR.y * left.y + dR.z * left.z) / frame.mouthWidth0 : null;
+  const leftVert =
+    dL != null ? (dL.x * up.x + dL.y * up.y + dL.z * up.z) / frame.mouthWidth0 : null;
+  const rightVert =
+    dR != null ? (dR.x * up.x + dR.y * up.y + dR.z * up.z) / frame.mouthWidth0 : null;
+  const asymmetry =
+    leftInward != null && rightInward != null ? Math.abs(leftInward - rightInward) : null;
+
+  const midN = {
+    x: (neutral.mouthUpper.x + neutral.mouthLower.x) / 2,
+    y: (neutral.mouthUpper.y + neutral.mouthLower.y) / 2,
+    z: (neutral.mouthUpper.z + neutral.mouthLower.z) / 2,
+  };
+  const midP = {
+    x: (posed.mouthUpper.x + posed.mouthLower.x) / 2,
+    y: (posed.mouthUpper.y + posed.mouthLower.y) / 2,
+    z: (posed.mouthUpper.z + posed.mouthLower.z) / 2,
+  };
+  const forwardProtrusion =
+    ((midP.x - midN.x) * forward.x +
+      (midP.y - midN.y) * forward.y +
+      (midP.z - midN.z) * forward.z) /
+    frame.mouthWidth0;
+
+  const disp = (id) => {
+    const a = neutral[id];
+    const b = posed[id];
+    if (!a || !b) return null;
+    return dist3(a, b);
+  };
+
+  return {
+    morphIndex,
+    nodeIdentity,
+    primitiveIndex: primIndex,
+    vertexCount: n,
+    affectedVertices: affected,
+    maxWeight: maxW,
+    meanWeightAffected: affected ? sumW / affected : 0,
+    maxDisplacement: maxDisp,
+    meanDisplacementAffected: affected ? sumDisp / affected : 0,
+    amp,
+    forwardAmp,
+    mouthWidth0: width0,
+    mouthWidthPucker: widthP,
+    widthRatio,
+    faceHeight: frame.faceHeight,
+    morphPositionSha256: hashMorphPositionArray(arr),
+    leftCornerInward: leftInward,
+    rightCornerInward: rightInward,
+    leftCornerVertical: leftVert,
+    rightCornerVertical: rightVert,
+    asymmetry,
+    forwardProtrusion,
+    displacements: {
+      mouthCornerLeft: disp('mouthCornerLeft'),
+      mouthCornerRight: disp('mouthCornerRight'),
+      mouthUpper: disp('mouthUpper'),
+      mouthLower: disp('mouthLower'),
+      chin: disp('chin'),
+      noseTip: disp('noseTip'),
+      forehead: disp('forehead'),
+      browLeftInner: disp('browLeftInner'),
+      browRightInner: disp('browRightInner'),
+      eyeLeftOuter: disp('eyeLeftOuter'),
+      eyeRightOuter: disp('eyeRightOuter'),
+    },
+  };
+}
+
+/**
  * @param {string} channel
  * @param {import('@gltf-transform/core').Document} document
  * @param {Record<string, unknown>} anchors
@@ -841,6 +1093,9 @@ function rewriteChannelMorph(channel, document, anchors) {
   }
   if (channel === 'mouthSmileRight') {
     return rewriteMouthSmileMorph(document, anchors, MOUTH_SMILE_RIGHT_AUTHOR_CONTRACT_V1);
+  }
+  if (channel === 'mouthPucker') {
+    return rewriteMouthPuckerMorph(document, anchors, MOUTH_PUCKER_AUTHOR_CONTRACT_V1);
   }
   throw new Error(`unsupported_channel:${channel}`);
 }

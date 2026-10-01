@@ -1,0 +1,93 @@
+{
+  "oldPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-smile1.glb",
+  "newPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-pucker1.glb",
+  "carryOk": 21,
+  "carryTotal": 21,
+  "pass": true,
+  "detail": {
+    "browLeftCenter": {
+      "ok": true,
+      "d": 0
+    },
+    "browLeftInner": {
+      "ok": true,
+      "d": 0
+    },
+    "browLeftOuter": {
+      "ok": true,
+      "d": 0
+    },
+    "browRightCenter": {
+      "ok": true,
+      "d": 0
+    },
+    "browRightInner": {
+      "ok": true,
+      "d": 0
+    },
+    "browRightOuter": {
+      "ok": true,
+      "d": 0
+    },
+    "chin": {
+      "ok": true,
+      "d": 0
+    },
+    "eyeLeftInner": {
+      "ok": true,
+      "d": 0
+    },
+    "eyeLeftLower": {
+      "ok": true,
+      "d": 0
+    },
+    "eyeLeftOuter": {
+      "ok": true,
+      "d": 0
+    },
+    "eyeLeftUpper": {
+      "ok": true,
+      "d": 0
+    },
+    "eyeRightInner": {
+      "ok": true,
+      "d": 0
+    },
+    "eyeRightLower": {
+      "ok": true,
+      "d": 0
+    },
+    "eyeRightOuter": {
+      "ok": true,
+      "d": 0
+    },
+    "eyeRightUpper": {
+      "ok": true,
+      "d": 0
+    },
+    "forehead": {
+      "ok": true,
+      "d": 0
+    },
+    "mouthCornerLeft": {
+      "ok": true,
+      "d": 0
+    },
+    "mouthCornerRight": {
+      "ok": true,
+      "d": 0
+    },
+    "mouthLower": {
+      "ok": true,
+      "d": 0
+    },
+    "mouthUpper": {
+      "ok": true,
+      "d": 0
+    },
+    "noseTip": {
+      "ok": true,
+      "d": 0
+    }
+  }
+}

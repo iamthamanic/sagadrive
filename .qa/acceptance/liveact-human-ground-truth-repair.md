@@ -9,8 +9,8 @@ Reviewed Ground Truth for m5/f5, then Functional Face QA; repair morphs with GT-
 - [x] Stage A: face-anchor-agent-review-v1 → `agent_reviewed` for m5 and f5 (21/21, 5/5).
 - [x] Stage B: Functional Face QA against reviewed GT for m5 and f5.
 - [x] Stage B: QtMesh FaceRig reauthor on Functional FAIL (full path, MARKER_SIM=2, 3.41.1).
-- [ ] Stage B: Functional QA PASS after reauthor — **BLOCKED** (FaceRig-only path; other 6 channels still red).
-- [ ] VRM 1.0 publish + resolver sync — **blocked until all 7 channels PASS**.
+- [x] Stage B: Functional QA PASS after reauthor — **7/7 channels PASS** (Milestone 5); final Stage-B publish gate still pending.
+- [ ] VRM 1.0 publish + resolver sync — **blocked until final #423 publish gate** (packaging / packaged-VRM regression / resolver).
 
 ## Milestone: GT-aware jawOpen production authoring
 
@@ -142,7 +142,95 @@ Input: `*-face3-brow1.glb` → Output: `*-face3-smile1.glb`.
 
 Evidence: `…/{m5,f5}-face3/qa/smile1/`
 
-pucker / VRM / resolver / #424: **not started**.
+## Milestone: GT-aware mouthPucker production authoring
+
+### Preconditions
+- Milestone 4 complete (`95478d8` baseline); six prior Functional channels PASS
+- smile1 morph buffer hashes immutable regression baseline recorded
+- m5/f5 reviewed GT with mouth corner + lip anchors
+
+### Postconditions (m5 AND f5)
+- [x] `mouthPucker` aus reviewed GT / topology-derived perioral neighborhoods neu authored
+- [x] Alter ICT `mouthPucker` vollständig ersetzt (kein additiver Rest)
+- [x] Mouth width reduziert; beide Corners bewegen sich inward; bilateral
+- [x] Nose / Chin / Eyes / Brows protected
+- [x] jawOpen / blinks / browInnerUp / smiles Morph Hashes unverändert vs Milestone-4 Baseline
+- [x] Neutral Mesh unverändert; GT carry-forward 21/21
+- [x] Functional QA `mouthPucker` PASS; Functional Overall 7/7 PASS
+- [x] deterministisch; nur 7/51 Morphs vs FaceRig Base geändert
+- [x] Combination probes (pucker+jaw / smiles / blink / brow) ohne Regression
+- [x] Noch **kein** Publish / VRM / Resolver / #424
+
+## Edge Cases
+- [x] No threshold / gain / deadZone / filename validator exceptions.
+- [x] GT carry-forward invariant: neutral topology + bound triangle positions unchanged (21/21) after reauthor.
+- [x] Reauthor morph POSITION buffers proven byte-identical to public face1 → same Functional FAIL class (FaceRig path).
+- [x] Unreviewed / stale topology / stale SHA / missing anchors / unsupported channel → fail closed (author check).
+
+## Regression
+- [x] Generic GLB fallback untouched.
+- [x] No #424 retarget changes.
+
+## Stage B Debug (jawOpen)
+- [x] Pipeline hops reconstructed for m5 `jawOpen`.
+- [x] Mutation test: exporter/canonicalize **preserves** shape-key edits (Case A).
+- [x] Root cause: FaceRig does not consume reviewed anchors; MARKER_SIM=2 regenerates face1-identical ICT morphs that do not open mouth at GT lips/chin.
+- [x] f5 minimal confirm: same class.
+- Evidence: `assets/species-3d/human/runs/quality-20260930-m5-face3/qa/debug-jawopen/ROOT-CAUSE.md`
+
+## Solution Spike (no production code)
+- [x] Options A/B/C compared; Option A infeasible (FaceRig CLI has no external marker input).
+- [x] Recommended: FaceRig base + GT-aware rewrite of the seven Functional channels.
+- [x] jawOpen offline prototype: m5 −0.00049 → +0.074; f5 −0.00863 → +0.077 (both ≥0.06; upper stable; nose/forehead leak 0).
+- [x] Design updated: `.qa/design/liveact-human-ground-truth-repair.md` § GT-aware Functional Morph Authoring.
+- `/implement ready: YES`
+
+## Implementation Notes
+**Milestone 1 (jawOpen only) PASS for m5 and f5.** Baseline commit `a50ef23` — immutable; do not re-author.
+
+Module: `scripts/lib/liveact-face-functional-morph-author.mjs` (+ profile, CLI, behavioral check).
+Architecture: FaceRig base morphs → GT-aware full rewrite of required channels → Functional QA authoritative.
+
+| Asset | input SHA (16) | output SHA (16) | before gapΔ | after gapΔ | jawOpen |
+|-------|----------------|-----------------|-------------|------------|---------|
+| m5 | `134f5137019ec5b2` | `c610d9fccd6bc06c` | ≈ −0.00049 | +0.914 | PASS |
+| f5 | `a003a7acb04aa0bf` | `fdffea65effff020` | ≈ −0.00863 | +1.148 | PASS |
+
+Evidence: `…/{m5,f5}-face3/qa/jawopen1/`
+
+**Milestone 2 (eyeBlinkLeft / eyeBlinkRight) PASS for m5 and f5.** Baseline `62ed154` — immutable.
+
+Supported channels after M2: `jawOpen`, `eyeBlinkLeft`, `eyeBlinkRight`.
+Evidence: `…/{m5,f5}-face3/qa/blink1/`
+
+**Milestone 3 (browInnerUp) PASS.** Fachliche Baseline `8c832ac` (rebased → `7a8476b`).
+
+**Milestone 4 (mouthSmileLeft / mouthSmileRight) PASS for m5 and f5.**
+
+Supported channels: jawOpen, blinks, browInnerUp, mouthSmileLeft, mouthSmileRight.
+Prior morph hashes (jaw/blink/brow) **identical** to Milestone-3 baseline.
+Input: `*-face3-brow1.glb` → Output: `*-face3-smile1.glb`.
+
+| Asset | smileL cornerUp | smileR cornerUp | opp isolation | PASS |
+|-------|-----------------|-----------------|---------------|------|
+| m5 | +0.079 | +0.079 | 0 | yes |
+| f5 | +0.079 | +0.079 | 0 | yes |
+
+Evidence: `…/{m5,f5}-face3/qa/smile1/`
+
+**Milestone 5 (mouthPucker) PASS for m5 and f5.**
+
+Supported channels: all seven required Functional channels.
+Prior six morph hashes **identical** to Milestone-4 / smile1 baseline.
+Input: `*-face3-smile1.glb` → Output: `*-face3-pucker1.glb`.
+
+| Asset | widthRatio before | widthRatio after | L/R inward | PASS |
+|-------|-------------------|------------------|------------|------|
+| m5 | ≈ 0.975 | ≈ 0.850 | ≈ 0.075 / 0.075 | yes |
+| f5 | ≈ 0.998 | ≈ 0.850 | ≈ 0.075 / 0.075 | yes |
+
+Functional Overall **7/7 PASS**. Publish / VRM / Resolver / #424: **not started**.
+Evidence: `…/{m5,f5}-face3/qa/pucker1/`
 
 ## Screenshots
 | Step | Filename |

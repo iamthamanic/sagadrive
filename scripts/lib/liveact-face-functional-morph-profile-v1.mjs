@@ -14,6 +14,7 @@ export const FACE_FUNCTIONAL_MORPH_AUTHOR_PROFILE_VERSION =
 /**
  * Channels supported by this authoring profile.
  * Milestone 1: jawOpen. Milestone 2: blinks. Milestone 3: browInnerUp.
+ * Milestone 4: smiles. Milestone 5: mouthPucker.
  */
 export const FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1 = Object.freeze([
   'jawOpen',
@@ -22,6 +23,7 @@ export const FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1 = Object.freeze([
   'browInnerUp',
   'mouthSmileLeft',
   'mouthSmileRight',
+  'mouthPucker',
 ]);
 
 /**
@@ -237,4 +239,41 @@ export const MOUTH_SMILE_RIGHT_AUTHOR_CONTRACT_V1 = Object.freeze({
     'browRightInner',
   ]),
   ...MOUTH_SMILE_SHARED,
+});
+
+/**
+ * @typedef {{
+ *   morphName: 'mouthPucker';
+ *   requiredAnchors: string[];
+ *   moveRadiusFaceH: number;
+ *   ampMouthW: number;
+ *   forwardAmpMouthW: number;
+ *   verticalDamp: number;
+ * }} MouthPuckerAuthorContract
+ */
+
+/** @type {Readonly<MouthPuckerAuthorContract>} */
+export const MOUTH_PUCKER_AUTHOR_CONTRACT_V1 = Object.freeze({
+  morphName: 'mouthPucker',
+  requiredAnchors: Object.freeze([
+    'mouthCornerLeft',
+    'mouthCornerRight',
+    'mouthUpper',
+    'mouthLower',
+    'chin',
+    'noseTip',
+    'forehead',
+    'eyeLeftOuter',
+    'eyeRightOuter',
+    'browLeftInner',
+    'browRightInner',
+  ]),
+  // Perioral neighborhood — corners + lip perimeter strongest; falloff before nose/chin.
+  moveRadiusFaceH: 0.13,
+  // Lateral inward amp as fraction of neutral mouth width (both corners → width shrink).
+  ampMouthW: 0.075,
+  // Mild local forward protrusion along existing face-frame forward (not whole-mouth translate).
+  forwardAmpMouthW: 0.028,
+  // Suppress vertical corner drift so pucker is width-led, not jaw lift.
+  verticalDamp: 0.12,
 });

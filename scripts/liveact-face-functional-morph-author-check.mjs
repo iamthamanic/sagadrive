@@ -242,8 +242,9 @@ async function main() {
       FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('browInnerUp') &&
       FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('mouthSmileLeft') &&
       FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('mouthSmileRight') &&
-      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.length === 6,
-    'Milestone 4 supports jaw/blink/brow/smile L+R only',
+      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('mouthPucker') &&
+      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.length === 7,
+    'Milestone 5 supports jaw/blink/brow/smile L+R/pucker',
   );
   check(
     FACE_FUNCTIONAL_MORPH_AUTHOR_CONTRACT_VERSION.startsWith('SagaDrive'),
@@ -480,6 +481,82 @@ async function main() {
       'smileR deterministic morph hash',
     );
 
+    // --- Milestone 5: pucker on smile stack; prior six morph hashes immutable ---
+    const smileROut = join(work, 'smileR.glb');
+    const smileRAuth = await writeBundle(join(work, 'smileR-auth'), readFileSync(smileROut), fixture.anchors);
+    const smileStackHashes = hashAllMorphPositionBuffers(await io.readBinary(readFileSync(smileROut)));
+    const puckerOut = join(work, 'pucker.glb');
+    const pucker = await authorLiveActFunctionalMorph({
+      inputPath: smileRAuth.glbPath,
+      outputPath: puckerOut,
+      anchorsPath: smileRAuth.anchorsPath,
+      authoringPath: smileRAuth.authoringPath,
+      channel: 'mouthPucker',
+    });
+    check(pucker.channel === 'mouthPucker', 'authors mouthPucker');
+    check(pucker.channelStats.affectedVertices > 0, 'pucker affects vertices');
+    check(
+      (pucker.channelStats.widthRatio || 1) < 0.96,
+      'pucker reduces mouth width (widthRatio < 0.96)',
+    );
+    check((pucker.channelStats.leftCornerInward || 0) > 0.02, 'left corner moves inward');
+    check((pucker.channelStats.rightCornerInward || 0) > 0.02, 'right corner moves inward');
+    check(
+      (pucker.channelStats.leftCornerInward || 0) > 0 &&
+        (pucker.channelStats.rightCornerInward || 0) > 0,
+      'bilateral inward effect',
+    );
+    check((pucker.channelStats.asymmetry ?? 1) < 0.12, 'pucker asymmetry plausible');
+    check(
+      Math.abs(pucker.channelStats.leftCornerVertical || 0) < 0.04 &&
+        Math.abs(pucker.channelStats.rightCornerVertical || 0) < 0.04,
+      'corners avoid excessive vertical drift',
+    );
+    check((pucker.channelStats.displacements.noseTip || 0) < 1e-5, 'pucker nose ≈ 0');
+    check((pucker.channelStats.displacements.forehead || 0) < 1e-5, 'pucker forehead ≈ 0');
+    check((pucker.channelStats.displacements.browLeftInner || 0) < 1e-4, 'pucker browL protected');
+    check((pucker.channelStats.displacements.eyeLeftOuter || 0) < 1e-4, 'pucker eye protected');
+    check(
+      pucker.afterJawOpenMorphSha256 === r1.afterJawOpenMorphSha256,
+      'pucker preserves jawOpen morph hash',
+    );
+    const puckerDoc = await io.readBinary(readFileSync(puckerOut));
+    const puckerHashes = hashAllMorphPositionBuffers(puckerDoc);
+    for (const ch of [
+      'jawOpen',
+      'eyeBlinkLeft',
+      'eyeBlinkRight',
+      'browInnerUp',
+      'mouthSmileLeft',
+      'mouthSmileRight',
+    ]) {
+      check(
+        puckerHashes.get(ch) === smileStackHashes.get(ch),
+        `pucker preserves prior morph hash: ${ch}`,
+      );
+    }
+    check(
+      pucker.changedMorphs.length === 1 && pucker.changedMorphs[0] === 'mouthPucker',
+      'pucker only changes mouthPucker',
+    );
+    let other44 = true;
+    for (const [name, sha] of smileStackHashes) {
+      if (name === 'mouthPucker') continue;
+      if (puckerHashes.get(name) !== sha) other44 = false;
+    }
+    check(other44, 'all non-pucker morph hashes identical vs smile stack');
+    const pucker2 = await authorLiveActFunctionalMorph({
+      inputPath: smileRAuth.glbPath,
+      outputPath: join(work, 'pucker2.glb'),
+      anchorsPath: smileRAuth.anchorsPath,
+      authoringPath: smileRAuth.authoringPath,
+      channel: 'mouthPucker',
+    });
+    check(
+      pucker.afterChannelMorphSha256 === pucker2.afterChannelMorphSha256,
+      'pucker deterministic morph hash',
+    );
+
     let rejected = false;
     try {
       const unrevDir = join(work, 'unreviewed');
@@ -583,12 +660,54 @@ async function main() {
         outputPath: join(goodDir, 'bad-channel.glb'),
         anchorsPath: good.anchorsPath,
         authoringPath: good.authoringPath,
-        channel: 'mouthPucker',
+        channel: 'mouthFrownLeft',
       });
     } catch (err) {
       rejected = String(err.message || err).includes('unsupported_channel');
     }
     check(rejected, 'unsupported channel rejected');
+
+    rejected = false;
+    try {
+      const badAnchors = structuredClone(fixture.anchors);
+      delete badAnchors.anchors.mouthCornerLeft;
+      const miss = await writeBundle(join(work, 'missing-corner'), fixture.bytes, badAnchors);
+      await authorLiveActFunctionalMorph({
+        inputPath: miss.glbPath,
+        outputPath: join(work, 'missing-corner', 'out.glb'),
+        anchorsPath: miss.anchorsPath,
+        authoringPath: miss.authoringPath,
+        channel: 'mouthPucker',
+      });
+    } catch (err) {
+      rejected =
+        String(err.message || err).includes('required anchor') ||
+        String(err.message || err).includes('anchors_binding') ||
+        String(err.message || err).includes('ground_truth') ||
+        String(err.message || err).includes('face local frame');
+    }
+    check(rejected, 'missing mouth-corner anchor rejected');
+
+    rejected = false;
+    try {
+      const badAnchors = structuredClone(fixture.anchors);
+      delete badAnchors.anchors.mouthUpper;
+      const miss = await writeBundle(join(work, 'missing-lip'), fixture.bytes, badAnchors);
+      await authorLiveActFunctionalMorph({
+        inputPath: miss.glbPath,
+        outputPath: join(work, 'missing-lip', 'out.glb'),
+        anchorsPath: miss.anchorsPath,
+        authoringPath: miss.authoringPath,
+        channel: 'mouthPucker',
+      });
+    } catch (err) {
+      rejected =
+        String(err.message || err).includes('required anchor') ||
+        String(err.message || err).includes('anchors_binding') ||
+        String(err.message || err).includes('ground_truth') ||
+        String(err.message || err).includes('face local frame');
+    }
+    check(rejected, 'missing lip semantic anchor rejected');
 
     rejected = false;
     try {

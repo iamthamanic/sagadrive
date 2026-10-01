@@ -1,0 +1,181 @@
+{
+  "contractVersion": "SagaDriveLiveActFaceFunctionalQaV1",
+  "profileVersion": "liveact-face-functional-profile-v1",
+  "pass": true,
+  "skipped": false,
+  "blockedByGroundTruth": false,
+  "violations": [],
+  "channels": {
+    "jawOpen": {
+      "pass": true,
+      "poseWeight": 1,
+      "neutralMetrics": {
+        "mouthGap": 0.79680628
+      },
+      "posedMetrics": {
+        "mouthGap": 1.71125422,
+        "noseTipDispFaceH": 0,
+        "foreheadDispFaceH": 0
+      },
+      "deltas": {
+        "mouthGap": 0.91444794,
+        "noseTipDispFaceH": 0,
+        "foreheadDispFaceH": 0
+      },
+      "thresholds": {
+        "minMouthGapDelta": 0.06,
+        "maxNoseTipDispFaceH": 0.04,
+        "maxForeheadDispFaceH": 0.025
+      },
+      "violations": []
+    },
+    "eyeBlinkLeft": {
+      "pass": true,
+      "poseWeight": 1,
+      "neutralMetrics": {
+        "eyeOpenPrimary": 1.04206438,
+        "eyeOpenOpposite": 0.99565209
+      },
+      "posedMetrics": {
+        "eyeOpenPrimary": 0.16044075,
+        "eyeOpenOpposite": 0.99565209
+      },
+      "deltas": {
+        "openDrop": 0.88162363,
+        "openRatio": 0.15396433,
+        "oppositeRelChange": 0
+      },
+      "thresholds": {
+        "maxOpenRatio": 0.65,
+        "minOpenDrop": 0.05,
+        "maxOppositeRelChange": 0.2
+      },
+      "violations": []
+    },
+    "eyeBlinkRight": {
+      "pass": true,
+      "poseWeight": 1,
+      "neutralMetrics": {
+        "eyeOpenPrimary": 0.99565209,
+        "eyeOpenOpposite": 1.04206438
+      },
+      "posedMetrics": {
+        "eyeOpenPrimary": 0.15536653,
+        "eyeOpenOpposite": 1.04206438
+      },
+      "deltas": {
+        "openDrop": 0.84028556,
+        "openRatio": 0.156045,
+        "oppositeRelChange": 0
+      },
+      "thresholds": {
+        "maxOpenRatio": 0.65,
+        "minOpenDrop": 0.05,
+        "maxOppositeRelChange": 0.2
+      },
+      "violations": []
+    },
+    "browInnerUp": {
+      "pass": true,
+      "poseWeight": 1,
+      "neutralMetrics": {
+        "browInnerLiftL": 1.42769068,
+        "browInnerLiftR": 1.39005757
+      },
+      "posedMetrics": {
+        "browInnerLiftL": 1.56026347,
+        "browInnerLiftR": 1.53829146
+      },
+      "deltas": {
+        "browInnerLiftL": 0.13257279,
+        "browInnerLiftR": 0.14823389,
+        "meanLiftDelta": 0.14040334
+      },
+      "thresholds": {
+        "minMeanLiftDelta": 0.03,
+        "maxDownwardPerSide": 0.01
+      },
+      "violations": []
+    },
+    "mouthSmileLeft": {
+      "pass": true,
+      "poseWeight": 1,
+      "neutralMetrics": {},
+      "posedMetrics": {
+        "cornerUp": 0.07885977,
+        "cornerOut": 0.04337473,
+        "cornerMotion": 0.09
+      },
+      "deltas": {
+        "cornerUp": 0.07885977,
+        "cornerOut": 0.04337473,
+        "cornerMotion": 0.09,
+        "oppositeCornerUp": 0,
+        "upAdvantage": 0.07885977
+      },
+      "thresholds": {
+        "minCornerUp": 0.025,
+        "minCornerMotion": 0.03,
+        "minUpAdvantageOverOpposite": 0.015
+      },
+      "violations": []
+    },
+    "mouthSmileRight": {
+      "pass": true,
+      "poseWeight": 1,
+      "neutralMetrics": {},
+      "posedMetrics": {
+        "cornerUp": 0.07885909,
+        "cornerOut": 0.04337065,
+        "cornerMotion": 0.09
+      },
+      "deltas": {
+        "cornerUp": 0.07885909,
+        "cornerOut": 0.04337065,
+        "cornerMotion": 0.09,
+        "oppositeCornerUp": 0,
+        "upAdvantage": 0.07885909
+      },
+      "thresholds": {
+        "minCornerUp": 0.025,
+        "minCornerMotion": 0.03,
+        "minUpAdvantageOverOpposite": 0.015
+      },
+      "violations": []
+    },
+    "mouthPucker": {
+      "pass": true,
+      "poseWeight": 1,
+      "neutralMetrics": {
+        "mouthWidth": 0.07384723,
+        "mouthGap": 0.79680628
+      },
+      "posedMetrics": {
+        "mouthWidth": 0.06277341,
+        "mouthGap": 0.91965013,
+        "mouthWidthRatio": 0.85004421
+      },
+      "deltas": {
+        "mouthWidthRatio": 0.85004421,
+        "mouthGap": 0.12284385,
+        "forwardProtrusion": 0.01177888
+      },
+      "thresholds": {
+        "maxMouthWidthRatio": 0.92
+      },
+      "violations": []
+    }
+  },
+  "neutralShared": {
+    "mouthGap": 0.79680628,
+    "eyeOpenL": 1.04206438,
+    "eyeOpenR": 0.99565209,
+    "browInnerLiftL": 1.42769068,
+    "browInnerLiftR": 1.39005757,
+    "mouthWidth": 0.07384723
+  },
+  "groundTruth": {
+    "reason": null,
+    "topologyFingerprint": "v133002:t215832:m1"
+  }
+}
