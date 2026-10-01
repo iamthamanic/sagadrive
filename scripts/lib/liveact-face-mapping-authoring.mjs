@@ -6,6 +6,13 @@
  * Mapping source ≠ reviewStatus. Human review stays valid; agent_reviewed needs provenance.
  */
 
+import { existsSync } from 'node:fs';
+import { isAbsolute, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { verifyCompletedAgentReviewLedger } from './face-anchor-agent-review-orchestrate.mjs';
+
+const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+
 export const FACE_MAPPING_AUTHORING_CONTRACT_VERSION = 'SagaDriveFaceMappingAuthoringV1';
 
 export const FACE_MAPPING_AUTHORING_SOURCES = ['auto', 'manual', 'manual_override'];
@@ -72,6 +79,7 @@ function isValidAgentReviewProvenance(value) {
   if (r.requiredPasses !== 5) return false;
   if (typeof r.completedPasses !== 'number' || r.completedPasses !== 5) return false;
   if (r.aggregationPass !== true) return false;
+  if (typeof r.ledgerDir !== 'string' || !r.ledgerDir.trim()) return false;
   return isValidFaceMappingReviewedAtV1(r.aggregatedAt);
 }
 
@@ -96,7 +104,8 @@ export function resolveFaceMappingReviewStatus(authoring) {
 }
 
 /**
- * Publish/QA ground truth: human_reviewed (legacy) OR agent_reviewed with full provenance.
+ * Publish/QA ground truth: human_reviewed (legacy) OR agent_reviewed with full provenance
+ * AND a verifiable on-disk agent-review ledger (fail closed against hand-written JSON).
  * @param {unknown} authoring
  */
 export function isReviewedFaceMappingGroundTruth(authoring) {
@@ -114,7 +123,21 @@ export function isReviewedFaceMappingGroundTruth(authoring) {
   if (status === 'agent_reviewed') {
     if (record.source === 'manual' || record.source === 'manual_override') return false;
     if (record.source !== 'auto') return false;
-    return isValidAgentReviewProvenance(record.agentReview);
+    if (!isValidAgentReviewProvenance(record.agentReview)) return false;
+    const agentReview = /** @type {Record<string, unknown>} */ (record.agentReview);
+    const asset = /** @type {Record<string, unknown>} */ (record.asset || {});
+    const ledgerRaw = String(agentReview.ledgerDir || '');
+    const ledgerDir = isAbsolute(ledgerRaw) ? ledgerRaw : resolve(REPO_ROOT, ledgerRaw);
+    if (!existsSync(ledgerDir)) return false;
+    const verified = verifyCompletedAgentReviewLedger({
+      ledgerDir,
+      expectedEvidenceManifestSha256: String(agentReview.evidenceManifestSha256),
+      expectedModelSha256: typeof asset.modelSha256 === 'string' ? asset.modelSha256 : undefined,
+      expectedAnchorsSha256: typeof asset.anchorsSha256 === 'string' ? asset.anchorsSha256 : undefined,
+      expectedTopologyFingerprint:
+        typeof asset.topologyFingerprint === 'string' ? asset.topologyFingerprint : undefined,
+    });
+    return verified.ok;
   }
   return false;
 }
@@ -268,6 +291,7 @@ export function createAutoUnreviewedFaceMappingAuthoring(input) {
  *   topologyFingerprint: string;
  *   evidenceManifestSha256: string;
  *   aggregatedAt: string;
+ *   ledgerDir: string;
  *   cacheBust?: string;
  *   note?: string;
  * }} input
@@ -293,6 +317,7 @@ export function createAgentReviewedFaceMappingAuthoring(input) {
       completedPasses: 5,
       aggregationPass: true,
       aggregatedAt: input.aggregatedAt,
+      ledgerDir: input.ledgerDir,
     },
     ...(input.note ? { note: input.note } : {}),
   };

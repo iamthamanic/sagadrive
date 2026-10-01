@@ -275,6 +275,20 @@ export function validateFaceAnchorAgentReviewPassReport(
       }
       if (typeof row.needsHuman !== 'boolean') errors.push(`${id}:needsHuman_invalid`);
       if (typeof row.conciseReason !== 'string') errors.push(`${id}:reason_invalid`);
+      if (!Array.isArray(row.evidenceViews) || row.evidenceViews.length === 0) {
+        errors.push(`${id}:evidenceViews_missing_or_empty`);
+      } else {
+        const views = row.evidenceViews as unknown[];
+        const seenViews = new Set<string>();
+        for (const v of views) {
+          const view = String(v || '');
+          if (!(FACE_ANCHOR_AGENT_REVIEW_EVIDENCE_VIEWS as readonly string[]).includes(view)) {
+            errors.push(`${id}:evidenceViews_invalid:${view}`);
+          }
+          if (seenViews.has(view)) errors.push(`${id}:evidenceViews_duplicate:${view}`);
+          seenViews.add(view);
+        }
+      }
     }
     for (const id of SAGA_DRIVE_FACE_ANCHOR_IDS) {
       if (!seen.has(id)) errors.push(`missing_anchor:${id}`);
@@ -311,6 +325,18 @@ export function aggregateFaceAnchorAgentReviews(input: {
   const indices = new Set(input.passes.map((p) => p.passIndex));
   for (let i = 1; i <= 5; i += 1) {
     if (!indices.has(i as 1 | 2 | 3 | 4 | 5)) reasons.push(`missing_pass_${i}`);
+  }
+
+  const reviewerIds: string[] = [];
+  for (const pass of input.passes) {
+    const rid = typeof pass.reviewerId === 'string' ? pass.reviewerId.trim() : '';
+    if (!rid) reasons.push(`pass_${pass.passIndex}_missing_reviewer_id`);
+    else reviewerIds.push(rid);
+  }
+  if (reviewerIds.length === FACE_ANCHOR_AGENT_REVIEW_REQUIRED_PASSES) {
+    if (new Set(reviewerIds).size !== reviewerIds.length) {
+      reasons.push('duplicate_reviewer_identity');
+    }
   }
 
   for (const pass of input.passes) {

@@ -140,19 +140,59 @@ const { createServer } = await import('node:http');
 const { extname } = await import('node:path');
 
 const PUBLIC_DIR = join(root, 'public');
+const MIME = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.mjs': 'text/javascript',
+  '.json': 'application/json',
+  '.glb': 'model/gltf-binary',
+  '.vrm': 'model/gltf-binary',
+  '.png': 'image/png',
+  '.css': 'text/css',
+};
+
+function safeJoin(base, rel) {
+  const full = resolve(base, rel.replace(/^\//, ''));
+  if (!full.startsWith(base)) return null;
+  return full;
+}
+
 const server = createServer((req, res) => {
   const url = new URL(req.url || '/', 'http://127.0.0.1');
   let rel = decodeURIComponent(url.pathname);
-  if (rel === '/') rel = '/index.html';
-  const filePath = join(PUBLIC_DIR, rel.replace(/^\//, ''));
-  if (!filePath.startsWith(PUBLIC_DIR) || !existsSync(filePath)) {
+  if (rel === '/') rel = '/face-agent-review-capture.html';
+
+  // Serve candidate model / anchors from repo paths (not only public/).
+  if (rel.startsWith('/__model')) {
+    const filePath = modelPath.startsWith('http') ? null : modelPath;
+    if (!filePath || !existsSync(filePath)) {
+      res.writeHead(404);
+      res.end('model not found');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': MIME[extname(filePath)] || 'application/octet-stream' });
+    res.end(readFileSync(filePath));
+    return;
+  }
+  if (rel.startsWith('/__anchors')) {
+    if (!existsSync(anchorsPath)) {
+      res.writeHead(404);
+      res.end('anchors not found');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(readFileSync(anchorsPath));
+    return;
+  }
+
+  const filePath = safeJoin(PUBLIC_DIR, rel);
+  if (!filePath || !existsSync(filePath)) {
     res.writeHead(404);
     res.end('not found');
     return;
   }
   const ext = extname(filePath);
-  const types = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.glb': 'model/gltf-binary', '.vrm': 'model/gltf-binary', '.png': 'image/png' };
-  res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream' });
+  res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
   res.end(readFileSync(filePath));
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
@@ -164,19 +204,20 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 
-// Harness expects window.__SAGA_FACE_AGENT_REVIEW_CAPTURE__ exposed by Face Setup when present.
-const harnessUrl = `http://127.0.0.1:${port}/?faceAgentReviewCapture=1&model=${encodeURIComponent(modelArg)}`;
-await page.goto(harnessUrl, { waitUntil: 'domcontentloaded', timeout: 120_000 });
+const modelQuery = modelPath.startsWith('http') ? modelArg : '/__model';
+const harnessUrl =
+  `http://127.0.0.1:${port}/face-agent-review-capture.html` +
+  `?faceAgentReviewCapture=1` +
+  `&model=${encodeURIComponent(modelQuery)}` +
+  `&anchors=${encodeURIComponent('/__anchors')}`;
+await page.goto(harnessUrl, { waitUntil: 'networkidle', timeout: 120_000 });
 
-const hasHook = await page.evaluate(() => typeof window.__SAGA_FACE_AGENT_REVIEW_CAPTURE__ === 'function');
-if (!hasHook) {
-  await browser.close();
-  server.close();
-  console.error(
-    'Harness hook window.__SAGA_FACE_AGENT_REVIEW_CAPTURE__ missing. Use Face Setup capture page or --plan-only.',
-  );
-  process.exit(1);
-}
+await page.waitForFunction(
+  () =>
+    typeof window.__SAGA_FACE_AGENT_REVIEW_CAPTURE__ === 'function' &&
+    window.__SAGA_FACE_AGENT_REVIEW_CAPTURE_READY__ === true,
+  { timeout: 120_000 },
+);
 
 /** @type {Array<Record<string, unknown>>} */
 const shots = [];

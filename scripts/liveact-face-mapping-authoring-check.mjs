@@ -148,9 +148,17 @@ const agentGt = domainMod.createAgentReviewedFaceMappingAuthoring({
   topologyFingerprint: 'v1:t1:m1',
   evidenceManifestSha256: agentSha,
   aggregatedAt: '2026-09-22T00:00:00.000Z',
+  ledgerDir: '.qa/runs/face-anchor-agent-review-v1-orch/tmp-run/agent-review',
 });
 check(domainMod.isReviewedFaceMappingGroundTruth(agentGt), 'agent_reviewed with provenance is GT');
 check(domainMod.validateFaceMappingAuthoringV1(agentGt).ok, 'agent authoring validates');
+check(
+  !isReviewedFaceMappingGroundTruth({
+    ...agentGt,
+    agentReview: { ...agentGt.agentReview, ledgerDir: '.qa/runs/missing-ledger' },
+  }),
+  'offline rejects agent GT without real ledger',
+);
 check(
   domainMod.canApplyAgentReviewToAuthoring(reviewedManual).ok === false,
   'human_reviewed immutable vs agent',

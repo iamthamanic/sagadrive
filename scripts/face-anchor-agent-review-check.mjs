@@ -23,10 +23,12 @@ import {
   evaluateFaceAnchorAgentReviewDeterministicGate,
   sha256Hex,
   validateFaceAnchorAgentReviewEvidenceManifest,
+  validateFaceAnchorAgentReviewPassReport,
 } from './lib/face-anchor-agent-review-v1.mjs';
 import {
   assertScreenshotEvidenceOnDisk,
   runFaceAnchorAgentReviewOrchestration,
+  verifyCompletedAgentReviewLedger,
 } from './lib/face-anchor-agent-review-orchestrate.mjs';
 import {
   canApplyAgentReviewToAuthoring,
@@ -72,11 +74,13 @@ check(/face-anchor-agent-review-v1/.test(barrel), 'barrel exports agent review')
 check(/agent_reviewed|face-anchor-agent-review-v1/.test(faceDoc), 'FACE-AUTHORING docs');
 check(/checkFaceAnchorAgentReview|face-anchor-agent-review-check/.test(gate), 'test-gate wiring');
 check(/FACE_ANCHOR_AGENT_REVIEW_CAPTURE_MATRIX|yaw_left_35/.test(capture), 'capture matrix');
-check(/reviewPassFn/.test(orch), 'orchestrator isolated passes');
-check(/structuredClone|Fresh context|prior/.test(orch), 'no cross-pass leak');
-check(FACE_ANCHOR_AGENT_REVIEW_REQUIRED_PASSES === 5, 'offline required passes 5');
-check(FACE_ANCHOR_AGENT_REVIEW_CAPTURE_MATRIX.length === 7, '7 capture views');
-check(FACE_ANCHOR_AGENT_REVIEW_EVIDENCE_VIEWS.length === 7, '7 evidence views');
+check(/assertScreenshotEvidenceOnDisk/.test(orch), 'orch exports disk assert');
+check(/verifyCompletedAgentReviewLedger/.test(orch), 'orch exports ledger verify');
+check(existsSync(join(root, 'public/face-agent-review-capture.html')), 'harness html');
+check(existsSync(join(root, 'public/face-agent-review-capture.mjs')), 'harness module');
+check(/__SAGA_FACE_AGENT_REVIEW_CAPTURE__/.test(read('public/face-agent-review-capture.mjs')), 'harness hook');
+check(/face-agent-review-capture\.html/.test(capture), 'capture serves harness page');
+check(/ledgerDir/.test(authoring), 'authoring provenance requires ledgerDir');
 
 const SHAF = (s) => createHash('sha256').update(s).digest('hex');
 const modelSha = SHAF('model-bytes');
@@ -240,6 +244,72 @@ const evidenceSha = 'e'.repeat(64);
   check(agg.outcome === 'human_review_required', '5 PASS + deterministic FAIL blocks');
 }
 
+// Duplicate reviewer identity across 5 passes
+{
+  const passes = [1, 2, 3, 4, 5].map((i) => {
+    const p = makePass(/** @type {any} */ (i));
+    p.reviewerId = 'same-reviewer';
+    return p;
+  });
+  const agg = aggregateFaceAnchorAgentReviews({
+    deterministic: allPassDeterministic(),
+    evidenceManifestSha256: evidenceSha,
+    passes,
+    aggregatedAt: now,
+  });
+  check(agg.outcome === 'human_review_required', 'duplicate reviewerId blocks');
+  check(agg.reasons.includes('duplicate_reviewer_identity'), 'duplicate_reviewer_identity reason');
+}
+
+// evidenceViews required on each finding
+{
+  const pass = makePass(1, (findings) => {
+    delete findings[0].evidenceViews;
+  });
+  const validated = validateFaceAnchorAgentReviewPassReport(pass, {
+    evidenceManifestSha256: evidenceSha,
+    modelSha256: modelSha,
+    anchorsSha256: anchorsSha,
+    topologyFingerprint: topo,
+    passIndex: 1,
+  });
+  check(!validated.ok, 'missing evidenceViews blocked');
+  check(
+    validated.errors.some((e) => e.includes('evidenceViews_missing_or_empty')),
+    'evidenceViews_missing_or_empty',
+  );
+}
+{
+  const pass = makePass(1, (findings) => {
+    findings[0].evidenceViews = [];
+  });
+  check(
+    !validateFaceAnchorAgentReviewPassReport(pass, {
+      evidenceManifestSha256: evidenceSha,
+      modelSha256: modelSha,
+      anchorsSha256: anchorsSha,
+      topologyFingerprint: topo,
+      passIndex: 1,
+    }).ok,
+    'empty evidenceViews blocked',
+  );
+}
+{
+  const pass = makePass(1, (findings) => {
+    findings[0].evidenceViews = ['not_a_view'];
+  });
+  check(
+    !validateFaceAnchorAgentReviewPassReport(pass, {
+      evidenceManifestSha256: evidenceSha,
+      modelSha256: modelSha,
+      anchorsSha256: anchorsSha,
+      topologyFingerprint: topo,
+      passIndex: 1,
+    }).ok,
+    'invalid evidenceViews blocked',
+  );
+}
+
 // Domain bundle parity
 const runsDir = join(root, '.qa/runs');
 mkdirSync(runsDir, { recursive: true });
@@ -344,6 +414,7 @@ const manualFakesAgent = {
     completedPasses: 5,
     aggregationPass: true,
     aggregatedAt: now,
+    ledgerDir: '/tmp/nonexistent-agent-review-ledger',
   },
 };
 check(!authMod.isReviewedFaceMappingGroundTruth(manualFakesAgent), 'manual cannot fake agent');
@@ -354,24 +425,24 @@ check(
   'manual_source_fakes_agent_review issue',
 );
 
-const agentOk = authMod.createAgentReviewedFaceMappingAuthoring({
+// Fake completedPasses/aggregation without ledger must not be offline GT
+const fakeAgentNoLedger = authMod.createAgentReviewedFaceMappingAuthoring({
   modelPath: 'assets/x.glb',
   modelSha256: modelSha,
   anchorsSha256: anchorsSha,
   topologyFingerprint: topo,
   evidenceManifestSha256: 'b'.repeat(64),
   aggregatedAt: now,
+  ledgerDir: '.qa/runs/does-not-exist-agent-review',
 });
-check(agentOk.reviewStatus === 'agent_reviewed', 'builder agent status');
-check(authMod.isReviewedFaceMappingGroundTruth(agentOk), 'agent_reviewed is GT');
-check(authMod.validateFaceMappingAuthoringV1(agentOk).ok, 'agent authoring validates');
+check(fakeAgentNoLedger.reviewStatus === 'agent_reviewed', 'builder agent status');
+check(authMod.isReviewedFaceMappingGroundTruth(fakeAgentNoLedger), 'domain accepts ledgerDir pointer shape');
+check(authMod.validateFaceMappingAuthoringV1(fakeAgentNoLedger).ok, 'agent authoring validates shape');
+check(!isReviewedFaceMappingGroundTruth(fakeAgentNoLedger), 'offline rejects missing ledger');
 
-// Offline mirror parity
-check(isReviewedFaceMappingGroundTruth(agentOk), 'offline agent GT');
 check(resolveFaceMappingReviewStatus(legacyHuman) === 'human_reviewed', 'offline legacy');
 check(canApplyAgentReviewToAuthoring(human).ok === false, 'offline immutable');
 check(createAutoUnreviewedFaceMappingAuthoring({ modelPath: 'a' }).reviewStatus === 'unreviewed', 'offline unreviewed');
-check(validateFaceMappingAuthoringV1(agentOk).ok, 'offline validates agent');
 
 // Orchestration temps live under .qa/runs (never commit generated evidence).
 const fixtureRoot = join(root, '.qa/runs/face-anchor-agent-review-v1-orch');
@@ -389,6 +460,29 @@ for (const view of FACE_ANCHOR_AGENT_REVIEW_EVIDENCE_VIEWS) {
 
 const disk = assertScreenshotEvidenceOnDisk(manifest, evidenceDir);
 check(disk.ok, 'screenshot evidence on disk');
+
+// Valid manifest but missing files on disk → orch fail closed before reviewers
+const missingShotsRun = join(fixtureRoot, 'tmp-missing-shots');
+mkdirSync(join(missingShotsRun, 'agent-review', 'evidence'), { recursive: true });
+let missingShotVision = 0;
+const missingShotsOrch = await runFaceAnchorAgentReviewOrchestration({
+  runDir: missingShotsRun,
+  evidenceManifest: manifest,
+  deterministicInput: allPassDeterministicInput(),
+  anchorsJson: {},
+  modelSha256: modelSha,
+  anchorsSha256: anchorsSha,
+  topologyFingerprint: topo,
+  candidateModelPath: manifest.candidateModelPath,
+  nowIso: now,
+  reviewPassFn: async () => {
+    missingShotVision += 1;
+    throw new Error('should not run without screenshot bytes');
+  },
+});
+check(missingShotsOrch.outcome === 'human_review_required', 'missing screenshot bytes block orch');
+check(missingShotsOrch.blocked === 'evidence', 'missing shots blocked=evidence');
+check(missingShotVision === 0, 'no reviewer without screenshots');
 
 // JSON-only: empty evidence dir
 const emptyRun = join(fixtureRoot, 'tmp-json-only');
@@ -486,6 +580,16 @@ check(fullOrch.outcome === 'agent_reviewed', 'orch 5/5 → agent_reviewed');
 check(existsSync(join(runTmp, 'agent-review', 'provenance.json')), 'provenance persisted');
 check(existsSync(join(runTmp, 'agent-review', 'passes', 'pass-5.json')), 'pass-5 persisted');
 
+const ledgerDir = join(runTmp, 'agent-review');
+const ledgerOk = verifyCompletedAgentReviewLedger({
+  ledgerDir,
+  expectedEvidenceManifestSha256: fullOrch.evidenceManifestSha256,
+  expectedModelSha256: modelSha,
+  expectedAnchorsSha256: anchorsSha,
+  expectedTopologyFingerprint: topo,
+});
+check(ledgerOk.ok, `completed ledger verifies (${ledgerOk.errors?.join(',') || 'ok'})`);
+
 const built = createAgentReviewedFaceMappingAuthoring({
   modelPath: manifest.candidateModelPath,
   modelSha256: modelSha,
@@ -493,8 +597,58 @@ const built = createAgentReviewedFaceMappingAuthoring({
   topologyFingerprint: topo,
   evidenceManifestSha256: fullOrch.evidenceManifestSha256,
   aggregatedAt: now,
+  ledgerDir,
 });
-check(isReviewedFaceMappingGroundTruth(built), 'final authoring GT from orch');
+check(isReviewedFaceMappingGroundTruth(built), 'final authoring GT from orch ledger');
+check(validateFaceMappingAuthoringV1(built).ok, 'offline validates agent with ledger');
+
+// Hand-written completedPasses=5 without real ledger artifacts
+const fakeCompleted = {
+  ...built,
+  agentReview: {
+    ...built.agentReview,
+    ledgerDir: join(fixtureRoot, 'tmp-missing-shots', 'agent-review'),
+  },
+};
+check(!isReviewedFaceMappingGroundTruth(fakeCompleted), 'fake completedPasses without ledger blocked');
+
+// Copied/reused pass identity via orch reviewer slot mismatch
+const copiedRun = join(fixtureRoot, 'tmp-copied-pass');
+mkdirSync(join(copiedRun, 'agent-review', 'evidence', 'shots'), { recursive: true });
+for (const view of FACE_ANCHOR_AGENT_REVIEW_EVIDENCE_VIEWS) {
+  writeFileSync(join(copiedRun, 'agent-review', 'evidence', 'shots', `${view}.png`), pngBytes);
+}
+const copiedOrch = await runFaceAnchorAgentReviewOrchestration({
+  runDir: copiedRun,
+  evidenceManifest: manifest,
+  deterministicInput: allPassDeterministicInput(),
+  anchorsJson: {},
+  modelSha256: modelSha,
+  anchorsSha256: anchorsSha,
+  topologyFingerprint: topo,
+  candidateModelPath: manifest.candidateModelPath,
+  nowIso: now,
+  reviewPassFn: async (ctx) => {
+    // Copy pass-1 identity onto every slot
+    return {
+      protocolVersion: FACE_ANCHOR_AGENT_REVIEW_PROTOCOL_VERSION,
+      passIndex: ctx.passIndex,
+      reviewerId: 'agent-pass-1',
+      evidenceManifestSha256: ctx.evidenceManifestSha256,
+      modelSha256: ctx.modelSha256,
+      anchorsSha256: ctx.anchorsSha256,
+      topologyFingerprint: ctx.topologyFingerprint,
+      findings: buildAllPassAgentReviewFindings(),
+      reviewedAt: now,
+    };
+  },
+});
+check(copiedOrch.outcome === 'human_review_required', 'copied reviewerId blocked by orch');
+check(
+  String(copiedOrch.blocked || '').includes('invalid') ||
+    (copiedOrch.aggregation?.reasons || []).some((r) => String(r).includes('reviewer')),
+  'copied reviewer reason present',
+);
 
 // Acceptance + design docs
 check(existsSync(join(root, '.qa/design/face-anchor-agent-review-v1.md')), 'design doc');

@@ -51,6 +51,11 @@ export interface FaceMappingAgentReviewProvenanceV1 {
   readonly aggregationPass: boolean;
   /** ISO-UTC with milliseconds when aggregation finalized. */
   readonly aggregatedAt: string;
+  /**
+   * Path to the `agent-review/` ledger directory (absolute or repo-relative).
+   * Required so Ground Truth cannot be faked from sidecar literals alone.
+   */
+  readonly ledgerDir: string;
 }
 
 export interface SagaDriveFaceMappingAuthoringV1 {
@@ -172,6 +177,7 @@ function isValidAgentReviewProvenance(value: unknown): value is FaceMappingAgent
   if (r.requiredPasses !== 5) return false;
   if (typeof r.completedPasses !== 'number' || r.completedPasses !== 5) return false;
   if (r.aggregationPass !== true) return false;
+  if (typeof r.ledgerDir !== 'string' || !r.ledgerDir.trim()) return false;
   return isValidFaceMappingReviewedAtV1(r.aggregatedAt);
 }
 
@@ -373,6 +379,8 @@ export function createAgentReviewedFaceMappingAuthoring(input: {
   topologyFingerprint: string;
   evidenceManifestSha256: string;
   aggregatedAt: string;
+  /** Path to completed `agent-review/` ledger (required for verifiable GT). */
+  ledgerDir: string;
   cacheBust?: string;
   note?: string;
 }): SagaDriveFaceMappingAuthoringV1 {
@@ -396,6 +404,7 @@ export function createAgentReviewedFaceMappingAuthoring(input: {
       completedPasses: 5,
       aggregationPass: true,
       aggregatedAt: input.aggregatedAt,
+      ledgerDir: input.ledgerDir,
     },
     ...(input.note ? { note: input.note } : {}),
   };
