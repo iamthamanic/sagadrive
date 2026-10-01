@@ -272,6 +272,14 @@ function checkAdaptiveSharedUiPrimitives() {
   });
 }
 
+function checkMobileUiQualityGate() {
+  console.log('Mobile UI quality gate (#483): Playwright matrix + adaptive helpers...');
+  execFileSync(process.execPath, ['scripts/mobile-ui-quality-gate-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkInventoryE2eIntegration() {
   console.log('Inventory v2 E2E integration (#114): child gates, architecture, docs sync, catalog size, inventory_v2 save...');
   execFileSync(process.execPath, ['scripts/inventory-e2e-integration-check.mjs'], {
@@ -1496,6 +1504,7 @@ checkInventoryWorldCatalogUi();
 checkInventoryEquipmentUi();
 checkInventoryMobileUi();
 checkAdaptiveSharedUiPrimitives();
+checkMobileUiQualityGate();
 checkInventoryE2eIntegration();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
