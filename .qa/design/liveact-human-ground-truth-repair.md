@@ -619,3 +619,182 @@ Omit GT author step → previous FaceRig-only GLB (known Functional FAIL). Publi
 **Size:** one focused offline author module + CLI + check + run orchestration; no UI.
 
 **Tests:** unit fixtures for jawOpen gap/stability; extend per channel; full asset check on m5/f5; test-gate wiring; no production publish inside unit tests.
+
+---
+
+# Coupled Facial Shell Contract
+
+**Status:** Option C **implemented** in production authoring path (2026-10-01). Predicate consistency clarified: skin joints are never primary allowlist; `neck`-only shells remain valid.
+
+**Evidence:**
+- `qa/debug-jawopen-interface/` (residual RCA class C, 92%)
+- `qa/debug-jawopen-interface/spike-coupled-shell/option-c-final.json`
+- Asset evidence: `qa/jawopen-coupled-shell1/` (m5/f5)
+## Problem
+
+After GT-bound topology surface gating fixed Euclidean body leakage (Root Cause A), m5 `jawOpen` still Visual FAIL.
+
+Root Cause C (proven):
+
+- Primary mouth components move (e.g. m5 206/210/297).
+- Disconnected near-shell **comp 292** stays at morph Δ=0.
+- Coincident vertex pairs (neutral distance **0**, both ~90% `neck`).
+- Interface gap opens 0 → ~6.2 mm at weight 1 → under-chin silhouette seam.
+- Defect is in **raw morph POSITION**, not skinning/shading; mouth tris are not needle-thin.
+
+Current ownership rule:
+
+```text
+same connected component → deform
+different connected component → Δ = 0
+```
+
+is correct for unrelated body shells, **too strict** for multi-shell facial contact surfaces.
+
+## Required ownership model
+
+```text
+GT-bound facial surface (primary)
++ deterministic directly-coupled seam patches on secondary shells
+→ coordinated local motion
+
+unrelated nearby body shell
+→ Δ = 0
+```
+
+Channel-scoped application (jawOpen when seam detected). Detection utility may be shared; do **not** globally cross-couple every functional morph.
+
+## Existing geometry support (reuse)
+
+| Capability | Location | Role |
+|------------|----------|------|
+| Triangle adjacency / mean edge | `liveact-face-functional-morph-surface.mjs` `buildPrimitiveAdjacency` | Seam proximity scale |
+| Connected components | `connectedComponentMask` / component BFS | Primary ownership |
+| GT triangle → verts | `resolveGtBoundTriangleVertices` | Authoritative seeds |
+| Topology hops on mask | `topologyDistancesOnAllowed` | Primary locality + secondary patch falloff |
+| GT surface gate | `buildGtBoundSurfaceGate` | Primary mouth cluster |
+| Face frame / faceH | `buildFaceLocalFrame` | Normalized tolerances |
+| Skin JOINTS/WEIGHTS | glTF accessors (secondary veto only) | Whole-comp body majority veto |
+| Morph POSITION | existing author rewrite | Motion transfer target |
+
+**Not sufficient alone:** Euclidean distance, bone names, material identity, primitive identity, connected-component alone.
+
+**Do not add:** new geometry framework, runtime coupling, recursive component graphs.
+
+## Dataset (offline)
+
+### Positives (must couple / safe facial dual-shell)
+- m5 mouth ↔ **comp 292** (known visual seam; coincide=62; wholeBody=0; gapNow≈0.010 → projected 0 after nearest transfer)
+- m5 additional facial dual-shells auto-detected: 176, 341, 189 (wholeBody=0, faceF=1)
+- f5 facial dual-shell **497** (coincide=12; optional; does not harm body safety)
+
+### Negatives (must stay Δ=0)
+- m5 **65** (chin/Spine shell; wholeBody≈0.84; coincident with mouth but body-majority)
+- m5 **284** (Spine/Shoulder shell; wholeBody≈0.86)
+- f5 **105**, **1071**, **1975** (body-majority near mouth; wholeBody≥0.83)
+
+### Separating features (combined)
+1. **Sustained coincident interface** (≥10 pairs at `τ_coincide = 0.12 * meanEdgeLength`) — PRIMARY
+2. **Normal compatibility** (mean interface normal· ≥ 0.55) — PRIMARY
+3. **GT locality** (median interface dist to mouth/chin/corner anchors ≤ `0.18 * faceH`) — PRIMARY
+4. **Whole-component body veto** (Spine/Shoulder/Chest/… majority > 0.35 ⇒ reject entire secondary) — SECONDARY skin veto only
+5. **Patch body veto** after interface BFS: body-family (spine/shoulder/chest/…) ≤ 0.12 — SECONDARY skin veto only
+
+**Skin naming clarification (predicate consistency):**
+- `body-family` = spine|shoulder|clavicle|chest|torso|upperchest|abdomen|arm|hand
+- `non-body / craniofacial skin` = everything else, **including `neck`**, plus head|jaw when present
+- There is **NO** gate requiring `Head`/`Jaw` weight ≥ 0.55
+- Offline `faceF` metrics counted `head|neck|jaw` as craniofacial; **`neck` alone is sufficient** (m5 292 = 100% `neck`, faceF=1)
+- Skin joints are **never** the primary allowlist / ownership source
+
+## Options compared
+
+### Option A — Interface correspondence → whole secondary component
+Fit for 292, but **too coarse**: body-majority comps with a facial interface tip would move entire Spine shells if only interface gates were used. Rejected as primary algorithm (may inform detection, not ownership extent).
+
+### Option B — Component coupling graph
+Same coarseness risk + transitive propagation hazard (mouth→shell→neck→chest). Rejected.
+
+### Option C — Explicit Seam / Surface-Patch Coupling (**RECOMMENDED**)
+```text
+primary = GT mouth components ∩ topology-local hops
+find secondary verts coincident with primary contact set
+gate: coincide + normals + GT locality + wholeCompBody ≤ 0.35
+seed secondary interface → BFS patch hops ≤ f(τ_near/meanEdge)
+transfer nearest-primary jaw delta onto patch with topology falloff
+secondary MUST NOT couple further components
+```
+Offline: m5 292 PASS; 65/284 REJECT; no body FP; f5 body REJECT; projected coincident gap → 0.
+
+### Option D — YAGNI (keep hard component cut)
+Leaves m5 Visual FAIL; blocks #423 publish. Documented as unacceptable end-state given Root Cause C.
+
+## Decision
+
+**Implement Option C** inside the existing Functional Morph Authoring boundary:
+
+> Resolve the anatomically owned surface patch for a reviewed GT functional region, including deterministic directly-coupled seam patches.
+
+Motion transfer (preferred): **nearest primary vertex delta** (optionally barycentric closest primary triangle) + **topology falloff** on the secondary patch. Primary amplitude contract unchanged (`min(faceH×0.12, mouthW×0.16, neutralGap×0.22)`).
+
+## Algorithm sketch (for `/implement`, not coded here)
+
+1. Build primary via existing `buildGtBoundSurfaceGate` + hop cap.
+2. Contact set = primary verts with channel delta > ε (else full primary).
+3. For each non-primary component, collect secondary verts with dist ≤ `τ_near` to contact set; count coincide ≤ `τ_coincide`.
+4. Reject if whole-component body-joint fraction > 0.35.
+5. Reject if coincide < 10 OR mean normal· < 0.55 OR median GT dist > `0.18*faceH`.
+6. Patch = BFS from coincide seeds on that component only, hops ≤ `ceil(τ_near/meanEdge)+1`.
+7. Reject patch only if **body-family fraction > 0.12** (spine/shoulder/chest/…). Do **not** require Head/Jaw weight; `neck`-only patches (m5 292) remain valid.
+8. For each patch vert: `delta = falloff(hops) * delta(nearestPrimaryVert)`; never recurse to other components.
+9. Blink: run detection; apply transfer only if a seam patch is found for that channel’s primary — do not force global coupling.
+
+Normalized constants are geometry-derived (faceH / meanEdge), not magic meters, not asset IDs.
+
+## Safety invariants
+
+| Invariant | Rule |
+|-----------|------|
+| Primary authoritative | GT mouth surface still owns amplitude/shape |
+| Body safety | Spine/Shoulder/Chest-majority comps stay 0 |
+| Seam continuity | Coincident pairs: post-transfer gap ≈ 0 (measure closest seam sep) |
+| Locality | Secondary motion → 0 by patch hop falloff |
+| No propagation | Coupled patch cannot activate a third component |
+| Determinism | Same geometry → same coupling map + morph hash |
+| Blink non-regression | Coupling only when seam detected for that channel |
+
+## Validation strategy (next `/implement`)
+
+Behavioral checks (geometry, not regex):
+
+1. Coincident facial dual-shell (fixture) receives transferred delta; gap closes.
+2. Body-majority shell with coincident tip stays 0.
+3. Euclidean-near chest/shoulder without coincide/normal/GT gates stays 0.
+4. Secondary patch cannot pull a third component.
+5. Blink path unchanged when no eye seam patch exists.
+6. Deterministic rerun hashes.
+
+Asset evidence: reauthor m5/f5 jaw (+blinks unchanged if no seam); Visual ladder; Surface Safety; Functional; Combination; no publish until Visual PASS.
+
+## Why not …
+
+- **Joint allowlist:** perioral legitimately `neck`-weighted (292).
+- **Euclidean ownership:** Root Cause A.
+- **Whole-component coupling:** moves Spine shells (65).
+- **m5 / vertex IDs / gender:** forbidden; contract is geometry-normalized.
+- **Runtime gain (#424):** out of scope.
+
+## Implementation sketch (paths only)
+
+Expected touch:
+
+- `scripts/lib/liveact-face-functional-morph-surface.mjs` — `resolveCoupledFacialPatches(...)`
+- `scripts/lib/liveact-face-functional-morph-author.mjs` — jawOpen applies transfer after primary weights
+- `scripts/liveact-face-functional-morph-author-check.mjs` — fixture positives/negatives
+- `.qa/acceptance/liveact-human-ground-truth-repair.md` — Coupled Shell postconditions
+
+No new dependencies. No design change to brow/smile/pucker unless a seam is later proven.
+
+## `/implement ready`
+
+**YES** — Option C offline-validated on m5/f5 with body negatives excluded and projected seam gap closed for m5/292. Production path implements the same normalized contract.

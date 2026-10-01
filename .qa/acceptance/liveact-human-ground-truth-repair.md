@@ -10,8 +10,48 @@ Reviewed Ground Truth for m5/f5, then Functional Face QA; repair morphs with GT-
 - [x] Stage B: Functional Face QA against reviewed GT for m5 and f5.
 - [x] Stage B: QtMesh FaceRig reauthor on Functional FAIL (full path, MARKER_SIM=2, 3.41.1).
 - [x] Stage B: Functional QA metrics PASS after reauthor — **7/7 channels PASS** (Milestone 5).
-- [ ] Stage B final visual + publish gate — **BLOCKED** (jawOpen visual grotesque on m5/f5).
-- [ ] VRM 1.0 publish + resolver sync — **blocked** (visual FAIL; premature face3 publish rolled back).
+- [x] Stage B final visual + publish gate — **visual jawOpen PASS after Coupled Shell (Option C)**; publish gate still deferred (no VRM/resolver this milestone).
+- [ ] VRM 1.0 publish + resolver sync — **blocked** until Final Publish Gate rerun (explicitly out of this Coupled-Shell milestone).
+
+## Visual Safety Postconditions (Surface Fix)
+
+GT-driven functional neighborhoods MUST NOT deform topologically separate surfaces solely because they are Euclidean-near.
+
+- [x] Mouth/jaw authoring stays on the reviewed-GT-bound perioral face surface (mouthUpper/Lower/Corners components); chin body-shell components without mouth topology connection receive zero jawOpen delta.
+- [x] Blink L/R stays on the reviewed eye/lid GT-bound surface component(s).
+- [x] Neck/Spine/Chest/Shoulder off-surface shells: jawOpen displacement = 0 when not topologically connected to mouth GT surface **and** not accepted as a Coupled Facial Shell secondary patch.
+- [x] Functional QA still PASS for jaw + blinks (independent gatekeeper).
+- [x] Surface Safety QA PASS (off-surface affected count = 0 for disconnected shells).
+- [x] Visual Sanity PASS for jawOpen + blinks (no spikes/craters/triangles/severe lid pinch).
+- [x] No runtime Gain/DeadZone compensation; no m5/f5 asset branches; no hardcoded vertex IDs in production authoring.
+
+### Selection contract
+- Primary: reviewed GT triangle binding → connected component union → topology-local hops → existing Euclidean falloff weight.
+- Skin joints: diagnosis / secondary evidence only — NOT the primary allowlist (perioral may be neck-weighted).
+
+## Coupled Facial Shell Contract (Option C)
+
+Primary GT-bound surface remains authoritative. Coupling is an **additive** secondary-patch transfer only when a sustained geometric seam exists.
+
+### Postconditions (m5 AND f5)
+- [x] Unrelated disconnected body surfaces remain morph Δ = 0 (m5 65/284; f5 105/1071/1975 — IDs evidence-only, not hardcoded in production).
+- [x] Directly coupled facial secondary patch may receive local transferred motion from primary.
+- [x] Whole secondary component is **not** moved wholesale — only topology-local seam patch + hop falloff.
+- [x] Seam stays closed / within geometry-normalized continuity tolerance under functional jaw motion.
+- [x] Motion falls to 0 within the secondary patch by topology falloff (no distal neck/chest/shoulder reactivation).
+- [x] No recursive component propagation (Primary → Secondary only; Secondary never couples a third shell).
+- [x] Same inputs → identical coupling map + morph POSITION buffer (determinism).
+- [x] m5 jawOpen Visual PASS (ladder 0/0.25/0.50/0.75/1.00; front + ±35° + slightly below).
+- [x] f5 jawOpen Visual PASS (no regression vs surface-fix1 borderline PASS).
+- [x] Blink L/R Visual + Functional PASS; coupling applied only if a valid blink seam is detected (default: strict surface/topology remains).
+- [x] Other functional morphs (brow/smiles/pucker) unchanged vs Milestone-5 frozen hashes; 44 FaceRig morph POSITION buffers identical vs FaceRig base.
+- [x] Body false positives = 0; Seam Continuity PASS; Combination PASS; `npm run test-gate` PASS.
+- [x] No Publish / Resolver / Cache Bust / VRM Final / #424 in this milestone.
+
+### Coupling predicate (consistency)
+- PRIMARY gates: sustained coincide (`τ=0.12·meanEdge`), normal compatibility (≥0.55), GT locality, local patch topology.
+- SECONDARY veto only: whole-comp / patch body-family skin fraction (spine|shoulder|chest|…).
+- **NOT** a primary allowlist: Head/Jaw weight ≥ X or `face≥0.55` skin score — would falsely reject neck-100% facial shells (m5 292).
 
 ## Milestone: GT-aware jawOpen production authoring
 

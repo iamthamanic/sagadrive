@@ -1,0 +1,20 @@
+{
+  "id": "m5",
+  "verdict": "PASS",
+  "gates": {
+    "functional": true,
+    "surfaceSafety": true,
+    "coupledShell": true,
+    "seamContinuity": true,
+    "bodyFp": 0,
+    "regression": true,
+    "combination": true,
+    "determinism": true,
+    "visual": true
+  },
+  "notes": [
+    "Option C coupled facial shell: primary GT surface + local secondary patch transfer",
+    "Skin joints secondary veto only; neck-only shells allowed (m5 292)",
+    "No publish / resolver / VRM / #424"
+  ]
+}

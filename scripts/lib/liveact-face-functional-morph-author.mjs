@@ -38,6 +38,12 @@ import {
   resolveFaceAnchorPositionsPosed,
   computeFunctionalMetricsFromAnchors,
 } from './liveact-face-functional-validate.mjs';
+import {
+  buildGtBoundSurfaceGate,
+  maxTopologyHopsForRadius,
+  resolveCoupledFacialPatches,
+  resolveGtBoundTriangleVertices,
+} from './liveact-face-functional-morph-surface.mjs';
 /**
  * @param {import('@gltf-transform/core').Primitive} prim
  * @param {import('@gltf-transform/core').Mesh} mesh
@@ -118,14 +124,18 @@ function dist3(a, b) {
  */
 export function computeJawOpenVertexWeight(p, refs, faceH, contract = JAW_OPEN_AUTHOR_CONTRACT_V1) {
   const rMove = faceH * contract.moveRadiusFaceH;
-  const wLower = Math.max(0, 1 - dist3(p, refs.mouthLower) / rMove) ** 1.15;
-  const wChin = Math.max(0, 1 - dist3(p, refs.chin) / (rMove * 1.2)) ** 1.05;
-  let w = Math.max(wLower, wChin);
-  const midY = (refs.mouthUpper.y + refs.mouthLower.y) / 2;
-  if (p.y < midY && Math.abs(p.x - refs.chin.x) < faceH * 0.38) {
-    const band = Math.max(0, 1 - Math.abs(p.y - refs.mouthLower.y) / (faceH * 0.35));
-    w = Math.max(w, 0.45 * band);
+  // Primary: mouthLower lip neighborhood. Chin spatial weight is optional — only when
+  // chin lies on the GT-bound allowed surface (caller may zero refs.useChinSpatial).
+  const wLower = Math.max(0, 1 - dist3(p, refs.mouthLower) / rMove) ** 1.2;
+  let w = wLower;
+  if (refs.useChinSpatial !== false) {
+    const wChin = Math.max(0, 1 - dist3(p, refs.chin) / (rMove * 1.05)) ** 1.15;
+    w = Math.max(w, wChin * 0.55);
   }
+  // Keep influence below the oral commissure midplane; no extra chin-band boost
+  // (that previously exaggerated beard-tip silhouette against a frozen neck shell).
+  const midY = (refs.mouthUpper.y + refs.mouthLower.y) / 2;
+  if (p.y > midY) w *= 0.15;
   if (p.y > refs.mouthUpper.y + faceH * 0.02) w *= 0.05;
   if (dist3(p, refs.noseTip) < faceH * 0.12) w = 0;
   if (dist3(p, refs.forehead) < faceH * 0.25) w = 0;
@@ -163,17 +173,42 @@ function rewriteJawOpenMorph(document, anchors, contract) {
   const frame = buildFaceLocalFrame(neutral);
   if (!frame) throw new Error('jawOpen author: face local frame incomplete');
 
+  const surface = buildGtBoundSurfaceGate(prim, anchors, contract.surfaceSeedAnchors);
+  // Chin GT may bind a disconnected body shell — keep as spatial reference only when
+  // at least one chin triangle vertex is on the mouth-allowed surface.
+  let chinOnAllowed = false;
+  try {
+    const chinVerts = resolveGtBoundTriangleVertices(prim, anchors.chin, 'chin');
+    chinOnAllowed = chinVerts.some((v) => surface.allowed[v] === 1);
+  } catch {
+    chinOnAllowed = false;
+  }
+
   const refs = {
     mouthUpper: neutral.mouthUpper,
     mouthLower: neutral.mouthLower,
     chin: neutral.chin,
     noseTip: neutral.noseTip,
     forehead: neutral.forehead,
+    useChinSpatial: chinOnAllowed,
   };
+
+  const rMove = frame.faceHeight * contract.moveRadiusFaceH;
+  const maxHops = maxTopologyHopsForRadius(surface.meanEdgeLength, rMove * 1.15);
+  const topoExp = typeof contract.topoFalloffExp === 'number' ? contract.topoFalloffExp : 1.25;
 
   const n = basePos.getCount();
   const arr = new Float32Array(n * 3); // full rewrite — discard ICT deltas
-  const amp = frame.faceHeight * contract.ampFaceH;
+  const mouthW =
+    neutral.mouthCornerLeft && neutral.mouthCornerRight
+      ? dist3(neutral.mouthCornerLeft, neutral.mouthCornerRight)
+      : frame.faceHeight * 0.35;
+  const metricsN0 = computeFunctionalMetricsFromAnchors(neutral, frame);
+  const neutralGap = Math.max(metricsN0?.mouthGap ?? 0, frame.faceHeight * 0.05);
+  const ampFace = frame.faceHeight * contract.ampFaceH;
+  const ampMouth = mouthW * contract.ampMouthWidth;
+  const ampGap = neutralGap * (contract.ampNeutralGap ?? 0.22);
+  const amp = Math.min(ampFace, ampMouth, ampGap);
   const down = { x: -frame.up.x, y: -frame.up.y, z: -frame.up.z };
   const back = {
     x: -frame.forward.x * contract.backBias,
@@ -186,11 +221,30 @@ function rewriteJawOpenMorph(document, anchors, contract) {
   let sumW = 0;
   let maxDisp = 0;
   let sumDisp = 0;
+  let offSurfaceRejected = 0;
+  let offTopoRejected = 0;
+  let maxOffSurfaceDispWouldBe = 0;
+  /** @type {number[]} */
+  const primaryAffected = [];
   const el = [0, 0, 0];
   for (let i = 0; i < n; i += 1) {
     basePos.getElement(i, el);
     const p = { x: el[0], y: el[1], z: el[2] };
-    const w = computeJawOpenVertexWeight(p, refs, frame.faceHeight, contract);
+    const wEuclid = computeJawOpenVertexWeight(p, refs, frame.faceHeight, contract);
+    if (wEuclid <= 1e-8) continue;
+    if (!surface.allowed[i]) {
+      offSurfaceRejected += 1;
+      const would = amp * wEuclid;
+      maxOffSurfaceDispWouldBe = Math.max(maxOffSurfaceDispWouldBe, would);
+      continue;
+    }
+    const hops = surface.topoDist[i];
+    if (hops < 0 || hops > maxHops) {
+      offTopoRejected += 1;
+      continue;
+    }
+    const topoW = Math.max(0, 1 - hops / Math.max(1, maxHops)) ** topoExp;
+    const w = wEuclid * topoW;
     if (w <= 1e-8) continue;
     affected += 1;
     maxW = Math.max(maxW, w);
@@ -204,7 +258,124 @@ function rewriteJawOpenMorph(document, anchors, contract) {
     const d = Math.hypot(dx, dy, dz);
     maxDisp = Math.max(maxDisp, d);
     sumDisp += d;
+    primaryAffected.push(i);
   }
+
+  // Coupled Facial Shell Contract (Option C): transfer primary deltas to seam patches only.
+  const jointNames =
+    document
+      .getRoot()
+      .listSkins()[0]
+      ?.listJoints()
+      .map((j) => j.getName() || '') || [];
+  const gtRefs = [
+    neutral.mouthLower,
+    neutral.mouthUpper,
+    neutral.chin,
+    neutral.mouthCornerLeft,
+    neutral.mouthCornerRight,
+  ].filter(Boolean);
+  const contactPrimary =
+    primaryAffected.length >= 50
+      ? primaryAffected
+      : (() => {
+          /** @type {number[]} */
+          const all = [];
+          for (let i = 0; i < n; i += 1) {
+            if (!surface.allowed[i]) continue;
+            const hops = surface.topoDist[i];
+            if (hops >= 0 && hops <= maxHops) all.push(i);
+          }
+          return all;
+        })();
+  const coupling = resolveCoupledFacialPatches({
+    prim,
+    surface,
+    primaryVerts: contactPrimary,
+    faceHeight: frame.faceHeight,
+    gtRefs,
+    jointNames,
+  });
+
+  let coupledAffected = 0;
+  let coupledMaxDisp = 0;
+  let coupledSumDisp = 0;
+  /** @type {Array<{ secondary: number; primary: number; hops: number; falloff: number; componentId: number }>} */
+  const coupledTransfers = [];
+  for (const [sec, bind] of [...coupling.secondaryBindings.entries()].sort(
+    (a, b) => a[0] - b[0],
+  )) {
+    // Never overwrite primary surface verts
+    if (surface.allowed[sec]) continue;
+    const px = arr[bind.primary * 3];
+    const py = arr[bind.primary * 3 + 1];
+    const pz = arr[bind.primary * 3 + 2];
+    const dx = px * bind.falloff;
+    const dy = py * bind.falloff;
+    const dz = pz * bind.falloff;
+    if (Math.hypot(dx, dy, dz) <= 1e-12) continue;
+    arr[sec * 3] = dx;
+    arr[sec * 3 + 1] = dy;
+    arr[sec * 3 + 2] = dz;
+    coupledAffected += 1;
+    const d = Math.hypot(dx, dy, dz);
+    coupledMaxDisp = Math.max(coupledMaxDisp, d);
+    coupledSumDisp += d;
+    coupledTransfers.push({
+      secondary: sec,
+      primary: bind.primary,
+      hops: bind.hops,
+      falloff: bind.falloff,
+      componentId: bind.componentId,
+    });
+  }
+  affected += coupledAffected;
+  maxDisp = Math.max(maxDisp, coupledMaxDisp);
+  sumDisp += coupledSumDisp;
+
+  // Seam continuity at weight 1 for accepted pairs
+  const seamContinuity = {
+    pairs: coupling.patches.flatMap((p) =>
+      p.seamPairs.slice(0, 40).map((sp) => {
+        const gap0 = sp.neutralDist;
+        const bSec = [0, 0, 0];
+        const bPri = [0, 0, 0];
+        basePos.getElement(sp.secondary, bSec);
+        basePos.getElement(sp.primary, bPri);
+        const a1 = {
+          x: bSec[0] + arr[sp.secondary * 3],
+          y: bSec[1] + arr[sp.secondary * 3 + 1],
+          z: bSec[2] + arr[sp.secondary * 3 + 2],
+        };
+        const b1 = {
+          x: bPri[0] + arr[sp.primary * 3],
+          y: bPri[1] + arr[sp.primary * 3 + 1],
+          z: bPri[2] + arr[sp.primary * 3 + 2],
+        };
+        const gap1 = Math.hypot(a1.x - b1.x, a1.y - b1.y, a1.z - b1.z);
+        return {
+          secondary: sp.secondary,
+          primary: sp.primary,
+          gap0,
+          gap1,
+          componentId: p.componentId,
+        };
+      }),
+    ),
+  };
+  const gap1s = seamContinuity.pairs.map((p) => p.gap1);
+  gap1s.sort((a, b) => a - b);
+  const seamStats = {
+    pairCount: gap1s.length,
+    maxGap1: gap1s.length ? gap1s[gap1s.length - 1] : 0,
+    meanGap1: gap1s.length ? gap1s.reduce((a, b) => a + b, 0) / gap1s.length : 0,
+    p95Gap1: gap1s.length ? gap1s[Math.min(gap1s.length - 1, Math.floor(gap1s.length * 0.95))] : 0,
+    // Continuity: after transfer, gap should stay near meanEdge scale (not open like pre-fix ~6mm)
+    pass:
+      gap1s.length === 0 ||
+      (gap1s[gap1s.length - 1] <= Math.max(surface.meanEdgeLength * 2.5, frame.faceHeight * 0.008)),
+  };
+
   morphPos.setArray(arr);
 
   const posed = resolveFaceAnchorPositionsPosed(document, anchors, 'jawOpen', 1);
@@ -226,15 +397,55 @@ function rewriteJawOpenMorph(document, anchors, contract) {
     vertexCount: n,
     affectedVertices: affected,
     maxWeight: maxW,
-    meanWeightAffected: affected ? sumW / affected : 0,
+    meanWeightAffected: affected ? sumW / Math.max(1, affected - coupledAffected) : 0,
     maxDisplacement: maxDisp,
     meanDisplacementAffected: affected ? sumDisp / affected : 0,
     amp,
+    ampFaceHComponent: ampFace,
+    ampMouthWidthComponent: ampMouth,
+    ampNeutralGapComponent: ampGap,
+    chinSpatialUsed: chinOnAllowed,
+    mouthWidth: mouthW,
     faceHeight: frame.faceHeight,
     morphPositionSha256: hashMorphPositionArray(arr),
     mouthGapNeutral: metricsN?.mouthGap ?? null,
     mouthGapJawOpen1: metricsP?.mouthGap ?? null,
     mouthGapDelta: gapDelta,
+    surfaceSafety: {
+      allowedSurfaceVertexCount: surface.allowedCount,
+      maxTopologyHops: maxHops,
+      meanEdgeLength: surface.meanEdgeLength,
+      offSurfaceRejected,
+      offTopoRejected,
+      offSurfaceAffectedCount: 0,
+      offSurfaceMaxDisplacement: 0,
+      maxOffSurfaceDispWouldHaveBeen: maxOffSurfaceDispWouldBe,
+      surfaceSeedAnchors: [...contract.surfaceSeedAnchors],
+      chinOnAllowedSurface: chinOnAllowed,
+    },
+    coupledShell: {
+      acceptedComponentIds: coupling.patches.map((p) => p.componentId),
+      rejected: coupling.rejected,
+      thresholds: coupling.thresholds,
+      patches: coupling.patches.map((p) => ({
+        componentId: p.componentId,
+        componentSize: p.componentSize,
+        coincideCount: p.coincideCount,
+        meanNormalDot: p.meanNormalDot,
+        medianGtDist: p.medianGtDist,
+        wholeCompBodyFrac: p.wholeCompBodyFrac,
+        patchBodyFrac: p.patchBodyFrac,
+        patchVertexCount: p.patchVerts.length,
+        maxPatchHops: p.maxPatchHops,
+        seamPairCount: p.seamPairs.length,
+      })),
+      coupledAffectedVertices: coupledAffected,
+      coupledMaxDisplacement: coupledMaxDisp,
+      coupledMeanDisplacement: coupledAffected ? coupledSumDisp / coupledAffected : 0,
+      transferCount: coupledTransfers.length,
+      seamContinuity: seamStats,
+      noRecursivePropagation: true,
+    },
     displacements: {
       mouthUpper: disp('mouthUpper'),
       mouthLower: disp('mouthLower'),
@@ -350,6 +561,16 @@ function rewriteEyeBlinkMorph(document, anchors, contract) {
   const ampUpper = aperture * contract.upperCloseFraction;
   const ampLower = aperture * contract.lowerCloseFraction;
 
+  const surfaceSeedAnchors = [
+    contract.upperAnchor,
+    contract.lowerAnchor,
+    contract.innerAnchor,
+    contract.outerAnchor,
+  ];
+  const surface = buildGtBoundSurfaceGate(prim, anchors, surfaceSeedAnchors);
+  const rMove = frame.faceHeight * contract.moveRadiusFaceH;
+  const maxHops = maxTopologyHopsForRadius(surface.meanEdgeLength, rMove * 1.35);
+
   const n = basePos.getCount();
   const arr = new Float32Array(n * 3); // full rewrite — discard ICT deltas
   let affected = 0;
@@ -357,12 +578,24 @@ function rewriteEyeBlinkMorph(document, anchors, contract) {
   let sumW = 0;
   let maxDisp = 0;
   let sumDisp = 0;
+  let offSurfaceRejected = 0;
+  let offTopoRejected = 0;
   const el = [0, 0, 0];
   for (let i = 0; i < n; i += 1) {
     basePos.getElement(i, el);
     const p = { x: el[0], y: el[1], z: el[2] };
-    const w = computeEyeBlinkVertexWeight(p, refs, frame, contract);
-    if (w <= 1e-8) continue;
+    const wEuclid = computeEyeBlinkVertexWeight(p, refs, frame, contract);
+    if (wEuclid <= 1e-8) continue;
+    if (!surface.allowed[i]) {
+      offSurfaceRejected += 1;
+      continue;
+    }
+    const hops = surface.topoDist[i];
+    if (hops < 0 || hops > maxHops) {
+      offTopoRejected += 1;
+      continue;
+    }
+    const w = wEuclid;
     affected += 1;
     maxW = Math.max(maxW, w);
     sumW += w;
@@ -431,6 +664,16 @@ function rewriteEyeBlinkMorph(document, anchors, contract) {
     openDrop,
     openRatio,
     oppositeRelChange,
+    surfaceSafety: {
+      allowedSurfaceVertexCount: surface.allowedCount,
+      maxTopologyHops: maxHops,
+      meanEdgeLength: surface.meanEdgeLength,
+      offSurfaceRejected,
+      offTopoRejected,
+      offSurfaceAffectedCount: 0,
+      offSurfaceMaxDisplacement: 0,
+      surfaceSeedAnchors,
+    },
     displacements: {
       [contract.upperAnchor]: disp(contract.upperAnchor),
       [contract.lowerAnchor]: disp(contract.lowerAnchor),

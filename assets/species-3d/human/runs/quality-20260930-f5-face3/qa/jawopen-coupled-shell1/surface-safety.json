@@ -1,0 +1,167 @@
+{
+  "jawOpen": {
+    "allowedSurfaceVertexCount": 3267,
+    "maxTopologyHops": 39,
+    "meanEdgeLength": 0.0038749430841682566,
+    "offSurfaceRejected": 1272,
+    "offTopoRejected": 0,
+    "offSurfaceAffectedCount": 0,
+    "offSurfaceMaxDisplacement": 0,
+    "maxOffSurfaceDispWouldHaveBeen": 0.0050271910407662015,
+    "surfaceSeedAnchors": [
+      "mouthUpper",
+      "mouthLower",
+      "mouthCornerLeft",
+      "mouthCornerRight"
+    ],
+    "chinOnAllowedSurface": false
+  },
+  "eyeBlinkLeft": {
+    "allowedSurfaceVertexCount": 1977,
+    "maxTopologyHops": 14,
+    "meanEdgeLength": 0.0038749430841682566,
+    "offSurfaceRejected": 15,
+    "offTopoRejected": 0,
+    "offSurfaceAffectedCount": 0,
+    "offSurfaceMaxDisplacement": 0,
+    "surfaceSeedAnchors": [
+      "eyeLeftUpper",
+      "eyeLeftLower",
+      "eyeLeftInner",
+      "eyeLeftOuter"
+    ]
+  },
+  "eyeBlinkRight": {
+    "allowedSurfaceVertexCount": 1718,
+    "maxTopologyHops": 14,
+    "meanEdgeLength": 0.0038749430841682566,
+    "offSurfaceRejected": 59,
+    "offTopoRejected": 0,
+    "offSurfaceAffectedCount": 0,
+    "offSurfaceMaxDisplacement": 0,
+    "surfaceSeedAnchors": [
+      "eyeRightUpper",
+      "eyeRightLower",
+      "eyeRightInner",
+      "eyeRightOuter"
+    ]
+  },
+  "coupledShell": {
+    "acceptedComponentIds": [
+      497
+    ],
+    "rejected": [
+      {
+        "componentId": 105,
+        "reason": "whole_comp_body",
+        "wholeCompBodyFrac": 0.8273273273273273,
+        "coincideCount": 27
+      },
+      {
+        "componentId": 235,
+        "reason": "low_coincide",
+        "coincideCount": 1
+      },
+      {
+        "componentId": 333,
+        "reason": "low_coincide",
+        "coincideCount": 8
+      },
+      {
+        "componentId": 385,
+        "reason": "low_coincide",
+        "coincideCount": 0
+      },
+      {
+        "componentId": 452,
+        "reason": "low_coincide",
+        "coincideCount": 1
+      },
+      {
+        "componentId": 520,
+        "reason": "low_coincide",
+        "coincideCount": 2
+      },
+      {
+        "componentId": 532,
+        "reason": "low_coincide",
+        "coincideCount": 1
+      },
+      {
+        "componentId": 556,
+        "reason": "low_coincide",
+        "coincideCount": 0
+      },
+      {
+        "componentId": 1057,
+        "reason": "gt_far",
+        "medianGtDist": 0.06407040506138549
+      },
+      {
+        "componentId": 1071,
+        "reason": "whole_comp_body",
+        "wholeCompBodyFrac": 0.996969696969697,
+        "coincideCount": 25
+      },
+      {
+        "componentId": 1072,
+        "reason": "low_coincide",
+        "coincideCount": 0
+      },
+      {
+        "componentId": 1101,
+        "reason": "low_coincide",
+        "coincideCount": 2
+      },
+      {
+        "componentId": 1875,
+        "reason": "low_coincide",
+        "coincideCount": 5
+      },
+      {
+        "componentId": 1975,
+        "reason": "whole_comp_body",
+        "wholeCompBodyFrac": 1,
+        "coincideCount": 1
+      }
+    ],
+    "thresholds": {
+      "tauCoincide": 0.0004649931701001908,
+      "tauNear": 0.00416565218247634,
+      "tauGtLocal": 0.0624847827371451,
+      "minCoincidePairs": 10,
+      "minMeanNormalDot": 0.55,
+      "maxWholeCompBodyFrac": 0.35,
+      "maxPatchBodyFrac": 0.12,
+      "maxPatchHops": 3,
+      "topoFalloffExp": 1.15
+    },
+    "patches": [
+      {
+        "componentId": 497,
+        "componentSize": 220,
+        "coincideCount": 12,
+        "meanNormalDot": 0.996717646306823,
+        "medianGtDist": 0.05516082586119344,
+        "wholeCompBodyFrac": 0,
+        "patchBodyFrac": 0,
+        "patchVertexCount": 55,
+        "maxPatchHops": 3,
+        "seamPairCount": 12
+      }
+    ],
+    "coupledAffectedVertices": 40,
+    "coupledMaxDisplacement": 0.0002773105570278621,
+    "coupledMeanDisplacement": 0.000049486307232323804,
+    "transferCount": 40,
+    "seamContinuity": {
+      "pairCount": 12,
+      "maxGap1": 0,
+      "meanGap1": 0,
+      "p95Gap1": 0,
+      "pass": true
+    },
+    "noRecursivePropagation": true
+  },
+  "pass": true
+}

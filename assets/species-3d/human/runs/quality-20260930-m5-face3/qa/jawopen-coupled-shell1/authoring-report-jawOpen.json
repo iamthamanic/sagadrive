@@ -1,0 +1,258 @@
+{
+  "contractVersion": "SagaDriveLiveActFaceFunctionalMorphAuthorV1",
+  "profileVersion": "liveact-face-functional-morph-author-profile-v1",
+  "channel": "jawOpen",
+  "inputPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-final.glb",
+  "outputPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-coupled-shell1/m5-jawOpen.glb",
+  "anchorsPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-coupled-shell1/face-anchors.json",
+  "authoringPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-coupled-shell1/face-mapping-authoring-input.json",
+  "inputSha256": "d2f1e879342782e9e7490f038cc7a1775147badf40188a046add1ab4e9359839",
+  "outputSha256": "86a084ef94e0f242d743fcffae8f7a882249a361ce9a1c03b98f83a288c97be3",
+  "topologyFingerprint": "v133002:t215832:m1",
+  "anchorsSha256": "2b7e9967aed0577bb3c628bfe1cc5272a7cc184f78b9cdf32793d9fb3b865a96",
+  "groundTruth": {
+    "ok": true,
+    "reason": null,
+    "reviewStatus": "human_reviewed"
+  },
+  "beforeChannelMorphSha256": "28d455fde18cf236474b440d70a9f1d6ddff77502c6a0490abe9da137c6eb542",
+  "afterChannelMorphSha256": "e046833a9c0e00695b138d30ee4710939c8985403c6faba32f0728bc6bf34ddc",
+  "beforeJawOpenMorphSha256": "28d455fde18cf236474b440d70a9f1d6ddff77502c6a0490abe9da137c6eb542",
+  "afterJawOpenMorphSha256": "e046833a9c0e00695b138d30ee4710939c8985403c6faba32f0728bc6bf34ddc",
+  "jawOpenMorphUnchanged": false,
+  "deterministicRerunMorphSha256": "e046833a9c0e00695b138d30ee4710939c8985403c6faba32f0728bc6bf34ddc",
+  "morphsUnchangedExceptChannel": true,
+  "morphCount": 51,
+  "changedMorphs": [
+    "jawOpen"
+  ],
+  "channelStats": {
+    "morphIndex": 24,
+    "nodeIdentity": "human-male-quality-20260921-m5_mesh",
+    "primitiveIndex": 0,
+    "vertexCount": 133002,
+    "affectedVertices": 3663,
+    "maxWeight": 1,
+    "meanWeightAffected": 0.2456619102831604,
+    "maxDisplacement": 0.012049550219596174,
+    "meanDisplacementAffected": 0.002869308805453091,
+    "amp": 0.011815556096103293,
+    "ampFaceHComponent": 0.04296690692490734,
+    "ampMouthWidthComponent": 0.011815556096103293,
+    "ampNeutralGapComponent": 0.1752973824796486,
+    "chinSpatialUsed": false,
+    "mouthWidth": 0.07384722560064558,
+    "faceHeight": 0.35805755770756115,
+    "morphPositionSha256": "e046833a9c0e00695b138d30ee4710939c8985403c6faba32f0728bc6bf34ddc",
+    "mouthGapNeutral": 0.7968062839984027,
+    "mouthGapJawOpen1": 0.9466232828315588,
+    "mouthGapDelta": 0.14981699883315613,
+    "surfaceSafety": {
+      "allowedSurfaceVertexCount": 3925,
+      "maxTopologyHops": 38,
+      "meanEdgeLength": 0.004141176986609892,
+      "offSurfaceRejected": 4360,
+      "offTopoRejected": 0,
+      "offSurfaceAffectedCount": 0,
+      "offSurfaceMaxDisplacement": 0,
+      "maxOffSurfaceDispWouldHaveBeen": 0.011267096764607932,
+      "surfaceSeedAnchors": [
+        "mouthUpper",
+        "mouthLower",
+        "mouthCornerLeft",
+        "mouthCornerRight"
+      ],
+      "chinOnAllowedSurface": false
+    },
+    "coupledShell": {
+      "acceptedComponentIds": [
+        176,
+        189,
+        292,
+        341
+      ],
+      "rejected": [
+        {
+          "componentId": 65,
+          "reason": "whole_comp_body",
+          "wholeCompBodyFrac": 0.8439716312056738,
+          "coincideCount": 15
+        },
+        {
+          "componentId": 177,
+          "reason": "low_coincide",
+          "coincideCount": 1
+        },
+        {
+          "componentId": 204,
+          "reason": "low_coincide",
+          "coincideCount": 6
+        },
+        {
+          "componentId": 206,
+          "reason": "low_coincide",
+          "coincideCount": 0
+        },
+        {
+          "componentId": 214,
+          "reason": "low_coincide",
+          "coincideCount": 2
+        },
+        {
+          "componentId": 223,
+          "reason": "low_coincide",
+          "coincideCount": 3
+        },
+        {
+          "componentId": 224,
+          "reason": "low_coincide",
+          "coincideCount": 6
+        },
+        {
+          "componentId": 229,
+          "reason": "low_coincide",
+          "coincideCount": 4
+        },
+        {
+          "componentId": 237,
+          "reason": "low_coincide",
+          "coincideCount": 4
+        },
+        {
+          "componentId": 243,
+          "reason": "low_coincide",
+          "coincideCount": 3
+        },
+        {
+          "componentId": 284,
+          "reason": "whole_comp_body",
+          "wholeCompBodyFrac": 0.8563484708063022,
+          "coincideCount": 0
+        },
+        {
+          "componentId": 286,
+          "reason": "low_coincide",
+          "coincideCount": 5
+        },
+        {
+          "componentId": 297,
+          "reason": "low_coincide",
+          "coincideCount": 0
+        },
+        {
+          "componentId": 306,
+          "reason": "low_coincide",
+          "coincideCount": 3
+        },
+        {
+          "componentId": 336,
+          "reason": "low_coincide",
+          "coincideCount": 4
+        },
+        {
+          "componentId": 343,
+          "reason": "low_coincide",
+          "coincideCount": 5
+        },
+        {
+          "componentId": 344,
+          "reason": "low_coincide",
+          "coincideCount": 5
+        },
+        {
+          "componentId": 353,
+          "reason": "low_coincide",
+          "coincideCount": 3
+        },
+        {
+          "componentId": 357,
+          "reason": "low_coincide",
+          "coincideCount": 0
+        }
+      ],
+      "thresholds": {
+        "tauCoincide": 0.000496941238393187,
+        "tauNear": 0.004296690692490734,
+        "tauGtLocal": 0.064450360387361,
+        "minCoincidePairs": 10,
+        "minMeanNormalDot": 0.55,
+        "maxWholeCompBodyFrac": 0.35,
+        "maxPatchBodyFrac": 0.12,
+        "maxPatchHops": 3,
+        "topoFalloffExp": 1.15
+      },
+      "patches": [
+        {
+          "componentId": 176,
+          "componentSize": 860,
+          "coincideCount": 33,
+          "meanNormalDot": 0.9312409403452568,
+          "medianGtDist": 0.02408096533741493,
+          "wholeCompBodyFrac": 0,
+          "patchBodyFrac": 0,
+          "patchVertexCount": 133,
+          "maxPatchHops": 3,
+          "seamPairCount": 33
+        },
+        {
+          "componentId": 189,
+          "componentSize": 415,
+          "coincideCount": 25,
+          "meanNormalDot": 0.9554262247900002,
+          "medianGtDist": 0.042839932065364725,
+          "wholeCompBodyFrac": 0,
+          "patchBodyFrac": 0,
+          "patchVertexCount": 120,
+          "maxPatchHops": 3,
+          "seamPairCount": 25
+        },
+        {
+          "componentId": 292,
+          "componentSize": 631,
+          "coincideCount": 62,
+          "meanNormalDot": 0.9719218083356619,
+          "medianGtDist": 0.02188109481250008,
+          "wholeCompBodyFrac": 0,
+          "patchBodyFrac": 0,
+          "patchVertexCount": 257,
+          "maxPatchHops": 3,
+          "seamPairCount": 62
+        },
+        {
+          "componentId": 341,
+          "componentSize": 1176,
+          "coincideCount": 33,
+          "meanNormalDot": 0.9487182783520058,
+          "medianGtDist": 0.027756497615845196,
+          "wholeCompBodyFrac": 0,
+          "patchBodyFrac": 0,
+          "patchVertexCount": 133,
+          "maxPatchHops": 3,
+          "seamPairCount": 33
+        }
+      ],
+      "coupledAffectedVertices": 471,
+      "coupledMaxDisplacement": 0.010367743346354433,
+      "coupledMeanDisplacement": 0.0022539053048371716,
+      "transferCount": 471,
+      "seamContinuity": {
+        "pairCount": 131,
+        "maxGap1": 0,
+        "meanGap1": 0,
+        "p95Gap1": 0,
+        "pass": true
+      },
+      "noRecursivePropagation": true
+    },
+    "displacements": {
+      "mouthUpper": 0,
+      "mouthLower": 0.012049550572776069,
+      "chin": 0,
+      "noseTip": 0,
+      "forehead": 0,
+      "mouthCornerLeft": 0.0007874723663991015,
+      "mouthCornerRight": 0.0009180834831645327
+    }
+  },
+  "authoredAt": "2026-10-01T22:07:59.650Z"
+}

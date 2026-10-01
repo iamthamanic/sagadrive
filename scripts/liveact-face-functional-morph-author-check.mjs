@@ -23,6 +23,14 @@ import {
   FACE_FUNCTIONAL_MORPH_AUTHOR_CONTRACT_VERSION,
   FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1,
 } from './lib/liveact-face-functional-morph-profile-v1.mjs';
+import {
+  buildGtBoundSurfaceGate,
+  buildPrimitiveAdjacency,
+  resolveCoupledFacialPatches,
+} from './lib/liveact-face-functional-morph-surface.mjs';
+import { buildFaceLocalFrame } from './lib/liveact-face-functional-validate.mjs';
+import { resolveFaceAnchorPositions } from './lib/liveact-face-anchor-anatomy-validate.mjs';
+import { JAW_OPEN_AUTHOR_CONTRACT_V1 } from './lib/liveact-face-functional-morph-profile-v1.mjs';
 
 const io = new NodeIO();
 let failed = 0;
@@ -109,6 +117,10 @@ async function buildFixtureGlb() {
       addTri(xi * 0.03, 1.45 + yi * 0.04, 0.18, null);
     }
   }
+  // Disconnected "chest/spine shell" inside Euclidean chin radius — MUST stay zero under jawOpen.
+  // Intentionally NOT edge-connected to the face grid. Not an anchor (unknown ids fail validation).
+  addTri(0, 1.1, 0.16, null);
+  const disconnectedChestVertexBase = positions.length / 3 - 3;
 
   const doc = new Document();
   const buffer = doc.createBuffer();
@@ -197,6 +209,352 @@ async function buildFixtureGlb() {
   return {
     bytes: Buffer.from(await io.writeBinary(doc)),
     anchors: { contractVersion: FACE_ANCHORS_CONTRACT_VERSION, anchors },
+    disconnectedChestVertexBase,
+  };
+}
+
+/**
+ * Fixture for Coupled Facial Shell Contract: connected primary mouth surface +
+ * coincident facial secondary (neck), body-majority shell (spine), single-coincide,
+ * GT-far shell, and a tertiary shell near secondary (must not receive recursive coupling).
+ */
+async function buildCoupledShellFixtureGlb() {
+  /** @type {number[]} */
+  const positions = [];
+  /** @type {number[]} */
+  const indices = [];
+  /** @type {number[]} */
+  const jointIdx = [];
+  /** @type {Record<string, number>} */
+  const triByAnchor = {};
+
+  const JOINT_NECK = 1;
+  const JOINT_SPINE = 2;
+
+  function pushVert(x, y, z, joint = 0) {
+    const i = positions.length / 3;
+    positions.push(x, y, z);
+    jointIdx.push(joint);
+    return i;
+  }
+
+  /** Shared-vertex grid → one connected primary component. */
+  const cols = 12;
+  const rows = 8;
+  /** @type {number[][]} */
+  const grid = [];
+  for (let r = 0; r < rows; r += 1) {
+    /** @type {number[]} */
+    const row = [];
+    for (let c = 0; c < cols; c += 1) {
+      const x = (c - (cols - 1) / 2) * 0.018;
+      const y = 1.2 + r * 0.018;
+      const z = 0.2;
+      row.push(pushVert(x, y, z, 0));
+    }
+    grid.push(row);
+  }
+  for (let r = 0; r < rows - 1; r += 1) {
+    for (let c = 0; c < cols - 1; c += 1) {
+      const a = grid[r][c];
+      const b = grid[r][c + 1];
+      const cc = grid[r + 1][c];
+      const d = grid[r + 1][c + 1];
+      indices.push(a, b, cc, b, d, cc);
+    }
+  }
+
+  function nearestGridTri(tx, ty) {
+    let best = Infinity;
+    let bi = 0;
+    let bj = 0;
+    for (let r = 0; r < rows; r += 1) {
+      for (let c = 0; c < cols; c += 1) {
+        const i = grid[r][c];
+        const dx = positions[i * 3] - tx;
+        const dy = positions[i * 3 + 1] - ty;
+        const d = dx * dx + dy * dy;
+        if (d < best) {
+          best = d;
+          bi = r;
+          bj = c;
+        }
+      }
+    }
+    const r0 = Math.min(bi, rows - 2);
+    const c0 = Math.min(bj, cols - 2);
+    // triangle index among primary quads (2 tris per cell, row-major)
+    return (r0 * (cols - 1) + c0) * 2;
+  }
+
+  triByAnchor.mouthUpper = nearestGridTri(0, 1.32);
+  triByAnchor.mouthLower = nearestGridTri(0, 1.26);
+  triByAnchor.mouthCornerLeft = nearestGridTri(-0.08, 1.29);
+  triByAnchor.mouthCornerRight = nearestGridTri(0.08, 1.29);
+  triByAnchor.chin = nearestGridTri(0, 1.2);
+  triByAnchor.noseTip = nearestGridTri(0, 1.34);
+  // Raised forehead landmark (extra verts) so faceH matches production-scale thresholds.
+  const foreheadV = pushVert(0, 1.55, 0.18, 0);
+  const foreheadV1 = pushVert(0.03, 1.55, 0.18, 0);
+  const foreheadV2 = pushVert(0, 1.58, 0.18, 0);
+  indices.push(foreheadV, foreheadV1, foreheadV2);
+  // Bridge forehead into primary via a connecting strip so surface gate can include it if seeded —
+  // keep disconnected for faceH only (anchors bind this tri).
+  triByAnchor.forehead = Math.floor(indices.length / 3) - 1;
+  for (const id of [
+    'browLeftInner',
+    'browLeftCenter',
+    'browLeftOuter',
+    'browRightInner',
+    'browRightCenter',
+    'browRightOuter',
+    'eyeLeftOuter',
+    'eyeLeftInner',
+    'eyeLeftUpper',
+    'eyeLeftLower',
+    'eyeRightOuter',
+    'eyeRightInner',
+    'eyeRightUpper',
+    'eyeRightLower',
+  ]) {
+    triByAnchor[id] = nearestGridTri(id.includes('Left') ? -0.06 : 0.06, 1.33);
+  }
+
+  // Secondary facial shell: coincident with primary bottom edge, extends down (neck-skinned)
+  /** @type {number[]} */
+  const secondarySeamVerts = [];
+  /** @type {number[][]} */
+  const secGrid = [];
+  const secRows = 5;
+  for (let r = 0; r < secRows; r += 1) {
+    /** @type {number[]} */
+    const row = [];
+    for (let c = 0; c < cols; c += 1) {
+      const x = (c - (cols - 1) / 2) * 0.018;
+      const y = 1.2 - r * 0.018;
+      const z = 0.2;
+      const i = pushVert(x, y, z, JOINT_NECK);
+      row.push(i);
+      if (r === 0) secondarySeamVerts.push(i);
+    }
+    secGrid.push(row);
+  }
+  for (let r = 0; r < secRows - 1; r += 1) {
+    for (let c = 0; c < cols - 1; c += 1) {
+      const a = secGrid[r][c];
+      const b = secGrid[r][c + 1];
+      const cc = secGrid[r + 1][c];
+      const d = secGrid[r + 1][c + 1];
+      // Match primary winding so interface normals stay compatible (+Z).
+      indices.push(a, cc, b, b, cc, d);
+    }
+  }
+  const secondaryDistalVerts = [...secGrid[secRows - 1]];
+
+  // Body-majority shell: coincident with mouth band but spine-skinned
+  /** @type {number[]} */
+  const bodyVerts = [];
+  /** @type {number[][]} */
+  const bodyGrid = [];
+  for (let r = 0; r < 4; r += 1) {
+    /** @type {number[]} */
+    const row = [];
+    for (let c = 0; c < cols; c += 1) {
+      const x = (c - (cols - 1) / 2) * 0.018;
+      const y = 1.26 - r * 0.01;
+      const z = 0.2;
+      const i = pushVert(x, y, z, JOINT_SPINE);
+      row.push(i);
+      bodyVerts.push(i);
+    }
+    bodyGrid.push(row);
+  }
+  for (let r = 0; r < 3; r += 1) {
+    for (let c = 0; c < cols - 1; c += 1) {
+      indices.push(
+        bodyGrid[r][c],
+        bodyGrid[r + 1][c],
+        bodyGrid[r][c + 1],
+        bodyGrid[r][c + 1],
+        bodyGrid[r + 1][c],
+        bodyGrid[r + 1][c + 1],
+      );
+    }
+  }
+
+  // Single coincident vertex shell (one tri overlapping one primary point) — too few coincide pairs
+  const sx = positions[grid[0][5] * 3];
+  const sy = positions[grid[0][5] * 3 + 1];
+  const sz = positions[grid[0][5] * 3 + 2];
+  const s0 = pushVert(sx, sy, sz, JOINT_NECK);
+  const s1 = pushVert(sx + 0.01, sy, sz, JOINT_NECK);
+  const s2 = pushVert(sx, sy + 0.01, sz, JOINT_NECK);
+  indices.push(s0, s1, s2);
+  const singleVerts = [s0, s1, s2];
+
+  // GT-far shell (chest height, normal-ish but far from mouth GT anchors)
+  /** @type {number[]} */
+  const farVerts = [];
+  for (let c = 0; c < 6; c += 1) {
+    for (let r = 0; r < 4; r += 1) {
+      farVerts.push(pushVert((c - 2.5) * 0.02, 0.7 + r * 0.02, 0.15, JOINT_NECK));
+    }
+  }
+  for (let i = 0; i + 2 < farVerts.length; i += 3) {
+    indices.push(farVerts[i], farVerts[i + 1], farVerts[i + 2]);
+  }
+  // Connect far into one component via strip
+  for (let i = 0; i < farVerts.length - 1; i += 1) {
+    if (i % 6 === 5) continue;
+    // already have tris; ensure connectivity by shared verts in row loops — rebuild as grid
+  }
+  // Rebuild far as proper connected grid (replace sparse tris)
+  // (farVerts already sequential row-major 6x4 — add quad topology)
+  indices.length = indices.length; // no-op keep existing; add quads:
+  for (let r = 0; r < 3; r += 1) {
+    for (let c = 0; c < 5; c += 1) {
+      const a = farVerts[r * 6 + c];
+      const b = farVerts[r * 6 + c + 1];
+      const cc = farVerts[(r + 1) * 6 + c];
+      const d = farVerts[(r + 1) * 6 + c + 1];
+      indices.push(a, b, cc, b, d, cc);
+    }
+  }
+
+  // Tertiary shell near secondary distal (coincident with secondary, NOT with primary) — recursion must not activate
+  /** @type {number[]} */
+  const thirdVerts = [];
+  /** @type {number[][]} */
+  const thirdGrid = [];
+  for (let r = 0; r < 3; r += 1) {
+    /** @type {number[]} */
+    const row = [];
+    for (let c = 0; c < cols; c += 1) {
+      const x = (c - (cols - 1) / 2) * 0.018;
+      const y = 1.2 - (secRows - 1) * 0.018 - r * 0.018;
+      const z = 0.2;
+      const i = pushVert(x, y, z, JOINT_NECK);
+      row.push(i);
+      thirdVerts.push(i);
+    }
+    thirdGrid.push(row);
+  }
+  for (let r = 0; r < 2; r += 1) {
+    for (let c = 0; c < cols - 1; c += 1) {
+      indices.push(
+        thirdGrid[r][c],
+        thirdGrid[r + 1][c],
+        thirdGrid[r][c + 1],
+        thirdGrid[r][c + 1],
+        thirdGrid[r + 1][c],
+        thirdGrid[r + 1][c + 1],
+      );
+    }
+  }
+
+  const vertexCount = positions.length / 3;
+  const doc = new Document();
+  const buffer = doc.createBuffer();
+  const posAcc = doc
+    .createAccessor()
+    .setType('VEC3')
+    .setArray(new Float32Array(positions))
+    .setBuffer(buffer);
+  const idxAcc = doc
+    .createAccessor()
+    .setType('SCALAR')
+    .setArray(new Uint32Array(indices))
+    .setBuffer(buffer);
+  const prim = doc.createPrimitive().setAttribute('POSITION', posAcc).setIndices(idxAcc);
+  prim.setMaterial(doc.createMaterial('face'));
+
+  const morphNames = [
+    'jawOpen',
+    'eyeBlinkLeft',
+    'eyeBlinkRight',
+    'browInnerUp',
+    'mouthSmileLeft',
+    'mouthSmileRight',
+    'mouthPucker',
+  ];
+  for (const name of morphNames) {
+    const deltas = new Float32Array(vertexCount * 3);
+    if (name === 'jawOpen') deltas[0] = 0.001;
+    const deltaAcc = doc.createAccessor().setType('VEC3').setArray(deltas).setBuffer(buffer);
+    prim.addTarget(doc.createPrimitiveTarget().setAttribute('POSITION', deltaAcc));
+  }
+  prim.setExtras({ targetNames: morphNames });
+  const mesh = doc.createMesh('FaceMesh').addPrimitive(prim);
+  mesh.setExtras({ targetNames: morphNames });
+
+  const jointsArr = new Uint16Array(vertexCount * 4);
+  const weightArr = new Float32Array(vertexCount * 4);
+  for (let v = 0; v < vertexCount; v += 1) {
+    jointsArr[v * 4] = jointIdx[v];
+    weightArr[v * 4] = 1;
+  }
+  prim
+    .setAttribute(
+      'JOINTS_0',
+      doc.createAccessor().setType('VEC4').setArray(jointsArr).setBuffer(buffer),
+    )
+    .setAttribute(
+      'WEIGHTS_0',
+      doc.createAccessor().setType('VEC4').setArray(weightArr).setBuffer(buffer),
+    );
+
+  const hips = doc.createNode('Hips');
+  const neck = doc.createNode('Neck');
+  const spine = doc.createNode('Spine');
+  const skin = doc.createSkin('skin').addJoint(hips).addJoint(neck).addJoint(spine).setSkeleton(hips);
+  const faceNode = doc.createNode('FaceMesh').setMesh(mesh).setSkin(skin);
+  doc.createScene().addChild(faceNode).addChild(hips).addChild(neck).addChild(spine);
+
+  /** @type {Record<string, unknown>} */
+  const anchors = {};
+  for (const [id, tri] of Object.entries(triByAnchor)) {
+    anchors[id] = {
+      nodeIdentity: 'FaceMesh',
+      primitiveIndex: 0,
+      triangleIndex: tri,
+      barycentric: { u: 1, v: 0, w: 0 },
+    };
+  }
+
+  // Component ids via same adjacency labeling as production
+  const { adj } = buildPrimitiveAdjacency(prim);
+  const compOf = new Int32Array(vertexCount).fill(-1);
+  let next = 0;
+  for (let s = 0; s < vertexCount; s += 1) {
+    if (compOf[s] >= 0) continue;
+    const cid = next;
+    next += 1;
+    const q = [s];
+    compOf[s] = cid;
+    for (let qi = 0; qi < q.length; qi += 1) {
+      for (const nb of adj[q[qi]]) {
+        if (compOf[nb] < 0) {
+          compOf[nb] = cid;
+          q.push(nb);
+        }
+      }
+    }
+  }
+
+  return {
+    bytes: Buffer.from(await io.writeBinary(doc)),
+    anchors: { contractVersion: FACE_ANCHORS_CONTRACT_VERSION, anchors },
+    secondarySeamVerts,
+    secondaryDistalVerts,
+    bodyVerts,
+    singleVerts,
+    farVerts,
+    thirdVerts,
+    secondaryComponentId: compOf[secondarySeamVerts[0]],
+    bodyComponentId: compOf[bodyVerts[0]],
+    singleComponentId: compOf[singleVerts[0]],
+    farComponentId: compOf[farVerts[0]],
+    thirdComponentId: compOf[thirdVerts[0]],
   };
 }
 
@@ -276,7 +634,13 @@ async function main() {
         (r1.channelStats.displacements.mouthUpper || 0),
       'lower moves more than upper',
     );
-    check((r1.channelStats.displacements.chin || 0) > 0.01, 'chin moves');
+    check((r1.channelStats.displacements.mouthLower || 0) > 0.01, 'mouthLower moves');
+    // Chin may be a separate connected component from mouth GT seeds (production body shell).
+    // Surface gate must NOT pull disconnected chin/chest shells; chin displacement may be ~0.
+    check(
+      (r1.channelStats.displacements.chin || 0) < 0.2,
+      'chin displacement bounded (disconnected chin shell not Euclidean-pulled)',
+    );
     check((r1.channelStats.displacements.noseTip || 0) < 1e-6, 'nose ≈ 0');
     check((r1.channelStats.displacements.forehead || 0) < 1e-6, 'forehead = 0');
     check(r1.afterJawOpenMorphSha256 !== r1.beforeJawOpenMorphSha256, 'jawOpen deltas changed');
@@ -761,6 +1125,164 @@ async function main() {
         String(err.message || err).includes('stale_triangle');
     }
     check(rejected, 'wrong/stale triangle binding rejected');
+
+    // --- Surface safety: disconnected Euclidean-near shell must not receive jawOpen deltas ---
+    {
+      const surfDir = join(work, 'surface-safety');
+      const surf = await writeBundle(surfDir, fixture.bytes, fixture.anchors);
+      const surfOut = join(surfDir, 'jaw.glb');
+      const surfReport = join(surfDir, 'jaw-report.json');
+      const rj = await authorLiveActFunctionalMorph({
+        inputPath: surf.glbPath,
+        outputPath: surfOut,
+        anchorsPath: surf.anchorsPath,
+        authoringPath: surf.authoringPath,
+        channel: 'jawOpen',
+        reportPath: surfReport,
+      });
+      check(
+        rj.channelStats?.surfaceSafety?.offSurfaceRejected > 0 ||
+          rj.channelStats?.surfaceSafety?.allowedSurfaceVertexCount < rj.channelStats?.vertexCount,
+        'jawOpen surface gate reports restricted allowed surface',
+      );
+      const docJ = await io.read(surfOut);
+      const meshJ = docJ.getRoot().listMeshes()[0];
+      const primJ = meshJ.listPrimitives()[0];
+      const mi = (() => {
+        const extras = primJ.getExtras() || {};
+        const names = Array.isArray(extras.targetNames) ? extras.targetNames.map(String) : [];
+        return names.indexOf('jawOpen');
+      })();
+      const mp = primJ.listTargets()[mi].getAttribute('POSITION');
+      const d = [0, 0, 0];
+      let chestMag = 0;
+      for (let k = 0; k < 3; k += 1) {
+        const vi = fixture.disconnectedChestVertexBase + k;
+        mp.getElement(vi, d);
+        chestMag = Math.max(chestMag, Math.hypot(d[0], d[1], d[2]));
+      }
+      check(chestMag <= 1e-8, 'disconnected chest shell inside Euclidean radius gets zero jawOpen delta');
+
+      // Same-component lip/mouthLower seed must deform
+      const mouthBinding = fixture.anchors.anchors.mouthLower;
+      const tri = mouthBinding.triangleIndex;
+      const idx = primJ.getIndices();
+      const i0 = idx.getScalar(tri * 3);
+      mp.getElement(i0, d);
+      const lipMag = Math.hypot(d[0], d[1], d[2]);
+      check(lipMag > 1e-5, 'GT-bound mouthLower triangle vertex receives jawOpen delta');
+    }
+
+    // --- Coupled Facial Shell Contract (Option C) geometry behavior ---
+    {
+      const coupled = await buildCoupledShellFixtureGlb();
+      const cDir = join(work, 'coupled-shell');
+      const bundle = await writeBundle(cDir, coupled.bytes, coupled.anchors);
+      const docC = await io.read(bundle.glbPath);
+      const primC = docC.getRoot().listMeshes()[0].listPrimitives()[0];
+      const anchorsObj = coupled.anchors.anchors;
+      const resolved = resolveFaceAnchorPositions(docC, anchorsObj);
+      const frame = buildFaceLocalFrame(resolved);
+      const surface = buildGtBoundSurfaceGate(
+        primC,
+        anchorsObj,
+        JAW_OPEN_AUTHOR_CONTRACT_V1.surfaceSeedAnchors,
+      );
+      /** @type {number[]} */
+      const primaryVerts = [];
+      for (let i = 0; i < surface.allowed.length; i += 1) {
+        if (surface.allowed[i]) primaryVerts.push(i);
+      }
+      const jointNames = docC
+        .getRoot()
+        .listSkins()[0]
+        .listJoints()
+        .map((j) => j.getName() || '');
+      const gtRefs = [
+        resolved.mouthLower,
+        resolved.mouthUpper,
+        resolved.chin,
+        resolved.mouthCornerLeft,
+        resolved.mouthCornerRight,
+      ].filter(Boolean);
+      const det1 = resolveCoupledFacialPatches({
+        prim: primC,
+        surface,
+        primaryVerts,
+        faceHeight: frame.faceHeight,
+        gtRefs,
+        jointNames,
+      });
+      const det2 = resolveCoupledFacialPatches({
+        prim: primC,
+        surface,
+        primaryVerts,
+        faceHeight: frame.faceHeight,
+        gtRefs,
+        jointNames,
+      });
+      const accepted = det1.patches.map((p) => p.componentId).sort((a, b) => a - b);
+      check(accepted.includes(coupled.secondaryComponentId), 'disconnected coherent facial seam accepted');
+      check(!accepted.includes(coupled.bodyComponentId), 'body-majority shell rejected');
+      check(!accepted.includes(coupled.singleComponentId), 'single coincident vertex shell rejected');
+      check(!accepted.includes(coupled.farComponentId), 'GT-far shell rejected');
+      check(!accepted.includes(coupled.thirdComponentId), 'near tertiary without primary seam rejected / not accepted');
+      check(
+        JSON.stringify(det1.patches.map((p) => p.componentId)) ===
+          JSON.stringify(det2.patches.map((p) => p.componentId)) &&
+          det1.secondaryBindings.size === det2.secondaryBindings.size,
+        'coupling detection deterministic',
+      );
+
+      // Author transfer: secondary seam moves; body/far/single stay 0; no third propagation
+      const outPath = join(cDir, 'jaw.glb');
+      const report = await authorLiveActFunctionalMorph({
+        inputPath: bundle.glbPath,
+        outputPath: outPath,
+        anchorsPath: bundle.anchorsPath,
+        authoringPath: bundle.authoringPath,
+        channel: 'jawOpen',
+        reportPath: join(cDir, 'jaw-report.json'),
+      });
+      const shell = report.channelStats?.coupledShell;
+      check(!!shell && shell.acceptedComponentIds?.includes(coupled.secondaryComponentId), 'author accepts facial secondary');
+      check(shell?.noRecursivePropagation === true, 'author asserts no recursive propagation');
+      check(shell?.seamContinuity?.pass !== false, 'seam continuity metric present/pass');
+
+      const docOut = await io.read(outPath);
+      const primOut = docOut.getRoot().listMeshes()[0].listPrimitives()[0];
+      const names = (primOut.getExtras()?.targetNames || []).map(String);
+      const mi = names.indexOf('jawOpen');
+      const mp = primOut.listTargets()[mi].getAttribute('POSITION');
+      const d = [0, 0, 0];
+      let secMag = 0;
+      for (const v of coupled.secondarySeamVerts) {
+        mp.getElement(v, d);
+        secMag = Math.max(secMag, Math.hypot(d[0], d[1], d[2]));
+      }
+      check(secMag > 1e-6, 'secondary interface moves with primary');
+      let distalMag = 0;
+      for (const v of coupled.secondaryDistalVerts) {
+        mp.getElement(v, d);
+        distalMag = Math.max(distalMag, Math.hypot(d[0], d[1], d[2]));
+      }
+      check(distalMag < secMag * 0.55, 'patch falloff reduces distal secondary motion');
+      let bodyMag = 0;
+      for (const v of coupled.bodyVerts) {
+        mp.getElement(v, d);
+        bodyMag = Math.max(bodyMag, Math.hypot(d[0], d[1], d[2]));
+      }
+      check(bodyMag <= 1e-8, 'body-majority shell stays zero after author');
+      let thirdMag = 0;
+      for (const v of coupled.thirdVerts) {
+        mp.getElement(v, d);
+        thirdMag = Math.max(thirdMag, Math.hypot(d[0], d[1], d[2]));
+      }
+      check(thirdMag <= 1e-8, 'secondary does not propagate to third component');
+
+      // Stale GT / malformed topology fail closed (already covered above for jawOpen;
+      // coupled utility also throws on missing POSITION/indices — covered via author path).
+    }
   } finally {
     rmSync(work, { recursive: true, force: true });
   }

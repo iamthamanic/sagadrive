@@ -1,0 +1,21 @@
+{
+  "jawOpen": {
+    "hash": "1956c38e8c27ae0d02c9db2ddeb4534600535f7bd2ddbc7ad9beb7367d4f0fdd",
+    "rerun": "1956c38e8c27ae0d02c9db2ddeb4534600535f7bd2ddbc7ad9beb7367d4f0fdd",
+    "pass": true
+  },
+  "eyeBlinkLeft": {
+    "hash": "439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e",
+    "rerun": "439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e",
+    "pass": true
+  },
+  "eyeBlinkRight": {
+    "hash": "e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201",
+    "rerun": "e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201",
+    "pass": true
+  },
+  "couplingMapAuthor": [
+    497
+  ],
+  "pass": true
+}

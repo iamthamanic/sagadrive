@@ -1,0 +1,42 @@
+{
+  "asset": "f5",
+  "requiredNegatives": [
+    105,
+    1071,
+    1975
+  ],
+  "stillRejected": [
+    {
+      "componentId": 105,
+      "accepted": false,
+      "rejectRecord": {
+        "componentId": 105,
+        "reason": "whole_comp_body",
+        "wholeCompBodyFrac": 0.8273273273273273,
+        "coincideCount": 27
+      }
+    },
+    {
+      "componentId": 1071,
+      "accepted": false,
+      "rejectRecord": {
+        "componentId": 1071,
+        "reason": "whole_comp_body",
+        "wholeCompBodyFrac": 0.996969696969697,
+        "coincideCount": 25
+      }
+    },
+    {
+      "componentId": 1975,
+      "accepted": false,
+      "rejectRecord": {
+        "componentId": 1975,
+        "reason": "whole_comp_body",
+        "wholeCompBodyFrac": 1,
+        "coincideCount": 12
+      }
+    }
+  ],
+  "bodyFp": 0,
+  "pass": true
+}

@@ -1,0 +1,557 @@
+{
+  "asset": "f5",
+  "pairs": [
+    {
+      "secondary": 46625,
+      "primary": 47748,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 47541,
+      "primary": 48708,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 47742,
+      "primary": 49293,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 49887,
+      "primary": 49294,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 51848,
+      "primary": 51494,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 52898,
+      "primary": 54413,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 53934,
+      "primary": 55935,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 54415,
+      "primary": 55682,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 54482,
+      "primary": 54894,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 54521,
+      "primary": 55420,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 54559,
+      "primary": 55914,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 54567,
+      "primary": 55419,
+      "neutralDist": 0,
+      "componentId": 497
+    },
+    {
+      "secondary": 71827,
+      "primary": 72205,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 71829,
+      "primary": 72207,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 72835,
+      "primary": 73251,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 72836,
+      "primary": 72198,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 72837,
+      "primary": 71900,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 72870,
+      "primary": 72873,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 72871,
+      "primary": 71293,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73254,
+      "primary": 72032,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73257,
+      "primary": 72200,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73259,
+      "primary": 72839,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73260,
+      "primary": 71833,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73265,
+      "primary": 73197,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73266,
+      "primary": 72853,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73416,
+      "primary": 72834,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73417,
+      "primary": 72197,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73418,
+      "primary": 72196,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73420,
+      "primary": 71288,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73421,
+      "primary": 72199,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73424,
+      "primary": 72201,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73427,
+      "primary": 72840,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73430,
+      "primary": 72202,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73444,
+      "primary": 71904,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73452,
+      "primary": 72305,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73454,
+      "primary": 73451,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73456,
+      "primary": 73455,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73457,
+      "primary": 73541,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73458,
+      "primary": 72850,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73460,
+      "primary": 73459,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73461,
+      "primary": 72851,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73462,
+      "primary": 73772,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73463,
+      "primary": 72852,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73465,
+      "primary": 72308,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73467,
+      "primary": 73145,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73469,
+      "primary": 73473,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73485,
+      "primary": 70776,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73486,
+      "primary": 70777,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73487,
+      "primary": 72875,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73488,
+      "primary": 71611,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73490,
+      "primary": 74649,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73574,
+      "primary": 73262,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73575,
+      "primary": 73111,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73576,
+      "primary": 72598,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73641,
+      "primary": 71903,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73756,
+      "primary": 73635,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73757,
+      "primary": 72849,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73774,
+      "primary": 72055,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73778,
+      "primary": 72841,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73787,
+      "primary": 73263,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73850,
+      "primary": 72060,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73854,
+      "primary": 72863,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73856,
+      "primary": 71857,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73860,
+      "primary": 72201,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73881,
+      "primary": 73482,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73883,
+      "primary": 72869,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 73884,
+      "primary": 73271,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74000,
+      "primary": 74595,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74009,
+      "primary": 72595,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74012,
+      "primary": 72848,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74013,
+      "primary": 73111,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74014,
+      "primary": 73147,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74016,
+      "primary": 73146,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74017,
+      "primary": 73146,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74024,
+      "primary": 73466,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74025,
+      "primary": 72020,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74037,
+      "primary": 72862,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74050,
+      "primary": 73481,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74051,
+      "primary": 72235,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74055,
+      "primary": 71690,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74057,
+      "primary": 72237,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74155,
+      "primary": 73270,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74156,
+      "primary": 72227,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74173,
+      "primary": 72868,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74303,
+      "primary": 71904,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74379,
+      "primary": 73111,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 74640,
+      "primary": 72605,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 75280,
+      "primary": 71521,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 75284,
+      "primary": 72236,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 75286,
+      "primary": 71663,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 75955,
+      "primary": 76601,
+      "neutralDist": 0,
+      "componentId": 1057
+    },
+    {
+      "secondary": 78052,
+      "primary": 77563,
+      "neutralDist": 0,
+      "componentId": 1057
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "changed": [
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "jawOpen"
+  ],
+  "frozenOk": true,
+  "frozenHashes": {
+    "browInnerUp": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+    "mouthSmileLeft": "d1bcdae0cbb803c79301b84bd1838ab0deb7af32ac183d914e130d06b9623d46",
+    "mouthSmileRight": "71a6c33a5c0777549ef463518ae35ca5fa7510363490f4723fb0b2ae79e6e32f",
+    "mouthPucker": "5f27917ff83ffd236649cedd807a14c08f46fa9d2c61ff966cfeda163bc080d0"
+  },
+  "faceRigUntouchedCount": 48,
+  "faceRigOk": true,
+  "onlyAllowedChanged": true
+}

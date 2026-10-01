@@ -1,0 +1,31 @@
+{
+  "asset": "m5",
+  "requiredNegatives": [
+    65,
+    284
+  ],
+  "stillRejected": [
+    {
+      "componentId": 65,
+      "accepted": false,
+      "rejectRecord": {
+        "componentId": 65,
+        "reason": "whole_comp_body",
+        "wholeCompBodyFrac": 0.8439716312056738,
+        "coincideCount": 15
+      }
+    },
+    {
+      "componentId": 284,
+      "accepted": false,
+      "rejectRecord": {
+        "componentId": 284,
+        "reason": "whole_comp_body",
+        "wholeCompBodyFrac": 0.8563484708063022,
+        "coincideCount": 0
+      }
+    }
+  ],
+  "bodyFp": 0,
+  "pass": true
+}

@@ -29,18 +29,29 @@ export const FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1 = Object.freeze([
 /**
  * @typedef {{
  *   targetAnchors: string[];
+ *   surfaceSeedAnchors: string[];
  *   fixedAnchors: string[];
  *   requiredAnchors: string[];
  *   moveRadiusFaceH: number;
  *   fixRadiusFaceH: number;
  *   ampFaceH: number;
+ *   ampMouthWidth: number;
+ *   ampNeutralGap: number;
  *   backBias: number;
+ *   topoFalloffExp: number;
  * }} JawOpenAuthorContract
  */
 
 /** @type {Readonly<JawOpenAuthorContract>} */
 export const JAW_OPEN_AUTHOR_CONTRACT_V1 = Object.freeze({
   targetAnchors: Object.freeze(['mouthLower', 'chin']),
+  /** GT-bound triangles that define the authoritative perioral surface (not chin body shell). */
+  surfaceSeedAnchors: Object.freeze([
+    'mouthUpper',
+    'mouthLower',
+    'mouthCornerLeft',
+    'mouthCornerRight',
+  ]),
   fixedAnchors: Object.freeze(['mouthUpper', 'noseTip', 'forehead']),
   requiredAnchors: Object.freeze([
     'mouthUpper',
@@ -50,11 +61,22 @@ export const JAW_OPEN_AUTHOR_CONTRACT_V1 = Object.freeze({
     'forehead',
     'eyeLeftOuter',
     'eyeRightOuter',
+    'mouthCornerLeft',
+    'mouthCornerRight',
   ]),
-  moveRadiusFaceH: 0.34,
+  moveRadiusFaceH: 0.28,
   fixRadiusFaceH: 0.14,
-  ampFaceH: 0.19,
-  backBias: 0.25,
+  ampFaceH: 0.12,
+  /**
+   * Geometric amp caps (shared m5/f5, no asset branches):
+   * amp = min(faceH*ampFaceH, mouthWidth*ampMouthWidth, neutralMouthGap*ampNeutralGap)
+   * Mouth-width + neutral-gap caps prevent post-surface-gate over-open on dense perioral meshes.
+   */
+  ampMouthWidth: 0.16,
+  ampNeutralGap: 0.22,
+  backBias: 0.2,
+  /** Topology hop falloff exponent on allowed surface (1=linear). */
+  topoFalloffExp: 1.25,
 });
 
 /**

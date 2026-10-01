@@ -1,0 +1,84 @@
+{
+  "id": "m5",
+  "candidateSha256": "a56e499f4cb62bcc0f03e0cc570fba0595c7cf4e22838d88823ecc2106b6c822",
+  "jawOpen": {
+    "oldAffectedApprox": 13055,
+    "newAffected": 3192,
+    "oldMouthGapApprox": 0.914,
+    "newMouthGapDelta": 0.14981699883315613,
+    "amp": 0.011815556096103293,
+    "ampFaceHComponent": 0.04296690692490734,
+    "ampMouthWidthComponent": 0.011815556096103293,
+    "ampNeutralGapComponent": 0.1752973824796486,
+    "morphHash": "61bf1476fb9acf0c717e87724c8a7fa6a523c289e30683822b59018cf9e26c5e",
+    "rerunHash": "61bf1476fb9acf0c717e87724c8a7fa6a523c289e30683822b59018cf9e26c5e",
+    "surfaceSafety": {
+      "allowedSurfaceVertexCount": 3925,
+      "maxTopologyHops": 38,
+      "meanEdgeLength": 0.004141176986609892,
+      "offSurfaceRejected": 4360,
+      "offTopoRejected": 0,
+      "offSurfaceAffectedCount": 0,
+      "offSurfaceMaxDisplacement": 0,
+      "maxOffSurfaceDispWouldHaveBeen": 0.011267096764607932,
+      "surfaceSeedAnchors": [
+        "mouthUpper",
+        "mouthLower",
+        "mouthCornerLeft",
+        "mouthCornerRight"
+      ],
+      "chinOnAllowedSurface": false
+    },
+    "chinSpatialUsed": false,
+    "functional": true,
+    "surfaceSafetyPass": true,
+    "visual": "FAIL \u2014 residual under-beard silhouette vs frozen neck shell (off-surface energy=0)"
+  },
+  "blinkLeft": {
+    "affected": 632,
+    "morphHash": "c601c77b4209188c791c974f5c7fb0b9e2151621f2067893c3a164bb97a91b71",
+    "functional": true,
+    "surfaceSafety": {
+      "allowedSurfaceVertexCount": 2277,
+      "maxTopologyHops": 14,
+      "meanEdgeLength": 0.004141176986609892,
+      "offSurfaceRejected": 37,
+      "offTopoRejected": 2,
+      "offSurfaceAffectedCount": 0,
+      "offSurfaceMaxDisplacement": 0,
+      "surfaceSeedAnchors": [
+        "eyeLeftUpper",
+        "eyeLeftLower",
+        "eyeLeftInner",
+        "eyeLeftOuter"
+      ]
+    },
+    "visual": "PASS \u2014 no severe lid pinch; side isolation OK"
+  },
+  "blinkRight": {
+    "affected": 526,
+    "morphHash": "681ff38de2d75675e37047902901e40599737857d28f86fcc7f8176d30c3883f",
+    "functional": true,
+    "visual": "PASS"
+  },
+  "regression": {
+    "changed": [
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
+      "jawOpen"
+    ],
+    "frozenOk": true,
+    "frozenHashes": {
+      "browInnerUp": "52f808420a23bb011de7fdd4251baf7258df3e56d03c7d2d29c0325badd5303f",
+      "mouthSmileLeft": "6df06ad3b3a13b14a591a6156a47a5a5776445f5294f4a1e8ff0b2631c944479",
+      "mouthSmileRight": "7e0132a6769368b04c66efef9198285ddd087cb6c7d6c01509e0abae790164be",
+      "mouthPucker": "e3e542a02d4cd32bd321acf9da0f26beaf6f84235260b2016a4d66324757495c"
+    },
+    "faceRigUntouchedCount": 48,
+    "faceRigOk": true,
+    "onlyAllowedChanged": true
+  },
+  "combinationPass": true,
+  "structuralPass": true,
+  "semanticPass": true
+}

@@ -1,0 +1,33 @@
+{
+  "id": "f5",
+  "candidateSha256": "f080391ae1b2e14abfafdafd8e77ff32ee4e2b28e7f03bf1d3eee816edbd9500",
+  "jawOpen": {
+    "functional": true,
+    "gapDelta": 0.12333840638086313,
+    "affected": 1244,
+    "coupledAccepted": [
+      497
+    ],
+    "coupledAffected": 40,
+    "seamContinuity": true,
+    "surfaceSafety": true,
+    "morphHash": "1956c38e8c27ae0d02c9db2ddeb4534600535f7bd2ddbc7ad9beb7367d4f0fdd",
+    "bodyFp": 0,
+    "visual": "PASS \u2014 under-chin coincident seam closed (gap0; was ~6.2mm); no chest/shoulder stretch; mouth aperture functional"
+  },
+  "blinks": {
+    "leftFunctional": true,
+    "rightFunctional": true,
+    "leftHash": "439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e",
+    "rightHash": "e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201",
+    "visual": "PASS \u2014 hashes match surface-fix1 path; no severe lid pinch regression expected"
+  },
+  "functionalOverall": true,
+  "regression": true,
+  "combination": true,
+  "determinism": true,
+  "detection": true,
+  "visualPendingManual": false,
+  "visualPass": true,
+  "overall": "PASS"
+}

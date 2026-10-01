@@ -1,0 +1,13 @@
+{
+  "neutral": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/visual/f5-neutral.jpg",
+  "jaw25-front": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/visual/f5-jaw25-front.jpg",
+  "jaw50-front": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/visual/f5-jaw50-front.jpg",
+  "jaw75-front": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/visual/f5-jaw75-front.jpg",
+  "jawOpen-front": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/visual/f5-jawOpen-front.jpg",
+  "jawOpen-left": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/visual/f5-jawOpen-left.jpg",
+  "jawOpen-right": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/visual/f5-jawOpen-right.jpg",
+  "jawOpen-below": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/visual/f5-jawOpen-below.jpg",
+  "blinkLeft": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/visual/f5-blinkLeft.jpg",
+  "blinkRight": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/visual/f5-blinkRight.jpg",
+  "bothBlinks": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/visual/f5-bothBlinks.jpg"
+}
