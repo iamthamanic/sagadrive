@@ -7,8 +7,11 @@ Diese Datei ist die kanonische visuelle Designsystem-Referenz fuer SagaDrive. Fu
 Produktverhalten ist separat verbindlich definiert:
 - `docs/concepts/conductor-experience-contract.md` fuer Performance Mode, Live-Steuerung, Responsivitaet, Motion, Command Depth und Mastery.
 - `docs/concepts/imagination-first-visualization-contract.md` fuer Scenes, Program/Viewer, 2D/3D, Visual Authority, Progressive Materialization und Imagination Preservation.
+- `docs/concepts/adaptive-ui-experience-contract.md` fuer Adaptive UI / Mobile Experience (Phone/Tablet/Desktop-Rekomposition, Touch Targets, Safe Areas, Accessibility, `AU-*` Gates).
 
 Diese Experience-Vertraege sind keine optionalen Designhinweise. Relevante UI-/Visualisierungsfeatures muessen ihre Gates erfuellen oder eine explizite Abweichung dokumentieren.
+
+**Entdopplung:** Visuelle Tokens, Markenrollen und Control-Affordances bleiben in diesem THEME_GUIDE. Messbare Mobile-/Viewport-/Touch-/Safe-Area-/Recomposition-Regeln und `AU-*` Gates stehen nur im Adaptive-UI-Contract — hier nicht widerspruechlich duplizieren.
 
 ## Design Read
 
@@ -202,6 +205,7 @@ Disabled                  -> Neutral
 - Mehrspaltige Editor-Layouts unter 768px auf eine Spalte reduzieren.
 - Keine horizontal abgeschnittenen Tabs oder Form Controls.
 - Labels und Helper-Text bleiben lesbar und springen nicht in Controls hinein.
+- Verbindliche Device-Bands, Safe-Area-, Touch-Parity-, Recomposition- und `AU-*` Gate-Regeln: `docs/concepts/adaptive-ui-experience-contract.md` (nicht hier erneut ausformulieren).
 
 ## Umsetzung fuer neue Screens
 

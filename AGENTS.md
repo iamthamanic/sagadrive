@@ -106,19 +106,22 @@ supabase/functions/
 - `src/styles/globals.css` and `src/shared/ui/` are the technical source of truth.
 - `docs/concepts/conductor-experience-contract.md` is mandatory for Performance Mode/live interaction work.
 - `docs/concepts/imagination-first-visualization-contract.md` is mandatory for Scene/Program/Viewer/3D/visualization work.
+- `docs/concepts/adaptive-ui-experience-contract.md` is mandatory for all new user-facing UI (Phone/Tablet/Desktop recomposition, touch, safe areas, a11y).
 - Do not introduce local color conventions that conflict with these files.
 
 ### Product Experience Contracts
 
-Before implementing any UI feature, classify it as `SETUP`, `PERFORMANCE`, or mixed.
+Before implementing any UI feature, classify it as `SETUP`, `PERFORMANCE`, or mixed, **and** classify the adaptive surface as Journey / Workstation / Live / Overlay per the Adaptive UI contract.
 
 For `PERFORMANCE` work, agents MUST read and apply `docs/concepts/conductor-experience-contract.md`. Relevant acceptance criteria must reference its `CE-*` gates.
 
 For visualization work, agents MUST read and apply `docs/concepts/imagination-first-visualization-contract.md`. Relevant acceptance criteria must reference its `IV-*` gates.
 
-Subjective words such as "premium", "cinematic", "immersive", "smooth", "magical" or "high quality" are never sufficient acceptance criteria. Translate them into observable behavior, quantitative thresholds, state rules and the applicable CE/IV gates.
+For **any new user-facing UI**, agents MUST read and apply `docs/concepts/adaptive-ui-experience-contract.md`. Relevant acceptance criteria must reference its `AU-*` gates (device bands, touch targets, safe areas, recomposition, states). Subjective "responsive" / "mobile-first" / "Apple-like" wording is never enough.
 
-If a ticket intentionally violates a contract baseline, the deviation and reason MUST be explicit in the ticket/acceptance.
+Subjective words such as "premium", "cinematic", "immersive", "smooth", "magical" or "high quality" are never sufficient acceptance criteria. Translate them into observable behavior, quantitative thresholds, state rules and the applicable CE/IV/AU gates.
+
+If a ticket intentionally violates a contract baseline, the deviation and reason MUST be explicit in the ticket/acceptance (Adaptive UI: named `AU-*` Hard Gate + supported device bands).
 
 ### Brand Color Roles
 
