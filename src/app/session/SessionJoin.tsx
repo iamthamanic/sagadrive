@@ -1,8 +1,12 @@
 /**
  * SessionJoin — Create/join play sessions via server-issued codes (#296).
  * Location: src/app/session/SessionJoin.tsx
+ *
+ * Library → Teilnehmen may deep-link with:
+ *   /session-join?project_id=<uuid>&saga=<SA-…>&intent=join
+ * so the clicked adventure and participant intent are preserved.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
@@ -14,11 +18,29 @@ import { useSessions } from './hooks/useSessions';
 import { PreparedAdventureFixturePanel } from './PreparedAdventureFixturePanel';
 import { toast } from 'sonner';
 
+export type SessionJoinSurfaceMeta = {
+  sagaPublicId: string | null;
+  sessionPublicId: string | null;
+};
+
 interface SessionJoinProps {
   onBack: () => void;
-  onJoinAsGM: (sessionId: string) => void;
-  onJoinAsPlayer: (sessionId: string, code: string) => void;
+  onJoinAsGM: (sessionId: string, meta?: SessionJoinSurfaceMeta) => void;
+  onJoinAsPlayer: (sessionId: string, code: string, meta?: SessionJoinSurfaceMeta) => void;
   onNavigateToCharacterEditor?: () => void;
+}
+
+function readSessionJoinSearch() {
+  if (typeof window === 'undefined') {
+    return { projectId: '', sagaPublicId: '', intentJoin: false };
+  }
+  const params = new URLSearchParams(window.location.search);
+  const intent = (params.get('intent') || '').toLowerCase();
+  return {
+    projectId: params.get('project_id') || params.get('adventure_id') || '',
+    sagaPublicId: (params.get('saga') || params.get('saga_public_id') || '').trim().toUpperCase(),
+    intentJoin: intent === 'join' || intent === 'participant' || intent === 'teilnehmen',
+  };
 }
 
 export function SessionJoin({
@@ -27,9 +49,14 @@ export function SessionJoin({
   onJoinAsPlayer,
   onNavigateToCharacterEditor,
 }: SessionJoinProps) {
+  const initialSearch = readSessionJoinSearch();
   const [sessionCode, setSessionCode] = useState('');
   const [newSessionName, setNewSessionName] = useState('');
-  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState(initialSearch.projectId);
+  const [sagaPublicId, setSagaPublicId] = useState(initialSearch.sagaPublicId);
+  const [activeTab, setActiveTab] = useState<'create' | 'join'>(
+    initialSearch.intentJoin ? 'join' : 'create',
+  );
   const [copied, setCopied] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
@@ -40,6 +67,32 @@ export function SessionJoin({
   const gmProjects = projects.filter(
     (project) => project.status === 'active' || project.status === 'paused',
   );
+
+  useEffect(() => {
+    const next = readSessionJoinSearch();
+    if (next.projectId) setSelectedProjectId(next.projectId);
+    if (next.sagaPublicId) setSagaPublicId(next.sagaPublicId);
+    if (next.intentJoin) setActiveTab('join');
+  }, []);
+
+  useEffect(() => {
+    if (sagaPublicId || !selectedProjectId) return;
+    const match = projects.find((project) => project.id === selectedProjectId);
+    if (match?.publicId) setSagaPublicId(match.publicId.trim().toUpperCase());
+  }, [projects, selectedProjectId, sagaPublicId]);
+
+  const resolveSurfaceMeta = (session: {
+    publicId: string | null;
+    projectId: string | null;
+  }): SessionJoinSurfaceMeta => {
+    const fromSessionProject = session.projectId
+      ? projects.find((project) => project.id === session.projectId)?.publicId
+      : null;
+    return {
+      sagaPublicId: (sagaPublicId || fromSessionProject || '').trim().toUpperCase() || null,
+      sessionPublicId: session.publicId ? session.publicId.trim().toUpperCase() : null,
+    };
+  };
 
   const handleCreateSession = async () => {
     if (!newSessionName.trim()) {
@@ -64,7 +117,7 @@ export function SessionJoin({
         
         // Auto-navigate after 2 seconds
         setTimeout(() => {
-          onJoinAsGM(session.id);
+          onJoinAsGM(session.id, resolveSurfaceMeta(session));
         }, 2000);
       }
     } catch (err) {
@@ -87,7 +140,7 @@ export function SessionJoin({
       
       if (session) {
         toast.success('Session beigetreten!');
-        onJoinAsPlayer(session.id, session.code);
+        onJoinAsPlayer(session.id, session.code, resolveSurfaceMeta(session));
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Session nicht gefunden oder Fehler beim Beitreten';
@@ -127,14 +180,14 @@ export function SessionJoin({
           </p>
         </div>
 
-        <Tabs defaultValue="create" className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v === 'join' ? 'join' : 'create')} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="create">
+            <TabsTrigger value="create" data-session-join-tab="create">
               <Gamepad2 className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Session erstellen</span>
               <span className="sm:hidden">Erstellen</span>
             </TabsTrigger>
-            <TabsTrigger value="join">
+            <TabsTrigger value="join" data-session-join-tab="join">
               <Users className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Session beitreten</span>
               <span className="sm:hidden">Beitreten</span>
@@ -169,6 +222,7 @@ export function SessionJoin({
                     <Label htmlFor="project">Abenteuer (Projekt) *</Label>
                     <select
                       id="project"
+                      data-session-join-project
                       value={selectedProjectId}
                       onChange={(e) => setSelectedProjectId(e.target.value)}
                       className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm md:text-base"
@@ -314,7 +368,9 @@ export function SessionJoin({
                       <div
                         key={session.id}
                         className="flex items-center justify-between p-3 border border-border rounded-lg hover:border-primary transition-colors cursor-pointer"
-                        onClick={() => onJoinAsPlayer(session.id, session.code)}
+                        onClick={() =>
+                          onJoinAsPlayer(session.id, session.code, resolveSurfaceMeta(session))
+                        }
                       >
                         <div>
                           <p className="font-medium text-sm md:text-base">{session.name}</p>

@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { Button } from '../../shared/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Input } from '../../shared/ui/input';
-import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package, Users, Palette } from 'lucide-react';
+import { Plus, Search, User, BookOpen, Edit, Trash2, Loader2, Globe2, Package, Users, Palette, Gamepad2 } from 'lucide-react';
 import { useCharacterSummaries, CreateCharacterEntryDialog, setCharacterEditorBootstrap } from '../character';
 import type { CharacterSummaryVm } from '../../domains/character';
 import { resolveAvatarSurfaceView } from '../../domains/character/avatar';
@@ -201,9 +201,29 @@ export function Library({
     }
   };
 
+  const isProjectGm = (project: ProjectSummaryVm) =>
+    user !== null && project.gmUserId === user.id;
+
+  const openProjectAsGm = (_project: ProjectSummaryVm) => {
+    onNavigate('gamemaster');
+  };
+
+  /** Player / session join surface — keep clicked adventure + participant intent. */
+  const openProjectAsParticipant = (project: ProjectSummaryVm) => {
+    const params = new URLSearchParams({
+      project_id: project.id,
+      saga: project.publicId,
+      intent: 'join',
+    });
+    onNavigate(`/session-join?${params.toString()}`);
+  };
+
   const openProject = (project: ProjectSummaryVm) => {
-    const isGM = user !== null && project.gmUserId === user.id;
-    onNavigate(isGM ? 'gamemaster' : 'join');
+    if (isProjectGm(project)) {
+      openProjectAsGm(project);
+      return;
+    }
+    openProjectAsParticipant(project);
   };
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
@@ -237,17 +257,38 @@ export function Library({
       isCenter={context.isCenter}
       onOpen={context.variant === 'list' || context.isCenter ? () => openProject(project) : undefined}
       actions={
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1"
-          onClick={() => openProject(project)}
-        >
-          <BookOpen className="w-3 h-3 mr-1" />
-          <span className="text-xs">
-            {user !== null && project.gmUserId === user.id ? 'Leiten' : 'Öffnen'}
-          </span>
-        </Button>
+        isProjectGm(project) ? (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => openProjectAsGm(project)}
+            >
+              <BookOpen className="w-3 h-3 mr-1" />
+              <span className="text-xs">Leiten</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => openProjectAsParticipant(project)}
+            >
+              <Gamepad2 className="w-3 h-3 mr-1" />
+              <span className="text-xs">Teilnehmen</span>
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => openProjectAsParticipant(project)}
+          >
+            <Gamepad2 className="w-3 h-3 mr-1" />
+            <span className="text-xs">Teilnehmen</span>
+          </Button>
+        )
       }
     />
   );

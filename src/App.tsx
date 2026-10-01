@@ -77,15 +77,21 @@ function AppShell() {
     npcCreatureDefinitionId,
     route,
     navigateToView,
+    navigateToPath,
     navigateToItem,
     navigateToItemCreateType,
     navigateToLookCreate,
     navigateToLookEdit,
     navigateToNpcCreatureCreate,
     navigateToNpcCreatureEdit,
+    navigateToSessionLive,
   } = useAppLocation();
 
   const handleNavigate = (view: string) => {
+    if (view.startsWith('/')) {
+      navigateToPath(view);
+      return;
+    }
     navigateToView(view);
   };
 
@@ -173,8 +179,23 @@ function AppShell() {
           <LazyView>
             <SessionJoin
               onBack={() => handleNavigate('dashboard')}
-              onJoinAsGM={() => handleNavigate('gamemaster')}
-              onJoinAsPlayer={() => handleNavigate('gamemaster')}
+              onJoinAsGM={(sessionId, meta) => {
+                if (meta?.sagaPublicId && meta?.sessionPublicId) {
+                  navigateToSessionLive(meta.sagaPublicId, meta.sessionPublicId, 'gamemaster');
+                  return;
+                }
+                handleNavigate('gamemaster');
+              }}
+              onJoinAsPlayer={(sessionId, code, meta) => {
+                if (meta?.sagaPublicId && meta?.sessionPublicId) {
+                  navigateToSessionLive(meta.sagaPublicId, meta.sessionPublicId, 'player');
+                  return;
+                }
+                console.warn(
+                  '[app] player join missing public IDs; staying on session-join',
+                  { sessionId, code },
+                );
+              }}
               onNavigateToCharacterEditor={() => handleNavigate('character-editor')}
             />
           </LazyView>
