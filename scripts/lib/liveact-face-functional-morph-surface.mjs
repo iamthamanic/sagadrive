@@ -35,6 +35,10 @@ export function buildPrimitiveAdjacency(prim) {
     pos.getElement(i2, b);
     edgeLenSum += Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
     edgeCount += 1;
+    pos.getElement(i1, a);
+    pos.getElement(i2, b);
+    edgeLenSum += Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+    edgeCount += 1;
   }
   for (let i = 0; i < n; i += 1) {
     adj[i] = [...new Set(adj[i])];
@@ -108,23 +112,28 @@ export function connectedComponentMask(adj, seeds) {
 export function topologyDistancesOnAllowed(adj, seeds, allowed) {
   const n = adj.length;
   const dist = new Int32Array(n).fill(-1);
+  /** @type {Int32Array} nearest seed index for each reached vertex (-1 if unreachable) */
+  const nearestSeed = new Int32Array(n).fill(-1);
   const q = [];
   for (const s of seeds) {
     if (s < 0 || s >= n || !allowed[s] || dist[s] >= 0) continue;
     dist[s] = 0;
+    nearestSeed[s] = s;
     q.push(s);
   }
   let qi = 0;
   while (qi < q.length) {
     const v = q[qi++];
     const d = dist[v];
+    const seed = nearestSeed[v];
     for (const nb of adj[v]) {
       if (!allowed[nb] || dist[nb] >= 0) continue;
       dist[nb] = d + 1;
+      nearestSeed[nb] = seed;
       q.push(nb);
     }
   }
-  return dist;
+  return { dist, nearestSeed };
 }
 
 /**
@@ -158,7 +167,7 @@ export function buildGtBoundSurfaceGate(prim, anchors, surfaceSeedAnchorIds) {
     }
   }
 
-  const topoDist = topologyDistancesOnAllowed(adj, seedVerts, allowed);
+  const { dist: topoDist } = topologyDistancesOnAllowed(adj, seedVerts, allowed);
   let allowedCount = 0;
   for (let i = 0; i < vertexCount; i += 1) if (allowed[i]) allowedCount += 1;
 
@@ -475,7 +484,7 @@ export function resolveCoupledFacialPatches(opts) {
     const seeds = [...rec.coincide].sort((a, b) => a.i - b.i || a.j - b.j).map((p) => p.i);
     const allowed = new Uint8Array(n);
     for (let i = 0; i < n; i += 1) if (componentOf[i] === cid) allowed[i] = 1;
-    const hops = topologyDistancesOnAllowed(adj, seeds, allowed);
+    const { dist: hops, nearestSeed } = topologyDistancesOnAllowed(adj, seeds, allowed);
     /** @type {number[]} */
     const patchVerts = [];
     let patchBody = 0;
@@ -510,6 +519,7 @@ export function resolveCoupledFacialPatches(opts) {
         .map((p) => ({ secondary: p.i, primary: p.j, neutralDist: p.d })),
       patchVerts: patchVerts.sort((a, b) => a - b),
       patchHops: hops,
+      nearestSeamSeed: nearestSeed,
     });
   }
 
@@ -526,28 +536,18 @@ export function resolveCoupledFacialPatches(opts) {
       /** @type {Map<number, { primary: number; hops: number; componentId: number; falloff: number }>} */
       const map = new Map();
       for (const p of patches) {
-        // Build nearest primary among seam pairs for each patch vert via hops + seam seed inherit
         /** @type {Map<number, number>} */
         const seedPrimary = new Map();
         for (const sp of p.seamPairs) seedPrimary.set(sp.secondary, sp.primary);
+        const nearestSeamSeed = p.nearestSeamSeed;
         for (const v of p.patchVerts) {
           const h = p.patchHops[v];
           if (h < 0 || h > thr.maxPatchHops) continue;
-          // Prefer exact seam correspondence; else nearest seam seed's primary
+          // Exact seam seed, else BFS-nearest seam seed on the secondary patch.
           let primary = seedPrimary.get(v);
-          if (primary == null) {
-            let bestH = Infinity;
-            let bestSeed = -1;
-            for (const sp of p.seamPairs) {
-              // hop distance from v to seam seed on secondary (approx via absolute hop from seeds)
-              const dh = Math.abs(p.patchHops[sp.secondary] - h);
-              if (p.patchHops[sp.secondary] >= 0 && dh < bestH) {
-                bestH = dh;
-                bestSeed = sp.secondary;
-                primary = sp.primary;
-              }
-            }
-            if (primary == null && bestSeed >= 0) primary = seedPrimary.get(bestSeed);
+          if (primary == null && nearestSeamSeed) {
+            const seed = nearestSeamSeed[v];
+            if (seed >= 0) primary = seedPrimary.get(seed);
           }
           if (primary == null) continue;
           const falloff = Math.max(0, 1 - h / Math.max(1, thr.maxPatchHops)) ** thr.topoFalloffExp;

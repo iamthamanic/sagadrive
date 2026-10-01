@@ -85,4 +85,46 @@ for (const p of pairs) {
   console.log(`liveact-face-human-repro-check: ${p.id} semantic QA V2 pass`);
 }
 
+// Active face3 publish candidates — structural/anatomy/semantic against reviewed Stage-A anchors.
+const face3Pairs = [
+  {
+    id: 'm5-face3',
+    publicGlb: 'public/assets/avatars/species/human-male-quality-20260921-m5-face3.glb',
+    baseline: 'public/assets/avatars/species/human-male-quality-20260921-m5.glb',
+    anchors: 'assets/species-3d/human/runs/quality-20260930-m5-face3/face-anchors.json',
+    inventory: '.qa/runs/liveact-face3-m5-inventory-repro.json',
+  },
+  {
+    id: 'f5-face3',
+    publicGlb: 'public/assets/avatars/species/human-female-quality-20260921-f5-face3.glb',
+    baseline: 'public/assets/avatars/species/human-female-quality-20260921-f5.glb',
+    anchors: 'assets/species-3d/human/runs/quality-20260930-f5-face3/face-anchors.json',
+    inventory: '.qa/runs/liveact-face3-f5-inventory-repro.json',
+  },
+];
+
+for (const p of face3Pairs) {
+  check(existsSync(join(root, p.publicGlb)), `${p.id} public GLB exists`);
+  check(existsSync(join(root, p.anchors)), `${p.id} reviewed anchors exist`);
+  const result = await validateLiveActFaceAsset({
+    inputPath: join(root, p.publicGlb),
+    baselinePath: join(root, p.baseline),
+    profile: 'core-v1',
+    anchorsPath: join(root, p.anchors),
+    functionalMode: 'diagnostic',
+    outPath: join(root, p.inventory),
+  });
+  writeFileSync(join(root, p.inventory), `${JSON.stringify(result.inventory, null, 2)}\n`);
+  check(result.inventory.structuralPass === true, `${p.id} structural gate`);
+  check(
+    result.inventory.faceAnchorAnatomyQa?.pass === true,
+    `${p.id} face anchor anatomy PASS`,
+  );
+  check(
+    result.inventory.semanticQa?.pass === true,
+    `${p.id} semantic QA V2 pass (${(result.inventory.semanticQa?.violations || []).slice(0, 4).join('; ')})`,
+  );
+  console.log(`liveact-face-human-repro-check: ${p.id} structural/anatomy/semantic PASS`);
+}
+
 console.log('liveact-face-human-repro-check OK');
