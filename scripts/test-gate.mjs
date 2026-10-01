@@ -264,6 +264,14 @@ function checkInventoryMobileUi() {
   });
 }
 
+function checkAdaptiveSharedUiPrimitives() {
+  console.log('Adaptive shared UI primitives (#482): bands, 8 patterns, AU markers...');
+  execFileSync(process.execPath, ['scripts/adaptive-shared-ui-primitives-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkInventoryE2eIntegration() {
   console.log('Inventory v2 E2E integration (#114): child gates, architecture, docs sync, catalog size, inventory_v2 save...');
   execFileSync(process.execPath, ['scripts/inventory-e2e-integration-check.mjs'], {
@@ -1487,6 +1495,7 @@ checkInventoryDesktopUi();
 checkInventoryWorldCatalogUi();
 checkInventoryEquipmentUi();
 checkInventoryMobileUi();
+checkAdaptiveSharedUiPrimitives();
 checkInventoryE2eIntegration();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();

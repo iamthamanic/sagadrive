@@ -20,3 +20,4 @@ export type {
   ImageLightboxTarget,
   UseImageLightboxResult,
 } from './useImageLightbox';
+export * from './adaptive';

@@ -17,7 +17,7 @@ Related canonical sources:
 
 When this document conflicts with a local implementation shortcut, **this document wins for adaptive UI/mobile experience** unless a ticket explicitly changes the contract.
 
-This slice defines the contract only. Shared primitives (#482), automated gates (#483), and golden mobile journeys (#484) implement and enforce it.
+Shared primitives live under `src/shared/ui/adaptive/**` (#482). Automated gates (#483) and golden mobile journeys (#484) enforce this contract further.
 
 ---
 
