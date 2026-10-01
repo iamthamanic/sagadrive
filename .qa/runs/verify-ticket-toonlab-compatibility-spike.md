@@ -1,5 +1,7 @@
 # Verify Ticket — toonlab-compatibility-spike (#341)
 
+- HEAD_SHA: 8abc883ed0e5560b8773cdace5fb883e1b43b047
+
 ## Intent match
 Isolated ToonLab ↔ avatar renderer compatibility spike with real fixtures, explicit BLOCKED decision, and unblock path. No Look UI / persistence / silent renderer upgrade.
 
