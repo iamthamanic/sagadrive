@@ -1,7 +1,7 @@
 # Review Ticket — adaptive-shared-ui-primitives (#482)
 
 - Date: 2026-10-01
-- HEAD: WORKTREE
+- HEAD: cf88e117f0682e9e7692b89ae849679ed3e23ae2
 - Verdict: ACCEPT
 
 ## Scope

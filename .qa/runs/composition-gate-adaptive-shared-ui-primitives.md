@@ -1,6 +1,6 @@
 # Composition Gate — adaptive-shared-ui-primitives
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: cf88e117f0682e9e7692b89ae849679ed3e23ae2
 - Date: 2026-10-01
 - Verdict: SKIPPED
 
