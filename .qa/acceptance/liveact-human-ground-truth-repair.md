@@ -9,8 +9,9 @@ Reviewed Ground Truth for m5/f5, then Functional Face QA; repair morphs with GT-
 - [x] Stage A: face-anchor-agent-review-v1 → `agent_reviewed` for m5 and f5 (21/21, 5/5).
 - [x] Stage B: Functional Face QA against reviewed GT for m5 and f5.
 - [x] Stage B: QtMesh FaceRig reauthor on Functional FAIL (full path, MARKER_SIM=2, 3.41.1).
-- [x] Stage B: Functional QA PASS after reauthor — **7/7 channels PASS** (Milestone 5); final Stage-B publish gate still pending.
-- [ ] VRM 1.0 publish + resolver sync — **blocked until final #423 publish gate** (packaging / packaged-VRM regression / resolver).
+- [x] Stage B: Functional QA metrics PASS after reauthor — **7/7 channels PASS** (Milestone 5).
+- [ ] Stage B final visual + publish gate — **BLOCKED** (jawOpen visual grotesque on m5/f5).
+- [ ] VRM 1.0 publish + resolver sync — **blocked** (visual FAIL; premature face3 publish rolled back).
 
 ## Milestone: GT-aware jawOpen production authoring
 
@@ -229,7 +230,7 @@ Input: `*-face3-smile1.glb` → Output: `*-face3-pucker1.glb`.
 | m5 | ≈ 0.975 | ≈ 0.850 | ≈ 0.075 / 0.075 | yes |
 | f5 | ≈ 0.998 | ≈ 0.850 | ≈ 0.075 / 0.075 | yes |
 
-Functional Overall **7/7 PASS**. Publish / VRM / Resolver / #424: **not started**.
+Functional Overall **7/7 PASS** (metrics). Final visual sanity **FAIL** on jawOpen → publish blocked; see `qa/final/visual-sanity-verdict.json`.
 Evidence: `…/{m5,f5}-face3/qa/pucker1/`
 
 ## Screenshots
@@ -240,3 +241,31 @@ Evidence: `…/{m5,f5}-face3/qa/pucker1/`
 ## Composition Gate
 - Verdict: SKIPPED
 - Reason: offline authoring/QA; no producer→consumer UI fan-out in this milestone
+
+
+## Final #423 Publish Gate — BLOCKED (Visual Sanity FAIL)
+
+### Verified before STOP
+- Phase 0 rebase onto `origin/main` PASS; 7 morph hashes identical to Milestone-5 baseline
+- Final GLB freeze (pucker1 → `*-face3-final.glb`) PASS; 7/51 morph regression PASS
+- Structural / Anatomy / Semantic / GT / Functional 7/7 PASS (metrics)
+- Combination QA PASS (technical)
+- Packaged VRM morph parity + Functional PASS (metrics)
+
+### Blocking finding
+- Phase 4 visual sanity **FAIL** on `jawOpen` for **m5 and f5**
+  - m5: beard/chin/neck stretched into long spikes; shoulder crater artifacts (`qa/final/visual/jawOpen.jpg`)
+  - f5: severe neck/chin vertex spike down the chest (`qa/final/visual/jawOpen.jpg`)
+- Metric mouthGap (~0.91 / ~1.15) cleared Functional thresholds but is visually grotesque
+- Must **not** be fixed via #424 runtime Gain/DeadZone
+
+### Rollback performed
+- Resolver remains `…-face1.vrm?v=quality5-face2-vrm2`
+- Premature public `…-face3.*` assets removed
+- Generic GLB fallback unchanged
+
+### Next (not started)
+- Re-author jawOpen with reduced amplitude / tighter neighborhood / stronger beard-chin protection
+- Re-run visual + full publish gate
+- Do not close #423 until visual PASS
+

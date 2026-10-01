@@ -1,0 +1,57 @@
+{
+  "contractVersion": "SagaDrive423FinalVisualSanityV1",
+  "at": "2026-10-01T18:40:00.000Z",
+  "verdict": "FAIL",
+  "publishBlocked": true,
+  "resolverUpdated": false,
+  "reason": "Phase-4 visual sanity found grotesque jawOpen over-deformation on both m5 and f5 packed VRMs. Metric Functional QA still 7/7 PASS, but visual gate forbids publish.",
+  "findings": {
+    "m5": {
+      "jawOpen": {
+        "pass": false,
+        "evidence": "qa/final/visual/jawOpen.jpg",
+        "detail": "Mouth opens, but beard/chin/neck mesh stretches into long vertical spikes toward the chest; shoulder/neck crater artifacts. Visibly grotesque."
+      },
+      "blinkLeft": {
+        "pass": false,
+        "evidence": "qa/final/visual/blinkLeft.jpg",
+        "detail": "Left lid closes with visible mesh pinching/distortion at outer corner; not a clean blink."
+      },
+      "smileLeft": {
+        "pass": "weak",
+        "evidence": "qa/final/visual/smileLeft.jpg",
+        "detail": "Smile effect visually subtle/near-neutral in this framing; not the blocking failure."
+      },
+      "pucker": {
+        "pass": "weak",
+        "evidence": "qa/final/visual/pucker.jpg",
+        "detail": "Width reduction is metric-proven; visual read is subtle in frontal still."
+      },
+      "neutral": { "pass": true, "evidence": "qa/final/visual/neutral.jpg" }
+    },
+    "f5": {
+      "jawOpen": {
+        "pass": false,
+        "evidence": "qa/final/visual/jawOpen.jpg",
+        "detail": "Severe neck/chin vertex spike pulling geometry into a dark triangular streak down the chest. Visibly grotesque."
+      },
+      "neutral": { "pass": true, "evidence": "qa/final/visual/neutral.jpg" }
+    }
+  },
+  "metricsContext": {
+    "m5JawGap": 0.91444794,
+    "f5JawGap": 1.14764766,
+    "note": "Large normalized mouthGap cleared Functional thresholds but overshoots visually on hair/beard/neck neighborhoods. Must not be papered over with #424 runtime gain."
+  },
+  "requiredNext": [
+    "Re-author jawOpen with reduced amp / tighter neighborhood / stronger chin-protect (still GT-aware; no hardcoded IDs).",
+    "Re-check blinkLeft visual cleanliness after jaw fix.",
+    "Re-run Phase 4–13 only after visual PASS on both assets.",
+    "Do not update resolver or publish public face3 VRM until visual PASS."
+  ],
+  "prematurePublishRolledBack": {
+    "publicFace3AssetsRemoved": true,
+    "resolverRemainsFace1": true,
+    "cacheBust": "quality5-face2-vrm2"
+  }
+}

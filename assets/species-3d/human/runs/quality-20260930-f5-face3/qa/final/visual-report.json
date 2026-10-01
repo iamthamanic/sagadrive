@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-01T18:40:22.232Z",
+  "assets": {
+    "m5": {
+      "vrm": "public/assets/avatars/species/human-male-quality-20260921-m5-face3.vrm",
+      "shots": {
+        "neutral": "qa/final/visual/neutral.jpg",
+        "jawOpen": "qa/final/visual/jawOpen.jpg",
+        "blinkLeft": "qa/final/visual/blinkLeft.jpg",
+        "blinkRight": "qa/final/visual/blinkRight.jpg",
+        "browInnerUp": "qa/final/visual/browInnerUp.jpg",
+        "smileLeft": "qa/final/visual/smileLeft.jpg",
+        "smileRight": "qa/final/visual/smileRight.jpg",
+        "pucker": "qa/final/visual/pucker.jpg",
+        "bothSmiles": "qa/final/visual/bothSmiles.jpg",
+        "bothBlinks": "qa/final/visual/bothBlinks.jpg",
+        "jaw_bothSmiles": "qa/final/visual/jaw_bothSmiles.jpg",
+        "jaw_pucker": "qa/final/visual/jaw_pucker.jpg"
+      },
+      "count": 12
+    },
+    "f5": {
+      "vrm": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm",
+      "shots": {
+        "neutral": "qa/final/visual/neutral.jpg",
+        "jawOpen": "qa/final/visual/jawOpen.jpg",
+        "blinkLeft": "qa/final/visual/blinkLeft.jpg",
+        "blinkRight": "qa/final/visual/blinkRight.jpg",
+        "browInnerUp": "qa/final/visual/browInnerUp.jpg",
+        "smileLeft": "qa/final/visual/smileLeft.jpg",
+        "smileRight": "qa/final/visual/smileRight.jpg",
+        "pucker": "qa/final/visual/pucker.jpg",
+        "bothSmiles": "qa/final/visual/bothSmiles.jpg",
+        "bothBlinks": "qa/final/visual/bothBlinks.jpg",
+        "jaw_bothSmiles": "qa/final/visual/jaw_bothSmiles.jpg",
+        "jaw_pucker": "qa/final/visual/jaw_pucker.jpg"
+      },
+      "count": 12
+    }
+  }
+}

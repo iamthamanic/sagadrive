@@ -1,0 +1,14 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "manual_override",
+  "reviewed": true,
+  "reviewStatus": "human_reviewed",
+  "reviewedAt": "2026-10-01T08:45:52.989Z",
+  "asset": {
+    "modelPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-pucker1.glb",
+    "modelSha256": "d2f1e879342782e9e7490f038cc7a1775147badf40188a046add1ab4e9359839",
+    "anchorsSha256": "2b7e9967aed0577bb3c628bfe1cc5272a7cc184f78b9cdf32793d9fb3b865a96",
+    "topologyFingerprint": "v133002:t215832:m1"
+  },
+  "note": "carry after pucker1; cf79bbf1bf28e20d2668f16e54211fcf20606056d3a6e4593e073b8d02760586→d2f1e879342782e9e7490f038cc7a1775147badf40188a046add1ab4e9359839"
+}

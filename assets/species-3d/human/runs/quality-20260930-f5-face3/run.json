@@ -141,5 +141,14 @@
       "bytes": 112038664,
       "gitPolicy": "not committed — morphs byte-identical to public face1; oversized duplicate"
     }
+  },
+  "finalPublishAttempt": {
+    "at": "2026-10-01T18:41:53.570Z",
+    "ticket": "#423",
+    "outcome": "BLOCKED_VISUAL_SANITY_FAIL",
+    "resolverUpdated": false,
+    "publicAssetsPublished": false,
+    "evidence": "qa/final/visual-sanity-verdict.json",
+    "note": "Metric Functional 7/7 PASS; Phase-4 visual jawOpen grotesque on m5+f5. Premature public face3 removed; resolver remains face1."
   }
 }

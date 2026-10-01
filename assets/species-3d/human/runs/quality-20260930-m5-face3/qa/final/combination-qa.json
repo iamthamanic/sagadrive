@@ -1,0 +1,177 @@
+{
+  "jaw_smileL": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.07012468317506382,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 1.0491972609198217,
+    "mouthGap": 1.6315882152552141
+  },
+  "jaw_smileR": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.07012468317506382,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 1.0441473793940623,
+    "mouthGap": 1.6326480850570155
+  },
+  "jaw_bothSmiles": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.07012468317506382,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 1.0870500244889816,
+    "mouthGap": 1.568212300336778
+  },
+  "jaw_pucker": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.07012468317506382,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 0.8504591359399161,
+    "mouthGap": 2.000405499068364
+  },
+  "smileL_smileR": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.006646250336459837,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 1.086725371850981,
+    "mouthGap": 0.727643738044269
+  },
+  "smileL_pucker": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.006606393290501728,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 0.8949506556387193,
+    "mouthGap": 0.873504329822338
+  },
+  "smileR_pucker": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.006606356411611189,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 0.8987977022195617,
+    "mouthGap": 0.8628491107484996
+  },
+  "bothSmiles_pucker": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.006606393290501728,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 0.9367622879267047,
+    "mouthGap": 0.8278800375486756
+  },
+  "jaw_bothSmiles_pucker": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.07012468317506382,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 0.9371388578280614,
+    "mouthGap": 1.807701026804808
+  },
+  "blinkL_blinkR": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.022448823948708493,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 1,
+    "mouthGap": 0.7968062839984027
+  },
+  "blinkL_brow": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.022361648207980755,
+    "noseDisp": 0,
+    "foreheadDisp": 0.00011624684521840778,
+    "mouthWidthRatio": 1,
+    "mouthGap": 0.7968062839984027
+  },
+  "blinkR_brow": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.019055107511359415,
+    "noseDisp": 0,
+    "foreheadDisp": 0.00011624684521840778,
+    "mouthWidthRatio": 1,
+    "mouthGap": 0.7968062839984027
+  },
+  "bothBlinks_brow": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.022361648207980755,
+    "noseDisp": 0,
+    "foreheadDisp": 0.00011624684521840778,
+    "mouthWidthRatio": 1,
+    "mouthGap": 0.7968062839984027
+  },
+  "jaw_blinkL": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.07012468317506382,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 1.0003527612959562,
+    "mouthGap": 1.7112542221377196
+  },
+  "jaw_blinkR": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.07012468317506382,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 1.0003527612959562,
+    "mouthGap": 1.7112542221377196
+  },
+  "jaw_brow": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.07012468317506382,
+    "noseDisp": 0,
+    "foreheadDisp": 0.00011624684521840778,
+    "mouthWidthRatio": 1.0003527612959562,
+    "mouthGap": 1.7112542221377196
+  },
+  "bothSmiles_bothBlinks": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.022448823948708493,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 1.086725371850981,
+    "mouthGap": 0.727643738044269
+  },
+  "jaw_smiles_blinks_brow": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.07012468317506382,
+    "noseDisp": 0,
+    "foreheadDisp": 0.00011624684521840778,
+    "mouthWidthRatio": 1.0870500244889816,
+    "mouthGap": 1.568212300336778
+  },
+  "full_seven": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.07012468317506382,
+    "noseDisp": 0,
+    "foreheadDisp": 0.00011624684521840778,
+    "mouthWidthRatio": 0.9371388578280614,
+    "mouthGap": 1.807701026804808
+  },
+  "neutralRecovery": {
+    "pass": true,
+    "maxDisp": 0
+  }
+}

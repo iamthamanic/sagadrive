@@ -1,0 +1,24 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "manual_override",
+  "reviewed": true,
+  "reviewStatus": "human_reviewed",
+  "reviewedAt": "2026-10-01T08:45:52.989Z",
+  "asset": {
+    "modelPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face3.vrm",
+    "modelSha256": "6375e65f2a133494121233e59591f5034aec5c3fb28bfe275fbc1c6fcf0394b5",
+    "anchorsSha256": "2b7e9967aed0577bb3c628bfe1cc5272a7cc184f78b9cdf32793d9fb3b865a96",
+    "topologyFingerprint": "v133002:t215832:m1",
+    "cacheBust": "quality5-face3-vrm1"
+  },
+  "agentReviewLedgerRef": {
+    "protocolVersion": "face-anchor-agent-review-v1",
+    "evidenceManifestSha256": "59b79f2b479b15f0ac38e1f4eea618efb336fd73ce04ef0e1c830a31e16a0834",
+    "requiredPasses": 5,
+    "completedPasses": 5,
+    "aggregationPass": true,
+    "aggregatedAt": "2026-10-01T08:45:52.989Z",
+    "ledgerDir": "assets/species-3d/human/runs/quality-20260930-m5-face3/agent-review"
+  },
+  "note": "Final #423 face3 publish candidate. Anchors agent_reviewed at Stage A (topology-stable); morph rewrite carry-forward as human_reviewed/manual_override with identity SHA of final GLB."
+}

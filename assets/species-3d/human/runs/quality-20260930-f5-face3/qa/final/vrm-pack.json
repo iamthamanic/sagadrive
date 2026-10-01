@@ -1,0 +1,20 @@
+{
+  "contractVersion": "SagaDriveAvatarVrmPackV1",
+  "packedAt": "2026-10-01T18:38:51.474Z",
+  "inputGlbPath": "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive-wt-423/public/assets/avatars/species/human-female-quality-20260921-f5-face3.glb",
+  "inventoryPath": "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive-wt-423/assets/species-3d/human/runs/quality-20260930-f5-face3/face-inventory.json",
+  "rigPath": null,
+  "outputVrmPath": "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive-wt-423/public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm",
+  "extension": "VRMC_vrm",
+  "specVersion": "1.0",
+  "gazeMode": "morphs",
+  "lookAtType": "expression",
+  "lookAtOverrides": null,
+  "humanoidBoneCount": 19,
+  "expressionPresetCount": 6,
+  "expressionCustomCount": 43,
+  "inputSha256": "05959ba56bcfcd7f7caaa4f8191f01ddf1de297964c77fc030199d72ada7cb61",
+  "outputSha256": "c292e9f7dc313f4e64474d317bf7d1b0323f22f84732e8c32cfb479fdb004a4c",
+  "outputBytes": 34436968,
+  "inventoryProfile": "full-v1"
+}
