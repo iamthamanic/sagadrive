@@ -208,9 +208,14 @@ export function Library({
     onNavigate('gamemaster');
   };
 
-  /** Player / session join surface — GMs can also enter as participant. */
-  const openProjectAsParticipant = (_project: ProjectSummaryVm) => {
-    onNavigate('session-join');
+  /** Player / session join surface — keep clicked adventure + participant intent. */
+  const openProjectAsParticipant = (project: ProjectSummaryVm) => {
+    const params = new URLSearchParams({
+      project_id: project.id,
+      saga: project.publicId,
+      intent: 'join',
+    });
+    onNavigate(`/session-join?${params.toString()}`);
   };
 
   const openProject = (project: ProjectSummaryVm) => {

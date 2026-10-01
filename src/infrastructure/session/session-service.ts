@@ -37,6 +37,25 @@ class SessionService {
   private readonly tableName = 'sessions';
   private readonly playersTableName = 'session_players';
 
+  /**
+   * Prefer getSession (storage) over getUser (network JWT validation) so
+   * client-side joins work when a session is planted/restored but GoTrue
+   * user introspection is unavailable (local e2e / offline fallback).
+   */
+  private async requireAuthUser(): Promise<{ id: string }> {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session?.user?.id) return session.user;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user?.id) return user;
+
+    throw new Error('User not authenticated');
+  }
+
   private async resolveGmUserId(projectId: string | null): Promise<string> {
     if (!projectId) return '';
     const { data, error } = await supabase
@@ -110,10 +129,7 @@ class SessionService {
   }
 
   async createSession(payload: CreateSessionDto): Promise<SessionVm> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    await this.requireAuthUser();
 
     const projectId = payload.project_id || payload.adventure_id;
     if (!projectId) {
@@ -134,10 +150,7 @@ class SessionService {
   }
 
   async joinSession(payload: JoinSessionDto): Promise<SessionVm> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    await this.requireAuthUser();
 
     const code = normalizeSessionJoinCode(payload.code);
 
@@ -172,10 +185,7 @@ class SessionService {
   }
 
   async getUserSessions(): Promise<SessionVm[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    const user = await this.requireAuthUser();
 
     const { data: gmProjects, error: gmProjectsError } = await supabase
       .from('projects')
@@ -257,10 +267,7 @@ class SessionService {
   }
 
   async leaveSession(sessionId: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
+    await this.requireAuthUser();
 
     const { error } = await supabase.rpc('leave_play_session', {
       p_session_id: sessionId,

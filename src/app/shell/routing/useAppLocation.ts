@@ -99,14 +99,20 @@ export function useAppLocation() {
 
   const navigateToPath = (nextPath: string, options?: { replace?: boolean }) => {
     if (typeof window === 'undefined') return;
+    const hashIndex = nextPath.indexOf('#');
+    const withoutHash = hashIndex >= 0 ? nextPath.slice(0, hashIndex) : nextPath;
+    const [pathPart, searchPart = ''] = withoutHash.split('?');
     const normalized =
-      nextPath.length > 1 && nextPath.endsWith('/') ? nextPath.slice(0, -1) : nextPath || '/';
-    if (normalized === pathnameRef.current) return;
+      pathPart.length > 1 && pathPart.endsWith('/') ? pathPart.slice(0, -1) : pathPart || '/';
+    const search = searchPart ? `?${searchPart}` : '';
+    const href = `${normalized}${search}`;
+    const currentSearch = window.location.search || '';
+    if (normalized === pathnameRef.current && search === currentSearch) return;
     if (!allowLeave()) return;
     if (options?.replace) {
-      window.history.replaceState(null, '', normalized);
+      window.history.replaceState(null, '', href);
     } else {
-      window.history.pushState(null, '', normalized);
+      window.history.pushState(null, '', href);
     }
     setPathname(normalized);
   };
