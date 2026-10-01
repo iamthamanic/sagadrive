@@ -1,0 +1,125 @@
+{
+  "contractVersion": "SagaDrive423StageBDebugRootCauseV1",
+  "issue": 423,
+  "phase": "debug_only",
+  "channel": "jawOpen",
+  "primaryAsset": "m5",
+  "confirmedAlsoOn": [
+    "f5"
+  ],
+  "stoppedAt": "2026-10-01T11:02:18.240Z",
+  "publishAllowed": false,
+  "singleRootCauseClass": "FaceRig never consumes reviewed SagaDrive anchors; MARKER_SIM=2 regenerates deterministic ICT-template morphs (identical to face1) whose jawOpen deltas do not open the mouth at reviewed lip/chin anchors",
+  "ruledOut": [
+    {
+      "candidate": "exporter exports original mesh datablock / drops new morphs",
+      "evidence": "A_exporter_preserves_shape_key_mutation",
+      "detail": "Controlled jawOpen Y=-0.15 mutation on mouthLower/chin verts survives canonicalizeFaceExport unchanged"
+    },
+    {
+      "candidate": "canonicalizeFaceExport wipes morph deltas",
+      "evidence": "mutation morph SHA may change only via sparse packing; intentional Y deltas preserved exactly"
+    },
+    {
+      "candidate": "FaceRig modifies wrong mesh / duplicate proxy",
+      "evidence": "single mesh m1 topology v133002:t215832:m1; [sim] submesh handle=1 verts=133002; export morphs on same nodeIdentity human-male-quality-20260921-m5_mesh"
+    },
+    {
+      "candidate": "MARKER_SIM path is simulation-only/no-op",
+      "evidence": "shapes_attached=51; [sim] jawOpen nonZero=46887; baseline has 0 morphs → output has 51"
+    },
+    {
+      "candidate": "duplicate existing Shape Keys cause no-op on reauthor",
+      "evidence": "Stage B input was baseline body WITHOUT morphs; FaceRig created morphs from scratch that hash-identical to face1"
+    }
+  ],
+  "rootCauseDetail": {
+    "hopWhereIntendedRepairIsImpossible": "1_face_authoring_config → 3_facerig_marker_driver",
+    "mechanism": [
+      "SagaDrive adapter buildFacerigArgv never passes face-anchors.json / reviewed GT into qtmesh",
+      "QTMESH_FACERIG_MARKER_SIM=2 drives an internal 13-marker ICT FaceKit fit ([sim] markers=13)",
+      "m5 MediaPipe seed residual 0.241 → proportional defaults (seedConfident=0)",
+      "FaceRig warps ICT template shapes onto the body mesh → writes real morph accessors",
+      "Recipe is fully deterministic: face3 file SHA == historical face1 run output checksum 53d7be5c…",
+      "Public face1 (134f5137…) differs only by shipping/canonicalize packaging; jawOpen POSITION buffer SHA identical (cc403218…)",
+      "At reviewed mouthUpper/mouthLower, jawOpen translates both lips nearly in parallel (relative≈5.3e-4); chin delta length = 0",
+      "Functional QA mouthGapΔ ≈ -4.9e-4 (need ≥0.06) — morph energy exists but not as a jaw opening against GT anchors"
+    ],
+    "geometricProof": {
+      "mouthUpperDelta": [
+        0.000259079912211746,
+        -0.005319476127624512,
+        -0.009781695902347565
+      ],
+      "mouthLowerDelta": [
+        0.00030174339190125465,
+        -0.004802703857421875,
+        -0.00966431200504303
+      ],
+      "relativeLowerMinusUpperLen": 0.0005316509485517783,
+      "chinDeltaLen": 0,
+      "mouthGapDelta": -0.000486043954055812,
+      "mouthGapNeutral": 0.05884193341444211,
+      "mouthGapJawOpen1": 0.0583558894603863
+    },
+    "markerCoverage": {
+      "reviewedAnchors": 21,
+      "facerigMarkers": 13,
+      "notConsumedByFacerig": "all 21 reviewed barycentric bindings",
+      "lidsAndInnerBrowsAbsentFromQtMesh13": [
+        "eyeLeftUpper",
+        "eyeLeftLower",
+        "eyeRightUpper",
+        "eyeRightLower",
+        "browLeftInner",
+        "browLeftOuter",
+        "browRightInner",
+        "browRightOuter"
+      ]
+    }
+  },
+  "mutationTest": {
+    "case": "A_exporter_preserves_shape_key_mutation",
+    "magicY": -0.15,
+    "beforeGapDelta": 0.1361517659923961,
+    "afterGapDelta": 0.1361517659923961,
+    "beforeSampleDeltaY": [
+      -0.15000000596046448,
+      -0.15000000596046448,
+      -0.15000000596046448
+    ],
+    "afterSampleDeltaY": [
+      -0.15000000596046448,
+      -0.15000000596046448,
+      -0.15000000596046448
+    ],
+    "beforeMorphSha": "48c15c1ad8423f821cfdd5453ae978dad4a34df085b6305a27af0cd9edf85978",
+    "afterMorphSha": "48c15c1ad8423f821cfdd5453ae978dad4a34df085b6305a27af0cd9edf85978",
+    "morphShaChangedByCanon": false,
+    "note": "canonicalizeFaceExport restores textures/IBM and marks sparse; must not wipe intentional morph deltas"
+  },
+  "markerSim": [
+    "MARKER_SIM is NOT a dry-run/no-op: it attaches 51 real morph shapes (shapes_attached=51) and writes jawOpen deltas.",
+    "It IS a marker-simulation / marker-sim path that drives FaceRig from 13 ICT-style markers (detected or proportional defaults), not from SagaDrive reviewed 21-anchor JSON.",
+    "When MediaPipe constellation residual is too high (m5: 0.241), FaceRig falls back to proportional defaults (seedConfident=0) — still produces morphs, but from default landmark layout."
+  ],
+  "historical": "No historical run produced different jawOpen POSITION buffers for m5. face1 created morphs via QtMesh MARKER_SIM=2; face2 only re-shipped anchors/VRM; face3 regenerates byte-identical morphs (and file-identical to face1 run output). The QtMesh FaceRig path is a deterministic morph generator, not a functional morph repair path relative to reviewed GT.",
+  "f5Confirm": {
+    "morphIdentical": true,
+    "face3EqualsHistoricalFace1RunOutput": true,
+    "chinDeltaLen": 0,
+    "mouthGapDelta": -0.008627692309795178
+  },
+  "implications": [
+    "Re-running the same QtMesh FaceRig recipe cannot repair Functional QA — it regenerates face1 morphs.",
+    "Existing QtMesh FaceRig path (as wired in SagaDrive) is a deterministic morph generator from internal markers, NOT a reviewed-GT-driven morph reauthoring path.",
+    "A future fix requires either: (a) feed reviewed markers into FaceRig if upstream supports it, or (b) a different authoring step that bakes GT-relative functional deltas — both are OUT OF SCOPE for this debug phase."
+  ],
+  "notDone": [
+    "No VRM publish",
+    "No threshold/gain changes",
+    "No #424",
+    "No new Face pipeline",
+    "Ground Truth unchanged"
+  ]
+}

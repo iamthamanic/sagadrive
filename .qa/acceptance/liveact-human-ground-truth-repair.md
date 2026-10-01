@@ -21,6 +21,13 @@ Reviewed Ground Truth for m5/f5, then Functional Face QA; reauthor via QtMesh on
 - [x] Generic GLB fallback untouched.
 - [x] No #424 retarget changes.
 
+## Stage B Debug (jawOpen)
+- [x] Pipeline hops reconstructed for m5 `jawOpen`.
+- [x] Mutation test: exporter/canonicalize **preserves** shape-key edits (Case A).
+- [x] Root cause: FaceRig does not consume reviewed anchors; MARKER_SIM=2 regenerates face1-identical ICT morphs that do not open mouth at GT lips/chin.
+- [x] f5 minimal confirm: same class.
+- Evidence: `assets/species-3d/human/runs/quality-20260930-m5-face3/qa/debug-jawopen/ROOT-CAUSE.md`
+
 ## Implementation Notes
 **STOP (Stage B):** Existing QtMesh FaceRig recipe deterministically regenerates the same morph deltas as the failing face1 candidates. Blink/brow anchors receive no (or negligible) morph displacement; jaw/smile/pucker fail Functional metrics. Publish forbidden until a non-identical, functionally correct morph authoring path exists (out of #423 Scope B without new DCC pipeline).
 
