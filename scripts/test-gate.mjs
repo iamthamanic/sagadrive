@@ -368,6 +368,14 @@ function checkLiveSessionRoleCapabilityContract() {
   });
 }
 
+function checkLiveSessionMediaPlane() {
+  console.log('Live Session media plane (#363): domain policy, token edge, degrade...');
+  execFileSync(process.execPath, ['scripts/live-session-media-plane-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1483,6 +1491,7 @@ checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();
 checkLiveSessionRoleCapabilityContract();
+checkLiveSessionMediaPlane();
 checkPlayerTestSessionSecurity();
 checkPlayerTestRealtimeRuntime();
 checkPlayerTestPlayerPanel();
