@@ -1,0 +1,375 @@
+{
+  "assetId": "m5",
+  "oldPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb",
+  "newPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3.glb",
+  "oldSha256": "134f5137019ec5b26abd977459bd510b763f080c111da3d6ab4f92cb3aaa33ff",
+  "newSha256": "53d7be5c5eba0862597e0142c527494fc1a5ad0175d8ce6f30af331172221aab",
+  "oldTopology": "v133002:t215832:m1",
+  "newTopology": "v133002:t215832:m1",
+  "topologyMatch": true,
+  "eps": 0.00001,
+  "groundTruthCarryForward": true,
+  "anchorInvariantCount": 21,
+  "anchorInvariantPassCount": 21,
+  "failures": [],
+  "allAnchorResults": [
+    {
+      "aid": "mouthUpper",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        65724,
+        66821,
+        65910
+      ],
+      "newIndices": [
+        65724,
+        66821,
+        65910
+      ]
+    },
+    {
+      "aid": "mouthLower",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        65122,
+        64746,
+        64385
+      ],
+      "newIndices": [
+        65122,
+        64746,
+        64385
+      ]
+    },
+    {
+      "aid": "mouthCornerLeft",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        80658,
+        80659,
+        80168
+      ],
+      "newIndices": [
+        80658,
+        80659,
+        80168
+      ]
+    },
+    {
+      "aid": "mouthCornerRight",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        54091,
+        54716,
+        54406
+      ],
+      "newIndices": [
+        54091,
+        54716,
+        54406
+      ]
+    },
+    {
+      "aid": "eyeLeftInner",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        78422,
+        77879,
+        77878
+      ],
+      "newIndices": [
+        78422,
+        77879,
+        77878
+      ]
+    },
+    {
+      "aid": "eyeLeftOuter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        88307,
+        88102,
+        88475
+      ],
+      "newIndices": [
+        88307,
+        88102,
+        88475
+      ]
+    },
+    {
+      "aid": "eyeLeftUpper",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        83382,
+        84678,
+        84679
+      ],
+      "newIndices": [
+        83382,
+        84678,
+        84679
+      ]
+    },
+    {
+      "aid": "eyeLeftLower",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        82594,
+        82595,
+        81066
+      ],
+      "newIndices": [
+        82594,
+        82595,
+        81066
+      ]
+    },
+    {
+      "aid": "eyeRightInner",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        55896,
+        55627,
+        54937
+      ],
+      "newIndices": [
+        55896,
+        55627,
+        54937
+      ]
+    },
+    {
+      "aid": "eyeRightOuter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        47039,
+        45956,
+        45988
+      ],
+      "newIndices": [
+        47039,
+        45956,
+        45988
+      ]
+    },
+    {
+      "aid": "eyeRightUpper",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        50005,
+        50234,
+        49476
+      ],
+      "newIndices": [
+        50005,
+        50234,
+        49476
+      ]
+    },
+    {
+      "aid": "eyeRightLower",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        54212,
+        53601,
+        53413
+      ],
+      "newIndices": [
+        54212,
+        53601,
+        53413
+      ]
+    },
+    {
+      "aid": "browLeftInner",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        78313,
+        78101,
+        78126
+      ],
+      "newIndices": [
+        78313,
+        78101,
+        78126
+      ]
+    },
+    {
+      "aid": "browLeftOuter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        83487,
+        85407,
+        83788
+      ],
+      "newIndices": [
+        83487,
+        85407,
+        83788
+      ]
+    },
+    {
+      "aid": "browLeftCenter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        82188,
+        81326,
+        82557
+      ],
+      "newIndices": [
+        82188,
+        81326,
+        82557
+      ]
+    },
+    {
+      "aid": "browRightInner",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        52725,
+        53958,
+        52769
+      ],
+      "newIndices": [
+        52725,
+        53958,
+        52769
+      ]
+    },
+    {
+      "aid": "browRightOuter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        47737,
+        47279,
+        48411
+      ],
+      "newIndices": [
+        47737,
+        47279,
+        48411
+      ]
+    },
+    {
+      "aid": "browRightCenter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        49728,
+        51244,
+        50054
+      ],
+      "newIndices": [
+        49728,
+        51244,
+        50054
+      ]
+    },
+    {
+      "aid": "noseTip",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        66023,
+        65881,
+        63939
+      ],
+      "newIndices": [
+        66023,
+        65881,
+        63939
+      ]
+    },
+    {
+      "aid": "chin",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        65904,
+        63152,
+        63151
+      ],
+      "newIndices": [
+        65904,
+        63152,
+        63151
+      ]
+    },
+    {
+      "aid": "forehead",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        64463,
+        64464,
+        64465
+      ],
+      "newIndices": [
+        64463,
+        64464,
+        64465
+      ]
+    }
+  ],
+  "checkedAt": "2026-10-01T10:48:26.935Z"
+}

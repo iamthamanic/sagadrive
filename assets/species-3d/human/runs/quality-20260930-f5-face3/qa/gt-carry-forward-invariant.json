@@ -1,0 +1,375 @@
+{
+  "assetId": "f5",
+  "oldPath": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb",
+  "newPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3.glb",
+  "oldSha256": "a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c",
+  "newSha256": "6cae825f18e5bbfb8b02ea1bef1a4ec9352e06e4ab08eb1c6c1085f2c8291cca",
+  "oldTopology": "v147707:t214973:m1",
+  "newTopology": "v147707:t214973:m1",
+  "topologyMatch": true,
+  "eps": 0.00001,
+  "groundTruthCarryForward": true,
+  "anchorInvariantCount": 21,
+  "anchorInvariantPassCount": 21,
+  "failures": [],
+  "allAnchorResults": [
+    {
+      "aid": "mouthUpper",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        62803,
+        65458,
+        65346
+      ],
+      "newIndices": [
+        62803,
+        65458,
+        65346
+      ]
+    },
+    {
+      "aid": "mouthLower",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        71478,
+        70601,
+        70961
+      ],
+      "newIndices": [
+        71478,
+        70601,
+        70961
+      ]
+    },
+    {
+      "aid": "mouthCornerLeft",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        88849,
+        88386,
+        89906
+      ],
+      "newIndices": [
+        88849,
+        88386,
+        89906
+      ]
+    },
+    {
+      "aid": "mouthCornerRight",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        61232,
+        60891,
+        60073
+      ],
+      "newIndices": [
+        61232,
+        60891,
+        60073
+      ]
+    },
+    {
+      "aid": "eyeLeftInner",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        90732,
+        89007,
+        89931
+      ],
+      "newIndices": [
+        90732,
+        89007,
+        89931
+      ]
+    },
+    {
+      "aid": "eyeLeftOuter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        105809,
+        106745,
+        105810
+      ],
+      "newIndices": [
+        105809,
+        106745,
+        105810
+      ]
+    },
+    {
+      "aid": "eyeLeftUpper",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        97428,
+        97429,
+        99647
+      ],
+      "newIndices": [
+        97428,
+        97429,
+        99647
+      ]
+    },
+    {
+      "aid": "eyeLeftLower",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        96541,
+        95635,
+        97562
+      ],
+      "newIndices": [
+        96541,
+        95635,
+        97562
+      ]
+    },
+    {
+      "aid": "eyeRightInner",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        58769,
+        57564,
+        57697
+      ],
+      "newIndices": [
+        58769,
+        57564,
+        57697
+      ]
+    },
+    {
+      "aid": "eyeRightOuter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        42533,
+        42067,
+        42534
+      ],
+      "newIndices": [
+        42533,
+        42067,
+        42534
+      ]
+    },
+    {
+      "aid": "eyeRightUpper",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        49282,
+        50877,
+        50380
+      ],
+      "newIndices": [
+        49282,
+        50877,
+        50380
+      ]
+    },
+    {
+      "aid": "eyeRightLower",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        45202,
+        43681,
+        45203
+      ],
+      "newIndices": [
+        45202,
+        43681,
+        45203
+      ]
+    },
+    {
+      "aid": "browLeftInner",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        96898,
+        94822,
+        96842
+      ],
+      "newIndices": [
+        96898,
+        94822,
+        96842
+      ]
+    },
+    {
+      "aid": "browLeftOuter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        101654,
+        102243,
+        102244
+      ],
+      "newIndices": [
+        101654,
+        102243,
+        102244
+      ]
+    },
+    {
+      "aid": "browLeftCenter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        98929,
+        94751,
+        96898
+      ],
+      "newIndices": [
+        98929,
+        94751,
+        96898
+      ]
+    },
+    {
+      "aid": "browRightInner",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        53514,
+        54345,
+        56603
+      ],
+      "newIndices": [
+        53514,
+        54345,
+        56603
+      ]
+    },
+    {
+      "aid": "browRightOuter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        44851,
+        46252,
+        46211
+      ],
+      "newIndices": [
+        44851,
+        46252,
+        46211
+      ]
+    },
+    {
+      "aid": "browRightCenter",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        47716,
+        50045,
+        47717
+      ],
+      "newIndices": [
+        47716,
+        50045,
+        47717
+      ]
+    },
+    {
+      "aid": "noseTip",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        71288,
+        71900,
+        71237
+      ],
+      "newIndices": [
+        71288,
+        71900,
+        71237
+      ]
+    },
+    {
+      "aid": "chin",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        71455,
+        71456,
+        67300
+      ],
+      "newIndices": [
+        71455,
+        71456,
+        67300
+      ]
+    },
+    {
+      "aid": "forehead",
+      "ok": true,
+      "indicesMatch": true,
+      "posDiff": 0,
+      "posMatch": true,
+      "indices": [
+        70469,
+        70470,
+        69996
+      ],
+      "newIndices": [
+        70469,
+        70470,
+        69996
+      ]
+    }
+  ],
+  "checkedAt": "2026-10-01T10:48:27.068Z"
+}
