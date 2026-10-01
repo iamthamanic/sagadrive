@@ -38,14 +38,15 @@ const pairs = [
 ];
 
 const domain = readFileSync(join(root, 'src/domains/character/avatar/species-template-models-v1.ts'), 'utf8');
-check(/m5-face1\.vrm/.test(domain) && /f5-face1\.vrm/.test(domain), 'both templates wired as VRM primary');
+check(/m5-face3\.vrm/.test(domain) && /f5-face3\.vrm/.test(domain), 'both templates wired as VRM primary');
 check(
-  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm')) &&
-    existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm')),
+  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face3.vrm')) &&
+    existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm')),
   'both public VRM shipping assets exist',
 );
 check(/liveact-face-human-repro-check/.test(readFileSync(join(root, 'scripts/test-gate.mjs'), 'utf8')), 'test-gate');
 
+// Historical face1 GLB repro remains valid against face2 run ledgers (generation regression).
 for (const p of pairs) {
   check(existsSync(join(root, p.publicGlb)), `${p.id} public exists`);
   check(existsSync(join(root, p.baseline)), `${p.id} baseline exists`);

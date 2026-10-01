@@ -2,38 +2,38 @@
   "jaw_smileL": {
     "pass": true,
     "nan": false,
-    "maxAnchorDisp": 0.07012468317506382,
+    "maxAnchorDisp": 0.012049550572776069,
     "noseDisp": 0,
     "foreheadDisp": 0,
-    "mouthWidthRatio": 1.0491972609198217,
-    "mouthGap": 1.6315882152552141
+    "mouthWidthRatio": 1.0447826306400307,
+    "mouthGap": 0.9060136269209051
   },
   "jaw_smileR": {
     "pass": true,
     "nan": false,
-    "maxAnchorDisp": 0.07012468317506382,
+    "maxAnchorDisp": 0.011474925722342601,
     "noseDisp": 0,
     "foreheadDisp": 0,
-    "mouthWidthRatio": 1.0441473793940623,
-    "mouthGap": 1.6326480850570155
+    "mouthWidthRatio": 1.0478189196394336,
+    "mouthGap": 0.8972278776996503
   },
   "jaw_bothSmiles": {
     "pass": true,
     "nan": false,
-    "maxAnchorDisp": 0.07012468317506382,
+    "maxAnchorDisp": 0.011474925722342601,
     "noseDisp": 0,
     "foreheadDisp": 0,
-    "mouthWidthRatio": 1.0870500244889816,
-    "mouthGap": 1.568212300336778
+    "mouthWidthRatio": 1.0866903952754963,
+    "mouthGap": 0.8651335739866262
   },
   "jaw_pucker": {
     "pass": true,
     "nan": false,
-    "maxAnchorDisp": 0.07012468317506382,
+    "maxAnchorDisp": 0.01178864638723218,
     "noseDisp": 0,
     "foreheadDisp": 0,
-    "mouthWidthRatio": 0.8504591359399161,
-    "mouthGap": 2.000405499068364
+    "mouthWidthRatio": 0.8499994934877215,
+    "mouthGap": 1.0976395051304428
   },
   "smileL_smileR": {
     "pass": true,
@@ -74,11 +74,11 @@
   "jaw_bothSmiles_pucker": {
     "pass": true,
     "nan": false,
-    "maxAnchorDisp": 0.07012468317506382,
+    "maxAnchorDisp": 0.011184975963205994,
     "noseDisp": 0,
     "foreheadDisp": 0,
-    "mouthWidthRatio": 0.9371388578280614,
-    "mouthGap": 1.807701026804808
+    "mouthWidthRatio": 0.9367217107218798,
+    "mouthGap": 0.9889902545698954
   },
   "blinkL_blinkR": {
     "pass": true,
@@ -119,29 +119,47 @@
   "jaw_blinkL": {
     "pass": true,
     "nan": false,
-    "maxAnchorDisp": 0.07012468317506382,
+    "maxAnchorDisp": 0.022448823948708493,
     "noseDisp": 0,
     "foreheadDisp": 0,
-    "mouthWidthRatio": 1.0003527612959562,
-    "mouthGap": 1.7112542221377196
+    "mouthWidthRatio": 0.999961988784691,
+    "mouthGap": 0.9466232828315588
   },
   "jaw_blinkR": {
     "pass": true,
     "nan": false,
-    "maxAnchorDisp": 0.07012468317506382,
+    "maxAnchorDisp": 0.019180565924171077,
     "noseDisp": 0,
     "foreheadDisp": 0,
-    "mouthWidthRatio": 1.0003527612959562,
-    "mouthGap": 1.7112542221377196
+    "mouthWidthRatio": 0.999961988784691,
+    "mouthGap": 0.9466232828315588
+  },
+  "jaw_bothBlinks": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.022448823948708493,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 0.999961988784691,
+    "mouthGap": 0.9466232828315588
   },
   "jaw_brow": {
     "pass": true,
     "nan": false,
-    "maxAnchorDisp": 0.07012468317506382,
+    "maxAnchorDisp": 0.012049550572776069,
     "noseDisp": 0,
     "foreheadDisp": 0.00011624684521840778,
-    "mouthWidthRatio": 1.0003527612959562,
-    "mouthGap": 1.7112542221377196
+    "mouthWidthRatio": 0.999961988784691,
+    "mouthGap": 0.9466232828315588
+  },
+  "smiles_blinks": {
+    "pass": true,
+    "nan": false,
+    "maxAnchorDisp": 0.022448823948708493,
+    "noseDisp": 0,
+    "foreheadDisp": 0,
+    "mouthWidthRatio": 1.086725371850981,
+    "mouthGap": 0.727643738044269
   },
   "bothSmiles_bothBlinks": {
     "pass": true,
@@ -155,20 +173,20 @@
   "jaw_smiles_blinks_brow": {
     "pass": true,
     "nan": false,
-    "maxAnchorDisp": 0.07012468317506382,
+    "maxAnchorDisp": 0.022361648207980755,
     "noseDisp": 0,
     "foreheadDisp": 0.00011624684521840778,
-    "mouthWidthRatio": 1.0870500244889816,
-    "mouthGap": 1.568212300336778
+    "mouthWidthRatio": 1.0866903952754963,
+    "mouthGap": 0.8651335739866262
   },
   "full_seven": {
     "pass": true,
     "nan": false,
-    "maxAnchorDisp": 0.07012468317506382,
+    "maxAnchorDisp": 0.022361648207980755,
     "noseDisp": 0,
     "foreheadDisp": 0.00011624684521840778,
-    "mouthWidthRatio": 0.9371388578280614,
-    "mouthGap": 1.807701026804808
+    "mouthWidthRatio": 0.9367217107218798,
+    "mouthGap": 0.9889902545698954
   },
   "neutralRecovery": {
     "pass": true,

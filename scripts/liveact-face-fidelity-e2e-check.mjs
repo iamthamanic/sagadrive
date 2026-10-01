@@ -39,22 +39,30 @@ const gate = readFileSync(join(root, 'scripts/test-gate.mjs'), 'utf8');
 check(existsSync(acceptance), 'acceptance doc present');
 check(existsSync(e2eSpec), 'fidelity e2e spec present');
 check(existsSync(smoke), 'viewport smoke preserved');
-check(/m5-face1\.vrm/.test(domain) && /f5-face1\.vrm/.test(domain), 'human VRM primary wired');
+check(/m5-face3\.vrm/.test(domain) && /f5-face3\.vrm/.test(domain), 'human VRM primary wired');
 check(
-  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm')),
+  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face3.vrm')),
   'm5 VRM shipping asset',
 );
 check(
-  existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm')),
+  existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm')),
   'f5 VRM shipping asset',
 );
 check(
-  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb')),
-  'm5 GLB fallback retained',
+  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face3.glb')),
+  'm5 GLB published',
 );
 check(
-  existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb')),
-  'f5 GLB fallback retained',
+  existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face3.glb')),
+  'f5 GLB published',
+);
+check(
+  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5.glb')),
+  'm5 generic GLB fallback retained',
+);
+check(
+  existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5.glb')),
+  'f5 generic GLB fallback retained',
 );
 check(/checkLiveActFaceFidelityE2E/.test(gate), 'test-gate wiring');
 

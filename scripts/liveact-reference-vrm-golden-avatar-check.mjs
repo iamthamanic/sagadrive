@@ -62,7 +62,7 @@ check(/reference-vrm-arkit52/.test(domain), 'golden id');
 check(/valid-white-m1-default\.vrm/.test(domain), 'public path');
 check(/3a79e95bc81655a3e1ec020538c67e7e17551b6f/.test(domain), 'pinned commit');
 check(/CC-BY-4\.0/.test(domain), 'license in domain');
-check(/human-male-quality-20260921-m5-face1\.vrm/.test(models), 'SagaDrive human unchanged');
+check(/human-male-quality-20260921-m5-face3\.vrm/.test(models), 'SagaDrive human unchanged');
 check(/LIVEACT_GOLDEN_REFERENCE_AVATAR_ID/.test(hook), 'hook wires reference');
 check(/avatarForPersist/.test(hook), 'persist strips reference URL');
 check(/human-mesh-variant-slot/.test(picker), 'picker hosts human mesh slot above grid');

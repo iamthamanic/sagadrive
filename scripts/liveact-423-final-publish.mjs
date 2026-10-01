@@ -35,6 +35,12 @@ import {
 } from './lib/liveact-face-mapping-authoring.mjs';
 import { FUNCTIONAL_REQUIRED_CHANNELS_V1 } from './lib/liveact-face-functional-profile-v1.mjs';
 import { packAvatarVrm1 } from './lib/avatar-vrm-pack.mjs';
+import {
+  buildGtBoundSurfaceGate,
+  maxTopologyHopsForRadius,
+  resolveCoupledFacialPatches,
+} from './lib/liveact-face-functional-morph-surface.mjs';
+import { JAW_OPEN_AUTHOR_CONTRACT_V1 } from './lib/liveact-face-functional-morph-profile-v1.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const io = new NodeIO();
@@ -47,7 +53,34 @@ const CHANNELS = [
   'mouthSmileRight',
   'mouthPucker',
 ];
-const CACHE_BUST = 'quality5-face3-vrm1';
+const CACHE_BUST = 'quality5-face3-coupled1';
+
+/** Authoritative Coupled-Shell / surface-fix morph POSITION hashes (must not regress to Milestone-5 jaw/blink). */
+const EXPECTED_MORPH_HASHES = {
+  m5: {
+    jawOpen: 'e046833a9c0e00695b138d30ee4710939c8985403c6faba32f0728bc6bf34ddc',
+    eyeBlinkLeft: 'c601c77b4209188c791c974f5c7fb0b9e2151621f2067893c3a164bb97a91b71',
+    eyeBlinkRight: '681ff38de2d75675e37047902901e40599737857d28f86fcc7f8176d30c3883f',
+    browInnerUp: '52f808420a23bb011de7fdd4251baf7258df3e56d03c7d2d29c0325badd5303f',
+    mouthSmileLeft: '6df06ad3b3a13b14a591a6156a47a5a5776445f5294f4a1e8ff0b2631c944479',
+    mouthSmileRight: '7e0132a6769368b04c66efef9198285ddd087cb6c7d6c01509e0abae790164be',
+    mouthPucker: 'e3e542a02d4cd32bd321acf9da0f26beaf6f84235260b2016a4d66324757495c',
+  },
+  f5: {
+    jawOpen: '1956c38e8c27ae0d02c9db2ddeb4534600535f7bd2ddbc7ad9beb7367d4f0fdd',
+    eyeBlinkLeft: '439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e',
+    eyeBlinkRight: 'e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201',
+    browInnerUp: 'bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa',
+    mouthSmileLeft: 'd1bcdae0cbb803c79301b84bd1838ab0deb7af32ac183d914e130d06b9623d46',
+    mouthSmileRight: '71a6c33a5c0777549ef463518ae35ca5fa7510363490f4723fb0b2ae79e6e32f',
+    mouthPucker: '5f27917ff83ffd236649cedd807a14c08f46fa9d2c61ff966cfeda163bc080d0',
+  },
+};
+
+const EXPECTED_COUPLED = {
+  m5: { mustAccept: [292], mustReject: [65, 284] },
+  f5: { mustAccept: [497], mustReject: [105, 1071, 1975] },
+};
 
 function sha256File(path) {
   return createHash('sha256').update(readFileSync(path)).digest('hex');
@@ -159,10 +192,8 @@ async function processAsset(id) {
   const qaFinal = join(run, 'qa', 'final');
   mkdirSync(qaFinal, { recursive: true });
 
-  const puckerGlbRel =
-    id === 'm5'
-      ? `${runRel}/human-male-quality-20260921-m5-face3-pucker1.glb`
-      : `${runRel}/human-female-quality-20260921-f5-face3-pucker1.glb`;
+  // Authoritative Coupled-Shell candidate (jaw+blinks surface/coupled; brow/smile/pucker frozen).
+  const coupledRel = `${runRel}/qa/jawopen-coupled-shell1/${id}-coupled-shell1.glb`;
   const face1BaseRel =
     id === 'm5'
       ? `${runRel}/human-male-quality-20260921-m5-face3.glb`
@@ -177,34 +208,39 @@ async function processAsset(id) {
     id === 'm5'
       ? join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5.glb')
       : join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5.glb');
-  const anchorsPath = join(run, 'face-anchors.json');
+  const anchorsPath = join(run, 'qa/jawopen-coupled-shell1/face-anchors.json');
   const stageAAuthPath = join(run, 'face-mapping-authoring.json');
-  const preBaselinePath = join(qaFinal, 'pre-rebase-milestone5-morph-baseline.json');
+  const expected = EXPECTED_MORPH_HASHES[id];
+  const coupledExpect = EXPECTED_COUPLED[id];
 
-  const puckerBytes = readFileSync(join(root, puckerGlbRel));
-  const pre = JSON.parse(readFileSync(preBaselinePath, 'utf8'));
-  const preAsset = pre.assets[id];
-  if (computeFaceAssetSha256Hex(puckerBytes) !== preAsset.glbSha256) {
-    throw new Error(`${id}: pucker1 SHA drifted vs pre-rebase baseline`);
+  if (!existsSync(join(root, coupledRel))) {
+    throw new Error(`${id}: coupled-shell1 candidate missing: ${coupledRel}`);
   }
 
-  // Phase 1 — freeze final GLB (byte-identical copy of pucker1)
+  // Phase 1 — freeze final GLB from Coupled-Shell candidate
   const finalGlbPath = join(run, finalGlbName);
-  copyFileSync(join(root, puckerGlbRel), finalGlbPath);
+  copyFileSync(join(root, coupledRel), finalGlbPath);
   const finalBytes = readFileSync(finalGlbPath);
   const finalSha = computeFaceAssetSha256Hex(finalBytes);
-  if (finalSha !== preAsset.glbSha256) throw new Error(`${id}: final copy SHA mismatch`);
+  // Determinism: second copy must match
+  copyFileSync(join(root, coupledRel), join(qaFinal, `${id}-final-rerun.glb`));
+  if (computeFaceAssetSha256Hex(readFileSync(join(qaFinal, `${id}-final-rerun.glb`))) !== finalSha) {
+    throw new Error(`${id}: final GLB copy nondeterministic`);
+  }
 
   const finalDoc = await io.readBinary(finalBytes);
   const finalHashes = hashAllMorphPositionBuffers(finalDoc);
   const topo = computeFaceAssetTopologyFingerprint(finalDoc);
-  if (topo !== preAsset.topology) throw new Error(`${id}: topology drifted`);
   for (const ch of CHANNELS) {
-    if (finalHashes.get(ch) !== preAsset.hashes[ch]) {
-      throw new Error(`${id}: morph hash drifted: ${ch}`);
+    if (finalHashes.get(ch) !== expected[ch]) {
+      throw new Error(
+        `${id}: morph hash drifted vs Coupled-Shell baseline: ${ch} got=${finalHashes.get(ch)} want=${expected[ch]}`,
+      );
     }
   }
-  const face1Hashes = hashAllMorphPositionBuffers(await io.readBinary(readFileSync(join(root, face1BaseRel))));
+  const face1Hashes = hashAllMorphPositionBuffers(
+    await io.readBinary(readFileSync(join(root, face1BaseRel))),
+  );
   const changedVsFace1 = [...finalHashes.keys()]
     .filter((n) => finalHashes.get(n) !== face1Hashes.get(n))
     .sort();
@@ -233,8 +269,106 @@ async function processAsset(id) {
   }
   if (carryOk !== carryTotal) throw new Error(`${id}: neutral GT carry ${carryOk}/${carryTotal}`);
 
-  // Final GT authoring: human_reviewed carry-forward (agent_reviewed ledger remains Stage-A provenance;
-  // model SHA changed by morph rewrite so agent_reviewed cannot re-bind without re-review).
+  // Coupled-Shell Safety (detection matrix on final GLB)
+  const first = Object.values(anchorsEnv.anchors)[0];
+  const node = findNodeByIdentity(finalDoc, first.nodeIdentity);
+  const mesh = node.getMesh();
+  const prim = mesh.listPrimitives()[first.primitiveIndex || 0];
+  const frame0 = buildFaceLocalFrame(nFinal);
+  const surface = buildGtBoundSurfaceGate(
+    prim,
+    anchorsEnv.anchors,
+    JAW_OPEN_AUTHOR_CONTRACT_V1.surfaceSeedAnchors,
+  );
+  const maxHops = maxTopologyHopsForRadius(
+    surface.meanEdgeLength,
+    Math.max(0.08, frame0.faceHeight * 0.35),
+  );
+  /** @type {number[]} */
+  const primaryVerts = [];
+  for (let i = 0; i < surface.allowed.length; i += 1) {
+    if (surface.allowed[i] && surface.topoDist[i] >= 0 && surface.topoDist[i] <= maxHops) {
+      primaryVerts.push(i);
+    }
+  }
+  const jointNames =
+    finalDoc.getRoot().listSkins()[0]?.listJoints().map((j) => j.getName() || '') || [];
+  const gtRefs = [
+    nFinal.mouthLower,
+    nFinal.mouthUpper,
+    nFinal.chin,
+    nFinal.mouthCornerLeft,
+    nFinal.mouthCornerRight,
+  ].filter(Boolean);
+  const coupling = resolveCoupledFacialPatches({
+    prim,
+    surface,
+    primaryVerts,
+    faceHeight: frame0.faceHeight,
+    gtRefs,
+    jointNames,
+  });
+  const accepted = coupling.patches.map((p) => p.componentId);
+  const bodyFp = coupling.patches.filter((p) => p.wholeCompBodyFrac > 0.35).length;
+  for (const cid of coupledExpect.mustAccept) {
+    if (!accepted.includes(cid)) {
+      throw new Error(`${id}: coupled positive missing component ${cid}; accepted=${accepted}`);
+    }
+  }
+  for (const cid of coupledExpect.mustReject) {
+    if (accepted.includes(cid)) {
+      throw new Error(`${id}: body negative accepted: ${cid}`);
+    }
+  }
+  if (bodyFp !== 0) throw new Error(`${id}: body FP=${bodyFp}`);
+
+  // Seam continuity at weight 1 for accepted patches
+  const jawIdx = findNamedMorphTargetIndex(prim, mesh, 'jawOpen');
+  const morphPos = prim.listTargets()[jawIdx].getAttribute('POSITION');
+  const basePos = prim.getAttribute('POSITION');
+  const bS = [0, 0, 0];
+  const bP = [0, 0, 0];
+  const dS = [0, 0, 0];
+  const dP = [0, 0, 0];
+  const gaps = [];
+  for (const p of coupling.patches) {
+    for (const sp of p.seamPairs.slice(0, 40)) {
+      basePos.getElement(sp.secondary, bS);
+      basePos.getElement(sp.primary, bP);
+      morphPos.getElement(sp.secondary, dS);
+      morphPos.getElement(sp.primary, dP);
+      gaps.push(
+        Math.hypot(
+          bS[0] + dS[0] - (bP[0] + dP[0]),
+          bS[1] + dS[1] - (bP[1] + dP[1]),
+          bS[2] + dS[2] - (bP[2] + dP[2]),
+        ),
+      );
+    }
+  }
+  gaps.sort((a, b) => a - b);
+  const seamMax = gaps.length ? gaps[gaps.length - 1] : 0;
+  const seamThr = Math.max(surface.meanEdgeLength * 2.5, frame0.faceHeight * 0.008);
+  if (seamMax > seamThr) {
+    throw new Error(`${id}: seam continuity FAIL max=${seamMax} thr=${seamThr}`);
+  }
+  writeFileSync(
+    join(qaFinal, 'coupled-shell-safety.json'),
+    `${JSON.stringify(
+      {
+        accepted,
+        rejectedBody: coupling.rejected.filter((r) => coupledExpect.mustReject.includes(r.componentId)),
+        bodyFp,
+        seamMax,
+        seamThr,
+        pass: true,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  // Final GT authoring: human_reviewed carry-forward
   const stageA = JSON.parse(readFileSync(stageAAuthPath, 'utf8'));
   const anchorsSha = computeFaceAssetSha256Hex(readFileSync(anchorsPath));
   const finalAuth = {
@@ -250,14 +384,16 @@ async function processAsset(id) {
       topologyFingerprint: topo,
       cacheBust: CACHE_BUST,
     },
-    agentReviewLedgerRef: stageA.agentReview || null,
+    agentReviewLedgerRef: stageA.agentReview || stageA.agentReviewLedgerRef || null,
     note:
-      'Final #423 face3 publish candidate. Anchors agent_reviewed at Stage A (topology-stable); ' +
-      'morph rewrite carry-forward as human_reviewed/manual_override with identity SHA of final GLB.',
+      'Final #423 face3 Coupled-Shell publish candidate. Anchors agent_reviewed at Stage A; ' +
+      'morph rewrite = GT surface + Option C seam-local coupled patch transfer.',
   };
   const finalAuthPath = join(run, 'face-mapping-authoring-final.json');
   writeFileSync(finalAuthPath, `${JSON.stringify(finalAuth, null, 2)}\n`);
   writeFileSync(join(qaFinal, 'face-mapping-authoring.json'), `${JSON.stringify(finalAuth, null, 2)}\n`);
+  copyFileSync(anchorsPath, join(qaFinal, 'face-anchors.json'));
+  copyFileSync(anchorsPath, join(run, 'face-anchors.json'));
 
   if (!isReviewedFaceMappingGroundTruth(finalAuth)) {
     throw new Error(`${id}: final authoring not reviewed GT`);
@@ -271,6 +407,15 @@ async function processAsset(id) {
   });
   if (!gtGate.ok) {
     throw new Error(`${id}: GT gate fail ${gtGate.reason}:${(gtGate.violations || []).join(',')}`);
+  }
+
+  // Agent review ledger presence (Stage A)
+  const ledgerDir = join(run, 'agent-review');
+  if (!existsSync(join(ledgerDir, 'aggregation.json'))) {
+    throw new Error(`${id}: agent-review aggregation missing`);
+  }
+  if (!existsSync(join(ledgerDir, 'evidence-manifest.json'))) {
+    throw new Error(`${id}: agent-review evidence-manifest missing`);
   }
 
   // Phase 2 — full Stage-B via face asset validate → inventory
@@ -328,7 +473,14 @@ async function processAsset(id) {
     bothBlinks_brow: { eyeBlinkLeft: 1, eyeBlinkRight: 1, browInnerUp: 1 },
     jaw_blinkL: { jawOpen: 1, eyeBlinkLeft: 1 },
     jaw_blinkR: { jawOpen: 1, eyeBlinkRight: 1 },
+    jaw_bothBlinks: { jawOpen: 1, eyeBlinkLeft: 1, eyeBlinkRight: 1 },
     jaw_brow: { jawOpen: 1, browInnerUp: 1 },
+    smiles_blinks: {
+      mouthSmileLeft: 1,
+      mouthSmileRight: 1,
+      eyeBlinkLeft: 1,
+      eyeBlinkRight: 1,
+    },
     bothSmiles_bothBlinks: {
       mouthSmileLeft: 1,
       mouthSmileRight: 1,
@@ -389,20 +541,48 @@ async function processAsset(id) {
   writeFileSync(join(qaFinal, 'combination-qa.json'), `${JSON.stringify(combination, null, 2)}\n`);
   if (comboFail) throw new Error(`${id}: combination FAIL count=${comboFail}`);
 
-  // Phase 4 — geometric visual sanity (metric; screenshots via VRM pose after pack)
+  // Phase 4 — geometric visual sanity + Coupled-Shell visual evidence carry-forward
   const morphDelta = maxMorphDelta(finalDoc, CHANNELS);
   const fqJaw = fq.channels?.jawOpen?.deltas?.mouthGap ?? fq.channels?.jawOpen?.posedMetrics?.mouthGap;
+  const coupledVisual = join(run, 'qa/jawopen-coupled-shell1/OVERALL-VERDICT.json');
+  let coupledVisualPass = false;
+  if (existsSync(coupledVisual)) {
+    const ov = JSON.parse(readFileSync(coupledVisual, 'utf8'));
+    coupledVisualPass = ov.verdict === 'PASS' && ov.gates?.visual === true;
+  }
   const visual = {
     morphDeltaMax: morphDelta.max,
     morphDeltaNan: morphDelta.nan,
     jawGapMetric: fqJaw,
-    jawGapNote:
-      'Large normalized gap (~0.9–1.15) is authored intentional aperture; flag only if morphDeltaNan or grotesque spike.',
+    coupledShellVisualEvidence: coupledVisualPass,
+    seamMax,
     grotesqueSpike: morphDelta.nan || morphDelta.max > 0.35,
-    pass: !morphDelta.nan && morphDelta.max <= 0.35,
+    pass: !morphDelta.nan && morphDelta.max <= 0.35 && coupledVisualPass && seamMax <= seamThr,
   };
   writeFileSync(join(qaFinal, 'visual-sanity.json'), `${JSON.stringify(visual, null, 2)}\n`);
-  if (!visual.pass) throw new Error(`${id}: visual sanity FAIL maxDelta=${morphDelta.max}`);
+  if (!visual.pass) {
+    throw new Error(
+      `${id}: visual sanity FAIL maxDelta=${morphDelta.max} coupledVisual=${coupledVisualPass} seam=${seamMax}`,
+    );
+  }
+  // Copy key visual evidence into qa/final/visual
+  const visSrc = join(run, 'qa/jawopen-coupled-shell1/visual');
+  const visDst = join(qaFinal, 'visual');
+  mkdirSync(visDst, { recursive: true });
+  if (existsSync(visSrc)) {
+    for (const name of [
+      `${id}-neutral.jpg`,
+      `${id}-jawOpen-front.jpg`,
+      `${id}-jawOpen-left.jpg`,
+      `${id}-jawOpen-right.jpg`,
+      `${id}-jawOpen-below.jpg`,
+      `${id}-blinkLeft.jpg`,
+      `${id}-blinkRight.jpg`,
+    ]) {
+      const p = join(visSrc, name);
+      if (existsSync(p)) copyFileSync(p, join(visDst, name));
+    }
+  }
 
   // Publish GLB + sidecars to public (immutable face3 generation)
   const publicDir = join(root, 'public/assets/avatars/species');
@@ -535,6 +715,7 @@ async function processAsset(id) {
     functional: channelPass,
     functionalOverall: true,
     combinationPass: true,
+    coupledShell: { accepted, bodyFp, seamMax, pass: true },
     visualSanity: visual,
     publicGlb: `public/assets/avatars/species/${publishStem}.glb`,
     publicVrm: `public/assets/avatars/species/${publishStem}.vrm`,

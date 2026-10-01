@@ -2,13 +2,13 @@
   "m5": {
     "id": "m5",
     "finalGlb": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-final.glb",
-    "finalGlbSha256": "d2f1e879342782e9e7490f038cc7a1775147badf40188a046add1ab4e9359839",
+    "finalGlbSha256": "5052b0adc8a3287a02309203ce37ee2344aeda8f63b203098c82897626e87153",
     "topology": "v133002:t215832:m1",
     "morphCount": 51,
     "channelHashes": {
-      "jawOpen": "28d455fde18cf236474b440d70a9f1d6ddff77502c6a0490abe9da137c6eb542",
-      "eyeBlinkLeft": "49a4150169ad4a08ffa7c55c5c68af7d5ea7a3483dd1a6391d11cd44b520fe75",
-      "eyeBlinkRight": "c02cb005803f9a30ce5cab86640d8eae8b9413290dc1635867337c22fb0c4b5f",
+      "jawOpen": "e046833a9c0e00695b138d30ee4710939c8985403c6faba32f0728bc6bf34ddc",
+      "eyeBlinkLeft": "c601c77b4209188c791c974f5c7fb0b9e2151621f2067893c3a164bb97a91b71",
+      "eyeBlinkRight": "681ff38de2d75675e37047902901e40599737857d28f86fcc7f8176d30c3883f",
       "browInnerUp": "52f808420a23bb011de7fdd4251baf7258df3e56d03c7d2d29c0325badd5303f",
       "mouthSmileLeft": "6df06ad3b3a13b14a591a6156a47a5a5776445f5294f4a1e8ff0b2631c944479",
       "mouthSmileRight": "7e0132a6769368b04c66efef9198285ddd087cb6c7d6c01509e0abae790164be",
@@ -39,34 +39,48 @@
     },
     "functionalOverall": true,
     "combinationPass": true,
+    "coupledShell": {
+      "accepted": [
+        176,
+        177,
+        189,
+        286,
+        292,
+        341
+      ],
+      "bodyFp": 0,
+      "seamMax": 0.000008132574592306245,
+      "pass": true
+    },
     "visualSanity": {
-      "morphDeltaMax": 0.07012468317506382,
+      "morphDeltaMax": 0.022448823948708493,
       "morphDeltaNan": false,
-      "jawGapMetric": 0.91444794,
-      "jawGapNote": "Large normalized gap (~0.9–1.15) is authored intentional aperture; flag only if morphDeltaNan or grotesque spike.",
+      "jawGapMetric": 0.149817,
+      "coupledShellVisualEvidence": true,
+      "seamMax": 0.000008132574592306245,
       "grotesqueSpike": false,
       "pass": true
     },
     "publicGlb": "public/assets/avatars/species/human-male-quality-20260921-m5-face3.glb",
     "publicVrm": "public/assets/avatars/species/human-male-quality-20260921-m5-face3.vrm",
-    "publicGlbSha256": "d2f1e879342782e9e7490f038cc7a1775147badf40188a046add1ab4e9359839",
-    "publicVrmSha256": "6375e65f2a133494121233e59591f5034aec5c3fb28bfe275fbc1c6fcf0394b5",
+    "publicGlbSha256": "5052b0adc8a3287a02309203ce37ee2344aeda8f63b203098c82897626e87153",
+    "publicVrmSha256": "61225e434bf2e4ad9713348f14e8b4b380571b0d39696eb73cf36676347c7a83",
     "vrmFunctionalPass": true,
     "morphParityOk": true,
     "gazeMode": "morphs",
     "packGaze": "morphs",
-    "cacheBust": "quality5-face3-vrm1"
+    "cacheBust": "quality5-face3-coupled1"
   },
   "f5": {
     "id": "f5",
     "finalGlb": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-final.glb",
-    "finalGlbSha256": "05959ba56bcfcd7f7caaa4f8191f01ddf1de297964c77fc030199d72ada7cb61",
+    "finalGlbSha256": "f080391ae1b2e14abfafdafd8e77ff32ee4e2b28e7f03bf1d3eee816edbd9500",
     "topology": "v147707:t214973:m1",
     "morphCount": 51,
     "channelHashes": {
-      "jawOpen": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
-      "eyeBlinkLeft": "37b109b278421a1c03c23d01effc98cee3ca4c2984b28570c582f4c238d401d4",
-      "eyeBlinkRight": "271d52f72a7567134f11e03e268e0923faf7d61f380109fb618c14707ea92545",
+      "jawOpen": "1956c38e8c27ae0d02c9db2ddeb4534600535f7bd2ddbc7ad9beb7367d4f0fdd",
+      "eyeBlinkLeft": "439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e",
+      "eyeBlinkRight": "e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201",
       "browInnerUp": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
       "mouthSmileLeft": "d1bcdae0cbb803c79301b84bd1838ab0deb7af32ac183d914e130d06b9623d46",
       "mouthSmileRight": "71a6c33a5c0777549ef463518ae35ca5fa7510363490f4723fb0b2ae79e6e32f",
@@ -97,22 +111,32 @@
     },
     "functionalOverall": true,
     "combinationPass": true,
+    "coupledShell": {
+      "accepted": [
+        497,
+        1057
+      ],
+      "bodyFp": 0,
+      "seamMax": 7.839364057682576e-7,
+      "pass": true
+    },
     "visualSanity": {
-      "morphDeltaMax": 0.0679860516553569,
+      "morphDeltaMax": 0.0230465441271755,
       "morphDeltaNan": false,
-      "jawGapMetric": 1.14764766,
-      "jawGapNote": "Large normalized gap (~0.9–1.15) is authored intentional aperture; flag only if morphDeltaNan or grotesque spike.",
+      "jawGapMetric": 0.12333841,
+      "coupledShellVisualEvidence": true,
+      "seamMax": 7.839364057682576e-7,
       "grotesqueSpike": false,
       "pass": true
     },
     "publicGlb": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.glb",
     "publicVrm": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm",
-    "publicGlbSha256": "05959ba56bcfcd7f7caaa4f8191f01ddf1de297964c77fc030199d72ada7cb61",
-    "publicVrmSha256": "c292e9f7dc313f4e64474d317bf7d1b0323f22f84732e8c32cfb479fdb004a4c",
+    "publicGlbSha256": "f080391ae1b2e14abfafdafd8e77ff32ee4e2b28e7f03bf1d3eee816edbd9500",
+    "publicVrmSha256": "20db033a14640401d0dbc9940c200fde90da043eacd5632d945474a00d7d8c00",
     "vrmFunctionalPass": true,
     "morphParityOk": true,
     "gazeMode": "morphs",
     "packGaze": "morphs",
-    "cacheBust": "quality5-face3-vrm1"
+    "cacheBust": "quality5-face3-coupled1"
   }
 }

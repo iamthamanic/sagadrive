@@ -1,8 +1,9 @@
 {
-  "morphDeltaMax": 0.07012468317506382,
+  "morphDeltaMax": 0.022448823948708493,
   "morphDeltaNan": false,
-  "jawGapMetric": 0.91444794,
-  "jawGapNote": "Large normalized gap (~0.9–1.15) is authored intentional aperture; flag only if morphDeltaNan or grotesque spike.",
+  "jawGapMetric": 0.149817,
+  "coupledShellVisualEvidence": true,
+  "seamMax": 0.000008132574592306245,
   "grotesqueSpike": false,
   "pass": true
 }

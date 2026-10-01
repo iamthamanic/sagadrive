@@ -149,6 +149,41 @@
     "resolverUpdated": false,
     "publicAssetsPublished": false,
     "evidence": "qa/final/visual-sanity-verdict.json",
-    "note": "Metric Functional 7/7 PASS; Phase-4 visual jawOpen grotesque on m5+f5. Premature public face3 removed; resolver remains face1."
+    "note": "Superseded: Coupled-Shell Option C fixed visual; final publish completed.",
+    "supersededBy": "finalPublish"
+  },
+  "finalPublish": {
+    "at": "2026-10-01T22:36:57.029Z",
+    "ticket": "#423",
+    "candidateGlb": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-final.glb",
+    "candidateSha256": "5052b0adc8a3287a02309203ce37ee2344aeda8f63b203098c82897626e87153",
+    "publicGlb": "public/assets/avatars/species/human-male-quality-20260921-m5-face3.glb",
+    "publicVrm": "public/assets/avatars/species/human-male-quality-20260921-m5-face3.vrm",
+    "publicGlbSha256": "5052b0adc8a3287a02309203ce37ee2344aeda8f63b203098c82897626e87153",
+    "publicVrmSha256": "61225e434bf2e4ad9713348f14e8b4b380571b0d39696eb73cf36676347c7a83",
+    "topologyFingerprint": "v133002:t215832:m1",
+    "cacheBust": "quality5-face3-coupled1",
+    "functionalPass": true,
+    "combinationPass": true,
+    "morphRegression": {
+      "changed": [
+        "browInnerUp",
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "jawOpen",
+        "mouthPucker",
+        "mouthSmileLeft",
+        "mouthSmileRight"
+      ],
+      "rest44Identical": true
+    },
+    "gazeMode": "morphs",
+    "outcome": "PASS",
+    "resolverUpdated": true,
+    "publicAssetsPublished": true,
+    "visualSanity": "PASS",
+    "coupledShell": "PASS",
+    "surfaceSafety": "PASS",
+    "note": "Coupled-Shell Option C final publish PASS. Resolver → face3 VRM ?v=quality5-face3-coupled1. Generic m5/f5.glb fallback preserved."
   }
 }

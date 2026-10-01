@@ -1,7 +1,7 @@
 # LiveAct Human Ground-Truth Repair (#423)
 
 ## Status
-Design ready for staged implementation. Depends on merged #422. No #424 retarget tuning in this slice.
+**IMPLEMENTED / READY for PR** — Coupled-Shell Option C final publish PASS (`quality5-face3-coupled1`). No #424 retarget tuning in this slice.
 
 ## Problem
 The current m5/f5 `face2` runs pass Structural + Anatomy + Semantic QA, but their ledgers explicitly state that the shipped GLB morphs are unchanged from `face1`. Those runs predate Functional Face QA, so there is no evidence yet that the real `jawOpen`, Blink L/R, `browInnerUp`, Smile L/R and `mouthPucker` morphs actually perform the promised facial function.
@@ -25,7 +25,7 @@ Create separate 21/21 human-reviewed Ground Truth for m5 and f5, run the current
 
 ## Current repository evidence
 - `assets/species-3d/human/runs/quality-20260921-m5-face2/run.json` and f5 equivalent report Structural/Semantic success but `GLB morphs unchanged from face1`.
-- Current resolver still points to `human-*-...-face1.vrm?v=quality5-face2-vrm2`.
+- **Resolved:** resolver → `human-*-…-face3.vrm?v=quality5-face3-coupled1` (Coupled-Shell final). Generic `*-m5/f5.glb` fallback preserved; historic face1 retained.
 - `scripts/liveact-face-authoring-qtmesh.mjs` is the existing reproducible QtMesh authoring path.
 - `scripts/lib/avatar-vrm-pack.mjs` packages validated GLB into VRM 1.0 without changing morph geometry.
 - #422 provides `SagaDriveLiveActFaceFunctionalQaV1` and reviewed provenance gating.

@@ -127,7 +127,7 @@
   "gazeModeSource": "inferred",
   "morphCount": 51,
   "usableMorphCount": 51,
-  "byteCount": 28734192,
+  "byteCount": 28582096,
   "meshCount": 1,
   "skinCount": 1,
   "materialCount": 1,
@@ -298,34 +298,34 @@
     "channels": {
       "eyeBlinkLeft": {
         "pass": true,
-        "expectedEnergy": 0.012845560917866077,
+        "expectedEnergy": 0.01170178270836986,
         "forbiddenLeakageRatio": 0,
-        "expectedEnergyRatio": 0.998155304451384,
+        "expectedEnergyRatio": 0.9980660088069455,
         "side": {
-          "leftEnergy": 0.01286930085987609,
+          "leftEnergy": 0.011724457706317217,
           "rightEnergy": 0
         },
         "violations": []
       },
       "eyeBlinkRight": {
         "pass": true,
-        "expectedEnergy": 0.00810128311330861,
+        "expectedEnergy": 0.007536530595017861,
         "forbiddenLeakageRatio": 0,
-        "expectedEnergyRatio": 0.9972978987354045,
+        "expectedEnergyRatio": 0.999656603591154,
         "side": {
           "leftEnergy": 0,
-          "rightEnergy": 0.00812323291123065
+          "rightEnergy": 0.007539119501580564
         },
         "violations": []
       },
       "jawOpen": {
         "pass": true,
-        "expectedEnergy": 10.005199208750406,
-        "forbiddenLeakageRatio": 2.054768490197198e-8,
-        "expectedEnergyRatio": 0.980889652417183,
+        "expectedEnergy": 0.05298685110412802,
+        "forbiddenLeakageRatio": 0,
+        "expectedEnergyRatio": 0.999999774201609,
         "side": {
-          "leftEnergy": 4.783157341471886,
-          "rightEnergy": 5.4169698431658855
+          "leftEnergy": 0.01718298734089217,
+          "rightEnergy": 0.035803875727584505
         },
         "violations": []
       },
@@ -459,12 +459,12 @@
           "mouthGap": 0.79680628
         },
         "posedMetrics": {
-          "mouthGap": 1.71125422,
+          "mouthGap": 0.94662328,
           "noseTipDispFaceH": 0,
           "foreheadDispFaceH": 0
         },
         "deltas": {
-          "mouthGap": 0.91444794,
+          "mouthGap": 0.149817,
           "noseTipDispFaceH": 0,
           "foreheadDispFaceH": 0
         },

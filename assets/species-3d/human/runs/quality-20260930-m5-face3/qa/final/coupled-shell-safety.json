@@ -1,0 +1,28 @@
+{
+  "accepted": [
+    176,
+    177,
+    189,
+    286,
+    292,
+    341
+  ],
+  "rejectedBody": [
+    {
+      "componentId": 65,
+      "reason": "whole_comp_body",
+      "wholeCompBodyFrac": 0.8439716312056738,
+      "coincideCount": 15
+    },
+    {
+      "componentId": 284,
+      "reason": "whole_comp_body",
+      "wholeCompBodyFrac": 0.8563484708063022,
+      "coincideCount": 0
+    }
+  ],
+  "bodyFp": 0,
+  "seamMax": 0.000008132574592306245,
+  "seamThr": 0.010352942466524729,
+  "pass": true
+}

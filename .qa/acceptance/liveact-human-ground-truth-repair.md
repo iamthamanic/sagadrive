@@ -10,8 +10,15 @@ Reviewed Ground Truth for m5/f5, then Functional Face QA; repair morphs with GT-
 - [x] Stage B: Functional Face QA against reviewed GT for m5 and f5.
 - [x] Stage B: QtMesh FaceRig reauthor on Functional FAIL (full path, MARKER_SIM=2, 3.41.1).
 - [x] Stage B: Functional QA metrics PASS after reauthor — **7/7 channels PASS** (Milestone 5).
-- [x] Stage B final visual + publish gate — **visual jawOpen PASS after Coupled Shell (Option C)**; publish gate still deferred (no VRM/resolver this milestone).
-- [ ] VRM 1.0 publish + resolver sync — **blocked** until Final Publish Gate rerun (explicitly out of this Coupled-Shell milestone).
+- [x] Stage B final visual + publish gate — **visual jawOpen PASS** after Surface + Coupled Shell (Option C).
+- [x] VRM 1.0 packaging + packaged regression + publish + resolver/cache sync — **PASS** (`quality5-face3-coupled1`).
+
+## Architecture (final)
+
+1. **Root cause (Functional):** FaceRig did not consume reviewed GT for required channels → GT-aware morph authoring for 7/51.
+2. **Visual root cause A:** Euclidean neighborhood selected disconnected body shells → GT-bound surface + topology hops.
+3. **Visual root cause C:** Strict component cut tore coincident dual facial shells → Option C seam-local coupled patch transfer.
+4. **Final ownership:** reviewed GT surface + topology-local primary morph + direct Primary→Secondary seam patch (no recursive coupling; body-family skin veto only).
 
 ## Visual Safety Postconditions (Surface Fix)
 
@@ -46,7 +53,7 @@ Primary GT-bound surface remains authoritative. Coupling is an **additive** seco
 - [x] Blink L/R Visual + Functional PASS; coupling applied only if a valid blink seam is detected (default: strict surface/topology remains).
 - [x] Other functional morphs (brow/smiles/pucker) unchanged vs Milestone-5 frozen hashes; 44 FaceRig morph POSITION buffers identical vs FaceRig base.
 - [x] Body false positives = 0; Seam Continuity PASS; Combination PASS; `npm run test-gate` PASS.
-- [x] No Publish / Resolver / Cache Bust / VRM Final / #424 in this milestone.
+- [x] Final Publish / Resolver / Cache Bust completed; #424 still out of scope.
 
 ### Coupling predicate (consistency)
 - PRIMARY gates: sustained coincide (`τ=0.12·meanEdge`), normal compatibility (≥0.55), GT locality, local patch topology.
@@ -270,7 +277,7 @@ Input: `*-face3-smile1.glb` → Output: `*-face3-pucker1.glb`.
 | m5 | ≈ 0.975 | ≈ 0.850 | ≈ 0.075 / 0.075 | yes |
 | f5 | ≈ 0.998 | ≈ 0.850 | ≈ 0.075 / 0.075 | yes |
 
-Functional Overall **7/7 PASS** (metrics). Final visual sanity **FAIL** on jawOpen → publish blocked; see `qa/final/visual-sanity-verdict.json`.
+Functional Overall **7/7 PASS** (metrics). Later Coupled-Shell visual gate PASS → publish completed.
 Evidence: `…/{m5,f5}-face3/qa/pucker1/`
 
 ## Screenshots
@@ -279,33 +286,34 @@ Evidence: `…/{m5,f5}-face3/qa/pucker1/`
 | 1 | n/a (offline morph authoring) |
 
 ## Composition Gate
-- Verdict: SKIPPED
-- Reason: offline authoring/QA; no producer→consumer UI fan-out in this milestone
+- Verdict: CLEAR
+- HEAD_SHA: WORKTREE (pre-commit final publish)
+- Event: Final Coupled-Shell face3 GLB/VRM published and resolved for human LiveAct templates
+- Hop chain: reviewed GT → surface ownership → coupled-shell resolution → functional morph authoring → final GLB → VRM pack → public `*-face3.{glb,vrm}` → `species-template-models-v1` resolver (`?v=quality5-face3-coupled1`) → runtime loader → LiveAct consumption
+- Simulations: N-actors (m5+f5 same contract, no asset branches) pass; invalid/missing (generic `*-m5/f5.glb` fallback preserved; face1 historical) pass; two consumers (cache-bust identity pins same SHA) pass
+- Proof: `.qa/runs/composition-gate-liveact-human-ground-truth-repair.md`
 
+## Final #423 Publish Gate — PASS (Coupled Shell)
 
-## Final #423 Publish Gate — BLOCKED (Visual Sanity FAIL)
+### Verified
+- Final GLB = Coupled-Shell candidate (`qa/jawopen-coupled-shell1/*-coupled-shell1.glb` → `*-face3-final.glb`)
+- Morph hashes authoritative Coupled-Shell baseline (not Milestone-5 jaw/blink)
+- Structural / Anatomy / Semantic / GT / Functional 7/7 PASS
+- Surface Safety + Coupled-Shell Safety PASS (Body FP=0; seam ≈0)
+- Combination PASS; Visual PASS; Determinism PASS
+- VRM pack via `avatar-vrm-pack.mjs`; morph POSITION parity GLB↔VRM PASS
+- Packaged VRM Functional PASS; VRM visual smoke PASS
+- Published `public/assets/avatars/species/*-face3.{glb,vrm}` + sidecars
+- Resolver → `…-face3.vrm?v=quality5-face3-coupled1`; Generic GLB fallback preserved
+- Gaze path unchanged (inventory `gazeMode=morphs`); no #424 gains
 
-### Verified before STOP
-- Phase 0 rebase onto `origin/main` PASS; 7 morph hashes identical to Milestone-5 baseline
-- Final GLB freeze (pucker1 → `*-face3-final.glb`) PASS; 7/51 morph regression PASS
-- Structural / Anatomy / Semantic / GT / Functional 7/7 PASS (metrics)
-- Combination QA PASS (technical)
-- Packaged VRM morph parity + Functional PASS (metrics)
+### Final identities
+| Asset | Final GLB SHA256 (16) | Public VRM SHA256 (16) | Cache |
+|-------|----------------------|------------------------|-------|
+| m5 | `5052b0adc8a3287a` | `61225e434bf2e4ad` | `quality5-face3-coupled1` |
+| f5 | `f080391ae1b2e14a` | `20db033a14640401` | `quality5-face3-coupled1` |
 
-### Blocking finding
-- Phase 4 visual sanity **FAIL** on `jawOpen` for **m5 and f5**
-  - m5: beard/chin/neck stretched into long spikes; shoulder crater artifacts (`qa/final/visual/jawOpen.jpg`)
-  - f5: severe neck/chin vertex spike down the chest (`qa/final/visual/jawOpen.jpg`)
-- Metric mouthGap (~0.91 / ~1.15) cleared Functional thresholds but is visually grotesque
-- Must **not** be fixed via #424 runtime Gain/DeadZone
-
-### Rollback performed
-- Resolver remains `…-face1.vrm?v=quality5-face2-vrm2`
-- Premature public `…-face3.*` assets removed
-- Generic GLB fallback unchanged
-
-### Next (not started)
-- Re-author jawOpen with reduced amplitude / tighter neighborhood / stronger beard-chin protection
-- Re-run visual + full publish gate
-- Do not close #423 until visual PASS
+### Out of scope
+- #424 runtime Gain/DeadZone
+- Merge (requires explicit user request after CI green)
 
