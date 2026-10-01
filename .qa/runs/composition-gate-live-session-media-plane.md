@@ -1,17 +1,23 @@
 # Composition Gate — live-session-media-plane
 
-- HEAD_SHA: b217ba38ab5a777a5a67285f6a580632efbd1b1c
+- HEAD_SHA: 2ceae1513199fedfdf44727b47fa6e4ac38b6375
+- BASE_SHA: d8720c5dbb7a9b8b0249aa4084e6faa1dec05546
 - Date: 2026-10-01
 - Verdict: SKIPPED
 
 ## Event
+Membership-gated short-lived media token issuance for Live Session SFU attach; media plane is ephemeral and separate from durable SessionRuntimeState.
 
-Media token issuance is request/response; SFU media is ephemeral and not persisted to SessionRuntimeState/world_state.
+## Hop chain
+Client → session-media-token edge (membership + media_token capability) → signed short-lived token → optional LiveKit adapter attach; no durable outbox/worker hop; gameplay continues when media unavailable.
 
-## Skip justification
+## Skip reason
+Ephemeral media plane only: request/response token issuance and SFU attach; no producer→consumer outbox/worker, no durable session/world_state write from media hops.
 
-No durable producer→consumer outbox/worker hop for gameplay. Token endpoint does not enqueue side effects. Media plane explicitly separated from durable session state.
+## Simulations
+- N/A (skipped — no durable multi-hop composition)
+- Invalid/missing: covered by domain token policy fail-closed in unit checks
+- Two consumers / crash: N/A for ephemeral media
 
-## Findings
-
+## Flags
 None.
