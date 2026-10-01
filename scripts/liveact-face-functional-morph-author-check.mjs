@@ -58,6 +58,12 @@ async function buildFixtureGlb() {
 
   // Anchor landmarks (face-like layout, Y up, Z forward)
   addTri(0, 1.7, 0.2, 'forehead');
+  addTri(-0.05, 1.62, 0.19, 'browLeftInner');
+  addTri(-0.09, 1.63, 0.18, 'browLeftCenter');
+  addTri(-0.13, 1.61, 0.17, 'browLeftOuter');
+  addTri(0.05, 1.62, 0.19, 'browRightInner');
+  addTri(0.09, 1.63, 0.18, 'browRightCenter');
+  addTri(0.13, 1.61, 0.17, 'browRightOuter');
   addTri(-0.12, 1.55, 0.18, 'eyeLeftOuter');
   addTri(-0.06, 1.55, 0.2, 'eyeLeftInner');
   addTri(-0.09, 1.58, 0.19, 'eyeLeftUpper');
@@ -79,6 +85,12 @@ async function buildFixtureGlb() {
       const y = 1.12 + yi * 0.025;
       const z = 0.15 + (yi < 3 ? 0.02 : 0);
       addTri(x, y, z, null);
+    }
+  }
+  // Dense brow band filler
+  for (let xi = -5; xi <= 5; xi += 1) {
+    for (let yi = 0; yi < 3; yi += 1) {
+      addTri(xi * 0.025, 1.6 + yi * 0.015, 0.18, null);
     }
   }
   // Dense left/right lid neighborhoods for blink falloff
@@ -170,15 +182,8 @@ async function buildFixtureGlb() {
       barycentric: { u: 1, v: 0, w: 0 },
     };
   }
-  // Fill remaining brow ids if missing (map extras to nearest)
-  for (const id of [
-    'browLeftInner',
-    'browLeftOuter',
-    'browLeftCenter',
-    'browRightInner',
-    'browRightOuter',
-    'browRightCenter',
-  ]) {
+  // Fill remaining ids if missing (should not be needed for core brow/eye)
+  for (const id of []) {
     if (!anchors[id]) {
       anchors[id] = {
         nodeIdentity: 'FaceMesh',
@@ -234,8 +239,9 @@ async function main() {
     FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('jawOpen') &&
       FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('eyeBlinkLeft') &&
       FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('eyeBlinkRight') &&
-      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.length === 3,
-    'Milestone 2 supports jawOpen + eyeBlinkLeft/Right only',
+      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.includes('browInnerUp') &&
+      FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1.length === 4,
+    'Milestone 3 supports jawOpen + blinks + browInnerUp only',
   );
   check(
     FACE_FUNCTIONAL_MORPH_AUTHOR_CONTRACT_VERSION.startsWith('SagaDrive'),
@@ -368,6 +374,56 @@ async function main() {
       'blinkR deterministic morph hash',
     );
 
+    // --- Milestone 3: browInnerUp on blink stack; prior morph hashes immutable ---
+    const blinkRAuth = await writeBundle(join(work, 'blinkR-auth'), readFileSync(blinkROut), fixture.anchors);
+    const browOut = join(work, 'brow.glb');
+    const brow = await authorLiveActFunctionalMorph({
+      inputPath: blinkRAuth.glbPath,
+      outputPath: browOut,
+      anchorsPath: blinkRAuth.anchorsPath,
+      authoringPath: blinkRAuth.authoringPath,
+      channel: 'browInnerUp',
+    });
+    check(brow.channel === 'browInnerUp', 'authors browInnerUp');
+    check(brow.channelStats.affectedVertices > 0, 'brow affects vertices');
+    check((brow.channelStats.meanLiftDelta || 0) >= 0.03, 'brow meanLiftDelta >= 0.03');
+    check((brow.channelStats.browInnerLiftLDelta || 0) > 0, 'left inner brow lifts');
+    check((brow.channelStats.browInnerLiftRDelta || 0) > 0, 'right inner brow lifts');
+    check((brow.channelStats.displacements.mouthUpper || 0) < 1e-5, 'brow mouth protected');
+    check((brow.channelStats.displacements.chin || 0) < 1e-5, 'brow chin protected');
+    check((brow.channelStats.displacements.noseTip || 0) < 1e-5, 'brow nose protected');
+    check(
+      brow.afterJawOpenMorphSha256 === r1.afterJawOpenMorphSha256,
+      'brow preserves jawOpen morph hash',
+    );
+    const browDoc = await io.readBinary(readFileSync(browOut));
+    const browHashes = hashAllMorphPositionBuffers(browDoc);
+    const blinkRDoc = await io.readBinary(readFileSync(blinkROut));
+    const blinkRHashes = hashAllMorphPositionBuffers(blinkRDoc);
+    check(
+      browHashes.get('eyeBlinkLeft') === blinkRHashes.get('eyeBlinkLeft'),
+      'brow preserves eyeBlinkLeft hash',
+    );
+    check(
+      browHashes.get('eyeBlinkRight') === blinkRHashes.get('eyeBlinkRight'),
+      'brow preserves eyeBlinkRight hash',
+    );
+    check(
+      brow.changedMorphs.length === 1 && brow.changedMorphs[0] === 'browInnerUp',
+      'brow only changes browInnerUp',
+    );
+    const brow2 = await authorLiveActFunctionalMorph({
+      inputPath: blinkRAuth.glbPath,
+      outputPath: join(work, 'brow2.glb'),
+      anchorsPath: blinkRAuth.anchorsPath,
+      authoringPath: blinkRAuth.authoringPath,
+      channel: 'browInnerUp',
+    });
+    check(
+      brow.afterChannelMorphSha256 === brow2.afterChannelMorphSha256,
+      'brow deterministic morph hash',
+    );
+
     let rejected = false;
     try {
       const unrevDir = join(work, 'unreviewed');
@@ -471,12 +527,32 @@ async function main() {
         outputPath: join(goodDir, 'bad-channel.glb'),
         anchorsPath: good.anchorsPath,
         authoringPath: good.authoringPath,
-        channel: 'browInnerUp',
+        channel: 'mouthSmileLeft',
       });
     } catch (err) {
       rejected = String(err.message || err).includes('unsupported_channel');
     }
     check(rejected, 'unsupported channel rejected');
+
+    rejected = false;
+    try {
+      const badAnchors = structuredClone(fixture.anchors);
+      delete badAnchors.anchors.browLeftInner;
+      const miss = await writeBundle(join(work, 'missing-brow'), fixture.bytes, badAnchors);
+      await authorLiveActFunctionalMorph({
+        inputPath: miss.glbPath,
+        outputPath: join(work, 'missing-brow', 'out.glb'),
+        anchorsPath: miss.anchorsPath,
+        authoringPath: miss.authoringPath,
+        channel: 'browInnerUp',
+      });
+    } catch (err) {
+      rejected =
+        String(err.message || err).includes('required anchor') ||
+        String(err.message || err).includes('anchors_binding') ||
+        String(err.message || err).includes('ground_truth');
+    }
+    check(rejected, 'missing brow semantic anchor rejected');
 
     rejected = false;
     try {

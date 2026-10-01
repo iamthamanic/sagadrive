@@ -1,0 +1,58 @@
+{
+  "brow_blinkL": {
+    "browInnerUp": {
+      "pass": true,
+      "mean": 0.14040334274354438,
+      "dL": 0.13257279188816384,
+      "dR": 0.14823389359892492
+    },
+    "eyeBlinkLeft": {
+      "pass": true,
+      "drop": 0.8816236324891942,
+      "ratio": 0.15396433312889268
+    }
+  },
+  "brow_blinkR": {
+    "browInnerUp": {
+      "pass": true,
+      "mean": 0.14040334274354438,
+      "dL": 0.13257279188816384,
+      "dR": 0.14823389359892492
+    },
+    "eyeBlinkRight": {
+      "pass": true,
+      "drop": 0.8402855635266623,
+      "ratio": 0.15604499666334928
+    }
+  },
+  "brow_bothBlinks": {
+    "browInnerUp": {
+      "pass": true,
+      "mean": 0.14040334274354438,
+      "dL": 0.13257279188816384,
+      "dR": 0.14823389359892492
+    },
+    "eyeBlinkLeft": {
+      "pass": true,
+      "drop": 0.8816236324891942,
+      "ratio": 0.15396433312889268
+    },
+    "eyeBlinkRight": {
+      "pass": true,
+      "drop": 0.8402855635266623,
+      "ratio": 0.15604499666334928
+    }
+  },
+  "brow_jaw": {
+    "browInnerUp": {
+      "pass": true,
+      "mean": 0.14040334274354438,
+      "dL": 0.13257279188816384,
+      "dR": 0.14823389359892492
+    },
+    "jawOpen": {
+      "pass": true,
+      "gap": 0.9144479381393169
+    }
+  }
+}

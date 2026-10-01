@@ -1,0 +1,73 @@
+{
+  "id": "f5",
+  "inputBlink1Sha": "50d70510bfbd048e5edbe554d42be41cd9a122546023c75676d944afa25be97e",
+  "outputBrow1Sha": "3832dc9fa058f4afe4b32ce8fb188abb7e3ea1edb8871f878830551f1521e277",
+  "topology": "v147707:t214973:m1",
+  "beforeMeanLift": 0,
+  "afterMeanLift": 0.14010056,
+  "browPass": true,
+  "jawPass": true,
+  "blinkLPass": true,
+  "blinkRPass": true,
+  "author": {
+    "meanLiftDelta": 0.14010055991653514,
+    "dL": 0.13560957891967784,
+    "dR": 0.14459154091339244,
+    "asymmetry": 0.008981961993714593,
+    "affected": 3474,
+    "displacements": {
+      "browLeftInner": 0.004997973587402883,
+      "browRightInner": 0.004997973587402883,
+      "browLeftOuter": 0.0031327723718180427,
+      "browRightOuter": 0.002874060363842314,
+      "eyeLeftUpper": 0.0001133861082226958,
+      "eyeRightUpper": 0.00013570060835685195,
+      "eyeLeftLower": 0,
+      "eyeRightLower": 1.3424392678470497e-7,
+      "noseTip": 0,
+      "forehead": 0,
+      "mouthUpper": 0,
+      "chin": 0
+    },
+    "morphHash": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+    "rerunHash": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa"
+  },
+  "regression": {
+    "jawSame": true,
+    "blinkLSame": true,
+    "blinkRSame": true,
+    "changedVsBlink1": [
+      "browInnerUp"
+    ],
+    "changedVsFace1Count": 4,
+    "changedVsFace1": [
+      "browInnerUp",
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
+      "jawOpen"
+    ]
+  },
+  "combination": {
+    "brow_blinkL": {
+      "browInnerUp": true,
+      "eyeBlinkLeft": true
+    },
+    "brow_blinkR": {
+      "browInnerUp": true,
+      "eyeBlinkRight": true
+    },
+    "brow_bothBlinks": {
+      "browInnerUp": true,
+      "eyeBlinkLeft": true,
+      "eyeBlinkRight": true
+    },
+    "brow_jaw": {
+      "browInnerUp": true,
+      "jawOpen": true
+    }
+  },
+  "structuralPass": false,
+  "anatomyPass": true,
+  "gtCarry": true,
+  "overallFunctional": false
+}

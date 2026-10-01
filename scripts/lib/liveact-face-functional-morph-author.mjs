@@ -4,7 +4,7 @@
  *
  * Design decision: from reviewed semantic anchors + mesh topology, deterministically
  * rewrite named SagaDrive face morph POSITION accessors.
- * Milestone 1: jawOpen. Milestone 2: eyeBlinkLeft / eyeBlinkRight.
+ * Milestone 1: jawOpen. Milestone 2: blinks. Milestone 3: browInnerUp.
  *
  * Does not import Functional QA thresholds as an optimization loop.
  * Domain/runtime code must not import this module.
@@ -18,6 +18,7 @@ import { parseManifestEnvelope, validateFaceAnchorsAgainstDocument } from './liv
 import { resolveFaceAnchorPositions } from './liveact-face-anchor-anatomy-validate.mjs';
 import { findNodeByIdentity } from './liveact-face-anchor-glb.mjs';
 import {
+  BROW_INNER_UP_AUTHOR_CONTRACT_V1,
   EYE_BLINK_LEFT_AUTHOR_CONTRACT_V1,
   EYE_BLINK_RIGHT_AUTHOR_CONTRACT_V1,
   FACE_FUNCTIONAL_MORPH_AUTHOR_CONTRACT_VERSION,
@@ -438,6 +439,202 @@ function rewriteEyeBlinkMorph(document, anchors, contract) {
 }
 
 /**
+ * Bilateral browInnerUp falloff in [0,1]. Strongest near inner brows; lids/nose/mouth protected.
+ * @param {{ x: number; y: number; z: number }} p
+ * @param {Record<string, { x: number; y: number; z: number }>} refs
+ * @param {ReturnType<typeof buildFaceLocalFrame>} frame
+ * @param {typeof BROW_INNER_UP_AUTHOR_CONTRACT_V1} contract
+ */
+export function computeBrowInnerUpVertexWeight(p, refs, frame, contract) {
+  if (!frame) return 0;
+  const faceH = frame.faceHeight;
+  const r = faceH * contract.moveRadiusFaceH;
+  const wLI = Math.max(0, 1 - dist3(p, refs.browLeftInner) / r) ** 1.15;
+  const wRI = Math.max(0, 1 - dist3(p, refs.browRightInner) / r) ** 1.15;
+  const wLC = Math.max(0, 1 - dist3(p, refs.browLeftCenter) / (r * 1.1)) ** 1.1 * 0.7;
+  const wRC = Math.max(0, 1 - dist3(p, refs.browRightCenter) / (r * 1.1)) ** 1.1 * 0.7;
+  const wLO =
+    Math.max(0, 1 - dist3(p, refs.browLeftOuter) / (r * 1.2)) ** 1.05 * contract.outerFalloffScale;
+  const wRO =
+    Math.max(0, 1 - dist3(p, refs.browRightOuter) / (r * 1.2)) ** 1.05 * contract.outerFalloffScale;
+  let w = Math.max(wLI, wRI, wLC, wRC, wLO, wRO);
+
+  // Protect lids / eye aperture — but never suppress verts closer to an inner brow.
+  const dBrow = Math.min(dist3(p, refs.browLeftInner), dist3(p, refs.browRightInner));
+  const rEye = faceH * 0.065;
+  let dEye = Infinity;
+  for (const id of [
+    'eyeLeftUpper',
+    'eyeLeftLower',
+    'eyeRightUpper',
+    'eyeRightLower',
+    'eyeLeftInner',
+    'eyeRightInner',
+    'eyeLeftOuter',
+    'eyeRightOuter',
+  ]) {
+    if (refs[id]) dEye = Math.min(dEye, dist3(p, refs[id]));
+  }
+  if (dEye < rEye && dEye + faceH * 0.01 < dBrow) w *= 0.06;
+
+  // Nose / mouth / chin hard protect
+  if (dist3(p, refs.noseTip) < faceH * 0.11) return 0;
+  if (refs.mouthUpper && dist3(p, refs.mouthUpper) < faceH * 0.16) return 0;
+  if (refs.chin && dist3(p, refs.chin) < faceH * 0.22) return 0;
+
+  // Do not lift the entire upper forehead crown — require proximity to brow band
+  const browMidY = (refs.browLeftInner.y + refs.browRightInner.y) / 2;
+  if (p.y > browMidY + faceH * 0.12) w *= 0.15;
+  if (p.y < browMidY - faceH * 0.08) w *= 0.05;
+
+  return Math.max(0, Math.min(1, w));
+}
+
+/**
+ * @param {import('@gltf-transform/core').Document} document
+ * @param {Record<string, unknown>} anchors
+ * @param {typeof BROW_INNER_UP_AUTHOR_CONTRACT_V1} contract
+ */
+function rewriteBrowInnerUpMorph(document, anchors, contract) {
+  const neutral = resolveFaceAnchorPositions(document, anchors);
+  for (const id of contract.requiredAnchors) {
+    if (!neutral[id]) throw new Error(`browInnerUp author: required anchor unresolved: ${id}`);
+  }
+
+  const sampleBinding = /** @type {Record<string, unknown>} */ (anchors.browLeftInner);
+  const nodeIdentity = String(sampleBinding?.nodeIdentity || '').trim();
+  const node = findNodeByIdentity(document, nodeIdentity);
+  const mesh = node?.getMesh();
+  if (!mesh) {
+    throw new Error(`browInnerUp author: meshed node missing for ${nodeIdentity || '(empty)'}`);
+  }
+  const primIndex = typeof sampleBinding.primitiveIndex === 'number' ? sampleBinding.primitiveIndex : 0;
+  const prim = mesh.listPrimitives()[primIndex];
+  if (!prim) throw new Error(`browInnerUp author: primitive ${primIndex} missing`);
+
+  const morphIndex = findNamedMorphTargetIndex(prim, mesh, 'browInnerUp');
+  if (morphIndex < 0) throw new Error('browInnerUp author: morph target missing');
+  const target = prim.listTargets()[morphIndex];
+  const morphPos = target.getAttribute('POSITION');
+  const basePos = prim.getAttribute('POSITION');
+  if (!morphPos || !basePos) throw new Error('browInnerUp author: POSITION accessors missing');
+
+  const frame = buildFaceLocalFrame(neutral);
+  if (!frame) throw new Error('browInnerUp author: face local frame incomplete');
+
+  const refs = {
+    browLeftInner: neutral.browLeftInner,
+    browRightInner: neutral.browRightInner,
+    browLeftCenter: neutral.browLeftCenter,
+    browRightCenter: neutral.browRightCenter,
+    browLeftOuter: neutral.browLeftOuter,
+    browRightOuter: neutral.browRightOuter,
+    eyeLeftInner: neutral.eyeLeftInner,
+    eyeRightInner: neutral.eyeRightInner,
+    eyeLeftUpper: neutral.eyeLeftUpper,
+    eyeRightUpper: neutral.eyeRightUpper,
+    eyeLeftLower: neutral.eyeLeftLower,
+    eyeRightLower: neutral.eyeRightLower,
+    eyeLeftOuter: neutral.eyeLeftOuter,
+    eyeRightOuter: neutral.eyeRightOuter,
+    noseTip: neutral.noseTip,
+    forehead: neutral.forehead,
+    mouthUpper: neutral.mouthUpper,
+    chin: neutral.chin,
+  };
+
+  const eyeWMean = (frame.eyeWidthL0 + frame.eyeWidthR0) / 2;
+  const amp = eyeWMean * contract.ampEyeW;
+  const up = frame.up;
+
+  const n = basePos.getCount();
+  const arr = new Float32Array(n * 3);
+  let affected = 0;
+  let maxW = 0;
+  let sumW = 0;
+  let maxDisp = 0;
+  let sumDisp = 0;
+  const el = [0, 0, 0];
+  for (let i = 0; i < n; i += 1) {
+    basePos.getElement(i, el);
+    const p = { x: el[0], y: el[1], z: el[2] };
+    const w = computeBrowInnerUpVertexWeight(p, refs, frame, contract);
+    if (w <= 1e-8) continue;
+    affected += 1;
+    maxW = Math.max(maxW, w);
+    sumW += w;
+    const dx = up.x * amp * w;
+    const dy = up.y * amp * w;
+    const dz = up.z * amp * w;
+    arr[i * 3] = dx;
+    arr[i * 3 + 1] = dy;
+    arr[i * 3 + 2] = dz;
+    const d = Math.hypot(dx, dy, dz);
+    maxDisp = Math.max(maxDisp, d);
+    sumDisp += d;
+  }
+  morphPos.setArray(arr);
+
+  const posed = resolveFaceAnchorPositionsPosed(document, anchors, 'browInnerUp', 1);
+  const metricsN = computeFunctionalMetricsFromAnchors(neutral, frame);
+  const metricsP = computeFunctionalMetricsFromAnchors(posed, frame);
+  const dL = (metricsP?.browInnerLiftL ?? 0) - (metricsN?.browInnerLiftL ?? 0);
+  const dR = (metricsP?.browInnerLiftR ?? 0) - (metricsN?.browInnerLiftR ?? 0);
+  const meanLiftDelta = (dL + dR) / 2;
+
+  const disp = (id) => {
+    const a = neutral[id];
+    const b = posed[id];
+    if (!a || !b) return null;
+    return dist3(a, b);
+  };
+  const liftAlongUp = (id) => {
+    const a = neutral[id];
+    const b = posed[id];
+    if (!a || !b) return null;
+    return (b.x - a.x) * up.x + (b.y - a.y) * up.y + (b.z - a.z) * up.z;
+  };
+
+  return {
+    morphIndex,
+    nodeIdentity,
+    primitiveIndex: primIndex,
+    vertexCount: n,
+    affectedVertices: affected,
+    maxWeight: maxW,
+    meanWeightAffected: affected ? sumW / affected : 0,
+    maxDisplacement: maxDisp,
+    meanDisplacementAffected: affected ? sumDisp / affected : 0,
+    amp,
+    eyeWidthMean: eyeWMean,
+    faceHeight: frame.faceHeight,
+    morphPositionSha256: hashMorphPositionArray(arr),
+    browInnerLiftLDelta: dL,
+    browInnerLiftRDelta: dR,
+    meanLiftDelta,
+    asymmetry: Math.abs(dL - dR),
+    displacements: {
+      browLeftInner: disp('browLeftInner'),
+      browRightInner: disp('browRightInner'),
+      browLeftOuter: disp('browLeftOuter'),
+      browRightOuter: disp('browRightOuter'),
+      eyeLeftUpper: disp('eyeLeftUpper'),
+      eyeRightUpper: disp('eyeRightUpper'),
+      eyeLeftLower: disp('eyeLeftLower'),
+      eyeRightLower: disp('eyeRightLower'),
+      noseTip: disp('noseTip'),
+      forehead: disp('forehead'),
+      mouthUpper: disp('mouthUpper'),
+      chin: disp('chin'),
+    },
+    liftsAlongUp: {
+      browLeftInner: liftAlongUp('browLeftInner'),
+      browRightInner: liftAlongUp('browRightInner'),
+    },
+  };
+}
+
+/**
  * @param {string} channel
  * @param {import('@gltf-transform/core').Document} document
  * @param {Record<string, unknown>} anchors
@@ -451,6 +648,9 @@ function rewriteChannelMorph(channel, document, anchors) {
   }
   if (channel === 'eyeBlinkRight') {
     return rewriteEyeBlinkMorph(document, anchors, EYE_BLINK_RIGHT_AUTHOR_CONTRACT_V1);
+  }
+  if (channel === 'browInnerUp') {
+    return rewriteBrowInnerUpMorph(document, anchors, BROW_INNER_UP_AUTHOR_CONTRACT_V1);
   }
   throw new Error(`unsupported_channel:${channel}`);
 }

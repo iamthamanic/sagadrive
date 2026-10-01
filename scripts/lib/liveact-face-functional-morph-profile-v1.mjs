@@ -13,12 +13,13 @@ export const FACE_FUNCTIONAL_MORPH_AUTHOR_PROFILE_VERSION =
 
 /**
  * Channels supported by this authoring profile.
- * Milestone 1: jawOpen. Milestone 2: + eyeBlinkLeft / eyeBlinkRight.
+ * Milestone 1: jawOpen. Milestone 2: blinks. Milestone 3: browInnerUp.
  */
 export const FUNCTIONAL_MORPH_AUTHOR_SUPPORTED_CHANNELS_V1 = Object.freeze([
   'jawOpen',
   'eyeBlinkLeft',
   'eyeBlinkRight',
+  'browInnerUp',
 ]);
 
 /**
@@ -46,16 +47,9 @@ export const JAW_OPEN_AUTHOR_CONTRACT_V1 = Object.freeze({
     'eyeLeftOuter',
     'eyeRightOuter',
   ]),
-  /** Neighborhood radius around lower lip / chin as fraction of faceHeight. */
   moveRadiusFaceH: 0.34,
-  /** Suppress radius around fixed anchors. */
   fixRadiusFaceH: 0.14,
-  /**
-   * Peak lower-jaw travel as fraction of faceHeight (geometric intent).
-   * Chosen from offline spike that cleared Functional jawOpen without baking QA thresholds.
-   */
   ampFaceH: 0.19,
-  /** Slight retract along −forward while opening. */
   backBias: 0.25,
 });
 
@@ -79,7 +73,6 @@ export const JAW_OPEN_AUTHOR_CONTRACT_V1 = Object.freeze({
  * }} EyeBlinkAuthorContract
  */
 
-/** Shared geometry for unilateral blink (side-specific anchors differ). */
 const EYE_BLINK_SHARED = Object.freeze({
   moveRadiusFaceH: 0.085,
   upperCloseFraction: 0.62,
@@ -139,4 +132,40 @@ export const EYE_BLINK_RIGHT_AUTHOR_CONTRACT_V1 = Object.freeze({
     'forehead',
   ]),
   ...EYE_BLINK_SHARED,
+});
+
+/**
+ * @typedef {{
+ *   morphName: 'browInnerUp';
+ *   requiredAnchors: string[];
+ *   moveRadiusFaceH: number;
+ *   ampEyeW: number;
+ *   outerFalloffScale: number;
+ * }} BrowInnerUpAuthorContract
+ */
+
+/** @type {Readonly<BrowInnerUpAuthorContract>} */
+export const BROW_INNER_UP_AUTHOR_CONTRACT_V1 = Object.freeze({
+  morphName: 'browInnerUp',
+  requiredAnchors: Object.freeze([
+    'browLeftInner',
+    'browRightInner',
+    'browLeftCenter',
+    'browRightCenter',
+    'browLeftOuter',
+    'browRightOuter',
+    'eyeLeftInner',
+    'eyeRightInner',
+    'eyeLeftUpper',
+    'eyeRightUpper',
+    'eyeLeftLower',
+    'eyeRightLower',
+    'noseTip',
+    'forehead',
+    'mouthUpper',
+    'chin',
+  ]),
+  moveRadiusFaceH: 0.14,
+  ampEyeW: 0.14,
+  outerFalloffScale: 0.35,
 });
