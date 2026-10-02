@@ -18,4 +18,4 @@
 - No real webcam; `?liveactE2e=1` / `__SAGA_ENABLE_LIVEACT_E2E__` gated ingest bridge only
 - CI environments without WebGL skip gracefully (no flake reruns)
 
-- HEAD: `9cc778d1eb23a08dbf9831c77ed32e6aff7a7769`
+- HEAD: `ed548c336fb51578526296ba50a1cc8ebcd331b0`
