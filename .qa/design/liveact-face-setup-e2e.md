@@ -5,6 +5,9 @@ Feature slug: `liveact-face-setup-e2e`
 ## Status
 **READY** — Epic #418 final slice. Depends on #423 MERGED (`quality5-face3-repro1`). Retarget: **NO RETARGET OVERRIDES REQUIRED**.
 
+## Living docs note
+Repo has no `.project-memory/` checkpoint; material #424 outcomes are recorded here + `.qa/acceptance/liveact-face-setup-e2e.md` + `.qa/runs/424-*` / gate reports. Full `@memory-live-doc` bootstrap deferred (not part of this PR).
+
 ## Intent
 End-to-End gate of the Face Setup epic: prove the real browser/runtime chain from versioned face3 assets through Face Setup (load / manual / auto / override / cancel / apply) into LiveAct (RAW → retarget → APPLIED → Character) with diagnostics, lifecycle, and Generic GLB fallback.
 
