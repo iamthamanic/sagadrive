@@ -71,8 +71,8 @@ async function requireWebGl(page: Page) {
   const hint = page.getByTestId('avatar-preview-runtime-hint');
   const webglSurface = page.locator('[data-avatar-use-webgl="true"]').first();
   await Promise.race([
-    webglSurface.waitFor({ state: 'visible', timeout: 90_000 }).catch(() => null),
-    hint.waitFor({ state: 'hidden', timeout: 90_000 }).catch(() => null),
+    webglSurface.waitFor({ state: 'visible', timeout: 45_000 }).catch(() => null),
+    hint.waitFor({ state: 'hidden', timeout: 45_000 }).catch(() => null),
   ]);
   const hasWebGl =
     (await webglSurface.isVisible().catch(() => false)) ||
