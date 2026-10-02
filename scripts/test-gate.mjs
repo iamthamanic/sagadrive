@@ -762,6 +762,14 @@ function checkLiveActFaceFidelityE2E() {
   });
 }
 
+function checkLiveActFaceSetupE2E() {
+  console.log('LiveAct face setup E2E (#424): Face Setup + RAW→APPLIED + identity retarget...');
+  execFileSync(process.execPath, ['scripts/liveact-face-setup-e2e-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFacePipelineDocs() {
   console.log('LiveAct face pipeline docs (#386): AUTHORING v1.1 + FACE-AUTHORING...');
   execFileSync(process.execPath, ['scripts/liveact-face-pipeline-doc-check.mjs'], {
@@ -1579,6 +1587,7 @@ checkLiveActRetargetProfile();
 checkLiveActFacialFidelityV2();
 checkAvatarVrmPack();
 checkLiveActFaceFidelityE2E();
+checkLiveActFaceSetupE2E();
 checkLiveActFacePipelineDocs();
 checkLiveActFaceHumanRepro();
 checkLiveActRigDebug();

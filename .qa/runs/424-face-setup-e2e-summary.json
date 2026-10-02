@@ -1,0 +1,7 @@
+{
+  "ok": true,
+  "retarget": "NO RETARGET OVERRIDES REQUIRED",
+  "face3CacheBust": "quality5-face3-repro1",
+  "e2eSpec": "e2e/liveact-face-setup-e2e.spec.ts",
+  "baseline": "424-retarget-baseline.json"
+}
