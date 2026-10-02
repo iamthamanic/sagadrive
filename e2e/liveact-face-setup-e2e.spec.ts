@@ -13,9 +13,21 @@ import {
   openAvatarPreviewLiveActSettings,
   openBlankCharacterEditor,
   openFaceMappingFromGear,
+  switchSpeciesGender,
 } from './helpers/character-editor';
 
 const EVIDENCE = '.qa/evidence/liveact-face-setup-e2e';
+const PUBLIC_SPECIES = path.join('public', 'assets', 'avatars', 'species');
+
+/** LIVEACT_MIRROR_AVATAR=true: L/R face channels swap on the applied path. */
+const MIRRORED_FACE: Readonly<Record<string, string>> = {
+  eyeBlinkLeft: 'eyeBlinkRight',
+  eyeBlinkRight: 'eyeBlinkLeft',
+  mouthSmileLeft: 'mouthSmileRight',
+  mouthSmileRight: 'mouthSmileLeft',
+};
+
+type AppliedSignal = { status: string; value: number | null };
 
 type LiveActE2eApi = {
   ingestSample: (sample: Record<string, unknown>, timestampMs?: number) => unknown;
@@ -24,7 +36,7 @@ type LiveActE2eApi = {
     stages: {
       raw: Record<string, number | null>;
       retargeted: Record<string, number | null>;
-      applied: Record<string, { status: string; value: number | null }>;
+      applied: Record<string, AppliedSignal>;
     };
   } | null;
   getState: () => { status: string };
@@ -54,12 +66,46 @@ function fixtureSample(face: Record<string, number>, head: Record<string, number
   };
 }
 
+async function requireWebGl(page: Page) {
+  // Prefer ready runtime (hint gone) — WebGL attribute alone can race model load.
+  const hint = page.getByTestId('avatar-preview-runtime-hint');
+  const webglSurface = page.locator('[data-avatar-use-webgl="true"]').first();
+  const ready = await Promise.race([
+    webglSurface
+      .waitFor({ state: 'visible', timeout: 90_000 })
+      .then(() => true)
+      .catch(() => false),
+    hint
+      .waitFor({ state: 'hidden', timeout: 90_000 })
+      .then(() => true)
+      .catch(() => false),
+  ]);
+  const hasWebGl =
+    ready ||
+    (await webglSurface.isVisible().catch(() => false)) ||
+    !(await hint.isVisible().catch(() => false));
+  if (!hasWebGl) {
+    await page.screenshot({ path: path.join(EVIDENCE, '00-no-webgl.png'), fullPage: true });
+  }
+  // CI must fail closed; local/dev without GPU may skip.
+  if (process.env.CI && !hasWebGl) {
+    throw new Error('#424 CI requires WebGL avatar surface (face3 VRM load)');
+  }
+  test.skip(!hasWebGl, 'WebGL avatar surface required for #424 Face Setup / LiveAct E2E');
+}
+
 test.use({
   contextOptions: {
     permissions: ['camera'],
   },
   launchOptions: {
-    args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+    args: [
+      '--use-fake-ui-for-media-stream',
+      '--use-fake-device-for-media-stream',
+      '--use-angle=swiftshader',
+      '--enable-webgl',
+      '--ignore-gpu-blocklist',
+    ],
   },
 });
 
@@ -70,7 +116,7 @@ test.beforeAll(() => {
 test('Face Setup: open, cancel, apply, tracking lifecycle + RAW→APPLIED inject', async ({
   page,
 }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(300_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.addInitScript(() => {
     (window as Window & { __SAGA_ENABLE_LIVEACT_E2E__?: boolean }).__SAGA_ENABLE_LIVEACT_E2E__ = true;
@@ -79,17 +125,7 @@ test('Face Setup: open, cancel, apply, tracking lifecycle + RAW→APPLIED inject
   await completeSpeciesBasics(page, 'female');
 
   await openAvatarPreviewLiveActSettings(page);
-  const webglSurface = page.locator('[data-avatar-use-webgl="true"]').first();
-  const hasWebGl = await webglSurface
-    .waitFor({ state: 'visible', timeout: 60_000 })
-    .then(() => true)
-    .catch(() => false);
-  if (!hasWebGl) {
-    await page.screenshot({ path: path.join(EVIDENCE, '00-no-webgl.png'), fullPage: true });
-    // Soft-degrade like liveact-face-fidelity: still assert gear exists.
-    await expect(page.getByTestId('liveact-tracking-toggle')).toBeVisible();
-    return;
-  }
+  await requireWebGl(page);
 
   // --- Face Setup open + Cancel ---
   await openFaceMappingFromGear(page);
@@ -102,17 +138,12 @@ test('Face Setup: open, cancel, apply, tracking lifecycle + RAW→APPLIED inject
   await cancelBtn.first().click();
   await expect(page.getByTestId('face-mapping-authoring-panel')).toHaveCount(0);
 
-  // --- Face Setup open + Apply (empty draft may be invalid — use Speichern only if enabled) ---
+  // --- Face Setup open + Apply (sidecar baseline must make Speichern enabled) ---
   await openFaceMappingFromGear(page);
   const saveBtn = page.getByTestId('face-mapping-viewport-save');
-  if (await saveBtn.isEnabled().catch(() => false)) {
-    await saveBtn.click();
-    await expect(page.getByTestId('face-mapping-authoring-panel')).toHaveCount(0);
-  } else {
-    // Incomplete draft: Cancel is the safe exit (Cancel contract).
-    await cancelBtn.first().click();
-    await expect(page.getByTestId('face-mapping-authoring-panel')).toHaveCount(0);
-  }
+  await expect(saveBtn).toBeEnabled({ timeout: 60_000 });
+  await saveBtn.click();
+  await expect(page.getByTestId('face-mapping-authoring-panel')).toHaveCount(0);
 
   // --- LiveAct tracking + diagnostics ---
   await openAvatarPreviewLiveActSettings(page);
@@ -147,70 +178,98 @@ test('Face Setup: open, cancel, apply, tracking lifecycle + RAW→APPLIED inject
     'mouthPucker',
   ] as const;
 
-  /** @type {Record<string, unknown>} */
   const matrix: Record<string, unknown> = {};
   for (const ch of channels) {
+    const expectedApplied = MIRRORED_FACE[ch] ?? ch;
+    const opposite =
+      ch === 'eyeBlinkLeft' || ch === 'eyeBlinkRight' || ch === 'mouthSmileLeft' || ch === 'mouthSmileRight'
+        ? MIRRORED_FACE[expectedApplied] ?? ch
+        : null;
     const result = await page.evaluate(
-      ({ channel, sample }) => {
+      ({ channel, expectedAppliedChannel, oppositeChannel, sample }) => {
         const api = (window as unknown as { __SAGA_LIVEACT_E2E__?: LiveActE2eApi }).__SAGA_LIVEACT_E2E__;
         if (!api) return { ok: false, reason: 'no_api' };
         api.ingestSample(sample);
         const d2 = api.getDiagnosticsV2();
         if (!d2 || d2.trackingLost) return { ok: false, reason: 'lost', d2 };
-        const raw = d2.stages.raw[`face.${channel}`];
-        const ret = d2.stages.retargeted[`face.${channel}`];
-        // Mirror may move L/R onto the opposite channel in retargeted — accept either side > 0.4
-        const retL = d2.stages.retargeted['face.eyeBlinkLeft'];
-        const retR = d2.stages.retargeted['face.eyeBlinkRight'];
-        const retSmileL = d2.stages.retargeted['face.mouthSmileLeft'];
-        const retSmileR = d2.stages.retargeted['face.mouthSmileRight'];
-        let appliedProbe = typeof ret === 'number' ? ret : null;
-        if (channel === 'eyeBlinkLeft' || channel === 'eyeBlinkRight') {
-          appliedProbe = Math.max(
-            typeof retL === 'number' ? retL : 0,
-            typeof retR === 'number' ? retR : 0,
-          );
-        }
-        if (channel === 'mouthSmileLeft' || channel === 'mouthSmileRight') {
-          appliedProbe = Math.max(
-            typeof retSmileL === 'number' ? retSmileL : 0,
-            typeof retSmileR === 'number' ? retSmileR : 0,
-          );
-        }
+        const rawKey = `face.${channel}`;
+        const appliedKey = `face.${expectedAppliedChannel}`;
+        const raw = d2.stages.raw[rawKey];
+        const applied = d2.stages.applied[appliedKey];
+        const opp =
+          oppositeChannel != null ? d2.stages.applied[`face.${oppositeChannel}`] : null;
+        const appliedOk =
+          applied?.status === 'ok' && typeof applied.value === 'number' && applied.value > 0.4;
+        const oppositeQuiet =
+          oppositeChannel == null ||
+          opp == null ||
+          opp.status !== 'ok' ||
+          typeof opp.value !== 'number' ||
+          opp.value < 0.25;
         return {
-          ok: typeof raw === 'number' && raw > 0.5 && typeof appliedProbe === 'number' && appliedProbe > 0.4,
+          ok: typeof raw === 'number' && raw > 0.5 && appliedOk && oppositeQuiet,
           raw,
-          retargeted: appliedProbe,
+          appliedStatus: applied?.status ?? null,
+          appliedValue: applied?.value ?? null,
+          oppositeValue: opp?.value ?? null,
         };
       },
-      { channel: ch, sample: fixtureSample({ [ch]: 0.7 }) },
+      {
+        channel: ch,
+        expectedAppliedChannel: expectedApplied,
+        oppositeChannel: opposite,
+        sample: fixtureSample({ [ch]: 0.7 }),
+      },
     );
     matrix[ch] = result;
     expect(result.ok, `${ch} RAW→APPLIED ${JSON.stringify(result)}`).toBe(true);
   }
 
-  // Head / gaze inject
+  // Head / gaze inject — assert APPLIED pose/gaze when available, else retargeted fallback for unsupported
   const pose = await page.evaluate((sample) => {
     const api = (window as unknown as { __SAGA_LIVEACT_E2E__?: LiveActE2eApi }).__SAGA_LIVEACT_E2E__;
     if (!api) return { ok: false };
     api.ingestSample(sample);
     const d2 = api.getDiagnosticsV2();
     if (!d2) return { ok: false };
-    return {
-      ok: true,
-      yaw: d2.stages.retargeted['head.yaw'],
-      pitch: d2.stages.retargeted['head.pitch'],
-      gazeX: d2.stages.retargeted['eyeLeft.x'],
-    };
+    const yawApplied = d2.stages.applied['head.yaw'];
+    const pitchApplied = d2.stages.applied['head.pitch'];
+    const gazeApplied = d2.stages.applied['eyeLeft.x'];
+    const yaw =
+      yawApplied?.status === 'ok' && typeof yawApplied.value === 'number'
+        ? yawApplied.value
+        : d2.stages.retargeted['head.yaw'];
+    const pitch =
+      pitchApplied?.status === 'ok' && typeof pitchApplied.value === 'number'
+        ? pitchApplied.value
+        : d2.stages.retargeted['head.pitch'];
+    const gazeX =
+      gazeApplied?.status === 'ok' && typeof gazeApplied.value === 'number'
+        ? gazeApplied.value
+        : d2.stages.retargeted['eyeLeft.x'];
+    return { ok: true, yaw, pitch, gazeX };
   }, fixtureSample({}, { yaw: 0.35, pitch: -0.25, lx: 0.45, ly: 0, rx: 0.4, ry: 0 }));
   expect(pose.ok).toBe(true);
   expect(Math.abs(Number(pose.yaw))).toBeGreaterThan(0.05);
   expect(Math.abs(Number(pose.pitch))).toBeGreaterThan(0.05);
 
-  // Lost / reacquire
+  // Lost / reacquire — neutralize then resume jaw on mirrored/applied path
   const lost = await page.evaluate(() => {
     const api = (window as unknown as { __SAGA_LIVEACT_E2E__?: LiveActE2eApi }).__SAGA_LIVEACT_E2E__;
     if (!api) return { ok: false };
+    api.ingestSample({
+      presence: 1,
+      headYaw: 0,
+      headPitch: 0,
+      headRoll: 0,
+      eyeLeftX: 0,
+      eyeLeftY: 0,
+      eyeRightX: 0,
+      eyeRightY: 0,
+      face: { jawOpen: 0.7 },
+      faceIndex: 0,
+      faceCount: 1,
+    });
     api.ingestSample({
       presence: 0,
       headYaw: 0,
@@ -225,6 +284,8 @@ test('Face Setup: open, cancel, apply, tracking lifecycle + RAW→APPLIED inject
       faceCount: 0,
     });
     const lostSnap = api.getDiagnosticsV2();
+    const jawLost = lostSnap?.stages.applied['face.jawOpen'];
+    const blinkLost = lostSnap?.stages.applied['face.eyeBlinkLeft'];
     api.ingestSample({
       presence: 1,
       headYaw: 0,
@@ -239,13 +300,48 @@ test('Face Setup: open, cancel, apply, tracking lifecycle + RAW→APPLIED inject
       faceCount: 1,
     });
     const back = api.getDiagnosticsV2();
+    const jawBack = back?.stages.applied['face.jawOpen'];
+    const jawNeutral =
+      !jawLost ||
+      jawLost.status !== 'ok' ||
+      jawLost.value == null ||
+      Math.abs(jawLost.value) < 0.15;
+    const blinkNeutral =
+      !blinkLost ||
+      blinkLost.status !== 'ok' ||
+      blinkLost.value == null ||
+      Math.abs(blinkLost.value) < 0.15;
+    const jawResumed =
+      jawBack?.status === 'ok' && typeof jawBack.value === 'number' && jawBack.value > 0.35;
     return {
-      ok: Boolean(lostSnap?.trackingLost) && back && !back.trackingLost,
+      ok: Boolean(lostSnap?.trackingLost) && Boolean(back && !back.trackingLost) && jawNeutral && blinkNeutral && jawResumed,
       lost: lostSnap?.trackingLost,
-      jawBack: back?.stages.retargeted['face.jawOpen'],
+      jawLostValue: jawLost?.value ?? null,
+      blinkLostValue: blinkLost?.value ?? null,
+      jawBack: jawBack?.value ?? null,
     };
   });
   expect(lost.ok, JSON.stringify(lost)).toBe(true);
+
+  // Model swap: female → male while LiveAct session active
+  await switchSpeciesGender(page, 'male');
+  await openAvatarPreviewLiveActSettings(page);
+  await expect(page.locator('[data-avatar-use-webgl="true"]').first()).toBeVisible({ timeout: 60_000 });
+  await expect
+    .poll(async () => Boolean(await getE2eApi(page)), { timeout: 45_000 })
+    .toBe(true);
+  const postSwap = await page.evaluate((sample) => {
+    const api = (window as unknown as { __SAGA_LIVEACT_E2E__?: LiveActE2eApi }).__SAGA_LIVEACT_E2E__;
+    if (!api) return { ok: false, reason: 'no_api' };
+    api.ingestSample(sample);
+    const d2 = api.getDiagnosticsV2();
+    const applied = d2?.stages.applied['face.jawOpen'];
+    return {
+      ok: d2 != null && !d2.trackingLost && applied?.status === 'ok' && typeof applied.value === 'number' && applied.value > 0.4,
+      applied: applied?.value ?? null,
+    };
+  }, fixtureSample({ jawOpen: 0.7 }));
+  expect(postSwap.ok, `model swap m5 ${JSON.stringify(postSwap)}`).toBe(true);
 
   // Stop tracking
   await trackingToggle.click();
@@ -258,7 +354,7 @@ test('Face Setup: open, cancel, apply, tracking lifecycle + RAW→APPLIED inject
 
   fs.writeFileSync(
     path.join(EVIDENCE, 'functional-matrix.json'),
-    `${JSON.stringify({ matrix, pose, lost }, null, 2)}\n`,
+    `${JSON.stringify({ matrix, pose, lost, postSwap }, null, 2)}\n`,
   );
   await page.screenshot({ path: path.join(EVIDENCE, '02-narrow-liveact.png'), fullPage: true });
 });
@@ -272,18 +368,57 @@ test('Face Setup male path: Face Mapping opens on m5 template', async ({ page })
   await openBlankCharacterEditor(page);
   await completeSpeciesBasics(page, 'male');
   await openAvatarPreviewLiveActSettings(page);
-  const webglSurface = page.locator('[data-avatar-use-webgl="true"]').first();
-  const hasWebGl = await webglSurface
-    .waitFor({ state: 'visible', timeout: 60_000 })
-    .then(() => true)
-    .catch(() => false);
-  if (!hasWebGl) {
-    await expect(page.getByTestId('liveact-tracking-toggle')).toBeVisible();
-    return;
-  }
+  await requireWebGl(page);
   await openFaceMappingFromGear(page);
   await expect(page.getByTestId('face-mapping-authoring-panel')).toBeVisible();
   await expect(page.getByTestId('face-mapping-auto')).toBeVisible();
+  const saveBtn = page.getByTestId('face-mapping-viewport-save');
+  await expect(saveBtn).toBeEnabled({ timeout: 60_000 });
   await page.getByTestId('face-mapping-cancel').or(page.getByTestId('face-mapping-viewport-cancel')).first().click();
   await page.screenshot({ path: path.join(EVIDENCE, '03-male-face-mapping.png'), fullPage: true });
+});
+
+test('Generic GLB fallback: species GLB body serves as glTF runtime path', async ({ page }) => {
+  test.setTimeout(240_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const glbPath = path.join(PUBLIC_SPECIES, 'human-female-quality-20260921-f5.glb');
+  expect(fs.existsSync(glbPath), 'f5 generic GLB present').toBe(true);
+  const glbBytes = fs.readFileSync(glbPath);
+  // Serve GLB bytes at the face3 VRM URL so the loader takes the non-VRM glTF branch (contractual fallback).
+  await page.route('**/human-female-quality-20260921-f5-face3.vrm**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'model/gltf-binary',
+      body: glbBytes,
+    });
+  });
+  await page.addInitScript(() => {
+    (window as Window & { __SAGA_ENABLE_LIVEACT_E2E__?: boolean }).__SAGA_ENABLE_LIVEACT_E2E__ = true;
+  });
+  await openBlankCharacterEditor(page);
+  await completeSpeciesBasics(page, 'female');
+  await openAvatarPreviewLiveActSettings(page);
+  await requireWebGl(page);
+  const trackingToggle = page.getByTestId('liveact-tracking-toggle');
+  await expect(trackingToggle).toBeEnabled({ timeout: 60_000 });
+  await trackingToggle.click();
+  await expect
+    .poll(async () => Boolean(await getE2eApi(page)), { timeout: 30_000 })
+    .toBe(true);
+  const glbRuntime = await page.evaluate((sample) => {
+    const api = (window as unknown as { __SAGA_LIVEACT_E2E__?: LiveActE2eApi }).__SAGA_LIVEACT_E2E__;
+    if (!api) return { ok: false, reason: 'no_api' };
+    api.ingestSample(sample);
+    const d2 = api.getDiagnosticsV2();
+    if (!d2 || d2.trackingLost) return { ok: false, reason: 'lost' };
+    const jaw = d2.stages.applied['face.jawOpen'];
+    // Supported morphs apply; missing optional channels may be unavailable — jaw is core when present.
+    const jawOk =
+      jaw == null ||
+      jaw.status === 'unavailable' ||
+      (jaw.status === 'ok' && typeof jaw.value === 'number' && jaw.value > 0.2);
+    return { ok: jawOk, jawStatus: jaw?.status ?? null, jawValue: jaw?.value ?? null };
+  }, fixtureSample({ jawOpen: 0.7 }));
+  expect(glbRuntime.ok, `generic GLB runtime ${JSON.stringify(glbRuntime)}`).toBe(true);
+  await page.screenshot({ path: path.join(EVIDENCE, '04-generic-glb.png'), fullPage: true });
 });

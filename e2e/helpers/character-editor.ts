@@ -23,8 +23,16 @@ export async function openBlankCharacterEditor(page: Page) {
 
 export async function completeSpeciesBasics(page: Page, gender: 'female' | 'male' = 'female') {
   await page.getByRole('tab', { name: /^Spezies$/i }).click();
+  const human = page.getByRole('radio', { name: /Mensch/i });
+  if (await human.count()) {
+    await human.click();
+  }
   await page.getByRole('combobox', { name: /Geschlecht wählen/i }).click();
-  await page.getByRole('option', { name: gender === 'male' ? /Männlich/i : /Weiblich/i }).click();
+  await page
+    .getByRole('option', {
+      name: gender === 'male' ? /Männlich( gelesen)?/i : /Weiblich( gelesen)?/i,
+    })
+    .click();
   await page.getByRole('button', { name: /Geschärfter Sinn, 1 Punkt/i }).click();
   await page.getByRole('combobox', { name: 'Geschärfter Sinn: Sinn' }).click();
   await page.getByRole('option', { name: /Hören/i }).click();
@@ -35,11 +43,22 @@ export async function completeSpeciesBasics(page: Page, gender: 'female' | 'male
   await expect(page.getByText(/^3 \/ 3$/).first()).toBeVisible();
 }
 
-/** Open gear + Face Setup accordion and enter Face Mapping authoring. */
-export async function openFaceMappingFromGear(page: Page) {
+/** Ensure the avatar preview settings menu is open (do not toggle closed). */
+export async function ensureAvatarPreviewSettingsOpen(page: Page) {
   const gear = page.getByTestId('avatar-preview-settings');
   await expect(gear).toBeVisible({ timeout: 20_000 });
-  await gear.click();
+  const menu = page.getByTestId('avatar-preview-settings-menu');
+  const expanded = (await gear.getAttribute('aria-expanded')) === 'true';
+  const menuVisible = await menu.isVisible().catch(() => false);
+  if (!expanded || !menuVisible) {
+    await gear.click();
+  }
+  await expect(menu).toBeVisible({ timeout: 10_000 });
+}
+
+/** Open gear + Face Setup accordion and enter Face Mapping authoring. */
+export async function openFaceMappingFromGear(page: Page) {
+  await ensureAvatarPreviewSettingsOpen(page);
   const faceSetup = page.getByTestId('face-setup-section');
   await expect(faceSetup).toBeVisible({ timeout: 10_000 });
   await faceSetup.click();
@@ -51,9 +70,7 @@ export async function openFaceMappingFromGear(page: Page) {
 
 /** Open gear + LiveAct accordion (sections start collapsed). */
 export async function openAvatarPreviewLiveActSettings(page: Page) {
-  const gear = page.getByTestId('avatar-preview-settings');
-  await expect(gear).toBeVisible({ timeout: 20_000 });
-  await gear.click();
+  await ensureAvatarPreviewSettingsOpen(page);
   const liveActTrigger = page.getByTestId('liveact-settings-accordion-trigger');
   await expect(liveActTrigger).toBeVisible({ timeout: 10_000 });
   const trackingToggle = page.getByTestId('liveact-tracking-toggle');
@@ -61,6 +78,13 @@ export async function openAvatarPreviewLiveActSettings(page: Page) {
     await liveActTrigger.click();
   }
   await expect(trackingToggle).toBeVisible({ timeout: 10_000 });
+}
+
+/** Switch Spezies gender after basics are already filled (model swap). */
+export async function switchSpeciesGender(page: Page, gender: 'female' | 'male') {
+  await page.getByRole('tab', { name: /^Spezies$/i }).click();
+  await page.getByRole('combobox', { name: /Geschlecht wählen/i }).click();
+  await page.getByRole('option', { name: gender === 'male' ? /Männlich/i : /Weiblich/i }).click();
 }
 
 const FREE_SKILL_ATTRIBUTE: Readonly<Record<string, string>> = {
