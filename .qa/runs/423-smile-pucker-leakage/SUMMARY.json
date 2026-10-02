@@ -1,0 +1,72 @@
+{
+  "measuredAt": "2026-10-02T00:14:19.296Z",
+  "source": "reauthor-current-runA-compact",
+  "m5BodyLeak": {
+    "mouthSmileLeft": [],
+    "mouthSmileRight": [],
+    "mouthPucker": [],
+    "jawOpen": []
+  },
+  "f5BodyLeak": {
+    "mouthSmileLeft": [],
+    "mouthSmileRight": [],
+    "mouthPucker": [],
+    "jawOpen": []
+  },
+  "m5ExpectNegHits": {
+    "mouthSmileLeft": [],
+    "mouthSmileRight": [],
+    "mouthPucker": [],
+    "jawOpen": []
+  },
+  "f5ExpectNegHits": {
+    "mouthSmileLeft": [],
+    "mouthSmileRight": [],
+    "mouthPucker": [],
+    "jawOpen": []
+  },
+  "m5OffSurface": {
+    "mouthSmileLeft": {
+      "offSurface": 0,
+      "offTopo": 0,
+      "bodyJointHits": 0
+    },
+    "mouthSmileRight": {
+      "offSurface": 0,
+      "offTopo": 0,
+      "bodyJointHits": 0
+    },
+    "mouthPucker": {
+      "offSurface": 0,
+      "offTopo": 0,
+      "bodyJointHits": 0
+    },
+    "jawOpen": {
+      "offSurface": 471,
+      "offTopo": 471,
+      "bodyJointHits": 0
+    }
+  },
+  "f5OffSurface": {
+    "mouthSmileLeft": {
+      "offSurface": 0,
+      "offTopo": 0,
+      "bodyJointHits": 0
+    },
+    "mouthSmileRight": {
+      "offSurface": 0,
+      "offTopo": 0,
+      "bodyJointHits": 0
+    },
+    "mouthPucker": {
+      "offSurface": 0,
+      "offTopo": 0,
+      "bodyJointHits": 0
+    },
+    "jawOpen": {
+      "offSurface": 40,
+      "offTopo": 40,
+      "bodyJointHits": 55
+    }
+  }
+}

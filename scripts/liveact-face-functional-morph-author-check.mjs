@@ -27,6 +27,7 @@ import {
   buildGtBoundSurfaceGate,
   buildPrimitiveAdjacency,
   resolveCoupledFacialPatches,
+  topologyDistancesOnAllowed,
 } from './lib/liveact-face-functional-morph-surface.mjs';
 import { buildFaceLocalFrame } from './lib/liveact-face-functional-validate.mjs';
 import { resolveFaceAnchorPositions } from './lib/liveact-face-anchor-anatomy-validate.mjs';
@@ -1282,6 +1283,83 @@ async function main() {
 
       // Stale GT / malformed topology fail closed (already covered above for jawOpen;
       // coupled utility also throws on missing POSITION/indices — covered via author path).
+    }
+
+    // --- Behavioral: meanEdgeLength includes all 3 triangle edges ---
+    {
+      const doc = new Document();
+      const buffer = doc.createBuffer();
+      const pos = doc
+        .createAccessor()
+        .setType('VEC3')
+        .setArray(new Float32Array([0, 0, 0, 2, 0, 0, 0, 2, 0]))
+        .setBuffer(buffer);
+      const idx = doc
+        .createAccessor()
+        .setType('SCALAR')
+        .setArray(new Uint16Array([0, 1, 2]))
+        .setBuffer(buffer);
+      const prim = doc.createPrimitive().setAttribute('POSITION', pos).setIndices(idx);
+      const { meanEdgeLength } = buildPrimitiveAdjacency(prim);
+      // Edges: 0-1=2, 0-2=2, 1-2=sqrt(8)≈2.828 → mean ≈ 2.276
+      const expected = (2 + 2 + Math.SQRT2 * 2) / 3;
+      check(
+        Math.abs(meanEdgeLength - expected) < 1e-9,
+        'meanEdgeLength averages all three triangle edges',
+      );
+    }
+
+    // --- Behavioral: nearestSeed BFS picks closest seam seed (not first sorted) ---
+    {
+      const adj = [
+        [1], // 0
+        [0, 2], // 1
+        [1, 3], // 2
+        [2], // 3
+      ];
+      const allowed = new Uint8Array([1, 1, 1, 1]);
+      // Seeds at 0 and 3; vertex 2 is nearer to 3
+      const { dist, nearestSeed } = topologyDistancesOnAllowed(adj, [0, 3], allowed);
+      check(dist[2] === 1 && nearestSeed[2] === 3, 'BFS nearestSeed prefers closer seam seed');
+      check(dist[1] === 1 && nearestSeed[1] === 0, 'BFS nearestSeed from other side');
+      // Deterministic tie: when equal hops, first enqueued seed wins
+      const tie = topologyDistancesOnAllowed([[1], [0, 2], [1]], [0, 2], new Uint8Array([1, 1, 1]));
+      check(tie.nearestSeed[1] === 0, 'BFS tie: earlier seed wins when hop-equal');
+    }
+
+    // --- Behavioral: smile rejects disconnected body shell (Euclidean-near) ---
+    {
+      const smileDir = join(work, 'smile-surface');
+      const smile = await writeBundle(smileDir, fixture.bytes, fixture.anchors);
+      const smileOut = join(smileDir, 'smileL.glb');
+      const sj = await authorLiveActFunctionalMorph({
+        inputPath: smile.glbPath,
+        outputPath: smileOut,
+        anchorsPath: smile.anchorsPath,
+        authoringPath: smile.authoringPath,
+        channel: 'mouthSmileLeft',
+      });
+      check(
+        (sj.channelStats?.surfaceGate?.offSurfaceRejected || 0) > 0,
+        'smile surface gate rejects off-surface Euclidean candidates',
+      );
+      const docS = await io.read(smileOut);
+      const meshS = docS.getRoot().listMeshes()[0];
+      const primS = meshS.listPrimitives()[0];
+      const names = (() => {
+        const extras = primS.getExtras() || {};
+        return Array.isArray(extras.targetNames) ? extras.targetNames.map(String) : [];
+      })();
+      const mi = names.indexOf('mouthSmileLeft');
+      const mp = primS.listTargets()[mi].getAttribute('POSITION');
+      const d = [0, 0, 0];
+      let chestMag = 0;
+      for (let k = 0; k < 3; k += 1) {
+        const vi = fixture.disconnectedChestVertexBase + k;
+        mp.getElement(vi, d);
+        chestMag = Math.max(chestMag, Math.hypot(d[0], d[1], d[2]));
+      }
+      check(chestMag <= 1e-8, 'smile writes zero delta on disconnected body shell');
     }
   } finally {
     rmSync(work, { recursive: true, force: true });

@@ -153,16 +153,16 @@
     "supersededBy": "finalPublish"
   },
   "finalPublish": {
-    "at": "2026-10-01T22:36:57.035Z",
+    "at": "2026-10-02T03:01:26.338Z",
     "ticket": "#423",
     "candidateGlb": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-final.glb",
-    "candidateSha256": "f080391ae1b2e14abfafdafd8e77ff32ee4e2b28e7f03bf1d3eee816edbd9500",
+    "candidateSha256": "871e38a7327480277fc39e9394deccb3ffb84ffd0d1b25b4c7377b160f3267ee",
     "publicGlb": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.glb",
     "publicVrm": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm",
-    "publicGlbSha256": "f080391ae1b2e14abfafdafd8e77ff32ee4e2b28e7f03bf1d3eee816edbd9500",
-    "publicVrmSha256": "20db033a14640401d0dbc9940c200fde90da043eacd5632d945474a00d7d8c00",
+    "publicGlbSha256": "871e38a7327480277fc39e9394deccb3ffb84ffd0d1b25b4c7377b160f3267ee",
+    "publicVrmSha256": "3d288739ce733732be9657d2d1aab6dce92bfa800e4cb67799e6ec72450aa8f3",
     "topologyFingerprint": "v147707:t214973:m1",
-    "cacheBust": "quality5-face3-coupled1",
+    "cacheBust": "quality5-face3-repro1",
     "functionalPass": true,
     "combinationPass": true,
     "morphRegression": {
@@ -177,13 +177,6 @@
       ],
       "rest44Identical": true
     },
-    "gazeMode": "morphs",
-    "outcome": "PASS",
-    "resolverUpdated": true,
-    "publicAssetsPublished": true,
-    "visualSanity": "PASS",
-    "coupledShell": "PASS",
-    "surfaceSafety": "PASS",
-    "note": "Coupled-Shell Option C final publish PASS. Resolver → face3 VRM ?v=quality5-face3-coupled1. Generic m5/f5.glb fallback preserved."
+    "gazeMode": "morphs"
   }
 }

@@ -1,17 +1,17 @@
 {
   "id": "m5",
   "finalGlb": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-final.glb",
-  "finalGlbSha256": "5052b0adc8a3287a02309203ce37ee2344aeda8f63b203098c82897626e87153",
+  "finalGlbSha256": "ea483b38266b0afc09f109a625363b8b8f228b8bad92802a73e72926439f62a2",
   "topology": "v133002:t215832:m1",
   "morphCount": 51,
   "channelHashes": {
-    "jawOpen": "e046833a9c0e00695b138d30ee4710939c8985403c6faba32f0728bc6bf34ddc",
+    "jawOpen": "5eba7c7faa566eec05989293708bee0aea7672e7f0cacd0c4761956b761f3cab",
     "eyeBlinkLeft": "c601c77b4209188c791c974f5c7fb0b9e2151621f2067893c3a164bb97a91b71",
     "eyeBlinkRight": "681ff38de2d75675e37047902901e40599737857d28f86fcc7f8176d30c3883f",
     "browInnerUp": "52f808420a23bb011de7fdd4251baf7258df3e56d03c7d2d29c0325badd5303f",
-    "mouthSmileLeft": "6df06ad3b3a13b14a591a6156a47a5a5776445f5294f4a1e8ff0b2631c944479",
-    "mouthSmileRight": "7e0132a6769368b04c66efef9198285ddd087cb6c7d6c01509e0abae790164be",
-    "mouthPucker": "e3e542a02d4cd32bd321acf9da0f26beaf6f84235260b2016a4d66324757495c"
+    "mouthSmileLeft": "97d5ce04e8237d85cf33fd6647cab38067775dfb1191bff893db10601f6f47d9",
+    "mouthSmileRight": "1d6b5a72455d309152353ac5997d5b4578135492eb52657c3a9da8b4640792da",
+    "mouthPucker": "13c1b0a2087dd7de3bb3a7b7a2ea3c057304f19a3f66adaee852f6037e75efe3"
   },
   "changedVsFace1": [
     "browInnerUp",
@@ -55,18 +55,18 @@
     "morphDeltaMax": 0.022448823948708493,
     "morphDeltaNan": false,
     "jawGapMetric": 0.149817,
-    "coupledShellVisualEvidence": true,
+    "reauthorVisualEvidence": true,
     "seamMax": 0.000008132574592306245,
     "grotesqueSpike": false,
     "pass": true
   },
   "publicGlb": "public/assets/avatars/species/human-male-quality-20260921-m5-face3.glb",
   "publicVrm": "public/assets/avatars/species/human-male-quality-20260921-m5-face3.vrm",
-  "publicGlbSha256": "5052b0adc8a3287a02309203ce37ee2344aeda8f63b203098c82897626e87153",
-  "publicVrmSha256": "61225e434bf2e4ad9713348f14e8b4b380571b0d39696eb73cf36676347c7a83",
+  "publicGlbSha256": "ea483b38266b0afc09f109a625363b8b8f228b8bad92802a73e72926439f62a2",
+  "publicVrmSha256": "7d32f2f4041314ef50c0e9b68fa1d6b8fa11e8222a0c58363a14f08d79f99787",
   "vrmFunctionalPass": true,
   "morphParityOk": true,
   "gazeMode": "morphs",
   "packGaze": "morphs",
-  "cacheBust": "quality5-face3-coupled1"
+  "cacheBust": "quality5-face3-repro1"
 }

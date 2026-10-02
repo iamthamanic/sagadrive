@@ -1,0 +1,139 @@
+{
+  "id": "f5",
+  "runTag": "runA",
+  "codeHead": "a3424e1a00e7c8cb3fbd362c13142672b8bb4af4",
+  "authoringBasePath": "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive-wt-423/.qa/runs/423-reproducibility-baseline/f5-prior-published.glb",
+  "authoringBaseSha256": "f080391ae1b2e14abfafdafd8e77ff32ee4e2b28e7f03bf1d3eee816edbd9500",
+  "zeroedRequiredMorphs": 7,
+  "zeroedBaseSha256": "937cfd081a2ceebb0ac6a27169941812a31592ee56b960a6cde3600070929dd6",
+  "finalGlb": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/reauthor-current-runA/f5-reauthor-current.glb",
+  "finalGlbSha256": "871e38a7327480277fc39e9394deccb3ffb84ffd0d1b25b4c7377b160f3267ee",
+  "morphHashes": {
+    "jawOpen": "de9c58ec36fde2feef7702e807d208a5edefad875561ccc68b2ca668e9464b14",
+    "eyeBlinkLeft": "439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e",
+    "eyeBlinkRight": "e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201",
+    "browInnerUp": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+    "mouthSmileLeft": "d841962774c67e03c9be844b6a8038b7e20f76447338f39b9db74ead47e8fa37",
+    "mouthSmileRight": "89fc0301710211c862cc7e76ec90ceccd5c505d9c45c3f7c72158ff6c9c8c144",
+    "mouthPucker": "dd3601dd5984e708e58c0c12c72052041c280e4cf5980f164297ca29ec1f0231"
+  },
+  "meanEdgeLength": 0.003926266706358638,
+  "maxTopologyHops": 42,
+  "thresholds": {
+    "tauCoincide": 0.0004711520047630365,
+    "tauNear": 0.00416565218247634,
+    "tauGtLocal": 0.0624847827371451,
+    "minCoincidePairs": 10,
+    "minMeanNormalDot": 0.55,
+    "maxWholeCompBodyFrac": 0.35,
+    "maxPatchBodyFrac": 0.12,
+    "maxPatchHops": 3,
+    "topoFalloffExp": 1.15
+  },
+  "acceptedComponents": [
+    497,
+    1057
+  ],
+  "bodyFp": 0,
+  "expectNegRejected": true,
+  "patchSets": [
+    {
+      "componentId": 497,
+      "patchVertexCount": 55,
+      "patchVertsSha256": "ffe91a509c5bead3c179e3a3360ff3c4160f03d0c9675d175ebb630165474485",
+      "seamPairsSha256": "6d9d6f47f39f8e0ae8d726ba32ada9027271d57d0127118c23d4316e1b527b27"
+    },
+    {
+      "componentId": 1057,
+      "patchVertexCount": 409,
+      "patchVertsSha256": "2fc4b1f2f93eb60407f3f7cd0552e4809e5fe9535cef9b6fcc1a0a6c674f7c0e",
+      "seamPairsSha256": "251e6e05be9637948ba299dc1de434635547a0b94951cdc93ece55a529f24261"
+    }
+  ],
+  "secondaryBindingCount": 348,
+  "channelReports": [
+    {
+      "channel": "jawOpen",
+      "inputSha256": "937cfd081a2ceebb0ac6a27169941812a31592ee56b960a6cde3600070929dd6",
+      "outputSha256": "c4cdc3e3e782a7fac02d42abfc822de658945350d05433d04fd120d64a3764f3",
+      "morphSha256": "de9c58ec36fde2feef7702e807d208a5edefad875561ccc68b2ca668e9464b14",
+      "affected": 1244,
+      "coupledAccepted": [
+        497
+      ],
+      "surfaceGate": null
+    },
+    {
+      "channel": "eyeBlinkLeft",
+      "inputSha256": "c4cdc3e3e782a7fac02d42abfc822de658945350d05433d04fd120d64a3764f3",
+      "outputSha256": "1038c07e6c349f25e307e7082e989cd23524eb56861a437f4f0a35ecfb2c8b93",
+      "morphSha256": "439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e",
+      "affected": 579,
+      "coupledAccepted": null,
+      "surfaceGate": null
+    },
+    {
+      "channel": "eyeBlinkRight",
+      "inputSha256": "1038c07e6c349f25e307e7082e989cd23524eb56861a437f4f0a35ecfb2c8b93",
+      "outputSha256": "6504a8a00acded84406c770a5633d302fb4ee0067e0d99bc8603346a6c438235",
+      "morphSha256": "e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201",
+      "affected": 457,
+      "coupledAccepted": null,
+      "surfaceGate": null
+    },
+    {
+      "channel": "browInnerUp",
+      "inputSha256": "6504a8a00acded84406c770a5633d302fb4ee0067e0d99bc8603346a6c438235",
+      "outputSha256": "d4d20ce98706fd937c16f7ae0cb46809132333f78aa0f50abbeda8ef61978a0d",
+      "morphSha256": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+      "affected": 3474,
+      "coupledAccepted": null,
+      "surfaceGate": null
+    },
+    {
+      "channel": "mouthSmileLeft",
+      "inputSha256": "d4d20ce98706fd937c16f7ae0cb46809132333f78aa0f50abbeda8ef61978a0d",
+      "outputSha256": "ff90f37e9f3051966deca6b1df8bb8a73612b9cb61587bf32d4905809b406897",
+      "morphSha256": "d841962774c67e03c9be844b6a8038b7e20f76447338f39b9db74ead47e8fa37",
+      "affected": 335,
+      "coupledAccepted": null,
+      "surfaceGate": {
+        "allowedSurfaceVertexCount": 3267,
+        "meanEdgeLength": 0.003926266706358638,
+        "maxTopologyHops": 20,
+        "offSurfaceRejected": 40,
+        "offTopoRejected": 22
+      }
+    },
+    {
+      "channel": "mouthSmileRight",
+      "inputSha256": "ff90f37e9f3051966deca6b1df8bb8a73612b9cb61587bf32d4905809b406897",
+      "outputSha256": "15e55a6d73a61c8ff6261c6854b3f6ed537119863a5395f301ab5ea13b6752d7",
+      "morphSha256": "89fc0301710211c862cc7e76ec90ceccd5c505d9c45c3f7c72158ff6c9c8c144",
+      "affected": 385,
+      "coupledAccepted": null,
+      "surfaceGate": {
+        "allowedSurfaceVertexCount": 3267,
+        "meanEdgeLength": 0.003926266706358638,
+        "maxTopologyHops": 20,
+        "offSurfaceRejected": 59,
+        "offTopoRejected": 22
+      }
+    },
+    {
+      "channel": "mouthPucker",
+      "inputSha256": "15e55a6d73a61c8ff6261c6854b3f6ed537119863a5395f301ab5ea13b6752d7",
+      "outputSha256": "871e38a7327480277fc39e9394deccb3ffb84ffd0d1b25b4c7377b160f3267ee",
+      "morphSha256": "dd3601dd5984e708e58c0c12c72052041c280e4cf5980f164297ca29ec1f0231",
+      "affected": 697,
+      "coupledAccepted": null,
+      "surfaceGate": {
+        "allowedSurfaceVertexCount": 3267,
+        "meanEdgeLength": 0.003926266706358638,
+        "maxTopologyHops": 21,
+        "offSurfaceRejected": 102,
+        "offTopoRejected": 22
+      }
+    }
+  ]
+}

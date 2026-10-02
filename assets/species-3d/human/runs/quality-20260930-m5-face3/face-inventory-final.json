@@ -127,7 +127,7 @@
   "gazeModeSource": "inferred",
   "morphCount": 51,
   "usableMorphCount": 51,
-  "byteCount": 28582096,
+  "byteCount": 28506252,
   "meshCount": 1,
   "skinCount": 1,
   "materialCount": 1,
@@ -320,34 +320,34 @@
       },
       "jawOpen": {
         "pass": true,
-        "expectedEnergy": 0.05298685110412802,
+        "expectedEnergy": 0.0505704632433248,
         "forbiddenLeakageRatio": 0,
-        "expectedEnergyRatio": 0.999999774201609,
+        "expectedEnergyRatio": 1,
         "side": {
-          "leftEnergy": 0.01718298734089217,
-          "rightEnergy": 0.035803875727584505
+          "leftEnergy": 0.014762891958707803,
+          "rightEnergy": 0.03580757128461681
         },
         "violations": []
       },
       "mouthSmileLeft": {
         "pass": true,
-        "expectedEnergy": 0.01980896360820581,
+        "expectedEnergy": 0.005125022403453525,
         "forbiddenLeakageRatio": 0,
-        "expectedEnergyRatio": 0.9999534908577995,
+        "expectedEnergyRatio": 1,
         "side": {
-          "leftEnergy": 0.019809884948961878,
+          "leftEnergy": 0.005125022403453525,
           "rightEnergy": 0
         },
         "violations": []
       },
       "mouthSmileRight": {
         "pass": true,
-        "expectedEnergy": 0.01948350842363287,
+        "expectedEnergy": 0.0051869508623196125,
         "forbiddenLeakageRatio": 0,
-        "expectedEnergyRatio": 0.9999706776965334,
+        "expectedEnergyRatio": 1,
         "side": {
           "leftEnergy": 0,
-          "rightEnergy": 0.019484079741731823
+          "rightEnergy": 0.0051869508623196125
         },
         "violations": []
       },
@@ -375,12 +375,12 @@
       },
       "mouthPucker": {
         "pass": true,
-        "expectedEnergy": 0.030592513807223685,
+        "expectedEnergy": 0.009037708569581214,
         "forbiddenLeakageRatio": 0,
-        "expectedEnergyRatio": 0.9999964573112758,
+        "expectedEnergyRatio": 1,
         "side": {
-          "leftEnergy": 0.015185856147775971,
-          "rightEnergy": 0.01540676603958537
+          "leftEnergy": 0.004482640986376095,
+          "rightEnergy": 0.00455506758320513
         },
         "violations": []
       },

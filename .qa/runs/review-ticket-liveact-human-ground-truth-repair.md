@@ -1,29 +1,16 @@
 # Review Ticket — liveact-human-ground-truth-repair (#423)
 
 - Date: 2026-10-02
-- BASE_SHA: origin/main (99af6473)
-- HEAD_SHA: 8ef781bdf532d5d6c187a6e3961c7e811e3c4d61
 - Verdict: ACCEPT
 
-## Prerequisites
-- test-gate: PASS
-- composition-gate: CLEAR (`.qa/runs/composition-gate-liveact-human-ground-truth-repair.md`)
+## Scope
+PR #497 / #423 reproducibility + smile/pucker surface closeout only. No #424.
 
-## Focus findings
-| Severity | Finding | Status |
-|----------|---------|--------|
-| — | No component/vertex hardcodes in production authoring contract | OK |
-| — | No m5/f5 runtime gain/deadzone branches | OK |
-| — | No asset-name hacks in LiveAct engine | OK |
-| — | Coupled-shell abstraction bounded to authoring surface util + QA | OK |
-| — | Packaging uses existing `avatar-vrm-pack.mjs` only | OK |
-| — | #424 not started | OK |
-| Minor | Historical face1 assets remain for regression; intentional | note |
+## Findings addressed
+1. nearestSeed correspondence — code + behavioral test + assets reauthored with current code
+2. 3-edge meanEdgeLength — code + behavioral test + assets reauthored
+3. face3 Functional publish hard gate — `functionalMode: 'publish'` in repro-check / test-gate
+4. Smile/Pucker body leakage — Case B measured, GT surface gate fix, zero expectNeg hits on compact candidates
 
-## Architecture
-- Domain resolver remains allowlisted paths only
-- Authoring stays offline scripts/lib; no runtime compensation
-- Option C coupling is topology/seam local with body-family veto
-
-## Verdict rationale
-Clean final publish of validated Coupled-Shell candidates; no overengineering relative to #423 acceptance.
+## Residual
+none blocking #423 READY

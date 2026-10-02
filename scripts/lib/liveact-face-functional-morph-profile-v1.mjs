@@ -217,6 +217,13 @@ const MOUTH_SMILE_SHARED = Object.freeze({
   upBias: 1.0,
   outBias: 0.55,
   midplaneSoftFaceH: 0.025,
+  /** GT-bound perioral surface — Euclidean falloff alone must not own body shells. */
+  surfaceSeedAnchors: Object.freeze([
+    'mouthUpper',
+    'mouthLower',
+    'mouthCornerLeft',
+    'mouthCornerRight',
+  ]),
 });
 
 /** @type {Readonly<MouthSmileAuthorContract>} */
@@ -289,6 +296,13 @@ export const MOUTH_PUCKER_AUTHOR_CONTRACT_V1 = Object.freeze({
     'eyeRightOuter',
     'browLeftInner',
     'browRightInner',
+  ]),
+  /** GT-bound perioral surface — Euclidean falloff alone must not own body shells. */
+  surfaceSeedAnchors: Object.freeze([
+    'mouthUpper',
+    'mouthLower',
+    'mouthCornerLeft',
+    'mouthCornerRight',
   ]),
   // Perioral neighborhood — corners + lip perimeter strongest; falloff before nose/chin.
   moveRadiusFaceH: 0.13,

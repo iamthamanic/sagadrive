@@ -1,0 +1,294 @@
+{
+  "id": "m5",
+  "glb": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/reauthor-current-runA/m5-reauthor-current.glb",
+  "channels": {
+    "mouthSmileLeft": {
+      "nonzero": 1198,
+      "maxMag": 0.00664625008092579,
+      "mean": 0.0015401085619135427,
+      "offSurfaceNonzero": 0,
+      "offTopoNonzero": 0,
+      "bodyJointHits": 0,
+      "expectNegHits": [],
+      "bodyLeakComponents": [],
+      "topComponents": [
+        {
+          "componentId": 297,
+          "nonzero": 1131,
+          "max": 0.00664625008092579,
+          "mean": 0.0016254141895240626,
+          "onGtSurfaceFrac": 1,
+          "topoReachableFrac": 1,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "A_facial_gt_surface",
+          "sampleJoints": [
+            "Head",
+            "Head",
+            "Head"
+          ]
+        },
+        {
+          "componentId": 210,
+          "nonzero": 39,
+          "max": 0.0007140138951376349,
+          "mean": 0.00014680826182293674,
+          "onGtSurfaceFrac": 1,
+          "topoReachableFrac": 1,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "A_facial_gt_surface",
+          "sampleJoints": [
+            "neck",
+            "neck",
+            "neck"
+          ]
+        },
+        {
+          "componentId": 206,
+          "nonzero": 28,
+          "max": 0.00011359313279568207,
+          "mean": 0.00003503880748624138,
+          "onGtSurfaceFrac": 1,
+          "topoReachableFrac": 1,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "A_facial_gt_surface",
+          "sampleJoints": [
+            "Head",
+            "Head",
+            "Head"
+          ]
+        }
+      ]
+    },
+    "mouthSmileRight": {
+      "nonzero": 1754,
+      "maxMag": 0.006646250336459837,
+      "mean": 0.0011875596981116689,
+      "offSurfaceNonzero": 0,
+      "offTopoNonzero": 0,
+      "bodyJointHits": 0,
+      "expectNegHits": [],
+      "bodyLeakComponents": [],
+      "topComponents": [
+        {
+          "componentId": 206,
+          "nonzero": 1094,
+          "max": 0.006646250336459837,
+          "mean": 0.0015996360569077283,
+          "onGtSurfaceFrac": 1,
+          "topoReachableFrac": 1,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "A_facial_gt_surface",
+          "sampleJoints": [
+            "Head",
+            "Head",
+            "Head"
+          ]
+        },
+        {
+          "componentId": 210,
+          "nonzero": 660,
+          "max": 0.0016461210486196027,
+          "mean": 0.0005045119155012326,
+          "onGtSurfaceFrac": 1,
+          "topoReachableFrac": 1,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "A_facial_gt_surface",
+          "sampleJoints": [
+            "neck",
+            "neck",
+            "neck"
+          ]
+        }
+      ]
+    },
+    "mouthPucker": {
+      "nonzero": 3006,
+      "maxMag": 0.005911930451283528,
+      "mean": 0.001272184387754593,
+      "offSurfaceNonzero": 0,
+      "offTopoNonzero": 0,
+      "bodyJointHits": 0,
+      "expectNegHits": [],
+      "bodyLeakComponents": [],
+      "topComponents": [
+        {
+          "componentId": 297,
+          "nonzero": 1167,
+          "max": 0.005911930451283528,
+          "mean": 0.0015182752600313735,
+          "onGtSurfaceFrac": 1,
+          "topoReachableFrac": 1,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "A_facial_gt_surface",
+          "sampleJoints": [
+            "Head",
+            "neck",
+            "neck"
+          ]
+        },
+        {
+          "componentId": 206,
+          "nonzero": 1066,
+          "max": 0.005911930292781393,
+          "mean": 0.0014952827637238627,
+          "onGtSurfaceFrac": 1,
+          "topoReachableFrac": 1,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "A_facial_gt_surface",
+          "sampleJoints": [
+            "Head",
+            "Head",
+            "Head"
+          ]
+        },
+        {
+          "componentId": 210,
+          "nonzero": 773,
+          "max": 0.0018584724451438483,
+          "mean": 0.0005929982082846693,
+          "onGtSurfaceFrac": 1,
+          "topoReachableFrac": 1,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "A_facial_gt_surface",
+          "sampleJoints": [
+            "neck",
+            "neck",
+            "neck"
+          ]
+        }
+      ]
+    },
+    "jawOpen": {
+      "nonzero": 3663,
+      "maxMag": 0.012049550572776069,
+      "mean": 0.0027818424493021156,
+      "offSurfaceNonzero": 471,
+      "offTopoNonzero": 471,
+      "bodyJointHits": 0,
+      "expectNegHits": [],
+      "bodyLeakComponents": [],
+      "topComponents": [
+        {
+          "componentId": 297,
+          "nonzero": 1309,
+          "max": 0.0053194106883290605,
+          "mean": 0.001994054823994272,
+          "onGtSurfaceFrac": 1,
+          "topoReachableFrac": 1,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "A_facial_gt_surface",
+          "sampleJoints": [
+            "neck",
+            "neck",
+            "neck"
+          ]
+        },
+        {
+          "componentId": 206,
+          "nonzero": 976,
+          "max": 0.006345381115479392,
+          "mean": 0.0024352274330855725,
+          "onGtSurfaceFrac": 1,
+          "topoReachableFrac": 1,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "A_facial_gt_surface",
+          "sampleJoints": [
+            "Head",
+            "Head",
+            "Head"
+          ]
+        },
+        {
+          "componentId": 210,
+          "nonzero": 907,
+          "max": 0.012049550572776069,
+          "mean": 0.004919172018043694,
+          "onGtSurfaceFrac": 1,
+          "topoReachableFrac": 1,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "A_facial_gt_surface",
+          "sampleJoints": [
+            "neck",
+            "neck",
+            "neck"
+          ]
+        },
+        {
+          "componentId": 292,
+          "nonzero": 192,
+          "max": 0.010367743346354433,
+          "mean": 0.0031224336676728367,
+          "onGtSurfaceFrac": 0,
+          "topoReachableFrac": 0,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "INVESTIGATE",
+          "sampleJoints": [
+            "neck",
+            "neck",
+            "neck"
+          ]
+        },
+        {
+          "componentId": 176,
+          "nonzero": 97,
+          "max": 0.0019768406344700395,
+          "mean": 0.00021494912525628902,
+          "onGtSurfaceFrac": 0,
+          "topoReachableFrac": 0,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "INVESTIGATE",
+          "sampleJoints": [
+            "Head",
+            "Head",
+            "Head"
+          ]
+        },
+        {
+          "componentId": 341,
+          "nonzero": 94,
+          "max": 0.00032255124848030574,
+          "mean": 0.00013323862645615777,
+          "onGtSurfaceFrac": 0,
+          "topoReachableFrac": 0,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "INVESTIGATE",
+          "sampleJoints": [
+            "Head",
+            "Head",
+            "Head"
+          ]
+        },
+        {
+          "componentId": 189,
+          "nonzero": 88,
+          "max": 0.0023062600750503844,
+          "mean": 0.0012308905897510673,
+          "onGtSurfaceFrac": 0,
+          "topoReachableFrac": 0,
+          "bodyJointFrac": 0,
+          "isExpectNeg": false,
+          "class": "INVESTIGATE",
+          "sampleJoints": [
+            "neck",
+            "neck",
+            "neck"
+          ]
+        }
+      ]
+    }
+  }
+}

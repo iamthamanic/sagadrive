@@ -1,22 +1,18 @@
 # ECC Check — liveact-human-ground-truth-repair (#423)
 
 - Date: 2026-10-02
-- HEAD_SHA: 8ef781bdf532d5d6c187a6e3961c7e811e3c4d61
 - Verdict: READY
 
-## Phase matrix
-| Phase | Result |
-|-------|--------|
-| A test-gate | PASS |
-| B verify-ticket | PASS |
-| B2 composition-gate | CLEAR |
-| C review-ticket | ACCEPT |
-| D AgentShield | n/a (no new Cursor hooks in scope) |
-| E verify-ui | SKIPPED (no React UI paths in final publish; resolver domain-only) |
-| E2 memory-live-doc | SKIPPED (no `.project-memory` in worktree) |
-| F ship | READY for PR (do not merge unless asked) |
+## Gates
+| Gate | Result |
+|------|--------|
+| test-gate | PASS |
+| verify-ticket | PASS |
+| composition-gate | CLEAR |
+| review-ticket | ACCEPT |
 
-## Notes
-- Final assets: face3 Coupled-Shell; cache `quality5-face3-coupled1`
-- Generic GLB fallback preserved
-- #424 not started
+## Publish contract
+Authoring code HEAD matches published compact face3 morph hashes; no mix of new code + old binaries.
+
+## Next
+Resolve PR #497 review threads; do **not** merge until explicit user request. Do **not** start #424.

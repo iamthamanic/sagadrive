@@ -11,7 +11,7 @@ Reviewed Ground Truth for m5/f5, then Functional Face QA; repair morphs with GT-
 - [x] Stage B: QtMesh FaceRig reauthor on Functional FAIL (full path, MARKER_SIM=2, 3.41.1).
 - [x] Stage B: Functional QA metrics PASS after reauthor — **7/7 channels PASS** (Milestone 5).
 - [x] Stage B final visual + publish gate — **visual jawOpen PASS** after Surface + Coupled Shell (Option C).
-- [x] VRM 1.0 packaging + packaged regression + publish + resolver/cache sync — **PASS** (`quality5-face3-coupled1`).
+- [x] VRM 1.0 packaging + packaged regression + publish + resolver/cache sync — **PASS** (`quality5-face3-repro1`).
 
 ## Architecture (final)
 
@@ -310,8 +310,14 @@ Evidence: `…/{m5,f5}-face3/qa/pucker1/`
 ### Final identities
 | Asset | Final GLB SHA256 (16) | Public VRM SHA256 (16) | Cache |
 |-------|----------------------|------------------------|-------|
-| m5 | `5052b0adc8a3287a` | `61225e434bf2e4ad` | `quality5-face3-coupled1` |
-| f5 | `f080391ae1b2e14a` | `20db033a14640401` | `quality5-face3-coupled1` |
+| m5 | `ea483b38266b0afc` | `7d32f2f4041314ef` | `quality5-face3-repro1` |
+| f5 | `871e38a732748027` | `3d288739ce733732` | `quality5-face3-repro1` |
+
+### Reproducibility closeout (PR #497 review threads)
+- Case B: current-HEAD reauthor (3-edge `meanEdgeLength` + `nearestSeed` + smile/pucker GT surface) from compact prior-published mesh base (required morphs zeroed, then rewritten) **diverged** on jawOpen + smiles + pucker → new compact candidates authoritative (same morph hashes as oversized FaceRig reauthor; ~27MB/33MB containers).
+- Smile/Pucker P2: Case B confirmed (m5 65/284, f5 105 = shoulder/spine shells, onGt=0, authored nonzero) → fixed with GT surface gate; expectNeg hits = 0 / off-surface smile-pucker = 0 post-fix.
+- `liveact-face-human-repro-check` HARD-asserts Functional 7/7 on published face3 (`functionalMode: 'publish'`).
+- Behavioral tests cover 3-edge `meanEdgeLength` + `nearestSeed` BFS/tie handling.
 
 ### Out of scope
 - #424 runtime Gain/DeadZone

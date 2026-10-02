@@ -1,0 +1,362 @@
+{
+  "codeHead": "a3424e1a00e7c8cb3fbd362c13142672b8bb4af4",
+  "assets": {
+    "m5": {
+      "deterministic": true,
+      "identicalToPublished": false,
+      "morphDiff": [
+        "jawOpen",
+        "mouthSmileLeft",
+        "mouthSmileRight",
+        "mouthPucker"
+      ],
+      "case": "B_diverged",
+      "runA": {
+        "id": "m5",
+        "runTag": "runA",
+        "codeHead": "a3424e1a00e7c8cb3fbd362c13142672b8bb4af4",
+        "authoringBasePath": "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive-wt-423/.qa/runs/423-reproducibility-baseline/m5-prior-published.glb",
+        "authoringBaseSha256": "5052b0adc8a3287a02309203ce37ee2344aeda8f63b203098c82897626e87153",
+        "zeroedRequiredMorphs": 7,
+        "zeroedBaseSha256": "2fcf1f746f4052410c7a68356b451637228e83ca94ee32a1924ed834daaf1cbd",
+        "finalGlb": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/reauthor-current-runA/m5-reauthor-current.glb",
+        "finalGlbSha256": "ea483b38266b0afc09f109a625363b8b8f228b8bad92802a73e72926439f62a2",
+        "morphHashes": {
+          "jawOpen": "5eba7c7faa566eec05989293708bee0aea7672e7f0cacd0c4761956b761f3cab",
+          "eyeBlinkLeft": "c601c77b4209188c791c974f5c7fb0b9e2151621f2067893c3a164bb97a91b71",
+          "eyeBlinkRight": "681ff38de2d75675e37047902901e40599737857d28f86fcc7f8176d30c3883f",
+          "browInnerUp": "52f808420a23bb011de7fdd4251baf7258df3e56d03c7d2d29c0325badd5303f",
+          "mouthSmileLeft": "97d5ce04e8237d85cf33fd6647cab38067775dfb1191bff893db10601f6f47d9",
+          "mouthSmileRight": "1d6b5a72455d309152353ac5997d5b4578135492eb52657c3a9da8b4640792da",
+          "mouthPucker": "13c1b0a2087dd7de3bb3a7b7a2ea3c057304f19a3f66adaee852f6037e75efe3"
+        },
+        "meanEdgeLength": 0.004193395784791266,
+        "maxTopologyHops": 41,
+        "thresholds": {
+          "tauCoincide": 0.0005032074941749519,
+          "tauNear": 0.004296690692490734,
+          "tauGtLocal": 0.064450360387361,
+          "minCoincidePairs": 10,
+          "minMeanNormalDot": 0.55,
+          "maxWholeCompBodyFrac": 0.35,
+          "maxPatchBodyFrac": 0.12,
+          "maxPatchHops": 3,
+          "topoFalloffExp": 1.15
+        },
+        "acceptedComponents": [
+          176,
+          177,
+          189,
+          286,
+          292,
+          341
+        ],
+        "bodyFp": 0,
+        "expectNegRejected": true,
+        "patchSets": [
+          {
+            "componentId": 176,
+            "patchVertexCount": 133,
+            "patchVertsSha256": "9b16b5def5efffa08a832823ee62dea873051b56fd7d8c8c3fc826708f82f307",
+            "seamPairsSha256": "d8ff641c9de5eebe1cffec1cdb03d678b1c70e2c57114a8f33e5f487bed36516"
+          },
+          {
+            "componentId": 177,
+            "patchVertexCount": 96,
+            "patchVertsSha256": "1b648334ac354188879d6366fec0271d082af20aec0a2d64343f1fd801f055f5",
+            "seamPairsSha256": "21880a230caf3a3d8c942819cb8a767427d5f8010938e4cf2c02fb6b56a8359a"
+          },
+          {
+            "componentId": 189,
+            "patchVertexCount": 120,
+            "patchVertsSha256": "4d2e4c0aaf91b715b994d2c95f1c6a40efeb3de1dd5c8c7b7a29d78ce593b52e",
+            "seamPairsSha256": "bb62677a7ecd0d62c7c17fd02bfefc733f00f9c1d96dee92004bd55c93917b31"
+          },
+          {
+            "componentId": 286,
+            "patchVertexCount": 119,
+            "patchVertsSha256": "d93ba83f013e61a2df60cb12edaa2d174d0f8fd50859a152bc220abbf2d61718",
+            "seamPairsSha256": "14155af32a962b4b58a3ff0cc4f01f23be62dc2f993924f459c7700af9cdd93b"
+          },
+          {
+            "componentId": 292,
+            "patchVertexCount": 257,
+            "patchVertsSha256": "5a9c8e22aaad58d16d2daf67e34716696edf3c24dfa97f338b4e411b080e3f2a",
+            "seamPairsSha256": "111293214628ac5ffaf7661e99dc9e604141f204e0511ff37c95cb616a4d87c1"
+          },
+          {
+            "componentId": 341,
+            "patchVertexCount": 133,
+            "patchVertsSha256": "1c8e61849c164cb0ae7392eb07952bcc392855a2a028d4517eaada8c92031889",
+            "seamPairsSha256": "aaa70d4a760c3c51d63ca68e257a3f3b400a8a79b53413977939a7159af06b57"
+          }
+        ],
+        "secondaryBindingCount": 626,
+        "channelReports": [
+          {
+            "channel": "jawOpen",
+            "inputSha256": "2fcf1f746f4052410c7a68356b451637228e83ca94ee32a1924ed834daaf1cbd",
+            "outputSha256": "e5f4b5991a010bd3d846b6c860ddb86567e04a4d41a76c07ba323dad8916d90b",
+            "morphSha256": "5eba7c7faa566eec05989293708bee0aea7672e7f0cacd0c4761956b761f3cab",
+            "affected": 3663,
+            "coupledAccepted": [
+              176,
+              189,
+              292,
+              341
+            ],
+            "surfaceGate": null
+          },
+          {
+            "channel": "eyeBlinkLeft",
+            "inputSha256": "e5f4b5991a010bd3d846b6c860ddb86567e04a4d41a76c07ba323dad8916d90b",
+            "outputSha256": "dc6611574ddbb753caa6a81003bd26393168bc224e0676dd134ebc114bae92c4",
+            "morphSha256": "c601c77b4209188c791c974f5c7fb0b9e2151621f2067893c3a164bb97a91b71",
+            "affected": 632,
+            "coupledAccepted": null,
+            "surfaceGate": null
+          },
+          {
+            "channel": "eyeBlinkRight",
+            "inputSha256": "dc6611574ddbb753caa6a81003bd26393168bc224e0676dd134ebc114bae92c4",
+            "outputSha256": "9b6127a832789e0c1a6e060bc745c0b4bcdadb3692c64ba960eaf41260faf4c0",
+            "morphSha256": "681ff38de2d75675e37047902901e40599737857d28f86fcc7f8176d30c3883f",
+            "affected": 526,
+            "coupledAccepted": null,
+            "surfaceGate": null
+          },
+          {
+            "channel": "browInnerUp",
+            "inputSha256": "9b6127a832789e0c1a6e060bc745c0b4bcdadb3692c64ba960eaf41260faf4c0",
+            "outputSha256": "07234097cd26184084d6bf653ad863d1963802a3eb8b77e9c0f10fb42911f74c",
+            "morphSha256": "52f808420a23bb011de7fdd4251baf7258df3e56d03c7d2d29c0325badd5303f",
+            "affected": 6281,
+            "coupledAccepted": null,
+            "surfaceGate": null
+          },
+          {
+            "channel": "mouthSmileLeft",
+            "inputSha256": "07234097cd26184084d6bf653ad863d1963802a3eb8b77e9c0f10fb42911f74c",
+            "outputSha256": "f1434b72b18885d56cfe67a26d9088d2ed084287d19fd265b4f364a9d00f8c3b",
+            "morphSha256": "97d5ce04e8237d85cf33fd6647cab38067775dfb1191bff893db10601f6f47d9",
+            "affected": 1198,
+            "coupledAccepted": null,
+            "surfaceGate": {
+              "allowedSurfaceVertexCount": 3925,
+              "meanEdgeLength": 0.004193395784791266,
+              "maxTopologyHops": 19,
+              "offSurfaceRejected": 1205,
+              "offTopoRejected": 271
+            }
+          },
+          {
+            "channel": "mouthSmileRight",
+            "inputSha256": "f1434b72b18885d56cfe67a26d9088d2ed084287d19fd265b4f364a9d00f8c3b",
+            "outputSha256": "52a3aeb86f0a6ca451ac3a1295b57ba253a6f9f57c50e3577f1f9d220521943c",
+            "morphSha256": "1d6b5a72455d309152353ac5997d5b4578135492eb52657c3a9da8b4640792da",
+            "affected": 1754,
+            "coupledAccepted": null,
+            "surfaceGate": {
+              "allowedSurfaceVertexCount": 3925,
+              "meanEdgeLength": 0.004193395784791266,
+              "maxTopologyHops": 19,
+              "offSurfaceRejected": 671,
+              "offTopoRejected": 183
+            }
+          },
+          {
+            "channel": "mouthPucker",
+            "inputSha256": "52a3aeb86f0a6ca451ac3a1295b57ba253a6f9f57c50e3577f1f9d220521943c",
+            "outputSha256": "ea483b38266b0afc09f109a625363b8b8f228b8bad92802a73e72926439f62a2",
+            "morphSha256": "13c1b0a2087dd7de3bb3a7b7a2ea3c057304f19a3f66adaee852f6037e75efe3",
+            "affected": 3006,
+            "coupledAccepted": null,
+            "surfaceGate": {
+              "allowedSurfaceVertexCount": 3925,
+              "meanEdgeLength": 0.004193395784791266,
+              "maxTopologyHops": 21,
+              "offSurfaceRejected": 1951,
+              "offTopoRejected": 297
+            }
+          }
+        ]
+      },
+      "runB": {
+        "finalGlbSha256": "ea483b38266b0afc09f109a625363b8b8f228b8bad92802a73e72926439f62a2",
+        "morphHashes": {
+          "jawOpen": "5eba7c7faa566eec05989293708bee0aea7672e7f0cacd0c4761956b761f3cab",
+          "eyeBlinkLeft": "c601c77b4209188c791c974f5c7fb0b9e2151621f2067893c3a164bb97a91b71",
+          "eyeBlinkRight": "681ff38de2d75675e37047902901e40599737857d28f86fcc7f8176d30c3883f",
+          "browInnerUp": "52f808420a23bb011de7fdd4251baf7258df3e56d03c7d2d29c0325badd5303f",
+          "mouthSmileLeft": "97d5ce04e8237d85cf33fd6647cab38067775dfb1191bff893db10601f6f47d9",
+          "mouthSmileRight": "1d6b5a72455d309152353ac5997d5b4578135492eb52657c3a9da8b4640792da",
+          "mouthPucker": "13c1b0a2087dd7de3bb3a7b7a2ea3c057304f19a3f66adaee852f6037e75efe3"
+        }
+      },
+      "publishedGlbSha256": "5052b0adc8a3287a02309203ce37ee2344aeda8f63b203098c82897626e87153"
+    },
+    "f5": {
+      "deterministic": true,
+      "identicalToPublished": false,
+      "morphDiff": [
+        "jawOpen",
+        "mouthSmileLeft",
+        "mouthSmileRight",
+        "mouthPucker"
+      ],
+      "case": "B_diverged",
+      "runA": {
+        "id": "f5",
+        "runTag": "runA",
+        "codeHead": "a3424e1a00e7c8cb3fbd362c13142672b8bb4af4",
+        "authoringBasePath": "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive-wt-423/.qa/runs/423-reproducibility-baseline/f5-prior-published.glb",
+        "authoringBaseSha256": "f080391ae1b2e14abfafdafd8e77ff32ee4e2b28e7f03bf1d3eee816edbd9500",
+        "zeroedRequiredMorphs": 7,
+        "zeroedBaseSha256": "937cfd081a2ceebb0ac6a27169941812a31592ee56b960a6cde3600070929dd6",
+        "finalGlb": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/reauthor-current-runA/f5-reauthor-current.glb",
+        "finalGlbSha256": "871e38a7327480277fc39e9394deccb3ffb84ffd0d1b25b4c7377b160f3267ee",
+        "morphHashes": {
+          "jawOpen": "de9c58ec36fde2feef7702e807d208a5edefad875561ccc68b2ca668e9464b14",
+          "eyeBlinkLeft": "439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e",
+          "eyeBlinkRight": "e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201",
+          "browInnerUp": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+          "mouthSmileLeft": "d841962774c67e03c9be844b6a8038b7e20f76447338f39b9db74ead47e8fa37",
+          "mouthSmileRight": "89fc0301710211c862cc7e76ec90ceccd5c505d9c45c3f7c72158ff6c9c8c144",
+          "mouthPucker": "dd3601dd5984e708e58c0c12c72052041c280e4cf5980f164297ca29ec1f0231"
+        },
+        "meanEdgeLength": 0.003926266706358638,
+        "maxTopologyHops": 42,
+        "thresholds": {
+          "tauCoincide": 0.0004711520047630365,
+          "tauNear": 0.00416565218247634,
+          "tauGtLocal": 0.0624847827371451,
+          "minCoincidePairs": 10,
+          "minMeanNormalDot": 0.55,
+          "maxWholeCompBodyFrac": 0.35,
+          "maxPatchBodyFrac": 0.12,
+          "maxPatchHops": 3,
+          "topoFalloffExp": 1.15
+        },
+        "acceptedComponents": [
+          497,
+          1057
+        ],
+        "bodyFp": 0,
+        "expectNegRejected": true,
+        "patchSets": [
+          {
+            "componentId": 497,
+            "patchVertexCount": 55,
+            "patchVertsSha256": "ffe91a509c5bead3c179e3a3360ff3c4160f03d0c9675d175ebb630165474485",
+            "seamPairsSha256": "6d9d6f47f39f8e0ae8d726ba32ada9027271d57d0127118c23d4316e1b527b27"
+          },
+          {
+            "componentId": 1057,
+            "patchVertexCount": 409,
+            "patchVertsSha256": "2fc4b1f2f93eb60407f3f7cd0552e4809e5fe9535cef9b6fcc1a0a6c674f7c0e",
+            "seamPairsSha256": "251e6e05be9637948ba299dc1de434635547a0b94951cdc93ece55a529f24261"
+          }
+        ],
+        "secondaryBindingCount": 348,
+        "channelReports": [
+          {
+            "channel": "jawOpen",
+            "inputSha256": "937cfd081a2ceebb0ac6a27169941812a31592ee56b960a6cde3600070929dd6",
+            "outputSha256": "c4cdc3e3e782a7fac02d42abfc822de658945350d05433d04fd120d64a3764f3",
+            "morphSha256": "de9c58ec36fde2feef7702e807d208a5edefad875561ccc68b2ca668e9464b14",
+            "affected": 1244,
+            "coupledAccepted": [
+              497
+            ],
+            "surfaceGate": null
+          },
+          {
+            "channel": "eyeBlinkLeft",
+            "inputSha256": "c4cdc3e3e782a7fac02d42abfc822de658945350d05433d04fd120d64a3764f3",
+            "outputSha256": "1038c07e6c349f25e307e7082e989cd23524eb56861a437f4f0a35ecfb2c8b93",
+            "morphSha256": "439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e",
+            "affected": 579,
+            "coupledAccepted": null,
+            "surfaceGate": null
+          },
+          {
+            "channel": "eyeBlinkRight",
+            "inputSha256": "1038c07e6c349f25e307e7082e989cd23524eb56861a437f4f0a35ecfb2c8b93",
+            "outputSha256": "6504a8a00acded84406c770a5633d302fb4ee0067e0d99bc8603346a6c438235",
+            "morphSha256": "e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201",
+            "affected": 457,
+            "coupledAccepted": null,
+            "surfaceGate": null
+          },
+          {
+            "channel": "browInnerUp",
+            "inputSha256": "6504a8a00acded84406c770a5633d302fb4ee0067e0d99bc8603346a6c438235",
+            "outputSha256": "d4d20ce98706fd937c16f7ae0cb46809132333f78aa0f50abbeda8ef61978a0d",
+            "morphSha256": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+            "affected": 3474,
+            "coupledAccepted": null,
+            "surfaceGate": null
+          },
+          {
+            "channel": "mouthSmileLeft",
+            "inputSha256": "d4d20ce98706fd937c16f7ae0cb46809132333f78aa0f50abbeda8ef61978a0d",
+            "outputSha256": "ff90f37e9f3051966deca6b1df8bb8a73612b9cb61587bf32d4905809b406897",
+            "morphSha256": "d841962774c67e03c9be844b6a8038b7e20f76447338f39b9db74ead47e8fa37",
+            "affected": 335,
+            "coupledAccepted": null,
+            "surfaceGate": {
+              "allowedSurfaceVertexCount": 3267,
+              "meanEdgeLength": 0.003926266706358638,
+              "maxTopologyHops": 20,
+              "offSurfaceRejected": 40,
+              "offTopoRejected": 22
+            }
+          },
+          {
+            "channel": "mouthSmileRight",
+            "inputSha256": "ff90f37e9f3051966deca6b1df8bb8a73612b9cb61587bf32d4905809b406897",
+            "outputSha256": "15e55a6d73a61c8ff6261c6854b3f6ed537119863a5395f301ab5ea13b6752d7",
+            "morphSha256": "89fc0301710211c862cc7e76ec90ceccd5c505d9c45c3f7c72158ff6c9c8c144",
+            "affected": 385,
+            "coupledAccepted": null,
+            "surfaceGate": {
+              "allowedSurfaceVertexCount": 3267,
+              "meanEdgeLength": 0.003926266706358638,
+              "maxTopologyHops": 20,
+              "offSurfaceRejected": 59,
+              "offTopoRejected": 22
+            }
+          },
+          {
+            "channel": "mouthPucker",
+            "inputSha256": "15e55a6d73a61c8ff6261c6854b3f6ed537119863a5395f301ab5ea13b6752d7",
+            "outputSha256": "871e38a7327480277fc39e9394deccb3ffb84ffd0d1b25b4c7377b160f3267ee",
+            "morphSha256": "dd3601dd5984e708e58c0c12c72052041c280e4cf5980f164297ca29ec1f0231",
+            "affected": 697,
+            "coupledAccepted": null,
+            "surfaceGate": {
+              "allowedSurfaceVertexCount": 3267,
+              "meanEdgeLength": 0.003926266706358638,
+              "maxTopologyHops": 21,
+              "offSurfaceRejected": 102,
+              "offTopoRejected": 22
+            }
+          }
+        ]
+      },
+      "runB": {
+        "finalGlbSha256": "871e38a7327480277fc39e9394deccb3ffb84ffd0d1b25b4c7377b160f3267ee",
+        "morphHashes": {
+          "jawOpen": "de9c58ec36fde2feef7702e807d208a5edefad875561ccc68b2ca668e9464b14",
+          "eyeBlinkLeft": "439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e",
+          "eyeBlinkRight": "e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201",
+          "browInnerUp": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+          "mouthSmileLeft": "d841962774c67e03c9be844b6a8038b7e20f76447338f39b9db74ead47e8fa37",
+          "mouthSmileRight": "89fc0301710211c862cc7e76ec90ceccd5c505d9c45c3f7c72158ff6c9c8c144",
+          "mouthPucker": "dd3601dd5984e708e58c0c12c72052041c280e4cf5980f164297ca29ec1f0231"
+        }
+      },
+      "publishedGlbSha256": "f080391ae1b2e14abfafdafd8e77ff32ee4e2b28e7f03bf1d3eee816edbd9500"
+    }
+  }
+}

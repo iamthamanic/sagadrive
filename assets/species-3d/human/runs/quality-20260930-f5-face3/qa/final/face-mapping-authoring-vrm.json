@@ -6,10 +6,10 @@
   "reviewedAt": "2026-10-01T08:45:52.999Z",
   "asset": {
     "modelPath": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm",
-    "modelSha256": "20db033a14640401d0dbc9940c200fde90da043eacd5632d945474a00d7d8c00",
+    "modelSha256": "3d288739ce733732be9657d2d1aab6dce92bfa800e4cb67799e6ec72450aa8f3",
     "anchorsSha256": "89bbcd8b6ba49bbd0c0a8424127617316e406b3974863e06dfd2568129bd9f5e",
     "topologyFingerprint": "v147707:t214973:m1",
-    "cacheBust": "quality5-face3-coupled1"
+    "cacheBust": "quality5-face3-repro1"
   },
   "agentReviewLedgerRef": {
     "protocolVersion": "face-anchor-agent-review-v1",
@@ -20,5 +20,5 @@
     "aggregatedAt": "2026-10-01T08:45:52.999Z",
     "ledgerDir": "assets/species-3d/human/runs/quality-20260930-f5-face3/agent-review"
   },
-  "note": "Final #423 face3 Coupled-Shell publish candidate. Anchors agent_reviewed at Stage A; morph rewrite = GT surface + Option C seam-local coupled patch transfer."
+  "note": "Final #423 face3 current-HEAD reauthor publish. Anchors reviewed GT; morph rewrite = GT surface + Option C coupled jaw + smile/pucker surface gate."
 }

@@ -981,6 +981,10 @@ function rewriteMouthSmileMorph(document, anchors, contract) {
     eyeRightOuter: neutral.eyeRightOuter,
   };
 
+  const surface = buildGtBoundSurfaceGate(prim, anchors, contract.surfaceSeedAnchors);
+  const rMove = frame.faceHeight * contract.moveRadiusFaceH;
+  const maxHops = maxTopologyHopsForRadius(surface.meanEdgeLength, rMove * 1.35);
+
   const n = basePos.getCount();
   const arr = new Float32Array(n * 3);
   let affected = 0;
@@ -988,11 +992,25 @@ function rewriteMouthSmileMorph(document, anchors, contract) {
   let sumW = 0;
   let maxDisp = 0;
   let sumDisp = 0;
+  let offSurfaceRejected = 0;
+  let offTopoRejected = 0;
   const el = [0, 0, 0];
   for (let i = 0; i < n; i += 1) {
     basePos.getElement(i, el);
     const p = { x: el[0], y: el[1], z: el[2] };
-    const w = computeMouthSmileVertexWeight(p, refs, frame, contract);
+    const wEuclid = computeMouthSmileVertexWeight(p, refs, frame, contract);
+    if (wEuclid <= 1e-8) continue;
+    if (!surface.allowed[i]) {
+      offSurfaceRejected += 1;
+      continue;
+    }
+    const hops = surface.topoDist[i];
+    if (hops < 0 || hops > maxHops) {
+      offTopoRejected += 1;
+      continue;
+    }
+    const topoW = Math.max(0, 1 - hops / Math.max(1, maxHops)) ** 1.15;
+    const w = wEuclid * topoW;
     if (w <= 1e-8) continue;
     affected += 1;
     maxW = Math.max(maxW, w);
@@ -1049,6 +1067,13 @@ function rewriteMouthSmileMorph(document, anchors, contract) {
     cornerMotion,
     oppositeCornerUp: oppUp,
     upAdvantage: cornerUp - oppUp,
+    surfaceGate: {
+      allowedSurfaceVertexCount: surface.allowedCount,
+      meanEdgeLength: surface.meanEdgeLength,
+      maxTopologyHops: maxHops,
+      offSurfaceRejected,
+      offTopoRejected,
+    },
     displacements: {
       [contract.targetCorner]: disp(contract.targetCorner),
       [contract.oppositeCorner]: disp(contract.oppositeCorner),
@@ -1161,6 +1186,10 @@ function rewriteMouthPuckerMorph(document, anchors, contract = MOUTH_PUCKER_AUTH
     eyeRightOuter: neutral.eyeRightOuter,
   };
 
+  const surface = buildGtBoundSurfaceGate(prim, anchors, contract.surfaceSeedAnchors);
+  const rMove = frame.faceHeight * contract.moveRadiusFaceH;
+  const maxHops = maxTopologyHopsForRadius(surface.meanEdgeLength, rMove * 1.35);
+
   const n = basePos.getCount();
   const arr = new Float32Array(n * 3);
   let affected = 0;
@@ -1168,13 +1197,27 @@ function rewriteMouthPuckerMorph(document, anchors, contract = MOUTH_PUCKER_AUTH
   let sumW = 0;
   let maxDisp = 0;
   let sumDisp = 0;
+  let offSurfaceRejected = 0;
+  let offTopoRejected = 0;
   const el = [0, 0, 0];
   const halfW = Math.max(frame.mouthWidth0 * 0.45, 1e-6);
 
   for (let i = 0; i < n; i += 1) {
     basePos.getElement(i, el);
     const p = { x: el[0], y: el[1], z: el[2] };
-    const w = computeMouthPuckerVertexWeight(p, refs, frame, contract);
+    const wEuclid = computeMouthPuckerVertexWeight(p, refs, frame, contract);
+    if (wEuclid <= 1e-8) continue;
+    if (!surface.allowed[i]) {
+      offSurfaceRejected += 1;
+      continue;
+    }
+    const hops = surface.topoDist[i];
+    if (hops < 0 || hops > maxHops) {
+      offTopoRejected += 1;
+      continue;
+    }
+    const topoW = Math.max(0, 1 - hops / Math.max(1, maxHops)) ** 1.15;
+    const w = wEuclid * topoW;
     if (w <= 1e-8) continue;
 
     // Lateral: move toward midplane along face-left (inward for both corners).
@@ -1289,6 +1332,13 @@ function rewriteMouthPuckerMorph(document, anchors, contract = MOUTH_PUCKER_AUTH
     mouthWidth0: width0,
     mouthWidthPucker: widthP,
     widthRatio,
+    surfaceGate: {
+      allowedSurfaceVertexCount: surface.allowedCount,
+      meanEdgeLength: surface.meanEdgeLength,
+      maxTopologyHops: maxHops,
+      offSurfaceRejected,
+      offTopoRejected,
+    },
     faceHeight: frame.faceHeight,
     morphPositionSha256: hashMorphPositionArray(arr),
     leftCornerInward: leftInward,
