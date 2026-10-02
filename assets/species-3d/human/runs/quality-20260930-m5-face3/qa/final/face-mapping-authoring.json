@@ -1,0 +1,24 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "manual_override",
+  "reviewed": true,
+  "reviewStatus": "human_reviewed",
+  "reviewedAt": "2026-10-01T08:45:52.989Z",
+  "asset": {
+    "modelPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-final.glb",
+    "modelSha256": "ea483b38266b0afc09f109a625363b8b8f228b8bad92802a73e72926439f62a2",
+    "anchorsSha256": "2b7e9967aed0577bb3c628bfe1cc5272a7cc184f78b9cdf32793d9fb3b865a96",
+    "topologyFingerprint": "v133002:t215832:m1",
+    "cacheBust": "quality5-face3-repro1"
+  },
+  "agentReviewLedgerRef": {
+    "protocolVersion": "face-anchor-agent-review-v1",
+    "evidenceManifestSha256": "59b79f2b479b15f0ac38e1f4eea618efb336fd73ce04ef0e1c830a31e16a0834",
+    "requiredPasses": 5,
+    "completedPasses": 5,
+    "aggregationPass": true,
+    "aggregatedAt": "2026-10-01T08:45:52.989Z",
+    "ledgerDir": "assets/species-3d/human/runs/quality-20260930-m5-face3/agent-review"
+  },
+  "note": "Final #423 face3 current-HEAD reauthor publish. Anchors reviewed GT; morph rewrite = GT surface + Option C coupled jaw + smile/pucker surface gate."
+}

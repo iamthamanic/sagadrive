@@ -1,0 +1,55 @@
+{
+  "reviewedAnchorCount": 21,
+  "qtmeshMarkerCount": 13,
+  "qtmeshMarkers": [
+    "Nose tip",
+    "Chin",
+    "Right eye outer",
+    "Left eye outer",
+    "Right eye inner",
+    "Left eye inner",
+    "Right mouth corner",
+    "Left mouth corner",
+    "Upper lip",
+    "Lower lip",
+    "Right brow",
+    "Left brow",
+    "Forehead"
+  ],
+  "mappedToReviewed": [
+    "noseTip",
+    "chin",
+    "eyeRightOuter",
+    "eyeLeftOuter",
+    "eyeRightInner",
+    "eyeLeftInner",
+    "mouthCornerRight",
+    "mouthCornerLeft",
+    "mouthUpper",
+    "mouthLower",
+    "browRightCenter",
+    "browLeftCenter",
+    "forehead"
+  ],
+  "reviewedNotInQtMesh13": [
+    "eyeLeftUpper",
+    "eyeLeftLower",
+    "eyeRightUpper",
+    "eyeRightLower",
+    "browLeftInner",
+    "browLeftOuter",
+    "browRightInner",
+    "browRightOuter"
+  ],
+  "sagaDrivePassesAnchorsToFacerig": false,
+  "facerigArgvEvidence": [
+    "facerig",
+    "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive-wt-423/public/assets/avatars/species/human-male-quality-20260921-m5.glb",
+    "-o",
+    "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive-wt-423/assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3.glb",
+    "--json",
+    "--max-residual",
+    "12"
+  ],
+  "note": "Even for overlapping IDs, FaceRig uses its own detected/proportional marker positions — not barycentric bindings from face-anchors.json"
+}

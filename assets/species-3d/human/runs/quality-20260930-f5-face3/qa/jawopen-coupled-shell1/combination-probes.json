@@ -1,0 +1,41 @@
+{
+  "pass": true,
+  "results": {
+    "jaw+smileL": {
+      "pass": true,
+      "note": ""
+    },
+    "jaw+smileR": {
+      "pass": true,
+      "note": ""
+    },
+    "jaw+bothSmiles": {
+      "pass": true,
+      "note": ""
+    },
+    "jaw+pucker": {
+      "pass": true,
+      "note": ""
+    },
+    "jaw+blinks": {
+      "pass": true,
+      "note": ""
+    },
+    "jaw+brow": {
+      "pass": true,
+      "note": ""
+    },
+    "bothBlinks+brow": {
+      "pass": true,
+      "note": ""
+    },
+    "smiles+blinks": {
+      "pass": true,
+      "note": ""
+    },
+    "fullStress": {
+      "pass": true,
+      "note": ""
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "contractVersion": "SagaDrive423GtMorphSpikeV1",
+  "optionUnderTest": "B_base_plus_gt_aware_repair",
+  "note": "Temporary offline probe only. Not production. Additive repair on existing jawOpen using reviewed-anchor falloff neighborhoods.",
+  "requiredMouthGapDelta": 0.06,
+  "m5": {
+    "label": "m5",
+    "srcPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb",
+    "outPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/spike-gt-morph/m5-jawopen-prototype.glb",
+    "faceHeight": 0.35805755770756115,
+    "affectedVertices": 8923,
+    "maxWeight": 0.9129806732001032,
+    "amp": 0.04296690692490734,
+    "morphShaBefore": "1e6399f79df79a88",
+    "gapNeutral": 0.05884193341444211,
+    "gapDeltaBefore": -0.000486043954055812,
+    "gapDeltaAfter": 0.03975710468465766,
+    "meetsFunctionalFloor": false,
+    "upperDisp": 0.011137572599057743,
+    "lowerDisp": 0.0507883081119424,
+    "chinDisp": 0.041447855094402096,
+    "noseDispFaceH": 0.03443937124399427,
+    "foreheadDispFaceH": 0.015246449085340976,
+    "upperStable": true,
+    "requiredGap": 0.06
+  },
+  "f5": {
+    "label": "f5",
+    "gapDeltaBefore": -0.008627692309795178,
+    "gapDeltaAfter": 0.007749894478807327,
+    "meetsFunctionalFloor": false,
+    "upperDisp": 0.01561926830363633,
+    "lowerDisp": 0.023694565324946598,
+    "upperStable": false,
+    "affectedVertices": 4889,
+    "faceHeight": 0.34713768187302835,
+    "outPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/spike-gt-morph/f5-jawopen-prototype.glb"
+  },
+  "feasibility": {
+    "jawOpenMouthGapPositive": true,
+    "meetsQaFloorBoth": false,
+    "upperLipMoreStableThanLower": false,
+    "noHardcodedVertexIds": true,
+    "portableM5toF5": true
+  }
+}

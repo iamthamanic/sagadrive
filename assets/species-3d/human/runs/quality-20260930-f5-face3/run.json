@@ -1,0 +1,182 @@
+{
+  "runId": "quality-20260930-f5-face3",
+  "createdAt": "2026-10-01T10:47:08.229Z",
+  "faceAuthoringProvider": "qtmesh-facerig",
+  "qtmesh": {
+    "repository": "fernandotonon/QtMeshEditor",
+    "commit": "8720dc91bd7426908b9218673fbd74d544dd908c",
+    "license": "MIT",
+    "bin": ".cache/sagadrive-tools/qtmesh/bin/qtmesh",
+    "binSource": "cache",
+    "install": {
+      "tool": "qtmesh",
+      "repository": "fernandotonon/QtMeshEditor",
+      "pinnedCommit": "8720dc91bd7426908b9218673fbd74d544dd908c",
+      "pinnedCommitNote": "native mesh.extras.targetNames (fix #1045)",
+      "binaryRelease": "3.41.1",
+      "binaryReleaseNote": "includes FaceRig surface-orientation resample #1066 + lipsync multi-submesh morph fix",
+      "license": "MIT",
+      "faceTemplate": {
+        "provider": "ICT-FaceKit",
+        "license": "MIT"
+      },
+      "platform": "Darwin/arm64",
+      "installedAt": "2026-10-01T09:27:00Z",
+      "bootstrapNote": "INSTALL written after smoke-test false-negative (SIGPIPE+pipefail on grep -q); facerig verified manually"
+    }
+  },
+  "faceTemplate": {
+    "provider": "ICT-FaceKit",
+    "license": "MIT",
+    "checksum": "f84b22e895dd1edafaf4b93165597b7e51c644fb8a27bbc121df9b84b8e74f4d"
+  },
+  "input": {
+    "path": "public/assets/avatars/species/human-female-quality-20260921-f5.glb",
+    "checksum": "ca1d79b37c94d0aa3acab339afee3c36ed6af781fc7bca3a2a22b2a9e8071c8d",
+    "bytes": 90360696
+  },
+  "output": {
+    "path": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3.glb",
+    "checksum": "6cae825f18e5bbfb8b02ea1bef1a4ec9352e06e4ab08eb1c6c1085f2c8291cca",
+    "bytes": 112038664
+  },
+  "faceRig": {
+    "shapeCount": 51,
+    "fitResidual": null,
+    "gazeMode": "morphs",
+    "coreProfile": "core-v1",
+    "fullProfile": "measured",
+    "targetNamesSample": [
+      "browDownLeft",
+      "browDownRight",
+      "browInnerUp",
+      "browOuterUpLeft",
+      "browOuterUpRight",
+      "cheekPuff",
+      "cheekSquintLeft",
+      "cheekSquintRight",
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
+      "eyeLookDownLeft",
+      "eyeLookDownRight"
+    ],
+    "canonicalize": {
+      "textureCount": 4,
+      "morphCount": 51,
+      "ibmCellsFixed": 2,
+      "sparseMorphTargets": 51
+    }
+  },
+  "validation": {
+    "khronos": {
+      "pass": true,
+      "numErrors": 0,
+      "numWarnings": 4
+    },
+    "sagaDrive": {
+      "pass": true,
+      "errors": [],
+      "missingRequired": [],
+      "emptyMorphs": [],
+      "preservationErrors": []
+    },
+    "ok": true,
+    "profile": "core-v1",
+    "inventoryPath": "face-inventory.json",
+    "qtmeshReportPath": "qtmesh-report.json",
+    "functionalQa": {
+      "pass": false,
+      "blockedPublish": true,
+      "note": "Stage B STOP: Functional FAIL; QtMesh reauthor identical morphs"
+    }
+  },
+  "beforeAfter": {
+    "bytes": {
+      "before": 90360696,
+      "after": 112038664
+    },
+    "triangles": {
+      "before": 214973,
+      "after": 214973
+    },
+    "morphs": {
+      "before": 0,
+      "after": 51
+    },
+    "skins": {
+      "before": 1,
+      "after": 1
+    },
+    "bones": {
+      "before": 24,
+      "after": 24
+    },
+    "materials": {
+      "before": 1,
+      "after": 1
+    },
+    "textures": {
+      "before": 4,
+      "after": 4
+    }
+  },
+  "stageB": {
+    "status": "stopped_functional_fail",
+    "publishAllowed": false,
+    "reauthoringRequired": true,
+    "reauthoringPerformed": true,
+    "morphIdenticalToPublicFace1": true,
+    "initialFunctionalQaPass": false,
+    "evidence": {
+      "diagnosis": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/functional-qa-diagnosis.json",
+      "initialValidate": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/face-asset-validate.json",
+      "carryForward": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/gt-carry-forward-invariant.json",
+      "anchorMorphCoverage": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/anchor-morph-coverage.json",
+      "stop": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/stage-b-stop.json",
+      "qtmeshLog": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/qtmesh-reauthor.log"
+    },
+    "reauthorOutput": {
+      "path": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3.glb",
+      "sha256": "6cae825f18e5bbfb8b02ea1bef1a4ec9352e06e4ab08eb1c6c1085f2c8291cca",
+      "bytes": 112038664,
+      "gitPolicy": "not committed — morphs byte-identical to public face1; oversized duplicate"
+    }
+  },
+  "finalPublishAttempt": {
+    "at": "2026-10-01T18:41:53.570Z",
+    "ticket": "#423",
+    "outcome": "BLOCKED_VISUAL_SANITY_FAIL",
+    "resolverUpdated": false,
+    "publicAssetsPublished": false,
+    "evidence": "qa/final/visual-sanity-verdict.json",
+    "note": "Superseded: Coupled-Shell Option C fixed visual; final publish completed.",
+    "supersededBy": "finalPublish"
+  },
+  "finalPublish": {
+    "at": "2026-10-02T03:01:26.338Z",
+    "ticket": "#423",
+    "candidateGlb": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-final.glb",
+    "candidateSha256": "871e38a7327480277fc39e9394deccb3ffb84ffd0d1b25b4c7377b160f3267ee",
+    "publicGlb": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.glb",
+    "publicVrm": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm",
+    "publicGlbSha256": "871e38a7327480277fc39e9394deccb3ffb84ffd0d1b25b4c7377b160f3267ee",
+    "publicVrmSha256": "3d288739ce733732be9657d2d1aab6dce92bfa800e4cb67799e6ec72450aa8f3",
+    "topologyFingerprint": "v147707:t214973:m1",
+    "cacheBust": "quality5-face3-repro1",
+    "functionalPass": true,
+    "combinationPass": true,
+    "morphRegression": {
+      "changed": [
+        "browInnerUp",
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "jawOpen",
+        "mouthPucker",
+        "mouthSmileLeft",
+        "mouthSmileRight"
+      ],
+      "rest44Identical": true
+    },
+    "gazeMode": "morphs"
+  }
+}

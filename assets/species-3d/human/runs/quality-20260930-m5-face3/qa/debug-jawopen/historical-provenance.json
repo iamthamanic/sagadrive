@@ -1,0 +1,31 @@
+{
+  "face1": {
+    "runId": "quality-20260921-m5-face1",
+    "input": {
+      "path": "public/assets/avatars/species/human-male-quality-20260921-m5.glb",
+      "checksum": "42a511f272e7a25e6cde980e33f0b1faf20dcc03607191422425e4bae88f0b1f",
+      "bytes": 86172992
+    },
+    "output": {
+      "path": "assets/species-3d/human/runs/quality-20260921-m5-face1/human-male-quality-20260921-m5-face1.glb",
+      "checksum": "53d7be5c5eba0862597e0142c527494fc1a5ad0175d8ce6f30af331172221aab",
+      "bytes": 100195628
+    },
+    "markerPath": "QTMESH_FACERIG_MARKER_SIM=2",
+    "authoringPath": "marker-sim-2-proportional-defaults",
+    "fitResidual": 0.9189788049869712
+  },
+  "face2": {
+    "runId": "quality-20260921-m5-face2",
+    "publishNote": "face2 anatomic anchors + VRM dual-blink; GLB morphs unchanged from face1.",
+    "outputPointsAtFace1": "assets/species-3d/human/runs/quality-20260921-m5-face1/human-male-quality-20260921-m5-face1.glb",
+    "morphUnchangedClaim": true
+  },
+  "face3": {
+    "runId": "quality-20260930-m5-face3",
+    "outputSha256": "53d7be5c5eba0862597e0142c527494fc1a5ad0175d8ce6f30af331172221aab",
+    "equalsFace1RunOutputChecksum": true,
+    "jawOpenMorphShaEqualsPublicFace1": true
+  },
+  "conclusion": "No historical run produced different jawOpen POSITION buffers for m5. face1 created morphs via QtMesh MARKER_SIM=2; face2 only re-shipped anchors/VRM; face3 regenerates byte-identical morphs (and file-identical to face1 run output). The QtMesh FaceRig path is a deterministic morph generator, not a functional morph repair path relative to reviewed GT."
+}

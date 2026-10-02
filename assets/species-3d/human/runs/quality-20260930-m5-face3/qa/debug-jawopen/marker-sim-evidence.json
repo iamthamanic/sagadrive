@@ -1,0 +1,29 @@
+{
+  "envVar": "QTMESH_FACERIG_MARKER_SIM",
+  "valueUsedInAuthoring": "2",
+  "wiredIn": "scripts/lib/liveact-face-authoring-qtmesh.mjs runQtmeshFaceAuthoring env default \"2\"",
+  "binaryStringsPresent": [
+    "QTMESH_FACERIG_MARKER_SIM",
+    "using proportional defaults",
+    "seedConfident=",
+    "Error: marker-sim attach failed",
+    "Error: marker-sim fit failed",
+    "shapes_attached"
+  ],
+  "runtimeLogEvidence": {
+    "pathPrefix": "[sim]",
+    "markers": 13,
+    "seedLine": "[facerig] seed: ulm.ok=1 conf=0.97 13/13 detected, constellation residual 0.241 -> using proportional defaults",
+    "seedConfident": 0,
+    "shapesAttached": 51,
+    "jawOpenInSim": {
+      "nonZero": 46887,
+      "maxDisp": 0.0278057
+    }
+  },
+  "conclusion": [
+    "MARKER_SIM is NOT a dry-run/no-op: it attaches 51 real morph shapes (shapes_attached=51) and writes jawOpen deltas.",
+    "It IS a marker-simulation / marker-sim path that drives FaceRig from 13 ICT-style markers (detected or proportional defaults), not from SagaDrive reviewed 21-anchor JSON.",
+    "When MediaPipe constellation residual is too high (m5: 0.241), FaceRig falls back to proportional defaults (seedConfident=0) — still produces morphs, but from default landmark layout."
+  ]
+}

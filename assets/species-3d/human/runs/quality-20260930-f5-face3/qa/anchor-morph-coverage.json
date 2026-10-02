@@ -1,0 +1,208 @@
+{
+  "jawOpen": {
+    "targetIndex": 24,
+    "anchors": {
+      "mouthUpper": {
+        "vertDisp": [
+          0.015201288841493951,
+          0.01561926830363633,
+          0.0063694623440960245
+        ],
+        "max": 0.01561926830363633,
+        "any": true
+      },
+      "mouthLower": {
+        "vertDisp": [
+          0.005546410980040095,
+          0.008385117937006734,
+          0.004295210497022155
+        ],
+        "max": 0.008385117937006734,
+        "any": true
+      },
+      "chin": {
+        "vertDisp": [
+          0,
+          0,
+          0
+        ],
+        "max": 0,
+        "any": false
+      }
+    },
+    "anyAnchorMoved": true
+  },
+  "eyeBlinkLeft": {
+    "targetIndex": 8,
+    "anchors": {
+      "eyeLeftUpper": {
+        "vertDisp": [
+          0.0010118640384050015,
+          0,
+          0
+        ],
+        "max": 0.0010118640384050015,
+        "any": true
+      },
+      "eyeLeftLower": {
+        "vertDisp": [
+          0,
+          0,
+          0
+        ],
+        "max": 0,
+        "any": false
+      },
+      "eyeLeftInner": {
+        "vertDisp": [
+          0,
+          0,
+          0
+        ],
+        "max": 0,
+        "any": false
+      },
+      "eyeLeftOuter": {
+        "vertDisp": [
+          0,
+          0,
+          0
+        ],
+        "max": 0,
+        "any": false
+      }
+    },
+    "anyAnchorMoved": true
+  },
+  "eyeBlinkRight": {
+    "targetIndex": 9,
+    "anchors": {
+      "eyeRightUpper": {
+        "vertDisp": [
+          0,
+          0.001000404577229274,
+          0
+        ],
+        "max": 0.001000404577229274,
+        "any": true
+      },
+      "eyeRightLower": {
+        "vertDisp": [
+          0,
+          0,
+          0
+        ],
+        "max": 0,
+        "any": false
+      },
+      "eyeRightInner": {
+        "vertDisp": [
+          0,
+          0,
+          0
+        ],
+        "max": 0,
+        "any": false
+      },
+      "eyeRightOuter": {
+        "vertDisp": [
+          0,
+          0,
+          0
+        ],
+        "max": 0,
+        "any": false
+      }
+    },
+    "anyAnchorMoved": true
+  },
+  "browInnerUp": {
+    "targetIndex": 2,
+    "anchors": {
+      "browInnerLeft": "anchor_missing",
+      "browInnerRight": "anchor_missing",
+      "forehead": {
+        "vertDisp": [
+          0,
+          0,
+          0
+        ],
+        "max": 0,
+        "any": false
+      }
+    },
+    "anyAnchorMoved": false
+  },
+  "mouthSmileLeft": {
+    "targetIndex": 43,
+    "anchors": {
+      "mouthCornerLeft": {
+        "vertDisp": [
+          0.002995761214228873,
+          0.002984029192924367,
+          0.0030544554750083297
+        ],
+        "max": 0.0030544554750083297,
+        "any": true
+      }
+    },
+    "anyAnchorMoved": true
+  },
+  "mouthSmileRight": {
+    "targetIndex": 44,
+    "anchors": {
+      "mouthCornerRight": {
+        "vertDisp": [
+          0.0038325923501557587,
+          0.003973063326659148,
+          0.0034839586765476336
+        ],
+        "max": 0.003973063326659148,
+        "any": true
+      }
+    },
+    "anyAnchorMoved": true
+  },
+  "mouthPucker": {
+    "targetIndex": 37,
+    "anchors": {
+      "mouthCornerLeft": {
+        "vertDisp": [
+          0.002990680725067651,
+          0.0029526350690241682,
+          0.002851164304932255
+        ],
+        "max": 0.002990680725067651,
+        "any": true
+      },
+      "mouthCornerRight": {
+        "vertDisp": [
+          0.007240503102720905,
+          0.007326424957027446,
+          0.0030285784915797718
+        ],
+        "max": 0.007326424957027446,
+        "any": true
+      },
+      "mouthUpper": {
+        "vertDisp": [
+          0.004524747434428172,
+          0.004489738418779472,
+          0.00836082586855044
+        ],
+        "max": 0.00836082586855044,
+        "any": true
+      },
+      "mouthLower": {
+        "vertDisp": [
+          0.0027707617073380853,
+          0.006636731035283756,
+          0.0026742321643979843
+        ],
+        "max": 0.006636731035283756,
+        "any": true
+      }
+    },
+    "anyAnchorMoved": true
+  }
+}

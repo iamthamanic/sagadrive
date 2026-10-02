@@ -1,0 +1,51 @@
+{
+  "vsSmile1": {
+    "changed": [
+      "mouthPucker"
+    ],
+    "onlyPucker": true
+  },
+  "vsFace1": {
+    "changed": [
+      "browInnerUp",
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
+      "jawOpen",
+      "mouthPucker",
+      "mouthSmileLeft",
+      "mouthSmileRight"
+    ],
+    "count": 7,
+    "rest44Identical": true
+  },
+  "hashes": {
+    "jawOpen": {
+      "same": true,
+      "hash": "28d455fde18cf236474b440d70a9f1d6ddff77502c6a0490abe9da137c6eb542"
+    },
+    "eyeBlinkLeft": {
+      "same": true,
+      "hash": "49a4150169ad4a08ffa7c55c5c68af7d5ea7a3483dd1a6391d11cd44b520fe75"
+    },
+    "eyeBlinkRight": {
+      "same": true,
+      "hash": "c02cb005803f9a30ce5cab86640d8eae8b9413290dc1635867337c22fb0c4b5f"
+    },
+    "browInnerUp": {
+      "same": true,
+      "hash": "52f808420a23bb011de7fdd4251baf7258df3e56d03c7d2d29c0325badd5303f"
+    },
+    "mouthSmileLeft": {
+      "same": true,
+      "hash": "6df06ad3b3a13b14a591a6156a47a5a5776445f5294f4a1e8ff0b2631c944479"
+    },
+    "mouthSmileRight": {
+      "same": true,
+      "hash": "7e0132a6769368b04c66efef9198285ddd087cb6c7d6c01509e0abae790164be"
+    }
+  },
+  "mouthPucker": {
+    "before": "cdd2f04e4786e19f31391937a711a5c11e4935cb33877070eb54baad3b8f4d85",
+    "after": "e3e542a02d4cd32bd321acf9da0f26beaf6f84235260b2016a4d66324757495c"
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "id": "m5",
+  "inputBrow1Sha": "c555672ba322ddf8a92e070191885bb182dcafcc93fe4d8df43709207509c96d",
+  "outputSmile1Sha": "cf79bbf1bf28e20d2668f16e54211fcf20606056d3a6e4593e073b8d02760586",
+  "topology": "v133002:t215832:m1",
+  "beforeSmileL": {
+    "pass": false,
+    "poseWeight": 1,
+    "neutralMetrics": {},
+    "posedMetrics": {
+      "cornerUp": 0.02274503,
+      "cornerOut": 0.01304387,
+      "cornerMotion": 0.02854948
+    },
+    "deltas": {
+      "cornerUp": 0.02274503,
+      "cornerOut": 0.01304387,
+      "cornerMotion": 0.02854948,
+      "oppositeCornerUp": 0,
+      "upAdvantage": 0.02274503
+    },
+    "thresholds": {
+      "minCornerUp": 0.025,
+      "minCornerMotion": 0.03,
+      "minUpAdvantageOverOpposite": 0.015
+    },
+    "violations": [
+      "mouthSmileLeft_corner_motion_below",
+      "mouthSmileLeft_corner_up_below"
+    ]
+  },
+  "beforeSmileR": {
+    "pass": false,
+    "poseWeight": 1,
+    "neutralMetrics": {},
+    "posedMetrics": {
+      "cornerUp": 0.02072441,
+      "cornerOut": 0.02384192,
+      "cornerMotion": 0.03160747
+    },
+    "deltas": {
+      "cornerUp": 0.02072441,
+      "cornerOut": 0.02384192,
+      "cornerMotion": 0.03160747,
+      "oppositeCornerUp": -0.01395869,
+      "upAdvantage": 0.03468309
+    },
+    "thresholds": {
+      "minCornerUp": 0.025,
+      "minCornerMotion": 0.03,
+      "minUpAdvantageOverOpposite": 0.015
+    },
+    "violations": [
+      "mouthSmileRight_corner_up_below"
+    ]
+  },
+  "smileLPass": true,
+  "smileRPass": true,
+  "jawPass": true,
+  "blinkLPass": true,
+  "blinkRPass": true,
+  "browPass": true,
+  "puckerPass": false,
+  "smileL": {
+    "cornerUp": 0.0788597682363461,
+    "cornerMotion": 0.08999999697846046,
+    "upAdvantage": 0.0788597682363461,
+    "oppositeCornerUp": 0,
+    "affected": 2717,
+    "displacements": {
+      "mouthCornerLeft": 0.00664625008092579,
+      "mouthCornerRight": 0,
+      "mouthUpper": 0,
+      "mouthLower": 0,
+      "chin": 0,
+      "noseTip": 0,
+      "forehead": 0,
+      "browLeftInner": 0,
+      "browRightInner": 0
+    },
+    "morphHash": "6df06ad3b3a13b14a591a6156a47a5a5776445f5294f4a1e8ff0b2631c944479",
+    "deltas": {
+      "cornerUp": 0.07885977,
+      "cornerOut": 0.04337473,
+      "cornerMotion": 0.09,
+      "oppositeCornerUp": 0,
+      "upAdvantage": 0.07885977
+    }
+  },
+  "smileR": {
+    "cornerUp": 0.07885909232502654,
+    "cornerMotion": 0.09000000043876713,
+    "upAdvantage": 0.07885909232502654,
+    "oppositeCornerUp": 0,
+    "affected": 2662,
+    "displacements": {
+      "mouthCornerRight": 0.006646250336459837,
+      "mouthCornerLeft": 0,
+      "mouthUpper": 0,
+      "mouthLower": 0.0006748404956858884,
+      "chin": 0,
+      "noseTip": 0,
+      "forehead": 0,
+      "browLeftInner": 0,
+      "browRightInner": 0
+    },
+    "morphHash": "7e0132a6769368b04c66efef9198285ddd087cb6c7d6c01509e0abae790164be",
+    "rerunHash": "7e0132a6769368b04c66efef9198285ddd087cb6c7d6c01509e0abae790164be",
+    "deltas": {
+      "cornerUp": 0.07885909,
+      "cornerOut": 0.04337065,
+      "cornerMotion": 0.09,
+      "oppositeCornerUp": 0,
+      "upAdvantage": 0.07885909
+    }
+  },
+  "regression": {
+    "jawSame": true,
+    "blinkLSame": true,
+    "blinkRSame": true,
+    "browSame": true,
+    "changedVsBrow1": [
+      "mouthSmileLeft",
+      "mouthSmileRight"
+    ],
+    "changedVsFace1Count": 6,
+    "changedVsFace1": [
+      "browInnerUp",
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
+      "jawOpen",
+      "mouthSmileLeft",
+      "mouthSmileRight"
+    ]
+  },
+  "structuralPass": true,
+  "semanticPass": true,
+  "anatomyPass": true,
+  "gtCarry": true,
+  "overallFunctional": false
+}

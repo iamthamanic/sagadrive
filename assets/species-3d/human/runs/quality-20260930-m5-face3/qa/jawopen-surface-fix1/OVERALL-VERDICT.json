@@ -1,0 +1,19 @@
+{
+  "verdict": "#423 STILL BLOCKED \u2014 m5 jawOpen residual beard/neck silhouette spike at multi-component interface (mouthLower GT seed ~4mm from off-surface shell; neck/chest pixel-delta=0; not off-surface leakage)",
+  "improved": [
+    "GT-bound triangle \u2192 connected component \u2192 topology hops \u2192 Euclidean falloff (joint allowlist NOT primary)",
+    "Disconnected chin/Spine01/neck shells: jawOpen delta=0 (m5 v65904=0; f5 Spine01 outliers=0)",
+    "Normalized amp = min(faceH*ampFaceH, mouthW*ampMouthWidth, neutralGap*ampNeutralGap) \u2014 shared m5/f5",
+    "m5 mouthGap\u0394 0.914\u21920.150; f5 1.148\u21920.123 (Functional PASS)",
+    "blink L/R surface-gated; visual blink panels anatomically plausible (no severe lid pinch)",
+    "Frozen brow/smiles/pucker unchanged; only jaw+blinks change vs final; combination finite PASS"
+  ],
+  "remaining": [
+    "m5 jawOpen at weight 1 still shows under-beard silhouette discontinuity vs frozen neck shell (~4mm spatial interleave with mouthLower seed). Fixing this without reintroducing neck leakage or joint allowlist requires a separate RCA (component-interface soft tissue / remesh), not further Euclidean leakage."
+  ],
+  "amplitude": {
+    "surfaceFixAloneSufficient": false,
+    "formula": "amp = min(faceH*0.12, mouthWidth*0.16, neutralMouthGap*0.22)",
+    "assetBranches": false
+  }
+}

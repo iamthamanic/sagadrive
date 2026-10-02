@@ -34,11 +34,11 @@ check(/resolveSpeciesTemplateModelUrl/.test(domain), 'resolver export');
 check(/SPECIES_TEMPLATE_MODEL_PUBLIC_BASE/.test(domain), 'public base constant');
 check(/diverse/.test(domain), 'diverse fails closed');
 check(
-  /human-male-quality-20260921-m5-face1\.vrm/.test(domain) &&
-    /human-female-quality-20260921-f5-face1\.vrm/.test(domain),
-  'human gender paths m5-face1/f5-face1 VRM primary',
+  /human-male-quality-20260921-m5-face3\.vrm/.test(domain) &&
+    /human-female-quality-20260921-f5-face3\.vrm/.test(domain),
+  'human gender paths m5-face3/f5-face3 VRM primary',
 );
-check(!/\.glb\?v=quality5-face2-vrm2/.test(domain), 'primary resolver is not GLB');
+check(!/\.glb\?v=quality5-face3-repro1/.test(domain), 'primary resolver is not GLB');
 check(!/HUMAN_MALE_PREVIEW_VERSIONS/.test(domain), 'no male version picker catalog');
 check(!/quality-m4|quality-m3|softreal2\.glb/.test(domain), 'no rollback paths in domain');
 check(/resolveSpeciesTemplateModelUrl/.test(barrel), 'barrel exports resolver');
@@ -48,32 +48,32 @@ check(/importedModelUrl \?\? templatePreviewUrl/.test(hook), 'import wins over t
 check(/genderReading,/.test(editor), 'editor passes genderReading');
 
 check(
-  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm')),
-  'public human-male quality m5-face1 VRM exists',
+  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face3.vrm')),
+  'public human-male quality m5-face3 VRM exists',
 );
 check(
-  existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm')),
-  'public human-female quality f5-face1 VRM exists',
-);
-check(
-  existsSync(
-    join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face1-face-anchors.json'),
-  ),
-  'public m5 face-anchors sidecar',
+  existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm')),
+  'public human-female quality f5-face3 VRM exists',
 );
 check(
   existsSync(
-    join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face1-face-anchors.json'),
+    join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face3-face-anchors.json'),
   ),
-  'public f5 face-anchors sidecar',
+  'public m5-face3 face-anchors sidecar',
 );
 check(
-  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb')),
-  'public human-male quality m5-face1 GLB fallback retained',
+  existsSync(
+    join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face3-face-anchors.json'),
+  ),
+  'public f5-face3 face-anchors sidecar',
 );
 check(
-  existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb')),
-  'public human-female quality f5-face1 GLB fallback retained',
+  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face3.glb')),
+  'public human-male quality m5-face3 GLB published',
+);
+check(
+  existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face3.glb')),
+  'public human-female quality f5-face3 GLB published',
 );
 check(
   existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5.glb')),
@@ -98,9 +98,9 @@ check(/VRMLoaderPlugin/.test(studio), 'studio uses existing VRMLoaderPlugin');
 
 const MESH = {
   'masculine-read':
-    '/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm?v=quality5-face2-vrm2',
+    '/assets/avatars/species/human-male-quality-20260921-m5-face3.vrm?v=quality5-face3-repro1',
   'feminine-read':
-    '/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm?v=quality5-face2-vrm2',
+    '/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm?v=quality5-face3-repro1',
 };
 function resolveReplica(speciesId, genderReading) {
   if (!speciesId) return undefined;
@@ -114,11 +114,11 @@ function resolveReplica(speciesId, genderReading) {
   return path;
 }
 check(
-  resolveReplica('human', 'masculine-read')?.includes('human-male-quality-20260921-m5-face1.vrm'),
+  resolveReplica('human', 'masculine-read')?.includes('human-male-quality-20260921-m5-face3.vrm'),
   'male VRM path',
 );
 check(
-  resolveReplica('human', 'feminine-read')?.includes('human-female-quality-20260921-f5-face1.vrm'),
+  resolveReplica('human', 'feminine-read')?.includes('human-female-quality-20260921-f5-face3.vrm'),
   'female VRM path',
 );
 check(resolveReplica('human', 'masculine-read')?.includes('?v='), 'cache-bust query preserved');

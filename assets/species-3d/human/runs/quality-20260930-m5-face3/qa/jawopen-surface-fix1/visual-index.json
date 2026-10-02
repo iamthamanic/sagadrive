@@ -1,0 +1,30 @@
+{
+  "files": {
+    "neutral": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-neutral.jpg",
+    "jawOpen": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-jawOpen.jpg",
+    "jaw025": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-jaw025.jpg",
+    "jaw050": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-jaw050.jpg",
+    "jaw075": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-jaw075.jpg",
+    "blinkLeft": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-blinkLeft.jpg",
+    "blinkRight": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-blinkRight.jpg",
+    "bothBlinks": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-bothBlinks.jpg",
+    "brow": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-brow.jpg",
+    "smileL": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-smileL.jpg",
+    "smileR": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-smileR.jpg",
+    "pucker": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/jawopen-surface-fix1/visual/m5-pucker.jpg"
+  },
+  "poses": [
+    "neutral",
+    "jawOpen",
+    "jaw025",
+    "jaw050",
+    "jaw075",
+    "blinkLeft",
+    "blinkRight",
+    "bothBlinks",
+    "brow",
+    "smileL",
+    "smileR",
+    "pucker"
+  ]
+}

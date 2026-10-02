@@ -1,0 +1,157 @@
+{
+  "contractVersion": "SagaDriveLiveActFaceFunctionalQaDiagnosisV1",
+  "assetId": "f5",
+  "candidateGlb": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb",
+  "modelSha256Prefix": "a003a7ac",
+  "topologyFingerprint": "v147707:t214973:m1",
+  "historicalNote": "face2 ledger: GLB morphs unchanged from face1 — morph deltas never functionally validated",
+  "functionalQaPass": false,
+  "violations": [
+    "browInnerUp:browInnerUp_mean_lift_below",
+    "eyeBlinkLeft:eyeBlinkLeft_open_drop_below",
+    "eyeBlinkLeft:eyeBlinkLeft_open_ratio_above",
+    "eyeBlinkRight:eyeBlinkRight_open_drop_below",
+    "eyeBlinkRight:eyeBlinkRight_open_ratio_above",
+    "jawOpen:jawOpen_forehead_leakage",
+    "jawOpen:jawOpen_mouth_gap_delta_below",
+    "jawOpen:jawOpen_nose_leakage",
+    "mouthPucker:mouthPucker_width_ratio_above",
+    "mouthSmileLeft:mouthSmileLeft_corner_up_below",
+    "mouthSmileRight:mouthSmileRight_corner_up_below"
+  ],
+  "channels": {
+    "jawOpen": {
+      "pass": false,
+      "violations": [
+        "jawOpen_forehead_leakage",
+        "jawOpen_mouth_gap_delta_below",
+        "jawOpen_nose_leakage"
+      ],
+      "deltas": {
+        "mouthGap": -0.18896196,
+        "noseTipDispFaceH": 0.06506866,
+        "foreheadDispFaceH": 0.03373371
+      },
+      "thresholds": {
+        "minMouthGapDelta": 0.06,
+        "maxNoseTipDispFaceH": 0.04,
+        "maxForeheadDispFaceH": 0.025
+      },
+      "morphPresent": null
+    },
+    "eyeBlinkLeft": {
+      "pass": false,
+      "violations": [
+        "eyeBlinkLeft_open_drop_below",
+        "eyeBlinkLeft_open_ratio_above"
+      ],
+      "deltas": {
+        "openDrop": 0,
+        "openRatio": 1,
+        "oppositeRelChange": 0
+      },
+      "thresholds": {
+        "maxOpenRatio": 0.65,
+        "minOpenDrop": 0.05,
+        "maxOppositeRelChange": 0.2
+      },
+      "morphPresent": null
+    },
+    "eyeBlinkRight": {
+      "pass": false,
+      "violations": [
+        "eyeBlinkRight_open_drop_below",
+        "eyeBlinkRight_open_ratio_above"
+      ],
+      "deltas": {
+        "openDrop": 0,
+        "openRatio": 1,
+        "oppositeRelChange": 0
+      },
+      "thresholds": {
+        "maxOpenRatio": 0.65,
+        "minOpenDrop": 0.05,
+        "maxOppositeRelChange": 0.2
+      },
+      "morphPresent": null
+    },
+    "browInnerUp": {
+      "pass": false,
+      "violations": [
+        "browInnerUp_mean_lift_below"
+      ],
+      "deltas": {
+        "browInnerLiftL": 0,
+        "browInnerLiftR": 0,
+        "meanLiftDelta": 0
+      },
+      "thresholds": {
+        "minMeanLiftDelta": 0.03,
+        "maxDownwardPerSide": 0.01
+      },
+      "morphPresent": null
+    },
+    "mouthSmileLeft": {
+      "pass": false,
+      "violations": [
+        "mouthSmileLeft_corner_up_below"
+      ],
+      "deltas": {
+        "cornerUp": -0.01500293,
+        "cornerOut": 0.01336838,
+        "cornerMotion": 0.0554342,
+        "oppositeCornerUp": -0.03606305,
+        "upAdvantage": 0.02106012
+      },
+      "thresholds": {
+        "minCornerUp": 0.025,
+        "minCornerMotion": 0.03,
+        "minUpAdvantageOverOpposite": 0.015
+      },
+      "morphPresent": null
+    },
+    "mouthSmileRight": {
+      "pass": false,
+      "violations": [
+        "mouthSmileRight_corner_up_below"
+      ],
+      "deltas": {
+        "cornerUp": -0.02873663,
+        "cornerOut": 0.00001415,
+        "cornerMotion": 0.06472137,
+        "oppositeCornerUp": -0.04891855,
+        "upAdvantage": 0.02018193
+      },
+      "thresholds": {
+        "minCornerUp": 0.025,
+        "minCornerMotion": 0.03,
+        "minUpAdvantageOverOpposite": 0.015
+      },
+      "morphPresent": null
+    },
+    "mouthPucker": {
+      "pass": false,
+      "violations": [
+        "mouthPucker_width_ratio_above"
+      ],
+      "deltas": {
+        "mouthWidthRatio": 0.99841796,
+        "mouthGap": 0.02462862,
+        "forwardProtrusion": 0.04313678
+      },
+      "thresholds": {
+        "maxMouthWidthRatio": 0.92
+      },
+      "morphPresent": null
+    }
+  },
+  "rootCauseHypothesis": [
+    "eyeBlink L/R: openDrop=0 openRatio=1 → lid anchors receive zero morph displacement (morph missing effect on eye region or wrong target)",
+    "browInnerUp: meanLiftDelta=0 → brow anchors unmoved",
+    "jawOpen: mouthGap negative (−0.189) + nose/forehead leakage — whole-face translation instead of jaw open",
+    "smile L/R: cornerUp below threshold; f5 corners move downward",
+    "mouthPucker: widthRatio ~0.97–1.00 vs max 0.92 — no functional width shrink"
+  ],
+  "repairPlan": "full QtMesh FaceRig reauthoring from baseline body GLB into versioned face3 output; no threshold changes",
+  "diagnosedAt": "2026-10-01T09:24:28.574Z"
+}

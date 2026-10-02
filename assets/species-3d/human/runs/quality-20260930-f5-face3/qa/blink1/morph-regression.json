@@ -1,0 +1,11 @@
+{
+  "input": "jawopen1",
+  "changedMorphs": [
+    "eyeBlinkLeft",
+    "eyeBlinkRight"
+  ],
+  "onlyBlinksChanged": true,
+  "jawOpenBaseline": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
+  "jawOpenAfter": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
+  "jawOpenIdentical": true
+}

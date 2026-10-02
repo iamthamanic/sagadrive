@@ -1,0 +1,14 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "manual_override",
+  "reviewed": true,
+  "reviewStatus": "human_reviewed",
+  "reviewedAt": "2026-10-01T08:45:52.999Z",
+  "asset": {
+    "modelPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-smile1.glb",
+    "modelSha256": "be9c4f190421c047cdb9001c644ebd4c88e00e9d97e8914bb5695269672553ca",
+    "anchorsSha256": "89bbcd8b6ba49bbd0c0a8424127617316e406b3974863e06dfd2568129bd9f5e",
+    "topologyFingerprint": "v147707:t214973:m1"
+  },
+  "note": "carry after smile1; 3832dc9fa058f4afe4b32ce8fb188abb7e3ea1edb8871f878830551f1521e277→be9c4f190421c047cdb9001c644ebd4c88e00e9d97e8914bb5695269672553ca"
+}

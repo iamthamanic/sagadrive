@@ -1,0 +1,623 @@
+{
+  "face1": {
+    "animations": [
+      {
+        "duration": 0.30000001192092896,
+        "name": "Armature|clip0|baselayer"
+      },
+      {
+        "duration": 0,
+        "name": "browDownLeft"
+      },
+      {
+        "duration": 0,
+        "name": "browDownRight"
+      },
+      {
+        "duration": 0,
+        "name": "browInnerUp"
+      },
+      {
+        "duration": 0,
+        "name": "browOuterUpLeft"
+      },
+      {
+        "duration": 0,
+        "name": "browOuterUpRight"
+      },
+      {
+        "duration": 0,
+        "name": "cheekPuff"
+      },
+      {
+        "duration": 0,
+        "name": "cheekSquintLeft"
+      },
+      {
+        "duration": 0,
+        "name": "cheekSquintRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeBlinkLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeBlinkRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookDownLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookDownRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookInLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookInRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookOutLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookOutRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookUpLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookUpRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeSquintLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeSquintRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeWideLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeWideRight"
+      },
+      {
+        "duration": 0,
+        "name": "jawForward"
+      },
+      {
+        "duration": 0,
+        "name": "jawLeft"
+      },
+      {
+        "duration": 0,
+        "name": "jawOpen"
+      },
+      {
+        "duration": 0,
+        "name": "jawRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthClose"
+      },
+      {
+        "duration": 0,
+        "name": "mouthDimpleLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthDimpleRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthFrownLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthFrownRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthFunnel"
+      },
+      {
+        "duration": 0,
+        "name": "mouthLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthLowerDownLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthLowerDownRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthPressLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthPressRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthPucker"
+      },
+      {
+        "duration": 0,
+        "name": "mouthRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthRollLower"
+      },
+      {
+        "duration": 0,
+        "name": "mouthRollUpper"
+      },
+      {
+        "duration": 0,
+        "name": "mouthShrugLower"
+      },
+      {
+        "duration": 0,
+        "name": "mouthShrugUpper"
+      },
+      {
+        "duration": 0,
+        "name": "mouthSmileLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthSmileRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthStretchLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthStretchRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthUpperUpLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthUpperUpRight"
+      },
+      {
+        "duration": 0,
+        "name": "noseSneerLeft"
+      },
+      {
+        "duration": 0,
+        "name": "noseSneerRight"
+      }
+    ],
+    "boundingBox": {
+      "max": [
+        0.8719555735588074,
+        1.7674998044967651,
+        0.15514934062957764
+      ],
+      "min": [
+        -0.8719555735588074,
+        -0.017500143498182297,
+        -0.15514932572841644
+      ]
+    },
+    "file": "human-male-quality-20260921-m5-face1.glb",
+    "materials": [
+      "Material_1"
+    ],
+    "skeleton": {
+      "boneCount": 25,
+      "bones": [
+        "Armature",
+        "Hips",
+        "LeftUpLeg",
+        "LeftLeg",
+        "RightUpLeg",
+        "RightLeg",
+        "Spine02",
+        "Spine01",
+        "Spine",
+        "LeftShoulder",
+        "LeftArm",
+        "RightShoulder",
+        "RightArm",
+        "neck",
+        "LeftFoot",
+        "RightFoot",
+        "LeftForeArm",
+        "RightForeArm",
+        "Head",
+        "LeftToeBase",
+        "RightToeBase",
+        "LeftHand",
+        "RightHand",
+        "head_end",
+        "headfront"
+      ],
+      "name": "human-male-quality-20260921-m5-face1.skeleton"
+    },
+    "submeshAcmr": [
+      {
+        "acmr": 0.7653777003288269,
+        "submeshIndex": 0,
+        "triangleCount": 215832
+      }
+    ],
+    "submeshes": 1,
+    "textures": [
+      "*0",
+      "*1",
+      "*2"
+    ],
+    "triangles": 215832,
+    "upAxis": "Y-up",
+    "vertices": 133002
+  },
+  "baseline": {
+    "animations": [
+      {
+        "duration": 0.30000001192092896,
+        "name": "Armature|clip0|baselayer"
+      }
+    ],
+    "boundingBox": {
+      "max": [
+        0.8719555735588074,
+        1.7674998044967651,
+        0.15514934062957764
+      ],
+      "min": [
+        -0.8719555735588074,
+        -0.017500143498182297,
+        -0.15514932572841644
+      ]
+    },
+    "file": "human-male-quality-20260921-m5.glb",
+    "materials": [
+      "Material_1"
+    ],
+    "skeleton": {
+      "boneCount": 25,
+      "bones": [
+        "Armature",
+        "Hips",
+        "LeftUpLeg",
+        "LeftLeg",
+        "LeftFoot",
+        "RightUpLeg",
+        "RightLeg",
+        "RightFoot",
+        "Spine02",
+        "Spine01",
+        "Spine",
+        "LeftShoulder",
+        "LeftArm",
+        "LeftForeArm",
+        "RightShoulder",
+        "RightArm",
+        "RightForeArm",
+        "neck",
+        "Head",
+        "LeftToeBase",
+        "RightToeBase",
+        "LeftHand",
+        "RightHand",
+        "head_end",
+        "headfront"
+      ],
+      "name": "human-male-quality-20260921-m5.skeleton"
+    },
+    "submeshAcmr": [
+      {
+        "acmr": 0.7653777003288269,
+        "submeshIndex": 0,
+        "triangleCount": 215832
+      }
+    ],
+    "submeshes": 1,
+    "textures": [
+      "*0",
+      "*1",
+      "*2"
+    ],
+    "triangles": 215832,
+    "upAxis": "Y-up",
+    "vertices": 133002
+  },
+  "face3": {
+    "animations": [
+      {
+        "duration": 0.30000001192092896,
+        "name": "Armature|clip0|baselayer"
+      },
+      {
+        "duration": 0,
+        "name": "browDownLeft"
+      },
+      {
+        "duration": 0,
+        "name": "browDownRight"
+      },
+      {
+        "duration": 0,
+        "name": "browInnerUp"
+      },
+      {
+        "duration": 0,
+        "name": "browOuterUpLeft"
+      },
+      {
+        "duration": 0,
+        "name": "browOuterUpRight"
+      },
+      {
+        "duration": 0,
+        "name": "cheekPuff"
+      },
+      {
+        "duration": 0,
+        "name": "cheekSquintLeft"
+      },
+      {
+        "duration": 0,
+        "name": "cheekSquintRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeBlinkLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeBlinkRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookDownLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookDownRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookInLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookInRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookOutLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookOutRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookUpLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeLookUpRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeSquintLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeSquintRight"
+      },
+      {
+        "duration": 0,
+        "name": "eyeWideLeft"
+      },
+      {
+        "duration": 0,
+        "name": "eyeWideRight"
+      },
+      {
+        "duration": 0,
+        "name": "jawForward"
+      },
+      {
+        "duration": 0,
+        "name": "jawLeft"
+      },
+      {
+        "duration": 0,
+        "name": "jawOpen"
+      },
+      {
+        "duration": 0,
+        "name": "jawRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthClose"
+      },
+      {
+        "duration": 0,
+        "name": "mouthDimpleLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthDimpleRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthFrownLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthFrownRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthFunnel"
+      },
+      {
+        "duration": 0,
+        "name": "mouthLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthLowerDownLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthLowerDownRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthPressLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthPressRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthPucker"
+      },
+      {
+        "duration": 0,
+        "name": "mouthRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthRollLower"
+      },
+      {
+        "duration": 0,
+        "name": "mouthRollUpper"
+      },
+      {
+        "duration": 0,
+        "name": "mouthShrugLower"
+      },
+      {
+        "duration": 0,
+        "name": "mouthShrugUpper"
+      },
+      {
+        "duration": 0,
+        "name": "mouthSmileLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthSmileRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthStretchLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthStretchRight"
+      },
+      {
+        "duration": 0,
+        "name": "mouthUpperUpLeft"
+      },
+      {
+        "duration": 0,
+        "name": "mouthUpperUpRight"
+      },
+      {
+        "duration": 0,
+        "name": "noseSneerLeft"
+      },
+      {
+        "duration": 0,
+        "name": "noseSneerRight"
+      }
+    ],
+    "boundingBox": {
+      "max": [
+        0.8719555735588074,
+        1.7674998044967651,
+        0.15514934062957764
+      ],
+      "min": [
+        -0.8719555735588074,
+        -0.017500143498182297,
+        -0.15514932572841644
+      ]
+    },
+    "file": "human-male-quality-20260921-m5-face3.glb",
+    "materials": [
+      "Material_1"
+    ],
+    "skeleton": {
+      "boneCount": 25,
+      "bones": [
+        "Armature",
+        "Hips",
+        "LeftUpLeg",
+        "LeftLeg",
+        "RightUpLeg",
+        "RightLeg",
+        "Spine02",
+        "Spine01",
+        "Spine",
+        "LeftShoulder",
+        "LeftArm",
+        "RightShoulder",
+        "RightArm",
+        "neck",
+        "LeftFoot",
+        "RightFoot",
+        "LeftForeArm",
+        "RightForeArm",
+        "Head",
+        "LeftToeBase",
+        "RightToeBase",
+        "LeftHand",
+        "RightHand",
+        "head_end",
+        "headfront"
+      ],
+      "name": "human-male-quality-20260921-m5-face3.skeleton"
+    },
+    "submeshAcmr": [
+      {
+        "acmr": 0.7653777003288269,
+        "submeshIndex": 0,
+        "triangleCount": 215832
+      }
+    ],
+    "submeshes": 1,
+    "textures": [
+      "*0",
+      "*1",
+      "*2"
+    ],
+    "triangles": 215832,
+    "upAxis": "Y-up",
+    "vertices": 133002
+  }
+}

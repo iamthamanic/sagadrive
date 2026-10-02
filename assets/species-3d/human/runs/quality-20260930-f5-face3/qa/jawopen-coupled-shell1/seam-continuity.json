@@ -1,0 +1,51 @@
+{
+  "asset": "f5",
+  "weights": {
+    "0": {
+      "pairCount": 12,
+      "maxGap": 0,
+      "meanGap": 0,
+      "p95Gap": 0,
+      "closestGap": 0,
+      "threshold": 0.009687357710420641,
+      "pass": true
+    },
+    "1": {
+      "pairCount": 12,
+      "maxGap": 0,
+      "meanGap": 0,
+      "p95Gap": 0,
+      "closestGap": 0,
+      "threshold": 0.009687357710420641,
+      "pass": true
+    },
+    "0.25": {
+      "pairCount": 12,
+      "maxGap": 0,
+      "meanGap": 0,
+      "p95Gap": 0,
+      "closestGap": 0,
+      "threshold": 0.009687357710420641,
+      "pass": true
+    },
+    "0.5": {
+      "pairCount": 12,
+      "maxGap": 0,
+      "meanGap": 0,
+      "p95Gap": 0,
+      "closestGap": 0,
+      "threshold": 0.009687357710420641,
+      "pass": true
+    },
+    "0.75": {
+      "pairCount": 12,
+      "maxGap": 0,
+      "meanGap": 0,
+      "p95Gap": 0,
+      "closestGap": 0,
+      "threshold": 0.009687357710420641,
+      "pass": true
+    }
+  },
+  "pass": true
+}

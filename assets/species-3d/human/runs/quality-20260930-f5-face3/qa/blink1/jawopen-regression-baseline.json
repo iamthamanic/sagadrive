@@ -1,0 +1,22 @@
+{
+  "contractVersion": "SagaDrive423JawOpenImmutableBaselineV1",
+  "capturedAt": "2026-10-01T11:42:45.079Z",
+  "assets": {
+    "m5": {
+      "path": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-jawopen1.glb",
+      "glbSha256": "c610d9fccd6bc06c97cc4b8d8352006c0af6fa79be45eb31d1f5141706b55afa",
+      "jawOpenMorphSha256": "28d455fde18cf236474b440d70a9f1d6ddff77502c6a0490abe9da137c6eb542",
+      "jawOpenFunctionalPass": true,
+      "eyeBlinkLeftPass": false,
+      "eyeBlinkRightPass": false
+    },
+    "f5": {
+      "path": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-jawopen1.glb",
+      "glbSha256": "fdffea65effff020d6f2f04a33e78ab3224254edde00c889aa790182bd3e738f",
+      "jawOpenMorphSha256": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
+      "jawOpenFunctionalPass": true,
+      "eyeBlinkLeftPass": false,
+      "eyeBlinkRightPass": false
+    }
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "contractVersion": "SagaDrive423JawOpenDebugPipelineV1",
+  "asset": "m5",
+  "channel": "jawOpen",
+  "hops": [
+    {
+      "hop": "0_reviewed_anchors",
+      "input": "face-anchor-agent-review-v1 ledger",
+      "output": "face-anchors.json (21 bindings)",
+      "file": "assets/species-3d/human/runs/quality-20260930-m5-face3/face-anchors.json",
+      "expected": "consumed by FaceRig as driver markers",
+      "actual": "NEVER passed to qtmesh facerig argv — SagaDrive adapter has no --anchors flag",
+      "evidence": "scripts/lib/liveact-face-authoring-qtmesh.mjs buildFacerigArgv → [facerig, input, -o, output, --json, --max-residual]"
+    },
+    {
+      "hop": "1_face_authoring_config",
+      "input": "QTMESH_FACERIG_MARKER_SIM=2 env + max-residual 12",
+      "output": "facerig argv",
+      "file": "assets/species-3d/human/runs/quality-20260930-m5-face3/qtmesh-report.json argv",
+      "expected": "use reviewed GT markers",
+      "actual": "MARKER_SIM=2 → internal 13 ICT-style markers; MediaPipe seed residual 0.241 → proportional defaults; seedConfident=0"
+    },
+    {
+      "hop": "2_qtmesh_invocation",
+      "input": "public/assets/avatars/species/human-male-quality-20260921-m5.glb (NOT public face1)",
+      "output": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3.glb",
+      "expectedChange": "new functional jawOpen deltas",
+      "actualChange": "51 shapes attached; jawOpen nonZero≈46887 in [sim] log; file SHA 53d7be5c identical to historical face1 RUN output checksum"
+    },
+    {
+      "hop": "3_facerig_marker_driver",
+      "input": "13 simulated/proportional markers (Nose tip, Chin, lips, eyes, brows, Forehead)",
+      "output": "warped ICT template fit residual max 0.918979%",
+      "expected": "21 reviewed anchors",
+      "actual": "markers=13 anchors=13; reviewed mouthUpper/mouthLower barycentric bindings unused"
+    },
+    {
+      "hop": "4_deformation_generation",
+      "input": "ICT FaceKit template shapes",
+      "output": "per-shape vertex deltas on submesh handle=1",
+      "expected": "jawOpen increases mouth gap at reviewed mouthUpper/Lower",
+      "actual": "in-tool [sim] jawOpen nonZero=46887 maxDisp=0.0278057; exported gapΔ=-0.000486043954055812 (Functional needs ≥0.06)"
+    },
+    {
+      "hop": "5_export_glb",
+      "input": "QtMesh Assimp export",
+      "output": "GLB morph accessors",
+      "expected": "preserve authored deltas",
+      "actual": "morphs present post-export; mutation test distinguishes exporter vs authoring",
+      "mutationVerdict": "A_exporter_preserves_shape_key_mutation"
+    },
+    {
+      "hop": "6_canonicalizeFaceExport",
+      "input": "face GLB + baseline textures",
+      "output": "re-embedded textures, IBM fix, sparse morph marking",
+      "expected": "no morph delta mutation beyond sparse packing",
+      "actual": {
+        "case": "A_exporter_preserves_shape_key_mutation",
+        "magicY": -0.15,
+        "beforeGapDelta": 0.1361517659923961,
+        "afterGapDelta": 0.1361517659923961,
+        "beforeSampleDeltaY": [
+          -0.15000000596046448,
+          -0.15000000596046448,
+          -0.15000000596046448
+        ],
+        "afterSampleDeltaY": [
+          -0.15000000596046448,
+          -0.15000000596046448,
+          -0.15000000596046448
+        ],
+        "beforeMorphSha": "48c15c1ad8423f821cfdd5453ae978dad4a34df085b6305a27af0cd9edf85978",
+        "afterMorphSha": "48c15c1ad8423f821cfdd5453ae978dad4a34df085b6305a27af0cd9edf85978",
+        "morphShaChangedByCanon": false,
+        "note": "canonicalizeFaceExport restores textures/IBM and marks sparse; must not wipe intentional morph deltas"
+      }
+    },
+    {
+      "hop": "7_functional_qa",
+      "input": "exported morphs + reviewed anchors",
+      "output": "jawOpen_mouth_gap_delta_below",
+      "expected": "mouthGapΔ ≥ 0.06",
+      "actual": "mouthGapΔ=-0.000486043954055812"
+    }
+  ],
+  "snapshotCompare": {
+    "face1MorphSha": "cc403218d55c384b22e2a7c0d4d1727eb456968ff7822de4242dd8527cd317ff",
+    "face3MorphSha": "cc403218d55c384b22e2a7c0d4d1727eb456968ff7822de4242dd8527cd317ff",
+    "identical": true,
+    "face1FileSha": "134f5137019ec5b26abd977459bd510b763f080c111da3d6ab4f92cb3aaa33ff",
+    "face3FileSha": "53d7be5c5eba0862597e0142c527494fc1a5ad0175d8ce6f30af331172221aab",
+    "historicalFace1RunChecksum": "53d7be5c5eba0862597e0142c527494fc1a5ad0175d8ce6f30af331172221aab",
+    "face3MatchesHistoricalFace1RunOutput": true
+  }
+}

@@ -1,0 +1,646 @@
+{
+  "snapMutBefore": {
+    "label": "mutation_before_canonicalize",
+    "path": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/debug-jawopen/mutation-input.glb",
+    "fileSha256": "0d7fea7cef3ce55bd8f7f75191d0865e4d61e2e50539addebe7c2a57bb2909fa",
+    "fileBytes": 100195676,
+    "meshCount": 1,
+    "meshNames": [
+      ""
+    ],
+    "nodes": [
+      {
+        "name": "human-male-quality-20260921-m5",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Armature",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Hips",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftUpLeg",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftLeg",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftFoot",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftToeBase",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightUpLeg",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightLeg",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightFoot",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightToeBase",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Spine02",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Spine01",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Spine",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftShoulder",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftArm",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftForeArm",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftHand",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightShoulder",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightArm",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightForeArm",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightHand",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "neck",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Head",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "head_end",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "headfront",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "human-male-quality-20260921-m5_mesh",
+        "mesh": null,
+        "primCount": 1,
+        "morphCount": 51
+      }
+    ],
+    "targetNamesCount": 51,
+    "jawOpen": {
+      "name": "jawOpen",
+      "present": true,
+      "morphIndex": 24,
+      "vertexCount": 133002,
+      "nonzero": 46871,
+      "maxAbs": 0.15000000596046448,
+      "minAbsNonzero": 0.000859476625919342,
+      "meanAbsNonzero": 0.007151869315332267,
+      "positionBufferSha256": "48c15c1ad8423f821cfdd5453ae978dad4a34df085b6305a27af0cd9edf85978",
+      "bboxNonzero": {
+        "min": [
+          -0.0036437250673770905,
+          -0.15000000596046448,
+          -0.014992870390415192
+        ],
+        "max": [
+          0.0037460457533597946,
+          0.007143139839172363,
+          0.007291765883564949
+        ]
+      },
+      "sparse": true
+    },
+    "mouthGapNeutral": 0.05884193341444211,
+    "mouthGapJawOpen1": 0.1949936994068382,
+    "mouthGapDelta": 0.1361517659923961,
+    "anchorsNeutral": {
+      "mouthUpper": [
+        -0.0008585663163103163,
+        1.5359370708465576,
+        0.08493343740701675
+      ],
+      "mouthLower": [
+        -0.004518256988376379,
+        1.488811731338501,
+        0.0498880073428154
+      ],
+      "chin": [
+        -0.0019195734057575464,
+        1.3352006673812866,
+        0.06978394836187363
+      ],
+      "noseTip": [
+        -0.00283518573269248,
+        1.5513219833374023,
+        0.08954370766878128
+      ],
+      "forehead": [
+        -0.006937498226761818,
+        1.6932226419448853,
+        0.07033239305019379
+      ]
+    },
+    "anchorsJawOpen1": {
+      "mouthUpper": [
+        -0.0005994864040985703,
+        1.530617594718933,
+        0.07515174150466919
+      ],
+      "mouthLower": [
+        -0.004216513596475124,
+        1.3388117253780365,
+        0.04022369533777237
+      ],
+      "chin": [
+        -0.0019195734057575464,
+        1.1852006614208221,
+        0.06978394836187363
+      ],
+      "noseTip": [
+        -0.002696604933589697,
+        1.543333888053894,
+        0.08026055991649628
+      ],
+      "forehead": [
+        -0.006879494059830904,
+        1.6977195739746094,
+        0.07342691719532013
+      ]
+    },
+    "sampleMouthLowerVerts": [
+      {
+        "vertexIndex": 65122,
+        "basis": [
+          -0.004518256988376379,
+          1.488811731338501,
+          0.0498880073428154
+        ],
+        "jawOpen1": [
+          -0.004216513596475124,
+          1.3388117253780365,
+          0.04022369533777237
+        ],
+        "delta": [
+          0.00030174339190125465,
+          -0.15000000596046448,
+          -0.00966431200504303
+        ]
+      },
+      {
+        "vertexIndex": 64746,
+        "basis": [
+          -0.004974682815372944,
+          1.4890953302383423,
+          0.05258975178003311
+        ],
+        "jawOpen1": [
+          -0.004672939423471689,
+          1.3390953242778778,
+          0.04292543977499008
+        ],
+        "delta": [
+          0.00030174339190125465,
+          -0.15000000596046448,
+          -0.00966431200504303
+        ]
+      },
+      {
+        "vertexIndex": 64385,
+        "basis": [
+          -0.005680487025529146,
+          1.488940715789795,
+          0.05041712895035744
+        ],
+        "jawOpen1": [
+          -0.0053787436336278915,
+          1.3389407098293304,
+          0.04075281322002411
+        ],
+        "delta": [
+          0.00030174339190125465,
+          -0.15000000596046448,
+          -0.009664315730333328
+        ]
+      }
+    ]
+  },
+  "snapMutAfter": {
+    "label": "mutation_after_canonicalize",
+    "path": "assets/species-3d/human/runs/quality-20260930-m5-face3/qa/debug-jawopen/mutation-after-canonicalize.glb",
+    "fileSha256": "0d7fea7cef3ce55bd8f7f75191d0865e4d61e2e50539addebe7c2a57bb2909fa",
+    "fileBytes": 100195676,
+    "meshCount": 1,
+    "meshNames": [
+      ""
+    ],
+    "nodes": [
+      {
+        "name": "human-male-quality-20260921-m5",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Armature",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Hips",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftUpLeg",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftLeg",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftFoot",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftToeBase",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightUpLeg",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightLeg",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightFoot",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightToeBase",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Spine02",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Spine01",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Spine",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftShoulder",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftArm",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftForeArm",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "LeftHand",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightShoulder",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightArm",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightForeArm",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "RightHand",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "neck",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "Head",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "head_end",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "headfront",
+        "mesh": null,
+        "primCount": 0,
+        "morphCount": 0
+      },
+      {
+        "name": "human-male-quality-20260921-m5_mesh",
+        "mesh": null,
+        "primCount": 1,
+        "morphCount": 51
+      }
+    ],
+    "targetNamesCount": 51,
+    "jawOpen": {
+      "name": "jawOpen",
+      "present": true,
+      "morphIndex": 24,
+      "vertexCount": 133002,
+      "nonzero": 46871,
+      "maxAbs": 0.15000000596046448,
+      "minAbsNonzero": 0.000859476625919342,
+      "meanAbsNonzero": 0.007151869315332267,
+      "positionBufferSha256": "48c15c1ad8423f821cfdd5453ae978dad4a34df085b6305a27af0cd9edf85978",
+      "bboxNonzero": {
+        "min": [
+          -0.0036437250673770905,
+          -0.15000000596046448,
+          -0.014992870390415192
+        ],
+        "max": [
+          0.0037460457533597946,
+          0.007143139839172363,
+          0.007291765883564949
+        ]
+      },
+      "sparse": true
+    },
+    "mouthGapNeutral": 0.05884193341444211,
+    "mouthGapJawOpen1": 0.1949936994068382,
+    "mouthGapDelta": 0.1361517659923961,
+    "anchorsNeutral": {
+      "mouthUpper": [
+        -0.0008585663163103163,
+        1.5359370708465576,
+        0.08493343740701675
+      ],
+      "mouthLower": [
+        -0.004518256988376379,
+        1.488811731338501,
+        0.0498880073428154
+      ],
+      "chin": [
+        -0.0019195734057575464,
+        1.3352006673812866,
+        0.06978394836187363
+      ],
+      "noseTip": [
+        -0.00283518573269248,
+        1.5513219833374023,
+        0.08954370766878128
+      ],
+      "forehead": [
+        -0.006937498226761818,
+        1.6932226419448853,
+        0.07033239305019379
+      ]
+    },
+    "anchorsJawOpen1": {
+      "mouthUpper": [
+        -0.0005994864040985703,
+        1.530617594718933,
+        0.07515174150466919
+      ],
+      "mouthLower": [
+        -0.004216513596475124,
+        1.3388117253780365,
+        0.04022369533777237
+      ],
+      "chin": [
+        -0.0019195734057575464,
+        1.1852006614208221,
+        0.06978394836187363
+      ],
+      "noseTip": [
+        -0.002696604933589697,
+        1.543333888053894,
+        0.08026055991649628
+      ],
+      "forehead": [
+        -0.006879494059830904,
+        1.6977195739746094,
+        0.07342691719532013
+      ]
+    },
+    "sampleMouthLowerVerts": [
+      {
+        "vertexIndex": 65122,
+        "basis": [
+          -0.004518256988376379,
+          1.488811731338501,
+          0.0498880073428154
+        ],
+        "jawOpen1": [
+          -0.004216513596475124,
+          1.3388117253780365,
+          0.04022369533777237
+        ],
+        "delta": [
+          0.00030174339190125465,
+          -0.15000000596046448,
+          -0.00966431200504303
+        ]
+      },
+      {
+        "vertexIndex": 64746,
+        "basis": [
+          -0.004974682815372944,
+          1.4890953302383423,
+          0.05258975178003311
+        ],
+        "jawOpen1": [
+          -0.004672939423471689,
+          1.3390953242778778,
+          0.04292543977499008
+        ],
+        "delta": [
+          0.00030174339190125465,
+          -0.15000000596046448,
+          -0.00966431200504303
+        ]
+      },
+      {
+        "vertexIndex": 64385,
+        "basis": [
+          -0.005680487025529146,
+          1.488940715789795,
+          0.05041712895035744
+        ],
+        "jawOpen1": [
+          -0.0053787436336278915,
+          1.3389407098293304,
+          0.04075281322002411
+        ],
+        "delta": [
+          0.00030174339190125465,
+          -0.15000000596046448,
+          -0.009664315730333328
+        ]
+      }
+    ]
+  },
+  "mutationVerdict": {
+    "case": "A_exporter_preserves_shape_key_mutation",
+    "magicY": -0.15,
+    "beforeGapDelta": 0.1361517659923961,
+    "afterGapDelta": 0.1361517659923961,
+    "beforeSampleDeltaY": [
+      -0.15000000596046448,
+      -0.15000000596046448,
+      -0.15000000596046448
+    ],
+    "afterSampleDeltaY": [
+      -0.15000000596046448,
+      -0.15000000596046448,
+      -0.15000000596046448
+    ],
+    "beforeMorphSha": "48c15c1ad8423f821cfdd5453ae978dad4a34df085b6305a27af0cd9edf85978",
+    "afterMorphSha": "48c15c1ad8423f821cfdd5453ae978dad4a34df085b6305a27af0cd9edf85978",
+    "morphShaChangedByCanon": false,
+    "note": "canonicalizeFaceExport restores textures/IBM and marks sparse; must not wipe intentional morph deltas"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "asset": "f5",
+  "channel": "jawOpen",
+  "publicFace1": {
+    "fileSha256": "a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c",
+    "jawOpenSha": "0915f0de848970a69f6b362d3149e231c0c02ecba38b044fee56596a9794de55",
+    "nonzero": 68412,
+    "maxAbs": 0.023722290992736816,
+    "mouthGapDelta": -0.008627692309795178,
+    "chinDelta": [
+      0,
+      0,
+      0
+    ],
+    "chinDeltaLen": 0,
+    "mouthUpperDelta": [
+      -0.0007400102913379669,
+      -0.009203076362609863,
+      -0.012598305940628052
+    ],
+    "mouthLowerDelta": [
+      0.00006856262916699052,
+      0.0004636049270629883,
+      -0.005526576191186905
+    ]
+  },
+  "face3Reauthor": {
+    "fileSha256": "6cae825f18e5bbfb8b02ea1bef1a4ec9352e06e4ab08eb1c6c1085f2c8291cca",
+    "jawOpenSha": "0915f0de848970a69f6b362d3149e231c0c02ecba38b044fee56596a9794de55",
+    "nonzero": 68412,
+    "maxAbs": 0.023722290992736816,
+    "mouthGapDelta": -0.008627692309795178,
+    "chinDelta": [
+      0,
+      0,
+      0
+    ],
+    "chinDeltaLen": 0,
+    "mouthUpperDelta": [
+      -0.0007400102913379669,
+      -0.009203076362609863,
+      -0.012598305940628052
+    ],
+    "mouthLowerDelta": [
+      0.00006856262916699052,
+      0.0004636049270629883,
+      -0.005526576191186905
+    ]
+  },
+  "morphIdentical": true,
+  "face3EqualsHistoricalFace1RunOutput": true,
+  "historicalFace1RunChecksum": "6cae825f18e5bbfb8b02ea1bef1a4ec9352e06e4ab08eb1c6c1085f2c8291cca",
+  "facerigArgvHasAnchors": false,
+  "facerigArgv": [
+    "facerig",
+    "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive-wt-423/public/assets/avatars/species/human-female-quality-20260921-f5.glb",
+    "-o",
+    "/Users/halteverbotsocialmacpro/Desktop/arsvivai/2-DEV-PROJEKTE/sagadrive/sagadrive-wt-423/assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3.glb",
+    "--json",
+    "--max-residual",
+    "12"
+  ],
+  "sameRootCauseAsM5": true,
+  "notes": [
+    "jawOpen morph POSITION buffer identical between public face1 and face3 reauthor",
+    "face3 file SHA matches historical f5 face1 run output checksum",
+    "chin displacement on jawOpen is near-zero/small parallel lip motion fails Functional mouthGap",
+    "reviewed anchors not in facerig argv"
+  ]
+}

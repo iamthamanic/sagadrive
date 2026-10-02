@@ -1,0 +1,52 @@
+{
+  "id": "m5",
+  "inputJawOpen1Sha": "c610d9fccd6bc06c97cc4b8d8352006c0af6fa79be45eb31d1f5141706b55afa",
+  "outputBlink1Sha": "bf9f6eced69a77d2c4465ed83eace7dce819fb46f0874a91ec230d4f12e6991f",
+  "topology": "v133002:t215832:m1",
+  "jawOpenMorphBaseline": "28d455fde18cf236474b440d70a9f1d6ddff77502c6a0490abe9da137c6eb542",
+  "jawOpenMorphAfter": "28d455fde18cf236474b440d70a9f1d6ddff77502c6a0490abe9da137c6eb542",
+  "jawOpenMorphIdentical": true,
+  "jawOpenFunctionalPass": true,
+  "eyeBlinkLeftPass": true,
+  "eyeBlinkRightPass": true,
+  "blinkL": {
+    "openDrop": 0.8816236324891942,
+    "openRatio": 0.15396433312889268,
+    "oppositeRelChange": 0,
+    "affected": 671,
+    "morphHash": "49a4150169ad4a08ffa7c55c5c68af7d5ea7a3483dd1a6391d11cd44b520fe75",
+    "displacements": {
+      "eyeLeftUpper": 0.022448823948708493,
+      "eyeLeftLower": 0.00868986159716291,
+      "eyeRightUpper": 0,
+      "eyeRightLower": 0,
+      "noseTip": 0,
+      "forehead": 0
+    }
+  },
+  "blinkR": {
+    "openDrop": 0.8402855635266623,
+    "openRatio": 0.15604499666334928,
+    "oppositeRelChange": 0,
+    "affected": 601,
+    "morphHash": "c02cb005803f9a30ce5cab86640d8eae8b9413290dc1635867337c22fb0c4b5f",
+    "rerunHash": "c02cb005803f9a30ce5cab86640d8eae8b9413290dc1635867337c22fb0c4b5f",
+    "displacements": {
+      "eyeRightUpper": 0.019180565924171077,
+      "eyeRightLower": 0.0074247298281817555,
+      "eyeLeftUpper": 0,
+      "eyeLeftLower": 0,
+      "noseTip": 0,
+      "forehead": 0
+    }
+  },
+  "changedFromJawOpen1": [
+    "eyeBlinkLeft",
+    "eyeBlinkRight"
+  ],
+  "structuralPass": false,
+  "sagaErrors": [],
+  "anatomyPass": true,
+  "gtCarryForward": true,
+  "overallFunctionalPass": false
+}

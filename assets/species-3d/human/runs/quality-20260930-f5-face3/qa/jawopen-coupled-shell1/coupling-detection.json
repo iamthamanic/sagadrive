@@ -1,0 +1,75 @@
+{
+  "asset": "f5",
+  "pass": true,
+  "authorAccepted": [
+    497
+  ],
+  "offlineAccepted": [
+    497,
+    1057
+  ],
+  "expectPos": [
+    497
+  ],
+  "expectNeg": [
+    105,
+    1071,
+    1975
+  ],
+  "bodyFp": 0,
+  "rejectedBody": [
+    {
+      "componentId": 105,
+      "reason": "whole_comp_body",
+      "wholeCompBodyFrac": 0.8273273273273273,
+      "coincideCount": 27
+    },
+    {
+      "componentId": 1071,
+      "reason": "whole_comp_body",
+      "wholeCompBodyFrac": 0.996969696969697,
+      "coincideCount": 25
+    },
+    {
+      "componentId": 1975,
+      "reason": "whole_comp_body",
+      "wholeCompBodyFrac": 1,
+      "coincideCount": 12
+    }
+  ],
+  "patches": [
+    {
+      "componentId": 497,
+      "coincideCount": 12,
+      "patchVertexCount": 55,
+      "wholeCompBodyFrac": 0,
+      "patchBodyFrac": 0,
+      "meanNormalDot": 0.996717646306823,
+      "medianGtDist": 0.05516082586119344,
+      "maxPatchHops": 3,
+      "seamPairCount": 12
+    },
+    {
+      "componentId": 1057,
+      "coincideCount": 104,
+      "patchVertexCount": 409,
+      "wholeCompBodyFrac": 0,
+      "patchBodyFrac": 0,
+      "meanNormalDot": 0.9360294613091947,
+      "medianGtDist": 0.04940781597602164,
+      "maxPatchHops": 3,
+      "seamPairCount": 104
+    }
+  ],
+  "thresholds": {
+    "tauCoincide": 0.0004649931701001908,
+    "tauNear": 0.00416565218247634,
+    "tauGtLocal": 0.0624847827371451,
+    "minCoincidePairs": 10,
+    "minMeanNormalDot": 0.55,
+    "maxWholeCompBodyFrac": 0.35,
+    "maxPatchBodyFrac": 0.12,
+    "maxPatchHops": 3,
+    "topoFalloffExp": 1.15
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "morphCount": 51,
+  "changedMorphs": [
+    "jawOpen"
+  ],
+  "unchangedCount": 50,
+  "onlyJawOpenChanged": true,
+  "jawOpenBefore": "0915f0de848970a69f6b362d3149e231c0c02ecba38b044fee56596a9794de55",
+  "jawOpenAfter": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0"
+}

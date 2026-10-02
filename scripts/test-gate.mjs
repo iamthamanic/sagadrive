@@ -714,6 +714,14 @@ function checkLiveActFaceFunctionalValidator() {
   });
 }
 
+function checkLiveActFaceFunctionalMorphAuthor() {
+  console.log('LiveAct face functional morph author (#423): GT-aware jawOpen rewrite...');
+  execFileSync(process.execPath, ['scripts/liveact-face-functional-morph-author-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFaceAuthoringQtmesh() {
   console.log('LiveAct face authoring qtmesh adapter (#384): fake CLI + report gates...');
   execFileSync(process.execPath, ['scripts/liveact-face-authoring-qtmesh-check.mjs'], {
@@ -1565,6 +1573,7 @@ checkLiveActFaceAssetContract();
 checkLiveActFaceAssetValidator();
 checkLiveActFaceSemanticValidator();
 checkLiveActFaceFunctionalValidator();
+checkLiveActFaceFunctionalMorphAuthor();
 checkLiveActFaceAuthoringQtmesh();
 checkLiveActRetargetProfile();
 checkLiveActFacialFidelityV2();

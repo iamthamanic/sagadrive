@@ -38,14 +38,15 @@ const pairs = [
 ];
 
 const domain = readFileSync(join(root, 'src/domains/character/avatar/species-template-models-v1.ts'), 'utf8');
-check(/m5-face1\.vrm/.test(domain) && /f5-face1\.vrm/.test(domain), 'both templates wired as VRM primary');
+check(/m5-face3\.vrm/.test(domain) && /f5-face3\.vrm/.test(domain), 'both templates wired as VRM primary');
 check(
-  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face1.vrm')) &&
-    existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face1.vrm')),
+  existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m5-face3.vrm')) &&
+    existsSync(join(root, 'public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm')),
   'both public VRM shipping assets exist',
 );
 check(/liveact-face-human-repro-check/.test(readFileSync(join(root, 'scripts/test-gate.mjs'), 'utf8')), 'test-gate');
 
+// Historical face1 GLB repro remains valid against face2 run ledgers (generation regression).
 for (const p of pairs) {
   check(existsSync(join(root, p.publicGlb)), `${p.id} public exists`);
   check(existsSync(join(root, p.baseline)), `${p.id} baseline exists`);
@@ -82,6 +83,71 @@ for (const p of pairs) {
     `${p.id} semantic contract V2`,
   );
   console.log(`liveact-face-human-repro-check: ${p.id} semantic QA V2 pass`);
+}
+
+// Active face3 publish candidates — full Stage-B including Functional 7/7 HARD gate.
+const face3Pairs = [
+  {
+    id: 'm5-face3',
+    publicGlb: 'public/assets/avatars/species/human-male-quality-20260921-m5-face3.glb',
+    baseline: 'public/assets/avatars/species/human-male-quality-20260921-m5.glb',
+    anchors: 'public/assets/avatars/species/human-male-quality-20260921-m5-face3-face-anchors.json',
+    authoring:
+      'public/assets/avatars/species/human-male-quality-20260921-m5-face3-face-mapping-authoring.json',
+    inventory: '.qa/runs/liveact-face3-m5-inventory-repro.json',
+  },
+  {
+    id: 'f5-face3',
+    publicGlb: 'public/assets/avatars/species/human-female-quality-20260921-f5-face3.glb',
+    baseline: 'public/assets/avatars/species/human-female-quality-20260921-f5.glb',
+    anchors: 'public/assets/avatars/species/human-female-quality-20260921-f5-face3-face-anchors.json',
+    authoring:
+      'public/assets/avatars/species/human-female-quality-20260921-f5-face3-face-mapping-authoring.json',
+    inventory: '.qa/runs/liveact-face3-f5-inventory-repro.json',
+  },
+];
+
+for (const p of face3Pairs) {
+  check(existsSync(join(root, p.publicGlb)), `${p.id} public GLB exists`);
+  check(existsSync(join(root, p.anchors)), `${p.id} reviewed anchors exist`);
+  check(existsSync(join(root, p.authoring)), `${p.id} publish authoring sidecar exists`);
+  const result = await validateLiveActFaceAsset({
+    inputPath: join(root, p.publicGlb),
+    baselinePath: join(root, p.baseline),
+    profile: 'full-v1',
+    anchorsPath: join(root, p.anchors),
+    authoringPath: join(root, p.authoring),
+    functionalMode: 'publish',
+    outPath: join(root, p.inventory),
+  });
+  writeFileSync(join(root, p.inventory), `${JSON.stringify(result.inventory, null, 2)}\n`);
+  check(result.ok === true, `${p.id} validateLiveActFaceAsset ok`);
+  check(result.inventory.structuralPass === true, `${p.id} structural gate`);
+  check(
+    result.inventory.faceAnchorAnatomyQa?.pass === true,
+    `${p.id} face anchor anatomy PASS`,
+  );
+  check(
+    result.inventory.semanticQa?.pass === true,
+    `${p.id} semantic QA V2 pass (${(result.inventory.semanticQa?.violations || []).slice(0, 4).join('; ')})`,
+  );
+  check(
+    result.inventory.functionalQa?.pass === true,
+    `${p.id} Functional 7/7 PASS (publish hard gate)`,
+  );
+  const channels = result.inventory.functionalQa?.channels || {};
+  for (const ch of [
+    'jawOpen',
+    'eyeBlinkLeft',
+    'eyeBlinkRight',
+    'browInnerUp',
+    'mouthSmileLeft',
+    'mouthSmileRight',
+    'mouthPucker',
+  ]) {
+    check(channels[ch]?.pass === true, `${p.id} Functional channel ${ch} PASS`);
+  }
+  console.log(`liveact-face-human-repro-check: ${p.id} structural/anatomy/semantic/functional PASS`);
 }
 
 console.log('liveact-face-human-repro-check OK');

@@ -1,0 +1,67 @@
+{
+  "contractVersion": "SagaDriveLiveActFaceFunctionalMorphAuthorV1",
+  "profileVersion": "liveact-face-functional-morph-author-profile-v1",
+  "channel": "browInnerUp",
+  "inputPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-blink1.glb",
+  "outputPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-brow1.glb",
+  "anchorsPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/face-anchors.json",
+  "authoringPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/blink1/face-mapping-authoring.json",
+  "inputSha256": "50d70510bfbd048e5edbe554d42be41cd9a122546023c75676d944afa25be97e",
+  "outputSha256": "3832dc9fa058f4afe4b32ce8fb188abb7e3ea1edb8871f878830551f1521e277",
+  "topologyFingerprint": "v147707:t214973:m1",
+  "anchorsSha256": "89bbcd8b6ba49bbd0c0a8424127617316e406b3974863e06dfd2568129bd9f5e",
+  "groundTruth": {
+    "ok": true,
+    "reason": null,
+    "reviewStatus": "human_reviewed"
+  },
+  "beforeChannelMorphSha256": "0c00fe038239c410c96e5036d125f05e3e53ad73ec4cf216cdf817b730d1fbf2",
+  "afterChannelMorphSha256": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+  "beforeJawOpenMorphSha256": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
+  "afterJawOpenMorphSha256": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
+  "jawOpenMorphUnchanged": true,
+  "deterministicRerunMorphSha256": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+  "morphsUnchangedExceptChannel": true,
+  "morphCount": 51,
+  "changedMorphs": [
+    "browInnerUp"
+  ],
+  "channelStats": {
+    "morphIndex": 2,
+    "nodeIdentity": "human-female-quality-20260921-f5_mesh",
+    "primitiveIndex": 0,
+    "vertexCount": 147707,
+    "affectedVertices": 3474,
+    "maxWeight": 1,
+    "meanWeightAffected": 0.11306980195213549,
+    "maxDisplacement": 0.0049979737960923155,
+    "meanDisplacementAffected": 0.0005651199072861192,
+    "amp": 0.0049979737960923155,
+    "eyeWidthMean": 0.03569981282923082,
+    "faceHeight": 0.34713768187302835,
+    "morphPositionSha256": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+    "browInnerLiftLDelta": 0.13560957891967784,
+    "browInnerLiftRDelta": 0.14459154091339244,
+    "meanLiftDelta": 0.14010055991653514,
+    "asymmetry": 0.008981961993714593,
+    "displacements": {
+      "browLeftInner": 0.004997973587402883,
+      "browRightInner": 0.004997973587402883,
+      "browLeftOuter": 0.0031327723718180427,
+      "browRightOuter": 0.002874060363842314,
+      "eyeLeftUpper": 0.0001133861082226958,
+      "eyeRightUpper": 0.00013570060835685195,
+      "eyeLeftLower": 0,
+      "eyeRightLower": 1.3424392678470497e-7,
+      "noseTip": 0,
+      "forehead": 0,
+      "mouthUpper": 0,
+      "chin": 0
+    },
+    "liftsAlongUp": {
+      "browLeftInner": 0.004997973587402883,
+      "browRightInner": 0.004997973587402883
+    }
+  },
+  "authoredAt": "2026-10-01T12:05:54.571Z"
+}

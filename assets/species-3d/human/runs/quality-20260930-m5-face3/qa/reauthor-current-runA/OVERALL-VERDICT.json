@@ -1,0 +1,7 @@
+{
+  "verdict": "PASS",
+  "gates": {
+    "visual": true
+  },
+  "note": "fresh reauthor-current visual evidence (jaw/blink/smile/pucker)"
+}

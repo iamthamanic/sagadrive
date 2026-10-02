@@ -1,0 +1,391 @@
+{
+  "contractVersion": "SagaDriveLiveAct423StageBStopV1",
+  "issue": 423,
+  "stage": "B",
+  "assetId": "m5",
+  "stoppedAt": "2026-10-01T10:50:29.468Z",
+  "publishAllowed": false,
+  "reason": "functional_qa_fail_after_qtmesh_reauthor_identical_morphs",
+  "initialCandidate": {
+    "path": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb",
+    "sha256": "134f5137019ec5b26abd977459bd510b763f080c111da3d6ab4f92cb3aaa33ff",
+    "topologyFingerprint": "v133002:t215832:m1"
+  },
+  "initialFunctionalQa": {
+    "pass": false,
+    "violations": [
+      "browInnerUp:browInnerUp_mean_lift_below",
+      "eyeBlinkLeft:eyeBlinkLeft_open_drop_below",
+      "eyeBlinkLeft:eyeBlinkLeft_open_ratio_above",
+      "eyeBlinkRight:eyeBlinkRight_open_drop_below",
+      "eyeBlinkRight:eyeBlinkRight_open_ratio_above",
+      "jawOpen:jawOpen_mouth_gap_delta_below",
+      "mouthPucker:mouthPucker_width_ratio_above",
+      "mouthSmileLeft:mouthSmileLeft_corner_motion_below",
+      "mouthSmileLeft:mouthSmileLeft_corner_up_below",
+      "mouthSmileRight:mouthSmileRight_corner_up_below"
+    ],
+    "channels": {
+      "jawOpen": {
+        "pass": false,
+        "violations": [
+          "jawOpen_mouth_gap_delta_below"
+        ],
+        "deltas": {
+          "mouthGap": -0.00735449,
+          "noseTipDispFaceH": 0.0342059,
+          "foreheadDispFaceH": 0.01524645
+        },
+        "thresholds": {
+          "minMouthGapDelta": 0.06,
+          "maxNoseTipDispFaceH": 0.04,
+          "maxForeheadDispFaceH": 0.025
+        }
+      },
+      "eyeBlinkLeft": {
+        "pass": false,
+        "violations": [
+          "eyeBlinkLeft_open_drop_below",
+          "eyeBlinkLeft_open_ratio_above"
+        ],
+        "deltas": {
+          "openDrop": 0,
+          "openRatio": 1,
+          "oppositeRelChange": 0
+        },
+        "thresholds": {
+          "maxOpenRatio": 0.65,
+          "minOpenDrop": 0.05,
+          "maxOppositeRelChange": 0.2
+        }
+      },
+      "eyeBlinkRight": {
+        "pass": false,
+        "violations": [
+          "eyeBlinkRight_open_drop_below",
+          "eyeBlinkRight_open_ratio_above"
+        ],
+        "deltas": {
+          "openDrop": 0,
+          "openRatio": 1,
+          "oppositeRelChange": 0
+        },
+        "thresholds": {
+          "maxOpenRatio": 0.65,
+          "minOpenDrop": 0.05,
+          "maxOppositeRelChange": 0.2
+        }
+      },
+      "browInnerUp": {
+        "pass": false,
+        "violations": [
+          "browInnerUp_mean_lift_below"
+        ],
+        "deltas": {
+          "browInnerLiftL": 0,
+          "browInnerLiftR": 0,
+          "meanLiftDelta": 0
+        },
+        "thresholds": {
+          "minMeanLiftDelta": 0.03,
+          "maxDownwardPerSide": 0.01
+        }
+      },
+      "mouthSmileLeft": {
+        "pass": false,
+        "violations": [
+          "mouthSmileLeft_corner_motion_below",
+          "mouthSmileLeft_corner_up_below"
+        ],
+        "deltas": {
+          "cornerUp": 0.02274503,
+          "cornerOut": 0.01304387,
+          "cornerMotion": 0.02854948,
+          "oppositeCornerUp": 0,
+          "upAdvantage": 0.02274503
+        },
+        "thresholds": {
+          "minCornerUp": 0.025,
+          "minCornerMotion": 0.03,
+          "minUpAdvantageOverOpposite": 0.015
+        }
+      },
+      "mouthSmileRight": {
+        "pass": false,
+        "violations": [
+          "mouthSmileRight_corner_up_below"
+        ],
+        "deltas": {
+          "cornerUp": 0.02072441,
+          "cornerOut": 0.02384192,
+          "cornerMotion": 0.03160747,
+          "oppositeCornerUp": -0.01395869,
+          "upAdvantage": 0.03468309
+        },
+        "thresholds": {
+          "minCornerUp": 0.025,
+          "minCornerMotion": 0.03,
+          "minUpAdvantageOverOpposite": 0.015
+        }
+      },
+      "mouthPucker": {
+        "pass": false,
+        "violations": [
+          "mouthPucker_width_ratio_above"
+        ],
+        "deltas": {
+          "mouthWidthRatio": 0.97465526,
+          "mouthGap": 0.01994415,
+          "forwardProtrusion": 0.00955442
+        },
+        "thresholds": {
+          "maxMouthWidthRatio": 0.92
+        }
+      }
+    }
+  },
+  "reauthoring": {
+    "performed": true,
+    "provider": "qtmesh-facerig",
+    "binaryRelease": "3.41.1",
+    "markerSim": "2",
+    "inputBaseline": "public/assets/avatars/species/human-male-quality-20260921-m5.glb",
+    "outputPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3.glb",
+    "outputSha256": "53d7be5c5eba0862597e0142c527494fc1a5ad0175d8ce6f30af331172221aab",
+    "outputBytes": 100195628,
+    "morphPositionBuffersVsPublicFace1": "IDENTICAL for jawOpen/eyeBlinkLeft/browInnerUp (and morph fingerprint stats match across all required channels)",
+    "note": "Deterministic QtMesh FaceRig same-recipe rerun reproduces the same morph deltas as public face1. Not a silent re-pack of face2 ledger alone — full facerig executed — but morph geometry is byte-identical to the failing candidate."
+  },
+  "groundTruth": {
+    "reviewStatus": "agent_reviewed",
+    "anchorsSha256": "2b7e9967aed0577bb3c628bfe1cc5272a7cc184f78b9cdf32793d9fb3b865a96",
+    "carryForwardInvariant": {
+      "topologyMatch": true,
+      "groundTruthCarryForward": true,
+      "anchorsPass": "21/21",
+      "oldSha256": "134f5137019ec5b26abd977459bd510b763f080c111da3d6ab4f92cb3aaa33ff",
+      "newSha256": "53d7be5c5eba0862597e0142c527494fc1a5ad0175d8ce6f30af331172221aab"
+    }
+  },
+  "anchorMorphCoverage": {
+    "jawOpen": {
+      "targetIndex": 24,
+      "anchors": {
+        "mouthUpper": {
+          "vertDisp": [
+            0.010883741423427497,
+            0.011137572599057743,
+            0.01107432386844826
+          ],
+          "max": 0.011137572599057743,
+          "any": true
+        },
+        "mouthLower": {
+          "vertDisp": [
+            0.010796107629487113,
+            0.010796107629487113,
+            0.010796110964241672
+          ],
+          "max": 0.010796110964241672,
+          "any": true
+        },
+        "chin": {
+          "vertDisp": [
+            0,
+            0,
+            0
+          ],
+          "max": 0,
+          "any": false
+        }
+      },
+      "anyAnchorMoved": true
+    },
+    "eyeBlinkLeft": {
+      "targetIndex": 8,
+      "anchors": {
+        "eyeLeftUpper": {
+          "vertDisp": [
+            0,
+            0,
+            0
+          ],
+          "max": 0,
+          "any": false
+        },
+        "eyeLeftLower": {
+          "vertDisp": [
+            0,
+            0,
+            0
+          ],
+          "max": 0,
+          "any": false
+        },
+        "eyeLeftInner": {
+          "vertDisp": [
+            0,
+            0,
+            0
+          ],
+          "max": 0,
+          "any": false
+        },
+        "eyeLeftOuter": {
+          "vertDisp": [
+            0,
+            0,
+            0
+          ],
+          "max": 0,
+          "any": false
+        }
+      },
+      "anyAnchorMoved": false
+    },
+    "eyeBlinkRight": {
+      "targetIndex": 9,
+      "anchors": {
+        "eyeRightUpper": {
+          "vertDisp": [
+            0,
+            0,
+            0
+          ],
+          "max": 0,
+          "any": false
+        },
+        "eyeRightLower": {
+          "vertDisp": [
+            0,
+            0,
+            0
+          ],
+          "max": 0,
+          "any": false
+        },
+        "eyeRightInner": {
+          "vertDisp": [
+            0,
+            0,
+            0
+          ],
+          "max": 0,
+          "any": false
+        },
+        "eyeRightOuter": {
+          "vertDisp": [
+            0,
+            0,
+            0
+          ],
+          "max": 0,
+          "any": false
+        }
+      },
+      "anyAnchorMoved": false
+    },
+    "browInnerUp": {
+      "targetIndex": 2,
+      "anchors": {
+        "browInnerLeft": "anchor_missing",
+        "browInnerRight": "anchor_missing",
+        "forehead": {
+          "vertDisp": [
+            0,
+            0,
+            0
+          ],
+          "max": 0,
+          "any": false
+        }
+      },
+      "anyAnchorMoved": false
+    },
+    "mouthSmileLeft": {
+      "targetIndex": 43,
+      "anchors": {
+        "mouthCornerLeft": {
+          "vertDisp": [
+            0.0021142663316608377,
+            0.0021082996802800546,
+            0.002113579833492887
+          ],
+          "max": 0.0021142663316608377,
+          "any": true
+        }
+      },
+      "anyAnchorMoved": true
+    },
+    "mouthSmileRight": {
+      "targetIndex": 44,
+      "anchors": {
+        "mouthCornerRight": {
+          "vertDisp": [
+            0.002334123999277287,
+            0.002334123999277287,
+            0.002334123999277287
+          ],
+          "max": 0.002334123999277287,
+          "any": true
+        }
+      },
+      "anyAnchorMoved": true
+    },
+    "mouthPucker": {
+      "targetIndex": 37,
+      "anchors": {
+        "mouthCornerLeft": {
+          "vertDisp": [
+            0.0011362919268931362,
+            0.0011368791078018234,
+            0.0011362911235008725
+          ],
+          "max": 0.0011368791078018234,
+          "any": true
+        },
+        "mouthCornerRight": {
+          "vertDisp": [
+            0.0015648842080939606,
+            0.0015648842080939606,
+            0.0015648842080939606
+          ],
+          "max": 0.0015648842080939606,
+          "any": true
+        },
+        "mouthUpper": {
+          "vertDisp": [
+            0.0015325627382016883,
+            0.0014435864839787633,
+            0.0014650903762537498
+          ],
+          "max": 0.0015325627382016883,
+          "any": true
+        },
+        "mouthLower": {
+          "vertDisp": [
+            0.0015648848703947265,
+            0.0015648847379345265,
+            0.0015648847379345265
+          ],
+          "max": 0.0015648848703947265,
+          "any": true
+        }
+      },
+      "anyAnchorMoved": true
+    }
+  },
+  "rootCause": [
+    "Required Functional channels FAIL against reviewed GT (blink openDrop=0, brow lift=0, jaw gap below/inverted, smile under threshold, pucker width ratio too high).",
+    "eyeBlink morph support does not displace reviewed eyelid anchor vertices (m5: 0 on all lid anchors; f5: tiny upper only).",
+    "QtMesh MARKER_SIM=2 recipe is deterministic: reauthor output morph POSITION buffers are byte-identical to public face1 — cannot satisfy Functional QA without a different authoring recipe or FaceRig capability outside this slice.",
+    "Historical #402 acceptance already noted same-recipe QtMesh re-auth reproduces morph energy failures; Functional QA (#422) now fail-closes publish."
+  ],
+  "notDone": [
+    "No VRM publish",
+    "No resolver/cache-bust update",
+    "No threshold/gain/deadZone changes",
+    "No #424 retarget tuning",
+    "#423 remains open"
+  ]
+}

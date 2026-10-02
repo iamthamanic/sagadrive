@@ -1,0 +1,39 @@
+{
+  "vsBlink1": {
+    "changed": [
+      "browInnerUp"
+    ],
+    "onlyBrow": true
+  },
+  "vsFace1": {
+    "changed": [
+      "browInnerUp",
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
+      "jawOpen"
+    ],
+    "count": 4,
+    "expected4": true
+  },
+  "hashes": {
+    "jawOpen": {
+      "baseline": "28d455fde18cf236474b440d70a9f1d6ddff77502c6a0490abe9da137c6eb542",
+      "after": "28d455fde18cf236474b440d70a9f1d6ddff77502c6a0490abe9da137c6eb542",
+      "same": true
+    },
+    "eyeBlinkLeft": {
+      "baseline": "49a4150169ad4a08ffa7c55c5c68af7d5ea7a3483dd1a6391d11cd44b520fe75",
+      "after": "49a4150169ad4a08ffa7c55c5c68af7d5ea7a3483dd1a6391d11cd44b520fe75",
+      "same": true
+    },
+    "eyeBlinkRight": {
+      "baseline": "c02cb005803f9a30ce5cab86640d8eae8b9413290dc1635867337c22fb0c4b5f",
+      "after": "c02cb005803f9a30ce5cab86640d8eae8b9413290dc1635867337c22fb0c4b5f",
+      "same": true
+    },
+    "browInnerUp": {
+      "before": "1bc8f65285e3074839d020924e733beb02e42f350b3016e1f4a439e126fc049d",
+      "after": "52f808420a23bb011de7fdd4251baf7258df3e56d03c7d2d29c0325badd5303f"
+    }
+  }
+}

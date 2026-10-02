@@ -1,0 +1,39 @@
+{
+  "required": 0.06,
+  "approach": "Option B shell + Option C rewrite for required channel jawOpen",
+  "m5": {
+    "assetId": "m5",
+    "mode": "rewrite_jawOpen_from_gt_neighborhoods",
+    "ampFactor": 0.18,
+    "faceH": 0.35805755770756115,
+    "affected": 13055,
+    "gapDeltaBefore": -0.000486043954055812,
+    "gapDeltaAfter": 0.07405063951799004,
+    "meetsFloor": true,
+    "upperDisp": 0,
+    "lowerDisp": 0.07906439167381646,
+    "upperStable": true,
+    "noseDispFaceH": 0,
+    "foreheadDispFaceH": 0,
+    "noseOk": true,
+    "foreheadOk": true
+  },
+  "f5": {
+    "assetId": "f5",
+    "mode": "rewrite_jawOpen_from_gt_neighborhoods",
+    "ampFactor": 0.2,
+    "faceH": 0.34713768187302835,
+    "affected": 21841,
+    "gapDeltaBefore": -0.008627692309795178,
+    "gapDeltaAfter": 0.07693932757683064,
+    "meetsFloor": true,
+    "upperDisp": 0,
+    "lowerDisp": 0.08671991173972664,
+    "upperStable": true,
+    "noseDispFaceH": 0,
+    "foreheadDispFaceH": 0,
+    "noseOk": true,
+    "foreheadOk": true
+  },
+  "jawOpenFeasible": true
+}

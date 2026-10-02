@@ -1,0 +1,14 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "manual_override",
+  "reviewed": true,
+  "reviewStatus": "human_reviewed",
+  "reviewedAt": "2026-10-01T08:45:52.989Z",
+  "asset": {
+    "modelPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-blink1.glb",
+    "modelSha256": "bf9f6eced69a77d2c4465ed83eace7dce819fb46f0874a91ec230d4f12e6991f",
+    "anchorsSha256": "2b7e9967aed0577bb3c628bfe1cc5272a7cc184f78b9cdf32793d9fb3b865a96",
+    "topologyFingerprint": "v133002:t215832:m1"
+  },
+  "note": "GT carry-forward after blink1 (L+R); sourceJawOpen1=c610d9fccd6bc06c97cc4b8d8352006c0af6fa79be45eb31d1f5141706b55afa; target=bf9f6eced69a77d2c4465ed83eace7dce819fb46f0874a91ec230d4f12e6991f"
+}

@@ -1,0 +1,19 @@
+{
+  "anchorCount": 21,
+  "anchorsStructurallyValid": true,
+  "barycentricAllValid": true,
+  "primitiveNodeAllValid": true,
+  "allowedAvatarSurfaceOnly": true,
+  "noHairSurface": true,
+  "noEquipmentSurface": true,
+  "noHelperDebugSurface": true,
+  "topologyFingerprintMatch": true,
+  "assetShaMatch": true,
+  "anatomyValidatorPass": true,
+  "leftRightSemanticsPlausible": true,
+  "symmetryPlausibleWhereApplicable": true,
+  "modelSha256": "a003a7acb04aa0bf2be0329d88d69797009e327dcf887f8c4a9babfa2846890c",
+  "anchorsSha256": "89bbcd8b6ba49bbd0c0a8424127617316e406b3974863e06dfd2568129bd9f5e",
+  "topologyFingerprint": "v147707:t214973:m1",
+  "candidateModelPath": "public/assets/avatars/species/human-female-quality-20260921-f5-face1.glb"
+}

@@ -1,0 +1,172 @@
+{
+  "frozenAt": "2026-10-01T23:37:46.985Z",
+  "codeHead": "a3424e1a00e7c8cb3fbd362c13142672b8bb4af4",
+  "assets": {
+    "m5": {
+      "id": "m5",
+      "publishedGlb": "public/assets/avatars/species/human-male-quality-20260921-m5-face3.glb",
+      "publishedGlbSha256": "5052b0adc8a3287a02309203ce37ee2344aeda8f63b203098c82897626e87153",
+      "publishedVrm": "public/assets/avatars/species/human-male-quality-20260921-m5-face3.vrm",
+      "publishedVrmSha256": "61225e434bf2e4ad9713348f14e8b4b380571b0d39696eb73cf36676347c7a83",
+      "morphHashes": {
+        "jawOpen": "e046833a9c0e00695b138d30ee4710939c8985403c6faba32f0728bc6bf34ddc",
+        "eyeBlinkLeft": "c601c77b4209188c791c974f5c7fb0b9e2151621f2067893c3a164bb97a91b71",
+        "eyeBlinkRight": "681ff38de2d75675e37047902901e40599737857d28f86fcc7f8176d30c3883f",
+        "browInnerUp": "52f808420a23bb011de7fdd4251baf7258df3e56d03c7d2d29c0325badd5303f",
+        "mouthSmileLeft": "6df06ad3b3a13b14a591a6156a47a5a5776445f5294f4a1e8ff0b2631c944479",
+        "mouthSmileRight": "7e0132a6769368b04c66efef9198285ddd087cb6c7d6c01509e0abae790164be",
+        "mouthPucker": "e3e542a02d4cd32bd321acf9da0f26beaf6f84235260b2016a4d66324757495c"
+      },
+      "meanEdgeLength": 0.004193395784791266,
+      "maxTopologyHops": 41,
+      "thresholds": {
+        "tauCoincide": 0.0005032074941749519,
+        "tauNear": 0.004296690692490734,
+        "tauGtLocal": 0.064450360387361,
+        "minCoincidePairs": 10,
+        "minMeanNormalDot": 0.55,
+        "maxWholeCompBodyFrac": 0.35,
+        "maxPatchBodyFrac": 0.12,
+        "maxPatchHops": 3,
+        "topoFalloffExp": 1.15
+      },
+      "acceptedComponents": [
+        176,
+        177,
+        189,
+        286,
+        292,
+        341
+      ],
+      "rejectedBody": [
+        {
+          "componentId": 65,
+          "reason": "whole_comp_body",
+          "wholeCompBodyFrac": 0.8439716312056738,
+          "coincideCount": 15
+        },
+        {
+          "componentId": 284,
+          "reason": "whole_comp_body",
+          "wholeCompBodyFrac": 0.8563484708063022,
+          "coincideCount": 0
+        }
+      ],
+      "patchSets": [
+        {
+          "componentId": 176,
+          "patchVertexCount": 133,
+          "seamPairCount": 33,
+          "patchVertsSha256": "9b16b5def5efffa08a832823ee62dea873051b56fd7d8c8c3fc826708f82f307",
+          "seamPairsSha256": "d8ff641c9de5eebe1cffec1cdb03d678b1c70e2c57114a8f33e5f487bed36516"
+        },
+        {
+          "componentId": 177,
+          "patchVertexCount": 96,
+          "seamPairCount": 19,
+          "patchVertsSha256": "1b648334ac354188879d6366fec0271d082af20aec0a2d64343f1fd801f055f5",
+          "seamPairsSha256": "21880a230caf3a3d8c942819cb8a767427d5f8010938e4cf2c02fb6b56a8359a"
+        },
+        {
+          "componentId": 189,
+          "patchVertexCount": 120,
+          "seamPairCount": 25,
+          "patchVertsSha256": "4d2e4c0aaf91b715b994d2c95f1c6a40efeb3de1dd5c8c7b7a29d78ce593b52e",
+          "seamPairsSha256": "bb62677a7ecd0d62c7c17fd02bfefc733f00f9c1d96dee92004bd55c93917b31"
+        },
+        {
+          "componentId": 286,
+          "patchVertexCount": 119,
+          "seamPairCount": 31,
+          "patchVertsSha256": "d93ba83f013e61a2df60cb12edaa2d174d0f8fd50859a152bc220abbf2d61718",
+          "seamPairsSha256": "14155af32a962b4b58a3ff0cc4f01f23be62dc2f993924f459c7700af9cdd93b"
+        },
+        {
+          "componentId": 292,
+          "patchVertexCount": 257,
+          "seamPairCount": 62,
+          "patchVertsSha256": "5a9c8e22aaad58d16d2daf67e34716696edf3c24dfa97f338b4e411b080e3f2a",
+          "seamPairsSha256": "111293214628ac5ffaf7661e99dc9e604141f204e0511ff37c95cb616a4d87c1"
+        },
+        {
+          "componentId": 341,
+          "patchVertexCount": 133,
+          "seamPairCount": 33,
+          "patchVertsSha256": "1c8e61849c164cb0ae7392eb07952bcc392855a2a028d4517eaada8c92031889",
+          "seamPairsSha256": "aaa70d4a760c3c51d63ca68e257a3f3b400a8a79b53413977939a7159af06b57"
+        }
+      ],
+      "secondaryBindingCount": 626
+    },
+    "f5": {
+      "id": "f5",
+      "publishedGlb": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.glb",
+      "publishedGlbSha256": "f080391ae1b2e14abfafdafd8e77ff32ee4e2b28e7f03bf1d3eee816edbd9500",
+      "publishedVrm": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm",
+      "publishedVrmSha256": "20db033a14640401d0dbc9940c200fde90da043eacd5632d945474a00d7d8c00",
+      "morphHashes": {
+        "jawOpen": "1956c38e8c27ae0d02c9db2ddeb4534600535f7bd2ddbc7ad9beb7367d4f0fdd",
+        "eyeBlinkLeft": "439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e",
+        "eyeBlinkRight": "e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201",
+        "browInnerUp": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+        "mouthSmileLeft": "d1bcdae0cbb803c79301b84bd1838ab0deb7af32ac183d914e130d06b9623d46",
+        "mouthSmileRight": "71a6c33a5c0777549ef463518ae35ca5fa7510363490f4723fb0b2ae79e6e32f",
+        "mouthPucker": "5f27917ff83ffd236649cedd807a14c08f46fa9d2c61ff966cfeda163bc080d0"
+      },
+      "meanEdgeLength": 0.003926266706358638,
+      "maxTopologyHops": 42,
+      "thresholds": {
+        "tauCoincide": 0.0004711520047630365,
+        "tauNear": 0.00416565218247634,
+        "tauGtLocal": 0.0624847827371451,
+        "minCoincidePairs": 10,
+        "minMeanNormalDot": 0.55,
+        "maxWholeCompBodyFrac": 0.35,
+        "maxPatchBodyFrac": 0.12,
+        "maxPatchHops": 3,
+        "topoFalloffExp": 1.15
+      },
+      "acceptedComponents": [
+        497,
+        1057
+      ],
+      "rejectedBody": [
+        {
+          "componentId": 105,
+          "reason": "whole_comp_body",
+          "wholeCompBodyFrac": 0.8273273273273273,
+          "coincideCount": 27
+        },
+        {
+          "componentId": 1071,
+          "reason": "whole_comp_body",
+          "wholeCompBodyFrac": 0.996969696969697,
+          "coincideCount": 25
+        },
+        {
+          "componentId": 1975,
+          "reason": "whole_comp_body",
+          "wholeCompBodyFrac": 1,
+          "coincideCount": 12
+        }
+      ],
+      "patchSets": [
+        {
+          "componentId": 497,
+          "patchVertexCount": 55,
+          "seamPairCount": 12,
+          "patchVertsSha256": "ffe91a509c5bead3c179e3a3360ff3c4160f03d0c9675d175ebb630165474485",
+          "seamPairsSha256": "6d9d6f47f39f8e0ae8d726ba32ada9027271d57d0127118c23d4316e1b527b27"
+        },
+        {
+          "componentId": 1057,
+          "patchVertexCount": 409,
+          "seamPairCount": 104,
+          "patchVertsSha256": "2fc4b1f2f93eb60407f3f7cd0552e4809e5fe9535cef9b6fcc1a0a6c674f7c0e",
+          "seamPairsSha256": "251e6e05be9637948ba299dc1de434635547a0b94951cdc93ece55a529f24261"
+        }
+      ],
+      "secondaryBindingCount": 348
+    }
+  }
+}

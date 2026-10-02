@@ -1,0 +1,24 @@
+{
+  "contractVersion": "SagaDriveFaceMappingAuthoringV1",
+  "source": "manual_override",
+  "reviewed": true,
+  "reviewStatus": "human_reviewed",
+  "reviewedAt": "2026-10-01T08:45:52.999Z",
+  "asset": {
+    "modelPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/qa/jawopen-coupled-shell1/f5-coupled-shell1.glb",
+    "modelSha256": "f080391ae1b2e14abfafdafd8e77ff32ee4e2b28e7f03bf1d3eee816edbd9500",
+    "anchorsSha256": "89bbcd8b6ba49bbd0c0a8424127617316e406b3974863e06dfd2568129bd9f5e",
+    "topologyFingerprint": "v147707:t214973:m1",
+    "cacheBust": "quality5-face3-vrm1"
+  },
+  "agentReviewLedgerRef": {
+    "protocolVersion": "face-anchor-agent-review-v1",
+    "evidenceManifestSha256": "2c5226b2bf9422ffda003145c1bc52c3d245cc0dd2a36816529be92c01e26549",
+    "requiredPasses": 5,
+    "completedPasses": 5,
+    "aggregationPass": true,
+    "aggregatedAt": "2026-10-01T08:45:52.999Z",
+    "ledgerDir": "assets/species-3d/human/runs/quality-20260930-f5-face3/agent-review"
+  },
+  "note": "Coupled facial shell1 candidate (jawOpen+blinks)."
+}

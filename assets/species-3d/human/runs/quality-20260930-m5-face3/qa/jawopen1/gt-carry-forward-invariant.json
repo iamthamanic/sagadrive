@@ -1,0 +1,16 @@
+{
+  "assetId": "m5",
+  "oldPath": "public/assets/avatars/species/human-male-quality-20260921-m5-face1.glb",
+  "newPath": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-jawopen1.glb",
+  "oldSha256": "134f5137019ec5b26abd977459bd510b763f080c111da3d6ab4f92cb3aaa33ff",
+  "newSha256": "c610d9fccd6bc06c97cc4b8d8352006c0af6fa79be45eb31d1f5141706b55afa",
+  "oldTopology": "v133002:t215832:m1",
+  "newTopology": "v133002:t215832:m1",
+  "topologyMatch": true,
+  "eps": 0.00001,
+  "groundTruthCarryForward": true,
+  "anchorInvariantCount": 21,
+  "anchorInvariantPassCount": 21,
+  "failures": [],
+  "checkedAt": "2026-10-01T11:35:19.396Z"
+}

@@ -1,0 +1,34 @@
+{
+  "vsBrow1": {
+    "changed": [
+      "mouthSmileLeft",
+      "mouthSmileRight"
+    ],
+    "onlySmiles": true
+  },
+  "vsFace1": {
+    "changed": [
+      "browInnerUp",
+      "eyeBlinkLeft",
+      "eyeBlinkRight",
+      "jawOpen",
+      "mouthSmileLeft",
+      "mouthSmileRight"
+    ],
+    "count": 6
+  },
+  "hashes": {
+    "jawOpen": {
+      "same": true
+    },
+    "eyeBlinkLeft": {
+      "same": true
+    },
+    "eyeBlinkRight": {
+      "same": true
+    },
+    "browInnerUp": {
+      "same": true
+    }
+  }
+}

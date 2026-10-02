@@ -1,0 +1,15 @@
+{
+  "assetId": "f5",
+  "oldPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-jawopen1.glb",
+  "newPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-blink1.glb",
+  "oldSha256": "fdffea65effff020d6f2f04a33e78ab3224254edde00c889aa790182bd3e738f",
+  "newSha256": "50d70510bfbd048e5edbe554d42be41cd9a122546023c75676d944afa25be97e",
+  "oldTopology": "v147707:t214973:m1",
+  "newTopology": "v147707:t214973:m1",
+  "topologyMatch": true,
+  "groundTruthCarryForward": true,
+  "anchorInvariantPassCount": 21,
+  "anchorInvariantCount": 21,
+  "failures": [],
+  "checkedAt": "2026-10-01T11:46:59.109Z"
+}

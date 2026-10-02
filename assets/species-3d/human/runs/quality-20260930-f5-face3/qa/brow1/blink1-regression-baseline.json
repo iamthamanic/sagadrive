@@ -1,0 +1,56 @@
+{
+  "contractVersion": "SagaDrive423Blink1ImmutableBaselineV1",
+  "capturedAt": "2026-10-01T12:02:07.809Z",
+  "assets": {
+    "m5": {
+      "path": "assets/species-3d/human/runs/quality-20260930-m5-face3/human-male-quality-20260921-m5-face3-blink1.glb",
+      "glbSha256": "bf9f6eced69a77d2c4465ed83eace7dce819fb46f0874a91ec230d4f12e6991f",
+      "jawOpen": "28d455fde18cf236474b440d70a9f1d6ddff77502c6a0490abe9da137c6eb542",
+      "eyeBlinkLeft": "49a4150169ad4a08ffa7c55c5c68af7d5ea7a3483dd1a6391d11cd44b520fe75",
+      "eyeBlinkRight": "c02cb005803f9a30ce5cab86640d8eae8b9413290dc1635867337c22fb0c4b5f",
+      "browInnerUp": "1bc8f65285e3074839d020924e733beb02e42f350b3016e1f4a439e126fc049d",
+      "jawPass": true,
+      "blinkLPass": true,
+      "blinkRPass": true,
+      "browPass": false,
+      "browBefore": {
+        "browInnerLiftL": 0,
+        "browInnerLiftR": 0,
+        "meanLiftDelta": 0
+      },
+      "browIds": [
+        "browLeftCenter",
+        "browLeftInner",
+        "browLeftOuter",
+        "browRightCenter",
+        "browRightInner",
+        "browRightOuter"
+      ]
+    },
+    "f5": {
+      "path": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-blink1.glb",
+      "glbSha256": "50d70510bfbd048e5edbe554d42be41cd9a122546023c75676d944afa25be97e",
+      "jawOpen": "6beab68143427be50d26d004d8958f199cf6a7b68eace17c0b4ed0e7d0b8faa0",
+      "eyeBlinkLeft": "37b109b278421a1c03c23d01effc98cee3ca4c2984b28570c582f4c238d401d4",
+      "eyeBlinkRight": "271d52f72a7567134f11e03e268e0923faf7d61f380109fb618c14707ea92545",
+      "browInnerUp": "0c00fe038239c410c96e5036d125f05e3e53ad73ec4cf216cdf817b730d1fbf2",
+      "jawPass": true,
+      "blinkLPass": true,
+      "blinkRPass": true,
+      "browPass": false,
+      "browBefore": {
+        "browInnerLiftL": 0,
+        "browInnerLiftR": 0,
+        "meanLiftDelta": 0
+      },
+      "browIds": [
+        "browLeftCenter",
+        "browLeftInner",
+        "browLeftOuter",
+        "browRightCenter",
+        "browRightInner",
+        "browRightOuter"
+      ]
+    }
+  }
+}

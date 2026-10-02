@@ -1,0 +1,14 @@
+{
+  "assetId": "f5",
+  "oldPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-brow1.glb",
+  "newPath": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-smile1.glb",
+  "oldSha256": "3832dc9fa058f4afe4b32ce8fb188abb7e3ea1edb8871f878830551f1521e277",
+  "newSha256": "be9c4f190421c047cdb9001c644ebd4c88e00e9d97e8914bb5695269672553ca",
+  "oldTopology": "v147707:t214973:m1",
+  "newTopology": "v147707:t214973:m1",
+  "topologyMatch": true,
+  "groundTruthCarryForward": true,
+  "anchorInvariantPassCount": 21,
+  "anchorInvariantCount": 21,
+  "checkedAt": "2026-10-01T12:15:05.405Z"
+}

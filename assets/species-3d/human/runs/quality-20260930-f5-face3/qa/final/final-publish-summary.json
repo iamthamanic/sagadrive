@@ -1,0 +1,68 @@
+{
+  "id": "f5",
+  "finalGlb": "assets/species-3d/human/runs/quality-20260930-f5-face3/human-female-quality-20260921-f5-face3-final.glb",
+  "finalGlbSha256": "871e38a7327480277fc39e9394deccb3ffb84ffd0d1b25b4c7377b160f3267ee",
+  "topology": "v147707:t214973:m1",
+  "morphCount": 51,
+  "channelHashes": {
+    "jawOpen": "de9c58ec36fde2feef7702e807d208a5edefad875561ccc68b2ca668e9464b14",
+    "eyeBlinkLeft": "439b9f75cab7b3db8c11bfeecca754916ae9499e3df9b8dbbd90e2c7ddbc432e",
+    "eyeBlinkRight": "e28eedc4ef756155afbf1df7b254c83f2b15536e38843d8307b72e306b044201",
+    "browInnerUp": "bbf84cb7b6b1d7aea3b93dd2750e069cf50bd8689b2929559509b973e2b31efa",
+    "mouthSmileLeft": "d841962774c67e03c9be844b6a8038b7e20f76447338f39b9db74ead47e8fa37",
+    "mouthSmileRight": "89fc0301710211c862cc7e76ec90ceccd5c505d9c45c3f7c72158ff6c9c8c144",
+    "mouthPucker": "dd3601dd5984e708e58c0c12c72052041c280e4cf5980f164297ca29ec1f0231"
+  },
+  "changedVsFace1": [
+    "browInnerUp",
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "jawOpen",
+    "mouthPucker",
+    "mouthSmileLeft",
+    "mouthSmileRight"
+  ],
+  "rest44Identical": true,
+  "structural": true,
+  "anatomy": true,
+  "semantic": true,
+  "gt": true,
+  "functional": {
+    "jawOpen": true,
+    "eyeBlinkLeft": true,
+    "eyeBlinkRight": true,
+    "browInnerUp": true,
+    "mouthSmileLeft": true,
+    "mouthSmileRight": true,
+    "mouthPucker": true
+  },
+  "functionalOverall": true,
+  "combinationPass": true,
+  "coupledShell": {
+    "accepted": [
+      497,
+      1057
+    ],
+    "bodyFp": 0,
+    "seamMax": 7.839364057682576e-7,
+    "pass": true
+  },
+  "visualSanity": {
+    "morphDeltaMax": 0.0230465441271755,
+    "morphDeltaNan": false,
+    "jawGapMetric": 0.12333841,
+    "reauthorVisualEvidence": true,
+    "seamMax": 7.839364057682576e-7,
+    "grotesqueSpike": false,
+    "pass": true
+  },
+  "publicGlb": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.glb",
+  "publicVrm": "public/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm",
+  "publicGlbSha256": "871e38a7327480277fc39e9394deccb3ffb84ffd0d1b25b4c7377b160f3267ee",
+  "publicVrmSha256": "3d288739ce733732be9657d2d1aab6dce92bfa800e4cb67799e6ec72450aa8f3",
+  "vrmFunctionalPass": true,
+  "morphParityOk": true,
+  "gazeMode": "morphs",
+  "packGaze": "morphs",
+  "cacheBust": "quality5-face3-repro1"
+}
