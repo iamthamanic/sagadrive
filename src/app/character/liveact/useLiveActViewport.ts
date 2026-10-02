@@ -41,6 +41,7 @@ import {
   type LiveActMotionTestStepPeakV1,
   type LiveActMotionTestStepResultV1,
   type LiveActRangeStepPhase,
+  type LiveActSourceSample,
   type LiveActStatus,
 } from '../../../domains/character/liveact';
 import type { LiveActCharacterFaceDebugHandle } from '../../../infrastructure/character/avatar/character-studio-runtime';
@@ -399,6 +400,31 @@ export function useLiveActViewport({
     const unsubDiagnostics = engine.subscribeDiagnostics((frame) => {
       diagnosticsRef.current = frame;
     });
+    // Playwright / local E2E only: ?liveactE2e=1 or window.__SAGA_ENABLE_LIVEACT_E2E__ (no storage).
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const e2eOn =
+        params.get('liveactE2e') === '1' ||
+        (window as Window & { __SAGA_ENABLE_LIVEACT_E2E__?: boolean }).__SAGA_ENABLE_LIVEACT_E2E__ ===
+          true;
+      if (e2eOn) {
+        (
+          window as Window & {
+            __SAGA_LIVEACT_E2E__?: {
+              ingestSample: (sample: LiveActSourceSample, timestampMs?: number) => unknown;
+              getDiagnosticsV2: () => LiveActDiagnosticsV2Snapshot | null;
+              getState: () => LiveActEngineState;
+            };
+          }
+        ).__SAGA_LIVEACT_E2E__ = {
+          ingestSample: (sample, timestampMs = performance.now()) =>
+            engine.ingestSampleForTests(sample, timestampMs),
+          getDiagnosticsV2: () => engine.getDiagnosticsV2(),
+          getState: () => engine.getState(),
+        };
+      }
+    }
+
     const unsubDiagnosticsV2 = engine.subscribeDiagnosticsV2((snapshot) => {
       diagnosticsV2Ref.current = snapshot;
       if (calibrationStatusRef.current === 'running') {
@@ -428,6 +454,13 @@ export function useLiveActViewport({
       unsubStatus();
       unsubDiagnostics();
       unsubDiagnosticsV2();
+      if (typeof window !== 'undefined') {
+        delete (
+          window as Window & {
+            __SAGA_LIVEACT_E2E__?: unknown;
+          }
+        ).__SAGA_LIVEACT_E2E__;
+      }
       releaseSharedLiveActEngine();
       engineRef.current = null;
       diagnosticsRef.current = null;

@@ -1,0 +1,75 @@
+{
+  "measuredAt": "2026-10-02T08:21:39.517Z",
+  "retarget": "NO RETARGET OVERRIDES REQUIRED",
+  "mirrorAvatar": true,
+  "channels": {
+    "jawOpen": {
+      "raw": 0.62,
+      "appliedChannel": "jawOpen",
+      "calibrated": 0.62,
+      "retargeted": 0.62,
+      "underResponsive": false,
+      "overResponsive": false
+    },
+    "eyeBlinkLeft": {
+      "raw": 0.62,
+      "appliedChannel": "eyeBlinkRight",
+      "calibrated": 0.62,
+      "retargeted": 0.62,
+      "underResponsive": false,
+      "overResponsive": false
+    },
+    "eyeBlinkRight": {
+      "raw": 0.62,
+      "appliedChannel": "eyeBlinkLeft",
+      "calibrated": 0.62,
+      "retargeted": 0.62,
+      "underResponsive": false,
+      "overResponsive": false
+    },
+    "browInnerUp": {
+      "raw": 0.62,
+      "appliedChannel": "browInnerUp",
+      "calibrated": 0.62,
+      "retargeted": 0.62,
+      "underResponsive": false,
+      "overResponsive": false
+    },
+    "mouthSmileLeft": {
+      "raw": 0.62,
+      "appliedChannel": "mouthSmileRight",
+      "calibrated": 0.62,
+      "retargeted": 0.62,
+      "underResponsive": false,
+      "overResponsive": false
+    },
+    "mouthSmileRight": {
+      "raw": 0.62,
+      "appliedChannel": "mouthSmileLeft",
+      "calibrated": 0.62,
+      "retargeted": 0.62,
+      "underResponsive": false,
+      "overResponsive": false
+    },
+    "mouthPucker": {
+      "raw": 0.62,
+      "appliedChannel": "mouthPucker",
+      "calibrated": 0.62,
+      "retargeted": 0.62,
+      "underResponsive": false,
+      "overResponsive": false
+    }
+  },
+  "pose": {
+    "rawYaw": 0.3,
+    "appliedYaw": -0.3,
+    "rawPitch": -0.2,
+    "appliedPitch": -0.2,
+    "rawGazeLX": 0.4,
+    "appliedGazeLX": -0.35
+  },
+  "lost": {
+    "trackingLost": true,
+    "jaw": 0
+  }
+}

@@ -35,7 +35,23 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        // Software WebGL for LiveAct / Three.js E2E on GPU-less CI runners.
+        launchOptions: {
+          args: [
+            '--use-angle=swiftshader',
+            '--enable-webgl',
+            '--ignore-gpu-blocklist',
+            '--use-gl=angle',
+            // Chrome 139+: software GL requires this opt-in on GPU-less runners.
+            '--enable-unsafe-swiftshader',
+          ],
+        },
+      },
+    },
     {
       name: 'mobile-chrome',
       testMatch: /adaptive-ui-quality\.spec\.ts/,
