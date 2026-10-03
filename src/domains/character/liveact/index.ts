@@ -240,3 +240,87 @@ export {
   shouldThrottleLiveActUiStatus,
   shouldDropLiveActInferenceTick,
 } from './liveact-runtime-policy';
+
+export {
+  LIVEACT_PERFECT_FIDELITY_CONTRACT,
+  LIVEACT_FIDELITY_CAPTURE_CONTRACT,
+  LIVEACT_FIDELITY_REPORT_CONTRACT,
+  LIVEACT_PERFECT_FIDELITY_TARGETS_VERSION,
+  LIVEACT_PERFECT_FIDELITY_BENCHMARK_VERSION,
+  LIVEACT_PERFECT_FIDELITY_STAGES,
+  LIVEACT_PERFECT_FIDELITY_TARGETS,
+  LIVEACT_FIDELITY_METRIC_STATUSES,
+  LIVEACT_FIDELITY_MOTION_PHASES,
+  LIVEACT_FIDELITY_NOMINAL_SAMPLE_RATE_HZ,
+  LIVEACT_FIDELITY_PHASE_SAMPLES_500MS,
+  LIVEACT_FIDELITY_CORRELATION_LAG_WINDOW_MS,
+  LIVEACT_FIDELITY_RETURN_STABLE_MS,
+  LIVEACT_FIDELITY_SATURATION_THRESHOLD,
+  LIVEACT_FIDELITY_NEUTRAL_TOLERANCE,
+  evaluateFidelityMaxTarget,
+  evaluateFidelityMinTarget,
+  evaluateFidelityRangeTarget,
+  type LiveActPerfectFidelityStageId,
+  type LiveActFidelityMetricStatus,
+  type LiveActFidelityMotionPhase,
+  type LiveActFidelityMetricResultV1,
+  type LiveActPerfectFidelityTargets,
+} from './liveact-perfect-fidelity-contract';
+
+export {
+  fidelityPercentile,
+  fidelityMedian,
+  fidelityMad,
+  fidelityPearson,
+  fidelityBestLagCorrelation,
+  fidelityAmplitudeRetentionPct,
+  fidelityVelocityRetentionPct,
+  fidelitySaturationFraction,
+  fidelityGazeAngularErrorDeg,
+  fidelityContourErrorPctMouthWidth,
+  fidelityCountSequenceGaps,
+} from './liveact-perfect-fidelity-math';
+
+export {
+  buildFidelityCaptureSession,
+  createEmptyFidelityStageSamples,
+  fidelityCaptureDurationMs,
+  fidelityStageCoverage,
+  extractFidelitySignalSeries,
+  extractFidelityPhaseSeries,
+  type LiveActFidelityCaptureSessionV1,
+  type LiveActFidelityTimeSampleV1,
+  type LiveActFidelitySourceKind,
+} from './liveact-perfect-fidelity-capture';
+
+export {
+  evaluateFidelityMotionProbe,
+  evaluateFidelitySpeechChannel,
+  evaluateFidelityRuntimeMetrics,
+  evaluateFidelityReturnLagMs,
+  evaluateFidelityGazeAngular,
+  evaluateFidelityContour,
+  buildFidelityReport,
+  fidelityReportForEquality,
+  type LiveActFidelityReportV1,
+  type LiveActFidelityMotionProbeResultV1,
+  type LiveActFidelitySpeechResultV1,
+} from './liveact-perfect-fidelity-evaluate';
+
+export {
+  LIVEACT_FIDELITY_SYNTHETIC_FIXTURE_IDS,
+  buildFidelityMotionProbeFixture,
+  fixturePerfectIdentityJaw,
+  fixtureKnownLatency,
+  fixtureAmplitudeUnderResponse,
+  fixtureAmplitudeOverResponse,
+  fixtureCrossTalk,
+  fixtureJitter,
+  fixtureSaturation,
+  fixtureDelayedReturn,
+  fixtureDroppedFrames,
+  fixtureSpeechShaped,
+  fixtureGazeAngularError,
+  fixtureContourError,
+  fixtureMissingAppliedStage,
+} from './liveact-perfect-fidelity-fixtures';

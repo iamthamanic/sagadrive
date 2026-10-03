@@ -1,0 +1,465 @@
+{
+  "contractVersion": "SagaDriveLiveActFidelityReportV1",
+  "fidelityContractVersion": "SagaDriveLiveActPerfectFidelityV1",
+  "benchmarkVersion": "pf-benchmark-v1",
+  "scenarioId": "v1-compatibility-baseline",
+  "sourceKind": "synthetic",
+  "sampleRate": 30,
+  "durationMs": 1466.6666666666667,
+  "stageCoverage": {
+    "raw": {
+      "present": 45,
+      "missing": 0
+    },
+    "mapped": {
+      "present": 45,
+      "missing": 0
+    },
+    "smoothed": {
+      "present": 45,
+      "missing": 0
+    },
+    "calibrated": {
+      "present": 45,
+      "missing": 0
+    },
+    "retargeted": {
+      "present": 45,
+      "missing": 0
+    },
+    "applied": {
+      "present": 45,
+      "missing": 0
+    }
+  },
+  "targetsVersion": "pf-targets-v1",
+  "metrics": [
+    {
+      "id": "jawOpen.settle.neutralBias",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "jawOpen.settle.neutralNoise",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "jawOpen.hold.amplitude",
+      "value": 0.7,
+      "unit": "normalized",
+      "target": 0.7,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "jawOpen.hold.crossTalkRatio",
+      "value": 0,
+      "unit": "ratio",
+      "target": 0.05,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "jawOpen.return.additionalLagMs",
+      "value": 0,
+      "unit": "ms",
+      "target": 70,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "eyeBlinkLeft.settle.neutralBias",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "eyeBlinkLeft.settle.neutralNoise",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "eyeBlinkLeft.hold.amplitude",
+      "value": 0.95,
+      "unit": "normalized",
+      "target": 0.95,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "eyeBlinkLeft.hold.crossTalkRatio",
+      "value": 0,
+      "unit": "ratio",
+      "target": 0.05,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "eyeBlinkLeft.return.additionalLagMs",
+      "value": 0,
+      "unit": "ms",
+      "target": 70,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "eyeBlinkRight.settle.neutralBias",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "eyeBlinkRight.settle.neutralNoise",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "eyeBlinkRight.hold.amplitude",
+      "value": 0.95,
+      "unit": "normalized",
+      "target": 0.95,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "eyeBlinkRight.hold.crossTalkRatio",
+      "value": 0,
+      "unit": "ratio",
+      "target": 0.05,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "eyeBlinkRight.return.additionalLagMs",
+      "value": 0,
+      "unit": "ms",
+      "target": 70,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "browInnerUp.settle.neutralBias",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "browInnerUp.settle.neutralNoise",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "browInnerUp.hold.amplitude",
+      "value": 0.6,
+      "unit": "normalized",
+      "target": 0.6,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "browInnerUp.hold.crossTalkRatio",
+      "value": 0,
+      "unit": "ratio",
+      "target": 0.05,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "browInnerUp.return.additionalLagMs",
+      "value": 0,
+      "unit": "ms",
+      "target": 70,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthSmileLeft.settle.neutralBias",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthSmileLeft.settle.neutralNoise",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthSmileLeft.hold.amplitude",
+      "value": 0.7,
+      "unit": "normalized",
+      "target": 0.7,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthSmileLeft.hold.crossTalkRatio",
+      "value": 0,
+      "unit": "ratio",
+      "target": 0.05,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthSmileLeft.return.additionalLagMs",
+      "value": 0,
+      "unit": "ms",
+      "target": 70,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthSmileRight.settle.neutralBias",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthSmileRight.settle.neutralNoise",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthSmileRight.hold.amplitude",
+      "value": 0.7,
+      "unit": "normalized",
+      "target": 0.7,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthSmileRight.hold.crossTalkRatio",
+      "value": 0,
+      "unit": "ratio",
+      "target": 0.05,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthSmileRight.return.additionalLagMs",
+      "value": 0,
+      "unit": "ms",
+      "target": 70,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthPucker.settle.neutralBias",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthPucker.settle.neutralNoise",
+      "value": 0,
+      "unit": "normalized",
+      "target": 0.03,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthPucker.hold.amplitude",
+      "value": 0.65,
+      "unit": "normalized",
+      "target": 0.65,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthPucker.hold.crossTalkRatio",
+      "value": 0,
+      "unit": "ratio",
+      "target": 0.05,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "mouthPucker.return.additionalLagMs",
+      "value": 0,
+      "unit": "ms",
+      "target": 70,
+      "status": "PASS",
+      "sampleCount": 15
+    },
+    {
+      "id": "runtime.effectiveFps",
+      "value": 30.68181818181818,
+      "unit": "Hz",
+      "target": 30,
+      "status": "PASS",
+      "sampleCount": 45
+    },
+    {
+      "id": "runtime.droppedInferenceFraction",
+      "value": 0,
+      "unit": "fraction",
+      "target": 0.01,
+      "status": "PASS",
+      "sampleCount": 45
+    },
+    {
+      "id": "runtime.processingDelayMedianMs",
+      "value": 0,
+      "unit": "ms",
+      "target": 50,
+      "status": "PASS",
+      "sampleCount": 45,
+      "note": "synthetic sync — processing delay measured in-process (not camera acquisition)"
+    },
+    {
+      "id": "runtime.cameraToAvatarP95Ms",
+      "value": null,
+      "unit": "ms",
+      "target": 100,
+      "status": "NOT_MEASURED",
+      "sampleCount": 0,
+      "note": "no authoritative camera acquisition timestamp on V1 synthetic path"
+    },
+    {
+      "id": "runtime.inputFrames",
+      "value": 45,
+      "unit": "count",
+      "target": null,
+      "status": "PASS",
+      "sampleCount": 45
+    },
+    {
+      "id": "runtime.processedFrames",
+      "value": 45,
+      "unit": "count",
+      "target": null,
+      "status": "PASS",
+      "sampleCount": 45
+    },
+    {
+      "id": "runtime.appliedFrames",
+      "value": 45,
+      "unit": "count",
+      "target": null,
+      "status": "PASS",
+      "sampleCount": 45
+    },
+    {
+      "id": "runtime.droppedInferenceFrames",
+      "value": 0,
+      "unit": "count",
+      "target": null,
+      "status": "PASS",
+      "sampleCount": 0
+    },
+    {
+      "id": "face.jawOpen.correlationAligned",
+      "value": 1,
+      "unit": "r",
+      "target": 0.95,
+      "status": "PASS",
+      "sampleCount": 60
+    },
+    {
+      "id": "face.jawOpen.bestLagMs",
+      "value": 33.333333333333336,
+      "unit": "ms",
+      "target": 66,
+      "status": "PASS",
+      "sampleCount": 60
+    },
+    {
+      "id": "face.jawOpen.amplitudeRetentionPct",
+      "value": 100,
+      "unit": "percent",
+      "target": "90-110",
+      "status": "PASS",
+      "sampleCount": 60
+    },
+    {
+      "id": "face.jawOpen.velocityRetentionPct",
+      "value": 99.61243109010549,
+      "unit": "percent",
+      "target": "90-110",
+      "status": "PASS",
+      "sampleCount": 60
+    },
+    {
+      "id": "face.jawOpen.saturationFraction",
+      "value": 0,
+      "unit": "fraction",
+      "target": 0.05,
+      "status": "PASS",
+      "sampleCount": 60
+    },
+    {
+      "id": "v1.gaze.angularErrorMedianDeg",
+      "value": null,
+      "unit": "deg",
+      "target": 3,
+      "status": "NOT_MEASURED",
+      "sampleCount": 0,
+      "note": "requires dense iris/gaze stage (#446); synthetic schema verified separately"
+    },
+    {
+      "id": "v1.lips.contourMedianErrorPctMouthWidth",
+      "value": null,
+      "unit": "percent",
+      "target": 3,
+      "status": "NOT_MEASURED",
+      "sampleCount": 0,
+      "note": "requires dense geometry stage (#445); synthetic schema verified separately"
+    },
+    {
+      "id": "v1.runtime.cameraToAvatarP95Ms",
+      "value": null,
+      "unit": "ms",
+      "target": 100,
+      "status": "NOT_MEASURED",
+      "sampleCount": 0,
+      "note": "no authoritative camera acquisition timestamp on V1 path"
+    },
+    {
+      "id": "runtime.processingDelayMedianMs",
+      "value": 66.66666666666667,
+      "unit": "ms",
+      "target": 50,
+      "status": "MISS",
+      "sampleCount": 45
+    }
+  ],
+  "warnings": [
+    "V1 baseline measurement via synthetic fixtures + identity pipeline semantics",
+    "Dense contour / iris runtime NOT_MEASURED until #445/#446",
+    "Camera→avatar latency NOT_MEASURED without acquisition timestamp (except latency fixture)"
+  ],
+  "measuredAt": "2026-10-03T16:35:40.023Z"
+}
