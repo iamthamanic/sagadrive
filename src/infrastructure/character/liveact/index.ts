@@ -15,6 +15,7 @@ export {
   type LiveActStatusListener,
   type LiveActFrameListener,
   type LiveActDiagnosticsListener,
+  type LiveActDenseFaceFeaturesListener,
   type LiveActCalibrationResult,
   type LiveActCalibrationStatus,
 } from './liveact-engine';
@@ -29,7 +30,13 @@ export {
   createMediaPipeLiveActFaceSource,
   type LiveActFaceSource,
   type LiveActFaceSourceFactory,
+  type LiveActFaceDetectResult,
 } from './mediapipe-face-source';
+export {
+  MEDIAPIPE_DENSE_SEMANTIC_POINTS_VERSION,
+  MEDIAPIPE_DENSE_EXTENSION_MAP_V1,
+  mapMediaPipeLandmarksToDenseSemanticGeometry,
+} from './mediapipe-dense-semantic-points-v1';
 export {
   createLiveActRigDebugController,
   type LiveActRigDebugController,

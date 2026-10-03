@@ -324,3 +324,65 @@ export {
   fixtureContourError,
   fixtureMissingAppliedStage,
 } from './liveact-perfect-fidelity-fixtures';
+
+export {
+  LIVEACT_DENSE_FACE_FEATURES_CONTRACT,
+  LIVEACT_DENSE_SEMANTIC_GEOMETRY_CONTRACT,
+  DENSE_SEMANTIC_POINT_IDS,
+  unavailableDenseScalar,
+  availableDenseScalar,
+  createEmptyDenseFaceFeatures,
+  assertDenseFaceFeaturesLocalOnly,
+  type DenseSemanticPointId,
+  type DenseScalarFeatureV1,
+  type DenseContourStationsV1,
+  type DenseLipsFeaturesV1,
+  type DenseEyesFeaturesV1,
+  type DenseBrowsFeaturesV1,
+  type DenseCheeksFeaturesV1,
+  type DenseNoseFeaturesV1,
+  type DenseJawFeaturesV1,
+  type LiveActDenseFaceFeaturesV1,
+  type DenseSemanticPoint3,
+  type DenseSemanticGeometryV1,
+  type DenseNormalizationStatus,
+} from './liveact-dense-face-features-contract';
+
+export {
+  buildDenseFaceLocalFrame,
+  mapGeometryToDenseLocal,
+  toDenseLocalPoint,
+  transformDenseSemanticGeometry,
+  denseLocalDistance,
+  type DenseFaceLocalFrameV1,
+  type DenseLocalPointMap,
+  type Vec3,
+} from './liveact-dense-face-features-normalize';
+
+export {
+  extractDenseFaceFeatures,
+  denseFeaturesForEquality,
+} from './liveact-dense-face-features-extract';
+
+export {
+  LIVEACT_DENSE_FIXTURE_IDS,
+  buildCanonicalNeutralGeometry,
+  buildDenseFixtureGeometry,
+  fixtureMouthOpen,
+  fixtureSmileLeft,
+  fixtureSmileRight,
+  fixturePuckerCompression,
+  fixtureEyeCloseLeft,
+  fixtureEyeCloseRight,
+  fixtureEyesBothClosed,
+  fixtureBrowInnerRaise,
+  fixtureBrowOuterLeft,
+  fixtureCheekRaiseLeft,
+  fixtureNoseNasolabial,
+  fixtureChinDrop,
+  fixturePartialMissingMouth,
+  fixtureDegenerateScale,
+  type LiveActDenseFixtureId,
+} from './liveact-dense-face-features-fixtures';
+
+export { evaluateDenseFeatureLipContour } from './liveact-dense-face-features-contour-metric';

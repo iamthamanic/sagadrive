@@ -780,6 +780,16 @@ function checkLiveActPerfectFidelityBenchmark() {
   });
 }
 
+function checkLiveActDenseFaceFeatures() {
+  console.log(
+    'LiveAct dense face features (#445): semantic geometry + face-local normalize + regions...',
+  );
+  execFileSync(process.execPath, ['scripts/liveact-dense-face-features-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFacePipelineDocs() {
   console.log('LiveAct face pipeline docs (#386): AUTHORING v1.1 + FACE-AUTHORING...');
   execFileSync(process.execPath, ['scripts/liveact-face-pipeline-doc-check.mjs'], {
@@ -1599,6 +1609,7 @@ checkAvatarVrmPack();
 checkLiveActFaceFidelityE2E();
 checkLiveActFaceSetupE2E();
 checkLiveActPerfectFidelityBenchmark();
+checkLiveActDenseFaceFeatures();
 checkLiveActFacePipelineDocs();
 checkLiveActFaceHumanRepro();
 checkLiveActRigDebug();
