@@ -14,3 +14,5 @@
 
 ## Non-goals confirmed
 No solver / retarget / morph / iris / dense geometry runtime changes.
+
+- HEAD: `2000d47ef5fdee56b04aca2c034d26a272f4a890`

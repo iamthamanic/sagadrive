@@ -8,3 +8,5 @@ synthetic/live input → RAW → MAPPED → SMOOTHED → CALIBRATED → RETARGET
 
 ## Flags
 none — measurement layer only; reuses Diagnostics V2 stage names; does not inflate LiveActFrameV1.
+
+- HEAD: `2000d47ef5fdee56b04aca2c034d26a272f4a890`
