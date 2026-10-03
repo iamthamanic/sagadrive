@@ -1,11 +1,12 @@
 /**
- * LiveActEngine — local webcam/MediaPipe performance-capture core (#329, #331).
+ * LiveActEngine — local webcam/MediaPipe performance-capture core (#329, #331, #445).
  * Location: src/infrastructure/character/liveact/liveact-engine.ts
  *
  * Wraps the shared MediaPipe face source. At most one active camera/detector.
  * Legacy AvatarFaceTrackingRuntime is compatibility-only (no productive canvas consumer).
  * RAW is the tracker's anatomical sample; everything from MAPPED on (calibration included) is in
  * avatar orientation (LIVEACT_MIRROR_AVATAR).
+ * Dense face features (#445) are a side-channel — never stuffed into LiveActFrameV1.
  */
 
 import {
@@ -16,10 +17,12 @@ import {
   LIVEACT_RANGE_CALIBRATION_STEPS,
   LIVEACT_RANGE_STEP_MIN_FRAMES,
   LIVEACT_RANGE_STEP_MIN_MS,
+  assertDenseFaceFeaturesLocalOnly,
   assertLiveActFrameLocalOnly,
   applyLiveActRetargetProfile,
   DEFAULT_LIVEACT_RETARGET_PROFILE,
   assertLiveActDiagnosticsV2LocalOnly,
+  createEmptyDenseFaceFeatures,
   createEmptyLiveActFaceDiagnosticsFrame,
   createEmptyLiveActSourceSample,
   createLiveActCalibrationAccumulator,
@@ -49,6 +52,7 @@ import {
   type LiveActCalibratedStepV1,
   type LiveActCalibrationAccumulator,
   type LiveActCalibrationStepPeakV1,
+  type LiveActDenseFaceFeaturesV1,
   type LiveActDiagnosticsV2Snapshot,
   type LiveActFaceDiagnosticsFrameV1,
   type LiveActFaceChannelId,
@@ -115,6 +119,8 @@ export type LiveActStatusListener = (state: LiveActEngineState) => void;
 export type LiveActFrameListener = (frame: LiveActFrameV1) => void;
 export type LiveActDiagnosticsListener = (frame: LiveActFaceDiagnosticsFrameV1) => void;
 export type LiveActDiagnosticsV2Listener = (snapshot: LiveActDiagnosticsV2Snapshot) => void;
+/** Future #446/#447 consumer access — single engine side-channel, not UI/DOM. */
+export type LiveActDenseFaceFeaturesListener = (frame: LiveActDenseFaceFeaturesV1) => void;
 
 function isMobileHint(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -149,7 +155,9 @@ export class LiveActEngine {
   private readonly frameListeners = new Set<LiveActFrameListener>();
   private readonly diagnosticsListeners = new Set<LiveActDiagnosticsListener>();
   private readonly diagnosticsV2Listeners = new Set<LiveActDiagnosticsV2Listener>();
+  private readonly denseFaceFeaturesListeners = new Set<LiveActDenseFaceFeaturesListener>();
   private diagnosticsV2: LiveActDiagnosticsV2Snapshot | null = null;
+  private denseFaceFeatures: LiveActDenseFaceFeaturesV1 | null = null;
   private neutralBaseline: LiveActNeutralBaselineV1 | null = null;
   private rangeCalibration: LiveActRangeCalibrationV1 | null = null;
   private calibrating = false;
@@ -244,6 +252,22 @@ export class LiveActEngine {
     return () => {
       this.diagnosticsV2Listeners.delete(listener);
     };
+  }
+
+  /**
+   * Dense face features side-channel (#445).
+   * Single access point for future #446/#447 — not part of LiveActFrameV1.
+   */
+  subscribeDenseFaceFeatures(listener: LiveActDenseFaceFeaturesListener): () => void {
+    this.denseFaceFeaturesListeners.add(listener);
+    if (this.denseFaceFeatures) listener(this.denseFaceFeatures);
+    return () => {
+      this.denseFaceFeaturesListeners.delete(listener);
+    };
+  }
+
+  getDenseFaceFeatures(): LiveActDenseFaceFeaturesV1 | null {
+    return this.denseFaceFeatures;
   }
 
   getDiagnosticsV2(): LiveActDiagnosticsV2Snapshot | null {
@@ -494,6 +518,7 @@ export class LiveActEngine {
     this.frame = null;
     this.pipelineStep = null;
     this.diagnosticsV2 = null;
+    this.denseFaceFeatures = null;
     this.output?.resetLiveActPose();
     this.releaseActiveClaim();
     this.setStatus('stopped', liveActStatusLabelDe('stopped'));
@@ -511,11 +536,13 @@ export class LiveActEngine {
     this.frame = null;
     this.pipelineStep = null;
     this.diagnosticsV2 = null;
+    this.denseFaceFeatures = null;
     this.output = null;
     this.statusListeners.clear();
     this.frameListeners.clear();
     this.diagnosticsListeners.clear();
     this.diagnosticsV2Listeners.clear();
+    this.denseFaceFeaturesListeners.clear();
     this.releaseActiveClaim();
     this.setStatus('idle', liveActStatusLabelDe('idle'));
     this.setCalibrationUi('idle', '');
@@ -523,7 +550,14 @@ export class LiveActEngine {
 
   /** Test helper: push one sample through map/smooth without camera. */
   ingestSampleForTests(sample: LiveActSourceSample, timestampMs = 0): LiveActFrameV1 {
-    return this.processSample(sample, timestampMs, null);
+    return this.processSample(sample, timestampMs, null, null);
+  }
+
+  /** Test helper: inject dense features without MediaPipe (#445). */
+  ingestDenseFaceFeaturesForTests(frame: LiveActDenseFaceFeaturesV1): void {
+    assertDenseFaceFeaturesLocalOnly(frame);
+    this.denseFaceFeatures = frame;
+    this.emitDenseFaceFeatures(frame);
   }
 
   private releaseActiveClaim(): void {
@@ -577,13 +611,17 @@ export class LiveActEngine {
         ? detect.diagnostics[primary]
         : createEmptyLiveActFaceDiagnosticsFrame({ timestampMs: now, sequence: this.sequence + 1 });
 
-    this.processSample(sample, now, diagnosticsRaw);
+    const denseRaw =
+      primary >= 0 && detect.denseFeatures[primary] ? detect.denseFeatures[primary] : null;
+
+    this.processSample(sample, now, diagnosticsRaw, denseRaw);
   };
 
   private processSample(
     sample: LiveActSourceSample,
     timestampMs: number,
     diagnosticsSeed: LiveActFaceDiagnosticsFrameV1 | null,
+    denseSeed: LiveActDenseFaceFeaturesV1 | null,
   ): LiveActFrameV1 {
     this.sequence += 1;
     const oriented = LIVEACT_MIRROR_AVATAR ? mirrorLiveActSourceSample(sample) : sample;
@@ -642,6 +680,24 @@ export class LiveActEngine {
           sequence: this.sequence,
         });
     this.emitDiagnostics(diagnostics);
+
+    const dense: LiveActDenseFaceFeaturesV1 = denseSeed
+      ? {
+          ...denseSeed,
+          sequence: this.sequence,
+          timestampMs,
+          presence: denseSeed.presence && !mapped.trackingLost,
+        }
+      : createEmptyDenseFaceFeatures({
+          sequence: this.sequence,
+          timestampMs,
+          faceConfidence: 0,
+          normalizationStatus: 'unavailable',
+        });
+    assertDenseFaceFeaturesLocalOnly(dense);
+    assertLiveActFrameLocalOnly(calibrated);
+    this.denseFaceFeatures = dense;
+    this.emitDenseFaceFeatures(dense);
 
     if (mapped.trackingLost) {
       if (this.status !== 'lost') this.setStatus('lost', liveActStatusLabelDe('lost'));
@@ -1007,6 +1063,12 @@ export class LiveActEngine {
   private emitDiagnosticsV2(snapshot: LiveActDiagnosticsV2Snapshot): void {
     for (const listener of this.diagnosticsV2Listeners) {
       listener(snapshot);
+    }
+  }
+
+  private emitDenseFaceFeatures(frame: LiveActDenseFaceFeaturesV1): void {
+    for (const listener of this.denseFaceFeaturesListeners) {
+      listener(frame);
     }
   }
 }

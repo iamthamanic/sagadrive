@@ -1,0 +1,62 @@
+{
+  "contractVersion": "SagaDriveLiveActDenseFaceFeaturesV1",
+  "geometryContractVersion": "SagaDriveLiveActDenseSemanticGeometryV1",
+  "fixtureIds": [
+    "canonical-neutral",
+    "mouth-open",
+    "smile-left",
+    "smile-right",
+    "pucker-compression",
+    "eye-close-left",
+    "eye-close-right",
+    "eyes-both-closed",
+    "brow-inner-raise",
+    "brow-outer-left",
+    "cheek-raise-left",
+    "nose-nasolabial",
+    "chin-drop",
+    "rigid-translated",
+    "rigid-scaled",
+    "rigid-yaw",
+    "rigid-pitch",
+    "rigid-roll",
+    "partial-missing-mouth",
+    "degenerate-scale"
+  ],
+  "normalizationInvariance": {
+    "tolerance": 0.04,
+    "translationMaxAbs": 9.992007221626409e-16,
+    "scaleMaxAbs": 4.440892098500626e-16,
+    "yawMaxAbs": 2.220446049250313e-16,
+    "pitchMaxAbs": 3.3306690738754696e-16,
+    "rollMaxAbs": 3.3306690738754696e-16
+  },
+  "featureDirection": {
+    "mouthOpenGapDelta": 0.299829722185375,
+    "smileLeftCornerDelta": 0.16169354340912323,
+    "leftBlinkOpening": 0,
+    "rightOpenDuringLeftBlink": 0.20000000000000004
+  },
+  "availability": {
+    "partialMouthLipsWidthAvailable": false,
+    "partialMouthEyesAvailable": true,
+    "degenerateStatus": "degenerate"
+  },
+  "contourFeatureLevel": {
+    "measurable": true,
+    "medianStatus": "MISS",
+    "p95Status": "MISS"
+  },
+  "remainingNotMeasuredAtE2E": [
+    "runtime.cameraToAvatarP95Ms",
+    "v1.gaze.angularErrorMedianDeg — requires #446",
+    "end-to-end avatar lip contour fidelity — requires #447/#451"
+  ],
+  "privacy": {
+    "committedRawLandmarkArrays": 0,
+    "committedRealFaceFeatureTraces": 0,
+    "networkSerialization": 0
+  },
+  "deterministicHash": "41c5fda42506543dc6b574fc229126026cbca476ffe423aa09bd95b2097cab3b",
+  "authoritativeGate": "scripts/liveact-dense-face-features-check.mjs"
+}

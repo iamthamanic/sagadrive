@@ -1,21 +1,25 @@
 /**
- * MediaPipe Face source for LiveAct — shared WASM/model paths (#329, #331).
+ * MediaPipe Face source for LiveAct — shared WASM/model paths (#329, #331, #445).
  * Location: src/infrastructure/character/liveact/mediapipe-face-source.ts
  *
  * Single first-party MediaPipe asset path; no CDN. Emits LiveActSourceSample
- * with full 52 face channels plus separate local-only diagnostics landmarks.
+ * with full 52 face channels plus separate local-only diagnostics landmarks and
+ * a Dense Feature side-channel (#445). V1 samples/frames stay landmark-free.
  * Samples are anatomical (RAW); head axes and gaze sign live in the pure domain mapper, the
  * mirror convention in the engine.
  */
 
 import {
+  extractDenseFaceFeatures,
   mapMediaPipeFaceToLiveActSample,
   resolveLiveActQualityProfile,
+  type LiveActDenseFaceFeaturesV1,
   type LiveActFaceDiagnosticsFrameV1,
   type LiveActQualityProfile,
   type LiveActSourceSample,
 } from '../../../domains/character/liveact';
 import { mapMediaPipeLandmarksToLiveActDiagnostics } from './liveact-face-diagnostics';
+import { mapMediaPipeLandmarksToDenseSemanticGeometry } from './mediapipe-dense-semantic-points-v1';
 
 /** First-party static paths (Vite public/). Never point at CDN/Google at runtime. */
 export const MEDIAPIPE_VISION_WASM_PATH = '/mediapipe/wasm';
@@ -25,6 +29,8 @@ export const MEDIAPIPE_FACE_LANDMARKER_MODEL_PATH =
 export interface LiveActFaceDetectResult {
   samples: LiveActSourceSample[];
   diagnostics: LiveActFaceDiagnosticsFrameV1[];
+  /** Provider-neutral dense features — side-channel; not part of LiveActFrameV1. */
+  denseFeatures: LiveActDenseFaceFeaturesV1[];
 }
 
 export interface LiveActFaceSource {
@@ -73,7 +79,7 @@ export async function createMediaPipeLiveActFaceSource(
         const shapes = result.faceBlendshapes ?? [];
         const rawLandmarks = result.faceLandmarks ?? [];
         if (shapes.length === 0) {
-          return { samples: [], diagnostics: [] };
+          return { samples: [], diagnostics: [], denseFeatures: [] };
         }
         const samples: LiveActSourceSample[] = shapes.map((shape, index) =>
           mapMediaPipeFaceToLiveActSample({
@@ -97,7 +103,21 @@ export async function createMediaPipeLiveActFaceSource(
           }),
         );
 
-        return { samples, diagnostics };
+        // Dense features side-channel (#445): landmarks → semantic points → extract.
+        // Raw landmark arrays are not retained on the returned dense frame.
+        const denseFeatures = shapes.map((_, index) => {
+          const geometry = mapMediaPipeLandmarksToDenseSemanticGeometry({
+            landmarks: rawLandmarks[index],
+            faceConfidence: 1,
+          });
+          return extractDenseFaceFeatures({
+            geometry,
+            sequence: 0,
+            timestampMs,
+          });
+        });
+
+        return { samples, diagnostics, denseFeatures };
       },
       dispose() {
         try {
