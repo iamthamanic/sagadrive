@@ -790,6 +790,16 @@ function checkLiveActDenseFaceFeatures() {
   });
 }
 
+function checkLiveActIrisGazeSolver() {
+  console.log(
+    'LiveAct iris gaze solver (#446): head-local per-eye iris + A/B vs blendshape...',
+  );
+  execFileSync(process.execPath, ['scripts/liveact-iris-gaze-solver-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFacePipelineDocs() {
   console.log('LiveAct face pipeline docs (#386): AUTHORING v1.1 + FACE-AUTHORING...');
   execFileSync(process.execPath, ['scripts/liveact-face-pipeline-doc-check.mjs'], {
@@ -1610,6 +1620,7 @@ checkLiveActFaceFidelityE2E();
 checkLiveActFaceSetupE2E();
 checkLiveActPerfectFidelityBenchmark();
 checkLiveActDenseFaceFeatures();
+checkLiveActIrisGazeSolver();
 checkLiveActFacePipelineDocs();
 checkLiveActFaceHumanRepro();
 checkLiveActRigDebug();

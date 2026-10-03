@@ -386,3 +386,63 @@ export {
 } from './liveact-dense-face-features-fixtures';
 
 export { evaluateDenseFeatureLipContour } from './liveact-dense-face-features-contour-metric';
+
+export {
+  LIVEACT_IRIS_GAZE_CONTRACT,
+  LIVEACT_IRIS_EYE_GEOMETRY_CONTRACT,
+  LIVEACT_IRIS_GAZE_MAX_YAW_DEG,
+  LIVEACT_IRIS_GAZE_MAX_PITCH_DEG,
+  LIVEACT_IRIS_GAZE_MIN_CONFIDENCE,
+  LIVEACT_IRIS_GAZE_NEUTRAL_ZERO,
+  unavailableIrisEyeGaze,
+  createEmptyIrisGaze,
+  assertIrisGazeLocalOnly,
+  yawPitchToNormalizedGaze,
+  normalizedGazeToYawPitch,
+  type LiveActIrisGazeFallbackState,
+  type LiveActIrisEyeGazeV1,
+  type LiveActIrisGazeV1,
+  type IrisPoint3,
+  type IrisEyeGeometryV1,
+  type IrisBinocularGeometryV1,
+  type LiveActIrisGazeNeutralOffsetV1,
+} from './liveact-iris-gaze-contract';
+
+export {
+  irisGeometryToDenseSemanticGeometry,
+  solveIrisGaze,
+  solvePlanarApertureGaze,
+  arbitrateLiveActGaze,
+  mirrorIrisGaze,
+  type BlendshapeGazeSample,
+} from './liveact-iris-gaze-solve';
+
+export {
+  LIVEACT_IRIS_GAZE_FIXTURE_IDS,
+  buildIrisNeutralGeometry,
+  buildIrisGazeFixture,
+  approximateBlendshapeGazeFromTruth,
+  fairBlendshapeGazeFromGeometry,
+  encodeNormalizedGazeAsEyeLookCategories,
+  type LiveActIrisGazeFixtureId,
+  type IrisGazeGroundTruth,
+} from './liveact-iris-gaze-fixtures';
+
+export {
+  runIrisGazeAbBenchmark,
+  LIVEACT_IRIS_AB_MIN_MEDIAN_IMPROVEMENT_DEG,
+  type IrisGazeAbReportV1,
+  type IrisGazeAbPathErrors,
+} from './liveact-iris-gaze-ab';
+
+export {
+  irisEyeballRadiusFromHalfWidth,
+  gazeDirectionFromYawPitchDeg,
+  gazeDirectionAngularErrorDeg,
+  solveGazeFromIrisOnSphere,
+  buildEyeSphereFrameFromCorners,
+  planarApertureGazeFromIris,
+  type EyeSphereFrame,
+  type GazeVec3,
+} from './liveact-iris-gaze-sphere';
+

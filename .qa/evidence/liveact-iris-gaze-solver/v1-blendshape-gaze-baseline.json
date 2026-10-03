@@ -1,0 +1,8 @@
+{
+  "path": "eyeLook blendshapes → eyeLeft/Right X/Y → mirror → LiveActFrameV1 → smooth/calibrate → exclusive gaze output (#403)",
+  "fairAbMethod": "planar-aperture → eyeLook encode → mapMediaPipeFaceToLiveActSample (no gain sabotage, no head-leak injection)",
+  "blendshapeOnlyMedianDeg": 0.8317952606018411,
+  "blendshapeOnlyP95Deg": 10.508689231820632,
+  "blendshapeNeutralOffsetMax": 1.3808914986618144e-17,
+  "note": "Frozen fair synthetic A/B baseline for #446 — structural planar vs sphere, not retuned."
+}

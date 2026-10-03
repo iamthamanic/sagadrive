@@ -18,12 +18,15 @@ import {
   LIVEACT_RANGE_STEP_MIN_FRAMES,
   LIVEACT_RANGE_STEP_MIN_MS,
   assertDenseFaceFeaturesLocalOnly,
+  assertIrisGazeLocalOnly,
   assertLiveActFrameLocalOnly,
   applyLiveActRetargetProfile,
   DEFAULT_LIVEACT_RETARGET_PROFILE,
   assertLiveActDiagnosticsV2LocalOnly,
   createEmptyDenseFaceFeatures,
+  createEmptyIrisGaze,
   createEmptyLiveActFaceDiagnosticsFrame,
+  mirrorIrisGaze,
   createEmptyLiveActSourceSample,
   createLiveActCalibrationAccumulator,
   createLiveActDiagnosticsV2Snapshot,
@@ -53,6 +56,7 @@ import {
   type LiveActCalibrationAccumulator,
   type LiveActCalibrationStepPeakV1,
   type LiveActDenseFaceFeaturesV1,
+  type LiveActIrisGazeV1,
   type LiveActDiagnosticsV2Snapshot,
   type LiveActFaceDiagnosticsFrameV1,
   type LiveActFaceChannelId,
@@ -119,8 +123,10 @@ export type LiveActStatusListener = (state: LiveActEngineState) => void;
 export type LiveActFrameListener = (frame: LiveActFrameV1) => void;
 export type LiveActDiagnosticsListener = (frame: LiveActFaceDiagnosticsFrameV1) => void;
 export type LiveActDiagnosticsV2Listener = (snapshot: LiveActDiagnosticsV2Snapshot) => void;
-/** Future #446/#447 consumer access — single engine side-channel, not UI/DOM. */
+/** Future #447 consumer access — single engine side-channel, not UI/DOM. */
 export type LiveActDenseFaceFeaturesListener = (frame: LiveActDenseFaceFeaturesV1) => void;
+/** Iris gaze side-channel (#446) — not a second avatar gaze driver. */
+export type LiveActIrisGazeListener = (gaze: LiveActIrisGazeV1) => void;
 
 function isMobileHint(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -156,8 +162,10 @@ export class LiveActEngine {
   private readonly diagnosticsListeners = new Set<LiveActDiagnosticsListener>();
   private readonly diagnosticsV2Listeners = new Set<LiveActDiagnosticsV2Listener>();
   private readonly denseFaceFeaturesListeners = new Set<LiveActDenseFaceFeaturesListener>();
+  private readonly irisGazeListeners = new Set<LiveActIrisGazeListener>();
   private diagnosticsV2: LiveActDiagnosticsV2Snapshot | null = null;
   private denseFaceFeatures: LiveActDenseFaceFeaturesV1 | null = null;
+  private irisGaze: LiveActIrisGazeV1 | null = null;
   private neutralBaseline: LiveActNeutralBaselineV1 | null = null;
   private rangeCalibration: LiveActRangeCalibrationV1 | null = null;
   private calibrating = false;
@@ -268,6 +276,18 @@ export class LiveActEngine {
 
   getDenseFaceFeatures(): LiveActDenseFaceFeaturesV1 | null {
     return this.denseFaceFeatures;
+  }
+
+  subscribeIrisGaze(listener: LiveActIrisGazeListener): () => void {
+    this.irisGazeListeners.add(listener);
+    if (this.irisGaze) listener(this.irisGaze);
+    return () => {
+      this.irisGazeListeners.delete(listener);
+    };
+  }
+
+  getIrisGaze(): LiveActIrisGazeV1 | null {
+    return this.irisGaze;
   }
 
   getDiagnosticsV2(): LiveActDiagnosticsV2Snapshot | null {
@@ -519,6 +539,7 @@ export class LiveActEngine {
     this.pipelineStep = null;
     this.diagnosticsV2 = null;
     this.denseFaceFeatures = null;
+    this.irisGaze = null;
     this.output?.resetLiveActPose();
     this.releaseActiveClaim();
     this.setStatus('stopped', liveActStatusLabelDe('stopped'));
@@ -537,12 +558,14 @@ export class LiveActEngine {
     this.pipelineStep = null;
     this.diagnosticsV2 = null;
     this.denseFaceFeatures = null;
+    this.irisGaze = null;
     this.output = null;
     this.statusListeners.clear();
     this.frameListeners.clear();
     this.diagnosticsListeners.clear();
     this.diagnosticsV2Listeners.clear();
     this.denseFaceFeaturesListeners.clear();
+    this.irisGazeListeners.clear();
     this.releaseActiveClaim();
     this.setStatus('idle', liveActStatusLabelDe('idle'));
     this.setCalibrationUi('idle', '');
@@ -550,7 +573,7 @@ export class LiveActEngine {
 
   /** Test helper: push one sample through map/smooth without camera. */
   ingestSampleForTests(sample: LiveActSourceSample, timestampMs = 0): LiveActFrameV1 {
-    return this.processSample(sample, timestampMs, null, null);
+    return this.processSample(sample, timestampMs, null, null, null);
   }
 
   /** Test helper: inject dense features without MediaPipe (#445). */
@@ -614,7 +637,10 @@ export class LiveActEngine {
     const denseRaw =
       primary >= 0 && detect.denseFeatures[primary] ? detect.denseFeatures[primary] : null;
 
-    this.processSample(sample, now, diagnosticsRaw, denseRaw);
+    const irisRaw =
+      primary >= 0 && detect.irisGaze[primary] ? detect.irisGaze[primary] : null;
+
+    this.processSample(sample, now, diagnosticsRaw, denseRaw, irisRaw);
   };
 
   private processSample(
@@ -622,6 +648,7 @@ export class LiveActEngine {
     timestampMs: number,
     diagnosticsSeed: LiveActFaceDiagnosticsFrameV1 | null,
     denseSeed: LiveActDenseFaceFeaturesV1 | null,
+    irisSeed: LiveActIrisGazeV1 | null,
   ): LiveActFrameV1 {
     this.sequence += 1;
     const oriented = LIVEACT_MIRROR_AVATAR ? mirrorLiveActSourceSample(sample) : sample;
@@ -698,6 +725,19 @@ export class LiveActEngine {
     assertLiveActFrameLocalOnly(calibrated);
     this.denseFaceFeatures = dense;
     this.emitDenseFaceFeatures(dense);
+
+    const irisBase =
+      irisSeed ??
+      createEmptyIrisGaze({ sequence: this.sequence, timestampMs });
+    const irisOriented = LIVEACT_MIRROR_AVATAR ? mirrorIrisGaze(irisBase) : irisBase;
+    const iris: LiveActIrisGazeV1 = {
+      ...irisOriented,
+      sequence: this.sequence,
+      timestampMs,
+    };
+    assertIrisGazeLocalOnly(iris);
+    this.irisGaze = iris;
+    this.emitIrisGaze(iris);
 
     if (mapped.trackingLost) {
       if (this.status !== 'lost') this.setStatus('lost', liveActStatusLabelDe('lost'));
@@ -1069,6 +1109,12 @@ export class LiveActEngine {
   private emitDenseFaceFeatures(frame: LiveActDenseFaceFeaturesV1): void {
     for (const listener of this.denseFaceFeaturesListeners) {
       listener(frame);
+    }
+  }
+
+  private emitIrisGaze(gaze: LiveActIrisGazeV1): void {
+    for (const listener of this.irisGazeListeners) {
+      listener(gaze);
     }
   }
 }
