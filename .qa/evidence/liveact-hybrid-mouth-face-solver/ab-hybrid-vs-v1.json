@@ -1,0 +1,48 @@
+{
+  "contractVersion": "SagaDriveLiveActHybridFaceAbReportV1",
+  "fixtureVersion": "hybrid-face-v1",
+  "controlsEvaluated": [
+    "mouthSmileLeft",
+    "mouthSmileRight",
+    "mouthPucker",
+    "mouthFunnel",
+    "mouthPressLeft",
+    "mouthPressRight",
+    "cheekSquintLeft",
+    "cheekSquintRight",
+    "noseSneerLeft",
+    "noseSneerRight",
+    "jawOpen"
+  ],
+  "v1": {
+    "motionErrorMedian": 0,
+    "speechCorrelation": 1,
+    "amplitudeRetentionPct": 50,
+    "velocityRetentionPct": 50,
+    "saturation": 0,
+    "crossTalkMax": 0
+  },
+  "hybrid": {
+    "motionErrorMedian": 0,
+    "speechCorrelation": 0.993643201290199,
+    "amplitudeRetentionPct": 75.31652319482023,
+    "velocityRetentionPct": 91.66667315028975,
+    "saturation": 0,
+    "crossTalkMax": 0
+  },
+  "improvement": {
+    "motionMedianAbs": 0,
+    "validationMedianAbs": 0,
+    "success": true
+  },
+  "avatarContourFidelity": "NOT_MEASURED — requires #450/#451",
+  "privacy": {
+    "committedRawLandmarks": 0,
+    "committedWebcam": 0
+  },
+  "requires450": [
+    "nasolabial fold intensity (beyond noseSneer)",
+    "richer cheek volume",
+    "segmented lip contour correctives"
+  ]
+}

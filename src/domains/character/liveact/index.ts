@@ -446,3 +446,54 @@ export {
   type GazeVec3,
 } from './liveact-iris-gaze-sphere';
 
+export {
+  LIVEACT_HYBRID_FACE_CONTRACT,
+  LIVEACT_HYBRID_FACE_CONTROL_IDS,
+  LIVEACT_HYBRID_AB_MIN_MEDIAN_IMPROVEMENT,
+  LIVEACT_HYBRID_AB_NON_DEGRADATION_TOL,
+  LIVEACT_HYBRID_DENSE_MIN_CONFIDENCE,
+  LIVEACT_HYBRID_DISAGREE_ABS,
+  createEmptyHybridFace,
+  hybridControlsToFacePartial,
+  assertHybridFaceLocalOnly,
+  isHybridFaceControlId,
+  unavailableHybridControl,
+  semanticPassthroughControl,
+  type LiveActHybridFaceSourceState,
+  type LiveActHybridFaceControlId,
+  type LiveActHybridControlResultV1,
+  type LiveActHybridControlsV1,
+  type LiveActHybridFaceV1,
+} from './liveact-hybrid-face-contract';
+
+export {
+  solveHybridFace,
+  applyHybridFaceToSemantic,
+  type SolveHybridFaceInput,
+} from './liveact-hybrid-face-solve';
+
+export {
+  fuseSemanticDense,
+  denseActivationFromSigned,
+  combineDenseEvidence,
+  readSemantic,
+  clamp01 as clampHybrid01,
+} from './liveact-hybrid-face-fusion';
+
+export {
+  LIVEACT_HYBRID_FACE_FIXTURE_IDS,
+  LIVEACT_HYBRID_TUNING_FIXTURE_IDS,
+  LIVEACT_HYBRID_VALIDATION_FIXTURE_IDS,
+  buildHybridFaceFixture,
+  buildHybridSpeechLikeSequence,
+  type LiveActHybridFaceFixtureId,
+  type HybridFaceLatentTruth,
+  type HybridFaceFixtureFrame,
+} from './liveact-hybrid-face-fixtures';
+
+export {
+  runHybridFaceAbBenchmark,
+  type HybridFaceAbReportV1,
+  type HybridFaceAbPathErrors,
+} from './liveact-hybrid-face-ab';
+

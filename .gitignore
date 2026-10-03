@@ -60,6 +60,8 @@ test-results/
 **/*liveact-dense-face-features-local*
 .qa/local/liveact-iris-gaze-local/
 **/*liveact-iris-gaze-local*
+.qa/local/liveact-hybrid-mouth-face-local/
+**/*liveact-hybrid-mouth-face-local*
 
 # Agent runner session state (per-session bookkeeping, not project state)
 .qa/queue/
