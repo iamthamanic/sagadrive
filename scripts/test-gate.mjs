@@ -800,6 +800,16 @@ function checkLiveActIrisGazeSolver() {
   });
 }
 
+function checkLiveActHybridMouthFaceSolver() {
+  console.log(
+    'LiveAct hybrid mouth/face solver (#447): semantic+dense fusion + A/B vs V1...',
+  );
+  execFileSync(process.execPath, ['scripts/liveact-hybrid-mouth-face-solver-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFacePipelineDocs() {
   console.log('LiveAct face pipeline docs (#386): AUTHORING v1.1 + FACE-AUTHORING...');
   execFileSync(process.execPath, ['scripts/liveact-face-pipeline-doc-check.mjs'], {
@@ -1621,6 +1631,7 @@ checkLiveActFaceSetupE2E();
 checkLiveActPerfectFidelityBenchmark();
 checkLiveActDenseFaceFeatures();
 checkLiveActIrisGazeSolver();
+checkLiveActHybridMouthFaceSolver();
 checkLiveActFacePipelineDocs();
 checkLiveActFaceHumanRepro();
 checkLiveActRigDebug();
