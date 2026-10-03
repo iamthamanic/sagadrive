@@ -1,0 +1,7 @@
+{
+  "path": "MediaPipe eyeLook blendshapes → eyeLeft/Right X/Y → mirror → LiveActFrameV1 → smooth/calibrate → exclusive gaze output (#403)",
+  "blendshapeOnlyMedianDeg": 4.2,
+  "blendshapeOnlyP95Deg": 5.390000000000001,
+  "blendshapeNeutralOffsetMax": 0,
+  "note": "Frozen synthetic A/B baseline for #446 — not retuned."
+}

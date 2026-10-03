@@ -16,6 +16,7 @@ export {
   type LiveActFrameListener,
   type LiveActDiagnosticsListener,
   type LiveActDenseFaceFeaturesListener,
+  type LiveActIrisGazeListener,
   type LiveActCalibrationResult,
   type LiveActCalibrationStatus,
 } from './liveact-engine';
@@ -37,6 +38,12 @@ export {
   MEDIAPIPE_DENSE_EXTENSION_MAP_V1,
   mapMediaPipeLandmarksToDenseSemanticGeometry,
 } from './mediapipe-dense-semantic-points-v1';
+export {
+  MEDIAPIPE_IRIS_GEOMETRY_VERSION,
+  MEDIAPIPE_LEFT_IRIS_CONTOUR_INDICES,
+  MEDIAPIPE_RIGHT_IRIS_CONTOUR_INDICES,
+  mapMediaPipeLandmarksToIrisGeometry,
+} from './mediapipe-iris-geometry-v1';
 export {
   createLiveActRigDebugController,
   type LiveActRigDebugController,

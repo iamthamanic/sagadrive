@@ -1,25 +1,31 @@
 /**
- * MediaPipe Face source for LiveAct — shared WASM/model paths (#329, #331, #445).
+ * MediaPipe Face source for LiveAct — shared WASM/model paths (#329, #331, #445, #446).
  * Location: src/infrastructure/character/liveact/mediapipe-face-source.ts
  *
  * Single first-party MediaPipe asset path; no CDN. Emits LiveActSourceSample
- * with full 52 face channels plus separate local-only diagnostics landmarks and
- * a Dense Feature side-channel (#445). V1 samples/frames stay landmark-free.
+ * with full 52 face channels plus separate local-only diagnostics landmarks,
+ * Dense Feature side-channel (#445), and iris gaze side-channel (#446).
+ * V1 samples/frames stay landmark-free. Blendshape eyeLook* remain secondary;
+ * iris arbitration overwrites eye X/Y when confident.
  * Samples are anatomical (RAW); head axes and gaze sign live in the pure domain mapper, the
  * mirror convention in the engine.
  */
 
 import {
+  arbitrateLiveActGaze,
   extractDenseFaceFeatures,
   mapMediaPipeFaceToLiveActSample,
   resolveLiveActQualityProfile,
+  solveIrisGaze,
   type LiveActDenseFaceFeaturesV1,
   type LiveActFaceDiagnosticsFrameV1,
+  type LiveActIrisGazeV1,
   type LiveActQualityProfile,
   type LiveActSourceSample,
 } from '../../../domains/character/liveact';
 import { mapMediaPipeLandmarksToLiveActDiagnostics } from './liveact-face-diagnostics';
 import { mapMediaPipeLandmarksToDenseSemanticGeometry } from './mediapipe-dense-semantic-points-v1';
+import { mapMediaPipeLandmarksToIrisGeometry } from './mediapipe-iris-geometry-v1';
 
 /** First-party static paths (Vite public/). Never point at CDN/Google at runtime. */
 export const MEDIAPIPE_VISION_WASM_PATH = '/mediapipe/wasm';
@@ -31,6 +37,8 @@ export interface LiveActFaceDetectResult {
   diagnostics: LiveActFaceDiagnosticsFrameV1[];
   /** Provider-neutral dense features — side-channel; not part of LiveActFrameV1. */
   denseFeatures: LiveActDenseFaceFeaturesV1[];
+  /** Iris geometric gaze — side-channel; blendshape remains fallback evidence. */
+  irisGaze: LiveActIrisGazeV1[];
 }
 
 export interface LiveActFaceSource {
@@ -79,9 +87,9 @@ export async function createMediaPipeLiveActFaceSource(
         const shapes = result.faceBlendshapes ?? [];
         const rawLandmarks = result.faceLandmarks ?? [];
         if (shapes.length === 0) {
-          return { samples: [], diagnostics: [], denseFeatures: [] };
+          return { samples: [], diagnostics: [], denseFeatures: [], irisGaze: [] };
         }
-        const samples: LiveActSourceSample[] = shapes.map((shape, index) =>
+        const blendshapeSamples: LiveActSourceSample[] = shapes.map((shape, index) =>
           mapMediaPipeFaceToLiveActSample({
             categories: shape.categories,
             matrix: result.facialTransformationMatrixes?.[index]?.data,
@@ -117,7 +125,38 @@ export async function createMediaPipeLiveActFaceSource(
           });
         });
 
-        return { samples, diagnostics, denseFeatures };
+        // Iris gaze (#446): geometry → head-local solve → arbitrate vs blendshape eyeLook*.
+        const irisGaze: LiveActIrisGazeV1[] = [];
+        const samples: LiveActSourceSample[] = blendshapeSamples.map((sample, index) => {
+          const irisGeom = mapMediaPipeLandmarksToIrisGeometry({
+            landmarks: rawLandmarks[index],
+            faceConfidence: 1,
+          });
+          const solved = solveIrisGaze({
+            geometry: irisGeom,
+            sequence: 0,
+            timestampMs,
+          });
+          const arb = arbitrateLiveActGaze({
+            iris: solved,
+            blendshape: {
+              eyeLeftX: sample.eyeLeftX,
+              eyeLeftY: sample.eyeLeftY,
+              eyeRightX: sample.eyeRightX,
+              eyeRightY: sample.eyeRightY,
+            },
+          });
+          irisGaze.push(arb.iris ?? solved);
+          return {
+            ...sample,
+            eyeLeftX: arb.eyeLeftX,
+            eyeLeftY: arb.eyeLeftY,
+            eyeRightX: arb.eyeRightX,
+            eyeRightY: arb.eyeRightY,
+          };
+        });
+
+        return { samples, diagnostics, denseFeatures, irisGaze };
       },
       dispose() {
         try {

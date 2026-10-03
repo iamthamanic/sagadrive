@@ -1,0 +1,108 @@
+{
+  "contractVersion": "SagaDriveLiveActIrisGazeV1",
+  "irisLandmarkProvenance": {
+    "package": "@mediapipe/tasks-vision@0.10.14",
+    "leftContour": [
+      474,
+      475,
+      476,
+      477
+    ],
+    "rightContour": [
+      469,
+      470,
+      471,
+      472
+    ],
+    "center": "centroid(contour[4])"
+  },
+  "ab": {
+    "fixtureIds": [
+      "iris-neutral",
+      "iris-look-left",
+      "iris-look-right",
+      "iris-look-up",
+      "iris-look-down",
+      "iris-far-convergent",
+      "iris-head-yaw-neutral-eyes",
+      "iris-head-pitch-neutral-eyes",
+      "iris-head-roll-neutral-eyes",
+      "iris-missing-contour"
+    ],
+    "iris": {
+      "path": "iris",
+      "errorsDeg": [
+        0.4620462046204624,
+        0.4620462046204624,
+        0.6526402640263967,
+        0.27145214521453076,
+        0.27145214521453076,
+        0.6526402640263967,
+        0.4620462046204624,
+        0.4620462046204624,
+        0.46204620462046236,
+        0.46204620462046236,
+        0.5833333333333429,
+        0.3580858085808558,
+        0.46204620462048307,
+        0.46204620462044166,
+        0.4620462046204622,
+        0.4620462046204622,
+        0.4620462046204624,
+        0.4620462046204622
+      ],
+      "medianDeg": 0.4620462046204624,
+      "p95Deg": 0.6526402640263967,
+      "neutralOffsetMax": 0.013201320132013212,
+      "medianStatus": "PASS",
+      "p95Status": "PASS",
+      "neutralStatus": "PASS"
+    },
+    "blendshape": {
+      "path": "blendshape",
+      "errorsDeg": [
+        0,
+        0,
+        5.390000000000001,
+        5.390000000000001,
+        5.390000000000001,
+        5.390000000000001,
+        4.2,
+        4.2,
+        4.2,
+        4.2,
+        3.4299999999999993,
+        2.9399999999999995,
+        4.8999999999999995,
+        4.8999999999999995,
+        3.15,
+        3.15,
+        1.8375,
+        1.8375
+      ],
+      "medianDeg": 4.2,
+      "p95Deg": 5.390000000000001,
+      "neutralOffsetMax": 0,
+      "medianStatus": "MISS",
+      "p95Status": "MISS",
+      "neutralStatus": "PASS"
+    },
+    "irisBeatsBlendshape": true,
+    "medianImprovementDeg": 3.737953795379538,
+    "headRelativeMaxAbs": 0.013201320132013802,
+    "binocularFarDisagreementDeg": 0.8085808580858025
+  },
+  "baseline": {
+    "path": "MediaPipe eyeLook blendshapes → eyeLeft/Right X/Y → mirror → LiveActFrameV1 → smooth/calibrate → exclusive gaze output (#403)",
+    "blendshapeOnlyMedianDeg": 4.2,
+    "blendshapeOnlyP95Deg": 5.390000000000001,
+    "blendshapeNeutralOffsetMax": 0,
+    "note": "Frozen synthetic A/B baseline for #446 — not retuned."
+  },
+  "privacy": {
+    "committedRawIrisSeries": 0,
+    "committedWebcam": 0
+  },
+  "authoritativeGate": "scripts/liveact-iris-gaze-solver-check.mjs",
+  "deterministicHash": "641a1394e5223aa4257d0bb54239d37246c965387cb6ac6d947d1e58f067630b"
+}

@@ -58,6 +58,8 @@ test-results/
 **/*liveact-perfect-fidelity-local-capture*
 .qa/local/liveact-dense-face-features-local/
 **/*liveact-dense-face-features-local*
+.qa/local/liveact-iris-gaze-local/
+**/*liveact-iris-gaze-local*
 
 # Agent runner session state (per-session bookkeeping, not project state)
 .qa/queue/
