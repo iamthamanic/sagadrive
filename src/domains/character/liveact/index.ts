@@ -411,6 +411,7 @@ export {
 export {
   irisGeometryToDenseSemanticGeometry,
   solveIrisGaze,
+  solvePlanarApertureGaze,
   arbitrateLiveActGaze,
   mirrorIrisGaze,
   type BlendshapeGazeSample,
@@ -421,12 +422,27 @@ export {
   buildIrisNeutralGeometry,
   buildIrisGazeFixture,
   approximateBlendshapeGazeFromTruth,
+  fairBlendshapeGazeFromGeometry,
+  encodeNormalizedGazeAsEyeLookCategories,
   type LiveActIrisGazeFixtureId,
   type IrisGazeGroundTruth,
 } from './liveact-iris-gaze-fixtures';
 
 export {
   runIrisGazeAbBenchmark,
+  LIVEACT_IRIS_AB_MIN_MEDIAN_IMPROVEMENT_DEG,
   type IrisGazeAbReportV1,
   type IrisGazeAbPathErrors,
 } from './liveact-iris-gaze-ab';
+
+export {
+  irisEyeballRadiusFromHalfWidth,
+  gazeDirectionFromYawPitchDeg,
+  gazeDirectionAngularErrorDeg,
+  solveGazeFromIrisOnSphere,
+  buildEyeSphereFrameFromCorners,
+  planarApertureGazeFromIris,
+  type EyeSphereFrame,
+  type GazeVec3,
+} from './liveact-iris-gaze-sphere';
+

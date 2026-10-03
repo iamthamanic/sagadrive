@@ -42,6 +42,7 @@ check(/liveact-iris-gaze-local/.test(gitignore), 'local iris capture gitignore')
 const domainFiles = [
   'src/domains/character/liveact/liveact-iris-gaze-contract.ts',
   'src/domains/character/liveact/liveact-iris-gaze-solve.ts',
+  'src/domains/character/liveact/liveact-iris-gaze-sphere.ts',
   'src/domains/character/liveact/liveact-iris-gaze-fixtures.ts',
   'src/domains/character/liveact/liveact-iris-gaze-ab.ts',
 ];
@@ -53,6 +54,13 @@ for (const rel of domainFiles) {
   check(!/\bMediaPipe\b/.test(src), `${rel} no MediaPipe in domain`);
   check(!/\b474\b|\b469\b/.test(src), `${rel} no iris magic indices in domain`);
 }
+const abSrc = read('src/domains/character/liveact/liveact-iris-gaze-ab.ts');
+const fixSrc = read('src/domains/character/liveact/liveact-iris-gaze-fixtures.ts');
+check(/fairBlendshapeGazeFromGeometry/.test(abSrc), 'A/B uses fair blendshape path');
+check(/solveGazeFromIrisOnSphere|eyeball-sphere/.test(read('src/domains/character/liveact/liveact-iris-gaze-solve.ts') + abSrc), 'sphere solve wired');
+check(!/gain\s*=\s*0\.72/.test(fixSrc), 'no sabotaged blendshape gain');
+check(!/\*\s*0\.35/.test(fixSrc) || /fairBlendshapeGazeFromGeometry/.test(fixSrc), 'no head-leak sabotage baseline');
+check(/buildDenseFaceLocalFrame/.test(read('src/domains/character/liveact/liveact-iris-gaze-solve.ts')), 'reuses #445 face frame');
 
 check(/LIVEACT_IRIS_GAZE_CONTRACT/.test(read('src/domains/character/liveact/index.ts')), 'barrel exports');
 check(/subscribeIrisGaze/.test(read('src/infrastructure/character/liveact/liveact-engine.ts')), 'engine iris side-channel');
@@ -63,11 +71,6 @@ check(
   ),
   'infra iris indices',
 );
-check(
-  /buildDenseFaceLocalFrame/.test(read('src/domains/character/liveact/liveact-iris-gaze-solve.ts')),
-  'reuses #445 face frame',
-);
-
 const frameContract = read('src/domains/character/liveact/liveact-contract.ts');
 check(!/IrisGaze|irisContour/.test(frameContract), 'V1 frame not polluted');
 check(/assertLiveActFrameLocalOnly/.test(frameContract), 'V1 local-only assert');
@@ -137,7 +140,18 @@ const rightSolved = mod.solveIrisGaze({
 });
 check(rightSolved.left.x < -0.3, 'look-right left.x negative');
 
-// Head-relative: neutral under yaw
+// Golden numerical: known sphere angles recovered within geometric tolerance
+const yaw10 = mod.buildIrisGazeFixture('iris-yaw-10');
+const yaw10Solved = mod.solveIrisGaze({ geometry: yaw10.geometry, sequence: 10, timestampMs: 0 });
+check(Math.abs(yaw10Solved.left.yawDeg - 10) <= 0.5, `golden +10° yaw got ${yaw10Solved.left.yawDeg}`);
+const yawNeg = mod.buildIrisGazeFixture('iris-yaw-neg10');
+const yawNegSolved = mod.solveIrisGaze({ geometry: yawNeg.geometry, sequence: 11, timestampMs: 0 });
+check(Math.abs(yawNegSolved.left.yawDeg - -10) <= 0.5, `golden -10° yaw got ${yawNegSolved.left.yawDeg}`);
+const pitch8 = mod.buildIrisGazeFixture('iris-pitch-8');
+const pitch8Solved = mod.solveIrisGaze({ geometry: pitch8.geometry, sequence: 12, timestampMs: 0 });
+check(Math.abs(pitch8Solved.left.pitchDeg - 8) <= 0.75, `golden +8° pitch got ${pitch8Solved.left.pitchDeg}`);
+
+// Head-relative: neutral under yaw / combined
 const headYaw = mod.buildIrisGazeFixture('iris-head-yaw-neutral-eyes');
 const headSolved = mod.solveIrisGaze({
   geometry: headYaw.geometry,
@@ -148,8 +162,21 @@ check(headSolved.faceNormalizationOk, 'head yaw norm ok');
 check(Math.abs(headSolved.left.x) <= 0.03, `head-yaw left.x~0 got ${headSolved.left.x}`);
 check(Math.abs(headSolved.left.y) <= 0.03, `head-yaw left.y~0 got ${headSolved.left.y}`);
 check(Math.abs(headSolved.right.x) <= 0.03, 'head-yaw right.x~0');
+const headComb = mod.buildIrisGazeFixture('iris-head-combined-neutral-eyes');
+const headCombSolved = mod.solveIrisGaze({
+  geometry: headComb.geometry,
+  sequence: 13,
+  timestampMs: 0,
+});
+check(Math.abs(headCombSolved.left.x) <= 0.03, 'combined head left.x~0');
+check(Math.abs(headCombSolved.left.y) <= 0.03, 'combined head left.y~0');
 
-// Fallback arbitration
+// Convergence allowed (L/R disagree intentionally)
+const conv = mod.buildIrisGazeFixture('iris-convergence');
+const convSolved = mod.solveIrisGaze({ geometry: conv.geometry, sequence: 14, timestampMs: 0 });
+check(convSolved.left.yawDeg < 0 && convSolved.right.yawDeg > 0, 'convergence signs');
+
+// Fallback arbitration — V1 equality when iris unavailable
 const missing = mod.buildIrisGazeFixture('iris-missing-contour');
 const missingSolved = mod.solveIrisGaze({
   geometry: missing.geometry,
@@ -159,21 +186,28 @@ const missingSolved = mod.solveIrisGaze({
 const blend = { eyeLeftX: 0.4, eyeLeftY: 0, eyeRightX: 0.4, eyeRightY: 0 };
 const arb = mod.arbitrateLiveActGaze({ iris: missingSolved, blendshape: blend });
 check(arb.fallbackState === 'mixed' || arb.fallbackState === 'blendshape' || arb.fallbackState === 'iris', 'arb state');
-check(arb.eyeLeftX === blend.eyeLeftX, 'missing left iris → blendshape left');
+check(arb.eyeLeftX === blend.eyeLeftX, 'missing left iris → exact V1 blendshape left');
+check(arb.eyeLeftY === blend.eyeLeftY, 'missing left iris → exact V1 blendshape left Y');
 check(typeof arb.eyeRightX === 'number', 'right still numeric');
 
-// A/B — must beat blendshape
+// A/B — must beat fair blendshape baseline
 const ab = mod.runIrisGazeAbBenchmark();
 check(ab.iris.medianDeg !== null, 'iris median measured');
 check(ab.blendshape.medianDeg !== null, 'blendshape median measured');
 check(ab.iris.medianStatus === 'PASS', `iris median PASS got ${ab.iris.medianStatus} (${ab.iris.medianDeg})`);
 check(ab.iris.p95Status === 'PASS', `iris p95 PASS got ${ab.iris.p95Status} (${ab.iris.p95Deg})`);
 check(ab.iris.neutralStatus === 'PASS', `iris neutral PASS got ${ab.iris.neutralStatus}`);
-check(ab.irisBeatsBlendshape === true, `iris must beat blendshape (iris=${ab.iris.medianDeg} blend=${ab.blendshape.medianDeg})`);
+check(ab.irisBeatsBlendshape === true, `iris must beat blendshape (iris=${ab.iris.medianDeg} blend=${ab.blendshape.medianDeg} Δ=${ab.medianImprovementDeg})`);
+check(
+  ab.medianImprovementDeg !== null && ab.medianImprovementDeg >= mod.LIVEACT_IRIS_AB_MIN_MEDIAN_IMPROVEMENT_DEG,
+  `meaningful improvement ≥ ${mod.LIVEACT_IRIS_AB_MIN_MEDIAN_IMPROVEMENT_DEG}° got ${ab.medianImprovementDeg}`,
+);
 check(ab.headRelativeMaxAbs <= 0.03, `head-relative max ${ab.headRelativeMaxAbs}`);
 if (ab.binocularFarDisagreementDeg !== null) {
   check(ab.binocularFarDisagreementDeg <= 2.5, `binocular disagree ${ab.binocularFarDisagreementDeg}`);
 }
+check(ab.method.iris === 'eyeball-sphere-solve', 'method iris sphere');
+check(/planar-aperture/.test(ab.method.blendshape), 'method fair planar V1');
 
 // Determinism
 const ab2 = mod.runIrisGazeAbBenchmark();

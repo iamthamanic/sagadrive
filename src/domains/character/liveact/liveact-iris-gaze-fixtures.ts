@@ -1,23 +1,37 @@
 /**
- * liveact-iris-gaze-fixtures — deterministic synthetic iris/eye geometry (#446).
+ * liveact-iris-gaze-fixtures — deterministic synthetic eye-sphere geometry (#446).
  * Location: src/domains/character/liveact/liveact-iris-gaze-fixtures.ts
  *
- * Provider-neutral geometry only. No biometric capture. Ground-truth gaze known.
+ * Provider-neutral geometry only. Ground-truth yaw/pitch known from sphere placement.
+ * Fair V1 baseline = planar aperture → V1 eyeLook mapper (no gain sabotage).
  */
 
 import {
   LIVEACT_IRIS_EYE_GEOMETRY_CONTRACT,
+  yawPitchToNormalizedGaze,
   type IrisBinocularGeometryV1,
   type IrisEyeGeometryV1,
   type IrisPoint3,
 } from './liveact-iris-gaze-contract';
 import { transformDenseSemanticGeometry } from './liveact-dense-face-features-normalize';
-import { irisGeometryToDenseSemanticGeometry } from './liveact-iris-gaze-solve';
+import {
+  irisGeometryToDenseSemanticGeometry,
+  solvePlanarApertureGaze,
+} from './liveact-iris-gaze-solve';
 import {
   LIVEACT_DENSE_SEMANTIC_GEOMETRY_CONTRACT,
   type DenseSemanticGeometryV1,
   type DenseSemanticPoint3,
 } from './liveact-dense-face-features-contract';
+import {
+  buildEyeSphereFrameFromCorners,
+  gazeVec3,
+  irisCenterOnSphere,
+} from './liveact-iris-gaze-sphere';
+import {
+  mapMediaPipeFaceToLiveActSample as mapFaceBlendshapesToLiveActSample,
+  type LiveActMediaPipeCategory as LiveActBlendshapeCategory,
+} from './liveact-mediapipe-sample';
 
 export const LIVEACT_IRIS_GAZE_FIXTURE_IDS = [
   'iris-neutral',
@@ -25,20 +39,37 @@ export const LIVEACT_IRIS_GAZE_FIXTURE_IDS = [
   'iris-look-right',
   'iris-look-up',
   'iris-look-down',
-  'iris-far-convergent',
+  'iris-look-diag-ul',
+  'iris-look-diag-ur',
+  'iris-look-diag-dl',
+  'iris-look-diag-dr',
+  'iris-yaw-10',
+  'iris-yaw-neg10',
+  'iris-pitch-8',
+  'iris-far-same',
+  'iris-convergence',
   'iris-head-yaw-neutral-eyes',
   'iris-head-pitch-neutral-eyes',
   'iris-head-roll-neutral-eyes',
+  'iris-head-combined-neutral-eyes',
+  'iris-head-yaw-with-gaze',
   'iris-missing-contour',
+  'iris-partial-contour',
 ] as const;
 
 export type LiveActIrisGazeFixtureId = (typeof LIVEACT_IRIS_GAZE_FIXTURE_IDS)[number];
 
 export interface IrisGazeGroundTruth {
+  /** Normalized −1..1 (LiveAct eye channels). */
   readonly leftX: number;
   readonly leftY: number;
   readonly rightX: number;
   readonly rightY: number;
+  /** Ground-truth degrees (sphere). */
+  readonly leftYawDeg: number;
+  readonly leftPitchDeg: number;
+  readonly rightYawDeg: number;
+  readonly rightPitchDeg: number;
 }
 
 function pt(x: number, y: number, z: number): IrisPoint3 {
@@ -49,65 +80,92 @@ function missing(): IrisPoint3 {
   return { available: false, x: Number.NaN, y: Number.NaN, z: Number.NaN };
 }
 
-function makeEye(input: {
+function makeEyeCorners(side: 'left' | 'right'): {
   inner: IrisPoint3;
   outer: IrisPoint3;
   upper: IrisPoint3;
   lower: IrisPoint3;
-  /** Iris offset in face-ish space from eye center (before placing). */
-  irisOffsetX: number;
-  irisOffsetY: number;
-  irisOffsetZ?: number;
-}): IrisEyeGeometryV1 {
-  const cx = (input.inner.x + input.outer.x + input.upper.x + input.lower.x) / 4;
-  const cy = (input.inner.y + input.outer.y + input.upper.y + input.lower.y) / 4;
-  const cz = (input.inner.z + input.outer.z + input.upper.z + input.lower.z) / 4;
-  const irisCenter = pt(
-    cx + input.irisOffsetX,
-    cy + input.irisOffsetY,
-    cz + (input.irisOffsetZ ?? 0.02),
-  );
+} {
+  if (side === 'left') {
+    return {
+      inner: pt(0.25, 0.2, 0.08),
+      outer: pt(0.55, 0.2, 0.05),
+      upper: pt(0.4, 0.28, 0.06),
+      lower: pt(0.4, 0.12, 0.06),
+    };
+  }
   return {
-    innerCorner: input.inner,
-    outerCorner: input.outer,
-    upperLid: input.upper,
-    lowerLid: input.lower,
-    irisCenter,
-    irisContourAvailableCount: 4,
-  };
-}
-
-/** Canonical upright face — matches #445 synthetic layout. */
-export function buildIrisNeutralGeometry(
-  offsets: { leftX?: number; leftY?: number; rightX?: number; rightY?: number } = {},
-): IrisBinocularGeometryV1 {
-  const lOx = offsets.leftX ?? 0;
-  const lOy = offsets.leftY ?? 0;
-  const rOx = offsets.rightX ?? 0;
-  const rOy = offsets.rightY ?? 0;
-
-  // Half eye width ~0.15 → aperture nx ≈ offset/0.15
-  const left = makeEye({
-    inner: pt(0.25, 0.2, 0.08),
-    outer: pt(0.55, 0.2, 0.05),
-    upper: pt(0.4, 0.28, 0.06),
-    lower: pt(0.4, 0.12, 0.06),
-    irisOffsetX: lOx * 0.15,
-    irisOffsetY: lOy * 0.08,
-  });
-  const right = makeEye({
     inner: pt(-0.25, 0.2, 0.08),
     outer: pt(-0.55, 0.2, 0.05),
     upper: pt(-0.4, 0.28, 0.06),
     lower: pt(-0.4, 0.12, 0.06),
-    irisOffsetX: rOx * 0.15,
-    irisOffsetY: rOy * 0.08,
-  });
+  };
+}
 
+function placeIrisOnSphereEye(
+  side: 'left' | 'right',
+  yawDeg: number,
+  pitchDeg: number,
+): IrisEyeGeometryV1 {
+  const corners = makeEyeCorners(side);
+  const frame = buildEyeSphereFrameFromCorners({
+    inner: gazeVec3(corners.inner.x, corners.inner.y, corners.inner.z),
+    outer: gazeVec3(corners.outer.x, corners.outer.y, corners.outer.z),
+    upper: gazeVec3(corners.upper.x, corners.upper.y, corners.upper.z),
+    lower: gazeVec3(corners.lower.x, corners.lower.y, corners.lower.z),
+    anatomicalLeft: side === 'left',
+  });
+  if (!frame) {
+    throw new Error(`iris fixture: degenerate ${side} eye frame`);
+  }
+  const iris = irisCenterOnSphere(frame, yawDeg, pitchDeg);
+  return {
+    innerCorner: corners.inner,
+    outerCorner: corners.outer,
+    upperLid: corners.upper,
+    lowerLid: corners.lower,
+    irisCenter: pt(iris.x, iris.y, iris.z),
+    irisContourAvailableCount: 4,
+  };
+}
+
+function truthFromDeg(
+  leftYaw: number,
+  leftPitch: number,
+  rightYaw: number,
+  rightPitch: number,
+): IrisGazeGroundTruth {
+  const l = yawPitchToNormalizedGaze(leftYaw, leftPitch);
+  const r = yawPitchToNormalizedGaze(rightYaw, rightPitch);
+  return {
+    leftX: l.x,
+    leftY: l.y,
+    rightX: r.x,
+    rightY: r.y,
+    leftYawDeg: leftYaw,
+    leftPitchDeg: leftPitch,
+    rightYawDeg: rightYaw,
+    rightPitchDeg: rightPitch,
+  };
+}
+
+/** Canonical upright face with per-eye sphere iris placement. */
+export function buildIrisNeutralGeometry(
+  angles: {
+    leftYawDeg?: number;
+    leftPitchDeg?: number;
+    rightYawDeg?: number;
+    rightPitchDeg?: number;
+  } = {},
+): IrisBinocularGeometryV1 {
+  const ly = angles.leftYawDeg ?? 0;
+  const lp = angles.leftPitchDeg ?? 0;
+  const ry = angles.rightYawDeg ?? 0;
+  const rp = angles.rightPitchDeg ?? 0;
   return {
     contractVersion: LIVEACT_IRIS_EYE_GEOMETRY_CONTRACT,
-    left,
-    right,
+    left: placeIrisOnSphereEye('left', ly, lp),
+    right: placeIrisOnSphereEye('right', ry, rp),
     forehead: pt(0, 0.65, 0.02),
     noseBridge: pt(0, 0.1, 0.18),
     noseTip: pt(0, -0.05, 0.28),
@@ -116,34 +174,96 @@ export function buildIrisNeutralGeometry(
 }
 
 /**
- * Approximate V1 blendshape gaze from true normalized gaze with systematic degradation.
- * Models head-leakage + gain compression typical of blendshape-only proxies.
+ * Encode normalized gaze as exclusive eyeLook* categories, then run
+ * the authoritative V1 mapper (transparent inverse of the source mapper).
  */
+export function encodeNormalizedGazeAsEyeLookCategories(input: {
+  eyeLeftX: number;
+  eyeLeftY: number;
+  eyeRightX: number;
+  eyeRightY: number;
+}): LiveActBlendshapeCategory[] {
+  const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+  const lx = input.eyeLeftX;
+  const ly = input.eyeLeftY;
+  const rx = input.eyeRightX;
+  const ry = input.eyeRightY;
+  return [
+    { categoryName: 'eyeLookOutLeft', score: clamp01(lx) },
+    { categoryName: 'eyeLookInLeft', score: clamp01(-lx) },
+    { categoryName: 'eyeLookUpLeft', score: clamp01(ly) },
+    { categoryName: 'eyeLookDownLeft', score: clamp01(-ly) },
+    // V1: eyeRightX = in - out
+    { categoryName: 'eyeLookInRight', score: clamp01(rx) },
+    { categoryName: 'eyeLookOutRight', score: clamp01(-rx) },
+    { categoryName: 'eyeLookUpRight', score: clamp01(ry) },
+    { categoryName: 'eyeLookDownRight', score: clamp01(-ry) },
+  ];
+}
+
+/**
+ * Fair V1 blendshape prediction from the same synthetic geometry:
+ * planar aperture read → eyeLook encoding → authoritative V1 source mapper.
+ * No artificial gain/leak sabotage.
+ */
+export function fairBlendshapeGazeFromGeometry(geometry: IrisBinocularGeometryV1): {
+  eyeLeftX: number;
+  eyeLeftY: number;
+  eyeRightX: number;
+  eyeRightY: number;
+} {
+  const planar = solvePlanarApertureGaze({ geometry });
+  const categories = encodeNormalizedGazeAsEyeLookCategories({
+    eyeLeftX: planar.eyeLeftX,
+    eyeLeftY: planar.eyeLeftY,
+    eyeRightX: planar.eyeRightX,
+    eyeRightY: planar.eyeRightY,
+  });
+  const sample = mapFaceBlendshapesToLiveActSample({
+    categories,
+    enableHeadPose: false,
+    matrix: null,
+    faceIndex: 0,
+    faceCount: 1,
+  });
+  return {
+    eyeLeftX: sample.eyeLeftX,
+    eyeLeftY: sample.eyeLeftY,
+    eyeRightX: sample.eyeRightX,
+    eyeRightY: sample.eyeRightY,
+  };
+}
+
+/** Honest truth→V1 mapper path (exact when categories encode truth). No sabotage. */
 export function approximateBlendshapeGazeFromTruth(
   truth: IrisGazeGroundTruth,
-  headLeak: { yaw?: number; pitch?: number; roll?: number } = {},
+  _headLeak: { yaw?: number; pitch?: number; roll?: number } = {},
 ): {
   eyeLeftX: number;
   eyeLeftY: number;
   eyeRightX: number;
   eyeRightY: number;
 } {
-  const leakX = (headLeak.yaw ?? 0) * 0.35 + (headLeak.roll ?? 0) * 0.15;
-  const leakY = (headLeak.pitch ?? 0) * 0.35;
-  const gain = 0.72;
+  void _headLeak;
+  const categories = encodeNormalizedGazeAsEyeLookCategories({
+    eyeLeftX: truth.leftX,
+    eyeLeftY: truth.leftY,
+    eyeRightX: truth.rightX,
+    eyeRightY: truth.rightY,
+  });
+  const sample = mapFaceBlendshapesToLiveActSample({
+    categories,
+    enableHeadPose: false,
+    matrix: null,
+    faceIndex: 0,
+    faceCount: 1,
+  });
   return {
-    eyeLeftX: clamp1(truth.leftX * gain + leakX),
-    eyeLeftY: clamp1(truth.leftY * gain + leakY),
-    eyeRightX: clamp1(truth.rightX * gain + leakX),
-    eyeRightY: clamp1(truth.rightY * gain + leakY),
+    eyeLeftX: sample.eyeLeftX,
+    eyeLeftY: sample.eyeLeftY,
+    eyeRightX: sample.eyeRightX,
+    eyeRightY: sample.eyeRightY,
   };
-}
-
-function clamp1(n: number): number {
-  if (!Number.isFinite(n)) return 0;
-  if (n <= -1) return -1;
-  if (n >= 1) return 1;
-  return n;
 }
 
 export function buildIrisGazeFixture(id: LiveActIrisGazeFixtureId): {
@@ -151,80 +271,106 @@ export function buildIrisGazeFixture(id: LiveActIrisGazeFixtureId): {
   truth: IrisGazeGroundTruth;
   headLeak: { yaw: number; pitch: number; roll: number };
 } {
+  const mk = (
+    ly: number,
+    lp: number,
+    ry: number,
+    rp: number,
+    head: { yaw: number; pitch: number; roll: number } = {
+      yaw: 0,
+      pitch: 0,
+      roll: 0,
+    },
+    transform?: { yawRad?: number; pitchRad?: number; rollRad?: number },
+  ) => {
+    let geometry = buildIrisNeutralGeometry({
+      leftYawDeg: ly,
+      leftPitchDeg: lp,
+      rightYawDeg: ry,
+      rightPitchDeg: rp,
+    });
+    if (transform) {
+      geometry = applyRigidHeadToIrisGeometry(geometry, transform);
+    }
+    return {
+      geometry,
+      truth: truthFromDeg(ly, lp, ry, rp),
+      headLeak: head,
+    };
+  };
+
   switch (id) {
     case 'iris-neutral':
-      return {
-        geometry: buildIrisNeutralGeometry(),
-        truth: { leftX: 0, leftY: 0, rightX: 0, rightY: 0 },
-        headLeak: { yaw: 0, pitch: 0, roll: 0 },
-      };
+      return mk(0, 0, 0, 0);
     case 'iris-look-left':
-      return {
-        geometry: buildIrisNeutralGeometry({ leftX: 0.55, rightX: 0.55 }),
-        truth: { leftX: 0.55, leftY: 0, rightX: 0.55, rightY: 0 },
-        headLeak: { yaw: 0, pitch: 0, roll: 0 },
-      };
+      return mk(20, 0, 20, 0);
     case 'iris-look-right':
-      return {
-        geometry: buildIrisNeutralGeometry({ leftX: -0.55, rightX: -0.55 }),
-        truth: { leftX: -0.55, leftY: 0, rightX: -0.55, rightY: 0 },
-        headLeak: { yaw: 0, pitch: 0, roll: 0 },
-      };
+      return mk(-20, 0, -20, 0);
     case 'iris-look-up':
-      return {
-        geometry: buildIrisNeutralGeometry({ leftY: 0.5, rightY: 0.5 }),
-        truth: { leftX: 0, leftY: 0.5, rightX: 0, rightY: 0.5 },
-        headLeak: { yaw: 0, pitch: 0, roll: 0 },
-      };
+      return mk(0, 15, 0, 15);
     case 'iris-look-down':
-      return {
-        geometry: buildIrisNeutralGeometry({ leftY: -0.5, rightY: -0.5 }),
-        truth: { leftX: 0, leftY: -0.5, rightX: 0, rightY: -0.5 },
-        headLeak: { yaw: 0, pitch: 0, roll: 0 },
-      };
-    case 'iris-far-convergent':
-      return {
-        geometry: buildIrisNeutralGeometry({ leftX: 0.35, rightX: 0.3 }),
-        truth: { leftX: 0.35, leftY: 0, rightX: 0.3, rightY: 0 },
-        headLeak: { yaw: 0, pitch: 0, roll: 0 },
-      };
-    case 'iris-head-yaw-neutral-eyes': {
-      const base = buildIrisNeutralGeometry();
-      return {
-        geometry: applyRigidHeadToIrisGeometry(base, { yawRad: 0.4 }),
-        truth: { leftX: 0, leftY: 0, rightX: 0, rightY: 0 },
-        headLeak: { yaw: 0.4, pitch: 0, roll: 0 },
-      };
-    }
-    case 'iris-head-pitch-neutral-eyes': {
-      const base = buildIrisNeutralGeometry();
-      return {
-        geometry: applyRigidHeadToIrisGeometry(base, { pitchRad: 0.3 }),
-        truth: { leftX: 0, leftY: 0, rightX: 0, rightY: 0 },
-        headLeak: { yaw: 0, pitch: 0.3, roll: 0 },
-      };
-    }
-    case 'iris-head-roll-neutral-eyes': {
-      const base = buildIrisNeutralGeometry();
-      return {
-        geometry: applyRigidHeadToIrisGeometry(base, { rollRad: 0.35 }),
-        truth: { leftX: 0, leftY: 0, rightX: 0, rightY: 0 },
-        headLeak: { yaw: 0, pitch: 0, roll: 0.35 },
-      };
-    }
+      return mk(0, -15, 0, -15);
+    case 'iris-look-diag-ul':
+      return mk(18, 12, 18, 12);
+    case 'iris-look-diag-ur':
+      return mk(-18, 12, -18, 12);
+    case 'iris-look-diag-dl':
+      return mk(18, -12, 18, -12);
+    case 'iris-look-diag-dr':
+      return mk(-18, -12, -18, -12);
+    case 'iris-yaw-10':
+      return mk(10, 0, 10, 0);
+    case 'iris-yaw-neg10':
+      return mk(-10, 0, -10, 0);
+    case 'iris-pitch-8':
+      return mk(0, 8, 0, 8);
+    case 'iris-far-same':
+      return mk(12, 0, 12, 0);
+    case 'iris-convergence':
+      // Near look: left toward nose (−), right toward nose (+)
+      return mk(-8, 0, 8, 0);
+    case 'iris-head-yaw-neutral-eyes':
+      return mk(0, 0, 0, 0, { yaw: 0.4, pitch: 0, roll: 0 }, { yawRad: 0.4 });
+    case 'iris-head-pitch-neutral-eyes':
+      return mk(0, 0, 0, 0, { yaw: 0, pitch: 0.3, roll: 0 }, { pitchRad: 0.3 });
+    case 'iris-head-roll-neutral-eyes':
+      return mk(0, 0, 0, 0, { yaw: 0, pitch: 0, roll: 0.35 }, { rollRad: 0.35 });
+    case 'iris-head-combined-neutral-eyes':
+      return mk(
+        0,
+        0,
+        0,
+        0,
+        { yaw: 0.25, pitch: 0.2, roll: 0.15 },
+        { yawRad: 0.25, pitchRad: 0.2, rollRad: 0.15 },
+      );
+    case 'iris-head-yaw-with-gaze':
+      return mk(15, 0, 15, 0, { yaw: 0.35, pitch: 0, roll: 0 }, { yawRad: 0.35 });
     case 'iris-missing-contour': {
-      const g = buildIrisNeutralGeometry({ leftX: 0.4, rightX: 0.4 });
+      const base = mk(15, 0, 15, 0);
       return {
+        ...base,
         geometry: {
-          ...g,
+          ...base.geometry,
           left: {
-            ...g.left,
+            ...base.geometry.left,
             irisCenter: missing(),
             irisContourAvailableCount: 0,
           },
         },
-        truth: { leftX: 0.4, leftY: 0, rightX: 0.4, rightY: 0 },
-        headLeak: { yaw: 0, pitch: 0, roll: 0 },
+      };
+    }
+    case 'iris-partial-contour': {
+      const base = mk(15, 0, 15, 0);
+      return {
+        ...base,
+        geometry: {
+          ...base.geometry,
+          left: {
+            ...base.geometry.left,
+            irisContourAvailableCount: 2,
+          },
+        },
       };
     }
     default: {
@@ -239,7 +385,6 @@ function applyRigidHeadToIrisGeometry(
   transform: { yawRad?: number; pitchRad?: number; rollRad?: number },
 ): IrisBinocularGeometryV1 {
   const dense = irisGeometryToDenseSemanticGeometry(geometry);
-  // Also carry iris centers through dense via custom transform on all iris points
   const withIris = attachIrisCentersToDense(dense, geometry);
   const transformed = transformDenseSemanticGeometry(withIris, transform);
   return denseTransformedToIrisGeometry(transformed, geometry);
@@ -249,7 +394,6 @@ function attachIrisCentersToDense(
   dense: DenseSemanticGeometryV1,
   geometry: IrisBinocularGeometryV1,
 ): DenseSemanticGeometryV1 {
-  // Reuse unused brow mid slots as carriers for iris centers during rigid transform
   const points = { ...dense.points };
   points.browMidLeft = toDense(geometry.left.irisCenter);
   points.browMidRight = toDense(geometry.right.irisCenter);

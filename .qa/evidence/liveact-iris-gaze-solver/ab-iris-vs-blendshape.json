@@ -1,0 +1,42 @@
+{
+  "contractVersion": "SagaDriveLiveActIrisGazeAbReportV1",
+  "fixtureVersion": "iris-sphere-v1",
+  "blendshapeBaseline": {
+    "medianAngularErrorDeg": 0.8317952606018411,
+    "p95AngularErrorDeg": 10.508689231820632,
+    "neutralOffset": 1.3808914986618144e-17,
+    "method": "planar-aperture→v1-eyelook-mapper"
+  },
+  "iris": {
+    "medianAngularErrorDeg": 0,
+    "p95AngularErrorDeg": 0,
+    "neutralOffset": 9.087299089895763e-17,
+    "method": "eyeball-sphere-solve"
+  },
+  "improvement": {
+    "medianAbsoluteDeg": 0.8317952606018411,
+    "p95AbsoluteDeg": 10.508689231820632,
+    "minMeaningfulMedianDeg": 0.5,
+    "success": true
+  },
+  "headInvariance": {
+    "maxAbsNormalized": 6.133926885679639e-16
+  },
+  "binocularConsistency": {
+    "farDisagreementDeg": 1.2434497875801753e-14
+  },
+  "golden": {
+    "yaw10AbsErrorDeg": 5.329070518200751e-15,
+    "yawNeg10AbsErrorDeg": 7.105427357601002e-15,
+    "pitch8AbsErrorDeg": 0
+  },
+  "fallbackCases": [
+    "iris-missing-contour",
+    "iris-partial-contour"
+  ],
+  "privacy": {
+    "committedRawIrisSeries": 0,
+    "committedWebcam": 0
+  },
+  "angularErrorDefinition": "acos(dot) 3D unit gaze directions"
+}

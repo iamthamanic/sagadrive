@@ -2,8 +2,9 @@
  * liveact-iris-gaze-solve — head-local per-eye iris gaze solver (#446).
  * Location: src/domains/character/liveact/liveact-iris-gaze-solve.ts
  *
- * Pure domain. Reuses #445 face-local frame. No provider landmark indices. No eyelid-follow.
- * No temporal filter. Minimal neutral offsets only (not #449).
+ * Pure domain. Reuses #445 face-local frame. Eyeball-sphere geometric solve.
+ * No provider landmark indices. No eyelid-follow. No temporal filter.
+ * Minimal neutral offsets only (not #449).
  */
 
 import {
@@ -26,6 +27,7 @@ import {
   LIVEACT_IRIS_GAZE_MIN_CONFIDENCE,
   LIVEACT_IRIS_GAZE_NEUTRAL_ZERO,
   unavailableIrisEyeGaze,
+  yawPitchToNormalizedGaze,
   type IrisBinocularGeometryV1,
   type IrisEyeGeometryV1,
   type IrisPoint3,
@@ -34,47 +36,18 @@ import {
   type LiveActIrisGazeNeutralOffsetV1,
   type LiveActIrisGazeV1,
 } from './liveact-iris-gaze-contract';
-
-const EPS = 1e-5;
-
-function v(x: number, y: number, z: number): Vec3 {
-  return { x, y, z };
-}
-
-function sub(a: Vec3, b: Vec3): Vec3 {
-  return v(a.x - b.x, a.y - b.y, a.z - b.z);
-}
-
-function add(a: Vec3, b: Vec3): Vec3 {
-  return v(a.x + b.x, a.y + b.y, a.z + b.z);
-}
-
-function scale(a: Vec3, s: number): Vec3 {
-  return v(a.x * s, a.y * s, a.z * s);
-}
-
-function dot(a: Vec3, b: Vec3): number {
-  return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
-function cross(a: Vec3, b: Vec3): Vec3 {
-  return v(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
-}
-
-function len(a: Vec3): number {
-  return Math.hypot(a.x, a.y, a.z);
-}
-
-function normalize(a: Vec3): Vec3 | null {
-  const l = len(a);
-  if (!Number.isFinite(l) || l < EPS) return null;
-  return scale(a, 1 / l);
-}
+import {
+  buildEyeSphereFrameFromCorners,
+  gazeVec3,
+  planarApertureGazeFromIris,
+  solveGazeFromIrisOnSphere,
+  type EyeSphereFrame,
+} from './liveact-iris-gaze-sphere';
 
 function asVec(p: IrisPoint3): Vec3 | null {
   if (!p.available) return null;
   if (!Number.isFinite(p.x) || !Number.isFinite(p.y) || !Number.isFinite(p.z)) return null;
-  return v(p.x, p.y, p.z);
+  return { x: p.x, y: p.y, z: p.z };
 }
 
 function toDensePoint(p: IrisPoint3): DenseSemanticPoint3 {
@@ -113,66 +86,47 @@ export function irisGeometryToDenseSemanticGeometry(
   };
 }
 
-interface EyeLocalFrame {
-  readonly origin: Vec3;
-  readonly axisX: Vec3;
-  readonly axisY: Vec3;
-  readonly axisZ: Vec3;
-  readonly halfWidth: number;
-  readonly halfHeight: number;
-}
-
-function buildEyeLocalFrame(
+function faceLocalCorners(
   eye: IrisEyeGeometryV1,
   faceFrame: DenseFaceLocalFrameV1,
-  /** Anatomical left eye: +eyeX toward anatomical left (temporal = outer). */
-  anatomicalLeft: boolean,
-): EyeLocalFrame | null {
+): {
+  inner: Vec3;
+  outer: Vec3;
+  upper: Vec3;
+  lower: Vec3;
+  iris: Vec3;
+} | null {
   const innerW = asVec(eye.innerCorner);
   const outerW = asVec(eye.outerCorner);
   const upperW = asVec(eye.upperLid);
   const lowerW = asVec(eye.lowerLid);
-  if (!innerW || !outerW || !upperW || !lowerW) return null;
-
+  const irisW = asVec(eye.irisCenter);
+  if (!innerW || !outerW || !upperW || !lowerW || !irisW) return null;
   const inner = toDenseLocalPoint(innerW, faceFrame);
   const outer = toDenseLocalPoint(outerW, faceFrame);
   const upper = toDenseLocalPoint(upperW, faceFrame);
   const lower = toDenseLocalPoint(lowerW, faceFrame);
-  if (!inner || !outer || !upper || !lower) return null;
+  const iris = toDenseLocalPoint(irisW, faceFrame);
+  if (!inner || !outer || !upper || !lower || !iris) return null;
+  return { inner, outer, upper, lower, iris };
+}
 
-  const origin = scale(add(add(inner, outer), add(upper, lower)), 0.25);
-
-  // +eyeX = anatomical left direction along eye
-  // left eye: outer is more +X (anatomical left); right eye: outer is more -X
-  const xRaw = anatomicalLeft ? sub(outer, inner) : sub(inner, outer);
-  // Wait: for right eye anatomical left is toward nose = inner. Spec: outer↔inner axis.
-  // Convention: +eyeX = anatomical left in face space.
-  // Left eye: outer (+X) - inner → points anatomical left. Good: sub(outer, inner).
-  // Right eye: anatomical left is toward nose = inner (higher X than outer). sub(inner, outer).
-  const axisX = normalize(xRaw);
-  if (!axisX) return null;
-
-  let yCand = sub(upper, lower);
-  yCand = sub(yCand, scale(axisX, dot(yCand, axisX)));
-  let axisY = normalize(yCand);
-  if (!axisY) return null;
-
-  let axisZ = normalize(cross(axisX, axisY));
-  if (!axisZ) return null;
-  // Face-forward: +Z should align with face +Z
-  if (dot(axisZ, v(0, 0, 1)) < 0) {
-    axisZ = scale(axisZ, -1);
-  }
-  axisY = normalize(cross(axisZ, axisX));
-  if (!axisY) return null;
-  axisZ = normalize(cross(axisX, axisY));
-  if (!axisZ) return null;
-
-  const halfWidth = len(sub(outer, inner)) * 0.5;
-  const halfHeight = len(sub(upper, lower)) * 0.5;
-  if (halfWidth < EPS || halfHeight < EPS) return null;
-
-  return { origin, axisX, axisY, axisZ, halfWidth, halfHeight };
+function buildEyeSphere(
+  eye: IrisEyeGeometryV1,
+  faceFrame: DenseFaceLocalFrameV1,
+  anatomicalLeft: boolean,
+): { frame: EyeSphereFrame; iris: Vec3 } | null {
+  const c = faceLocalCorners(eye, faceFrame);
+  if (!c) return null;
+  const frame = buildEyeSphereFrameFromCorners({
+    inner: gazeVec3(c.inner.x, c.inner.y, c.inner.z),
+    outer: gazeVec3(c.outer.x, c.outer.y, c.outer.z),
+    upper: gazeVec3(c.upper.x, c.upper.y, c.upper.z),
+    lower: gazeVec3(c.lower.x, c.lower.y, c.lower.z),
+    anatomicalLeft,
+  });
+  if (!frame) return null;
+  return { frame, iris: c.iris };
 }
 
 function solveOneEye(
@@ -186,31 +140,30 @@ function solveOneEye(
   if (eye.irisContourAvailableCount < 4) {
     return unavailableIrisEyeGaze(faceConf * 0.2);
   }
-  const irisW = asVec(eye.irisCenter);
-  if (!irisW) return unavailableIrisEyeGaze(faceConf * 0.2);
 
-  const eyeFrame = buildEyeLocalFrame(eye, faceFrame, anatomicalLeft);
-  if (!eyeFrame) return unavailableIrisEyeGaze(faceConf * 0.3);
+  const built = buildEyeSphere(eye, faceFrame, anatomicalLeft);
+  if (!built) return unavailableIrisEyeGaze(faceConf * 0.3);
 
-  const irisLocal = toDenseLocalPoint(irisW, faceFrame);
-  if (!irisLocal) return unavailableIrisEyeGaze(faceConf * 0.3);
+  const solved = solveGazeFromIrisOnSphere(
+    built.frame,
+    gazeVec3(built.iris.x, built.iris.y, built.iris.z),
+  );
+  if (!solved) return unavailableIrisEyeGaze(faceConf * 0.3);
 
-  const rel = sub(irisLocal, eyeFrame.origin);
-  const lx = dot(rel, eyeFrame.axisX);
-  const ly = dot(rel, eyeFrame.axisY);
-  // Normalized aperture coords
-  let nx = lx / eyeFrame.halfWidth;
-  let ny = ly / eyeFrame.halfHeight;
-  if (!Number.isFinite(nx) || !Number.isFinite(ny)) {
-    return unavailableIrisEyeGaze(faceConf * 0.3);
+  // Plausible iris: reject extreme planar outliers (outside ~1.35 aperture)
+  const planar = planarApertureGazeFromIris(
+    built.frame,
+    gazeVec3(built.iris.x, built.iris.y, built.iris.z),
+  );
+  if (!planar || Math.abs(planar.x) > 1.35 || Math.abs(planar.y) > 1.35) {
+    return unavailableIrisEyeGaze(faceConf * 0.25);
   }
-  // Aperture-normalized iris offset → LiveAct −1..1 gaze (head-local).
-  let x = Math.min(1, Math.max(-1, nx)) - neutralX;
-  let y = Math.min(1, Math.max(-1, ny)) - neutralY;
-  x = Math.min(1, Math.max(-1, x));
-  y = Math.min(1, Math.max(-1, y));
-  const yawDeg = x * LIVEACT_IRIS_GAZE_MAX_YAW_DEG;
-  const pitchDeg = y * LIVEACT_IRIS_GAZE_MAX_PITCH_DEG;
+
+  let { x, y } = yawPitchToNormalizedGaze(solved.yawDeg, solved.pitchDeg);
+  x = Math.min(1, Math.max(-1, x - neutralX));
+  y = Math.min(1, Math.max(-1, y - neutralY));
+  const outYaw = x * LIVEACT_IRIS_GAZE_MAX_YAW_DEG;
+  const outPitch = y * LIVEACT_IRIS_GAZE_MAX_PITCH_DEG;
 
   const geomAvail = eye.irisContourAvailableCount / 4;
   const confidence = Math.min(
@@ -220,8 +173,8 @@ function solveOneEye(
 
   return {
     available: true,
-    yawDeg,
-    pitchDeg,
+    yawDeg: outYaw,
+    pitchDeg: outPitch,
     x,
     y,
     confidence,
@@ -301,6 +254,73 @@ export function solveIrisGaze(input: {
     binocularYawDisagreementDeg,
     binocularPitchDisagreementDeg,
     faceNormalizationOk: true,
+  };
+}
+
+/**
+ * Planar aperture gaze from same geometry (structural V1-like channel).
+ * Used for fair A/B — not intentionally gain-degraded.
+ */
+export function solvePlanarApertureGaze(input: {
+  geometry: IrisBinocularGeometryV1;
+}): {
+  eyeLeftX: number;
+  eyeLeftY: number;
+  eyeRightX: number;
+  eyeRightY: number;
+  leftAvailable: boolean;
+  rightAvailable: boolean;
+} {
+  const dense = irisGeometryToDenseSemanticGeometry(input.geometry);
+  const faceFrame = buildDenseFaceLocalFrame(dense);
+  const zero = {
+    eyeLeftX: 0,
+    eyeLeftY: 0,
+    eyeRightX: 0,
+    eyeRightY: 0,
+    leftAvailable: false,
+    rightAvailable: false,
+  };
+  if (faceFrame.status !== 'ok') return zero;
+
+  const leftBuilt = buildEyeSphere(input.geometry.left, faceFrame, true);
+  const rightBuilt = buildEyeSphere(input.geometry.right, faceFrame, false);
+  let eyeLeftX = 0;
+  let eyeLeftY = 0;
+  let eyeRightX = 0;
+  let eyeRightY = 0;
+  let leftAvailable = false;
+  let rightAvailable = false;
+
+  if (leftBuilt && input.geometry.left.irisContourAvailableCount >= 4) {
+    const p = planarApertureGazeFromIris(
+      leftBuilt.frame,
+      gazeVec3(leftBuilt.iris.x, leftBuilt.iris.y, leftBuilt.iris.z),
+    );
+    if (p) {
+      eyeLeftX = p.x;
+      eyeLeftY = p.y;
+      leftAvailable = true;
+    }
+  }
+  if (rightBuilt && input.geometry.right.irisContourAvailableCount >= 4) {
+    const p = planarApertureGazeFromIris(
+      rightBuilt.frame,
+      gazeVec3(rightBuilt.iris.x, rightBuilt.iris.y, rightBuilt.iris.z),
+    );
+    if (p) {
+      eyeRightX = p.x;
+      eyeRightY = p.y;
+      rightAvailable = true;
+    }
+  }
+  return {
+    eyeLeftX,
+    eyeLeftY,
+    eyeRightX,
+    eyeRightY,
+    leftAvailable,
+    rightAvailable,
   };
 }
 
@@ -386,7 +406,6 @@ export function mirrorIrisGaze(gaze: LiveActIrisGazeV1): LiveActIrisGazeV1 {
       confidence: e.confidence,
     };
   };
-  // Swap eyes and flip horizontal (same as mirrorLiveActSourceSample)
   return {
     ...gaze,
     left: flipEye(gaze.right),
