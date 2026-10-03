@@ -770,6 +770,16 @@ function checkLiveActFaceSetupE2E() {
   });
 }
 
+function checkLiveActPerfectFidelityBenchmark() {
+  console.log(
+    'LiveAct Perfect Fidelity benchmark (#444): contract + capture + motion/speech metrics...',
+  );
+  execFileSync(process.execPath, ['scripts/liveact-perfect-fidelity-benchmark-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFacePipelineDocs() {
   console.log('LiveAct face pipeline docs (#386): AUTHORING v1.1 + FACE-AUTHORING...');
   execFileSync(process.execPath, ['scripts/liveact-face-pipeline-doc-check.mjs'], {
@@ -1588,6 +1598,7 @@ checkLiveActFacialFidelityV2();
 checkAvatarVrmPack();
 checkLiveActFaceFidelityE2E();
 checkLiveActFaceSetupE2E();
+checkLiveActPerfectFidelityBenchmark();
 checkLiveActFacePipelineDocs();
 checkLiveActFaceHumanRepro();
 checkLiveActRigDebug();

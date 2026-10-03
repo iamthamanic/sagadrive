@@ -53,6 +53,10 @@ playwright-report/
 .qa/test-results/
 test-results/
 
+# LiveAct Perfect Fidelity — local-only real webcam / biometric capture (#444)
+.qa/local/liveact-perfect-fidelity-local-capture/
+**/*liveact-perfect-fidelity-local-capture*
+
 # Agent runner session state (per-session bookkeeping, not project state)
 .qa/queue/
 
