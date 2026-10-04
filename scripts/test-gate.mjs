@@ -384,6 +384,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Live Scene Runtime V2 (#366): reference container + V1 normalize...');
+  execFileSync(process.execPath, ['scripts/live-scene-runtime-v2-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {
