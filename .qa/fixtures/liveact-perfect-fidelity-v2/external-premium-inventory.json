@@ -1,0 +1,27 @@
+{
+  "id": "external-premium-fixture",
+  "contractVersion": "SagaDrivePerformanceFaceV2",
+  "presentTargetNames": [
+    "eyeBlinkLeft",
+    "eyeBlinkRight",
+    "jawOpen",
+    "mouthSmileLeft",
+    "mouthSmileRight",
+    "mouthFrownLeft",
+    "mouthFrownRight",
+    "mouthPucker",
+    "mouthShrugUpper",
+    "mouthShrugLower",
+    "nasolabialFoldLeft",
+    "nasolabialFoldRight",
+    "cheekVolumeLeft",
+    "cheekVolumeRight",
+    "lipContourUpperLeft",
+    "lipContourUpperRight",
+    "lipContourLowerLeft",
+    "lipContourLowerRight",
+    "lidTightenLeft",
+    "lidTightenRight"
+  ],
+  "note": "Committed morph-name inventory for #451 external Premium contract proof. Not a biometric capture."
+}

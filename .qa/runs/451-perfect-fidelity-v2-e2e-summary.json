@@ -1,0 +1,36 @@
+{
+  "contractVersion": "SagaDriveLiveActPerfectFidelityV2E2E",
+  "standardFallbackGreen": true,
+  "externalPremiumPass": true,
+  "canonicalPremiumBlockerOk": true,
+  "contour": {
+    "mean": 0.40249999999999997,
+    "sampleCount": 4,
+    "status": "MEASURED"
+  },
+  "avatars": [
+    {
+      "id": "canonical-face3",
+      "level": 2,
+      "standard": true,
+      "premium": false,
+      "missingRequired": [
+        "nasolabialFoldLeft",
+        "nasolabialFoldRight",
+        "cheekVolumeLeft",
+        "cheekVolumeRight",
+        "lipContourUpperLeft",
+        "lipContourUpperRight",
+        "lipContourLowerLeft",
+        "lipContourLowerRight"
+      ]
+    },
+    {
+      "id": "external-premium-fixture",
+      "level": 3,
+      "standard": true,
+      "premium": true,
+      "missingRequired": []
+    }
+  ]
+}

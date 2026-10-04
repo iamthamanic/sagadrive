@@ -14,12 +14,14 @@ import {
   liveActGazePathSkipsEyeLookMorphs,
   liveActGazePathUsesPoseDriver,
   resolveLiveActGazeDrivePath,
+  applyPerformanceFaceWeights as writePerformanceFaceWeights,
   validatePerformanceFaceV2,
   type LiveActAvatarCapabilities,
   type LiveActDiagnosticsV2AppliedValues,
   type LiveActFaceChannelId,
   type LiveActFrameV1,
   type LiveActGazeDrivePath,
+  type PerformanceFaceControlId,
   type PerformanceFaceValidationReportV1,
 } from '../../../domains/character/liveact';
 import { resolveLiveActChannelTargets } from '../../../domains/character/liveact/liveact-channel-target-aliases';
@@ -115,6 +117,25 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
 
   getPerformanceFaceReport(): PerformanceFaceValidationReportV1 {
     return this.performanceFaceReport;
+  }
+
+  applyPerformanceFaceWeights(
+    weights: Readonly<Partial<Record<PerformanceFaceControlId, number>>>,
+  ): void {
+    if (this.disposed || !this.performanceFaceReport.premiumEligible) return;
+    writePerformanceFaceWeights({
+      writeWeight: (targetName, weight) => {
+        const bindings = this.morphIndex.get(targetName);
+        if (!bindings?.length) return;
+        for (const binding of bindings) {
+          const influences = binding.mesh.morphTargetInfluences;
+          if (!influences) continue;
+          influences[binding.index] = weight;
+        }
+      },
+      resolvedNames: this.performanceFaceReport.resolvedTargetNames,
+      weights,
+    });
   }
 
   getAppliedDiagnostics(): LiveActDiagnosticsV2AppliedValues {

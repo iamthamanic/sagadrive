@@ -87,7 +87,8 @@ export interface HybridFaceAbReportV1 {
     readonly hybridMaxUnintended: number;
     readonly notWorse: boolean;
   };
-  readonly avatarContourFidelity: 'NOT_MEASURED — requires #450/#451';
+  /** Contour on real Premium morphs is measured by #451 E2E gate (not this AB). */
+  readonly avatarContourFidelity: 'MEASURED_VIA_451_E2E_GATE';
   readonly method: {
     readonly minMedianImprovement: typeof LIVEACT_HYBRID_AB_MIN_MEDIAN_IMPROVEMENT;
     readonly nonDegradationTol: typeof LIVEACT_HYBRID_AB_NON_DEGRADATION_TOL;
@@ -422,7 +423,7 @@ export function runHybridFaceAbBenchmark(): HybridFaceAbReportV1 {
       hybridMaxUnintended: ctHy,
       notWorse: ctHy <= ctV1 + 0.05,
     },
-    avatarContourFidelity: 'NOT_MEASURED — requires #450/#451',
+    avatarContourFidelity: 'MEASURED_VIA_451_E2E_GATE',
     method: {
       minMedianImprovement: LIVEACT_HYBRID_AB_MIN_MEDIAN_IMPROVEMENT,
       nonDegradationTol: LIVEACT_HYBRID_AB_NON_DEGRADATION_TOL,

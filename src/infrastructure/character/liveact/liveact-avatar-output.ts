@@ -12,6 +12,7 @@ import type {
   LiveActAvatarCapabilities,
   LiveActDiagnosticsV2AppliedValues,
   LiveActFrameV1,
+  PerformanceFaceControlId,
   PerformanceFaceValidationReportV1,
 } from '../../../domains/character/liveact';
 import { GltfLiveActAvatarOutput } from './gltf-liveact-avatar-output';
@@ -29,6 +30,10 @@ export interface LiveActAvatarOutput {
   getAppliedDiagnostics(): LiveActDiagnosticsV2AppliedValues;
   /** Performance Face V2 bind-time report (#450) — Premium gaps never block bind. */
   getPerformanceFaceReport(): PerformanceFaceValidationReportV1;
+  /** Apply Premium PerformanceFace weights when asset is Premium-eligible (#451). */
+  applyPerformanceFaceWeights(
+    weights: Readonly<Partial<Record<PerformanceFaceControlId, number>>>,
+  ): void;
   dispose(): void;
 }
 
