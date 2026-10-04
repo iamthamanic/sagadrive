@@ -18,3 +18,5 @@ export { AvatarSurfaceViewer } from './avatar/AvatarSurfaceViewer';
 export { AvatarTokenView } from './avatar/AvatarTokenView';
 export { PlayerAvatarPanel } from './avatar/PlayerAvatarPanel';
 export * from './inventory/inventory-ui-labels';
+/** Shared LiveAct engine for session transport (#364) — other app areas use this barrel only. */
+export { getSharedLiveActEngine, acquireSharedLiveActEngine } from './liveact';

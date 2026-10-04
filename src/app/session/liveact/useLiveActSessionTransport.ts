@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { canPublishTrack } from '../../../domains/session/media/media-plane-contract';
 import type { LiveSessionAccess } from '../../../domains/session/contracts/live-session-access';
-import { getSharedLiveActEngine } from '../../character/liveact/liveact-engine-singleton';
+import { getSharedLiveActEngine } from '../../character';
 import {
   LiveActSessionTransport,
   type LiveActRemoteApplyTarget,
