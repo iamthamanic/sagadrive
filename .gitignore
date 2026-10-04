@@ -62,6 +62,8 @@ test-results/
 **/*liveact-iris-gaze-local*
 .qa/local/liveact-hybrid-mouth-face-local/
 **/*liveact-hybrid-mouth-face-local*
+.qa/local/liveact-adaptive-temporal-local/
+**/*liveact-adaptive-temporal-local*
 
 # Agent runner session state (per-session bookkeeping, not project state)
 .qa/queue/

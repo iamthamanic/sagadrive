@@ -23,6 +23,8 @@ import {
   type LiveActSourceSample,
   DEFAULT_LIVEACT_LIMITS,
 } from './liveact-contract';
+import type { LiveActTemporalStateV1 } from './liveact-temporal-contract';
+import { stepAdaptiveTemporal } from './liveact-temporal-solve';
 
 export const LIVEACT_CALIBRATION_FRAME_TARGET = 30 as const;
 export const LIVEACT_CALIBRATION_TIMEOUT_MS = 2000 as const;
@@ -455,10 +457,15 @@ export function applyLiveActCalibration(
 }
 
 export interface LiveActCalibratedStepV1 {
-  /** Temporal filter state on uncalibrated values (Diagnostics V2 "smoothed"). */
+  /**
+   * Uncalibrated temporal output — Diagnostics V2 "smoothed".
+   * Production (#448): adaptive temporal. V1 baseline path uses fixed EMA.
+   */
   smoothed: LiveActFrameV1;
   /** Neutral + range applied — retarget input (Diagnostics V2 "calibrated"). */
   calibrated: LiveActFrameV1;
+  /** Adaptive temporal O(1) state (#448). Null on legacy V1-fixed path. */
+  temporal: LiveActTemporalStateV1 | null;
 }
 
 /** Inverse of the neutral subtraction for a lost (face-neutral) frame. */
@@ -489,25 +496,58 @@ function liveActUncalibratedLostPose(
   };
 }
 
+export type LiveActSmoothPathMode = 'adaptive' | 'v1-fixed';
+
 /**
- * One engine tick after mapping. Smoothing keeps its own uncalibrated state: feeding the
- * calibrated frame back would subtract the baseline again every tick (steady state ≈ raw − b/α).
- * While tracking is lost the last calibrated output eases to neutral, and the smoothing state
- * moves to the matching uncalibrated pose so re-acquisition blends instead of jumping.
+ * One engine tick after mapping.
+ *
+ * Production default (#448): adaptive continuous-time temporal → then calibration.
+ * `mode: 'v1-fixed'` keeps `smoothLiveActFrame(α=0.35)` for fair A/B baselines only.
+ *
+ * Temporal keeps uncalibrated state: feeding calibrated back would subtract the baseline
+ * again every tick. Lost/reacquire: adaptive solver clears stale pre-loss face state.
  */
 export function stepLiveActCalibratedFrame(
   previous: LiveActCalibratedStepV1 | null,
   mapped: LiveActFrameV1,
   calibration: LiveActCalibrationSetV1,
   limits: LiveActLimits = DEFAULT_LIVEACT_LIMITS,
+  mode: LiveActSmoothPathMode = 'adaptive',
 ): LiveActCalibratedStepV1 {
-  if (mapped.trackingLost && previous) {
-    const calibrated = smoothLiveActFrame(previous.calibrated, mapped, limits.smooth);
+  if (mode === 'v1-fixed') {
+    if (mapped.trackingLost && previous) {
+      const calibrated = smoothLiveActFrame(previous.calibrated, mapped, limits.smooth);
+      return {
+        smoothed: liveActUncalibratedLostPose(calibrated, calibration.neutral, limits),
+        calibrated,
+        temporal: null,
+      };
+    }
+    const smoothed = smoothLiveActFrame(previous?.smoothed ?? null, mapped, limits.smooth);
     return {
-      smoothed: liveActUncalibratedLostPose(calibrated, calibration.neutral, limits),
-      calibrated,
+      smoothed,
+      calibrated: applyLiveActCalibration(smoothed, calibration, limits),
+      temporal: null,
     };
   }
-  const smoothed = smoothLiveActFrame(previous?.smoothed ?? null, mapped, limits.smooth);
-  return { smoothed, calibrated: applyLiveActCalibration(smoothed, calibration, limits) };
+
+  const { frame: smoothedRaw, state: temporal } = stepAdaptiveTemporal(
+    previous?.temporal ?? null,
+    mapped,
+  );
+  if (mapped.trackingLost) {
+    // Lost: calibration passthrough (trackingLost). Keep Diagnostics SMOOTHED =
+    // adaptive output (do not inverse-baseline; that misreports dropout state).
+    const calibrated = applyLiveActCalibration(smoothedRaw, calibration, limits);
+    return {
+      smoothed: smoothedRaw,
+      calibrated,
+      temporal,
+    };
+  }
+  return {
+    smoothed: smoothedRaw,
+    calibrated: applyLiveActCalibration(smoothedRaw, calibration, limits),
+    temporal,
+  };
 }

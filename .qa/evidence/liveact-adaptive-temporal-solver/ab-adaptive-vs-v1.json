@@ -1,0 +1,225 @@
+{
+  "contractVersion": "SagaDriveLiveActTemporalV1",
+  "policyVersion": "liveact-temporal-policy-v1",
+  "v1Fixed": {
+    "headJitter": 0.0037798942981191533,
+    "gazeLag": 16.666666666666682,
+    "lipAmplitude": {
+      "1Hz": 97.58335210762804,
+      "2Hz": 89.3138110652798,
+      "3Hz": 84.0361180888715,
+      "5Hz": 63.82877337103141
+    },
+    "lipLag": {
+      "1Hz": 33.33333333333334,
+      "2Hz": 33.333333333333485,
+      "3Hz": 33.333333333333485,
+      "5Hz": 120
+    },
+    "lipVelocity": {
+      "1Hz": 94.91631927416401,
+      "2Hz": 88.39521554010787,
+      "3Hz": 80.03245201834336,
+      "5Hz": 63.93097780637484
+    },
+    "overshoot": 0,
+    "returnToNeutral": 33.33333333333337,
+    "speech": {
+      "jitterP95": 0.26092813297686174,
+      "lagMs": 33.33333333333334,
+      "overshoot": 0,
+      "amplitudeRetentionPct": 96.9501194211461,
+      "velocityRetentionPct": 89.30933529344793,
+      "saturation": 0,
+      "returnLagMs": 33.33333333333337,
+      "correlation": 0.968833281671165,
+      "peak": 0.3287460665907411
+    }
+  },
+  "adaptive": {
+    "headJitter": 0.0018087636050240184,
+    "gazeLag": 0,
+    "lipAmplitude": {
+      "1Hz": 100.068213494329,
+      "2Hz": 96.75646868543221,
+      "3Hz": 100.12725801796284,
+      "5Hz": 94.69816410123103
+    },
+    "lipLag": {
+      "1Hz": 16.66666666666667,
+      "2Hz": 0,
+      "3Hz": 0,
+      "5Hz": 0
+    },
+    "lipVelocity": {
+      "1Hz": 98.70774435926779,
+      "2Hz": 98.4729394663996,
+      "3Hz": 98.62683633234226,
+      "5Hz": 97.85495334476954
+    },
+    "overshoot": 0,
+    "returnToNeutral": 16.666666666666742,
+    "speech": {
+      "jitterP95": 0.2684690796609965,
+      "lagMs": 0,
+      "overshoot": 0.00030482556843863806,
+      "amplitudeRetentionPct": 100.62991903512197,
+      "velocityRetentionPct": 97.8203757147019,
+      "saturation": 0,
+      "returnLagMs": 16.666666666666742,
+      "correlation": 0.9979139390282147,
+      "peak": 0.3336145329766688
+    }
+  },
+  "frequencySweep": {
+    "1Hz": {
+      "v1": {
+        "jitterP95": 0.2703204538872846,
+        "lagMs": 33.33333333333334,
+        "overshoot": 0,
+        "amplitudeRetentionPct": 97.58335210762804,
+        "velocityRetentionPct": 94.91631927416401,
+        "saturation": 0,
+        "returnLagMs": 0,
+        "correlation": 0.9831950036190212,
+        "peak": 0.5423209273454579
+      },
+      "adaptive": {
+        "jitterP95": 0.27619553727844587,
+        "lagMs": 16.66666666666667,
+        "overshoot": 0,
+        "amplitudeRetentionPct": 100.068213494329,
+        "velocityRetentionPct": 98.70774435926779,
+        "saturation": 0,
+        "returnLagMs": 0,
+        "correlation": 0.9983268653757036,
+        "peak": 0.5482009376135697
+      }
+    },
+    "2Hz": {
+      "v1": {
+        "jitterP95": 0.2600061167499474,
+        "lagMs": 33.333333333333485,
+        "overshoot": 0,
+        "amplitudeRetentionPct": 89.3138110652798,
+        "velocityRetentionPct": 88.39521554010787,
+        "saturation": 0,
+        "returnLagMs": 0,
+        "correlation": 0.9411517753813086,
+        "peak": 0.524343012812651
+      },
+      "adaptive": {
+        "jitterP95": 0.27125286341541416,
+        "lagMs": 0,
+        "overshoot": 0,
+        "amplitudeRetentionPct": 96.75646868543221,
+        "velocityRetentionPct": 98.4729394663996,
+        "saturation": 0,
+        "returnLagMs": 0,
+        "correlation": 0.9978274398811673,
+        "peak": 0.5444003173494916
+      }
+    },
+    "3Hz": {
+      "v1": {
+        "jitterP95": 0.25080236606674056,
+        "lagMs": 33.333333333333485,
+        "overshoot": 0,
+        "amplitudeRetentionPct": 84.0361180888715,
+        "velocityRetentionPct": 80.03245201834336,
+        "saturation": 0,
+        "returnLagMs": 0,
+        "correlation": 0.890708672528375,
+        "peak": 0.5027113761861403
+      },
+      "adaptive": {
+        "jitterP95": 0.26688438559465344,
+        "lagMs": 0,
+        "overshoot": 0,
+        "amplitudeRetentionPct": 100.12725801796284,
+        "velocityRetentionPct": 98.62683633234226,
+        "saturation": 0,
+        "returnLagMs": 0,
+        "correlation": 0.998696826398591,
+        "peak": 0.5389352159269984
+      }
+    },
+    "5Hz": {
+      "v1": {
+        "jitterP95": 0.19594162561960057,
+        "lagMs": 120,
+        "overshoot": 0,
+        "amplitudeRetentionPct": 63.82877337103141,
+        "velocityRetentionPct": 63.93097780637484,
+        "saturation": 0,
+        "returnLagMs": 0,
+        "correlation": 0.8093813009834363,
+        "peak": 0.46935123755002384
+      },
+      "adaptive": {
+        "jitterP95": 0.26723626722934746,
+        "lagMs": 0,
+        "overshoot": 0,
+        "amplitudeRetentionPct": 94.69816410123103,
+        "velocityRetentionPct": 97.85495334476954,
+        "saturation": 0,
+        "returnLagMs": 0,
+        "correlation": 0.9983623299610213,
+        "peak": 0.5354557696575589
+      }
+    }
+  },
+  "fps": {
+    "hz30": {
+      "jitterP95": 0.2614240438420321,
+      "lagMs": 0,
+      "overshoot": 0,
+      "amplitudeRetentionPct": 99.67630885604459,
+      "velocityRetentionPct": 99.40822872140994,
+      "saturation": 0,
+      "returnLagMs": 0,
+      "correlation": 0.9998497958731668,
+      "peak": 0.5356940651328274
+    },
+    "hz60": {
+      "jitterP95": 0.26688438559465344,
+      "lagMs": 0,
+      "overshoot": 0,
+      "amplitudeRetentionPct": 100.12725801796284,
+      "velocityRetentionPct": 98.62683633234226,
+      "saturation": 0,
+      "returnLagMs": 0,
+      "correlation": 0.998696826398591,
+      "peak": 0.5389352159269984
+    },
+    "comparable": true
+  },
+  "lifecycle": {
+    "lostReacquireMaxSmileAfter": 0,
+    "droppedFinite": true,
+    "droppedOvershoot": 0
+  },
+  "targets": {
+    "lipAmplitudeRetentionMinPct": 90,
+    "lipAmplitudeRetentionMaxPct": 110,
+    "lipLagP95MsMax": 66,
+    "lipReturnLagMsMax": 70,
+    "lipSaturationMax": 0.05,
+    "gazeLagSlackMsVsV1": 20,
+    "headLagSlackMsVsV1": 40,
+    "blinkPeakMin": 0.95,
+    "fpsInvarianceTol": 0.08
+  },
+  "results": {
+    "success": true
+  },
+  "ce": {
+    "CE-04": "lip lag p95 ≤66ms; gaze fast; #444 runtime targets",
+    "CE-20": "lost/reacquire/dropped defined; no stale leakage",
+    "other": "N/A — no user-facing control surface changed"
+  },
+  "privacy": {
+    "committedRawLandmarks": 0,
+    "committedWebcam": 0
+  }
+}

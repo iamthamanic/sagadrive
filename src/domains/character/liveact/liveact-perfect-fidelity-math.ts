@@ -241,3 +241,77 @@ export function fidelityCountSequenceGaps(sequences: readonly number[]): number 
   }
   return drops;
 }
+
+/**
+ * Per-event response lag p95 (ms) (#448 / CE-04).
+ * Detects significant sample-to-sample truth transitions and measures how long
+ * the output takes to cross the halfway point of each transition.
+ * Falls back to |bestLagMs| from whole-trace correlation when no events found.
+ */
+export function fidelityLagP95Ms(
+  truth: readonly number[],
+  pred: readonly number[],
+  timestampsMs: readonly number[],
+  opts?: { readonly minDelta?: number; readonly lagWindowMs?: number },
+): number | null {
+  const n = Math.min(truth.length, pred.length, timestampsMs.length);
+  if (n < 2) return null;
+  const minDelta = opts?.minDelta ?? 0.04;
+  const delays: number[] = [];
+  for (let i = 1; i < n; i += 1) {
+    const delta = truth[i]! - truth[i - 1]!;
+    if (Math.abs(delta) < minDelta) continue;
+    const half = truth[i - 1]! + delta * 0.5;
+    const t0 = timestampsMs[i]!;
+    let hit: number | null = null;
+    for (let j = i; j < n; j += 1) {
+      const crossed = delta > 0 ? pred[j]! >= half : pred[j]! <= half;
+      if (crossed) {
+        hit = Math.max(0, timestampsMs[j]! - t0);
+        break;
+      }
+    }
+    delays.push(hit === null ? (opts?.lagWindowMs ?? 120) : hit);
+  }
+  if (delays.length > 0) return fidelityPercentile(delays, 95);
+  const dt = timestampsMs[1]! - timestampsMs[0]!;
+  const hz = dt > 0 ? 1000 / dt : 60;
+  const best = fidelityBestLagCorrelation(truth, pred, hz, opts?.lagWindowMs ?? 120);
+  return best.bestLagMs === null ? null : Math.abs(best.bestLagMs);
+}
+
+/**
+ * Overshoot for a monotonic step toward `target` (#448 / #444 extension).
+ * After the input first reaches `target` (within eps), measures max amount
+ * output exceeds the target envelope on the same side of the step.
+ * Returns 0 when output never exceeds target. Empty → null.
+ */
+export function fidelityOvershoot(
+  input: readonly number[],
+  output: readonly number[],
+  target: number,
+  eps = 1e-4,
+): number | null {
+  const n = Math.min(input.length, output.length);
+  if (n === 0) return null;
+  let onset = -1;
+  for (let i = 0; i < n; i += 1) {
+    if (Math.abs(input[i]! - target) <= eps) {
+      onset = i;
+      break;
+    }
+  }
+  if (onset < 0) return 0;
+  const start = input[0] ?? 0;
+  const up = target >= start;
+  let maxOver = 0;
+  for (let i = onset; i < n; i += 1) {
+    const o = output[i]!;
+    if (up) {
+      maxOver = Math.max(maxOver, o - target);
+    } else {
+      maxOver = Math.max(maxOver, target - o);
+    }
+  }
+  return Math.max(0, maxOver);
+}

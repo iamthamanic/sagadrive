@@ -5,8 +5,8 @@
  * Wraps the shared MediaPipe face source. At most one active camera/detector.
  * Legacy AvatarFaceTrackingRuntime is compatibility-only (no productive canvas consumer).
  * RAW is the tracker's anatomical sample. #447 hybrid fuses anatomical semantic + anatomical
- * dense, then mirrors ONCE (LIVEACT_MIRROR_AVATAR) before map/calibrate/output.
- * Dense face features (#445) and hybrid face (#447) are side-channels —
+ * dense, then mirrors ONCE (LIVEACT_MIRROR_AVATAR) before map → #448 adaptive temporal →
+ * calibrate → retarget → output. Dense (#445) / hybrid (#447) / iris (#446) are side-channels —
  * never stuffed as raw geometry into LiveActFrameV1 (hybrid writes semantic face only).
  */
 
@@ -226,10 +226,15 @@ export class LiveActEngine {
   }
 
   bindOutput(output: LiveActAvatarOutput | null): void {
+    const swapped = output !== this.output;
     this.output = output;
-    // Model swap must not leak prior applied values into the next adapter generation.
+    // Model swap must not leak prior applied values or #448 temporal state.
     if (!output) {
       this.diagnosticsV2 = null;
+    }
+    if (swapped) {
+      // Temporal reset only — calibration baselines are product-owned separately.
+      this.pipelineStep = null;
     }
   }
 
