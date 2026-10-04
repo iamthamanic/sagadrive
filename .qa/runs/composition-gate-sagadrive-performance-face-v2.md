@@ -1,6 +1,6 @@
 # Composition Gate — sagadrive-performance-face-v2
 
-- HEAD_SHA: WORKTREE (base `c71b6a2e99695627d1dabfeb51d132b2a0abc897` + #450 impl uncommitted)
+- HEAD_SHA: 2e2e25b96f7bf4048a91ee968ec05a3e10b8e6e6
 - Date: 2026-10-04
 - Verdict: CLEAR
 
@@ -37,3 +37,4 @@ presentTargetNames (+ bones/gaze/arkit)
 ## Skip reason
 
 n/a
+
