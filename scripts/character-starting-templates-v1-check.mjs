@@ -28,16 +28,16 @@ const KEYS = [
 ];
 
 const LABELS = [
-  'Berserker',
+  'Berserker / Berserkerin',
   'Vanguard',
-  'Zauberer',
-  'Technomant',
-  'Medicus',
-  'Mystiker',
-  'Assassine',
+  'Zauberer / Zaubererin',
+  'Technomant / Technomantin',
+  'Medicus / Medica',
+  'Mystiker / Mystikerin',
+  'Assassin / Assassine',
   'Mechanom',
-  'Mentalist',
-  'Herold',
+  'Mentalist / Mentalistin',
+  'Herold / Heroldin',
 ];
 
 function section(name) {
@@ -104,6 +104,9 @@ section('4 · catalog validates against rules kernel');
   }
   for (const label of LABELS) {
     check(list.some((t) => t.labelDe === label), `label ${label}`);
+  }
+  for (const entry of list) {
+    check(typeof entry.playstyleDe === 'string' && entry.playstyleDe.trim().length > 12, `${entry.key} playstyleDe`);
   }
   check(mod.getSagaDriveStartingTemplate('mage')?.archetype === 'thinker', 'mage is thinker');
   check(mod.getSagaDriveStartingTemplate('unknown') === null, 'unknown key → null');

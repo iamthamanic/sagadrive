@@ -33,7 +33,8 @@ function bgSpec(skill: SagaDriveSkillKey, name: string) {
 export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = [
   {
     key: 'berserker',
-    labelDe: 'Berserker',
+    labelDe: 'Berserker / Berserkerin',
+    playstyleDe: 'Nahkämpfer mit roher Kraft: Du gehst voran, hältst Druck und brichst Linien im Körperkontakt.',
     archetype: 'fighter',
     essence: 'physical',
     attributes: {
@@ -59,6 +60,7 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'vanguard',
     labelDe: 'Vanguard',
+    playstyleDe: 'Disziplinierter Soldat auf Distanz: Du hältst die Linie mit Feuer, Ausdauer und Systemen.',
     archetype: 'fighter',
     essence: 'technological',
     attributes: {
@@ -82,7 +84,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   },
   {
     key: 'mage',
-    labelDe: 'Zauberer',
+    labelDe: 'Zauberer / Zaubererin',
+    playstyleDe: 'Akademischer Mystiker: Du liest Okkultes, analysierst und greifst über Wissen und Geist ein.',
     archetype: 'thinker',
     essence: 'spiritual',
     attributes: {
@@ -106,7 +109,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   },
   {
     key: 'technomancer',
-    labelDe: 'Technomant',
+    labelDe: 'Technomant / Technomantin',
+    playstyleDe: 'Tech-Denker und Archivar: Du knackst Systeme, folgst Spuren und wirkst über Technik statt Ritual.',
     archetype: 'thinker',
     essence: 'technological',
     attributes: {
@@ -131,7 +135,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   },
   {
     key: 'medicus',
-    labelDe: 'Medicus',
+    labelDe: 'Medicus / Medica',
+    playstyleDe: 'Feldmediziner unter Druck: Du stabilisierst Verletzte, bleibst wach und holst Leute aus dem Schlimmsten zurück.',
     archetype: 'healer',
     essence: 'physical',
     attributes: {
@@ -155,7 +160,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   },
   {
     key: 'mystic',
-    labelDe: 'Mystiker',
+    labelDe: 'Mystiker / Mystikerin',
+    playstyleDe: 'Spiritueller Heiler: Du spürst Risse in Willen und Seele und stabilisierst mit Einsicht und ruhiger Präsenz.',
     archetype: 'healer',
     essence: 'spiritual',
     attributes: {
@@ -180,7 +186,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   },
   {
     key: 'assassin',
-    labelDe: 'Assassine',
+    labelDe: 'Assassin / Assassine',
+    playstyleDe: 'Körperlicher Infiltrator: Du kommst ungesehen, schlägst zu und verschwindest über Gassen und Dächer.',
     archetype: 'rebel',
     essence: 'physical',
     attributes: {
@@ -206,6 +213,7 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'mechanom',
     labelDe: 'Mechanom',
+    playstyleDe: 'Tech-Rebell aus der Werkstatt: Du sabotierst, knackst Mechanik und lässt Geräte für dich arbeiten.',
     archetype: 'rebel',
     essence: 'technological',
     attributes: {
@@ -231,7 +239,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   },
   {
     key: 'mentalist',
-    labelDe: 'Mentalist',
+    labelDe: 'Mentalist / Mentalistin',
+    playstyleDe: 'Menschenleser und Ermittler: Du erkennst Lügen, liest Motive und drehst Gespräche leise zu deinen Gunsten.',
     archetype: 'diplomat',
     essence: 'mental',
     attributes: {
@@ -256,7 +265,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   },
   {
     key: 'herald',
-    labelDe: 'Herold',
+    labelDe: 'Herold / Heroldin',
+    playstyleDe: 'Öffentliche Stimme mit Mandat: Du führst mit Rede und Bühne — alle hören hin, wenn du sprichst.',
     archetype: 'diplomat',
     essence: 'bound',
     attributes: {

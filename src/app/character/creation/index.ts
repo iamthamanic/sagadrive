@@ -18,3 +18,4 @@ export { SpeciesCarousel } from './SpeciesCarousel';
 export { SpeciesTraitsPanel } from './SpeciesTraitsPanel';
 export { CreateCharacterEntryDialog } from './CreateCharacterEntryDialog';
 export { StartingTemplatePicker } from './StartingTemplatePicker';
+export { getStartingTemplateSketchUrl, startingTemplateSketchSources } from './startingTemplateSketches';

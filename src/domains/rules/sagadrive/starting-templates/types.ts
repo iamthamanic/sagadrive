@@ -36,6 +36,8 @@ export type SagaDriveStartingTemplateKey =
 export type SagaDriveStartingTemplate = {
   readonly key: SagaDriveStartingTemplateKey;
   readonly labelDe: string;
+  /** Short DE play-fantasy for Create-flow cards (display only). */
+  readonly playstyleDe: string;
   readonly archetype: SagaDriveArchetypeKey;
   readonly essence: SagaDriveEssenceKey;
   /** Base attributes — permutation of [4,3,3,2,2,1]. */

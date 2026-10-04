@@ -92,6 +92,15 @@ requireMatch(dialog, /setCharacterEditorBootstrap/, 'bootstrap wiring from dialo
 requireMatch(dialog, /assertValidSnapshot/, 'assert before bootstrap handoff');
 requireMatch(startingTemplatePicker, /SagaDrive-Starttemplates/, 'system starttemplates section');
 requireMatch(startingTemplatePicker, /listSagaDriveStartingTemplates/, 'catalog list in picker');
+requireMatch(startingTemplatePicker, /getSagaDriveArchetype/, 'archetype label in picker');
+requireMatch(startingTemplatePicker, /getSagaDriveEssence/, 'essence label in picker');
+requireMatch(startingTemplatePicker, /getStartingTemplateSketchUrl/, 'sketch thumbnail wiring');
+requireMatch(startingTemplatePicker, /h-20 w-20/, 'square thumbnail size');
+requireMatch(startingTemplatePicker, /playstyleDe/, 'playstyle copy in picker');
+requireMatch(startingTemplatePicker, /SagaDrive<\/Badge>|SagaDrive\s*\n?\s*</, 'SagaDrive provenance tag');
+const startingTemplateSketches = read('src/app/character/creation/startingTemplateSketches.ts');
+requireMatch(startingTemplateSketches, /startingTemplateSketchSources/, 'sketch source map');
+requireMatch(startingTemplateSketches, /berserker:|vanguard:|herald:/, 'sketch keys mapped');
 requireMatch(bootstrap, /kind: 'starting-template'/, 'bootstrap union includes starting-template');
 
 requireMatch(editor, /value="settings"/, 'Einstellungen editor tab');
