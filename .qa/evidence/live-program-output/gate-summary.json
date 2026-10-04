@@ -1,0 +1,6 @@
+{
+  "slug": "live-program-output",
+  "issue": 365,
+  "gate": "live-program-output-check",
+  "result": "PASS"
+}
