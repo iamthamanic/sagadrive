@@ -1,6 +1,6 @@
 # Composition Gate — session-knowledge-reveals
 
-- HEAD_SHA: 4c03e7c72bb5dfe443c15838c68a1fe5c8590d16
+- HEAD_SHA: ee4f6a04c18cbf8d14a1d766d854c8e7a64de235
 - BASE_SHA: 6ce9b2e3ed50eec863aa2a75459a545a7fa6ff93
 - Date: 2026-10-05
 - Verdict: CLEAR
