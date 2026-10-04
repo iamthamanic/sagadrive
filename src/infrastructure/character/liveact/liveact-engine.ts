@@ -4,9 +4,10 @@
  *
  * Wraps the shared MediaPipe face source. At most one active camera/detector.
  * Legacy AvatarFaceTrackingRuntime is compatibility-only (no productive canvas consumer).
- * RAW is the tracker's anatomical sample; everything from MAPPED on (calibration included) is in
- * avatar orientation (LIVEACT_MIRROR_AVATAR).
- * Dense face features (#445) are a side-channel — never stuffed into LiveActFrameV1.
+ * RAW is the tracker's anatomical sample. #447 hybrid fuses anatomical semantic + anatomical
+ * dense, then mirrors ONCE (LIVEACT_MIRROR_AVATAR) before map/calibrate/output.
+ * Dense face features (#445) and hybrid face (#447) are side-channels —
+ * never stuffed as raw geometry into LiveActFrameV1 (hybrid writes semantic face only).
  */
 
 import {
@@ -18,8 +19,10 @@ import {
   LIVEACT_RANGE_STEP_MIN_FRAMES,
   LIVEACT_RANGE_STEP_MIN_MS,
   assertDenseFaceFeaturesLocalOnly,
+  assertHybridFaceLocalOnly,
   assertIrisGazeLocalOnly,
   assertLiveActFrameLocalOnly,
+  applyHybridFaceToSemantic,
   applyLiveActRetargetProfile,
   DEFAULT_LIVEACT_RETARGET_PROFILE,
   assertLiveActDiagnosticsV2LocalOnly,
@@ -51,11 +54,13 @@ import {
   shouldThrottleLiveActUiStatus,
   snapshotLiveActDiagnosticsV2FromFrame,
   snapshotLiveActDiagnosticsV2FromSample,
+  solveHybridFace,
   stepLiveActCalibratedFrame,
   type LiveActCalibratedStepV1,
   type LiveActCalibrationAccumulator,
   type LiveActCalibrationStepPeakV1,
   type LiveActDenseFaceFeaturesV1,
+  type LiveActHybridFaceV1,
   type LiveActIrisGazeV1,
   type LiveActDiagnosticsV2Snapshot,
   type LiveActFaceDiagnosticsFrameV1,
@@ -127,6 +132,7 @@ export type LiveActDiagnosticsV2Listener = (snapshot: LiveActDiagnosticsV2Snapsh
 export type LiveActDenseFaceFeaturesListener = (frame: LiveActDenseFaceFeaturesV1) => void;
 /** Iris gaze side-channel (#446) — not a second avatar gaze driver. */
 export type LiveActIrisGazeListener = (gaze: LiveActIrisGazeV1) => void;
+export type LiveActHybridFaceListener = (frame: LiveActHybridFaceV1) => void;
 
 function isMobileHint(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -163,9 +169,11 @@ export class LiveActEngine {
   private readonly diagnosticsV2Listeners = new Set<LiveActDiagnosticsV2Listener>();
   private readonly denseFaceFeaturesListeners = new Set<LiveActDenseFaceFeaturesListener>();
   private readonly irisGazeListeners = new Set<LiveActIrisGazeListener>();
+  private readonly hybridFaceListeners = new Set<LiveActHybridFaceListener>();
   private diagnosticsV2: LiveActDiagnosticsV2Snapshot | null = null;
   private denseFaceFeatures: LiveActDenseFaceFeaturesV1 | null = null;
   private irisGaze: LiveActIrisGazeV1 | null = null;
+  private hybridFace: LiveActHybridFaceV1 | null = null;
   private neutralBaseline: LiveActNeutralBaselineV1 | null = null;
   private rangeCalibration: LiveActRangeCalibrationV1 | null = null;
   private calibrating = false;
@@ -288,6 +296,22 @@ export class LiveActEngine {
 
   getIrisGaze(): LiveActIrisGazeV1 | null {
     return this.irisGaze;
+  }
+
+  /**
+   * Hybrid mouth/cheek/nose face side-channel (#447).
+   * Semantic controls only — raw dense geometry stays out of LiveActFrameV1.
+   */
+  subscribeHybridFace(listener: LiveActHybridFaceListener): () => void {
+    this.hybridFaceListeners.add(listener);
+    if (this.hybridFace) listener(this.hybridFace);
+    return () => {
+      this.hybridFaceListeners.delete(listener);
+    };
+  }
+
+  getHybridFace(): LiveActHybridFaceV1 | null {
+    return this.hybridFace;
   }
 
   getDiagnosticsV2(): LiveActDiagnosticsV2Snapshot | null {
@@ -540,6 +564,7 @@ export class LiveActEngine {
     this.diagnosticsV2 = null;
     this.denseFaceFeatures = null;
     this.irisGaze = null;
+    this.hybridFace = null;
     this.output?.resetLiveActPose();
     this.releaseActiveClaim();
     this.setStatus('stopped', liveActStatusLabelDe('stopped'));
@@ -559,6 +584,7 @@ export class LiveActEngine {
     this.diagnosticsV2 = null;
     this.denseFaceFeatures = null;
     this.irisGaze = null;
+    this.hybridFace = null;
     this.output = null;
     this.statusListeners.clear();
     this.frameListeners.clear();
@@ -566,6 +592,7 @@ export class LiveActEngine {
     this.diagnosticsV2Listeners.clear();
     this.denseFaceFeaturesListeners.clear();
     this.irisGazeListeners.clear();
+    this.hybridFaceListeners.clear();
     this.releaseActiveClaim();
     this.setStatus('idle', liveActStatusLabelDe('idle'));
     this.setCalibrationUi('idle', '');
@@ -651,7 +678,38 @@ export class LiveActEngine {
     irisSeed: LiveActIrisGazeV1 | null,
   ): LiveActFrameV1 {
     this.sequence += 1;
-    const oriented = LIVEACT_MIRROR_AVATAR ? mirrorLiveActSourceSample(sample) : sample;
+
+    // #447 Orientation authority = anatomical.
+    // Fuse RAW anatomical semantic + RAW anatomical dense, then mirror ONCE.
+    // Never fuse mirrored semantic against unmirrored dense (L/R mismatch).
+    const denseForHybrid: LiveActDenseFaceFeaturesV1 | null = denseSeed
+      ? {
+          ...denseSeed,
+          sequence: this.sequence,
+          timestampMs,
+          presence: denseSeed.presence,
+        }
+      : null;
+    const hybrid = solveHybridFace({
+      semanticFace: sample.face,
+      dense: denseForHybrid,
+      sequence: this.sequence,
+      timestampMs,
+      denseSequence: denseForHybrid?.sequence ?? null,
+    });
+    assertHybridFaceLocalOnly(hybrid);
+    this.hybridFace = hybrid;
+    this.emitHybridFace(hybrid);
+
+    const anatomicalFused: LiveActSourceSample = {
+      ...sample,
+      face: applyHybridFaceToSemantic(sample.face, hybrid),
+    };
+    // Single mirror point — avatar orientation for map/calibrate/output.
+    const oriented = LIVEACT_MIRROR_AVATAR
+      ? mirrorLiveActSourceSample(anatomicalFused)
+      : anatomicalFused;
+
     const mapped = mapLiveActSourceSample(oriented, {
       timestampMs,
       sequence: this.sequence,
@@ -682,6 +740,7 @@ export class LiveActEngine {
       timestampMs,
       sequence: this.sequence,
       trackingLost: mapped.trackingLost,
+      // RAW remains pre-hybrid tracker sample; mapped includes hybrid face controls.
       raw: snapshotLiveActDiagnosticsV2FromSample(sample),
       mapped: snapshotLiveActDiagnosticsV2FromFrame(mapped),
       smoothed: snapshotLiveActDiagnosticsV2FromFrame(smoothed),
@@ -1115,6 +1174,12 @@ export class LiveActEngine {
   private emitIrisGaze(gaze: LiveActIrisGazeV1): void {
     for (const listener of this.irisGazeListeners) {
       listener(gaze);
+    }
+  }
+
+  private emitHybridFace(frame: LiveActHybridFaceV1): void {
+    for (const listener of this.hybridFaceListeners) {
+      listener(frame);
     }
   }
 }

@@ -646,11 +646,25 @@ const faceSource = read('src/infrastructure/character/liveact/mediapipe-face-sou
 const vrmOutput = read('src/infrastructure/character/liveact/vrm-liveact-avatar-output.ts');
 
 check(
-  /const oriented = LIVEACT_MIRROR_AVATAR \? mirrorLiveActSourceSample\(sample\) : sample/.test(engine),
+  /LIVEACT_MIRROR_AVATAR\s*\?\s*mirrorLiveActSourceSample\((?:sample|anatomicalFused)\)\s*:\s*(?:sample|anatomicalFused)/.test(
+    engine,
+  ),
   'engine orients the sample between RAW and MAPPED',
 );
+check(
+  /semanticFace:\s*sample\.face/.test(engine) &&
+    /mirrorLiveActSourceSample\(anatomicalFused\)/.test(engine),
+  'engine #447: anatomical hybrid then mirror once',
+);
 check(/raw: snapshotLiveActDiagnosticsV2FromSample\(sample\)/.test(engine), 'Diagnostics RAW is the unmirrored sample');
-check(/tickCalibration\(oriented\)/.test(engine), 'calibration runs in avatar orientation');
+check(
+  /tickCalibration\(oriented\)/.test(engine),
+  'calibration runs in avatar orientation',
+);
+check(
+  /solveHybridFace|applyHybridFaceToSemantic/.test(engine),
+  'engine applies #447 hybrid face before map/calibration when dense is present',
+);
 check(!/mirrorLiveActSourceSample|LIVEACT_MIRROR_AVATAR/.test(faceSource), 'face source stays anatomical');
 check(
   /applyLiveActVrmEyeLookAt\(this\.deps\.vrm/.test(vrmOutput) && !/eyeLookTarget/.test(vrmOutput),
