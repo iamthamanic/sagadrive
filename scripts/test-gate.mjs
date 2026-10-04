@@ -374,6 +374,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('LiveAct session transport (#364): network frame + remote consumer + data plane...');
+  execFileSync(process.execPath, ['scripts/liveact-session-transport-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {

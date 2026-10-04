@@ -675,3 +675,27 @@ export {
   type PerfectFidelityV2E2eReport,
 } from './liveact-perfect-fidelity-v2-e2e';
 
+export {
+  LIVEACT_NETWORK_FRAME_CONTRACT,
+  LIVEACT_NETWORK_TOPIC,
+  LIVEACT_NETWORK_MAX_SEND_HZ,
+  LIVEACT_NETWORK_STALE_MS,
+  encodeLiveActNetworkFrame,
+  decodeLiveActNetworkFrame,
+  serializeLiveActNetworkFrame,
+  parseLiveActNetworkFrameJson,
+  type LiveActNetworkFrameV1,
+  type LiveActNetworkDecodeResult,
+  type LiveActNetworkDecodeFailure,
+} from './liveact-network-frame';
+
+export {
+  createLiveActRemoteConsumerState,
+  acceptLiveActRemoteFrame,
+  clearLiveActRemoteConsumer,
+  userIdFromMediaIdentity,
+  resolveRemoteLiveActCharacterId,
+  type LiveActRemoteConsumerState,
+  type LiveActRemoteAcceptResult,
+} from './liveact-remote-consumer';
+

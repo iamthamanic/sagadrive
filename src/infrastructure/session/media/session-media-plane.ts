@@ -14,7 +14,10 @@ import {
   type MediaPublishIntent,
   type MediaTrackKind,
 } from '../../../domains/session/media/media-plane-contract';
-import type { MediaPlaneAdapter } from './media-plane-adapter';
+import type {
+  MediaPlaneAdapter,
+  MediaPlaneDataHandler,
+} from './media-plane-adapter';
 import { fetchSessionMediaToken } from './media-token-client';
 import { LiveKitMediaPlaneAdapter } from './livekit-media-plane-adapter';
 import { MemoryMediaPlaneAdapter } from './memory-media-plane-adapter';
@@ -154,6 +157,34 @@ export class SessionMediaPlane {
 
   async unpublish(kinds: readonly MediaTrackKind[]): Promise<void> {
     await this.adapter.unpublish(kinds);
+  }
+
+  /**
+   * Publish ephemeral LiveAct network JSON when access allows liveact-data (#364).
+   */
+  async publishLiveActData(payload: string): Promise<boolean> {
+    if (!this.access || !canPublishTrack(this.access, 'liveact-data')) {
+      return false;
+    }
+    if (this.status.health !== 'ready' && this.status.health !== 'reconnecting') {
+      return false;
+    }
+    if (typeof this.adapter.publishData !== 'function') {
+      return false;
+    }
+    try {
+      await this.adapter.publishData('liveact-data', payload);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  subscribeLiveActData(handler: MediaPlaneDataHandler): () => void {
+    if (typeof this.adapter.subscribeData !== 'function') {
+      return () => undefined;
+    }
+    return this.adapter.subscribeData(handler);
   }
 
   /**
