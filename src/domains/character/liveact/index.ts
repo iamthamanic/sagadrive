@@ -204,6 +204,7 @@ export {
   type LiveActRangeCalibrationStepId,
   type LiveActCalibrationSetV1,
   type LiveActCalibratedStepV1,
+  type LiveActSmoothPathMode,
 } from './liveact-calibration';
 
 export {
@@ -279,6 +280,7 @@ export {
   fidelityGazeAngularErrorDeg,
   fidelityContourErrorPctMouthWidth,
   fidelityCountSequenceGaps,
+  fidelityOvershoot,
 } from './liveact-perfect-fidelity-math';
 
 export {
@@ -496,4 +498,56 @@ export {
   type HybridFaceAbReportV1,
   type HybridFaceAbPathErrors,
 } from './liveact-hybrid-face-ab';
+
+export {
+  LIVEACT_TEMPORAL_CONTRACT,
+  LIVEACT_TEMPORAL_POLICY_VERSION,
+  LIVEACT_TEMPORAL_SIGNAL_GROUPS,
+  LIVEACT_TEMPORAL_POLICIES,
+  LIVEACT_TEMPORAL_DEFAULT_DT_MS,
+  LIVEACT_TEMPORAL_MIN_DT_MS,
+  LIVEACT_TEMPORAL_MAX_DT_MS,
+  LIVEACT_TEMPORAL_LONG_GAP_MS,
+  LIVEACT_TEMPORAL_TARGETS,
+  createEmptyTemporalState,
+  temporalGroupForFaceChannel,
+  temporalGroupForScalarKey,
+  temporalFaceKey,
+  type LiveActTemporalSignalGroup,
+  type LiveActTemporalLifecycleMode,
+  type LiveActTemporalGroupPolicyV1,
+  type LiveActTemporalScalarKey,
+  type LiveActTemporalStateV1,
+} from './liveact-temporal-contract';
+
+export {
+  stepAdaptiveTemporal,
+  resetAdaptiveTemporal,
+  resolveTemporalDtMs,
+  temporalAlpha,
+  temporalSmoothstep,
+  readTemporalScalar,
+  type StepAdaptiveTemporalResult,
+} from './liveact-temporal-solve';
+
+export {
+  buildHeadYawStepSequence,
+  buildGazeStepSequence,
+  buildLipSineSequence,
+  buildHeadJitterSequence,
+  buildBlinkSequence,
+  buildTemporalSpeechSequence,
+  buildLostReacquireSmileSequence,
+  buildDroppedFrameLipSequence,
+  temporalTimestamps,
+  type TemporalMappedSequence,
+  type TemporalFixtureKind,
+} from './liveact-temporal-fixtures';
+
+export {
+  runTemporalAbBenchmark,
+  type TemporalAbReportV1,
+  type TemporalAbChannelMetrics,
+  type TemporalAbPath,
+} from './liveact-temporal-ab';
 

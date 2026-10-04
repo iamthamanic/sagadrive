@@ -810,6 +810,16 @@ function checkLiveActHybridMouthFaceSolver() {
   });
 }
 
+function checkLiveActAdaptiveTemporalSolver() {
+  console.log(
+    'LiveAct adaptive temporal solver (#448): dt-based per-group policies + A/B vs V1 EMA...',
+  );
+  execFileSync(process.execPath, ['scripts/liveact-adaptive-temporal-solver-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkLiveActFacePipelineDocs() {
   console.log('LiveAct face pipeline docs (#386): AUTHORING v1.1 + FACE-AUTHORING...');
   execFileSync(process.execPath, ['scripts/liveact-face-pipeline-doc-check.mjs'], {
@@ -1632,6 +1642,7 @@ checkLiveActPerfectFidelityBenchmark();
 checkLiveActDenseFaceFeatures();
 checkLiveActIrisGazeSolver();
 checkLiveActHybridMouthFaceSolver();
+checkLiveActAdaptiveTemporalSolver();
 checkLiveActFacePipelineDocs();
 checkLiveActFaceHumanRepro();
 checkLiveActRigDebug();

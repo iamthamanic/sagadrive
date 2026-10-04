@@ -241,3 +241,39 @@ export function fidelityCountSequenceGaps(sequences: readonly number[]): number 
   }
   return drops;
 }
+
+/**
+ * Overshoot for a monotonic step toward `target` (#448 / #444 extension).
+ * After the input first reaches `target` (within eps), measures max amount
+ * output exceeds the target envelope on the same side of the step.
+ * Returns 0 when output never exceeds target. Empty → null.
+ */
+export function fidelityOvershoot(
+  input: readonly number[],
+  output: readonly number[],
+  target: number,
+  eps = 1e-4,
+): number | null {
+  const n = Math.min(input.length, output.length);
+  if (n === 0) return null;
+  let onset = -1;
+  for (let i = 0; i < n; i += 1) {
+    if (Math.abs(input[i]! - target) <= eps) {
+      onset = i;
+      break;
+    }
+  }
+  if (onset < 0) return 0;
+  const start = input[0] ?? 0;
+  const up = target >= start;
+  let maxOver = 0;
+  for (let i = onset; i < n; i += 1) {
+    const o = output[i]!;
+    if (up) {
+      maxOver = Math.max(maxOver, o - target);
+    } else {
+      maxOver = Math.max(maxOver, target - o);
+    }
+  }
+  return Math.max(0, maxOver);
+}

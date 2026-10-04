@@ -87,13 +87,13 @@ const neutral = d.finalizeLiveActCalibration(neutralAcc);
 check(neutral !== null, 'neutral baseline from 30 frames');
 
 let sequence = 0;
-function run(input, frames, calibration, previous = null) {
+function run(input, frames, calibration, previous = null, mode = 'adaptive') {
   let step = previous;
   const trace = [];
   for (let i = 0; i < frames; i += 1) {
     sequence += 1;
     const mapped = d.mapLiveActSourceSample(input, { timestampMs: sequence * 33, sequence });
-    step = d.stepLiveActCalibratedFrame(step, mapped, calibration);
+    step = d.stepLiveActCalibratedFrame(step, mapped, calibration, d.DEFAULT_LIVEACT_LIMITS, mode);
     trace.push(step);
   }
   return { step, trace };
@@ -158,25 +158,40 @@ near(state.calibrated.face.jawOpen, 0.5, 1e-3, 'half jaw → 0.5');
 state = run(sample(), 60, full, state).step;
 near(state.calibrated.face.jawOpen, 0, 1e-6, 'neutral stays 0 with range');
 
+// V1 fixed-EMA lost/reacquire semantics (baseline retained for #448 A/B)
+state = run(sample({ headRoll: 0.3 }), 60, full, null, 'v1-fixed').step;
+near(state.calibrated.head.roll, 0.2, 1e-3, 'steady roll before loss (v1-fixed)');
+const lostV1 = run(lostSample(), 30, full, state, 'v1-fixed');
+const firstLostV1 = lostV1.trace[0].calibrated;
+check(firstLostV1.trackingLost, 'lost frame flagged (v1-fixed)');
+check(
+  firstLostV1.head.roll <= 0.2 + 1e-9 && firstLostV1.head.roll >= 0.2 * (1 - 0.35 * 0.65) - 1e-6,
+  `tracking lost eases from calibrated pose without jump (got ${firstLostV1.head.roll})`,
+);
+near(firstLostV1.face.eyeBlinkLeft, 0, 1e-9, 'lost face → neutral (v1-fixed)');
+check(Math.abs(lostV1.step.calibrated.head.roll) < 0.01, 'lost eases to neutral (v1-fixed)');
+const lastLostRollV1 = lostV1.step.calibrated.head.roll;
+const reacquiredV1 = run(sample({ headRoll: 0.3 }), 60, full, lostV1.step, 'v1-fixed');
+const firstBackV1 = reacquiredV1.trace[0].calibrated.head.roll;
+check(
+  firstBackV1 >= lastLostRollV1 - 1e-9 && firstBackV1 <= 0.2 + 1e-9,
+  `re-acquire blends without jump (last lost ${lastLostRollV1}, first back ${firstBackV1})`,
+);
+near(reacquiredV1.step.calibrated.head.roll, 0.2, 1e-3, 're-acquire converges (v1-fixed)');
+
+// #448 adaptive: lost eases head; reacquire rebases from current input (no stale revive)
 state = run(sample({ headRoll: 0.3 }), 60, full).step;
-near(state.calibrated.head.roll, 0.2, 1e-3, 'steady roll before loss');
-const lost = run(lostSample(), 30, full, state);
-const firstLost = lost.trace[0].calibrated;
-check(firstLost.trackingLost, 'lost frame flagged');
+near(state.calibrated.head.roll, 0.2, 1e-3, 'steady roll before loss (adaptive)');
+const lostAd = run(lostSample(), 30, full, state);
+check(lostAd.trace[0].calibrated.trackingLost, 'lost frame flagged (adaptive)');
 check(
-  firstLost.head.roll <= 0.2 + 1e-9 && firstLost.head.roll >= 0.2 * (1 - 0.35 * 0.65) - 1e-6,
-  `tracking lost eases from calibrated pose without jump (got ${firstLost.head.roll})`,
+  lostAd.trace[0].calibrated.head.roll <= 0.2 + 1e-9,
+  `adaptive lost does not jump above prior (got ${lostAd.trace[0].calibrated.head.roll})`,
 );
-near(firstLost.face.eyeBlinkLeft, 0, 1e-9, 'lost face → neutral');
-check(Math.abs(lost.step.calibrated.head.roll) < 0.01, 'lost eases to neutral');
-const lastLostRoll = lost.step.calibrated.head.roll;
-const reacquired = run(sample({ headRoll: 0.3 }), 60, full, lost.step);
-const firstBack = reacquired.trace[0].calibrated.head.roll;
-check(
-  firstBack >= lastLostRoll - 1e-9 && firstBack <= 0.2 + 1e-9,
-  `re-acquire blends without jump (last lost ${lastLostRoll}, first back ${firstBack})`,
-);
-near(reacquired.step.calibrated.head.roll, 0.2, 1e-3, 're-acquire converges');
+near(lostAd.trace[0].calibrated.face.eyeBlinkLeft, 0, 1e-9, 'adaptive lost face → neutral');
+check(Math.abs(lostAd.step.calibrated.head.roll) < 0.05, 'adaptive lost eases toward neutral');
+const reacquiredAd = run(sample({ headRoll: 0.3 }), 60, full, lostAd.step);
+near(reacquiredAd.step.calibrated.head.roll, 0.2, 1e-3, 'adaptive reacquire converges');
 
 // --- 1b. Engine two-step calibration state machine (real engine, controlled clock) ---------
 const engineModule = await bundle(
