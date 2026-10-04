@@ -394,6 +394,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Session entry role routing (#477): canonical Saga→Session live entry...');
+  execFileSync(process.execPath, ['scripts/session-entry-role-routing-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {

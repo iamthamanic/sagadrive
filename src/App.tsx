@@ -16,6 +16,10 @@ import { LookCreateScreen, LookEditScreen } from './app/look';
 import { NpcCreatureCreateScreen, NpcCreatureEditorScreen } from './app/npc-creature';
 import { SagaResourceScreen } from './app/project';
 import { SessionResourceScreen } from './app/session';
+import {
+  assertPlayerNotRoutedToGamemaster,
+  resolveCanonicalLiveEntry,
+} from './domains/session/contracts/session-entry-routing';
 
 const CharacterEditor = lazy(() =>
   import('./app/character/root').then((module) => ({ default: module.CharacterEditor })),
@@ -180,15 +184,37 @@ function AppShell() {
             <SessionJoin
               onBack={() => handleNavigate('dashboard')}
               onJoinAsGM={(sessionId, meta) => {
-                if (meta?.sagaPublicId && meta?.sessionPublicId) {
-                  navigateToSessionLive(meta.sagaPublicId, meta.sessionPublicId, 'gamemaster');
+                const decision = resolveCanonicalLiveEntry({
+                  role: 'gamemaster',
+                  sagaPublicId: meta?.sagaPublicId ?? null,
+                  sessionPublicId: meta?.sessionPublicId ?? null,
+                });
+                if (decision.kind === 'live') {
+                  navigateToSessionLive(
+                    decision.sagaPublicId,
+                    decision.sessionPublicId,
+                    decision.liveView,
+                  );
                   return;
                 }
-                handleNavigate('gamemaster');
+                console.warn(
+                  '[app] GM join missing public IDs; staying on session-join',
+                  { sessionId, reason: decision.kind === 'unauthorized' ? decision.reason : decision.kind },
+                );
               }}
               onJoinAsPlayer={(sessionId, code, meta) => {
-                if (meta?.sagaPublicId && meta?.sessionPublicId) {
-                  navigateToSessionLive(meta.sagaPublicId, meta.sessionPublicId, 'player');
+                const decision = resolveCanonicalLiveEntry({
+                  role: 'player',
+                  sagaPublicId: meta?.sagaPublicId ?? null,
+                  sessionPublicId: meta?.sessionPublicId ?? null,
+                });
+                if (decision.kind === 'live') {
+                  assertPlayerNotRoutedToGamemaster('player', decision.liveView);
+                  navigateToSessionLive(
+                    decision.sagaPublicId,
+                    decision.sessionPublicId,
+                    decision.liveView,
+                  );
                   return;
                 }
                 console.warn(

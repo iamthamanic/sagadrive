@@ -13,3 +13,4 @@ export * from './combat-encounter';
 export * from './multiuser-e2e-security';
 export * from './player-test-instrumentation';
 export * from './live-session-access';
+export * from './session-entry-routing';

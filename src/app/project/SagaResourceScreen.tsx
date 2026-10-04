@@ -6,7 +6,8 @@
  * #302: overview + sessions link to SessionJoin (mounted in App) — no session import (cycle).
  */
 import { Button } from '../../shared/ui/button';
-import { pathForView, type SagaSectionId } from '../shell';
+import { buildSessionJoinPath } from '../../domains/session/contracts/session-entry-routing';
+import type { SagaSectionId } from '../shell';
 
 type SagaResourceScreenProps = {
   mode: 'list' | 'new' | 'section';
@@ -35,12 +36,15 @@ export function SagaResourceScreen({
   onNavigate,
 }: SagaResourceScreenProps) {
   const goSessionJoin = () => {
+    const path = buildSessionJoinPath({
+      sagaPublicId: sagaPublicId ?? null,
+      intent: 'create',
+    });
     if (onNavigate) {
-      onNavigate('session-join');
+      onNavigate(path);
       return;
     }
-    const path = pathForView('session-join');
-    if (path && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       window.history.pushState(null, '', path);
       window.dispatchEvent(new PopStateEvent('popstate'));
     }
