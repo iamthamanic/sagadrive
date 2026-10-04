@@ -1,11 +1,12 @@
 # Composition Gate — live-program-output
 
-- HEAD_SHA: ae869593beadf3af6bd2511229769ed19a5892aa
+- HEAD_SHA: bc24d76346a0c00a4c53cecaa8de3204647f3d72
+- BASE_SHA: fd5676f9575961f80199670fedd837597b269d0f
 - Date: 2026-10-04
 - Verdict: CLEAR
 
 ## Event
-GM/Director switches Program source/layout → viewers/display receive public Program Output.
+GM switches Program source/layout; display/viewer consume public Program Output only.
 
 ## Hop chain
 ```text
@@ -18,11 +19,11 @@ ProgramGmControls
 ```
 
 ## Simulations
-| Case | Result |
-|------|--------|
-| N viewers | same program read model | pass |
-| invalid gm_only payload | rejected | pass |
-| 2 consumers | scene source projects #301 scene | pass |
+| Case | Intended | Composed | Result |
+|------|----------|----------|--------|
+| N-actors | Multiple viewers/display clients read same program revision | shared.programPresentation fan-out via runtime snapshot | pass |
+| Invalid/missing | gm_only / forged keys rejected; missing program defaults to shared-scene or neutral | fail-closed parse + defaultProgramPresentationState | pass |
+| Two consumers / crash | Display + GM preview; one consumer disconnect does not corrupt program state | independent read models | pass |
 
 ## Flags
 none
