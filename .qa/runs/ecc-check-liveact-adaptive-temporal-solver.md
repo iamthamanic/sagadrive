@@ -13,5 +13,7 @@
 | verify-ui | N/A |
 | composition-gate | CLEAR |
 | review-ticket | ACCEPT |
+| PR #507 review threads | 0 unresolved |
+| HEAD | `69cebe1` |
 
 Do not merge until explicit request. Do not start #449.

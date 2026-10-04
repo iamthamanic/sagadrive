@@ -12,9 +12,11 @@
 - Wired into `npm run test-gate` → PASS
 - V1 `smoothLiveActFrame(α=0.35)` retained as A/B baseline
 - Production: adaptive continuous-time one-pole per signal group
-- Lip 1–5 Hz amplitude 90–110%, lag ≤66 ms
+- Lip 1–5 Hz amplitude 90–110%, lag p95 ≤66 ms (`fidelityLagP95Ms`)
+- Lost diagnostics preserve adaptive SMOOTHED (`smoothedRaw`); no inverse-baseline
 - Lost/reacquire/model-swap/dropped-frame lifecycle PASS
 - #446 / #447 regression intact
+- HEAD `69cebe1` review P2 fixes verified
 
 ## Non-goals confirmed
 No #449 personal calib, #450 morphs, no #446/#447 solver changes.

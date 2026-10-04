@@ -14,5 +14,10 @@
 - No #449 / #450 scope
 - #446 / #447 untouched
 
+## Review follow-ups (Codex P2)
+- Lost SMOOTHED: adaptive raw preserved (resolved)
+- Lip latency metric: event p95 via `fidelityLagP95Ms` (resolved)
+- Unresolved blocking threads: 0
+
 ## Findings
 none blocking
