@@ -1,0 +1,8 @@
+{
+  "encodeOk": true,
+  "versionMismatchBlocked": true,
+  "biometricsBlocked": true,
+  "sequenceDrops": true,
+  "trackingLostNeutral": true,
+  "memoryFanOut": true
+}

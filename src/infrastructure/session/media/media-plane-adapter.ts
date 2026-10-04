@@ -21,6 +21,15 @@ export type MediaPlaneConnectInput = {
   readonly url: string;
 };
 
+/** Ephemeral data payload on the media plane (#364 LiveAct). */
+export type MediaPlaneDataMessage = {
+  readonly topic: string;
+  readonly payload: string;
+  readonly publisherIdentity: string;
+};
+
+export type MediaPlaneDataHandler = (message: MediaPlaneDataMessage) => void;
+
 export type MediaPlaneAdapter = {
   readonly providerId: 'livekit' | 'memory' | 'none';
   connect(input: MediaPlaneConnectInput): Promise<void>;
@@ -29,4 +38,8 @@ export type MediaPlaneAdapter = {
   unpublish(kinds: readonly MediaTrackKind[]): Promise<void>;
   getPresence(): MediaPresenceSnapshot;
   getHealth(): MediaPlaneHealth;
+  /** Publish ephemeral UTF-8 data (LiveAct network frames). */
+  publishData?(topic: string, payload: string): Promise<void>;
+  /** Subscribe to ephemeral data; returns unsubscribe. */
+  subscribeData?(handler: MediaPlaneDataHandler): () => void;
 };

@@ -52,3 +52,8 @@ export {
   resolveLiveActRetargetProfile,
   type LiveActRetargetProfileSelectionInput,
 } from './liveact-retarget-profile-registry';
+export {
+  LiveActSessionTransport,
+  type LiveActSessionTransportOptions,
+  type LiveActRemoteApplyTarget,
+} from './liveact-session-transport';
