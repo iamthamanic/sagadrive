@@ -4,6 +4,9 @@
  *
  * Latent truth ≠ dense observation. No baseline sabotage.
  * Uses #444 Pearson / amplitude / velocity / saturation helpers.
+ *
+ * Clean non-degradation evaluates ACTIVE controls only (avoids zero-inflated median).
+ * Success gate uses the same `activeUnderResponseMedianAbs` that is reported.
  */
 
 import {
@@ -31,10 +34,23 @@ import {
 } from './liveact-perfect-fidelity-math';
 import { LIVEACT_FIDELITY_SATURATION_THRESHOLD } from './liveact-perfect-fidelity-contract';
 
+const ACTIVE_LATENT_THRESHOLD = 0.05;
+const ACTIVE_CHANGE_THRESHOLD = 0.02;
+
 export interface HybridFaceAbPathErrors {
   readonly path: 'v1' | 'hybrid';
   readonly medianAbsError: number | null;
   readonly errors: readonly number[];
+}
+
+export interface HybridFaceAbCleanControlRow {
+  readonly control: LiveActHybridFaceControlId;
+  readonly latent: number;
+  readonly v1: number;
+  readonly hybrid: number;
+  readonly v1Error: number;
+  readonly hybridError: number;
+  readonly delta: number;
 }
 
 export interface HybridFaceAbReportV1 {
@@ -44,9 +60,17 @@ export interface HybridFaceAbReportV1 {
   readonly v1: HybridFaceAbPathErrors;
   readonly hybrid: HybridFaceAbPathErrors;
   readonly motionImprovement: number | null;
+  readonly cleanActiveControls: readonly HybridFaceAbCleanControlRow[];
   readonly cleanNonDegradation: boolean;
   readonly validationImprovement: number | null;
+  /** Gate metric — median abs-error improvement on active under-response controls. */
+  readonly activeUnderResponseMedianAbs: number;
+  readonly requiredMinimum: typeof LIVEACT_HYBRID_AB_MIN_MEDIAN_IMPROVEMENT;
   readonly hybridBeatsV1: boolean;
+  readonly neutralLeakage: {
+    readonly maxUnintendedActivation: number;
+    readonly fixtureId: 'hy-neutral-realistic-geometry';
+  };
   readonly speech: {
     readonly v1Correlation: number | null;
     readonly hybridCorrelation: number | null;
@@ -151,15 +175,52 @@ function runPathActive(
         : null;
     for (const cid of EVAL_CONTROLS) {
       const truth = latentValue(frame.latent, cid);
-      const pred =
-        path === 'v1'
-          ? semanticValue(frame.semantic, cid)
-          : (hybrid!.controls[cid].value ?? semanticValue(frame.semantic, cid));
-      if (truth < 0.05 && pred < 0.05) continue;
+      const v1Pred = semanticValue(frame.semantic, cid);
+      const hyPred =
+        hybrid !== null
+          ? (hybrid.controls[cid].value ?? v1Pred)
+          : v1Pred;
+      const pred = path === 'v1' ? v1Pred : hyPred;
+      const active =
+        truth >= ACTIVE_LATENT_THRESHOLD ||
+        Math.abs(v1Pred - hyPred) >= ACTIVE_CHANGE_THRESHOLD;
+      if (!active) continue;
       all.push(Math.abs(pred - truth));
     }
   }
   return all;
+}
+
+function cleanActiveControlRows(): HybridFaceAbCleanControlRow[] {
+  const frame = buildHybridFaceFixture('hy-clean-smile-bilateral');
+  const hybrid = solveHybridFace({
+    semanticFace: frame.semantic,
+    dense: frame.dense,
+    sequence: frame.sequence,
+    timestampMs: frame.timestampMs,
+    denseSequence: frame.dense?.sequence ?? null,
+  });
+  const rows: HybridFaceAbCleanControlRow[] = [];
+  for (const cid of EVAL_CONTROLS) {
+    const latent = latentValue(frame.latent, cid);
+    const v1 = semanticValue(frame.semantic, cid);
+    const hy = hybrid.controls[cid].value ?? v1;
+    const active =
+      latent >= ACTIVE_LATENT_THRESHOLD || Math.abs(v1 - hy) >= ACTIVE_CHANGE_THRESHOLD;
+    if (!active) continue;
+    const v1Error = Math.abs(v1 - latent);
+    const hybridError = Math.abs(hy - latent);
+    rows.push({
+      control: cid,
+      latent,
+      v1,
+      hybrid: hy,
+      v1Error,
+      hybridError,
+      delta: v1Error - hybridError,
+    });
+  }
+  return rows;
 }
 
 function speechSeries(path: 'v1' | 'hybrid'): {
@@ -172,7 +233,6 @@ function speechSeries(path: 'v1' | 'hybrid'): {
   const pred: number[] = [];
   const timestampsMs: number[] = [];
   for (const f of frames) {
-    // Composite lip activity: jaw + smile mean + pucker
     const t =
       (f.latent.jawOpen +
         (f.latent.mouthSmileLeft + f.latent.mouthSmileRight) / 2 +
@@ -210,7 +270,6 @@ function speechSeries(path: 'v1' | 'hybrid'): {
 }
 
 function crossTalkMax(path: 'v1' | 'hybrid'): number {
-  // Isolated smile-left: unintended pucker/funnel/jaw
   const f = buildHybridFaceFixture('hy-smile-left-only');
   const unintended: LiveActHybridFaceControlId[] = [
     'mouthPucker',
@@ -238,9 +297,44 @@ function crossTalkMax(path: 'v1' | 'hybrid'): number {
   return maxU;
 }
 
+function neutralLeakageMax(): number {
+  const f = buildHybridFaceFixture('hy-neutral-realistic-geometry');
+  const h = solveHybridFace({
+    semanticFace: f.semantic,
+    dense: f.dense,
+    sequence: f.sequence,
+    timestampMs: f.timestampMs,
+    denseSequence: f.dense?.sequence ?? null,
+  });
+  const watch: LiveActHybridFaceControlId[] = [
+    'jawOpen',
+    'mouthPressLeft',
+    'mouthPressRight',
+    'mouthRollUpper',
+    'mouthRollLower',
+    'mouthPucker',
+    'mouthFunnel',
+    'mouthSmileLeft',
+    'mouthSmileRight',
+    'cheekSquintLeft',
+    'cheekSquintRight',
+    'noseSneerLeft',
+    'noseSneerRight',
+  ];
+  let max = 0;
+  for (const id of watch) {
+    max = Math.max(max, h.controls[id].value ?? 0);
+  }
+  return max;
+}
+
 export function runHybridFaceAbBenchmark(): HybridFaceAbReportV1 {
   const motionIds = LIVEACT_HYBRID_FACE_FIXTURE_IDS.filter(
-    (id) => id !== 'hy-speech-like' && id !== 'hy-dense-stale-sequence',
+    (id) =>
+      id !== 'hy-speech-like' &&
+      id !== 'hy-dense-stale-sequence' &&
+      id !== 'hy-neutral-realistic-geometry' &&
+      id !== 'hy-roll',
   );
   const v1Errors = runPath(motionIds, 'v1');
   const hyErrors = runPath(motionIds, 'hybrid');
@@ -249,30 +343,29 @@ export function runHybridFaceAbBenchmark(): HybridFaceAbReportV1 {
   const motionImprovement =
     v1Median !== null && hyMedian !== null ? v1Median - hyMedian : null;
 
-  // Clean non-degradation
-  const clean = buildHybridFaceFixture('hy-clean-smile-bilateral');
-  const cleanV1 = fidelityMedian(absErrorsForFrame(clean, 'v1')) ?? 0;
-  const cleanHy = fidelityMedian(absErrorsForFrame(clean, 'hybrid')) ?? 0;
-  const cleanNonDegradation = cleanHy <= cleanV1 + LIVEACT_HYBRID_AB_NON_DEGRADATION_TOL;
+  // Clean non-degradation on ACTIVE controls only + hard per-control rule
+  const cleanActiveControls = cleanActiveControlRows();
+  const cleanNonDegradation =
+    cleanActiveControls.length > 0 &&
+    cleanActiveControls.every(
+      (row) => row.hybridError <= row.v1Error + LIVEACT_HYBRID_AB_NON_DEGRADATION_TOL,
+    );
 
-  // Validation-only improvement (known-limitation under-response style)
   const valUnder = ['hy-smile-over-response', 'hy-funnel', 'hy-cheek', 'hy-nose-sneer', 'hy-jaw'] as const;
   const v1Val = runPath(valUnder, 'v1');
   const hyVal = runPath(valUnder, 'hybrid');
   const validationImprovement =
     (fidelityMedian(v1Val) ?? 0) - (fidelityMedian(hyVal) ?? 0);
 
-  // Under-response meaningful improvement (active controls only — avoid zero-inflated median)
+  // Under-response meaningful improvement — THIS is the reported + gated metric
   const underIds = ['hy-smile-under-response', 'hy-pucker-under', 'hy-smile-left-only'] as const;
-  const underImp =
+  const activeUnderResponseMedianAbs =
     (fidelityMedian(runPathActive(underIds, 'v1')) ?? 0) -
     (fidelityMedian(runPathActive(underIds, 'hybrid')) ?? 0);
 
-  // Success (predeclared design): non-degradation on clean + meaningful under-response win.
-  // Validation median must not regress by more than non-degradation tolerance.
   const hybridBeatsV1 =
     cleanNonDegradation &&
-    underImp >= LIVEACT_HYBRID_AB_MIN_MEDIAN_IMPROVEMENT &&
+    activeUnderResponseMedianAbs >= LIVEACT_HYBRID_AB_MIN_MEDIAN_IMPROVEMENT &&
     validationImprovement >= -LIVEACT_HYBRID_AB_NON_DEGRADATION_TOL;
 
   const spV1 = speechSeries('v1');
@@ -286,14 +379,15 @@ export function runHybridFaceAbBenchmark(): HybridFaceAbReportV1 {
   const v1Sat = fidelitySaturationFraction(spV1.pred, LIVEACT_FIDELITY_SATURATION_THRESHOLD);
   const hySat = fidelitySaturationFraction(spHy.pred, LIVEACT_FIDELITY_SATURATION_THRESHOLD);
 
-  // Return-to-neutral: last frames of speech sequence should be near 0 for hybrid
   const lastHy = spHy.pred.slice(-5);
   const returnToNeutralOk = lastHy.every((v) => Math.abs(v) <= 0.08);
 
   const ctV1 = crossTalkMax('v1');
   const ctHy = crossTalkMax('hybrid');
+  const leakage = neutralLeakageMax();
 
   void LIVEACT_HYBRID_VALIDATION_FIXTURE_IDS;
+  void LIVEACT_HYBRID_FACE_CONTROL_IDS;
 
   return {
     contractVersion: 'SagaDriveLiveActHybridFaceAbReportV1',
@@ -302,9 +396,16 @@ export function runHybridFaceAbBenchmark(): HybridFaceAbReportV1 {
     v1: { path: 'v1', medianAbsError: v1Median, errors: v1Errors },
     hybrid: { path: 'hybrid', medianAbsError: hyMedian, errors: hyErrors },
     motionImprovement,
+    cleanActiveControls,
     cleanNonDegradation,
     validationImprovement,
+    activeUnderResponseMedianAbs,
+    requiredMinimum: LIVEACT_HYBRID_AB_MIN_MEDIAN_IMPROVEMENT,
     hybridBeatsV1,
+    neutralLeakage: {
+      maxUnintendedActivation: leakage,
+      fixtureId: 'hy-neutral-realistic-geometry',
+    },
     speech: {
       v1Correlation: v1Corr,
       hybridCorrelation: hyCorr,

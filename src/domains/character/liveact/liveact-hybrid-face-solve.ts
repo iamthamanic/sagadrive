@@ -235,20 +235,25 @@ export function solveHybridFace(input: SolveHybridFaceInput): LiveActHybridFaceV
     }),
   );
 
-  // --- Press L/R: side gap when available; compression is global → semantic L/R authority ---
+  // --- Press L/R ---
+  // Closed mouth (gap≈0) is NOT press. Inverse-gap may strengthen only when
+  // compression evidence is already active.
   const gapL = denseScalar(lips.gapLeft);
   const gapR = denseScalar(lips.gapRight);
+  const pressCompressActive =
+    compress.available && compress.value !== null && compress.value > 0.12;
   const pressDenseL = combineDenseEvidence(
     [
       {
-        available: compress.available,
+        available: pressCompressActive,
         value: compress.value,
-        confidence: compress.confidence * 0.55,
+        confidence: compress.confidence,
       },
       {
-        available: gapL.available && gapL.value !== null,
+        available:
+          pressCompressActive && gapL.available && gapL.value !== null,
         value: gapL.value !== null ? clamp01(1 - gapL.value) : null,
-        confidence: gapL.confidence,
+        confidence: gapL.confidence * 0.55,
       },
     ],
     'mean',
@@ -256,14 +261,15 @@ export function solveHybridFace(input: SolveHybridFaceInput): LiveActHybridFaceV
   const pressDenseR = combineDenseEvidence(
     [
       {
-        available: compress.available,
+        available: pressCompressActive,
         value: compress.value,
-        confidence: compress.confidence * 0.55,
+        confidence: compress.confidence,
       },
       {
-        available: gapR.available && gapR.value !== null,
+        available:
+          pressCompressActive && gapR.available && gapR.value !== null,
         value: gapR.value !== null ? clamp01(1 - gapR.value) : null,
-        confidence: gapR.confidence,
+        confidence: gapR.confidence * 0.55,
       },
     ],
     'mean',
@@ -287,20 +293,32 @@ export function solveHybridFace(input: SolveHybridFaceInput): LiveActHybridFaceV
     }),
   );
 
-  // --- Roll upper/lower: contour + gap; semantic-first if contour weak ---
+  // --- Roll upper/lower ---
+  // Contour availability + compression/semantic roll evidence required.
+  // Inverse-gap alone at closed mouth must NOT activate roll.
   const upperConf = lips.upperContour.available ? lips.upperContour.confidence : 0;
   const lowerConf = lips.lowerContour.available ? lips.lowerContour.confidence : 0;
+  const rollCompressActive =
+    compress.available && compress.value !== null && compress.value > 0.12;
   const rollUpperDense =
-    lips.upperContour.available && compress.available
+    lips.upperContour.available && rollCompressActive
       ? {
-          value: clamp01(((compress.value ?? 0) + (gapC.available ? 1 - (gapC.value ?? 0) : 0)) / 2),
+          value: clamp01(
+            ((compress.value ?? 0) +
+              (gapC.available && gapC.value !== null ? 1 - gapC.value : 0)) /
+              2,
+          ),
           confidence: clamp01(0.5 * upperConf + 0.5 * compress.confidence),
         }
       : { value: null as number | null, confidence: 0 };
   const rollLowerDense =
-    lips.lowerContour.available && compress.available
+    lips.lowerContour.available && rollCompressActive
       ? {
-          value: clamp01(((compress.value ?? 0) + (gapC.available ? 1 - (gapC.value ?? 0) : 0)) / 2),
+          value: clamp01(
+            ((compress.value ?? 0) +
+              (gapC.available && gapC.value !== null ? 1 - gapC.value : 0)) /
+              2,
+          ),
           confidence: clamp01(0.5 * lowerConf + 0.5 * compress.confidence),
         }
       : { value: null as number | null, confidence: 0 };
@@ -515,23 +533,19 @@ export function solveHybridFace(input: SolveHybridFaceInput): LiveActHybridFaceV
   );
 
   // --- Jaw ---
-  const chinDrop = denseScalar(jaw.chinDrop);
-  const chinFwd = denseScalar(jaw.chinForward);
-  const jawOpenDense = combineDenseEvidence(
-    [
-      {
-        available: chinDrop.available,
-        value: chinDrop.value !== null ? clamp01(chinDrop.value) : null,
-        confidence: chinDrop.confidence,
-      },
-      {
-        available: gapC.available,
-        value: gapC.value !== null ? clamp01(gapC.value) : null,
+  // chinDrop / chinForward are static anatomical distances (non-zero at closed
+  // mouth). #447 must NOT treat them as motion activation.
+  // Neutral-relative chin/jaw geometry → #449.
+  // Dynamic evidence: gapCenter only when clearly open (speech/jaw motion).
+  void jaw;
+  const jawOpenGapActive =
+    gapC.available && gapC.value !== null && gapC.value > 0.08;
+  const jawOpenDense = jawOpenGapActive
+    ? {
+        value: clamp01(gapC.value!),
         confidence: gapC.confidence,
-      },
-    ],
-    'mean',
-  );
+      }
+    : { value: null as number | null, confidence: 0 };
   ctrl(
     controls,
     'jawOpen',
@@ -541,14 +555,14 @@ export function solveHybridFace(input: SolveHybridFaceInput): LiveActHybridFaceV
       denseConfidence: jawOpenDense.confidence,
     }),
   );
+  // jawForward: semantic authority only until #449 neutral-relative chin.
   ctrl(
     controls,
     'jawForward',
     fuseSemanticDense({
       semantic: readSemantic(input.semanticFace, 'jawForward'),
-      denseEvidence:
-        chinFwd.available && chinFwd.value !== null ? clamp01(chinFwd.value) : null,
-      denseConfidence: chinFwd.confidence,
+      denseEvidence: null,
+      denseConfidence: 0,
     }),
   );
 

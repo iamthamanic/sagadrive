@@ -4,6 +4,15 @@
  *
  * Dense confirms / corrects / asymmetrically refines semantic evidence.
  * No Gain-4. No opaque 0.5/0.5. No temporal state. No actor profiles.
+ *
+ * Decision order (authoritative):
+ * 1. missing/unavailable
+ * 2. semantic-only fallback
+ * 3. dense-only (explicit allow)
+ * 4. strong high-confidence disagreement → semantic authority
+ * 5. under-response correction
+ * 6. over-response correction
+ * 7. agreement refinement / soft disagree
  */
 
 import {
@@ -55,20 +64,11 @@ export function denseActivationFromSigned(
 ): number | null {
   if (!available || value === null || !Number.isFinite(value)) return null;
   const signed = positiveMeansActive ? value : -value;
-  // Soft activation — differential shape signal, not absolute baseline width.
   return clamp01(signed * 2.2);
 }
 
 /**
  * Core fusion: semantic channel + optional dense evidence in [0,1].
- *
- * Rules (design Phase 7):
- * - missing dense → exact semantic
- * - agree → preserve / modest refine
- * - under-response → hybrid correction toward dense
- * - over-response → pull toward dense
- * - high-conf disagree → semantic authority + confidence↓
- * - dense-only only when semantic null/weak and dense strong
  */
 export function fuseSemanticDense(input: {
   semantic: number | null;
@@ -88,14 +88,17 @@ export function fuseSemanticDense(input: {
         ? 0
         : 0.85;
 
+  // 1. both missing
   if (sem === null && (dense === null || dConf < LIVEACT_HYBRID_DENSE_MIN_CONFIDENCE)) {
     return unavailableHybridControl(null);
   }
 
+  // 2. semantic-only fallback (dense missing / low conf)
   if (dense === null || dConf < LIVEACT_HYBRID_DENSE_MIN_CONFIDENCE) {
     return semanticPassthroughControl(sem, sConf);
   }
 
+  // 3. dense-only when explicitly allowed and semantic absent
   if (sem === null) {
     if (input.allowDenseOnly && dConf >= LIVEACT_HYBRID_DENSE_MIN_CONFIDENCE) {
       return {
@@ -114,7 +117,19 @@ export function fuseSemanticDense(input: {
   const diff = Math.abs(s - d);
   const agree = diff <= LIVEACT_HYBRID_DISAGREE_ABS;
 
-  // Under-response: weak semantic below strong dense → hybrid correction (before disagree)
+  // 4. Strong high-confidence disagreement → semantic authority BEFORE corrections
+  // Requires strong semantic amplitude so weak under-response can still be corrected (step 5).
+  if (!agree && s >= 0.45 && sConf >= 0.7 && dConf >= 0.7) {
+    return {
+      value: s,
+      confidence: clamp01(Math.min(sConf, dConf) * 0.55),
+      source: 'semantic',
+      semanticInput: s,
+      denseEvidence: d,
+    };
+  }
+
+  // 5. Under-response: weak semantic below strong dense → hybrid correction
   if (s < d - 0.12 && dConf >= LIVEACT_HYBRID_DENSE_MIN_CONFIDENCE) {
     const w = clamp01(dConf * 0.75);
     const value = clamp01(s * (1 - w * 0.7) + d * (w * 0.7));
@@ -127,7 +142,7 @@ export function fuseSemanticDense(input: {
     };
   }
 
-  // Over-response: semantic well above dense
+  // 6. Over-response: semantic well above dense
   if (s > d + 0.15 && dConf >= LIVEACT_HYBRID_DENSE_MIN_CONFIDENCE) {
     const w = clamp01(dConf * 0.55);
     const value = clamp01(s * (1 - w) + d * w);
@@ -140,18 +155,7 @@ export function fuseSemanticDense(input: {
     };
   }
 
-  // High-confidence disagreement with strong semantic amplitude → semantic authority
-  if (!agree && s >= 0.45 && sConf >= 0.7 && dConf >= 0.7) {
-    return {
-      value: s,
-      confidence: clamp01(Math.min(sConf, dConf) * 0.55),
-      source: 'semantic',
-      semanticInput: s,
-      denseEvidence: d,
-    };
-  }
-
-  // Agree / modest refine — preserve good semantic, tiny dense nudge
+  // 7a. Agree / modest refine
   if (agree) {
     const nudge = (d - s) * 0.12 * dConf;
     const value = clamp01(s + nudge);
@@ -164,7 +168,7 @@ export function fuseSemanticDense(input: {
     };
   }
 
-  // Soft disagreement — confidence-weighted, semantic-leaning
+  // 7b. Soft disagreement — confidence-weighted, semantic-leaning
   const w = clamp01(dConf / (sConf + dConf + 1e-6)) * 0.4;
   const value = clamp01(s * (1 - w) + d * w);
   return {

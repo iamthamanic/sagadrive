@@ -17,6 +17,7 @@ import type { LiveActFaceChannelPartial } from './liveact-face-contract';
 
 export const LIVEACT_HYBRID_FACE_FIXTURE_IDS = [
   'hy-neutral',
+  'hy-neutral-realistic-geometry',
   'hy-clean-smile-bilateral',
   'hy-smile-under-response',
   'hy-smile-over-response',
@@ -27,6 +28,7 @@ export const LIVEACT_HYBRID_FACE_FIXTURE_IDS = [
   'hy-pucker-under',
   'hy-funnel',
   'hy-press',
+  'hy-roll',
   'hy-upper-lower',
   'hy-cheek',
   'hy-nose-sneer',
@@ -278,6 +280,58 @@ export function buildHybridFaceFixture(id: LiveActHybridFaceFixtureId): HybridFa
       const latent = zeroTruth();
       return frame('clean', seq, latent, semanticFromLatent(latent), buildDenseFromLatent(latent, seq));
     }
+    case 'hy-neutral-realistic-geometry': {
+      // Closed mouth with realistic non-zero anatomical dense (chin drop, lip width).
+      // Must NOT activate jaw/press/roll from static geometry alone.
+      const latent = zeroTruth();
+      const base = buildDenseFromLatent(latent, seq);
+      const dense: LiveActDenseFaceFeaturesV1 = {
+        ...base,
+        lips: {
+          ...base.lips,
+          width: sc(0.52, 0.92),
+          gapLeft: sc(0.02, 0.9),
+          gapCenter: sc(0.03, 0.95),
+          gapRight: sc(0.02, 0.9),
+          compression: sc(0.04, 0.85),
+          protrusion: sc(0.03, 0.85),
+          curvature: sc(0.02, 0.85),
+          cornerLeft: sc(0.01, 0.9),
+          cornerRight: sc(0.01, 0.9),
+          upperContour: {
+            available: true,
+            confidence: 0.9,
+            stations: [sc(0.02, 0.9), sc(0.02, 0.9), sc(0.01, 0.9), sc(0.02, 0.9), sc(0.02, 0.9)],
+          },
+          lowerContour: {
+            available: true,
+            confidence: 0.9,
+            stations: [sc(0.02, 0.9), sc(0.02, 0.9), sc(0.01, 0.9), sc(0.02, 0.9), sc(0.02, 0.9)],
+          },
+        },
+        jaw: {
+          chinDrop: sc(0.28, 0.95),
+          chinForward: sc(0.12, 0.9),
+          jawWidth: sc(0.48, 0.8),
+        },
+        cheeks: {
+          raiseLeft: sc(0.03, 0.85),
+          raiseRight: sc(0.03, 0.85),
+          compressionLeft: sc(0.02, 0.8),
+          compressionRight: sc(0.02, 0.8),
+          volumeProxyLeft: sc(0.04, 0.75),
+          volumeProxyRight: sc(0.04, 0.75),
+        },
+        nose: {
+          alarLeft: sc(0.02, 0.85),
+          alarRight: sc(0.02, 0.85),
+          nasolabialLeft: sc(0.03, 0.8),
+          nasolabialRight: sc(0.03, 0.8),
+          width: sc(0.42, 0.8),
+        },
+      };
+      return frame('clean', seq, latent, semanticFromLatent(latent), dense);
+    }
     case 'hy-clean-smile-bilateral': {
       const latent = { ...zeroTruth(), mouthSmileLeft: 0.7, mouthSmileRight: 0.7, cheekSquintLeft: 0.35, cheekSquintRight: 0.35 };
       return frame('clean', seq, latent, semanticFromLatent(latent), buildDenseFromLatent(latent, seq));
@@ -342,6 +396,37 @@ export function buildHybridFaceFixture(id: LiveActHybridFaceFixtureId): HybridFa
     case 'hy-press': {
       const latent = { ...zeroTruth(), mouthPressLeft: 0.6, mouthPressRight: 0.55 };
       return frame('other', seq, latent, semanticFromLatent(latent, { scale: 0.4 }), buildDenseFromLatent(latent, seq));
+    }
+    case 'hy-roll': {
+      // Roll activation: compression + contour present; semantic under-responds.
+      const latent = zeroTruth();
+      const semantic = {
+        ...semanticFromLatent(latent),
+        mouthRollUpper: 0.25,
+        mouthRollLower: 0.2,
+      };
+      const denseBase = buildDenseFromLatent(latent, seq);
+      const dense: LiveActDenseFaceFeaturesV1 = {
+        ...denseBase,
+        lips: {
+          ...denseBase.lips,
+          compression: sc(0.55, 0.92),
+          gapCenter: sc(0.04, 0.9),
+          gapLeft: sc(0.03, 0.9),
+          gapRight: sc(0.03, 0.9),
+          upperContour: {
+            available: true,
+            confidence: 0.93,
+            stations: [sc(0.1, 0.9), sc(0.12, 0.9), sc(0.1, 0.9), sc(0.12, 0.9), sc(0.1, 0.9)],
+          },
+          lowerContour: {
+            available: true,
+            confidence: 0.93,
+            stations: [sc(0.1, 0.9), sc(0.11, 0.9), sc(0.1, 0.9), sc(0.11, 0.9), sc(0.1, 0.9)],
+          },
+        },
+      };
+      return frame('other', seq, latent, semantic, dense);
     }
     case 'hy-upper-lower': {
       const latent = {

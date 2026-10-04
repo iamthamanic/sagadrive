@@ -1,6 +1,8 @@
 {
   "contractVersion": "SagaDriveLiveActHybridFaceAbReportV1",
   "fixtureVersion": "hybrid-face-v1",
+  "orientationAuthority": "anatomical",
+  "mirrorPoint": "once-after-hybrid",
   "controlsEvaluated": [
     "mouthSmileLeft",
     "mouthSmileRight",
@@ -14,6 +16,47 @@
     "noseSneerRight",
     "jawOpen"
   ],
+  "clean": {
+    "activeControls": [
+      {
+        "control": "mouthSmileLeft",
+        "latent": 0.7,
+        "v1": 0.7,
+        "hybrid": 0.7001875999999999,
+        "v1Error": 0,
+        "hybridError": 0.00018759999999995447,
+        "delta": -0.00018759999999995447
+      },
+      {
+        "control": "mouthSmileRight",
+        "latent": 0.7,
+        "v1": 0.7,
+        "hybrid": 0.7001875999999999,
+        "v1Error": 0,
+        "hybridError": 0.00018759999999995447,
+        "delta": -0.00018759999999995447
+      },
+      {
+        "control": "cheekSquintLeft",
+        "latent": 0.35,
+        "v1": 0.35,
+        "hybrid": 0.35378,
+        "v1Error": 0,
+        "hybridError": 0.0037800000000000056,
+        "delta": -0.0037800000000000056
+      },
+      {
+        "control": "cheekSquintRight",
+        "latent": 0.35,
+        "v1": 0.35,
+        "hybrid": 0.35378,
+        "v1Error": 0,
+        "hybridError": 0.0037800000000000056,
+        "delta": -0.0037800000000000056
+      }
+    ],
+    "cleanNonDegradation": true
+  },
   "v1": {
     "motionErrorMedian": 0,
     "speechCorrelation": 1,
@@ -24,25 +67,40 @@
   },
   "hybrid": {
     "motionErrorMedian": 0,
-    "speechCorrelation": 0.993643201290199,
-    "amplitudeRetentionPct": 75.31652319482023,
-    "velocityRetentionPct": 91.66667315028975,
+    "speechCorrelation": 0.9939120464374921,
+    "amplitudeRetentionPct": 74.45715543960894,
+    "velocityRetentionPct": 90.2605144651621,
     "saturation": 0,
     "crossTalkMax": 0
   },
   "improvement": {
-    "motionMedianAbs": 0,
+    "activeUnderResponseMedianAbs": 0.18705,
+    "requiredMinimum": 0.05,
     "validationMedianAbs": 0,
+    "cleanNonDegradation": true,
     "success": true
   },
+  "neutralLeakage": {
+    "maxUnintendedActivation": 0.0035700000000000003,
+    "fixtureId": "hy-neutral-realistic-geometry"
+  },
+  "speechNote": "correlation remains above target, while amplitude + velocity retention materially improve",
   "avatarContourFidelity": "NOT_MEASURED — requires #450/#451",
   "privacy": {
     "committedRawLandmarks": 0,
     "committedWebcam": 0
   },
+  "ce": {
+    "CE-04": "frame-local same detect tick; #444 latency contract",
+    "CE-20": "dense unavailable/stale → exact V1 fallback",
+    "other": "N/A — no UI/control surface changed"
+  },
   "requires450": [
     "nasolabial fold intensity (beyond noseSneer)",
     "richer cheek volume",
     "segmented lip contour correctives"
+  ],
+  "requires449": [
+    "neutral-relative chin/jaw geometry"
   ]
 }

@@ -4,8 +4,8 @@
  *
  * Wraps the shared MediaPipe face source. At most one active camera/detector.
  * Legacy AvatarFaceTrackingRuntime is compatibility-only (no productive canvas consumer).
- * RAW is the tracker's anatomical sample; everything from MAPPED on (calibration included) is in
- * avatar orientation (LIVEACT_MIRROR_AVATAR).
+ * RAW is the tracker's anatomical sample. #447 hybrid fuses anatomical semantic + anatomical
+ * dense, then mirrors ONCE (LIVEACT_MIRROR_AVATAR) before map/calibrate/output.
  * Dense face features (#445) and hybrid face (#447) are side-channels —
  * never stuffed as raw geometry into LiveActFrameV1 (hybrid writes semantic face only).
  */
@@ -678,10 +678,10 @@ export class LiveActEngine {
     irisSeed: LiveActIrisGazeV1 | null,
   ): LiveActFrameV1 {
     this.sequence += 1;
-    const mirrored = LIVEACT_MIRROR_AVATAR ? mirrorLiveActSourceSample(sample) : sample;
 
-    // #447: RAW semantic + same-frame dense → hybrid semantic face → map/smooth/calibrate
-    // Dense from the same detect() is stamped with this.sequence (never reuse stale frames).
+    // #447 Orientation authority = anatomical.
+    // Fuse RAW anatomical semantic + RAW anatomical dense, then mirror ONCE.
+    // Never fuse mirrored semantic against unmirrored dense (L/R mismatch).
     const denseForHybrid: LiveActDenseFaceFeaturesV1 | null = denseSeed
       ? {
           ...denseSeed,
@@ -691,7 +691,7 @@ export class LiveActEngine {
         }
       : null;
     const hybrid = solveHybridFace({
-      semanticFace: mirrored.face,
+      semanticFace: sample.face,
       dense: denseForHybrid,
       sequence: this.sequence,
       timestampMs,
@@ -701,11 +701,14 @@ export class LiveActEngine {
     this.hybridFace = hybrid;
     this.emitHybridFace(hybrid);
 
-    // Avatar-oriented sample after hybrid (downstream calibration/smoothing unchanged).
-    const oriented: LiveActSourceSample = {
-      ...mirrored,
-      face: applyHybridFaceToSemantic(mirrored.face, hybrid),
+    const anatomicalFused: LiveActSourceSample = {
+      ...sample,
+      face: applyHybridFaceToSemantic(sample.face, hybrid),
     };
+    // Single mirror point — avatar orientation for map/calibrate/output.
+    const oriented = LIVEACT_MIRROR_AVATAR
+      ? mirrorLiveActSourceSample(anatomicalFused)
+      : anatomicalFused;
 
     const mapped = mapLiveActSourceSample(oriented, {
       timestampMs,
