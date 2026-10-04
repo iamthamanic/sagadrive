@@ -57,6 +57,11 @@ check(/pipelineStep = null/.test(engine) && /bindOutput/.test(engine), 'engine m
 check(/semanticFace:\s*sample\.face/.test(engine), '#447 anatomical fusion intact');
 check(/LIVEACT_TEMPORAL_CONTRACT/.test(read('src/domains/character/liveact/index.ts')), 'barrel');
 check(/fidelityOvershoot/.test(read('src/domains/character/liveact/liveact-perfect-fidelity-math.ts')), 'overshoot metric');
+check(/fidelityLagP95Ms/.test(read('src/domains/character/liveact/liveact-perfect-fidelity-math.ts')), 'lag p95 metric');
+check(
+  /smoothed:\s*smoothedRaw/.test(read('src/domains/character/liveact/liveact-calibration.ts')),
+  'lost diagnostics preserve adaptive smoothed',
+);
 
 // Privacy
 const privacyRoots = ['.qa/evidence/liveact-adaptive-temporal-solver', '.qa/fixtures/liveact-adaptive-temporal-solver'];

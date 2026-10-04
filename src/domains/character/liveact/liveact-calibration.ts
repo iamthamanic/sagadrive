@@ -536,9 +536,11 @@ export function stepLiveActCalibratedFrame(
     mapped,
   );
   if (mapped.trackingLost) {
+    // Lost: calibration passthrough (trackingLost). Keep Diagnostics SMOOTHED =
+    // adaptive output (do not inverse-baseline; that misreports dropout state).
     const calibrated = applyLiveActCalibration(smoothedRaw, calibration, limits);
     return {
-      smoothed: liveActUncalibratedLostPose(calibrated, calibration.neutral, limits),
+      smoothed: smoothedRaw,
       calibrated,
       temporal,
     };

@@ -3,7 +3,7 @@
   "policyVersion": "liveact-temporal-policy-v1",
   "v1Fixed": {
     "headJitter": 0.0037798942981191533,
-    "gazeLag": 16.66666666666667,
+    "gazeLag": 16.666666666666682,
     "lipAmplitude": {
       "1Hz": 97.58335210762804,
       "2Hz": 89.3138110652798,
@@ -12,9 +12,9 @@
     },
     "lipLag": {
       "1Hz": 33.33333333333334,
-      "2Hz": 33.33333333333334,
-      "3Hz": 33.33333333333334,
-      "5Hz": 116.66666666666669
+      "2Hz": 33.333333333333485,
+      "3Hz": 33.333333333333485,
+      "5Hz": 120
     },
     "lipVelocity": {
       "1Hz": 94.91631927416401,
@@ -99,7 +99,7 @@
     "2Hz": {
       "v1": {
         "jitterP95": 0.2600061167499474,
-        "lagMs": 33.33333333333334,
+        "lagMs": 33.333333333333485,
         "overshoot": 0,
         "amplitudeRetentionPct": 89.3138110652798,
         "velocityRetentionPct": 88.39521554010787,
@@ -123,7 +123,7 @@
     "3Hz": {
       "v1": {
         "jitterP95": 0.25080236606674056,
-        "lagMs": 33.33333333333334,
+        "lagMs": 33.333333333333485,
         "overshoot": 0,
         "amplitudeRetentionPct": 84.0361180888715,
         "velocityRetentionPct": 80.03245201834336,
@@ -147,7 +147,7 @@
     "5Hz": {
       "v1": {
         "jitterP95": 0.19594162561960057,
-        "lagMs": 116.66666666666669,
+        "lagMs": 120,
         "overshoot": 0,
         "amplitudeRetentionPct": 63.82877337103141,
         "velocityRetentionPct": 63.93097780637484,

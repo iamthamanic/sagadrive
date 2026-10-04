@@ -281,6 +281,7 @@ export {
   fidelityContourErrorPctMouthWidth,
   fidelityCountSequenceGaps,
   fidelityOvershoot,
+  fidelityLagP95Ms,
 } from './liveact-perfect-fidelity-math';
 
 export {

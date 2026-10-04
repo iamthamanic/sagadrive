@@ -14,7 +14,7 @@ import {
 import { LIVEACT_FIDELITY_SATURATION_THRESHOLD } from './liveact-perfect-fidelity-contract';
 import {
   fidelityAmplitudeRetentionPct,
-  fidelityBestLagCorrelation,
+  fidelityLagP95Ms,
   fidelityMedian,
   fidelityOvershoot,
   fidelityP95AbsDev,
@@ -106,11 +106,7 @@ function lagP95Ms(
   pred: readonly number[],
   timestampsMs: readonly number[],
 ): number | null {
-  if (timestampsMs.length < 2) return null;
-  const dt = timestampsMs[1]! - timestampsMs[0]!;
-  const hz = dt > 0 ? 1000 / dt : 60;
-  const lag = fidelityBestLagCorrelation(truth, pred, hz, 120);
-  return lag.bestLagMs !== null ? Math.abs(lag.bestLagMs) : null;
+  return fidelityLagP95Ms(truth, pred, timestampsMs, { minDelta: 0.04, lagWindowMs: 120 });
 }
 
 function returnLagMs(
