@@ -82,7 +82,14 @@ mustInclude(
 
 mustInclude(
   'src/app/session/hooks/usePlayerPanel.ts',
-  ['useSessionRuntime', 'getCharacterByPublicId', 'getSessionByPublicIds', 'buildPlayerPanelModel', "kind: 'roll'"],
+  [
+    'useSessionRuntime',
+    'getCharacterById',
+    'getSessionByPublicIds',
+    'assertUrlCharacterMatchesMembership',
+    'buildPlayerPanelModel',
+    "kind: 'roll'",
+  ],
   'player panel hook',
 );
 
