@@ -1,0 +1,6 @@
+{
+  "slug": "live-scene-runtime-v2",
+  "issue": 366,
+  "gate": "live-scene-runtime-v2-check",
+  "result": "PASS"
+}

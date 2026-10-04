@@ -15,6 +15,10 @@ import {
   filterPayloadForAccess,
   type LiveSessionAccess,
 } from '../contracts/live-session-access';
+import {
+  projectSceneV2ToSharedSceneV1,
+  readScenePresentationConfigV2,
+} from './scene-live-runtime-v2';
 
 export const PROGRAM_PRESENTATION_SCHEMA_VERSION = 1 as const;
 
@@ -219,6 +223,9 @@ export function resolveProgramScene(
   shared: Record<string, unknown>,
 ): SharedScenePresentation | null {
   if (program.source.kind !== 'shared-scene') return null;
+  // Prefer Scene Runtime V2 normalize path (#366); falls back to V1 reader.
+  const v2 = readScenePresentationConfigV2(shared);
+  if (v2) return projectSceneV2ToSharedSceneV1(v2);
   return readSharedScenePresentation(shared);
 }
 
