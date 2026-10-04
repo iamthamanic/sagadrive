@@ -818,6 +818,13 @@ function checkLiveActAdaptiveTemporalSolver() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log(
+    'LiveAct personal calibration V2 (#449): 20–40s local profile + A/B vs V1 generic...',
+  );
+  execFileSync(process.execPath, ['scripts/liveact-personal-calibration-v2-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkLiveActFacePipelineDocs() {

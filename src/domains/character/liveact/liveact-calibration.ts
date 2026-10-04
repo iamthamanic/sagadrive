@@ -25,6 +25,11 @@ import {
 } from './liveact-contract';
 import type { LiveActTemporalStateV1 } from './liveact-temporal-contract';
 import { stepAdaptiveTemporal } from './liveact-temporal-solve';
+import type { LiveActCalibrationProfileV2 } from './liveact-personal-calibration-contract';
+import {
+  applyLiveActPersonalCalibration,
+  resolveLiveActPersonalProfileStatus,
+} from './liveact-personal-calibration-solve';
 
 export const LIVEACT_CALIBRATION_FRAME_TARGET = 30 as const;
 export const LIVEACT_CALIBRATION_TIMEOUT_MS = 2000 as const;
@@ -507,12 +512,28 @@ export type LiveActSmoothPathMode = 'adaptive' | 'v1-fixed';
  * Temporal keeps uncalibrated state: feeding calibrated back would subtract the baseline
  * again every tick. Lost/reacquire: adaptive solver clears stale pre-loss face state.
  */
+function applyCalibrationStage(
+  frame: LiveActFrameV1,
+  calibration: LiveActCalibrationSetV1,
+  personalProfile: LiveActCalibrationProfileV2 | null | undefined,
+  limits: LiveActLimits,
+): LiveActFrameV1 {
+  if (
+    personalProfile &&
+    resolveLiveActPersonalProfileStatus(personalProfile) === 'valid'
+  ) {
+    return applyLiveActPersonalCalibration(frame, personalProfile, limits);
+  }
+  return applyLiveActCalibration(frame, calibration, limits);
+}
+
 export function stepLiveActCalibratedFrame(
   previous: LiveActCalibratedStepV1 | null,
   mapped: LiveActFrameV1,
   calibration: LiveActCalibrationSetV1,
   limits: LiveActLimits = DEFAULT_LIVEACT_LIMITS,
   mode: LiveActSmoothPathMode = 'adaptive',
+  personalProfile: LiveActCalibrationProfileV2 | null = null,
 ): LiveActCalibratedStepV1 {
   if (mode === 'v1-fixed') {
     if (mapped.trackingLost && previous) {
@@ -526,7 +547,7 @@ export function stepLiveActCalibratedFrame(
     const smoothed = smoothLiveActFrame(previous?.smoothed ?? null, mapped, limits.smooth);
     return {
       smoothed,
-      calibrated: applyLiveActCalibration(smoothed, calibration, limits),
+      calibrated: applyCalibrationStage(smoothed, calibration, personalProfile, limits),
       temporal: null,
     };
   }
@@ -538,7 +559,12 @@ export function stepLiveActCalibratedFrame(
   if (mapped.trackingLost) {
     // Lost: calibration passthrough (trackingLost). Keep Diagnostics SMOOTHED =
     // adaptive output (do not inverse-baseline; that misreports dropout state).
-    const calibrated = applyLiveActCalibration(smoothedRaw, calibration, limits);
+    const calibrated = applyCalibrationStage(
+      smoothedRaw,
+      calibration,
+      personalProfile,
+      limits,
+    );
     return {
       smoothed: smoothedRaw,
       calibrated,
@@ -547,7 +573,7 @@ export function stepLiveActCalibratedFrame(
   }
   return {
     smoothed: smoothedRaw,
-    calibrated: applyLiveActCalibration(smoothedRaw, calibration, limits),
+    calibrated: applyCalibrationStage(smoothedRaw, calibration, personalProfile, limits),
     temporal,
   };
 }

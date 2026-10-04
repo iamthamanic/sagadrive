@@ -1,0 +1,45 @@
+{
+  "contractVersion": "SagaDriveLiveActCalibrationProfileV2",
+  "policyVersion": "liveact-personal-calibration-policy-v1",
+  "choreographyDurationMs": 34500,
+  "v1": {
+    "neutralSmileBias": 0,
+    "noseSneerGain": 4,
+    "smileLeftOut": 0.48051948051948057,
+    "smileRightOut": 0.5185185185185186,
+    "smileAsymmetryPreserved": false
+  },
+  "personal": {
+    "neutralSmileBias": 0,
+    "noseSneerGain": 1,
+    "noseCapability": "weak",
+    "smileLeftOut": 0.4805194805194806,
+    "smileRightOut": 0.18181818181818182,
+    "smileAsymmetryPreserved": true,
+    "crossTalkLeftBlink": 0.2,
+    "profileStatus": "valid"
+  },
+  "improvements": {
+    "neutralBiasReduced": true,
+    "weakChannelNotExploded": true,
+    "asymmetryPreserved": true
+  },
+  "targets": {
+    "durationMs": [
+      20000,
+      40000
+    ],
+    "measurableImprovementMin": 1
+  },
+  "results": {
+    "success": true
+  },
+  "privacy": {
+    "committedRawLandmarks": 0,
+    "committedWebcam": 0
+  },
+  "ce": {
+    "CE-04": "premium start immediate; phase timers",
+    "CE-20": "skip/N/A/fingerprint → V1 or recalibrate"
+  }
+}

@@ -103,6 +103,10 @@ export interface UseLiveActViewportResult {
   calibrationMessage: string;
   hasNeutralBaseline: boolean;
   hasRangeCalibration: boolean;
+  hasPersonalCalibrationProfile: boolean;
+  personalCalibrationActive: boolean;
+  personalCalibrationPhaseLabelDe: string | null;
+  canSkipPersonalCalibrationPhase: boolean;
   canCalibrate: boolean;
   canAdvanceCalibration: boolean;
   calibrationAdvanceLabelDe: 'Weiter' | 'Fertig' | null;
@@ -112,6 +116,8 @@ export interface UseLiveActViewportResult {
   canRetryCalibrationHold: boolean;
   calibrationStepPeaks: LiveActEngineState['calibrationStepPeaks'];
   calibrateNeutral: () => Promise<void>;
+  calibratePersonalV2: () => Promise<void>;
+  skipPersonalCalibrationPhase: () => void;
   advanceCalibration: () => void;
   startCalibrationHold: () => void;
   retryCalibrationHold: () => void;
@@ -190,6 +196,12 @@ export function useLiveActViewport({
   const [calibrationMessage, setCalibrationMessage] = useState('');
   const [hasNeutralBaseline, setHasNeutralBaseline] = useState(false);
   const [hasRangeCalibration, setHasRangeCalibration] = useState(false);
+  const [hasPersonalCalibrationProfile, setHasPersonalCalibrationProfile] = useState(false);
+  const [personalCalibrationActive, setPersonalCalibrationActive] = useState(false);
+  const [personalCalibrationPhaseLabelDe, setPersonalCalibrationPhaseLabelDe] = useState<
+    string | null
+  >(null);
+  const [canSkipPersonalCalibrationPhase, setCanSkipPersonalCalibrationPhase] = useState(false);
   const [canAdvanceCalibration, setCanAdvanceCalibration] = useState(false);
   const [calibrationAdvanceLabelDe, setCalibrationAdvanceLabelDe] = useState<
     'Weiter' | 'Fertig' | null
@@ -359,6 +371,10 @@ export function useLiveActViewport({
       setCalibrationMessage(state.calibrationMessage);
       setHasNeutralBaseline(state.hasNeutralBaseline);
       setHasRangeCalibration(state.hasRangeCalibration);
+      setHasPersonalCalibrationProfile(state.hasPersonalCalibrationProfile);
+      setPersonalCalibrationActive(state.personalCalibrationActive);
+      setPersonalCalibrationPhaseLabelDe(state.personalCalibrationPhaseLabelDe);
+      setCanSkipPersonalCalibrationPhase(state.canSkipPersonalCalibrationPhase);
       setCanAdvanceCalibration(state.canAdvanceCalibration);
       setCalibrationAdvanceLabelDe(state.calibrationAdvanceLabelDe);
       setCalibrationCountdownSec(state.calibrationCountdownSec);
@@ -677,6 +693,21 @@ export function useLiveActViewport({
     await engine.calibrate();
   }, [canCalibrate]);
 
+  const calibratePersonalV2 = useCallback(async () => {
+    if (!canCalibrate) return;
+    const engine = engineRef.current;
+    if (!engine) return;
+    calibrationPeaksRef.current = createLiveActDiagnosticsPeaks();
+    setCalibrationPeakFrames(0);
+    await engine.calibratePersonalV2();
+  }, [canCalibrate]);
+
+  const skipPersonalCalibrationPhase = useCallback(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    engine.skipPersonalCalibrationPhase();
+  }, []);
+
   const advanceCalibration = useCallback(() => {
     const engine = engineRef.current;
     if (!engine) return;
@@ -771,6 +802,10 @@ export function useLiveActViewport({
     calibrationMessage,
     hasNeutralBaseline,
     hasRangeCalibration,
+    hasPersonalCalibrationProfile,
+    personalCalibrationActive,
+    personalCalibrationPhaseLabelDe,
+    canSkipPersonalCalibrationPhase,
     canCalibrate,
     canAdvanceCalibration,
     calibrationAdvanceLabelDe,
@@ -780,6 +815,8 @@ export function useLiveActViewport({
     canRetryCalibrationHold,
     calibrationStepPeaks,
     calibrateNeutral,
+    calibratePersonalV2,
+    skipPersonalCalibrationPhase,
     advanceCalibration,
     startCalibrationHold,
     retryCalibrationHold,
