@@ -12,6 +12,7 @@ import type {
   LiveActAvatarCapabilities,
   LiveActDiagnosticsV2AppliedValues,
   LiveActFrameV1,
+  PerformanceFaceValidationReportV1,
 } from '../../../domains/character/liveact';
 import { GltfLiveActAvatarOutput } from './gltf-liveact-avatar-output';
 import { VrmLiveActAvatarOutput } from './vrm-liveact-avatar-output';
@@ -26,6 +27,8 @@ export interface LiveActAvatarOutput {
    * Reflects values actually written by the last apply/reset — not desired retarget.
    */
   getAppliedDiagnostics(): LiveActDiagnosticsV2AppliedValues;
+  /** Performance Face V2 bind-time report (#450) — Premium gaps never block bind. */
+  getPerformanceFaceReport(): PerformanceFaceValidationReportV1;
   dispose(): void;
 }
 
