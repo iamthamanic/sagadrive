@@ -42,6 +42,7 @@ check(!/from ['"]three['"]/.test(aliases), 'alias domain pure');
 check(/createLiveActAvatarOutput/.test(output), 'output factory');
 check(/getAvatarCapabilities/.test(output), 'output avatar capabilities');
 check(/getAppliedDiagnostics/.test(output), 'output applied diagnostics (#397)');
+check(/getPerformanceFaceReport/.test(output), 'output Performance Face report (#450)');
 check(/VrmLiveActAvatarOutput/.test(output), 'VRM adapter wired');
 check(/GltfLiveActAvatarOutput/.test(output), 'GLB adapter wired');
 

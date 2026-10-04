@@ -614,3 +614,46 @@ export {
   type LiveActPersonalCalibrationAbReportV1,
 } from './liveact-personal-calibration-ab';
 
+export {
+  SAGADRIVE_PERFORMANCE_FACE_CONTRACT,
+  PERFORMANCE_FACE_VALIDATOR_VERSION,
+  PERFORMANCE_FACE_MANIFEST_VERSION,
+  PERFORMANCE_FACE_AUTHORING_SPEC,
+  LIVEACT_ACTIVE_CAPABILITY_CONTRACT,
+  PERFORMANCE_FACE_CAPABILITY_LEVELS,
+  PERFORMANCE_FACE_LEVEL_LABELS,
+  PERFORMANCE_FACE_REQUIRED_PREMIUM_CONTROLS,
+  PERFORMANCE_FACE_OPTIONAL_PREMIUM_CONTROLS,
+  PERFORMANCE_FACE_ALL_CONTROLS,
+  isPerformanceFaceControlId,
+  isPerformanceFaceCapabilityLevel,
+  clampPerformanceFaceWeight,
+  computeCorrectiveWeight,
+  parsePerformanceFaceManifestV1,
+  type PerformanceFaceCapabilityLevel,
+  type PerformanceFaceRequiredControlId,
+  type PerformanceFaceOptionalControlId,
+  type PerformanceFaceControlId,
+  type PerformanceFaceCorrectiveWeightRule,
+  type PerformanceFaceCorrectiveDeclarationV1,
+  type PerformanceFaceManifestV1,
+  type PerformanceFaceCorrectiveCapabilityV1,
+  type PerformanceFaceValidationReportV1,
+} from './liveact-performance-face-contract';
+
+export {
+  PERFORMANCE_FACE_TARGET_ALIASES,
+  resolvePerformanceFaceTargets,
+  type PerformanceFaceTargetResolution,
+} from './liveact-performance-face-aliases';
+
+export {
+  validatePerformanceFaceV2,
+  composeLiveActWithPerformanceFace,
+  evaluatePerformanceFaceForImport,
+  formatPerformanceFaceReportDe,
+  applyPerformanceFaceWeights,
+  type PerformanceFaceInventoryV1,
+  type LiveActActiveCapabilityV2,
+} from './liveact-performance-face-validate';
+

@@ -7,6 +7,11 @@
  * No React / Supabase / Three / glTF IO.
  */
 
+import type { PerformanceFaceValidationReportV1 } from '../liveact/liveact-performance-face-contract';
+import {
+  evaluatePerformanceFaceForImport,
+  type PerformanceFaceInventoryV1,
+} from '../liveact/liveact-performance-face-validate';
 import type { AvatarStructureAnalysisResultV2 } from './avatar-structure-analyzer-v2';
 import type { FamilyCompatibilityResultV1 } from './body-profile-contract-v1';
 import type {
@@ -244,6 +249,21 @@ export function morphEvidenceFromImportAnalysis(
   // Anatomy/modularity alone does not prove SagaDrive morph targets.
   void _analysis;
   return { hasBodyMorphTargets: false, hasFaceMorphTargets: false };
+}
+
+/**
+ * Performance Face V2 on Import Original (#450).
+ * Always allows import; Premium gaps only downgrade eligibility in the report.
+ * Call when morph/expression names are available (structure morph count alone is not enough).
+ */
+export function evaluateImportOriginalPerformanceFace(input: {
+  inventory: PerformanceFaceInventoryV1;
+}): {
+  importAllowed: true;
+  blocksImport: false;
+  report: PerformanceFaceValidationReportV1;
+} {
+  return evaluatePerformanceFaceForImport(input.inventory);
 }
 
 /**

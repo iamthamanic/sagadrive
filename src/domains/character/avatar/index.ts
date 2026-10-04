@@ -63,6 +63,7 @@ export {
   assertImportOriginalFlowInvariants,
   buildImportAnalysisSummary,
   buildImportOriginalKeepSeed,
+  evaluateImportOriginalPerformanceFace,
   isImportOriginalFlowStatus,
   morphEvidenceFromImportAnalysis,
   resolveImportFlowStatusFromAnalysis,

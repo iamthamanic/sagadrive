@@ -14,11 +14,13 @@ import {
   liveActGazePathSkipsEyeLookMorphs,
   liveActGazePathUsesPoseDriver,
   resolveLiveActGazeDrivePath,
+  validatePerformanceFaceV2,
   type LiveActAvatarCapabilities,
   type LiveActDiagnosticsV2AppliedValues,
   type LiveActFaceChannelId,
   type LiveActFrameV1,
   type LiveActGazeDrivePath,
+  type PerformanceFaceValidationReportV1,
 } from '../../../domains/character/liveact';
 import { resolveLiveActChannelTargets } from '../../../domains/character/liveact/liveact-channel-target-aliases';
 import type { LiveActAvatarOutput } from './liveact-avatar-output';
@@ -53,6 +55,7 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
   private readonly leftEyeRest = new THREE.Quaternion();
   private readonly rightEyeRest = new THREE.Quaternion();
   private readonly gazePath: LiveActGazeDrivePath;
+  private readonly performanceFaceReport: PerformanceFaceValidationReportV1;
   private disposed = false;
   private applied: LiveActDiagnosticsV2AppliedValues = createUnavailableLiveActAppliedValues();
 
@@ -93,11 +96,25 @@ export class GltfLiveActAvatarOutput implements LiveActAvatarOutput {
       gazeDrivePath: this.gazePath,
       runtimeKind: 'gltf',
     });
+    const arkitPresentChannels = LIVEACT_FACE_CHANNELS.filter(
+      (id) => resolution.faceSupport[id],
+    );
+    this.performanceFaceReport = validatePerformanceFaceV2({
+      presentTargetNames: present,
+      hasHumanoid: Boolean(deps.headBone),
+      hasHead: Boolean(deps.headBone),
+      gazeDrivePath: this.gazePath,
+      arkitPresentChannels,
+    });
     this.recordNeutralApplied();
   }
 
   getAvatarCapabilities(): LiveActAvatarCapabilities {
     return this.avatarCapabilities;
+  }
+
+  getPerformanceFaceReport(): PerformanceFaceValidationReportV1 {
+    return this.performanceFaceReport;
   }
 
   getAppliedDiagnostics(): LiveActDiagnosticsV2AppliedValues {

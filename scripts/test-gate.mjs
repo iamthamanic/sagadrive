@@ -825,6 +825,13 @@ function checkLiveActAdaptiveTemporalSolver() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log(
+    'SagaDrive Performance Face V2 (#450): Premium contract + compose with Caps V1...',
+  );
+  execFileSync(process.execPath, ['scripts/sagadrive-performance-face-v2-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkLiveActFacePipelineDocs() {
