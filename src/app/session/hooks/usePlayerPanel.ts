@@ -10,8 +10,10 @@ import {
 import type { SagaDriveSkillKey } from '../../../domains/rules/sagadrive/character-creation';
 import type { RollMode } from '../../../domains/session/contracts/shared-rolls';
 import type { CharacterVm } from '../../../domains/character';
+import { assertUrlCharacterMatchesMembership } from '../../../domains/session/contracts/player-character-assignment';
 import { characterService } from '../../../infrastructure/character/character-service';
 import { projectService } from '../../../infrastructure/project/project-service';
+import { sessionService } from '../../../infrastructure/session/session-service';
 import { useAuth } from '../../../lib/auth-context';
 import { useSessionRuntime } from './useSessionRuntime';
 
@@ -57,14 +59,30 @@ export function usePlayerPanel(input: {
         setSessionId(session.id);
 
         if (!input.characterPublicId) {
+          setBootstrapError('Charakter-Route fehlt — bitte über Session-Join beitreten');
           setCharacter(null);
           setIsBootstrapping(false);
           return;
         }
 
-        const loaded = await characterService.getCharacterByPublicId(input.characterPublicId);
+        const detail = await sessionService.getSessionById(session.id);
         if (cancelled) return;
-        setCharacter(loaded);
+        const membership = detail.players.find((p) => p.userId === user?.id);
+        if (!membership?.characterId) {
+          setBootstrapError(
+            'Kein Charakter an diese Session gebunden. Bitte über Session-Join mit Charakter beitreten.',
+          );
+          setIsBootstrapping(false);
+          return;
+        }
+
+        const bound = await characterService.getCharacterById(membership.characterId);
+        if (cancelled) return;
+        assertUrlCharacterMatchesMembership({
+          urlCharacterPublicId: input.characterPublicId,
+          membershipCharacterPublicId: bound.publicId,
+        });
+        setCharacter(bound);
         setIsBootstrapping(false);
       } catch (err) {
         if (cancelled) return;
@@ -77,7 +95,7 @@ export function usePlayerPanel(input: {
     return () => {
       cancelled = true;
     };
-  }, [input.sagaPublicId, input.sessionPublicId, input.characterPublicId]);
+  }, [input.sagaPublicId, input.sessionPublicId, input.characterPublicId, user?.id]);
 
   const errorMessage = bootstrapError ?? runtime.error;
   const model = buildPlayerPanelModel({
