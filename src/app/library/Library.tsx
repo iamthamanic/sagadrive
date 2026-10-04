@@ -204,8 +204,9 @@ export function Library({
   const isProjectGm = (project: ProjectSummaryVm) =>
     user !== null && project.gmUserId === user.id;
 
-  const openProjectAsGm = (_project: ProjectSummaryVm) => {
-    onNavigate('gamemaster');
+  const openProjectAsGm = (project: ProjectSummaryVm) => {
+    // Canonical: Saga sessions section — not legacy /gamemaster (#477).
+    onNavigate(`/sagas/${encodeURIComponent(project.publicId.trim().toUpperCase())}/sessions`);
   };
 
   /** Player / session join surface — keep clicked adventure + participant intent. */
