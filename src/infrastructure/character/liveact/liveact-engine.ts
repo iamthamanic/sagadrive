@@ -56,9 +56,26 @@ import {
   snapshotLiveActDiagnosticsV2FromSample,
   solveHybridFace,
   stepLiveActCalibratedFrame,
+  LIVEACT_PERSONAL_CALIBRATION_PHASES,
+  createLiveActPersonalCalibrationSessionV2,
+  pushLiveActPersonalCalibrationSample,
+  skipLiveActPersonalCalibrationPhase,
+  advanceLiveActPersonalCalibrationPhase,
+  isLiveActPersonalCalibrationPhaseComplete,
+  liveActPersonalCalibrationPhaseRemainingSec,
+  hasLiveActPersonalCalibrationEnoughValidSamples,
+  finalizeLiveActPersonalCalibrationProfile,
+  liveActCalibrationSetFromPersonalProfile,
+  currentLiveActPersonalPhaseId,
+  saveLiveActPersonalCalibrationProfile,
+  loadLiveActPersonalCalibrationProfile,
+  isLiveActPersonalCalibrationScopeComplete,
   type LiveActCalibratedStepV1,
   type LiveActCalibrationAccumulator,
   type LiveActCalibrationStepPeakV1,
+  type LiveActCalibrationProfileV2,
+  type LiveActPersonalCalibrationScopeV1,
+  type LiveActPersonalCalibrationSessionV2,
   type LiveActDenseFaceFeaturesV1,
   type LiveActHybridFaceV1,
   type LiveActIrisGazeV1,
@@ -90,6 +107,11 @@ export type LiveActCalibrationStatus = 'idle' | 'running' | 'success' | 'failed'
 export interface LiveActCalibrationResult {
   ok: boolean;
   messageDe: string;
+  /**
+   * Premium V2 only: whether device-local profile persistence succeeded.
+   * `false` = capture applied for this session only (no false “gespeichert”).
+   */
+  persisted?: boolean;
 }
 
 export interface LiveActEngineState {
@@ -120,6 +142,14 @@ export interface LiveActEngineState {
    * Whole seconds left in the current hold (neutral or holding). Null when not counting down.
    */
   calibrationCountdownSec: number | null;
+  /** Premium Personal Calibration V2 (#449) in progress. */
+  personalCalibrationActive: boolean;
+  /** Current V2 phase label (DE), null when inactive. */
+  personalCalibrationPhaseLabelDe: string | null;
+  /** True when Skip is available for the current V2 phase. */
+  canSkipPersonalCalibrationPhase: boolean;
+  /** Valid local Profile V2 loaded or just captured. */
+  hasPersonalCalibrationProfile: boolean;
   /** Inference ticks dropped due to in-flight backpressure (UI-throttled metric). */
   droppedInferenceFrames: number;
 }
@@ -176,6 +206,12 @@ export class LiveActEngine {
   private hybridFace: LiveActHybridFaceV1 | null = null;
   private neutralBaseline: LiveActNeutralBaselineV1 | null = null;
   private rangeCalibration: LiveActRangeCalibrationV1 | null = null;
+  private personalProfile: LiveActCalibrationProfileV2 | null = null;
+  private personalSession: LiveActPersonalCalibrationSessionV2 | null = null;
+  private personalCalibrating = false;
+  /** Owner + character scope for Profile V2; incomplete ⇒ no persistent load/save. */
+  private personalCalibrationScope: LiveActPersonalCalibrationScopeV1 | null = null;
+  private personalCapturePaused = false;
   private calibrating = false;
   private calibrationPhase: 'neutral' | 'range' = 'neutral';
   private calibrationAccumulator: LiveActCalibrationAccumulator = createLiveActCalibrationAccumulator();
@@ -222,7 +258,75 @@ export class LiveActEngine {
       limits,
     });
     this.fpsCap = this.qualityProfile.fpsCap;
+    // No scope yet — fail closed (no shared `_default` profile load).
     this.emitStatus(true);
+  }
+
+  /**
+   * Bind Personal Calibration persistence to authenticated owner + character.
+   * Incomplete scope clears runtime personal profile and never loads `_default`.
+   */
+  setPersonalCalibrationScope(scope: LiveActPersonalCalibrationScopeV1 | null): void {
+    const next =
+      scope && isLiveActPersonalCalibrationScopeComplete(scope)
+        ? {
+            ownerLocalId: scope.ownerLocalId.trim(),
+            characterLocalId: scope.characterLocalId.trim(),
+          }
+        : null;
+    const prev = this.personalCalibrationScope;
+    const same =
+      prev?.ownerLocalId === next?.ownerLocalId &&
+      prev?.characterLocalId === next?.characterLocalId;
+    if (same) return;
+    // Detach prior scoped profile immediately on switch / clear.
+    this.personalProfile = null;
+    this.personalCalibrationScope = next;
+    this.reloadPersonalProfileFromStore();
+    this.emitStatus(true);
+  }
+
+  /** @deprecated Use {@link setPersonalCalibrationScope}. Character-only is insufficient. */
+  setCharacterLocalId(characterLocalId: string | null): void {
+    if (!characterLocalId) {
+      this.setPersonalCalibrationScope(null);
+      return;
+    }
+    const owner = this.personalCalibrationScope?.ownerLocalId ?? '';
+    this.setPersonalCalibrationScope(
+      owner
+        ? { ownerLocalId: owner, characterLocalId }
+        : null,
+    );
+  }
+
+  getPersonalCalibrationProfile(): LiveActCalibrationProfileV2 | null {
+    return this.personalProfile;
+  }
+
+  getPersonalCalibrationScope(): LiveActPersonalCalibrationScopeV1 | null {
+    return this.personalCalibrationScope;
+  }
+
+  private reloadPersonalProfileFromStore(): void {
+    if (!isLiveActPersonalCalibrationScopeComplete(this.personalCalibrationScope)) {
+      this.personalProfile = null;
+      return;
+    }
+    const loaded = loadLiveActPersonalCalibrationProfile(this.personalCalibrationScope);
+    if (loaded.status === 'valid' && loaded.profile) {
+      this.applyPersonalProfile(loaded.profile);
+      return;
+    }
+    // Invalid/mismatched profiles must not apply silently.
+    this.personalProfile = null;
+  }
+
+  private applyPersonalProfile(profile: LiveActCalibrationProfileV2): void {
+    this.personalProfile = profile;
+    const set = liveActCalibrationSetFromPersonalProfile(profile);
+    this.neutralBaseline = set.neutral;
+    this.rangeCalibration = set.range;
   }
 
   bindOutput(output: LiveActAvatarOutput | null): void {
@@ -348,6 +452,10 @@ export class LiveActEngine {
       canRetryCalibrationHold: this.computeCanRetryCalibrationHold(),
       calibrationStepPeaks: this.rangeStepPeaks,
       calibrationCountdownSec: this.computeCalibrationCountdownSec(),
+      personalCalibrationActive: this.personalCalibrating,
+      personalCalibrationPhaseLabelDe: this.computePersonalPhaseLabelDe(),
+      canSkipPersonalCalibrationPhase: this.computeCanSkipPersonalPhase(),
+      hasPersonalCalibrationProfile: this.personalProfile !== null,
       droppedInferenceFrames: this.droppedInferenceFrames,
     };
   }
@@ -391,6 +499,7 @@ export class LiveActEngine {
   /**
    * Step 1: 30 valid neutral frames within 2 s (on failure the previous calibration is kept).
    * Then one max-pass expression at a time; the user advances with {@link advanceCalibration}.
+   * Classic V1 / fallback path — prefer {@link calibratePersonalV2} for Premium Fidelity.
    */
   calibrate(): Promise<LiveActCalibrationResult> {
     if (this.disposed) {
@@ -405,7 +514,7 @@ export class LiveActEngine {
         messageDe: 'Kalibrierung erfordert aktives Tracking.',
       });
     }
-    if (this.calibrating) {
+    if (this.calibrating || this.personalCalibrating) {
       return Promise.resolve({
         ok: false,
         messageDe: 'Kalibrierung läuft bereits.',
@@ -413,6 +522,9 @@ export class LiveActEngine {
     }
 
     return new Promise((resolve) => {
+      // Classic session override: disable Personal apply for this session.
+      // Persisted Premium profile is NOT deleted — reload may restore it.
+      this.personalProfile = null;
       this.calibrating = true;
       this.calibrationPhase = 'neutral';
       this.canAdvanceCalibration = false;
@@ -429,6 +541,60 @@ export class LiveActEngine {
       this.setCalibrationUi('running', liveActNeutralCalibrationPrompt());
       this.emitStatus(true);
     });
+  }
+
+  /**
+   * Premium Personal Calibration V2 (#449) — compact auto-advancing ~20–40 s session.
+   * Persists a local fingerprint-bound profile; V1 classic {@link calibrate} remains.
+   */
+  calibratePersonalV2(): Promise<LiveActCalibrationResult> {
+    if (this.disposed) {
+      return Promise.resolve({
+        ok: false,
+        messageDe: 'LiveAct ist nicht verfügbar.',
+      });
+    }
+    if (this.status !== 'active' && this.status !== 'lost') {
+      return Promise.resolve({
+        ok: false,
+        messageDe: 'Kalibrierung erfordert aktives Tracking.',
+      });
+    }
+    if (this.calibrating || this.personalCalibrating) {
+      return Promise.resolve({
+        ok: false,
+        messageDe: 'Kalibrierung läuft bereits.',
+      });
+    }
+
+    return new Promise((resolve) => {
+      this.personalCalibrating = true;
+      this.personalCapturePaused = false;
+      this.personalSession = createLiveActPersonalCalibrationSessionV2(
+        this.personalCalibrationScope,
+      );
+      this.calibrationResolve = resolve;
+      const phase0 = LIVEACT_PERSONAL_CALIBRATION_PHASES[0];
+      this.setCalibrationUi(
+        'running',
+        phase0 ? `${phase0.labelDe}: ${phase0.holdDe}` : 'Premium-Kalibrierung…',
+      );
+      this.emitStatus(true);
+    });
+  }
+
+  /** Skip current Personal V2 phase when allowed (motor limitation / N/A). */
+  skipPersonalCalibrationPhase(): void {
+    if (!this.personalCalibrating || !this.personalSession) return;
+    if (!this.computeCanSkipPersonalPhase()) return;
+    this.personalCapturePaused = false;
+    const advanced = skipLiveActPersonalCalibrationPhase(this.personalSession);
+    if (!advanced) {
+      this.completePersonalCalibration();
+      return;
+    }
+    this.emitPersonalPhasePrompt();
+    this.emitStatus(true);
   }
 
   /** Begin the countdown/hold for the current armed expression. */
@@ -582,6 +748,9 @@ export class LiveActEngine {
     this.cancelCalibration('LiveAct beendet.');
     this.neutralBaseline = null;
     this.rangeCalibration = null;
+    this.personalProfile = null;
+    this.personalSession = null;
+    this.personalCalibrating = false;
     this.cancelLoop();
     this.cleanupMedia();
     this.frame = null;
@@ -728,6 +897,8 @@ export class LiveActEngine {
       mapped,
       { neutral: this.neutralBaseline, range: this.rangeCalibration },
       this.limits,
+      'adaptive',
+      this.personalProfile,
     );
     this.pipelineStep = step;
     const { smoothed, calibrated } = step;
@@ -896,9 +1067,13 @@ export class LiveActEngine {
   }
 
   private tickCalibration(sample: LiveActSourceSample): void {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (this.personalCalibrating) {
+      this.tickPersonalCalibration(sample, now);
+      return;
+    }
     if (!this.calibrating) return;
 
-    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
     if (this.calibrationPhase === 'range') {
       this.tickRangeCalibration(sample, now);
       return;
@@ -981,8 +1156,12 @@ export class LiveActEngine {
   }
 
   private computeCalibrationCountdownSec(): number | null {
-    if (!this.calibrating || this.calibrationStatus !== 'running') return null;
+    if (this.calibrationStatus !== 'running') return null;
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (this.personalCalibrating && this.personalSession) {
+      return liveActPersonalCalibrationPhaseRemainingSec(this.personalSession);
+    }
+    if (!this.calibrating) return null;
     if (this.calibrationPhase === 'neutral') {
       const remaining = LIVEACT_CALIBRATION_TIMEOUT_MS - (now - this.calibrationStartedAtMs);
       return Math.max(0, Math.ceil(remaining / 1000));
@@ -1058,8 +1237,106 @@ export class LiveActEngine {
     this.emitStatus(true);
   }
 
+  private tickPersonalCalibration(sample: LiveActSourceSample, now: number): void {
+    const session = this.personalSession;
+    if (!session) return;
+
+    const pushed = pushLiveActPersonalCalibrationSample(session, sample, {
+      headPoseSupported: this.qualityProfile.enableHeadPose,
+      limits: this.limits,
+      nowMs: now,
+    });
+    if (!pushed) {
+      // Tracking lost / invalid sample: pause valid-capture clock (no wall-clock advance).
+      if (!this.personalCapturePaused) {
+        this.personalCapturePaused = true;
+        this.setCalibrationUi(
+          'running',
+          'Gesicht nicht erkannt — Kalibrierung pausiert',
+        );
+      }
+      this.emitCountdownIfChanged();
+      return;
+    }
+
+    if (this.personalCapturePaused) {
+      this.personalCapturePaused = false;
+      this.emitPersonalPhasePrompt();
+    }
+
+    this.emitCountdownIfChanged();
+    if (!isLiveActPersonalCalibrationPhaseComplete(session, now)) return;
+
+    const hasNext = advanceLiveActPersonalCalibrationPhase(session);
+    if (!hasNext) {
+      this.completePersonalCalibration();
+      return;
+    }
+    this.emitPersonalPhasePrompt();
+    this.emitStatus(true);
+  }
+
+  private completePersonalCalibration(): void {
+    const session = this.personalSession;
+    if (!session || !hasLiveActPersonalCalibrationEnoughValidSamples(session)) {
+      this.failCalibration(
+        'Premium-Kalibrierung unvollständig — zu wenig gültige Samples.',
+      );
+      return;
+    }
+    const createdAt =
+      typeof performance !== 'undefined' ? Date.now() : 1_700_000_000_000;
+    const profile = finalizeLiveActPersonalCalibrationProfile(session, createdAt);
+    if (profile.status !== 'valid') {
+      this.failCalibration(
+        'Premium-Kalibrierung unvollständig — zu wenig gültige Samples.',
+      );
+      return;
+    }
+    // Persist only with complete owner+character scope; otherwise session-only.
+    // Persistence lives in the domain store (not inline in the engine stack).
+    const persisted = saveLiveActPersonalCalibrationProfile(profile);
+    this.applyPersonalProfile(profile);
+    this.personalCalibrating = false;
+    this.personalCapturePaused = false;
+    this.personalSession = null;
+    this.lastEmittedCountdownSec = null;
+    const resolve = this.calibrationResolve;
+    this.calibrationResolve = null;
+    const messageDe = persisted
+      ? 'Premium-Kalibrierung gespeichert (lokal) — Neutral, Range, Noise Floor aktiv.'
+      : 'Premium-Kalibrierung aktiv — lokales Speichern nicht verfügbar. Gilt nur für diese Sitzung.';
+    this.setCalibrationUi('success', messageDe);
+    resolve?.({ ok: true, messageDe, persisted });
+    this.emitStatus(true);
+  }
+
+  private computePersonalPhaseLabelDe(): string | null {
+    if (!this.personalCalibrating || !this.personalSession) return null;
+    const id = currentLiveActPersonalPhaseId(this.personalSession);
+    const phase = LIVEACT_PERSONAL_CALIBRATION_PHASES.find((p) => p.id === id);
+    return phase?.labelDe ?? null;
+  }
+
+  private computeCanSkipPersonalPhase(): boolean {
+    if (!this.personalCalibrating || !this.personalSession) return false;
+    const id = currentLiveActPersonalPhaseId(this.personalSession);
+    const phase = LIVEACT_PERSONAL_CALIBRATION_PHASES.find((p) => p.id === id);
+    return Boolean(phase?.skipAllowed);
+  }
+
+  private emitPersonalPhasePrompt(): void {
+    if (!this.personalSession) return;
+    const id = currentLiveActPersonalPhaseId(this.personalSession);
+    const phase = LIVEACT_PERSONAL_CALIBRATION_PHASES.find((p) => p.id === id);
+    if (!phase) return;
+    this.setCalibrationUi('running', `${phase.labelDe}: ${phase.holdDe}`);
+  }
+
   private failCalibration(messageDe: string): void {
     this.calibrating = false;
+    this.personalCalibrating = false;
+    this.personalSession = null;
     this.calibrationPhase = 'neutral';
     this.canAdvanceCalibration = false;
     this.rangeStepPhase = 'armed';
@@ -1073,8 +1350,10 @@ export class LiveActEngine {
   }
 
   private cancelCalibration(messageDe: string): void {
-    if (!this.calibrating) return;
+    if (!this.calibrating && !this.personalCalibrating) return;
     this.calibrating = false;
+    this.personalCalibrating = false;
+    this.personalSession = null;
     this.calibrationPhase = 'neutral';
     this.canAdvanceCalibration = false;
     this.rangeStepPhase = 'armed';

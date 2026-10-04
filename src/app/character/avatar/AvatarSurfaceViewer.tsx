@@ -17,6 +17,7 @@ import {
   type AvatarSurfaceRef,
 } from '../../../domains/character/avatar';
 import { resolveLiveActRetargetProfile } from '../../../infrastructure/character/liveact';
+import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
 import { AvatarCanvas, type AvatarPortraitCaptureHandle } from './AvatarCanvas';
 import { AvatarPreviewExpandDialog } from './AvatarPreviewExpandDialog';
 import {
@@ -91,7 +92,22 @@ export function AvatarSurfaceViewer({
     null,
   );
   const [characterFaceMappingAvailable, setCharacterFaceMappingAvailable] = useState(false);
+  const [ownerLocalId, setOwnerLocalId] = useState<string | null>(null);
   const checkedRef = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getAuthenticatedUserId()
+      .then((id) => {
+        if (!cancelled) setOwnerLocalId(id);
+      })
+      .catch(() => {
+        if (!cancelled) setOwnerLocalId(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleMtoonState = useRef(
     (enabled: boolean, apply: (next: boolean) => void) => {
@@ -137,6 +153,8 @@ export function AvatarSurfaceViewer({
       studioRuntimeRef.current?.getLiveActAvatarCapabilities() ?? null,
     getBonesAvailable: () => studioRuntimeRef.current?.hasLiveActSkeleton() ?? false,
     modelRevision: modelEpoch,
+    personalCalibrationOwnerLocalId: ownerLocalId,
+    personalCalibrationCharacterLocalId: surfaceRef.characterId,
   });
 
   useEffect(() => {

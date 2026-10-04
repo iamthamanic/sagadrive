@@ -71,6 +71,13 @@ interface AvatarPreviewSettingsProps {
   mouthLimited: boolean;
   canCalibrate: boolean;
   onCalibrate: () => void;
+  /** Premium Personal Calibration V2 (#449) — ~20–40 s local profile. */
+  onCalibratePersonalV2?: () => void;
+  personalCalibrationActive?: boolean;
+  personalCalibrationPhaseLabelDe?: string | null;
+  canSkipPersonalCalibrationPhase?: boolean;
+  onSkipPersonalCalibrationPhase?: () => void;
+  hasPersonalCalibrationProfile?: boolean;
   canAdvanceCalibration?: boolean;
   calibrationAdvanceLabelDe?: 'Weiter' | 'Fertig' | null;
   onAdvanceCalibration?: () => void;
@@ -155,6 +162,12 @@ export function AvatarPreviewSettings({
   mouthLimited,
   canCalibrate,
   onCalibrate,
+  onCalibratePersonalV2,
+  personalCalibrationActive = false,
+  personalCalibrationPhaseLabelDe = null,
+  canSkipPersonalCalibrationPhase = false,
+  onSkipPersonalCalibrationPhase,
+  hasPersonalCalibrationProfile = false,
   canAdvanceCalibration = false,
   calibrationAdvanceLabelDe = null,
   onAdvanceCalibration,
@@ -575,8 +588,50 @@ export function AvatarPreviewSettings({
                       ) : null}
                     </div>
                   </div>
+                ) : personalCalibrationActive ? (
+                  <div className="mt-1 flex flex-col gap-1">
+                    <p
+                      className="px-1 text-[10px] text-amber-200/90"
+                      data-testid="liveact-personal-calib-phase"
+                    >
+                      Premium: {personalCalibrationPhaseLabelDe ?? 'Kalibrierung…'}
+                      {typeof calibrationCountdownSec === 'number' ? (
+                        <span className="ml-1 font-semibold tabular-nums">
+                          ({calibrationCountdownSec} s)
+                        </span>
+                      ) : null}
+                    </p>
+                    {canSkipPersonalCalibrationPhase && onSkipPersonalCalibrationPhase ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={actionsDisabled}
+                        className="min-h-11 w-full border-white/15 text-xs"
+                        data-testid="liveact-personal-calib-skip"
+                        title="Phase überspringen (N/A / motorisch nicht möglich)"
+                        onClick={onSkipPersonalCalibrationPhase}
+                      >
+                        Überspringen (N/A)
+                      </Button>
+                    ) : null}
+                  </div>
                 ) : canCalibrate || (canMotionTest && onMotionTest) ? (
                   <div className="mt-1 flex flex-col gap-1">
+                    {canCalibrate && onCalibratePersonalV2 ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="default"
+                        disabled={actionsDisabled}
+                        className="min-h-11 w-full text-xs"
+                        data-testid="liveact-calibrate-personal-v2"
+                        title="Premium-Kalibrierung ca. 20–40 s — lokales Profil (Neutral, Range, Noise)"
+                        onClick={onCalibratePersonalV2}
+                      >
+                        Premium Kalibrierung (20–40s)
+                      </Button>
+                    ) : null}
                     {canCalibrate ? (
                       <Button
                         type="button"
@@ -585,10 +640,10 @@ export function AvatarPreviewSettings({
                         disabled={actionsDisabled}
                         className="h-8 w-full border-white/15 text-xs"
                         data-testid="liveact-calibrate"
-                        title="Kalibrierung in Schritten: Neutral, dann je Ausdruck Start → Werte → Weiter"
+                        title="Klassische Kalibrierung in Schritten: Neutral, dann je Ausdruck Start → Werte → Weiter"
                         onClick={onCalibrate}
                       >
-                        Kalibrieren
+                        Klassisch kalibrieren
                       </Button>
                     ) : null}
                     {canMotionTest && onMotionTest ? (
@@ -633,6 +688,14 @@ export function AvatarPreviewSettings({
                         ({motionTestCountdownSec} s)
                       </span>
                     ) : null}
+                  </p>
+                ) : null}
+                {hasPersonalCalibrationProfile ? (
+                  <p
+                    className="px-1 text-[10px] text-emerald-400/90"
+                    data-testid="liveact-personal-calib-active"
+                  >
+                    Premium-Profil aktiv (lokal)
                   </p>
                 ) : null}
                 {hasNeutralBaseline ? (

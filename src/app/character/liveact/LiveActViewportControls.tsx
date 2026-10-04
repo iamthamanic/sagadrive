@@ -637,6 +637,14 @@ export function LiveActViewportControls({
       onCalibrate={() => {
         void liveAct.calibrateNeutral();
       }}
+      onCalibratePersonalV2={() => {
+        void liveAct.calibratePersonalV2();
+      }}
+      personalCalibrationActive={liveAct.personalCalibrationActive}
+      personalCalibrationPhaseLabelDe={liveAct.personalCalibrationPhaseLabelDe}
+      canSkipPersonalCalibrationPhase={liveAct.canSkipPersonalCalibrationPhase}
+      onSkipPersonalCalibrationPhase={liveAct.skipPersonalCalibrationPhase}
+      hasPersonalCalibrationProfile={liveAct.hasPersonalCalibrationProfile}
       canAdvanceCalibration={liveAct.canAdvanceCalibration}
       calibrationAdvanceLabelDe={liveAct.calibrationAdvanceLabelDe}
       onAdvanceCalibration={liveAct.advanceCalibration}

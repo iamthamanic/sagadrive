@@ -552,3 +552,65 @@ export {
   type TemporalAbPath,
 } from './liveact-temporal-ab';
 
+export {
+  LIVEACT_PERSONAL_CALIBRATION_CONTRACT,
+  LIVEACT_PERSONAL_CALIBRATION_POLICY_VERSION,
+  LIVEACT_PERSONAL_CALIBRATION_PHASES,
+  LIVEACT_PERSONAL_CALIBRATION_DURATION_MS,
+  LIVEACT_PERSONAL_MIN_USABLE_SPAN,
+  LIVEACT_PERSONAL_WEAK_SPAN,
+  LIVEACT_PERSONAL_MAX_GAIN,
+  LIVEACT_PERSONAL_NOISE_DEADZONE_MULT,
+  LIVEACT_PERSONAL_MAX_SAMPLE_GAP_MS,
+  LIVEACT_PERSONAL_MIN_PHASE_FRAMES,
+  LIVEACT_PERSONAL_STORAGE_KEY_PREFIX,
+  createLiveActSolverFingerprintV1,
+  liveActSolverFingerprintsEqual,
+  liveActPersonalCalibrationStorageKey,
+  isLiveActPersonalPersistableCharacterId,
+  isLiveActPersonalCalibrationScopeComplete,
+  type LiveActPersonalCapability,
+  type LiveActPersonalProfileStatus,
+  type LiveActSolverFingerprintV1,
+  type LiveActPersonalChannelCalibV2,
+  type LiveActPersonalGazeCalibV2,
+  type LiveActPersonalHeadCalibV2,
+  type LiveActPersonalSpeechEvidenceV2,
+  type LiveActCalibrationProfileV2,
+  type LiveActPersonalCalibrationScopeV1,
+  type LiveActPersonalCalibrationPhaseId,
+} from './liveact-personal-calibration-contract';
+
+export {
+  createLiveActPersonalCalibrationSessionV2,
+  pushLiveActPersonalCalibrationSample,
+  skipLiveActPersonalCalibrationPhase,
+  advanceLiveActPersonalCalibrationPhase,
+  liveActPersonalCalibrationPhaseElapsed,
+  isLiveActPersonalCalibrationPhaseComplete,
+  liveActPersonalCalibrationPhaseRemainingSec,
+  hasLiveActPersonalCalibrationEnoughValidSamples,
+  finalizeLiveActPersonalCalibrationProfile,
+  resolveLiveActPersonalProfileStatus,
+  liveActCalibrationSetFromPersonalProfile,
+  applyLiveActPersonalCalibration,
+  assertLiveActPersonalProfileLocalOnly,
+  currentLiveActPersonalPhaseId,
+  type LiveActPersonalCalibrationSessionV2,
+} from './liveact-personal-calibration-solve';
+
+export {
+  saveLiveActPersonalCalibrationProfile,
+  loadLiveActPersonalCalibrationProfile,
+  clearLiveActPersonalCalibrationProfile,
+  type LiveActPersonalProfileLoadResult,
+} from './liveact-personal-calibration-store';
+
+export { buildPersonalCalibrationActorSession } from './liveact-personal-calibration-fixtures';
+
+export {
+  runPersonalCalibrationAbBenchmark,
+  LIVEACT_PERSONAL_AB_MAX_GAIN,
+  type LiveActPersonalCalibrationAbReportV1,
+} from './liveact-personal-calibration-ab';
+
