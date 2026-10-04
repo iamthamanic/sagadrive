@@ -657,3 +657,21 @@ export {
   type LiveActActiveCapabilityV2,
 } from './liveact-performance-face-validate';
 
+export {
+  drivePerformanceFaceWeights,
+  measurePerformanceFaceContourProxy,
+} from './liveact-performance-face-drive';
+
+export {
+  LIVEACT_PERFECT_FIDELITY_V2_E2E_CONTRACT,
+  buildCoreArkitChannels,
+  buildCanonicalFace3Inventory,
+  buildExternalPremiumInventory,
+  listPerfectFidelityV2AvatarProfiles,
+  evaluatePerfectFidelityV2Avatar,
+  runPerfectFidelityV2E2e,
+  type PerfectFidelityV2AvatarProfile,
+  type PerfectFidelityV2AvatarGateResult,
+  type PerfectFidelityV2E2eReport,
+} from './liveact-perfect-fidelity-v2-e2e';
+

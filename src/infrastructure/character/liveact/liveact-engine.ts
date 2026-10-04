@@ -54,6 +54,7 @@ import {
   shouldThrottleLiveActUiStatus,
   snapshotLiveActDiagnosticsV2FromFrame,
   snapshotLiveActDiagnosticsV2FromSample,
+  drivePerformanceFaceWeights,
   solveHybridFace,
   stepLiveActCalibratedFrame,
   LIVEACT_PERSONAL_CALIBRATION_PHASES,
@@ -906,6 +907,12 @@ export class LiveActEngine {
     this.frame = calibrated;
     const retargeted = applyLiveActRetargetProfile(calibrated, this.retargetProfile);
     this.output?.applyLiveActFrame(retargeted);
+    // #451 Premium PerformanceFace — only writes when bind report is premiumEligible.
+    const performanceWeights = drivePerformanceFaceWeights({
+      hybrid: this.hybridFace,
+      face: retargeted.face,
+    });
+    this.output?.applyPerformanceFaceWeights(performanceWeights);
     this.emitFrame(calibrated);
 
     const applied = this.output

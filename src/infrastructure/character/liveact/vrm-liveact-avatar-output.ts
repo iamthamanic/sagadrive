@@ -15,12 +15,14 @@ import {
   liveActGazePathSkipsEyeLookMorphs,
   liveActGazePathUsesPoseDriver,
   resolveLiveActGazeDrivePath,
+  applyPerformanceFaceWeights as writePerformanceFaceWeights,
   validatePerformanceFaceV2,
   type LiveActAvatarCapabilities,
   type LiveActDiagnosticsV2AppliedValues,
   type LiveActFaceChannelId,
   type LiveActFrameV1,
   type LiveActGazeDrivePath,
+  type PerformanceFaceControlId,
   type PerformanceFaceValidationReportV1,
 } from '../../../domains/character/liveact';
 import { resolveLiveActChannelTargets } from '../../../domains/character/liveact/liveact-channel-target-aliases';
@@ -120,6 +122,25 @@ export class VrmLiveActAvatarOutput implements LiveActAvatarOutput {
 
   getPerformanceFaceReport(): PerformanceFaceValidationReportV1 {
     return this.performanceFaceReport;
+  }
+
+  applyPerformanceFaceWeights(
+    weights: Readonly<Partial<Record<PerformanceFaceControlId, number>>>,
+  ): void {
+    if (this.disposed || !this.performanceFaceReport.premiumEligible) return;
+    const manager = this.deps.vrm.expressionManager;
+    if (!manager) return;
+    writePerformanceFaceWeights({
+      writeWeight: (targetName, weight) => {
+        try {
+          manager.setValue(targetName, weight);
+        } catch {
+          // fail-soft — expression may be absent despite name resolution
+        }
+      },
+      resolvedNames: this.performanceFaceReport.resolvedTargetNames,
+      weights,
+    });
   }
 
   getAppliedDiagnostics(): LiveActDiagnosticsV2AppliedValues {

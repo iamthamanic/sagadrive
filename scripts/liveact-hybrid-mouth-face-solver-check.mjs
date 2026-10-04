@@ -334,7 +334,11 @@ check(
 check(ab.hybridBeatsV1 === true, `AB hybrid beats V1 underImp=${ab.activeUnderResponseMedianAbs}`);
 check(ab.crossTalk.notWorse === true, `cross-talk not worse v1=${ab.crossTalk.v1MaxUnintended} hy=${ab.crossTalk.hybridMaxUnintended}`);
 check(ab.speech.returnToNeutralOk === true, 'return to neutral');
-check(ab.avatarContourFidelity.startsWith('NOT_MEASURED'), 'avatar contour labeled NOT_MEASURED');
+check(
+  ab.avatarContourFidelity === 'MEASURED_VIA_451_E2E_GATE' ||
+    String(ab.avatarContourFidelity).startsWith('NOT_MEASURED'),
+  'avatar contour labeled for #451 E2E measurement',
+);
 check(
   ab.speech.hybridCorrelation !== null && ab.speech.hybridCorrelation >= 0.95,
   `speech corr hy=${ab.speech.hybridCorrelation} v1=${ab.speech.v1Correlation}`,

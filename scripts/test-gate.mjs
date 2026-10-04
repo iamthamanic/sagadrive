@@ -832,6 +832,13 @@ function checkLiveActAdaptiveTemporalSolver() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log(
+    'LiveAct Perfect Fidelity V2 E2E (#451): dual-avatar Premium gate + contour...',
+  );
+  execFileSync(process.execPath, ['scripts/liveact-perfect-fidelity-v2-e2e-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkLiveActFacePipelineDocs() {
