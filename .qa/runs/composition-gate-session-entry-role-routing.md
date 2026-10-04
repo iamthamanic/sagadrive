@@ -1,6 +1,6 @@
 # Composition Gate — session-entry-role-routing
 
-- HEAD_SHA: 9687b5ad83acf612755da056332147590b2c6a86
+- HEAD_SHA: 9f52ec2f3187b6389acc182c5b8528dda72105f6
 - BASE_SHA: 596be85753303add95434be5362fe233c9289264
 - Date: 2026-10-05
 - Verdict: CLEAR
