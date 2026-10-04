@@ -111,18 +111,259 @@ check(ab1.personal.noseSneerGain <= 1.0001, 'nose gain not exploded');
 check((ab1.v1.noseSneerGain ?? 1) >= ab1.personal.noseSneerGain, 'v1 nose gain >= personal');
 
 // Fingerprint invalidation
-const { profile } = mod.buildPersonalCalibrationActorSession();
+const { profile, v1Set } = mod.buildPersonalCalibrationActorSession();
 const bad = {
   ...profile,
   solverFingerprint: { ...profile.solverFingerprint, temporalPolicy: 'tampered' },
 };
 check(mod.resolveLiveActPersonalProfileStatus(bad) === 'needsRecalibration', 'fingerprint invalidate');
+check(typeof profile.ownerLocalId === 'string' && profile.ownerLocalId.length > 0, 'profile has owner');
+check(typeof profile.characterLocalId === 'string' && profile.characterLocalId.length > 0, 'profile has character');
 
 // Skip semantics
-const session = mod.createLiveActPersonalCalibrationSessionV2('skip-test');
+const session = mod.createLiveActPersonalCalibrationSessionV2({
+  ownerLocalId: 'skip-owner',
+  characterLocalId: 'skip-test',
+});
 session.phaseIndex = 2; // eyesBrows
 check(mod.skipLiveActPersonalCalibrationPhase(session) === true, 'skip eyesBrows');
 check(session.skippedPhaseIds.includes('eyesBrows'), 'skipped recorded');
+
+// --- Scope isolation (behavioral) ---
+check(mod.isLiveActPersonalCalibrationScopeComplete(null) === false, 'null scope incomplete');
+check(
+  mod.isLiveActPersonalCalibrationScopeComplete({
+    ownerLocalId: 'o',
+    characterLocalId: 'draft',
+  }) === false,
+  'draft not persistable',
+);
+const scopeA1 = { ownerLocalId: 'owner-a', characterLocalId: 'char-1' };
+const scopeA2 = { ownerLocalId: 'owner-a', characterLocalId: 'char-2' };
+const scopeB1 = { ownerLocalId: 'owner-b', characterLocalId: 'char-1' };
+const keyA1 = mod.liveActPersonalCalibrationStorageKey(scopeA1);
+const keyA2 = mod.liveActPersonalCalibrationStorageKey(scopeA2);
+const keyB1 = mod.liveActPersonalCalibrationStorageKey(scopeB1);
+check(keyA1 !== keyA2, 'character isolation keys');
+check(keyA1 !== keyB1, 'owner isolation keys');
+check(!keyA1.includes('_default'), 'no default in key');
+check(!/:_default$|_default:/.test(keyA1), 'no default segment');
+
+function createMemoryStorage() {
+  const map = new Map();
+  return {
+    getItem: (k) => (map.has(k) ? map.get(k) : null),
+    setItem: (k, v) => {
+      map.set(String(k), String(v));
+    },
+    removeItem: (k) => {
+      map.delete(k);
+    },
+    clear: () => map.clear(),
+    get _size() {
+      return map.size;
+    },
+    _has(k) {
+      return map.has(k);
+    },
+  };
+}
+
+const mem = createMemoryStorage();
+globalThis.localStorage = mem;
+const profileA1 = { ...profile, ownerLocalId: 'owner-a', characterLocalId: 'char-1' };
+const profileA2 = {
+  ...profile,
+  ownerLocalId: 'owner-a',
+  characterLocalId: 'char-2',
+  createdAtLocalMs: profile.createdAtLocalMs + 1,
+};
+const profileB1 = {
+  ...profile,
+  ownerLocalId: 'owner-b',
+  characterLocalId: 'char-1',
+  createdAtLocalMs: profile.createdAtLocalMs + 2,
+};
+check(mod.saveLiveActPersonalCalibrationProfile(profileA1) === true, 'save A1');
+check(mod.saveLiveActPersonalCalibrationProfile(profileA2) === true, 'save A2');
+check(mod.saveLiveActPersonalCalibrationProfile(profileB1) === true, 'save B1');
+const loadA1 = mod.loadLiveActPersonalCalibrationProfile(scopeA1);
+const loadA2 = mod.loadLiveActPersonalCalibrationProfile(scopeA2);
+const loadB1 = mod.loadLiveActPersonalCalibrationProfile(scopeB1);
+check(loadA1.profile?.characterLocalId === 'char-1', 'load A1 character');
+check(loadA2.profile?.characterLocalId === 'char-2', 'load A2 character');
+check(loadB1.profile?.ownerLocalId === 'owner-b', 'load B1 owner');
+check(loadA1.profile?.createdAtLocalMs !== loadA2.profile?.createdAtLocalMs, 'A1 ≠ A2');
+check(loadA1.profile?.createdAtLocalMs !== loadB1.profile?.createdAtLocalMs, 'A1 ≠ B1');
+check(mod.loadLiveActPersonalCalibrationProfile(null).status === 'missing', 'no-scope no load');
+check(
+  mod.loadLiveActPersonalCalibrationProfile({
+    ownerLocalId: '',
+    characterLocalId: 'char-1',
+  }).status === 'missing',
+  'missing owner no load',
+);
+const incompleteSave = mod.saveLiveActPersonalCalibrationProfile({
+  ...profile,
+  ownerLocalId: '',
+  characterLocalId: 'char-1',
+});
+check(incompleteSave === false, 'incomplete scope no persist');
+check(!String(keyA1).includes('undefined'), 'key defined');
+
+// Persistence failure → false (session-only path)
+const throwingLs = {
+  getItem: () => null,
+  setItem: () => {
+    throw new Error('quota');
+  },
+  removeItem: () => {},
+};
+globalThis.localStorage = throwingLs;
+check(mod.saveLiveActPersonalCalibrationProfile(profileA1) === false, 'setItem throw → false');
+globalThis.localStorage = null;
+check(mod.saveLiveActPersonalCalibrationProfile(profileA1) === false, 'unavailable → false');
+globalThis.localStorage = createMemoryStorage();
+check(mod.loadLiveActPersonalCalibrationProfile(scopeA1).status === 'missing', 'reload after failed save absent');
+
+// --- Valid capture time gating ---
+function probeSample(presence = 1) {
+  const s = mod.createEmptyLiveActSourceSample();
+  s.faceIndex = 0;
+  s.presence = presence;
+  s.headYaw = 0.01;
+  s.headPitch = 0;
+  s.headRoll = 0;
+  s.eyeLeftX = 0;
+  s.eyeLeftY = 0;
+  s.eyeRightX = 0;
+  s.eyeRightY = 0;
+  return s;
+}
+
+const capSession = mod.createLiveActPersonalCalibrationSessionV2(scopeA1);
+const phase0 = mod.LIVEACT_PERSONAL_CALIBRATION_PHASES[0];
+const dt = 33;
+let t = 1000;
+for (let i = 0; i < 20; i += 1) {
+  t += dt;
+  check(
+    mod.pushLiveActPersonalCalibrationSample(capSession, probeSample(1), {
+      headPoseSupported: true,
+      nowMs: t,
+    }) === true,
+    'valid push',
+  );
+}
+const captureAfterBurst = capSession.validCaptureMs;
+check(captureAfterBurst > 0 && captureAfterBurst < 20 * dt + 1, 'capture ~burst');
+const beforeGap = capSession.validCaptureMs;
+t += 5000; // tracking lost 5s
+check(
+  mod.pushLiveActPersonalCalibrationSample(capSession, probeSample(1), {
+    headPoseSupported: true,
+    nowMs: t,
+  }) === true,
+  'recover push',
+);
+check(capSession.validCaptureMs - beforeGap <= mod.LIVEACT_PERSONAL_MAX_SAMPLE_GAP_MS, 'lost 5s not added');
+
+// 90% lost + one recovered frame cannot complete phase
+const wallSession = mod.createLiveActPersonalCalibrationSessionV2(scopeA1);
+wallSession.phaseStartedAtMs = 0;
+const fakeNow = phase0.durationMs + 10_000;
+check(
+  mod.isLiveActPersonalCalibrationPhaseComplete(wallSession, fakeNow) === false,
+  'wall clock alone incomplete',
+);
+mod.pushLiveActPersonalCalibrationSample(wallSession, probeSample(1), {
+  headPoseSupported: true,
+  nowMs: 1,
+});
+check(
+  mod.isLiveActPersonalCalibrationPhaseComplete(wallSession, phase0.durationMs + 50_000) === false,
+  'one frame cannot finish phase',
+);
+
+// Full valid phase completes at ~duration via capture clock
+const fullPhase = mod.createLiveActPersonalCalibrationSessionV2(scopeA1);
+let ft = 0;
+const framesNeeded = Math.ceil(phase0.durationMs / dt) + 5;
+for (let i = 0; i < framesNeeded; i += 1) {
+  ft += dt;
+  mod.pushLiveActPersonalCalibrationSample(fullPhase, probeSample(1), {
+    headPoseSupported: true,
+    nowMs: ft,
+  });
+}
+check(mod.isLiveActPersonalCalibrationPhaseComplete(fullPhase, ft) === true, 'full valid phase complete');
+check(
+  mod.liveActPersonalCalibrationPhaseRemainingSec(fullPhase) === 0,
+  'countdown reaches 0 on complete',
+);
+
+// Every phase only one valid frame → cannot finalize valid
+const sparse = mod.createLiveActPersonalCalibrationSessionV2(scopeA1);
+for (let p = 0; p < mod.LIVEACT_PERSONAL_CALIBRATION_PHASES.length; p += 1) {
+  sparse.phaseIndex = p;
+  sparse.validFrameCount = 0;
+  sparse.validCaptureMs = 0;
+  sparse.lastValidSampleTimestamp = 0;
+  mod.pushLiveActPersonalCalibrationSample(sparse, probeSample(1), {
+    headPoseSupported: true,
+    nowMs: (p + 1) * 1000,
+  });
+  if (p < mod.LIVEACT_PERSONAL_CALIBRATION_PHASES.length - 1) {
+    // Force advance without meeting capture requirements (simulates bug path)
+    sparse.phaseIndex += 1;
+    sparse.validFrameCount = 0;
+    sparse.validCaptureMs = 0;
+    sparse.lastValidSampleTimestamp = 0;
+  }
+}
+check(mod.hasLiveActPersonalCalibrationEnoughValidSamples(sparse) === false, 'sparse not enough');
+const sparseProfile = mod.finalizeLiveActPersonalCalibrationProfile(sparse, 1);
+check(sparseProfile.status !== 'valid', 'sparse profile not valid');
+
+// --- Classic overrides Personal for session (apply stage) ---
+const mapped = mod.createNeutralLiveActFrame(0);
+mapped.trackingLost = false;
+mapped.face = { ...mapped.face, mouthSmileLeft: 0.8, mouthSmileRight: 0.3 };
+const withPersonal = mod.stepLiveActCalibratedFrame(null, mapped, v1Set, undefined, 'v1-fixed', profile);
+const classicOnly = mod.stepLiveActCalibratedFrame(null, mapped, v1Set, undefined, 'v1-fixed', null);
+check(classicOnly.calibrated != null && withPersonal.calibrated != null, 'both apply paths produce frames');
+const personalWins =
+  Math.abs(withPersonal.calibrated.face.mouthSmileLeft - classicOnly.calibrated.face.mouthSmileLeft) > 1e-6 ||
+  Math.abs(withPersonal.calibrated.face.mouthSmileRight - classicOnly.calibrated.face.mouthSmileRight) > 1e-6;
+check(personalWins, 'personal profile changes apply vs classic-null override');
+// Stored premium still exists after classic session override simulation
+globalThis.localStorage = createMemoryStorage();
+check(mod.saveLiveActPersonalCalibrationProfile(profileA1) === true, 'premium still savable');
+check(mod.loadLiveActPersonalCalibrationProfile(scopeA1).status === 'valid', 'premium still loadable');
+
+// Engine classic clears personalProfile (source contract)
+check(/this\.personalProfile = null/.test(engine), 'classic/session clears personalProfile');
+check(/setPersonalCalibrationScope/.test(engine), 'engine scope API');
+check(/Gesicht nicht erkannt — Kalibrierung pausiert/.test(engine), 'lost tracking copy');
+check(/lokales Speichern nicht verfügbar/.test(engine), 'session-only copy');
+check(/persisted/.test(engine), 'persisted result field');
+
+// UI touch targets + wiring
+const settingsUi = read('src/app/character/avatar/AvatarPreviewSettings.tsx');
+check(/min-h-11[\s\S]*?liveact-calibrate-personal-v2/.test(settingsUi), 'premium min-h-11');
+check(/min-h-11[\s\S]*?liveact-personal-calib-skip/.test(settingsUi), 'skip min-h-11');
+check(/setPersonalCalibrationScope/.test(read('src/app/character/liveact/useLiveActViewport.ts')), 'viewport scope wire');
+check(/getAuthenticatedUserId/.test(read('src/app/character/avatar/AvatarSurfaceViewer.tsx')), 'owner from auth');
+check(/personalCalibrationCharacterLocalId:\s*surfaceRef\.characterId/.test(read('src/app/character/avatar/AvatarSurfaceViewer.tsx')), 'character from surfaceRef');
+
+// AU acceptance references
+check(/AU-01/.test(acceptance) && /AU-02/.test(acceptance) && /AU-15/.test(acceptance), 'AU gates');
+check(/AU-03[\s\S]*N\/A/.test(acceptance), 'AU-03 N/A documented');
+check(/owner \+ character|owner\+character|ownerLocalId/.test(acceptance), 'acceptance scope');
+check(/valid capture/i.test(acceptance), 'acceptance capture validity');
+check(/session-only|Sitzung/.test(acceptance), 'acceptance persistence degraded');
+check(/Classic|Klassisch/.test(acceptance), 'acceptance classic override');
+check(/ownerLocalId/.test(design) && /validCaptureMs|valid capture/i.test(design), 'design scope+capture');
 
 const evidenceDir = join(root, '.qa/evidence/liveact-personal-calibration-v2');
 mkdirSync(evidenceDir, { recursive: true });

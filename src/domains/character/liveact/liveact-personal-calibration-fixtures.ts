@@ -70,13 +70,19 @@ export function buildPersonalCalibrationActorSession(): {
   profile: LiveActCalibrationProfileV2;
   v1Set: LiveActCalibrationSetV1;
 } {
-  const session = createLiveActPersonalCalibrationSessionV2('fixture-actor');
+  const session = createLiveActPersonalCalibrationSessionV2({
+    ownerLocalId: 'fixture-owner',
+    characterLocalId: 'fixture-actor',
+  });
   let t = 0;
   const dt = 1000 / 30;
 
   for (let phaseIndex = 0; phaseIndex < LIVEACT_PERSONAL_CALIBRATION_PHASES.length; phaseIndex += 1) {
     session.phaseIndex = phaseIndex;
     session.phaseStartedAtMs = t;
+    session.validFrameCount = 0;
+    session.validCaptureMs = 0;
+    session.lastValidSampleTimestamp = 0;
     const phase = LIVEACT_PERSONAL_CALIBRATION_PHASES[phaseIndex]!;
     const frames = Math.ceil(phase.durationMs / dt);
     for (let i = 0; i < frames; i += 1) {
@@ -132,7 +138,10 @@ export function buildPersonalCalibrationActorSession(): {
       }
 
       sample.face = face as LiveActFaceChannels;
-      pushLiveActPersonalCalibrationSample(session, sample, { headPoseSupported: true });
+      pushLiveActPersonalCalibrationSample(session, sample, {
+        headPoseSupported: true,
+        nowMs: t,
+      });
     }
     if (phaseIndex < LIVEACT_PERSONAL_CALIBRATION_PHASES.length - 1) {
       advanceLiveActPersonalCalibrationPhase(session);

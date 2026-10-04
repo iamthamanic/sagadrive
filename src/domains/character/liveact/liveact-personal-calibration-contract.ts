@@ -111,14 +111,22 @@ export interface LiveActPersonalSpeechEvidenceV2 {
   readonly sampleCount: number;
 }
 
+/** Authenticated owner + stable character identity — required for persistence. */
+export interface LiveActPersonalCalibrationScopeV1 {
+  readonly ownerLocalId: string;
+  readonly characterLocalId: string;
+}
+
 export interface LiveActCalibrationProfileV2 {
   readonly contractVersion: typeof LIVEACT_PERSONAL_CALIBRATION_CONTRACT;
   readonly policyVersion: typeof LIVEACT_PERSONAL_CALIBRATION_POLICY_VERSION;
   readonly solverFingerprint: LiveActSolverFingerprintV1;
   /** Local wall-clock ms when finalized (metadata only; not used in apply math). */
   readonly createdAtLocalMs: number;
-  /** Non-biometric local handle (character id / slot). */
-  readonly characterLocalId: string | null;
+  /** Authenticated account / user id (non-biometric). */
+  readonly ownerLocalId: string;
+  /** Stable character domain id (not model URL / preset name). */
+  readonly characterLocalId: string;
   readonly status: LiveActPersonalProfileStatus;
   readonly head: LiveActPersonalHeadCalibV2;
   readonly gaze: LiveActPersonalGazeCalibV2;
@@ -218,9 +226,36 @@ export const LIVEACT_PERSONAL_MIN_USABLE_SPAN = 0.12 as const;
 export const LIVEACT_PERSONAL_WEAK_SPAN = 0.06 as const;
 export const LIVEACT_PERSONAL_MAX_GAIN = 4 as const;
 export const LIVEACT_PERSONAL_NOISE_DEADZONE_MULT = 1.5 as const;
+/** Max gap between consecutive valid samples that still accumulates capture time. */
+export const LIVEACT_PERSONAL_MAX_SAMPLE_GAP_MS = 100 as const;
+/** Minimum valid frames per phase (skipped phases exempt). */
+export const LIVEACT_PERSONAL_MIN_PHASE_FRAMES = 12 as const;
 export const LIVEACT_PERSONAL_STORAGE_KEY_PREFIX = 'sagadrive.liveact.calibrationProfile.v2:' as const;
 
-export function liveActPersonalCalibrationStorageKey(characterLocalId: string | null): string {
-  const id = characterLocalId && characterLocalId.length > 0 ? characterLocalId : '_default';
-  return `${LIVEACT_PERSONAL_STORAGE_KEY_PREFIX}${id}`;
+/** Draft / unsaved characters must not share a persistent key. */
+export function isLiveActPersonalPersistableCharacterId(characterLocalId: string): boolean {
+  const id = characterLocalId.trim();
+  return id.length > 0 && id !== 'draft' && id !== '_default';
+}
+
+export function isLiveActPersonalCalibrationScopeComplete(
+  scope: LiveActPersonalCalibrationScopeV1 | null | undefined,
+): scope is LiveActPersonalCalibrationScopeV1 {
+  if (!scope) return false;
+  const owner = scope.ownerLocalId.trim();
+  const character = scope.characterLocalId.trim();
+  return owner.length > 0 && isLiveActPersonalPersistableCharacterId(character);
+}
+
+/**
+ * Storage key requires owner + character. No shared `_default` fallback.
+ * Callers must only invoke when {@link isLiveActPersonalCalibrationScopeComplete}.
+ */
+export function liveActPersonalCalibrationStorageKey(
+  scope: LiveActPersonalCalibrationScopeV1,
+): string {
+  return (
+    LIVEACT_PERSONAL_STORAGE_KEY_PREFIX +
+    `${encodeURIComponent(scope.ownerLocalId.trim())}:${encodeURIComponent(scope.characterLocalId.trim())}`
+  );
 }

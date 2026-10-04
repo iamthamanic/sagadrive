@@ -68,10 +68,73 @@ Skip/N/A marks capability without huge gains.
 - Cross-talk: counterpart peak during intended unilateral actions (evidence)
 - Convert to apply: neutral subtract + deadzone + sparse gains (cap retained)
 
-## Persistence
+## Persistence Scope
 
-Device-local `localStorage` only. Derived scalars. No cloud / Supabase / telemetry.
-No webcam/mesh/iris/raw series.
+```text
+ownerLocalId (authenticated account)
++
+characterLocalId (stable character domain id)
+```
+
+Storage key (semantic):
+
+```text
+sagadrive.liveact.calibrationProfile.v2:<owner>:<character>
+```
+
+No shared `_default` key. Incomplete scope ⇒ **no persistent load/save**
+(session-only capture allowed; fail closed).
+
+Draft characters (`draft`) are not persistable.
+
+## Missing Scope
+
+```text
+session-only / no persistent profile
+```
+
+Engine must not load or write a fallback profile when owner or character is unknown.
+
+## Capture Clock
+
+```text
+valid capture duration (validCaptureMs)
+not wall time
+```
+
+- Only bounded gaps between consecutive valid samples accumulate (`≤ maxSampleGapMs`)
+- Tracking lost pauses progress and countdown
+- Phase completion requires `validCaptureMs ≥ phase.durationMs` **and** min valid frames
+- One recovered frame after a long dropout cannot finish a phase
+
+## Calibration Mode
+
+```text
+Personal V2  — fingerprint-bound local profile; preferred path
+Classic V1   — session-only override when explicitly started
+```
+
+When the user starts **Klassisch kalibrieren**:
+
+- Runtime `personalProfile` is cleared for the session so Classic baseline/range actually apply
+- Persisted Premium profile is **not** deleted
+- New engine / reload with scope may load Premium again
+
+## Persistence Failure
+
+```text
+profile remains session-active
+but not persisted
+```
+
+UI must not claim „gespeichert“ when `localStorage` write fails.
+Copy: session-only / Speichern nicht verfügbar.
+
+## Privacy
+
+Persists only derived calibration scalars, ranges, noise floor, capability/N/A, fingerprint.
+Never: raw landmarks, iris points, webcam frames, face time-series, audio/video.
+No network/cloud.
 
 ## A/B
 

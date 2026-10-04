@@ -607,7 +607,7 @@ export function AvatarPreviewSettings({
                         size="sm"
                         variant="outline"
                         disabled={actionsDisabled}
-                        className="h-8 w-full border-white/15 text-xs"
+                        className="min-h-11 w-full border-white/15 text-xs"
                         data-testid="liveact-personal-calib-skip"
                         title="Phase überspringen (N/A / motorisch nicht möglich)"
                         onClick={onSkipPersonalCalibrationPhase}
@@ -624,7 +624,7 @@ export function AvatarPreviewSettings({
                         size="sm"
                         variant="default"
                         disabled={actionsDisabled}
-                        className="h-8 w-full text-xs"
+                        className="min-h-11 w-full text-xs"
                         data-testid="liveact-calibrate-personal-v2"
                         title="Premium-Kalibrierung ca. 20–40 s — lokales Profil (Neutral, Range, Noise)"
                         onClick={onCalibratePersonalV2}

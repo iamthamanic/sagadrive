@@ -8,10 +8,12 @@
 | Gate | Result |
 |------|--------|
 | personal-calibration-v2-check | PASS |
+| test-gate | PASS |
 | #448 temporal regression | PASS |
 | #446 / #447 regression | PASS |
 | verify-ticket | PASS |
+| verify-ui | PASS |
 | composition-gate | CLEAR |
 | review-ticket | ACCEPT |
 
-Do not merge until CI green + explicit request. Do not start #450.
+Do not merge until CI green on final HEAD + unresolved threads = 0. Do not start #450.

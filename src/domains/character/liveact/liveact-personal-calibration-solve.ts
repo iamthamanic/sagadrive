@@ -31,12 +31,16 @@ import {
   LIVEACT_PERSONAL_CALIBRATION_PHASES,
   LIVEACT_PERSONAL_CALIBRATION_POLICY_VERSION,
   LIVEACT_PERSONAL_MAX_GAIN,
+  LIVEACT_PERSONAL_MAX_SAMPLE_GAP_MS,
+  LIVEACT_PERSONAL_MIN_PHASE_FRAMES,
   LIVEACT_PERSONAL_MIN_USABLE_SPAN,
   LIVEACT_PERSONAL_NOISE_DEADZONE_MULT,
   LIVEACT_PERSONAL_WEAK_SPAN,
   createLiveActSolverFingerprintV1,
+  isLiveActPersonalCalibrationScopeComplete,
   liveActSolverFingerprintsEqual,
   type LiveActCalibrationProfileV2,
+  type LiveActPersonalCalibrationScopeV1,
   type LiveActPersonalCapability,
   type LiveActPersonalChannelCalibV2,
   type LiveActPersonalCalibrationPhaseId,
@@ -50,7 +54,14 @@ export interface LiveActPersonalPhaseSampleBucket {
 
 export interface LiveActPersonalCalibrationSessionV2 {
   phaseIndex: number;
+  /** Wall-clock phase open (diagnostics only; completion uses validCaptureMs). */
   phaseStartedAtMs: number;
+  /** Valid samples accepted in the current phase. */
+  validFrameCount: number;
+  /** Accumulated capture time from bounded consecutive valid sample gaps. */
+  validCaptureMs: number;
+  /** Timestamp of last accepted valid sample in the current phase (0 = none). */
+  lastValidSampleTimestamp: number;
   skippedPhaseIds: string[];
   /** Per phase id → channel → samples */
   phaseValues: Record<string, Record<string, number[]>>;
@@ -66,15 +77,28 @@ export interface LiveActPersonalCalibrationSessionV2 {
   speechVelocityAbsSum: number;
   speechVelocityCount: number;
   headPoseSupported: boolean;
-  characterLocalId: string | null;
+  ownerLocalId: string;
+  characterLocalId: string;
+}
+
+function resetPhaseCaptureClock(session: LiveActPersonalCalibrationSessionV2): void {
+  session.phaseStartedAtMs = 0;
+  session.validFrameCount = 0;
+  session.validCaptureMs = 0;
+  session.lastValidSampleTimestamp = 0;
 }
 
 export function createLiveActPersonalCalibrationSessionV2(
-  characterLocalId: string | null = null,
+  scope: LiveActPersonalCalibrationScopeV1 | null = null,
 ): LiveActPersonalCalibrationSessionV2 {
+  const ownerLocalId = scope?.ownerLocalId?.trim() ?? '';
+  const characterLocalId = scope?.characterLocalId?.trim() ?? '';
   return {
     phaseIndex: 0,
     phaseStartedAtMs: 0,
+    validFrameCount: 0,
+    validCaptureMs: 0,
+    lastValidSampleTimestamp: 0,
     skippedPhaseIds: [],
     phaseValues: {},
     headYaw: [],
@@ -89,6 +113,7 @@ export function createLiveActPersonalCalibrationSessionV2(
     speechVelocityAbsSum: 0,
     speechVelocityCount: 0,
     headPoseSupported: true,
+    ownerLocalId,
     characterLocalId,
   };
 }
@@ -109,13 +134,33 @@ function ensurePhaseChannel(
 export function pushLiveActPersonalCalibrationSample(
   session: LiveActPersonalCalibrationSessionV2,
   sample: LiveActSourceSample,
-  options: { headPoseSupported: boolean; limits?: LiveActLimits } = { headPoseSupported: true },
+  options: {
+    headPoseSupported: boolean;
+    limits?: LiveActLimits;
+    /** Monotonic sample clock (ms). Required for valid-capture accumulation. */
+    nowMs?: number;
+  } = { headPoseSupported: true },
 ): boolean {
   const limits = options.limits ?? DEFAULT_LIVEACT_LIMITS;
   if (!isValidLiveActCalibrationSample(sample, limits)) return false;
   const phase = LIVEACT_PERSONAL_CALIBRATION_PHASES[session.phaseIndex];
   if (!phase) return false;
   session.headPoseSupported = session.headPoseSupported && options.headPoseSupported;
+
+  const nowMs =
+    typeof options.nowMs === 'number' && Number.isFinite(options.nowMs) ? options.nowMs : 0;
+  if (nowMs > 0) {
+    if (session.phaseStartedAtMs <= 0) session.phaseStartedAtMs = nowMs;
+    if (session.lastValidSampleTimestamp > 0) {
+      const gap = nowMs - session.lastValidSampleTimestamp;
+      if (gap > 0 && gap <= LIVEACT_PERSONAL_MAX_SAMPLE_GAP_MS) {
+        session.validCaptureMs += gap;
+      }
+      // Large gaps (tracking lost) do not accumulate capture time.
+    }
+    session.lastValidSampleTimestamp = nowMs;
+  }
+  session.validFrameCount += 1;
 
   pushNum(session.headYaw, sample.headYaw);
   pushNum(session.headPitch, sample.headPitch);
@@ -164,25 +209,55 @@ export function advanceLiveActPersonalCalibrationPhase(
     return false;
   }
   session.phaseIndex += 1;
-  session.phaseStartedAtMs = 0;
+  resetPhaseCaptureClock(session);
   return true;
 }
 
+/**
+ * Valid capture duration for the current phase (not wall-clock elapsed).
+ * `nowMs` is accepted for API stability; progress is driven by accumulated sample gaps.
+ */
 export function liveActPersonalCalibrationPhaseElapsed(
   session: LiveActPersonalCalibrationSessionV2,
-  nowMs: number,
+  _nowMs?: number,
 ): number {
-  if (!Number.isFinite(nowMs) || session.phaseStartedAtMs <= 0) return 0;
-  return Math.max(0, nowMs - session.phaseStartedAtMs);
+  return Math.max(0, session.validCaptureMs);
 }
 
 export function isLiveActPersonalCalibrationPhaseComplete(
   session: LiveActPersonalCalibrationSessionV2,
-  nowMs: number,
+  _nowMs?: number,
 ): boolean {
   const phase = LIVEACT_PERSONAL_CALIBRATION_PHASES[session.phaseIndex];
   if (!phase) return true;
-  return liveActPersonalCalibrationPhaseElapsed(session, nowMs) >= phase.durationMs;
+  if (session.validFrameCount < LIVEACT_PERSONAL_MIN_PHASE_FRAMES) return false;
+  return session.validCaptureMs >= phase.durationMs;
+}
+
+/** Remaining valid-capture seconds for UI countdown (pauses when tracking lost). */
+export function liveActPersonalCalibrationPhaseRemainingSec(
+  session: LiveActPersonalCalibrationSessionV2,
+): number | null {
+  const phase = LIVEACT_PERSONAL_CALIBRATION_PHASES[session.phaseIndex];
+  if (!phase) return null;
+  const remainingMs = Math.max(0, phase.durationMs - session.validCaptureMs);
+  return Math.ceil(remainingMs / 1000);
+}
+
+/**
+ * Guard against finalizing a profile from sparse/recovered single frames.
+ * Phases only advance when validCaptureMs + min frames are met (or skipped);
+ * this session-level check blocks a single-frame “success” path.
+ */
+export function hasLiveActPersonalCalibrationEnoughValidSamples(
+  session: LiveActPersonalCalibrationSessionV2,
+): boolean {
+  const requiredPhases = LIVEACT_PERSONAL_CALIBRATION_PHASES.filter(
+    (p) => !session.skippedPhaseIds.includes(p.id),
+  ).length;
+  return (
+    session.headYaw.length >= LIVEACT_PERSONAL_MIN_PHASE_FRAMES * Math.max(1, requiredPhases)
+  );
 }
 
 function quantile(values: readonly number[], q: number): number {
@@ -426,13 +501,25 @@ export function finalizeLiveActPersonalCalibrationProfile(
       ? session.speechJaw.filter((v) => v >= 0.98).length / session.speechJaw.length
       : 0;
 
+  const scope: LiveActPersonalCalibrationScopeV1 = {
+    ownerLocalId: session.ownerLocalId,
+    characterLocalId: session.characterLocalId,
+  };
+  const enough = hasLiveActPersonalCalibrationEnoughValidSamples(session);
+  const status: LiveActPersonalProfileStatus = enough ? 'valid' : 'incompatible';
+
   return {
     contractVersion: LIVEACT_PERSONAL_CALIBRATION_CONTRACT,
     policyVersion: LIVEACT_PERSONAL_CALIBRATION_POLICY_VERSION,
     solverFingerprint: createLiveActSolverFingerprintV1(),
     createdAtLocalMs,
-    characterLocalId: session.characterLocalId,
-    status: 'valid',
+    ownerLocalId: isLiveActPersonalCalibrationScopeComplete(scope)
+      ? scope.ownerLocalId
+      : session.ownerLocalId,
+    characterLocalId: isLiveActPersonalCalibrationScopeComplete(scope)
+      ? scope.characterLocalId
+      : session.characterLocalId,
+    status,
     head: {
       neutralYaw: headNeutralYaw,
       neutralPitch: headNeutralPitch,

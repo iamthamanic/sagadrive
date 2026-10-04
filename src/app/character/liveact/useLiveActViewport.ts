@@ -69,6 +69,12 @@ export interface UseLiveActViewportOptions {
   getBonesAvailable?: () => boolean;
   /** Bump when the studio runtime loads or swaps models. */
   modelRevision?: number;
+  /**
+   * Personal Calibration V2 persistence scope (#449).
+   * Must be authenticated owner + stable character id — never model URL / draft.
+   */
+  personalCalibrationOwnerLocalId?: string | null;
+  personalCalibrationCharacterLocalId?: string | null;
 }
 
 export interface UseLiveActViewportResult {
@@ -162,6 +168,8 @@ export function useLiveActViewport({
   getLiveActAvatarCapabilities,
   getBonesAvailable,
   modelRevision = 0,
+  personalCalibrationOwnerLocalId = null,
+  personalCalibrationCharacterLocalId = null,
 }: UseLiveActViewportOptions): UseLiveActViewportResult {
   const engineRef = useRef<LiveActEngine | null>(null);
   const getAvatarCapsRef = useRef(getLiveActAvatarCapabilities);
@@ -485,6 +493,25 @@ export function useLiveActViewport({
       setComposedCapabilities(null);
     };
   }, [enabled]);
+
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    const owner = personalCalibrationOwnerLocalId?.trim() || '';
+    const character = personalCalibrationCharacterLocalId?.trim() || '';
+    if (owner && character && character !== 'draft') {
+      engine.setPersonalCalibrationScope({
+        ownerLocalId: owner,
+        characterLocalId: character,
+      });
+    } else {
+      engine.setPersonalCalibrationScope(null);
+    }
+  }, [
+    enabled,
+    personalCalibrationOwnerLocalId,
+    personalCalibrationCharacterLocalId,
+  ]);
 
   useEffect(() => {
     if (!enabled || !runtimeReady) return;
