@@ -379,6 +379,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Live Program Output (#365): presentation state + display runtime...');
+  execFileSync(process.execPath, ['scripts/live-program-output-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {

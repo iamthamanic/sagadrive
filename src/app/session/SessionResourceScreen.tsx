@@ -5,8 +5,8 @@
 import { Button } from '../../shared/ui/button';
 import { GamemasterPanel } from './GamemasterPanel';
 import { PlayerPanel } from './PlayerPanel';
-import { SharedScenePresentationView } from './SharedScenePresentationView';
-import { useSharedScenePresentation } from './hooks/useSharedScenePresentation';
+import { ProgramDisplayShell } from './program/ProgramDisplayShell';
+import { useProgramPresentation } from './hooks/useProgramPresentation';
 import type { LiveViewId, SessionPhaseRouteId } from '../shell';
 
 type SessionResourceScreenProps = {
@@ -63,7 +63,6 @@ export function SessionResourceScreen({
       <SessionDisplayView
         sagaPublicId={sagaPublicId}
         sessionPublicId={sessionPublicId}
-        onNavigateHome={onNavigateHome}
       />
     );
   }
@@ -105,49 +104,28 @@ export function SessionResourceScreen({
 }
 
 /**
- * SessionDisplayView — Shared tabletop display surface for scene presentation (#301).
+ * SessionDisplayView — control-free Program Output display runtime (#365).
  * Location: colocated in SessionResourceScreen.tsx
+ * URL alone grants no access; chrome/controls intentionally omitted.
  */
 function SessionDisplayView({
   sagaPublicId,
   sessionPublicId,
-  onNavigateHome,
 }: {
   sagaPublicId: string;
   sessionPublicId: string;
-  onNavigateHome: () => void;
 }) {
-  const { presentation, sceneId, isLoading, error, resync } = useSharedScenePresentation({
+  const { readModel, isLoading, error } = useProgramPresentation({
     sagaPublicId,
     sessionPublicId,
   });
 
   return (
-    <div className="flex h-full min-h-0 flex-col" data-session-display="v1">
-      <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground">
-        Live Display · {sagaPublicId} / {sessionPublicId} — URL gewährt keine Rechte
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex max-w-4xl flex-col gap-4 p-4 md:p-8">
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Szene wird geladen…</p>
-          ) : null}
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <SharedScenePresentationView
-            presentation={presentation}
-            sceneIdFallback={sceneId}
-          />
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => void resync()}>
-              Neu laden
-            </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={onNavigateHome}>
-              Zurück
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ProgramDisplayShell
+      readModel={readModel}
+      isLoading={isLoading}
+      error={error}
+    />
   );
 }
 

@@ -3,3 +3,4 @@
  * Location: src/domains/session/index.ts
  */
 export * from './contracts';
+export * from './presentation';

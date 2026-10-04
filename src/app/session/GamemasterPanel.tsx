@@ -19,8 +19,10 @@ import { SessionAvatarStrip } from './SessionAvatarStrip';
 import { PlayerAvatarPanel } from '../character';
 import { createCharacterStudioAvatar } from '../../domains/character/use-cases/avatar-presets';
 import { SharedSceneGmControls } from './SharedSceneGmControls';
+import { ProgramGmControls } from './program/ProgramGmControls';
 import { CombatEncounterGmPanel } from './CombatEncounterGmPanel';
 import { useSharedScenePresentation } from './hooks/useSharedScenePresentation';
+import { useProgramPresentation } from './hooks/useProgramPresentation';
 import { useCombatEncounter } from './hooks/useCombatEncounter';
 
 type GamemasterPanelProps = {
@@ -46,6 +48,10 @@ export function GamemasterPanel({
       ? { sagaPublicId, sessionPublicId }
       : null;
   const sharedScene = useSharedScenePresentation({
+    sagaPublicId: sceneRuntime?.sagaPublicId ?? '',
+    sessionPublicId: sceneRuntime?.sessionPublicId ?? '',
+  });
+  const program = useProgramPresentation({
     sagaPublicId: sceneRuntime?.sagaPublicId ?? '',
     sessionPublicId: sceneRuntime?.sessionPublicId ?? '',
   });
@@ -233,12 +239,18 @@ export function GamemasterPanel({
 
               <TabsContent value="scenes" className="space-y-3 md:space-y-4">
                 {sceneRuntime ? (
-                  <SharedSceneGmControls
-                    presentation={sharedScene.presentation}
-                    isBusy={sharedScene.isPublishing || sharedScene.isLoading}
-                    error={sharedScene.error}
-                    onPublish={sharedScene.publishScene}
-                  />
+                  <>
+                    <SharedSceneGmControls
+                      presentation={sharedScene.presentation}
+                      isBusy={sharedScene.isPublishing || sharedScene.isLoading}
+                      error={sharedScene.error}
+                      onPublish={sharedScene.publishScene}
+                    />
+                    <ProgramGmControls
+                      isSwitching={program.isSwitching}
+                      onSwitch={program.switchProgram}
+                    />
+                  </>
                 ) : (
                   <div>
                     <h4 className="mb-3 text-sm md:text-base">Szenen-Bibliothek</h4>
