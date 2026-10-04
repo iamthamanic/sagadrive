@@ -21,4 +21,7 @@ export { useSessionRuntime } from './hooks/useSessionRuntime';
 export { usePlayerPanel } from './hooks/usePlayerPanel';
 export { useSharedScenePresentation } from './hooks/useSharedScenePresentation';
 export { useProgramPresentation } from './hooks/useProgramPresentation';
+export { useSessionKnowledge } from './hooks/useSessionKnowledge';
+export { KnowledgeGmControls } from './knowledge/KnowledgeGmControls';
+export { KnowledgeFeed } from './knowledge/KnowledgeFeed';
 export { useCombatEncounter } from './hooks/useCombatEncounter';

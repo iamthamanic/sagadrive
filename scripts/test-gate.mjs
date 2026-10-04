@@ -389,6 +389,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Session Knowledge / Reveals (#367): audience projections + reveal command...');
+  execFileSync(process.execPath, ['scripts/session-knowledge-reveals-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {
