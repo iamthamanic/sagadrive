@@ -19,7 +19,8 @@ export type SessionEventKind =
   | 'scene'
   | 'combat'
   | 'gameplay'
-  | 'program';
+  | 'program'
+  | 'reveal';
 
 const EVENT_KINDS: readonly SessionEventKind[] = [
   'join',
@@ -33,6 +34,7 @@ const EVENT_KINDS: readonly SessionEventKind[] = [
   'combat',
   'gameplay',
   'program',
+  'reveal',
 ] as const;
 
 export interface SessionPresenceEntry {

@@ -20,9 +20,12 @@ import { PlayerAvatarPanel } from '../character';
 import { createCharacterStudioAvatar } from '../../domains/character/use-cases/avatar-presets';
 import { SharedSceneGmControls } from './SharedSceneGmControls';
 import { ProgramGmControls } from './program/ProgramGmControls';
+import { KnowledgeGmControls } from './knowledge/KnowledgeGmControls';
+import { KnowledgeFeed } from './knowledge/KnowledgeFeed';
 import { CombatEncounterGmPanel } from './CombatEncounterGmPanel';
 import { useSharedScenePresentation } from './hooks/useSharedScenePresentation';
 import { useProgramPresentation } from './hooks/useProgramPresentation';
+import { useSessionKnowledge } from './hooks/useSessionKnowledge';
 import { useCombatEncounter } from './hooks/useCombatEncounter';
 
 type GamemasterPanelProps = {
@@ -54,6 +57,11 @@ export function GamemasterPanel({
   const program = useProgramPresentation({
     sagaPublicId: sceneRuntime?.sagaPublicId ?? '',
     sessionPublicId: sceneRuntime?.sessionPublicId ?? '',
+  });
+  const knowledge = useSessionKnowledge({
+    sagaPublicId: sceneRuntime?.sagaPublicId ?? '',
+    sessionPublicId: sceneRuntime?.sessionPublicId ?? '',
+    access: { role: 'gamemaster', capabilities: [], characterId: null },
   });
   const combat = useCombatEncounter({
     sagaPublicId: sceneRuntime?.sagaPublicId ?? '',
@@ -250,6 +258,14 @@ export function GamemasterPanel({
                       isSwitching={program.isSwitching}
                       onSwitch={program.switchProgram}
                     />
+                    <KnowledgeGmControls
+                      isBusy={knowledge.isRevealing || knowledge.isLoading}
+                      onReveal={knowledge.reveal}
+                    />
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium">Knowledge (GM)</h4>
+                      <KnowledgeFeed projection={knowledge.projection} />
+                    </div>
                   </>
                 ) : (
                   <div>
