@@ -169,7 +169,7 @@ export const GM_ACTION_CATALOG: readonly GmActionDescriptor[] = [
     id: 'trigger-cue',
     group: 'presentation',
     label: 'Cue auslösen',
-    description: 'Presentation cue (#375 Director) — descriptor reserved.',
+    description: 'Director Cue auf Program legen (manueller Override).',
     runtimeKind: 'cue',
     requiresConfirm: false,
     gameplay: false,
@@ -223,7 +223,8 @@ export function isExecutableGmRuntimeKind(kind: string): boolean {
     kind === 'condition' ||
     kind === 'gameplay' ||
     kind === 'life' ||
-    kind === 'adventure'
+    kind === 'adventure' ||
+    kind === 'cue'
   );
 }
 
@@ -407,7 +408,14 @@ export function resolveGmActionCommand(input: {
         actionId: action.id,
         kind: 'cue',
         requiresConfirm: false,
-        payload: { note: input.note ?? null },
+        payload: {
+          op: 'apply_cue',
+          trigger: 'manual',
+          manual: true,
+          overlayText: input.note ?? null,
+          source: { kind: 'shared-scene' },
+          layout: { kind: 'fullscreen-16x9' },
+        },
       };
   }
 }
