@@ -429,6 +429,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Session Death Lifecycle (#373): downed / stabilize / dead...');
+  execFileSync(process.execPath, ['scripts/session-death-lifecycle-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {

@@ -253,6 +253,8 @@ export function GamemasterLiveScreen({
         combatActive={combat.combatActive}
         isBusy={combat.isBusy || combat.isLoading}
         error={combat.error}
+        sessionId={combat.sessionId ?? runtimeSessionId}
+        access={gmAccess}
         onStart={async (participants) => combat.runCombat({ action: 'start', participants })}
         onEnd={async () => combat.runCombat({ action: 'end' })}
         onNextTurn={async () => combat.runCombat({ action: 'nextTurn' })}
