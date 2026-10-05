@@ -200,9 +200,9 @@ export const PREPARED_ADVENTURE_FIXTURE: PreparedAdventureFixture = {
   fixtureId: PLAYER_TEST_PREPARED_ADVENTURE_FIXTURE_ID,
   schemaVersion: PREPARED_ADVENTURE_FIXTURE_SCHEMA_VERSION,
   worldModulePackId: PREPARED_ADVENTURE_WORLD_MODULE_PACK_ID,
-  adventureName: 'Waldschatten-Probeabenteuer',
+  adventureName: 'Das Flüstern unter Dornhain (Foundation)',
   adventureDescription:
-    'Player-Test-Abenteuer (Stufe 2): Taverne → Wald → Banditen, mit Heiltrank und Drive/Momentum.',
+    'Foundation-Fixture (#302) für das Golden Adventure Package package:dornhain.whisper.v1 — Taverne/Wald/Banditen mit Heiltrank; volle Sandbox-State in #377.',
   level: 2,
   beats: FIXTURE_BEATS,
   pregens: FIXTURE_PREGENS,

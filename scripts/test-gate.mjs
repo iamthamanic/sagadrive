@@ -449,6 +449,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Golden Adventure Dornhain (#377): package instantiate...');
+  execFileSync(process.execPath, ['scripts/golden-adventure-dornhain-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {
