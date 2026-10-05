@@ -82,7 +82,7 @@ mustInclude(
 
 mustInclude(
   'src/app/session/SessionResourceScreen.tsx',
-  ['liveView === \'display\'', 'SessionDisplayView', 'GamemasterPanel sagaPublicId'],
+  ['liveView === \'display\'', 'SessionDisplayView', 'GamemasterLiveScreen'],
   'session resource wiring',
 );
 
