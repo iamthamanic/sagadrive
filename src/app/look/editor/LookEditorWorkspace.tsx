@@ -10,7 +10,7 @@ import { AdaptiveLiveStage, useAdaptiveBand } from '../../../shared/ui/adaptive'
 import { Button } from '../../../shared/ui/button';
 import { LookEditorInspector } from './LookEditorInspector';
 import { LookEditorNav } from './LookEditorNav';
-import { LookPreviewStageStub } from './LookPreviewStageStub';
+import { LookPreviewStage } from './LookPreviewStage';
 import type { LookEditorSectionId } from './look-editor-sections';
 import { useLookEditor, type LookEditorMode } from './useLookEditor';
 
@@ -125,7 +125,10 @@ export function LookEditorWorkspace({
                 <LookEditorNav section={section} onSectionChange={setSection} />
               </div>
             ) : null}
-            <LookPreviewStageStub
+            <LookPreviewStage
+              draft={editor.draft}
+              baseline={editor.baseline}
+              versions={editor.versions}
               displayName={editor.draft.displayName}
               versionLabel={versionLabel}
             />

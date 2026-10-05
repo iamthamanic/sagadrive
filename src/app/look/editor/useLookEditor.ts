@@ -166,6 +166,7 @@ export function useLookEditor({ mode, lookId, onCreated }: UseLookEditorArgs) {
 
   return {
     draft,
+    baseline,
     patchDraft,
     record,
     versions,
