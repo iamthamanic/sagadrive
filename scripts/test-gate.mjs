@@ -419,6 +419,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Generic GM Actions (#371): catalog + palette...');
+  execFileSync(process.execPath, ['scripts/generic-gm-actions-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {
