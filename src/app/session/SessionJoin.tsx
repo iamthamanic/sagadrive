@@ -14,13 +14,19 @@ import { Label } from '../../shared/ui/label';
 import { ArrowLeft, Users, Gamepad2, Copy, Check, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { useProjects } from '../project';
+import { useCharacterSummaries } from '../character';
 import { useSessions } from './hooks/useSessions';
 import { PreparedAdventureFixturePanel } from './PreparedAdventureFixturePanel';
+import {
+  assertOwnedCharacterId,
+  resolveCharacterAssignmentPick,
+} from '../../domains/session/contracts/player-character-assignment';
 import { toast } from 'sonner';
 
 export type SessionJoinSurfaceMeta = {
   sagaPublicId: string | null;
   sessionPublicId: string | null;
+  characterPublicId?: string | null;
 };
 
 interface SessionJoinProps {
@@ -61,9 +67,19 @@ export function SessionJoin({
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [createdSession, setCreatedSession] = useState<{ id: string; code: string } | null>(null);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string>('');
 
   const { sessions, createSession, joinSession } = useSessions();
   const { projects } = useProjects();
+  const { characters, isLoading: charactersLoading } = useCharacterSummaries({ enabled: true });
+  const assignable = characters
+    .filter((c) => Boolean(c.id) && Boolean(c.publicId))
+    .map((c) => ({
+      id: c.id,
+      publicId: c.publicId ?? null,
+      name: c.name || 'Charakter',
+    }));
+  const pick = resolveCharacterAssignmentPick({ owned: assignable });
   const gmProjects = projects.filter(
     (project) => project.status === 'active' || project.status === 'paused',
   );
@@ -80,6 +96,14 @@ export function SessionJoin({
     const match = projects.find((project) => project.id === selectedProjectId);
     if (match?.publicId) setSagaPublicId(match.publicId.trim().toUpperCase());
   }, [projects, selectedProjectId, sagaPublicId]);
+
+  useEffect(() => {
+    if (pick.kind === 'single') {
+      setSelectedCharacterId(pick.character.id);
+    } else if (pick.kind === 'choose' && !selectedCharacterId) {
+      setSelectedCharacterId(pick.characters[0]?.id ?? '');
+    }
+  }, [pick, selectedCharacterId]);
 
   const resolveSurfaceMeta = (session: {
     publicId: string | null;
@@ -128,6 +152,26 @@ export function SessionJoin({
     }
   };
 
+  const resolveSelectedCharacter = () => {
+    if (pick.kind === 'none') {
+      throw new Error(pick.reason);
+    }
+    const characterId =
+      pick.kind === 'single' ? pick.character.id : selectedCharacterId;
+    if (!characterId) {
+      throw new Error('Bitte wähle einen Charakter');
+    }
+    assertOwnedCharacterId(
+      assignable.map((c) => c.id),
+      characterId,
+    );
+    const option = assignable.find((c) => c.id === characterId);
+    if (!option?.publicId) {
+      throw new Error('Charakter hat keine Public ID');
+    }
+    return option;
+  };
+
   const handleJoinSession = async () => {
     if (sessionCode.length < 6) {
       toast.error('Bitte gib einen gültigen 6-stelligen Code ein');
@@ -136,11 +180,18 @@ export function SessionJoin({
 
     setIsJoining(true);
     try {
-      const session = await joinSession({ code: sessionCode });
-      
+      const character = resolveSelectedCharacter();
+      const session = await joinSession({
+        code: sessionCode,
+        character_id: character.id,
+      });
+
       if (session) {
-        toast.success('Session beigetreten!');
-        onJoinAsPlayer(session.id, session.code, resolveSurfaceMeta(session));
+        toast.success(`Mit ${character.name} beigetreten!`);
+        onJoinAsPlayer(session.id, session.code, {
+          ...resolveSurfaceMeta(session),
+          characterPublicId: character.publicId,
+        });
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Session nicht gefunden oder Fehler beim Beitreten';
@@ -332,16 +383,60 @@ export function SessionJoin({
                   </p>
                 </div>
 
+                <div className="space-y-2" data-character-assignment="v1">
+                  <Label htmlFor="join-character">Charakter</Label>
+                  {charactersLoading ? (
+                    <p className="text-xs text-muted-foreground">Charaktere werden geladen…</p>
+                  ) : pick.kind === 'none' ? (
+                    <div className="space-y-2">
+                      <p className="text-sm text-destructive">{pick.reason}</p>
+                      {onNavigateToCharacterEditor ? (
+                        <Button type="button" variant="outline" size="sm" onClick={onNavigateToCharacterEditor}>
+                          Charakter erstellen
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <select
+                      id="join-character"
+                      className="select select-bordered select-sm w-full"
+                      value={selectedCharacterId}
+                      onChange={(e) => setSelectedCharacterId(e.target.value)}
+                      data-character-select
+                      disabled={pick.kind === 'single'}
+                    >
+                      {(pick.kind === 'single'
+                        ? [pick.character]
+                        : pick.kind === 'choose'
+                          ? pick.characters
+                          : []
+                      ).map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
                 <Button 
                   className="w-full" 
                   onClick={handleJoinSession}
-                  disabled={sessionCode.length < 6 || isJoining}
+                  disabled={
+                    sessionCode.length < 6 ||
+                    isJoining ||
+                    pick.kind === 'none' ||
+                    !selectedCharacterId
+                  }
+                  data-join-with-character
                 >
                   {isJoining ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Beitrete...
                     </>
+                  ) : selectedCharacterId ? (
+                    `Mit ${assignable.find((c) => c.id === selectedCharacterId)?.name ?? 'Charakter'} beitreten`
                   ) : (
                     'Als Spieler beitreten'
                   )}
@@ -368,9 +463,26 @@ export function SessionJoin({
                       <div
                         key={session.id}
                         className="flex items-center justify-between p-3 border border-border rounded-lg hover:border-primary transition-colors cursor-pointer"
-                        onClick={() =>
-                          onJoinAsPlayer(session.id, session.code, resolveSurfaceMeta(session))
-                        }
+                        onClick={() => {
+                          void (async () => {
+                            try {
+                              const character = resolveSelectedCharacter();
+                              const joined = await joinSession({
+                                code: session.code,
+                                character_id: character.id,
+                              });
+                              if (!joined) return;
+                              onJoinAsPlayer(joined.id, joined.code, {
+                                ...resolveSurfaceMeta(joined),
+                                characterPublicId: character.publicId,
+                              });
+                            } catch (err) {
+                              toast.error(
+                                err instanceof Error ? err.message : 'Beitritt fehlgeschlagen',
+                              );
+                            }
+                          })();
+                        }}
                       >
                         <div>
                           <p className="font-medium text-sm md:text-base">{session.name}</p>

@@ -5,6 +5,7 @@
 import { Button } from '../../shared/ui/button';
 import { GamemasterPanel } from './GamemasterPanel';
 import { PlayerPanel } from './PlayerPanel';
+import { PlayerCharacterResolve } from './PlayerCharacterResolve';
 import { ProgramDisplayShell } from './program/ProgramDisplayShell';
 import { useProgramPresentation } from './hooks/useProgramPresentation';
 import type { LiveViewId, SessionPhaseRouteId } from '../shell';
@@ -47,7 +48,17 @@ export function SessionResourceScreen({
     );
   }
 
-  if (liveView === 'player' || liveView === 'player-resolve') {
+  if (liveView === 'player-resolve') {
+    return (
+      <PlayerCharacterResolve
+        sagaPublicId={sagaPublicId}
+        sessionPublicId={sessionPublicId}
+        onNavigateHome={onNavigateHome}
+      />
+    );
+  }
+
+  if (liveView === 'player') {
     return (
       <PlayerPanel
         sagaPublicId={sagaPublicId}

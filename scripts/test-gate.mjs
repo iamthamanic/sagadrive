@@ -399,6 +399,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Player join character assignment (#478): picker + membership resolve...');
+  execFileSync(process.execPath, ['scripts/player-join-character-assignment-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {

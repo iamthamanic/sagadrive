@@ -214,6 +214,7 @@ function AppShell() {
                     decision.sagaPublicId,
                     decision.sessionPublicId,
                     decision.liveView,
+                    meta?.characterPublicId ?? undefined,
                   );
                   return;
                 }
