@@ -10,6 +10,7 @@ export { PreparedAdventureFixturePanel } from './PreparedAdventureFixturePanel';
 export { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
 export { SessionAvatarStrip } from './SessionAvatarStrip';
 export { SessionResourceScreen } from './SessionResourceScreen';
+export { SessionLookSettings } from './SessionLookSettings';
 export { PlayerPanel } from './PlayerPanel';
 export { PlayerLiveScreen } from './PlayerLiveScreen';
 export { PlayerPanelStatusBanner } from './PlayerPanelStatusBanner';

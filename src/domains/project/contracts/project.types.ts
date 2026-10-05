@@ -57,6 +57,8 @@ export interface SessionDto {
   started_at: string | null;
   ended_at: string | null;
   duration_minutes: number | null;
+  /** Optional session Look override (#349). Null/omitted → inherit saga default. */
+  look_profile_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -85,6 +87,8 @@ export interface SessionVm {
   startedAt: string | null;
   endedAt: string | null;
   durationMinutes: number | null;
+  /** Optional session Look override (#349). Null → inherit saga. */
+  lookProfileId: string | null;
   createdAt: string;
 }
 
