@@ -144,7 +144,7 @@ export function buildDornhainInitialAdventureRuntime(input?: {
   readonly stressDeathStart?: boolean;
 }): AdventureRuntimeState {
   const base = emptyAdventureRuntimeState();
-  const flags: AdventureRuntimeState['flags'] = {
+  const flags: Record<string, AdventureRuntimeState['flags'][string]> = {
     bandits_blamed: {
       key: 'bandits_blamed',
       value: true,
@@ -172,7 +172,7 @@ export function buildDornhainInitialAdventureRuntime(input?: {
       updatedAt: null,
     };
   }
-  const clocks: AdventureRuntimeState['clocks'] = {};
+  const clocks: Record<string, AdventureRuntimeState['clocks'][string]> = {};
   for (const clock of GOLDEN_ADVENTURE_DORNHAIN.escalationClocks) {
     clocks[clock.id] = {
       id: clock.id,
