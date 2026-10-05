@@ -2,8 +2,8 @@
 
 - Issue: #348
 - Feature slug: saga-default-look
-- HEAD_SHA: WORKTREE
-- BASE_SHA: pending
+- HEAD_SHA: d35ecef72e6c1209a8fc6ac6fa656ad647db8c30
+- BASE_SHA: 86076652da33e421c3ec99ba3ca1126a8b507e7e
 - Verdict: CLEAR
 
 ## Event
