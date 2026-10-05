@@ -44,6 +44,7 @@ mustInclude(
     'data-gm-view-as-player',
     'data-gm-generic-action-slot',
     'data-gm-live-action-rail',
+    'GmActionPalette',
   ],
   'GM live screen',
 );

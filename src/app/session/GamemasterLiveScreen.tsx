@@ -4,7 +4,7 @@
  *
  * Reuses SharedScene/Program/Knowledge/Combat GM controls. Route grants no rights.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AdaptiveLiveStage, useAdaptiveBand } from '../../shared/ui/adaptive';
 import { Button } from '../../shared/ui/button';
 import { Label } from '../../shared/ui/label';
@@ -13,6 +13,7 @@ import { useAuth } from '../../lib/auth-context';
 import { useProjectSummaries } from '../project';
 import { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
 import { CombatEncounterGmPanel } from './CombatEncounterGmPanel';
+import { GmActionPalette } from './GmActionPalette';
 import { KnowledgeFeed } from './knowledge/KnowledgeFeed';
 import { KnowledgeGmControls } from './knowledge/KnowledgeGmControls';
 import { ProgramDisplayShell } from './program/ProgramDisplayShell';
@@ -22,7 +23,9 @@ import { SessionAvatarStrip } from './SessionAvatarStrip';
 import { useCombatEncounter } from './hooks/useCombatEncounter';
 import { useProgramPresentation } from './hooks/useProgramPresentation';
 import { useSessionKnowledge } from './hooks/useSessionKnowledge';
+import { useSessionRuntime } from './hooks/useSessionRuntime';
 import { useSharedScenePresentation } from './hooks/useSharedScenePresentation';
+import { projectService } from '../../infrastructure/project/project-service';
 
 type GamemasterLiveScreenProps = {
   sagaPublicId: string;
@@ -62,6 +65,27 @@ export function GamemasterLiveScreen({
         : { role: 'gamemaster', capabilities: [], characterId: null },
   });
   const combat = useCombatEncounter({ sagaPublicId, sessionPublicId });
+  const [runtimeSessionId, setRuntimeSessionId] = useState<string | null>(null);
+  const runtime = useSessionRuntime(runtimeSessionId);
+  const gmAccess = { role: 'gamemaster' as const, capabilities: [] as const, characterId: null };
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { session } = await projectService.getSessionByPublicIds(
+          sagaPublicId,
+          sessionPublicId,
+        );
+        if (!cancelled) setRuntimeSessionId(session.id);
+      } catch {
+        if (!cancelled) setRuntimeSessionId(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sagaPublicId, sessionPublicId]);
 
   const leftNav = (
     <div className="flex h-full min-h-0 flex-col p-2" data-gm-live-navigator="v1">
@@ -208,8 +232,19 @@ export function GamemasterLiveScreen({
       <p className="mb-2 px-1 text-xs font-medium text-muted-foreground">
         Actions (generic extension in #371)
       </p>
-      <div data-gm-generic-action-slot="primary" className="mb-2 min-h-11 rounded-md border border-dashed border-border px-2 py-2 text-xs text-muted-foreground">
-        Reserved: freeform GM action rail
+      <div data-gm-generic-action-slot="primary" className="mb-3">
+        <GmActionPalette
+          access={gmAccess}
+          isBusy={runtime.isLoading}
+          onExecute={async (command) => {
+            const next = await runtime.applyCommand({
+              kind: command.kind,
+              payload: command.payload,
+              idempotencyKey: `gm-action:${command.actionId}:${Date.now()}`,
+            });
+            return next !== null;
+          }}
+        />
       </div>
       <CombatEncounterGmPanel
         projectId={activeProjectId}
