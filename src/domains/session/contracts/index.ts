@@ -22,3 +22,4 @@ export * from './adventure-runtime-state';
 export * from '../director';
 export * from './golden-adventure-dornhain';
 export * from './golden-mobile-journeys';
+export * from './live-session-golden-e2e-gate';

@@ -288,6 +288,14 @@ function checkGoldenMobileJourneys() {
   });
 }
 
+function checkLiveSessionGoldenE2eGate() {
+  console.log('Live Session Golden E2E Gate (#378): multi-role scenarios + security + Dornhain/#484 hooks...');
+  execFileSync(process.execPath, ['scripts/live-session-golden-e2e-gate-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkInventoryE2eIntegration() {
   console.log('Inventory v2 E2E integration (#114): child gates, architecture, docs sync, catalog size, inventory_v2 save...');
   execFileSync(process.execPath, ['scripts/inventory-e2e-integration-check.mjs'], {
@@ -1699,6 +1707,7 @@ checkInventoryMobileUi();
 checkAdaptiveSharedUiPrimitives();
 checkMobileUiQualityGate();
 checkGoldenMobileJourneys();
+checkLiveSessionGoldenE2eGate();
 checkInventoryE2eIntegration();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();
