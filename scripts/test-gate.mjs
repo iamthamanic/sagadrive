@@ -280,6 +280,14 @@ function checkMobileUiQualityGate() {
   });
 }
 
+function checkGoldenMobileJourneys() {
+  console.log('Golden Mobile Journeys (#484): AU surfaces, journey IDs, #378 npm entry...');
+  execFileSync(process.execPath, ['scripts/golden-mobile-journeys-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkInventoryE2eIntegration() {
   console.log('Inventory v2 E2E integration (#114): child gates, architecture, docs sync, catalog size, inventory_v2 save...');
   execFileSync(process.execPath, ['scripts/inventory-e2e-integration-check.mjs'], {
@@ -1690,6 +1698,7 @@ checkInventoryEquipmentUi();
 checkInventoryMobileUi();
 checkAdaptiveSharedUiPrimitives();
 checkMobileUiQualityGate();
+checkGoldenMobileJourneys();
 checkInventoryE2eIntegration();
 checkBackgroundFrameworkRegressions();
 checkAvatarRuntimeRegressions();

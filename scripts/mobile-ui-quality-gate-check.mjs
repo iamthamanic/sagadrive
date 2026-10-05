@@ -41,7 +41,11 @@ const pkg = read('package.json');
 check(/name: 'mobile-chrome'/.test(config), 'mobile-chrome project');
 check(/name: 'tablet-chrome'/.test(config), 'tablet-chrome project');
 check(/name: 'chromium'/.test(config), 'chromium desktop project');
-check(/testMatch: \/adaptive-ui-quality\\.spec\\.ts\//.test(config), 'mobile/tablet testMatch limit');
+check(
+  /testMatch: \/\(\?:adaptive-ui-quality\|golden-mobile-journeys\)\\.spec\\.ts\//.test(config) ||
+    /testMatch: \/adaptive-ui-quality\\.spec\\.ts\//.test(config),
+  'mobile/tablet testMatch limit (adaptive ± golden journeys)',
+);
 check(/Pixel 7/.test(config), 'Pixel 7 phone device');
 check(/iPad Mini/.test(config), 'iPad Mini tablet device');
 

@@ -5,8 +5,8 @@ const isCi = !!process.env.CI;
 
 /**
  * Desktop `chromium` runs the full e2e suite.
- * `mobile-chrome` / `tablet-chrome` only run adaptive-ui-quality.spec.ts
- * so the device matrix does not multiply every journey (AU / #483).
+ * `mobile-chrome` / `tablet-chrome` only run adaptive + golden-mobile journey specs
+ * so the device matrix does not multiply every journey (AU / #483 / #484).
  */
 export default defineConfig({
   testDir: './e2e',
@@ -54,7 +54,7 @@ export default defineConfig({
     },
     {
       name: 'mobile-chrome',
-      testMatch: /adaptive-ui-quality\.spec\.ts/,
+      testMatch: /(?:adaptive-ui-quality|golden-mobile-journeys)\.spec\.ts/,
       use: {
         ...devices['Pixel 7'],
         // CI installs Chromium only — keep phone emulation on Chromium.
@@ -63,7 +63,7 @@ export default defineConfig({
     },
     {
       name: 'tablet-chrome',
-      testMatch: /adaptive-ui-quality\.spec\.ts/,
+      testMatch: /(?:adaptive-ui-quality|golden-mobile-journeys)\.spec\.ts/,
       use: {
         ...devices['iPad Mini'],
         // iPad Mini defaults to WebKit; force Chromium for CI parity.
