@@ -16,3 +16,4 @@ export * from './live-session-access';
 export * from './session-entry-routing';
 export * from './player-character-assignment';
 export * from './generic-gm-actions';
+export * from './live-inventory-lifecycle';

@@ -24,6 +24,7 @@ export interface RequestCheckOptions {
 
 export interface UsePlayerPanelResult {
   model: PlayerPanelModel;
+  sessionId: string | null;
   isBootstrapping: boolean;
   resync: () => Promise<void>;
   requestCheck: (skill: SagaDriveSkillKey, options?: RequestCheckOptions) => Promise<boolean>;
@@ -131,6 +132,7 @@ export function usePlayerPanel(input: {
 
   return {
     model,
+    sessionId,
     isBootstrapping,
     resync: runtime.resync,
     requestCheck,

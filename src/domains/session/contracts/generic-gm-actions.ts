@@ -376,13 +376,15 @@ export function resolveGmActionCommand(input: {
     case 'remove-item':
       return {
         actionId: action.id,
-        kind: 'inventory',
+        kind: 'gameplay',
         requiresConfirm: true,
         payload: {
-          op: input.actionId === 'give-item' ? 'give' : 'remove',
-          characterId: input.targetId ?? null,
-          itemId: input.itemId ?? null,
-          note: input.note ?? null,
+          inventoryEvent: {
+            op: input.actionId === 'give-item' ? 'give' : 'remove',
+            characterId: input.targetId ?? null,
+            itemId: input.itemId ?? null,
+            note: input.note ?? null,
+          },
         },
       };
     case 'set-adventure-flag':

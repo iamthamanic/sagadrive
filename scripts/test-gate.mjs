@@ -424,6 +424,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Live Inventory Lifecycle (#372): Inventory V2 session ops...');
+  execFileSync(process.execPath, ['scripts/live-inventory-lifecycle-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {
