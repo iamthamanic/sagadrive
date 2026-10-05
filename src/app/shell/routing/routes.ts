@@ -50,7 +50,7 @@ export type SessionPhaseId = 'prepare' | 'live' | 'recap';
 /** Neutral session URL resolves phase from persisted status in the app layer. */
 export type SessionPhaseRouteId = SessionPhaseId | 'auto';
 
-export type LiveViewId = 'gamemaster' | 'player' | 'player-resolve' | 'display';
+export type LiveViewId = 'gamemaster' | 'player' | 'player-resolve' | 'display' | 'viewer';
 
 export type ResolvedRoute =
   | {
@@ -358,12 +358,12 @@ function resolveSagaRoutes(path: string): ResolvedRoute | null {
   }
 
   const liveView = path.match(
-    /^\/sagas\/([^/]+)\/sessions\/([^/]+)\/live\/(gamemaster|player|display)$/,
+    /^\/sagas\/([^/]+)\/sessions\/([^/]+)\/live\/(gamemaster|player|display|viewer)$/,
   );
   if (liveView) {
     const sagaPublicId = requireSagaPublicId(liveView[1] ?? '');
     const sessionPublicId = requireSessionPublicId(liveView[2] ?? '');
-    const view = liveView[3] as 'gamemaster' | 'player' | 'display';
+    const view = liveView[3] as 'gamemaster' | 'player' | 'display' | 'viewer';
     if (!sagaPublicId || !sessionPublicId) {
       return { kind: 'not-found', attemptedPath: path };
     }

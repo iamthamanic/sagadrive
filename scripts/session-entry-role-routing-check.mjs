@@ -118,6 +118,15 @@ if (player.kind !== 'live' || player.liveView !== 'player') {
   throw new Error('Player must route to player live');
 }
 
+const viewer = mod.resolveCanonicalLiveEntry({
+  role: 'viewer',
+  sagaPublicId: 'SA-ABC12',
+  sessionPublicId: 'SE-XYZ99',
+});
+if (viewer.kind !== 'live' || viewer.liveView !== 'viewer') {
+  throw new Error('Viewer must route to viewer live');
+}
+
 let blocked = false;
 try {
   mod.assertPlayerNotRoutedToGamemaster('player', 'gamemaster');
