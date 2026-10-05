@@ -439,6 +439,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Director Runtime Cues (#375): automatic mode + override...');
+  execFileSync(process.execPath, ['scripts/director-runtime-cues-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {
