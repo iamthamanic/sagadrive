@@ -160,7 +160,7 @@ export const GM_ACTION_CATALOG: readonly GmActionDescriptor[] = [
     group: 'adventure',
     label: 'Adventure-Flag setzen',
     description: 'Typed adventure state key (#374) — not raw world_state JSON.',
-    runtimeKind: 'adventure-state',
+    runtimeKind: 'adventure',
     requiresConfirm: true,
     gameplay: true,
     targetKinds: ['none'],
@@ -221,7 +221,9 @@ export function isExecutableGmRuntimeKind(kind: string): boolean {
     kind === 'program' ||
     kind === 'damage' ||
     kind === 'condition' ||
-    kind === 'gameplay'
+    kind === 'gameplay' ||
+    kind === 'life' ||
+    kind === 'adventure'
   );
 }
 
@@ -390,11 +392,13 @@ export function resolveGmActionCommand(input: {
     case 'set-adventure-flag':
       return {
         actionId: action.id,
-        kind: 'adventure-state',
+        kind: 'adventure',
         requiresConfirm: true,
         payload: {
+          op: 'set_flag',
           key: input.flagKey ?? 'flag',
           value: input.flagValue ?? true,
+          visibility: 'shared',
           note: input.note ?? null,
         },
       };
