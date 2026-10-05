@@ -9,6 +9,7 @@ export { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstan
 export { SessionAvatarStrip } from './SessionAvatarStrip';
 export { SessionResourceScreen } from './SessionResourceScreen';
 export { PlayerPanel } from './PlayerPanel';
+export { PlayerLiveScreen } from './PlayerLiveScreen';
 export { PlayerPanelStatusBanner } from './PlayerPanelStatusBanner';
 export { SharedScenePresentationView } from './SharedScenePresentationView';
 export { SharedSceneGmControls } from './SharedSceneGmControls';

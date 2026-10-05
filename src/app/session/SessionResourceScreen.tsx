@@ -4,7 +4,7 @@
  */
 import { Button } from '../../shared/ui/button';
 import { GamemasterPanel } from './GamemasterPanel';
-import { PlayerPanel } from './PlayerPanel';
+import { PlayerLiveScreen } from './PlayerLiveScreen';
 import { PlayerCharacterResolve } from './PlayerCharacterResolve';
 import { ProgramDisplayShell } from './program/ProgramDisplayShell';
 import { useProgramPresentation } from './hooks/useProgramPresentation';
@@ -60,7 +60,7 @@ export function SessionResourceScreen({
 
   if (liveView === 'player') {
     return (
-      <PlayerPanel
+      <PlayerLiveScreen
         sagaPublicId={sagaPublicId}
         sessionPublicId={sessionPublicId}
         characterPublicId={characterPublicId ?? null}

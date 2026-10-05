@@ -76,8 +76,8 @@ mustNotInclude(
 
 mustInclude(
   'src/app/session/SessionResourceScreen.tsx',
-  ['PlayerPanel', "liveView === 'player'"],
-  'session screen wires player panel',
+  ['PlayerLiveScreen', "liveView === 'player'"],
+  'session screen wires player live screen',
 );
 
 mustInclude(
