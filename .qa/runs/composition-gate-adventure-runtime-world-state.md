@@ -1,10 +1,10 @@
 # Composition Gate — adventure-runtime-world-state
-- HEAD_SHA: a1fa1d80dd7fda94df86761347f6bb0b87f1b3b0
+- HEAD_SHA: 72737c07ab3a7989f2a372b148706a00f75c270a
 - BASE_SHA: a1fa1d80dd7fda94df86761347f6bb0b87f1b3b0
 - Verdict: CLEAR
 
 ## Event
-GM mutates typed adventure playthrough (flag/clock/consequence/definitionRef) → session `shared.adventure` + optional `projects.adventure_runtime` → audience-projected snapshot for player/viewer.
+GM mutates typed adventure playthrough (flag/clock/consequence/definitionRef) → session shared.adventure + optional projects.adventure_runtime → audience-projected snapshot for player/viewer.
 
 ## Hop chain
 AdventureRuntimeControls / GmActionPalette set-adventure-flag
