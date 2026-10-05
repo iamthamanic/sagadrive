@@ -166,6 +166,24 @@ export function PlayerPanel({
             />
           </section>
 
+          <section
+            aria-label="Lebensstatus"
+            className="space-y-1"
+            data-death-lifecycle-player="v1"
+            data-life-status={model.lifeStatus}
+          >
+            <h2 className="text-sm font-medium text-foreground">Lebensstatus</h2>
+            <p className="text-sm tabular-nums" data-death-lifecycle-player-label>
+              {model.lifeLabel}
+              {model.life && model.life.status === 'downed'
+                ? ` · Sterbend ${model.life.dyingLevel}`
+                : ''}
+              {model.lifeStatus === 'dead'
+                ? ' — keine Spielaktionen möglich'
+                : ''}
+            </p>
+          </section>
+
           <section aria-label="Widerstände" className="space-y-2">
             <h2 className="text-sm font-medium text-foreground">Widerstände</h2>
             {model.resistances.length === 0 ? (

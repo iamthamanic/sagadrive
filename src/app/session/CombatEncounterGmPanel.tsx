@@ -1,6 +1,8 @@
 /**
  * CombatEncounterGmPanel — GM controls for encounter start/turn/HP/conditions (#300).
  * Location: src/app/session/CombatEncounterGmPanel.tsx
+ *
+ * Also hosts DeathLifecycleControls (#373) for selected PC participants.
  */
 import { useEffect, useState } from 'react';
 import type { NpcCreatureInstance } from '../../domains/npc-creature';
@@ -10,11 +12,13 @@ import {
   type EncounterParticipant,
   type EncounterState,
 } from '../../domains/session/contracts/combat-encounter';
+import type { LiveSessionAccess } from '../../domains/session/contracts/live-session-access';
 import type { SessionPresenceEntry } from '../../domains/session/contracts/session-runtime';
 import { listNpcCreatureInstances } from '../../infrastructure/npc-creature/npc-creature-service';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
+import { DeathLifecycleControls } from './DeathLifecycleControls';
 
 type CombatEncounterGmPanelProps = {
   projectId: string | null;
@@ -23,6 +27,8 @@ type CombatEncounterGmPanelProps = {
   combatActive: boolean;
   isBusy: boolean;
   error: string | null;
+  sessionId?: string | null;
+  access?: LiveSessionAccess | null;
   onStart: (participants: Array<{ kind: 'pc' | 'npc'; refId: string; name?: string }>) => Promise<boolean>;
   onEnd: () => Promise<boolean>;
   onNextTurn: () => Promise<boolean>;
@@ -38,6 +44,8 @@ export function CombatEncounterGmPanel({
   combatActive,
   isBusy,
   error,
+  sessionId = null,
+  access = null,
   onStart,
   onEnd,
   onNextTurn,
@@ -349,8 +357,43 @@ export function CombatEncounterGmPanel({
               ))}
             </div>
           ) : null}
+
+          {(() => {
+            const selected =
+              encounter?.participants.find((p) => p.id === targetId) ?? null;
+            const lifeCharacterId =
+              selected?.kind === 'pc'
+                ? selected.refId
+                : roster.find((r) => r.characterId)?.characterId ?? null;
+            return (
+              <div data-death-lifecycle-slot="v1" className="pt-2">
+                <DeathLifecycleControls
+                  sessionId={sessionId}
+                  access={access}
+                  characterId={lifeCharacterId}
+                  participantId={selected?.kind === 'pc' ? selected.id : null}
+                  characterName={selected?.kind === 'pc' ? selected.name : null}
+                />
+              </div>
+            );
+          })()}
         </div>
       )}
+
+      {!combatActive ? (
+        <div data-death-lifecycle-slot="idle" className="pt-2">
+          <DeathLifecycleControls
+            sessionId={sessionId}
+            access={access}
+            characterId={
+              roster.find((r) => typeof r.characterId === 'string' && r.characterId)?.characterId
+              ?? null
+            }
+            participantId={null}
+            characterName={null}
+          />
+        </div>
+      ) : null}
 
       {error ? (
         <p className="text-xs text-destructive" role="alert" data-combat-error>

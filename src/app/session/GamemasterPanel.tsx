@@ -223,6 +223,8 @@ export function GamemasterPanel({
                     combatActive={combat.combatActive}
                     isBusy={combat.isBusy || combat.isLoading}
                     error={combat.error}
+                    sessionId={combat.sessionId}
+                    access={{ role: 'gamemaster', capabilities: [], characterId: null }}
                     onStart={async (participants) =>
                       combat.runCombat({ action: 'start', participants })
                     }

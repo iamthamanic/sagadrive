@@ -33,6 +33,13 @@ import {
   readEncounterState,
   type EncounterState,
 } from './combat-encounter';
+import {
+  canPerformProhibitedGameplay,
+  lifeStatusLabel,
+  readLifeByCharacter,
+  type CharacterLifeState,
+  type LifeStatus,
+} from './session-death-lifecycle';
 
 export type PlayerPanelConnectionKind =
   | 'loading'
@@ -94,6 +101,10 @@ export interface PlayerPanelModel {
   momentumShared: boolean;
   inventory: PlayerPanelInventoryLine[];
   conditions: string[];
+  /** Authoritative life track (#373); null = treat as alive. */
+  life: CharacterLifeState | null;
+  lifeStatus: LifeStatus;
+  lifeLabel: string;
   roster: PlayerPanelRosterLine[];
   sceneId: string | null;
   scenePresentation: SharedScenePresentation | null;
@@ -304,6 +315,9 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
       momentumShared: false,
       inventory: [],
       conditions: [],
+      life: null,
+      lifeStatus: 'alive',
+      lifeLabel: 'Lebend',
       roster: runtime ? rosterLines(runtime.roster, input.selfUserId) : [],
       sceneId: runtime?.gameplay.sceneId ?? null,
       scenePresentation: runtime ? readSharedScenePresentation(runtime.gameplay.shared) : null,
@@ -406,6 +420,9 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
     : conditionsFromMap.length > 0
       ? conditionsFromMap
       : readSharedStringList(shared, ['conditions', 'activeConditions', 'active_conditions']);
+  const life = character.id ? readLifeByCharacter(shared, character.id) : null;
+  const lifeStatus: LifeStatus = life?.status ?? 'alive';
+  const lifeLabel = life ? lifeStatusLabel(life) : 'Lebend';
   const checkTarget = readSharedNumber(shared, ['checkTarget', 'check_target']);
   const lastRoll = readLastSharedRoll(shared);
   const scenePresentation = readSharedScenePresentation(shared);
@@ -426,6 +443,9 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
     }
   }
 
+  const connectionAllowsCheck = connection.kind === 'ready' || connection.kind === 'paused';
+  const lifeAllowsCheck = canPerformProhibitedGameplay(life);
+
   return {
     characterName: character.name,
     characterId: character.id,
@@ -445,6 +465,9 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
     momentumShared,
     inventory: inventoryLines(character.inventoryV2),
     conditions,
+    life,
+    lifeStatus,
+    lifeLabel,
     roster: runtime ? rosterLines(runtime.roster, input.selfUserId) : [],
     sceneId: runtime?.gameplay.sceneId ?? null,
     scenePresentation,
@@ -457,7 +480,7 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
     connection: connection.kind,
     connectionLabel: copy.label,
     connectionDetail: copy.detail,
-    canAttemptCheck: connection.kind === 'ready' || connection.kind === 'paused',
+    canAttemptCheck: connectionAllowsCheck && lifeAllowsCheck,
     checkTarget,
     lastRoll,
   };
