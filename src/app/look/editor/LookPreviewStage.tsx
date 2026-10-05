@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LookProfileVersion } from '../../../domains/look/types';
 import type { CharacterStudioRuntime } from '../../../infrastructure/character/avatar/character-studio-runtime';
 import { Button } from '../../../shared/ui/button';
-import { AvatarCanvas } from '../../character/avatar/AvatarCanvas';
+import { AvatarCanvas } from '../../character';
 import type { LookEditorUiDraft } from './look-editor-draft';
 import { lookPreviewAvatarFromModelUrl } from './look-preview-avatar';
 import {
