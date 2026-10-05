@@ -298,10 +298,12 @@ export function PlayerPanel({
               </label>
               <Button
                 type="button"
+                className="min-h-11"
                 disabled={!model.canAttemptCheck || !effectiveSkill || checkBusy}
                 onClick={() => {
                   void onCheck();
                 }}
+                data-player-check-roll
               >
                 {checkBusy ? 'Senden…' : 'Check würfeln'}
               </Button>

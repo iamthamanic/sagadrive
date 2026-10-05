@@ -1,3 +1,7 @@
+/**
+ * Dashboard — Authenticated home journey with adaptive page shell (#484).
+ * Location: src/app/dashboard/Dashboard.tsx
+ */
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Button } from '../../shared/ui/button';
 import { Plus, Users, Gamepad2, TrendingUp, Calendar } from 'lucide-react';
@@ -5,6 +9,7 @@ import { useState } from 'react';
 import { useProjectSummaries } from '../project';
 import { useCharacterSummaries, CreateCharacterEntryDialog } from '../character';
 import { useAuth } from '../../lib/auth-context';
+import { AdaptivePage } from '../../shared/ui/adaptive';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
@@ -21,8 +26,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const totalMembers = projects.reduce((sum, p) => sum + p.memberCount, 0);
 
   return (
-    <div className="w-full h-full overflow-y-auto">
-      <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6 md:space-y-8">
+    <AdaptivePage data-au-surface="dashboard" className="h-full w-full">
+      <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
         {/* Welcome Section */}
         <div>
           <h1 className="text-2xl md:text-3xl lg:text-4xl mb-2">Dashboard</h1>
@@ -79,8 +84,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </Card>
 
             <Card 
-              className="cursor-pointer hover:bg-accent/10 hover:border-accent/40 transition-all" 
+              className="min-h-11 cursor-pointer hover:bg-accent/10 hover:border-accent/40 transition-all" 
               onClick={() => setCreateCharacterOpen(true)}
+              role="button"
+              tabIndex={0}
+              data-dashboard-character-create
+              aria-label="Neuer Charakter"
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setCreateCharacterOpen(true);
+                }
+              }}
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -236,7 +251,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   <Gamepad2 className="w-4 h-4 mr-2" />
                   Projekt erstellen
                 </Button>
-                <Button variant="outline" onClick={() => setCreateCharacterOpen(true)}>
+                <Button
+                  variant="outline"
+                  className="min-h-11"
+                  onClick={() => setCreateCharacterOpen(true)}
+                  data-dashboard-character-create-secondary
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Charakter erstellen
                 </Button>
@@ -251,6 +271,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         onOpenChange={setCreateCharacterOpen}
         onNavigateToEditor={() => onNavigate('character-editor')}
       />
-    </div>
+    </AdaptivePage>
   );
 }

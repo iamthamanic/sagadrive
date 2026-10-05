@@ -1,5 +1,5 @@
 /**
- * SessionJoin — Create/join play sessions via server-issued codes (#296).
+ * SessionJoin — Create/join play sessions via server-issued codes (#296 / #484 adaptive).
  * Location: src/app/session/SessionJoin.tsx
  *
  * Library → Teilnehmen may deep-link with:
@@ -13,6 +13,7 @@ import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
 import { ArrowLeft, Users, Gamepad2, Copy, Check, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
+import { AdaptivePage } from '../../shared/ui/adaptive';
 import { useProjects } from '../project';
 import { useCharacterSummaries } from '../character';
 import { useSessions } from './hooks/useSessions';
@@ -211,13 +212,13 @@ export function SessionJoin({
   };
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="max-w-2xl mx-auto space-y-4 md:space-y-6">
+    <AdaptivePage data-au-surface="session-join" className="h-full w-full">
+      <div className="mx-auto max-w-2xl space-y-4 md:space-y-6">
         {/* Back Button */}
         <Button 
           variant="ghost" 
           onClick={onBack}
-          className="mb-2"
+          className="mb-2 min-h-11"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Zurück
@@ -232,13 +233,13 @@ export function SessionJoin({
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v === 'join' ? 'join' : 'create')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="create" data-session-join-tab="create">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1">
+            <TabsTrigger value="create" className="min-h-11" data-session-join-tab="create">
               <Gamepad2 className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Session erstellen</span>
               <span className="sm:hidden">Erstellen</span>
             </TabsTrigger>
-            <TabsTrigger value="join" data-session-join-tab="join">
+            <TabsTrigger value="join" className="min-h-11" data-session-join-tab="join">
               <Users className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Session beitreten</span>
               <span className="sm:hidden">Beitreten</span>
@@ -295,7 +296,7 @@ export function SessionJoin({
                   </div>
 
                   <Button 
-                    className="w-full" 
+                    className="min-h-11 w-full" 
                     onClick={handleCreateSession}
                     disabled={!newSessionName.trim() || !selectedProjectId || isCreating}
                   >
@@ -391,7 +392,12 @@ export function SessionJoin({
                     <div className="space-y-2">
                       <p className="text-sm text-destructive">{pick.reason}</p>
                       {onNavigateToCharacterEditor ? (
-                        <Button type="button" variant="outline" size="sm" onClick={onNavigateToCharacterEditor}>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="min-h-11"
+                          onClick={onNavigateToCharacterEditor}
+                        >
                           Charakter erstellen
                         </Button>
                       ) : null}
@@ -399,7 +405,7 @@ export function SessionJoin({
                   ) : (
                     <select
                       id="join-character"
-                      className="select select-bordered select-sm w-full"
+                      className="select select-bordered min-h-11 w-full"
                       value={selectedCharacterId}
                       onChange={(e) => setSelectedCharacterId(e.target.value)}
                       data-character-select
@@ -420,7 +426,7 @@ export function SessionJoin({
                 </div>
 
                 <Button 
-                  className="w-full" 
+                  className="min-h-11 w-full" 
                   onClick={handleJoinSession}
                   disabled={
                     sessionCode.length < 6 ||
@@ -500,6 +506,6 @@ export function SessionJoin({
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </AdaptivePage>
   );
 }

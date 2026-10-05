@@ -63,9 +63,13 @@ export function LoginScreen() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-background p-4">
+    <div
+      className="relative flex min-h-screen items-center justify-center bg-background p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]"
+      data-au-surface="login"
+      data-au-pattern="page"
+    >
       <div className="absolute right-4 top-4">
-        <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
+        <div className="flex min-h-11 items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
           <Sun className="h-4 w-4 text-muted-foreground" />
           <Switch
             checked={isDarkMode}
@@ -99,9 +103,13 @@ export function LoginScreen() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Registrieren</TabsTrigger>
+              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1">
+                <TabsTrigger value="login" className="min-h-11">
+                  Login
+                </TabsTrigger>
+                <TabsTrigger value="signup" className="min-h-11">
+                  Registrieren
+                </TabsTrigger>
               </TabsList>
 
               {/* Login Tab */}
@@ -143,7 +151,7 @@ export function LoginScreen() {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="min-h-11 w-full" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
