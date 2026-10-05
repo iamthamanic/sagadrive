@@ -62,7 +62,7 @@ mustInclude(
     'data-player-panel="v1"',
     'usePlayerPanel',
     'Check würfeln',
-    'Inventar (nur Lesen)',
+    'Inventar',
     'PlayerPanelStatusBanner',
   ],
   'player panel UI',
