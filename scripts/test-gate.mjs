@@ -414,6 +414,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Viewer Live Screen (#370): read-only Program + public context...');
+  execFileSync(process.execPath, ['scripts/viewer-live-screen-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {

@@ -6,6 +6,7 @@ import { Button } from '../../shared/ui/button';
 import { GamemasterLiveScreen } from './GamemasterLiveScreen';
 import { PlayerLiveScreen } from './PlayerLiveScreen';
 import { PlayerCharacterResolve } from './PlayerCharacterResolve';
+import { ViewerLiveScreen } from './ViewerLiveScreen';
 import { ProgramDisplayShell } from './program/ProgramDisplayShell';
 import { useProgramPresentation } from './hooks/useProgramPresentation';
 import type { LiveViewId, SessionPhaseRouteId } from '../shell';
@@ -53,6 +54,16 @@ export function SessionResourceScreen({
         sagaPublicId={sagaPublicId}
         sessionPublicId={sessionPublicId}
         characterPublicId={characterPublicId ?? null}
+        onNavigateHome={onNavigateHome}
+      />
+    );
+  }
+
+  if (liveView === 'viewer') {
+    return (
+      <ViewerLiveScreen
+        sagaPublicId={sagaPublicId}
+        sessionPublicId={sessionPublicId}
         onNavigateHome={onNavigateHome}
       />
     );
@@ -152,5 +163,7 @@ function liveViewLabel(liveView: LiveViewId, characterPublicId?: string | null):
       return 'Live · Spieler (Charakter auflösen)';
     case 'display':
       return 'Live · Display';
+    case 'viewer':
+      return 'Live · Viewer';
   }
 }

@@ -13,7 +13,7 @@ export type SessionEntryIntent = 'create' | 'join' | 'open';
 export type CanonicalLiveEntryDecision =
   | {
       readonly kind: 'live';
-      readonly liveView: 'gamemaster' | 'player';
+      readonly liveView: 'gamemaster' | 'player' | 'viewer';
       readonly sagaPublicId: string;
       readonly sessionPublicId: string;
     }
@@ -63,10 +63,18 @@ export function resolveCanonicalLiveEntry(input: {
       sessionPublicId,
     };
   }
-  if (input.role === 'player' || input.role === 'viewer') {
+  if (input.role === 'player') {
     return {
       kind: 'live',
       liveView: 'player',
+      sagaPublicId,
+      sessionPublicId,
+    };
+  }
+  if (input.role === 'viewer') {
+    return {
+      kind: 'live',
+      liveView: 'viewer',
       sagaPublicId,
       sessionPublicId,
     };
