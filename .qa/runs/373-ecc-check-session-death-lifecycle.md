@@ -1,6 +1,6 @@
 # ECC Check — session-death-lifecycle (#373)
 
-HEAD_SHA: f63a24b686af3ca9dcf0fcc84356cd7d6d885285
+HEAD_SHA: ee892eba123adcba6dee7de575d2bbac088c170e
 State: READY
 
 ## Phases
