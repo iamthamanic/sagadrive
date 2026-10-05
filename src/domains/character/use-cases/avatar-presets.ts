@@ -242,6 +242,9 @@ export function normalizeCharacterAppearance(
     ),
     clothing: appearance?.clothing ?? appearance?.avatar?.traits.clothing ?? 'casual',
     ...(appearance?.gender_reading ? { gender_reading: appearance.gender_reading } : {}),
+    ...(appearance?.personal_look_profile_id !== undefined
+      ? { personal_look_profile_id: appearance.personal_look_profile_id }
+      : {}),
     avatar: appearance?.avatar,
   };
 }

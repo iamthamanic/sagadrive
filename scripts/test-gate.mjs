@@ -512,6 +512,14 @@ function checkSagaDefaultLook() {
   });
 }
 
+function checkCharacterLookPreview() {
+  console.log('Character Look preview (#347): selector, origin labels, AvatarSurfaceViewer bridge...');
+  execFileSync(process.execPath, ['scripts/character-look-preview-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1715,6 +1723,7 @@ checkLookRuntimeAdapter();
 checkLookEditorWorkspace();
 checkLookPreviewStage();
 checkSagaDefaultLook();
+checkCharacterLookPreview();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();
