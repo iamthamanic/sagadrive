@@ -409,6 +409,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Gamemaster Live Screen V2 (#369): Control Room composition...');
+  execFileSync(process.execPath, ['scripts/gamemaster-live-screen-v2-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {
