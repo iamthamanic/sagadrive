@@ -488,6 +488,14 @@ function checkLookRuntimeAdapter() {
   });
 }
 
+function checkLookEditorWorkspace() {
+  console.log('Look editor workspace (#344): canonical 3-column editor, inspectors, draft round-trip...');
+  execFileSync(process.execPath, ['scripts/look-editor-workspace-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1688,6 +1696,7 @@ checkLookLibrary();
 checkLookWorldCapabilityStubs();
 checkToonLabCompatibilitySpike();
 checkLookRuntimeAdapter();
+checkLookEditorWorkspace();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();

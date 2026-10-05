@@ -112,7 +112,8 @@ section('5 · UI contract / read-only gating');
   const edit = read('src/app/look/LookEditScreen.tsx');
   check(/data-look-create-screen/.test(create), 'create screen hook');
   check(/data-look-edit-screen/.test(edit), 'edit screen hook');
-  check(/Zurück zur Bibliothek/.test(create) && /Zurück zur Bibliothek/.test(edit), 'back copy');
+  check(/LookEditorWorkspace/.test(create), 'create mounts LookEditorWorkspace (#344)');
+  check(/LookEditorWorkspace/.test(edit), 'edit mounts LookEditorWorkspace (#344)');
 }
 
 section('6 · pure filter domain behaviour');

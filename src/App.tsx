@@ -255,7 +255,10 @@ function AppShell() {
         );
       case 'look-create':
         return (
-          <LookCreateScreen onBack={() => handleNavigate('library')} />
+          <LookCreateScreen
+            onBack={() => handleNavigate('library')}
+            onCreated={(id) => navigateToLookEdit(id, { replace: true })}
+          />
         );
       case 'look-edit':
         return (
@@ -263,6 +266,7 @@ function AppShell() {
             key={lookId ?? 'missing'}
             lookId={lookId ?? ''}
             onBack={() => handleNavigate('library')}
+            onNavigateToLookEdit={(id) => navigateToLookEdit(id, { replace: true })}
           />
         );
       case 'npc-creature-create':
