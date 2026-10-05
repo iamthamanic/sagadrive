@@ -404,6 +404,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Player Live Screen V2 (#368): Program stage + private rail...');
+  execFileSync(process.execPath, ['scripts/player-live-screen-v2-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {

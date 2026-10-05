@@ -211,7 +211,9 @@ test('successful player join routes to live player surface (not gamemaster)', as
     { timeout: 20_000 },
   );
   expect(page.url()).not.toMatch(/gamemaster/);
-  await expect(page.locator('[data-player-panel="v1"]')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('[data-player-live-screen="v2"]')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('[data-program-display="v1"]')).toBeVisible();
+  await expect(page.locator('[data-player-panel="v1"]')).toBeVisible();
   await expect(page.getByText(/Live Spieler/i).first()).toBeVisible();
 
   await page.screenshot({

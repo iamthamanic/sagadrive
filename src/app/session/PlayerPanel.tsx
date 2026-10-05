@@ -20,6 +20,8 @@ type PlayerPanelProps = {
   sessionPublicId: string;
   characterPublicId: string | null;
   onNavigateHome: () => void;
+  /** `rail` omits duplicate scene chrome when embedded in Player Live V2 stage. */
+  embedMode?: 'standalone' | 'rail';
 };
 
 function gradeLabelDe(grade: ProbeGrade): string {
@@ -40,12 +42,14 @@ export function PlayerPanel({
   sessionPublicId,
   characterPublicId,
   onNavigateHome,
+  embedMode = 'standalone',
 }: PlayerPanelProps) {
   const { model, resync, requestCheck } = usePlayerPanel({
     sagaPublicId,
     sessionPublicId,
     characterPublicId,
   });
+  const isRail = embedMode === 'rail';
   const skillOptions = playerPanelCheckSkillOptions(model);
   const [selectedSkill, setSelectedSkill] = useState<string>('');
   const [selectedMode, setSelectedMode] = useState<RollMode>('normal');
@@ -78,16 +82,28 @@ export function PlayerPanel({
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col" data-player-panel="v1">
-      <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground">
-        Live Spieler · {sagaPublicId} / {sessionPublicId}
-        {characterPublicId ? ` · ${characterPublicId}` : ''}
-        {' '}
-        — URL gewährt keine Rechte
-      </div>
+    <div
+      className="flex h-full min-h-0 flex-col"
+      data-player-panel="v1"
+      data-player-panel-embed={embedMode}
+    >
+      {!isRail ? (
+        <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground">
+          Live Spieler · {sagaPublicId} / {sessionPublicId}
+          {characterPublicId ? ` · ${characterPublicId}` : ''}
+          {' '}
+          — URL gewährt keine Rechte
+        </div>
+      ) : null}
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex max-w-3xl flex-col gap-4 p-4 md:p-6">
+        <div
+          className={
+            isRail
+              ? 'flex flex-col gap-3 p-3'
+              : 'mx-auto flex max-w-3xl flex-col gap-4 p-4 md:p-6'
+          }
+        >
           <PlayerPanelStatusBanner
             kind={model.connection}
             label={model.connectionLabel}
@@ -97,11 +113,13 @@ export function PlayerPanel({
             }}
           />
 
-          <SharedScenePresentationView
-            presentation={model.scenePresentation}
-            sceneIdFallback={model.sceneId}
-            compact
-          />
+          {!isRail ? (
+            <SharedScenePresentationView
+              presentation={model.scenePresentation}
+              sceneIdFallback={model.sceneId}
+              compact
+            />
+          ) : null}
 
           <header className="flex flex-wrap items-start gap-4">
             <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
@@ -311,7 +329,11 @@ export function PlayerPanel({
             )}
           </section>
 
-          <section aria-label="Inventar" className="space-y-2">
+          <section
+            aria-label="Inventar"
+            className="space-y-2"
+            data-live-inventory-slot="v1"
+          >
             <h2 className="text-sm font-medium text-foreground">Inventar (nur Lesen)</h2>
             {model.inventory.length === 0 ? (
               <p className="text-sm text-muted-foreground">Kein Inventar geladen.</p>

@@ -77,6 +77,7 @@ export interface PlayerPanelRosterLine {
 
 export interface PlayerPanelModel {
   characterName: string;
+  characterId: string | null;
   characterPublicId: string | null;
   portraitUrl: string | null;
   level: number;
@@ -286,6 +287,7 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
   if (!character) {
     return {
       characterName: '—',
+      characterId: null,
       characterPublicId: input.characterPublicId ?? null,
       portraitUrl: null,
       level: 0,
@@ -426,6 +428,7 @@ export function buildPlayerPanelModel(input: BuildPlayerPanelModelInput): Player
 
   return {
     characterName: character.name,
+    characterId: character.id,
     characterPublicId: character.publicId ?? input.characterPublicId ?? null,
     portraitUrl: character.portraitUrl ?? null,
     level: character.level,
