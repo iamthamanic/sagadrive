@@ -74,7 +74,7 @@ section('3 · 3-column AdaptiveLiveStage layout');
   check(/rightRail=/.test(workspace), 'right rail (inspector)');
   check(/bottomRail=/.test(workspace), 'phone bottom rail');
   check(/LookEditorNav/.test(workspace), 'nav in layout');
-  check(/LookPreviewStageStub/.test(workspace), 'preview stub (#345)');
+  check(/LookPreviewStage/.test(workspace), 'preview stage (#345)');
   check(/LookEditorInspector/.test(workspace), 'inspector in layout');
   check(/data-look-editor-workspace/.test(workspace), 'workspace data hook');
   check(/Speichern/.test(workspace), 'save CTA');

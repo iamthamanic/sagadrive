@@ -496,6 +496,14 @@ function checkLookEditorWorkspace() {
   });
 }
 
+function checkLookPreviewStage() {
+  console.log('Look preview stage (#345): modes, cameras, fixtures, LookRuntime compare...');
+  execFileSync(process.execPath, ['scripts/look-preview-stage-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1697,6 +1705,7 @@ checkLookWorldCapabilityStubs();
 checkToonLabCompatibilitySpike();
 checkLookRuntimeAdapter();
 checkLookEditorWorkspace();
+checkLookPreviewStage();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();
