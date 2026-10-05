@@ -48,6 +48,9 @@ import {
   type AvatarFacialRuntimeState,
 } from './avatar-facial-runtime';
 import type { FacialCanonicalKey } from '../../../domains/character/avatar/facial-contract';
+import type { LookExecutionMode, LookProfileVersion } from '../../../domains/look/types';
+import { createLookRuntime, type LookRuntime } from '../../look/look-runtime';
+import type { LookRuntimeApplyResult } from '../../look/look-runtime-types';
 import type { FaceTrackingDrive } from '../../../domains/character/avatar/face-tracking-contract';
 import type { LiveActAvatarCapabilities } from '../../../domains/character/liveact';
 import {
@@ -187,6 +190,9 @@ export class CharacterStudioRuntime {
   /** Editor preview: SagaDrive MToon profile on/off. Default off until loadModel sets VRM vs GLB. Not persisted. */
   private mtoonStyleEnabled = false;
   private materialStyleSnapshots: MaterialStyleSnapshot[] = [];
+  /** Provider-neutral LookRuntime (#342) — ToonLab never imported here. */
+  private readonly lookRuntime: LookRuntime = createLookRuntime();
+  private lastLookApply: LookRuntimeApplyResult | null = null;
   private readonly animationRuntime: AvatarAnimationRuntime;
   private readonly facialRuntime: AvatarFacialRuntime;
   private readonly rigidEquipmentRuntime: AvatarRigidEquipmentRuntime;
@@ -443,6 +449,92 @@ export class CharacterStudioRuntime {
     if (this.currentAvatar && this.currentManifest) {
       this.applyAppearance(this.currentAvatar, this.currentManifest);
     }
+  }
+
+  getLookRuntime(): LookRuntime {
+    return this.lookRuntime;
+  }
+
+  getLastLookApplyResult(): LookRuntimeApplyResult | null {
+    return this.lastLookApply;
+  }
+
+  /**
+   * Apply a LookProfileVersion via provider-neutral LookRuntime (#342).
+   * Restores material baseline before apply; AvatarCanvas stays ToonLab-free.
+   */
+  applyLookProfile(
+    version: LookProfileVersion,
+    executionMode: LookExecutionMode = 'realtime',
+  ): LookRuntimeApplyResult {
+    if (this.disposed || !this.currentRoot || !this.currentAvatar) {
+      const empty: LookRuntimeApplyResult = {
+        status: 'unsupported',
+        providerId: 'none',
+        profileId: version.profileId,
+        version: version.version,
+        executionMode,
+        capabilities: [],
+        noticeDe: 'Kein Avatar geladen.',
+      };
+      this.lastLookApply = empty;
+      return empty;
+    }
+    const clothingColor = clothingTint(this.currentAvatar.traits.clothing);
+    const result = this.lookRuntime.applyLookProfile(
+      version,
+      {
+        root: this.currentRoot,
+        scene: this.scene,
+        styleLights: this.styleLights,
+        materialSnapshots: this.materialStyleSnapshots,
+        isImportModel: Boolean(this.currentAvatar.model_url),
+        colors: {
+          skin: this.currentAvatar.colors.skin,
+          hair: this.currentAvatar.colors.hair,
+          clothing: clothingColor,
+          eyes: this.currentAvatar.colors.eyes,
+        },
+      },
+      executionMode,
+    );
+    this.lastLookApply = result;
+    this.mtoonStyleEnabled = result.status === 'applied' || result.status === 'partial';
+    this.renderNow();
+    return result;
+  }
+
+  /** Restore load-time PBR Neutral baseline (#342). */
+  restorePbrNeutralLook(): LookRuntimeApplyResult {
+    if (this.disposed || !this.currentRoot) {
+      const empty: LookRuntimeApplyResult = {
+        status: 'unsupported',
+        providerId: 'none',
+        profileId: null,
+        version: null,
+        executionMode: null,
+        capabilities: [],
+        noticeDe: 'Kein Avatar geladen.',
+      };
+      this.lastLookApply = empty;
+      return empty;
+    }
+    const result = this.lookRuntime.restorePbrNeutral({
+      root: this.currentRoot,
+      scene: this.scene,
+      styleLights: this.styleLights,
+      materialSnapshots: this.materialStyleSnapshots,
+      isImportModel: Boolean(this.currentAvatar?.model_url),
+      colors: {},
+    });
+    this.lastLookApply = result;
+    this.mtoonStyleEnabled = false;
+    if (this.currentAvatar && this.currentManifest) {
+      this.applyAppearance(this.currentAvatar, this.currentManifest);
+    } else {
+      this.renderNow();
+    }
+    return result;
   }
 
   playAnimation(actionId: AvatarAnimationActionId): boolean {

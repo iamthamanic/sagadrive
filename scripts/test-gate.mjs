@@ -480,6 +480,14 @@ function checkToonLabCompatibilitySpike() {
   });
 }
 
+function checkLookRuntimeAdapter() {
+  console.log('Look runtime adapter (#342): provider-neutral apply/restore, host-mtoon, ToonLab stub...');
+  execFileSync(process.execPath, ['scripts/look-runtime-adapter-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1679,6 +1687,7 @@ checkLookProfilePersistence();
 checkLookLibrary();
 checkLookWorldCapabilityStubs();
 checkToonLabCompatibilitySpike();
+checkLookRuntimeAdapter();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();
