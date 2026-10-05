@@ -2,8 +2,8 @@
 
 - Issue: #345
 - Feature slug: look-preview-stage
-- HEAD_SHA: WORKTREE
-- BASE_SHA: pending
+- HEAD_SHA: d09aba279888694a35979fa8a358dd06a2262a56
+- BASE_SHA: 41e49676e3c9f81a64668c2ed8769319dfd0a932
 - Verdict: CLEAR
 
 ## Event
