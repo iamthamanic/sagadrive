@@ -2,7 +2,7 @@
 
 - Issue: #349
 - Feature slug: session-look-override
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 7900ebbe90337aef151aafb839a7ffb762dca89d
 - BASE_SHA: 6f9015ae0da07ffc45d1c91f0ba15215fa9d7e6a
 - Verdict: CLEAR
 
