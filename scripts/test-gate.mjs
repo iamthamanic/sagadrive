@@ -434,6 +434,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Adventure Runtime World State (#374): typed playthrough...');
+  execFileSync(process.execPath, ['scripts/adventure-runtime-world-state-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {

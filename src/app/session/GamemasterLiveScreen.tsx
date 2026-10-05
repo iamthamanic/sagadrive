@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { useAuth } from '../../lib/auth-context';
 import { useProjectSummaries } from '../project';
 import { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
+import { AdventureRuntimeControls } from './AdventureRuntimeControls';
 import { CombatEncounterGmPanel } from './CombatEncounterGmPanel';
 import { GmActionPalette } from './GmActionPalette';
 import { KnowledgeFeed } from './knowledge/KnowledgeFeed';
@@ -138,10 +139,24 @@ export function GamemasterLiveScreen({
             Action extension point
           </div>
         </TabsContent>
-        <TabsContent value="world" className="mt-2 p-2 text-sm text-muted-foreground">
-          Persistenter World State folgt in #374.
-          <div data-gm-generic-action-slot="world" className="mt-2 min-h-11 rounded-md border border-dashed border-border p-2 text-xs">
-            Action extension point
+        <TabsContent value="world" className="mt-2 min-h-0 flex-1 overflow-y-auto space-y-2 p-1">
+          <AdventureRuntimeControls
+            sessionId={runtimeSessionId}
+            access={gmAccess}
+          />
+          <div data-gm-generic-action-slot="world" className="min-h-11">
+            <GmActionPalette
+              access={gmAccess}
+              isBusy={runtime.isLoading}
+              onExecute={async (command) => {
+                const next = await runtime.applyCommand({
+                  kind: command.kind,
+                  payload: command.payload,
+                  idempotencyKey: `gm-world:${command.actionId}:${Date.now()}`,
+                });
+                return next !== null;
+              }}
+            />
           </div>
         </TabsContent>
       </Tabs>
