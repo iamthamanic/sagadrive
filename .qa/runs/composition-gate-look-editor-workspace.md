@@ -2,7 +2,7 @@
 
 - Issue: #344
 - Feature slug: look-editor-workspace
-- HEAD_SHA: 8274e2789d82246328fdadb4575f284ca324d8b8
+- HEAD_SHA: 2bc33253072e7386a6f4fcef13550d8fdc06c900
 - BASE_SHA: 29854f1ab2f961c1d94864e4810b9f647ae04d0c
 - Verdict: CLEAR
 
