@@ -136,7 +136,7 @@ export function buildSessionJoinPath(input: {
  */
 export function assertPlayerNotRoutedToGamemaster(
   role: SessionRole | null,
-  liveView: 'gamemaster' | 'player' | 'display',
+  liveView: 'gamemaster' | 'player' | 'viewer' | 'display',
 ): void {
   if (role === 'player' && liveView === 'gamemaster') {
     throw new Error('Player darf nicht auf /live/gamemaster geroutet werden');
