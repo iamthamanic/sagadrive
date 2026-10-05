@@ -40,7 +40,7 @@ const JOINED_SESSION = {
 
 const MOCK_JOIN_CHARACTER = {
   id: 'char-teilnehmen-1',
-  public_id: 'CH-JOIN1',
+  public_id: 'CH-K7M4Q',
   owner_user_id: LOCAL_ADMIN_USER_ID,
   name: 'Teilnehmen Hero',
   description: null,
@@ -207,7 +207,7 @@ test('successful player join routes to live player surface (not gamemaster)', as
   await page.getByRole('button', { name: /Mit .+ beitreten/i }).click();
 
   await expect(page).toHaveURL(
-    /\/sagas\/SA-K7M4Q\/sessions\/SE-X4K73\/live\/player\/CH-JOIN1(?:\/|$|\?)/,
+    /\/sagas\/SA-K7M4Q\/sessions\/SE-X4K73\/live\/player\/CH-K7M4Q(?:\/|$|\?)/,
     { timeout: 20_000 },
   );
   expect(page.url()).not.toMatch(/gamemaster/);

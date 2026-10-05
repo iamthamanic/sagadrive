@@ -9,7 +9,7 @@ const LOCAL_ADMIN_USER_ID = '00000000-0000-4000-8000-000000000001';
 
 const MOCK_CHARACTER = {
   id: 'char-join-1',
-  public_id: 'CH-JOIN1',
+  public_id: 'CH-K7M4Q',
   owner_user_id: LOCAL_ADMIN_USER_ID,
   name: 'Join Hero',
   description: null,
