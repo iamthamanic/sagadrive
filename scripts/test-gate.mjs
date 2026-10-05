@@ -444,6 +444,11 @@ function checkLiveSessionMediaPlane() {
     cwd: root,
     stdio: 'inherit',
   });
+  console.log('Director Control Room (#376): Preview/Program UI...');
+  execFileSync(process.execPath, ['scripts/director-control-room-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 }
 
 function checkToonLabCompatibilitySpike() {

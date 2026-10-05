@@ -3,6 +3,7 @@
  * Location: src/app/session/SessionResourceScreen.tsx
  */
 import { Button } from '../../shared/ui/button';
+import { DirectorControlRoomScreen } from './DirectorControlRoomScreen';
 import { GamemasterLiveScreen } from './GamemasterLiveScreen';
 import { PlayerLiveScreen } from './PlayerLiveScreen';
 import { PlayerCharacterResolve } from './PlayerCharacterResolve';
@@ -62,6 +63,16 @@ export function SessionResourceScreen({
   if (liveView === 'viewer') {
     return (
       <ViewerLiveScreen
+        sagaPublicId={sagaPublicId}
+        sessionPublicId={sessionPublicId}
+        onNavigateHome={onNavigateHome}
+      />
+    );
+  }
+
+  if (liveView === 'director') {
+    return (
+      <DirectorControlRoomScreen
         sagaPublicId={sagaPublicId}
         sessionPublicId={sessionPublicId}
         onNavigateHome={onNavigateHome}
@@ -165,5 +176,7 @@ function liveViewLabel(liveView: LiveViewId, characterPublicId?: string | null):
       return 'Live · Display';
     case 'viewer':
       return 'Live · Viewer';
+    case 'director':
+      return 'Live · Director';
   }
 }
