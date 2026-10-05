@@ -3,6 +3,7 @@
  * Location: src/app/session/index.ts
  */
 export { GamemasterPanel } from './GamemasterPanel';
+export { GamemasterLiveScreen } from './GamemasterLiveScreen';
 export { SessionJoin } from './SessionJoin';
 export { PreparedAdventureFixturePanel } from './PreparedAdventureFixturePanel';
 export { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
