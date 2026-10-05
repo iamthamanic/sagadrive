@@ -13,6 +13,7 @@ import { useAuth } from '../../lib/auth-context';
 import { useProjectSummaries } from '../project';
 import { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
 import { AdventureRuntimeControls } from './AdventureRuntimeControls';
+import { SessionLookSettings } from './SessionLookSettings';
 import { GoldenAdventureDornhainPanel } from './GoldenAdventureDornhainPanel';
 import { CombatEncounterGmPanel } from './CombatEncounterGmPanel';
 import { GmActionPalette } from './GmActionPalette';
@@ -141,6 +142,10 @@ export function GamemasterLiveScreen({
           </div>
         </TabsContent>
         <TabsContent value="world" className="mt-2 min-h-0 flex-1 overflow-y-auto space-y-2 p-1">
+          <SessionLookSettings
+            sagaPublicId={sagaPublicId}
+            sessionPublicId={sessionPublicId}
+          />
           <GoldenAdventureDornhainPanel
             sessionId={runtimeSessionId}
             access={gmAccess}

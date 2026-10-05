@@ -105,6 +105,10 @@ function isSessionDto(value: unknown): value is SessionDto {
     typeof value.public_id === 'string'
     || value.public_id === undefined
     || value.public_id === null;
+  const lookOk =
+    value.look_profile_id === undefined
+    || value.look_profile_id === null
+    || typeof value.look_profile_id === 'string';
   return (
     typeof value.id === 'string'
     && publicIdOk
@@ -116,6 +120,7 @@ function isSessionDto(value: unknown): value is SessionDto {
     && (typeof value.started_at === 'string' || value.started_at === null)
     && (typeof value.ended_at === 'string' || value.ended_at === null)
     && durationOk
+    && lookOk
     && typeof value.created_at === 'string'
     && typeof value.updated_at === 'string'
   );
@@ -173,6 +178,8 @@ class ProjectService {
       startedAt: session.started_at,
       endedAt: session.ended_at,
       durationMinutes: session.duration_minutes ?? null,
+      lookProfileId:
+        typeof session.look_profile_id === 'string' ? session.look_profile_id : null,
       createdAt: session.created_at,
     }));
 
@@ -487,6 +494,45 @@ class ProjectService {
   }
 
   /**
+   * Session Look override (#349). Null clears override → inherit saga default.
+   * GM-only + look ownership via DB trigger on sessions.look_profile_id.
+   */
+  async updateSessionLookSettings(
+    sessionId: string,
+    settings: { lookProfileId: string | null },
+  ): Promise<SessionVm> {
+    const { data, error } = await supabase
+      .from(this.sessionsTableName)
+      .update({ look_profile_id: settings.lookProfileId })
+      .eq('id', sessionId)
+      .select('*')
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update session look: ${error.message}`);
+    }
+    if (!isSessionDto(data)) {
+      throw new Error('Failed to update session look: invalid response');
+    }
+    const normalized = normalizeSessionDto(data);
+    return {
+      id: normalized.id,
+      publicId: typeof normalized.public_id === 'string' ? normalized.public_id : '',
+      projectId: normalized.project_id,
+      sessionNumber: normalized.session_number,
+      name: normalized.name,
+      notes: normalized.notes,
+      status: normalized.status,
+      startedAt: normalized.started_at,
+      endedAt: normalized.ended_at,
+      durationMinutes: normalized.duration_minutes,
+      lookProfileId:
+        typeof normalized.look_profile_id === 'string' ? normalized.look_profile_id : null,
+      createdAt: normalized.created_at,
+    };
+  }
+
+  /**
    * Delete project
    */
   async deleteProject(id: string): Promise<void> {
@@ -576,6 +622,8 @@ class ProjectService {
       startedAt: normalized.started_at,
       endedAt: normalized.ended_at,
       durationMinutes: normalized.duration_minutes,
+      lookProfileId:
+        typeof normalized.look_profile_id === 'string' ? normalized.look_profile_id : null,
       createdAt: normalized.created_at,
     };
   }

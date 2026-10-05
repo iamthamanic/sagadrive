@@ -520,6 +520,14 @@ function checkCharacterLookPreview() {
   });
 }
 
+function checkSessionLookOverride() {
+  console.log('Session Look override (#349): session column, GM inherit/override UI, world resolve...');
+  execFileSync(process.execPath, ['scripts/session-look-override-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1724,6 +1732,7 @@ checkLookEditorWorkspace();
 checkLookPreviewStage();
 checkSagaDefaultLook();
 checkCharacterLookPreview();
+checkSessionLookOverride();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();

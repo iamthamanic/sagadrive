@@ -78,6 +78,7 @@ export { resolveLookProfileId } from './resolve';
 export {
   SYSTEM_DEFAULT_LOOK_PROFILE_ID,
   buildLookResolutionContextFromSaga,
+  resolveWorldLookForSession,
 } from './system-default';
 
 export {
