@@ -38,7 +38,7 @@ section('1 · slice files exist');
   'src/app/look/editor/LookEditorWorkspace.tsx',
   'src/app/look/editor/LookEditorNav.tsx',
   'src/app/look/editor/LookEditorInspector.tsx',
-  'src/app/look/editor/LookPreviewStageStub.tsx',
+  'src/app/look/editor/LookPreviewStage.tsx',
   'src/app/look/editor/useLookEditor.ts',
   'src/app/look/editor/look-editor-draft.ts',
   'src/app/look/editor/look-editor-sections.ts',
