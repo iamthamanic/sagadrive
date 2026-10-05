@@ -30,11 +30,37 @@ const JOINED_SESSION = {
   name: 'Live Join Session',
   project_id: MOCK_PROJECT.id,
   public_id: 'SE-X4K73',
+  session_number: 1,
   status: 'waiting',
   created_at: '2026-08-28T11:00:00.000Z',
   updated_at: '2026-08-28T11:00:00.000Z',
   started_at: null,
   ended_at: null,
+};
+
+const MOCK_JOIN_CHARACTER = {
+  id: 'char-teilnehmen-1',
+  public_id: 'CH-JOIN1',
+  owner_user_id: LOCAL_ADMIN_USER_ID,
+  name: 'Teilnehmen Hero',
+  description: null,
+  class: 'Wanderer',
+  race: 'Mensch',
+  ruleset_key: 'sagadrive-core',
+  level: 1,
+  portrait_url: null,
+  sheet_status: 'ready',
+  created_at: '2026-08-28T10:00:00.000Z',
+  updated_at: '2026-08-28T10:00:00.000Z',
+};
+
+const MOCK_SESSION_PLAYER = {
+  id: 'sp-teilnehmen-1',
+  session_id: JOINED_SESSION.id,
+  user_id: LOCAL_ADMIN_USER_ID,
+  character_id: MOCK_JOIN_CHARACTER.id,
+  is_online: true,
+  joined_at: '2026-08-28T11:00:00.000Z',
 };
 
 function json(route: Route, value: unknown, status = 200) {
@@ -89,6 +115,32 @@ async function stubLibraryProjects(page: Page) {
   });
 }
 
+async function stubPlayerJoinCharacters(page: Page) {
+  await page.route('**/rest/v1/characters*', async (route) => {
+    if (route.request().method() !== 'GET') {
+      await route.fallback();
+      return;
+    }
+    await json(route, [MOCK_JOIN_CHARACTER]);
+  });
+
+  await page.route('**/rest/v1/session_players*', async (route) => {
+    if (route.request().method() !== 'GET') {
+      await route.fallback();
+      return;
+    }
+    await json(route, [MOCK_SESSION_PLAYER]);
+  });
+
+  await page.route('**/rest/v1/sessions*', async (route) => {
+    if (route.request().method() !== 'GET') {
+      await route.fallback();
+      return;
+    }
+    await json(route, [JOINED_SESSION]);
+  });
+}
+
 test.beforeAll(() => {
   fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
 });
@@ -133,6 +185,7 @@ test('successful player join routes to live player surface (not gamemaster)', as
   test.setTimeout(90_000);
 
   await stubLibraryProjects(page);
+  await stubPlayerJoinCharacters(page);
 
   await page.route('**/rest/v1/rpc/join_session_by_code**', async (route) => {
     await json(route, JOINED_SESSION);
@@ -149,11 +202,12 @@ test('successful player join routes to live player surface (not gamemaster)', as
     'active',
   );
 
+  await expect(page.locator('[data-character-assignment="v1"]')).toBeVisible({ timeout: 15_000 });
   await page.getByPlaceholder('z.B. ABC123').fill(JOINED_SESSION.code);
-  await page.getByRole('button', { name: 'Als Spieler beitreten' }).click();
+  await page.getByRole('button', { name: /Mit .+ beitreten/i }).click();
 
   await expect(page).toHaveURL(
-    /\/sagas\/SA-K7M4Q\/sessions\/SE-X4K73\/live\/player(?:\/|$|\?)/,
+    /\/sagas\/SA-K7M4Q\/sessions\/SE-X4K73\/live\/player\/CH-JOIN1(?:\/|$|\?)/,
     { timeout: 20_000 },
   );
   expect(page.url()).not.toMatch(/gamemaster/);
