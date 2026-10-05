@@ -2,7 +2,7 @@
 
 - Issue: #348
 - Feature slug: saga-default-look
-- HEAD_SHA: d35ecef72e6c1209a8fc6ac6fa656ad647db8c30
+- HEAD_SHA: c5ff1a1e67def6e159874748e8ac6c83e695a2bf
 - BASE_SHA: 86076652da33e421c3ec99ba3ca1126a8b507e7e
 - Verdict: CLEAR
 
@@ -14,8 +14,8 @@ SagaVisualStyleSettings → projectService.updateProjectLookSettings → project
 
 ## Simulations
 - N-actors: non-GM cannot UPDATE (RLS); UI disables save.
-- Invalid look id / foreign owner / archived → trigger or client reject; null clears to system default.
-- Session overrides untouched (out of scope).
+- Invalid/missing: foreign owner / archived / unknown look id → trigger or client reject; null clears to system default.
+- Two consumers / crash: resolution helper is pure; settings save does not fan-out; Look Editor remains the sole authoring surface.
 
 ## Flags
 none
