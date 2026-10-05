@@ -504,6 +504,14 @@ function checkLookPreviewStage() {
   });
 }
 
+function checkSagaDefaultLook() {
+  console.log('Saga default Look (#348): project fields, GM settings UI, resolution fallback...');
+  execFileSync(process.execPath, ['scripts/saga-default-look-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1706,6 +1714,7 @@ checkToonLabCompatibilitySpike();
 checkLookRuntimeAdapter();
 checkLookEditorWorkspace();
 checkLookPreviewStage();
+checkSagaDefaultLook();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();

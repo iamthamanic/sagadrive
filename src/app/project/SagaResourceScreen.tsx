@@ -4,10 +4,12 @@
  *
  * Deep-linkable Saga sections; full redesign is out of scope for this issue.
  * #302: overview + sessions link to SessionJoin (mounted in App) — no session import (cycle).
+ * #348: settings hosts SagaVisualStyleSettings (default Look + player override).
  */
 import { Button } from '../../shared/ui/button';
 import { buildSessionJoinPath } from '../../domains/session/contracts/session-entry-routing';
 import type { SagaSectionId } from '../shell';
+import { SagaVisualStyleSettings } from './SagaVisualStyleSettings';
 
 type SagaResourceScreenProps = {
   mode: 'list' | 'new' | 'section';
@@ -80,6 +82,32 @@ export function SagaResourceScreen({
         </p>
         <Button variant="ghost" className="self-start" onClick={onNavigateHome}>
           Abbrechen
+        </Button>
+      </div>
+    );
+  }
+
+  if (section === 'settings') {
+    return (
+      <div className="mx-auto flex max-w-3xl flex-col gap-6 p-6" data-saga-section="settings">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Saga</p>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {sagaPublicId ?? 'Unbekannte Saga'}
+            {' '}
+            · Einstellungen
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Berechtigungen kommen aus Membership/RLS — nicht aus der URL.
+          </p>
+        </div>
+        {sagaPublicId ? (
+          <SagaVisualStyleSettings sagaPublicId={sagaPublicId} onNavigate={onNavigate} />
+        ) : (
+          <p className="text-sm text-muted-foreground">Keine Saga-Public-ID.</p>
+        )}
+        <Button variant="ghost" className="self-start" onClick={onNavigateHome}>
+          Zurück
         </Button>
       </div>
     );

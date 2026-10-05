@@ -14,6 +14,12 @@ function toProjectDtoUpdates(updates: Partial<ProjectVm>): Partial<ProjectDto> {
   if (updates.status !== undefined) dto.status = updates.status;
   if (updates.worldId !== undefined) dto.world_id = updates.worldId;
   if (updates.worldProfileId !== undefined) dto.world_profile_id = updates.worldProfileId;
+  if (updates.defaultLookProfileId !== undefined) {
+    dto.default_look_profile_id = updates.defaultLookProfileId;
+  }
+  if (updates.allowPlayerCharacterLookOverride !== undefined) {
+    dto.allow_player_character_look_override = updates.allowPlayerCharacterLookOverride;
+  }
   if (updates.code !== undefined) dto.code = updates.code;
   return dto;
 }
