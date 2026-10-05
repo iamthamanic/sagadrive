@@ -2,7 +2,7 @@
 
 - Issue: #484
 - Feature slug: golden-mobile-journeys
-- HEAD_SHA: 62130f98ddd7279acb7349de648329e1ec2e5ba0
+- HEAD_SHA: 52c2db5a5314b6ab657dc29e41e408739673964f
 - Verdict: SKIPPED
 - Reason: Single presentation hop (Adaptive AU surfaces → Playwright golden journeys). No new business producer→consumer path. Auth/RLS unchanged.
 - Event: none (presentation-only)
