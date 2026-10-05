@@ -20,3 +20,4 @@ export * from './live-inventory-lifecycle';
 export * from './session-death-lifecycle';
 export * from './adventure-runtime-state';
 export * from '../director';
+export * from './golden-adventure-dornhain';
