@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { usePlayerPanel } from './hooks/usePlayerPanel';
 import { PlayerPanelStatusBanner } from './PlayerPanelStatusBanner';
 import { SharedScenePresentationView } from './SharedScenePresentationView';
+import { LiveInventoryControls } from './LiveInventoryControls';
 
 type PlayerPanelProps = {
   sagaPublicId: string;
@@ -44,7 +45,7 @@ export function PlayerPanel({
   onNavigateHome,
   embedMode = 'standalone',
 }: PlayerPanelProps) {
-  const { model, resync, requestCheck } = usePlayerPanel({
+  const { model, sessionId, resync, requestCheck } = usePlayerPanel({
     sagaPublicId,
     sessionPublicId,
     characterPublicId,
@@ -334,7 +335,7 @@ export function PlayerPanel({
             className="space-y-2"
             data-live-inventory-slot="v1"
           >
-            <h2 className="text-sm font-medium text-foreground">Inventar (nur Lesen)</h2>
+            <h2 className="text-sm font-medium text-foreground">Inventar</h2>
             {model.inventory.length === 0 ? (
               <p className="text-sm text-muted-foreground">Kein Inventar geladen.</p>
             ) : (
@@ -347,6 +348,18 @@ export function PlayerPanel({
                 ))}
               </ul>
             )}
+            {isRail ? (
+              <LiveInventoryControls
+                sessionId={sessionId}
+                access={
+                  model.characterId
+                    ? { role: 'player', capabilities: [], characterId: model.characterId }
+                    : null
+                }
+                boundCharacterId={model.characterId}
+                characterId={model.characterId}
+              />
+            ) : null}
           </section>
 
           <section aria-label="Roster" className="space-y-2">
