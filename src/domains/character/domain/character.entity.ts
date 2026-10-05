@@ -80,6 +80,11 @@ export interface CharacterAppearanceDto {
   clothing: string;
   gender_reading?: CharacterGenderReading;
   avatar?: CharacterAvatarDto;
+  /**
+   * Optional personal LookProfile override for player-character resolution (#347).
+   * Null/omitted → inherit saga/session/system. Must be active + owned when set.
+   */
+  personal_look_profile_id?: string | null;
 }
 
 export interface AbilityDto {

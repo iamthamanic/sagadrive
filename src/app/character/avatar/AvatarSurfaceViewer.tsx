@@ -38,6 +38,8 @@ interface AvatarSurfaceViewerProps {
   canvasRef?: RefObject<HTMLCanvasElement>;
   captureApiRef?: MutableRefObject<AvatarPortraitCaptureHandle | null>;
   onRuntimeReady?: () => void;
+  /** Optional external handle for LookRuntime apply/restore (#347). */
+  studioRuntimeRef?: MutableRefObject<CharacterStudioRuntime | null>;
   /** Portrait/list density — fixed aspect box to avoid layout jump. */
   size?: 'sm' | 'md' | 'lg';
   /** Override Face Tracking on 3D surfaces. Default: on for editor/player-panel, off for tiny session strip. */
@@ -71,6 +73,7 @@ export function AvatarSurfaceViewer({
   canvasRef,
   captureApiRef,
   onRuntimeReady,
+  studioRuntimeRef: studioRuntimeRefProp,
   size = 'md',
   enableFaceTracking,
   onFaceAnchorsCommitted,
@@ -80,7 +83,8 @@ export function AvatarSurfaceViewer({
   const [runtimeReady, setRuntimeReady] = useState(false);
   const [mtoonEnabled, setMtoonEnabled] = useState(true);
   const mtoonHandlerRef = useRef<((enabled: boolean) => void) | null>(null);
-  const studioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
+  const internalStudioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
+  const studioRuntimeRef = studioRuntimeRefProp ?? internalStudioRuntimeRef;
   const expandStudioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
   const [faceMappingPanelHost, setFaceMappingPanelHost] = useState<HTMLDivElement | null>(null);
   const [settingsStickyHost, setSettingsStickyHost] = useState<HTMLDivElement | null>(null);

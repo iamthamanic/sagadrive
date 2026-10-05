@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, CheckCircle2, CircleHelp, Eye, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import type { CharacterStudioRuntime } from '../../../infrastructure/character/avatar/character-studio-runtime';
+import { CharacterLookSelector } from '../../look';
 import { AvatarSurfaceViewer } from '../avatar/AvatarSurfaceViewer';
 import { AvatarImportPanel } from '../avatar/AvatarImportPanel';
 import { AvatarMeshyPanel } from '../avatar/AvatarMeshyPanel';
@@ -318,6 +320,10 @@ export function CharacterEditor() {
   const [flaws, setFlaws] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  /** Personal Look override from appearance JSON (#347). null = inherit world/saga. */
+  const [personalLookProfileId, setPersonalLookProfileId] = useState<string | null>(null);
+  const [lookRuntimeReady, setLookRuntimeReady] = useState(false);
+  const studioRuntimeRef = useRef<CharacterStudioRuntime | null>(null);
   const bootstrapAppliedRef = useRef(false);
 
   const {
@@ -584,6 +590,7 @@ export function CharacterEditor() {
         skin_tone: currentAvatar.colors.skin,
         clothing: currentAvatar.traits.clothing ?? clothing,
         gender_reading: genderReading,
+        personal_look_profile_id: personalLookProfileId,
         avatar: avatarForPersist,
       },
       attributes,
@@ -633,6 +640,8 @@ export function CharacterEditor() {
     setCharacterArchetype(profile.archetype && isSagaDriveArchetypeKey(profile.archetype) ? profile.archetype : undefined);
     setEssenceProfile(profile.essence && isSagaDriveEssenceKey(profile.essence) ? profile.essence : undefined);
     setGenderReading(appearance.gender_reading);
+    setPersonalLookProfileId(appearance.personal_look_profile_id ?? null);
+    setLookRuntimeReady(false);
     setSpeciesTraitInstances(profile.speciesTraitInstances ?? []);
     setSpeciesProfileName(profile.speciesProfile?.name ?? '');
     setSpeciesBodyDescription(profile.speciesProfile?.bodyDescription ?? '');
@@ -1181,6 +1190,7 @@ export function CharacterEditor() {
           skin_tone: avatarForSave.colors.skin,
           clothing: avatarForSave.traits.clothing ?? clothing,
           gender_reading: genderReading,
+          personal_look_profile_id: personalLookProfileId,
           avatar: avatarForSave,
         },
         attributes,
@@ -1369,7 +1379,11 @@ export function CharacterEditor() {
                   avatar={currentAvatar}
                   canvasRef={avatarCanvasRef}
                   captureApiRef={portraitCaptureRef}
-                  onRuntimeReady={handleAvatarRuntimeReady}
+                  studioRuntimeRef={studioRuntimeRef}
+                  onRuntimeReady={() => {
+                    setLookRuntimeReady(true);
+                    handleAvatarRuntimeReady();
+                  }}
                   onFaceAnchorsCommitted={commitFaceAnchors}
                   size="lg"
                   className="w-full border-0"
@@ -1736,6 +1750,14 @@ export function CharacterEditor() {
 
                 <TabsContent value="appearance" className="space-y-6">
                   <div className="rounded-lg border border-primary/30 bg-primary/5 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-medium">Look ist kosmetisch</p><p className="mt-1 text-sm text-muted-foreground">Körperbau, Gesicht, Haare und Kleidung verändern keine Charakterwerte. Spezies und Speziesmerkmale wählst du im Spezies-Tab.</p></div><Badge variant="outline">Keine Werte</Badge></div></div>
+                  <CharacterLookSelector
+                    characterId={savedCharacterId}
+                    personalLookProfileId={personalLookProfileId}
+                    onPersonalLookProfileIdChange={setPersonalLookProfileId}
+                    studioRuntimeRef={studioRuntimeRef}
+                    runtimeReady={lookRuntimeReady}
+                    disabled={saving}
+                  />
                   {editorSurfaces.status === 'pending' ? (
                     <p
                       className="text-sm text-muted-foreground"
