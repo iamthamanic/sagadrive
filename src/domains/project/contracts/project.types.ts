@@ -17,6 +17,10 @@ export interface ProjectDto {
   world_id: string | null;
   /** SagaDrive world profile binding (inventory/NPC catalogs). */
   world_profile_id?: string | null;
+  /** Optional saga default LookProfile id (#348). */
+  default_look_profile_id?: string | null;
+  /** When true, personal character Look overrides may apply (#348). */
+  allow_player_character_look_override?: boolean;
   gm_user_id: string;
   status: 'active' | 'paused' | 'completed' | 'archived';
   created_at: string;
@@ -92,6 +96,10 @@ export interface ProjectVm {
   description: string | null;
   worldId: string | null;
   worldProfileId: string | null;
+  /** Optional saga default LookProfile (#348). Null → system default. */
+  defaultLookProfileId: string | null;
+  /** GM: allow player personal character Look overrides (#348). */
+  allowPlayerCharacterLookOverride: boolean;
   gmUserId: string;
   status: 'active' | 'paused' | 'completed' | 'archived';
   createdAt: string;

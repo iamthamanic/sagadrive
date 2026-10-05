@@ -76,6 +76,11 @@ export {
 export { resolveLookProfileId } from './resolve';
 
 export {
+  SYSTEM_DEFAULT_LOOK_PROFILE_ID,
+  buildLookResolutionContextFromSaga,
+} from './system-default';
+
+export {
   assertLookCapabilitiesSupported,
   assertLookProfileVersionInvariants,
   assertLookReferenceKindSemantics,

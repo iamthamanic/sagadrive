@@ -36,6 +36,13 @@ function isProjectDto(value: unknown): value is ProjectDto {
     value.world_profile_id === undefined
     || value.world_profile_id === null
     || typeof value.world_profile_id === 'string';
+  const defaultLookOk =
+    value.default_look_profile_id === undefined
+    || value.default_look_profile_id === null
+    || typeof value.default_look_profile_id === 'string';
+  const allowOverrideOk =
+    value.allow_player_character_look_override === undefined
+    || typeof value.allow_player_character_look_override === 'boolean';
   return (
     typeof value.id === 'string' &&
     publicIdOk &&
@@ -44,6 +51,8 @@ function isProjectDto(value: unknown): value is ProjectDto {
     (typeof value.description === 'string' || value.description === null) &&
     (typeof value.world_id === 'string' || value.world_id === null) &&
     worldProfileOk &&
+    defaultLookOk &&
+    allowOverrideOk &&
     typeof value.gm_user_id === 'string' &&
     isProjectStatus(value.status) &&
     typeof value.created_at === 'string' &&
@@ -183,6 +192,12 @@ class ProjectService {
       worldId: project.world_id,
       worldProfileId:
         typeof project.world_profile_id === 'string' ? project.world_profile_id : null,
+      defaultLookProfileId:
+        typeof project.default_look_profile_id === 'string'
+          ? project.default_look_profile_id
+          : null,
+      allowPlayerCharacterLookOverride:
+        project.allow_player_character_look_override === false ? false : true,
       gmUserId: project.gm_user_id,
       status: project.status,
       createdAt: project.created_at,
@@ -453,6 +468,22 @@ class ProjectService {
     worldProfileId: string | null,
   ): Promise<ProjectVm> {
     return this.updateProject(projectId, { world_profile_id: worldProfileId });
+  }
+
+  /**
+   * Saga Look settings (#348). GM-only via projects RLS; look ownership via DB trigger.
+   */
+  async updateProjectLookSettings(
+    projectId: string,
+    settings: {
+      defaultLookProfileId: string | null;
+      allowPlayerCharacterLookOverride: boolean;
+    },
+  ): Promise<ProjectVm> {
+    return this.updateProject(projectId, {
+      default_look_profile_id: settings.defaultLookProfileId,
+      allow_player_character_look_override: settings.allowPlayerCharacterLookOverride,
+    });
   }
 
   /**
