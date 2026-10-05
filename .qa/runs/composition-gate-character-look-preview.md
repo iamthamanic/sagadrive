@@ -2,7 +2,7 @@
 
 - Issue: #347
 - Feature slug: character-look-preview
-- HEAD_SHA: WORKTREE (pre-commit; re-stamp after commit)
+- HEAD_SHA: de454c3dc9448421d17d895908d3434f123e4b55
 - BASE_SHA: f8ef39b10cdbd501464896bedbdee045fa4e63ef
 - Verdict: CLEAR
 
