@@ -1,6 +1,6 @@
 # ECC Check — golden-mobile-journeys (#484)
 
-- HEAD_SHA: 7535c159644a05dd77cb98fe89e38b9545271b3d
+- HEAD_SHA: 62130f98ddd7279acb7349de648329e1ec2e5ba0
 - Verdict: READY
 - verify: PASS (.qa/runs/verify-ticket-golden-mobile-journeys.md)
 - composition: SKIPPED (.qa/runs/composition-gate-golden-mobile-journeys.md)
