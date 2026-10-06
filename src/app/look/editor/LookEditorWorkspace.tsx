@@ -1,5 +1,5 @@
 /**
- * LookEditorWorkspace — Canonical 3-column Look Editor (#344).
+ * LookEditorWorkspace — Canonical 3-column Look Editor (#344 / #353).
  * Location: src/app/look/editor/LookEditorWorkspace.tsx
  *
  * Desktop: left nav / center preview stub / right inspector.
@@ -8,15 +8,18 @@
 import { useState } from 'react';
 import { AdaptiveLiveStage, useAdaptiveBand } from '../../../shared/ui/adaptive';
 import { Button } from '../../../shared/ui/button';
+import { LookReferenceAdaptionFlow } from '../create/LookReferenceAdaptionFlow';
 import { LookEditorInspector } from './LookEditorInspector';
 import { LookEditorNav } from './LookEditorNav';
 import { LookPreviewStage } from './LookPreviewStage';
+import type { LookEditorUiDraft } from './look-editor-draft';
 import type { LookEditorSectionId } from './look-editor-sections';
 import { useLookEditor, type LookEditorMode } from './useLookEditor';
 
 export type LookEditorWorkspaceProps = {
   mode: LookEditorMode;
   lookId?: string | null;
+  initialDraft?: LookEditorUiDraft | null;
   onBack: () => void;
   onCreated?: (lookId: string) => void;
 };
@@ -24,19 +27,35 @@ export type LookEditorWorkspaceProps = {
 export function LookEditorWorkspace({
   mode,
   lookId = null,
+  initialDraft = null,
   onBack,
   onCreated,
 }: LookEditorWorkspaceProps) {
   const band = useAdaptiveBand();
   const phone = band === 'phone';
   const [section, setSection] = useState<LookEditorSectionId>('overview');
-  const editor = useLookEditor({ mode, lookId, onCreated });
+  const [showReanalyze, setShowReanalyze] = useState(false);
+  const editor = useLookEditor({ mode, lookId, initialDraft, onCreated });
 
   const versionLabel = editor.record
     ? `Version ${editor.record.profile.currentVersion}${editor.dirty ? ' · ungespeichert' : ''}`
     : mode === 'create'
       ? 'Neuer Look'
       : '—';
+
+  if (showReanalyze) {
+    return (
+      <LookReferenceAdaptionFlow
+        title="Look neu analysieren"
+        displayNameHint={editor.draft.displayName}
+        onBack={() => setShowReanalyze(false)}
+        onAnalyzed={(draft) => {
+          editor.applyAnalysisDraft(draft);
+          setShowReanalyze(false);
+        }}
+      />
+    );
+  }
 
   const topbar = (
     <div
@@ -66,15 +85,27 @@ export function LookEditorWorkspace({
         Zurücksetzen
       </Button>
       {mode === 'edit' && lookId ? (
-        <Button
-          type="button"
-          variant="outline"
-          className="min-h-11"
-          disabled={editor.saving}
-          onClick={() => void editor.duplicate()}
-        >
-          Duplizieren
-        </Button>
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11"
+            disabled={editor.readOnly || editor.saving}
+            onClick={() => setShowReanalyze(true)}
+            data-look-reanalyze
+          >
+            Neu analysieren
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11"
+            disabled={editor.saving}
+            onClick={() => void editor.duplicate()}
+          >
+            Duplizieren
+          </Button>
+        </>
       ) : null}
       <Button
         type="button"

@@ -552,6 +552,14 @@ function checkBasicLookReferenceAnalysis() {
   });
 }
 
+function checkBasicLookAdaptionUx() {
+  console.log('Basic Look Adaption UX (#353): create chooser, references, reanalyze...');
+  execFileSync(process.execPath, ['scripts/basic-look-adaption-ux-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1760,6 +1768,7 @@ checkSessionLookOverride();
 checkWorldLookPreview();
 checkPlayerCharacterLookOverride();
 checkBasicLookReferenceAnalysis();
+checkBasicLookAdaptionUx();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();
