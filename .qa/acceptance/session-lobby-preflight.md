@@ -55,4 +55,6 @@ Out of scope: Marketplace payments, Director Control Room, full Media Engine, Pr
 
 ## Composition Gate
 
-(pending proof)
+- Verdict: CLEAR
+- Proof: `.qa/runs/composition-gate-session-lobby-preflight.md`
+- HEAD: cf1959dab85df6f10c0e7c9324a886cf84a2447d
