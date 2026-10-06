@@ -1,6 +1,6 @@
 # Composition Gate — canonical-saga-workspace
 
-- HEAD_SHA: 60c79bdd83f3719ee708fef6a6f898951f304fcf
+- HEAD_SHA: 77ddb63aac3236bb7a39e211952413d185fb9365
 - BASE_SHA: a9ed5de3ab0fa9aca951c574d3c1e19065272e72
 - Date: 2026-10-06
 - Verdict: CLEAR
@@ -27,3 +27,4 @@ Dashboard/Library/SagaCreateForm/ProjectJoin (UI) → project-service create/joi
 
 ## Skip reason
 n/a
+
