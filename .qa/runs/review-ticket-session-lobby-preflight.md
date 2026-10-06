@@ -1,6 +1,6 @@
 # Review Ticket — session-lobby-preflight (#491)
 
-- HEAD_SHA: cf1959dab85df6f10c0e7c9324a886cf84a2447d
+- HEAD_SHA: 9eedd5ed02f85e923a1e3cf7abe9125a7eb5209c
 - Date: 2026-10-06
 - Verdict: ACCEPT
 

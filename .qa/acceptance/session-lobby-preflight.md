@@ -57,4 +57,4 @@ Out of scope: Marketplace payments, Director Control Room, full Media Engine, Pr
 
 - Verdict: CLEAR
 - Proof: `.qa/runs/composition-gate-session-lobby-preflight.md`
-- HEAD: cf1959dab85df6f10c0e7c9324a886cf84a2447d
+- HEAD: 9eedd5ed02f85e923a1e3cf7abe9125a7eb5209c
