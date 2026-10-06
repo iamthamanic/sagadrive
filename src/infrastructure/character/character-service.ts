@@ -114,7 +114,7 @@ class CharacterService {
       lookStatus,
       sagaAllowsPlayerOverrides: sagaAllows,
     });
-    if (!gate.ok) {
+    if (gate.ok === false) {
       throw new Error(gate.messageDe);
     }
   }
