@@ -129,3 +129,31 @@ export {
   type LookCapabilityAvailability,
   type LookCapabilityMeta,
 } from './capability-metadata';
+
+export {
+  ADVANCED_LOOK_GUIDE_INPUT_DESCRIPTORS,
+  ADVANCED_LOOK_GUIDE_INPUT_KINDS,
+  ADVANCED_LOOK_REQUIRED_GUIDE_KIND_IDS,
+  buildAdvancedLookAdaptionRequest,
+  getAdvancedLookGuideInputDescriptor,
+  isAdvancedLookGuideInputKind,
+  listAdvancedLookGuideInputDescriptors,
+  negotiateAdvancedLookProvider,
+  providerSupportsExecutionMode,
+  type AdvancedLookAdaptionRequest,
+  type AdvancedLookDegradeReason,
+  type AdvancedLookGuideInputDescriptor,
+  type AdvancedLookGuideInputKind,
+  type AdvancedLookNegotiationFail,
+  type AdvancedLookNegotiationOk,
+  type AdvancedLookNegotiationResult,
+  type AdvancedLookProviderCapabilities,
+} from './advanced-adaption';
+
+export {
+  getAdvancedLookProvider,
+  listAdvancedLookProviders,
+  registerAdvancedLookProvider,
+  resolveAdvancedLookProviderForMode,
+  unregisterAdvancedLookProvider,
+} from './advanced-look-provider-registry';
