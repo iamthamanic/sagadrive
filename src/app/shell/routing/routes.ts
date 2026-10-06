@@ -46,7 +46,7 @@ export type SagaSectionId =
   | 'sessions'
   | 'settings';
 
-export type SessionPhaseId = 'prepare' | 'live' | 'recap';
+export type SessionPhaseId = 'prepare' | 'lobby' | 'live' | 'recap';
 
 /** Neutral session URL resolves phase from persisted status in the app layer. */
 export type SessionPhaseRouteId = SessionPhaseId | 'auto';
@@ -334,7 +334,7 @@ function resolveSagaRoutes(path: string): ResolvedRoute | null {
   }
 
   const sessionPhase = path.match(
-    /^\/sagas\/([^/]+)\/sessions\/([^/]+)\/(prepare|live|recap)$/,
+    /^\/sagas\/([^/]+)\/sessions\/([^/]+)\/(prepare|lobby|live|recap)$/,
   );
   if (sessionPhase) {
     const sagaPublicId = requireSagaPublicId(sessionPhase[1] ?? '');

@@ -14,6 +14,7 @@ export * from './multiuser-e2e-security';
 export * from './player-test-instrumentation';
 export * from './live-session-access';
 export * from './session-entry-routing';
+export * from './session-lobby';
 export * from './session-invite';
 export * from './player-character-assignment';
 export * from './generic-gm-actions';

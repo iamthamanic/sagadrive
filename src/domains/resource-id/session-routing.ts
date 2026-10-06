@@ -12,7 +12,7 @@ export type ProjectSessionLifecycleStatus =
   | 'completed'
   | 'cancelled';
 
-export type SessionLifecyclePhase = 'prepare' | 'live' | 'recap';
+export type SessionLifecyclePhase = 'prepare' | 'lobby' | 'live' | 'recap';
 
 export type LiveSessionRole = 'gm' | 'player' | 'observer' | 'none';
 

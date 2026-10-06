@@ -584,6 +584,14 @@ function checkSessionInviteShareEntry() {
   });
 }
 
+function checkSessionLobbyPreflight() {
+  console.log('Session lobby preflight (#491): lobby route + media opt-in + enter...');
+  execFileSync(process.execPath, ['scripts/session-lobby-preflight-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1796,6 +1804,7 @@ checkBasicLookReferenceAnalysis();
 checkBasicLookAdaptionUx();
 checkCanonicalSagaWorkspace();
 checkSessionInviteShareEntry();
+checkSessionLobbyPreflight();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();

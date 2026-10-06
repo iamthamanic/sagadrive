@@ -8,6 +8,7 @@ import { GamemasterLiveScreen } from './GamemasterLiveScreen';
 import { PlayerLiveScreen } from './PlayerLiveScreen';
 import { PlayerCharacterResolve } from './PlayerCharacterResolve';
 import { ViewerLiveScreen } from './ViewerLiveScreen';
+import { SessionLobbyScreen } from './SessionLobbyScreen';
 import { ProgramDisplayShell } from './program/ProgramDisplayShell';
 import { useProgramPresentation } from './hooks/useProgramPresentation';
 import type { LiveViewId, SessionPhaseRouteId } from '../shell';
@@ -19,6 +20,7 @@ type SessionResourceScreenProps = {
   liveView?: LiveViewId;
   characterPublicId?: string | null;
   onNavigateHome: () => void;
+  onNavigate?: (path: string) => void;
 };
 
 export function SessionResourceScreen({
@@ -28,7 +30,27 @@ export function SessionResourceScreen({
   liveView,
   characterPublicId,
   onNavigateHome,
+  onNavigate,
 }: SessionResourceScreenProps) {
+  if (phase === 'lobby' && !liveView) {
+    return (
+      <SessionLobbyScreen
+        sagaPublicId={sagaPublicId}
+        sessionPublicId={sessionPublicId}
+        onNavigateHome={onNavigateHome}
+        onNavigate={(path) => {
+          if (onNavigate) {
+            onNavigate(path);
+            return;
+          }
+          if (typeof window !== 'undefined') {
+            window.history.pushState(null, '', path);
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }
+        }}
+      />
+    );
+  }
   if (liveView === 'gamemaster') {
     return (
       <GamemasterLiveScreen
@@ -155,6 +177,8 @@ function phaseLabel(phase: SessionPhaseRouteId): string {
   switch (phase) {
     case 'prepare':
       return 'Session vorbereiten';
+    case 'lobby':
+      return 'Session-Lobby';
     case 'live':
       return 'Live-Session';
     case 'recap':
