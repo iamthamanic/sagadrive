@@ -7,6 +7,7 @@ import { useEffect, type ReactNode } from 'react';
 import { useAuth } from '../../../lib/auth-context';
 import { LoginScreen } from './LoginScreen';
 import { SagaDriveLogo } from '../SagaDriveLogo';
+import { setInviteReturnPath } from '../../../domains/session/contracts/session-invite';
 
 interface AuthGateProps {
   children: ReactNode;
@@ -39,6 +40,12 @@ export function AuthGate({ children }: AuthGateProps) {
   }
 
   if (!user) {
+    if (typeof window !== 'undefined') {
+      const path = `${window.location.pathname}${window.location.search}`;
+      if (path.startsWith('/session-invite')) {
+        setInviteReturnPath(path);
+      }
+    }
     return <LoginScreen />;
   }
 
