@@ -5,7 +5,7 @@
 
 ## Phases
 - A test-gate: PASS
-- B composition-gate: CLEAR (HEAD 3ce1cb9f45fda7eec63e6a80817be1e3a98a8abb)
+- B composition-gate: CLEAR (HEAD 0440d24bc1dcbe0ed2cc26fe33fd518a88ea46f2)
 - C review: ACCEPT
 - D typed-strict / architecture: PASS
 - E UI guidelines / ux-laws / verify-ui: PASS
