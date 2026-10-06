@@ -191,9 +191,8 @@ function parseReferences(value: unknown): ParsedRef[] {
 }
 
 serve(async (request) => {
-  if (request.method === 'OPTIONS') {
-    return handleOptions(request, CORS_OPTS);
-  }
+  const optionsResponse = handleOptions(request, CORS_OPTS);
+  if (optionsResponse) return optionsResponse;
   if (request.method !== 'POST') {
     return jsonResponse(request, { status: 'error', message: 'Method not allowed' }, 405);
   }
