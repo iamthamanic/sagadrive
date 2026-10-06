@@ -107,11 +107,14 @@ export function useSessionLobby(input: UseSessionLobbyInput): UseSessionLobbyRes
         const detail = await sessionService.getSessionById(session.id);
         const selfPlayer = detail.players.find((p) => p.userId === user.id);
         const isGm = detail.gmUserId === user.id;
-        const selfRole: SessionRole = isGm
-          ? 'gamemaster'
-          : selfPlayer
-            ? 'player'
-            : 'viewer';
+        // Prefer player seat when a character is bound (GM who joined as player).
+        const selfRole: SessionRole = selfPlayer?.characterId
+          ? 'player'
+          : isGm
+            ? 'gamemaster'
+            : selfPlayer
+              ? 'player'
+              : 'viewer';
 
         if (selfRole === 'viewer' && !selfPlayer && !isGm) {
           setError('Keine Session-Mitgliedschaft für diese Lobby.');
@@ -188,7 +191,7 @@ export function useSessionLobby(input: UseSessionLobbyInput): UseSessionLobbyRes
             status: detail.status,
             code: detail.code,
           },
-          selfRole: isGm ? 'gamemaster' : selfRole,
+          selfRole,
           selfUserId: user.id,
           selfCharacterId: selfPlayer?.characterId ?? null,
           selfCharacterName: selfMeta?.name ?? null,
