@@ -56,7 +56,7 @@ section('2 · canonical routes mount workspace only');
   const create = read('src/app/look/LookCreateScreen.tsx');
   const edit = read('src/app/look/LookEditScreen.tsx');
   const app = read('src/App.tsx');
-  check(/LookEditorWorkspace/.test(create), 'create mounts workspace');
+  check(/LookCreateChooser|LookEditorWorkspace/.test(create), 'create mounts chooser/workspace');
   check(/LookEditorWorkspace/.test(edit), 'edit mounts workspace');
   check(/data-look-create-screen/.test(create), 'create data hook');
   check(/data-look-edit-screen/.test(edit), 'edit data hook');

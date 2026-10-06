@@ -1,5 +1,5 @@
 /**
- * useLookEditor — Load/save/duplicate/reset state for Look Editor workspace (#344).
+ * useLookEditor — Load/save/duplicate/reset state for Look Editor workspace (#344 / #353).
  * Location: src/app/look/editor/useLookEditor.ts
  */
 import { useEffect, useRef, useState } from 'react';
@@ -25,18 +25,35 @@ export type LookEditorMode = 'create' | 'edit';
 export type UseLookEditorArgs = {
   mode: LookEditorMode;
   lookId: string | null;
+  /** Prefill from reference analysis or other create paths (#353). */
+  initialDraft?: LookEditorUiDraft | null;
   onCreated?: (lookId: string) => void;
 };
 
-export function useLookEditor({ mode, lookId, onCreated }: UseLookEditorArgs) {
-  const [draft, setDraft] = useState<LookEditorUiDraft>(() => defaultLookEditorUiDraft());
-  const [baseline, setBaseline] = useState<LookEditorUiDraft>(() => defaultLookEditorUiDraft());
+export function useLookEditor({
+  mode,
+  lookId,
+  initialDraft = null,
+  onCreated,
+}: UseLookEditorArgs) {
+  const [draft, setDraft] = useState<LookEditorUiDraft>(
+    () => initialDraft ?? defaultLookEditorUiDraft(),
+  );
+  const [baseline, setBaseline] = useState<LookEditorUiDraft>(() =>
+    initialDraft
+      ? defaultLookEditorUiDraft(initialDraft.displayName)
+      : defaultLookEditorUiDraft(),
+  );
   const [record, setRecord] = useState<LookProfileRecord | null>(null);
   const [versions, setVersions] = useState<LookProfileVersion[]>([]);
   const [loading, setLoading] = useState(mode === 'edit');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(
+    initialDraft?.source === 'reference-analysis'
+      ? 'Referenzanalyse geladen — prüfe die Vorschau und speichere, wenn du zufrieden bist.'
+      : null,
+  );
   const [readOnly, setReadOnly] = useState(false);
   const onCreatedRef = useRef(onCreated);
   onCreatedRef.current = onCreated;
@@ -97,6 +114,17 @@ export function useLookEditor({ mode, lookId, onCreated }: UseLookEditorArgs) {
     if (readOnly) return;
     setDraft((prev) => ({ ...prev, ...patch }));
     setStatusMessage(null);
+  };
+
+  /** Apply a new analysis result without saving (edit → Speichern = neue Version). */
+  const applyAnalysisDraft = (next: LookEditorUiDraft) => {
+    if (readOnly) return;
+    setDraft(next);
+    setStatusMessage(
+      mode === 'edit'
+        ? 'Neue Analyse geladen — Speichern erzeugt eine neue Version; die alte bleibt erhalten.'
+        : 'Referenzanalyse geladen — prüfe die Vorschau und speichere, wenn du zufrieden bist.',
+    );
   };
 
   const reset = () => {
@@ -168,6 +196,7 @@ export function useLookEditor({ mode, lookId, onCreated }: UseLookEditorArgs) {
     draft,
     baseline,
     patchDraft,
+    applyAnalysisDraft,
     record,
     versions,
     loading,

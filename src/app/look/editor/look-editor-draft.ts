@@ -1,15 +1,17 @@
 /**
- * look-editor-draft — UI draft ↔ LookProfileWriteDraft for #344.
+ * look-editor-draft — UI draft ↔ LookProfileWriteDraft for #344 / #353.
  * Location: src/app/look/editor/look-editor-draft.ts
  *
  * SagaDrive knobs only — no ToonLab raw blobs on the write path.
  * Knobs round-trip via a structured style reference URI (not provider JSON).
  */
+import type { LookReferenceAnalysisDraft } from '../../../domains/look';
 import type {
   LookProfileRecord,
   LookProfileVersion,
   LookProfileWriteDraft,
   LookReference,
+  LookSource,
 } from '../../../domains/look/types';
 
 export type LookEditorUiDraft = {
@@ -28,6 +30,8 @@ export type LookEditorUiDraft = {
   postFxSaturation: number;
   /** Advanced (collapsed): opaque note — never a provider blob. */
   advancedNote: string;
+  /** Authorship source for the next save (#353 reference adaption). */
+  source: LookSource;
 };
 
 const KNOBS_REF_ID = 'ref.sagadrive-knobs-v1';
@@ -50,6 +54,7 @@ export function defaultLookEditorUiDraft(displayName = 'Neuer Look'): LookEditor
     postFxContrast: 50,
     postFxSaturation: 50,
     advancedNote: '',
+    source: 'manual',
   };
 }
 
@@ -90,11 +95,29 @@ export function uiDraftFromVersion(version: LookProfileVersion): LookEditorUiDra
     displayName: version.displayName,
     ...knobsFromReferences(version.references),
     advancedNote: noteFromReferences(version.references),
+    source: version.source,
   };
 }
 
 export function uiDraftFromRecord(record: LookProfileRecord): LookEditorUiDraft {
   return uiDraftFromVersion(record.current);
+}
+
+/** Map normalized reference analysis into an editable Look Editor draft (#353). */
+export function uiDraftFromAnalysisDraft(
+  analysis: LookReferenceAnalysisDraft,
+): LookEditorUiDraft {
+  return {
+    displayName: analysis.displayName,
+    characterStylization: clamp01to100(analysis.knobs.characterStylization, 55),
+    characterOutline: clamp01to100(analysis.knobs.characterOutline, 40),
+    lightingWarmth: clamp01to100(analysis.knobs.lightingWarmth, 50),
+    lightingKey: clamp01to100(analysis.knobs.lightingKey, 60),
+    postFxContrast: clamp01to100(analysis.knobs.postFxContrast, 50),
+    postFxSaturation: clamp01to100(analysis.knobs.postFxSaturation, 50),
+    advancedNote: analysis.contentNotes.slice(0, 200),
+    source: 'reference-analysis',
+  };
 }
 
 export function toLookProfileWriteDraft(ui: LookEditorUiDraft): LookProfileWriteDraft {
@@ -123,9 +146,11 @@ export function toLookProfileWriteDraft(ui: LookEditorUiDraft): LookProfileWrite
       label: 'Erweiterte Notiz',
     });
   }
+  const source: LookSource =
+    ui.source === 'reference-analysis' ? 'reference-analysis' : ui.source || 'manual';
   return {
     displayName: ui.displayName.trim() || 'Unbenannter Look',
-    source: 'manual',
+    source,
     references,
     capabilities: ['character', 'lighting', 'postFx'],
     executionModes: ['realtime', 'rendered'],
