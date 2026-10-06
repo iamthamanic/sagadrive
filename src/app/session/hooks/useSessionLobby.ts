@@ -34,6 +34,9 @@ export type UseSessionLobbyResult = {
   readonly model: LobbyPreflightViewModel | null;
   readonly isLoading: boolean;
   readonly error: string | null;
+  readonly cameraStatus: LobbyMediaDeviceStatus;
+  readonly microphoneStatus: LobbyMediaDeviceStatus;
+  readonly liveActStatus: LobbyLiveActStatus;
   readonly setReady: (ready: boolean) => void;
   readonly probeCamera: () => Promise<void>;
   readonly probeMicrophone: () => Promise<void>;
@@ -307,6 +310,9 @@ export function useSessionLobby(input: UseSessionLobbyInput): UseSessionLobbyRes
     model,
     isLoading,
     error,
+    cameraStatus,
+    microphoneStatus,
+    liveActStatus,
     setReady,
     probeCamera,
     probeMicrophone,

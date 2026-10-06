@@ -206,6 +206,16 @@ test('successful player join routes to live player surface (not gamemaster)', as
   await page.getByPlaceholder('z.B. ABC123').fill(JOINED_SESSION.code);
   await page.getByRole('button', { name: /Mit .+ beitreten/i }).click();
 
+  // #491: join lands in Lobby first (not direct live).
+  await expect(page).toHaveURL(
+    /\/sagas\/SA-K7M4Q\/sessions\/SE-X4K73\/lobby(?:\/|$|\?)/,
+    { timeout: 20_000 },
+  );
+  expect(page.url()).not.toMatch(/gamemaster/);
+  await expect(page.locator('[data-au-surface="session-lobby"]')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('[data-session-lobby-enter]')).toBeVisible({ timeout: 20_000 });
+  await page.locator('[data-session-lobby-enter]').click();
+
   await expect(page).toHaveURL(
     /\/sagas\/SA-K7M4Q\/sessions\/SE-X4K73\/live\/player\/CH-K7M4Q(?:\/|$|\?)/,
     { timeout: 20_000 },

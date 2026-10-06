@@ -28,6 +28,9 @@ export function SessionLobbyScreen({
     model,
     isLoading,
     error,
+    cameraStatus,
+    microphoneStatus,
+    liveActStatus,
     setReady,
     probeCamera,
     probeMicrophone,
@@ -105,6 +108,68 @@ export function SessionLobbyScreen({
             {error}
           </p>
         ) : null}
+
+        {/* Media probes are always available after first paint — never gated on roster load. */}
+        <section
+          className="rounded-lg border border-border bg-card/40 p-4"
+          data-session-lobby-media
+        >
+          <h2 className="text-sm font-medium">Geräte & LiveAct</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Kamera, Mikrofon und LiveAct starten nur nach deinem Klick — nie automatisch.
+            Fehlende Geräte blockieren den Session-Start nicht.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-md border border-border/60 p-3">
+              <p className="text-xs text-muted-foreground">Kamera</p>
+              <p className="text-sm" data-lobby-camera-status>
+                {lobbyMediaStatusLabelDe(cameraStatus)}
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="mt-2 min-h-11 w-full"
+                onClick={() => void probeCamera()}
+                data-session-lobby-probe-camera
+              >
+                Kamera prüfen
+              </Button>
+            </div>
+            <div className="rounded-md border border-border/60 p-3">
+              <p className="text-xs text-muted-foreground">Mikrofon</p>
+              <p className="text-sm" data-lobby-mic-status>
+                {lobbyMediaStatusLabelDe(microphoneStatus)}
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="mt-2 min-h-11 w-full"
+                onClick={() => void probeMicrophone()}
+                data-session-lobby-probe-mic
+              >
+                Mikrofon prüfen
+              </Button>
+            </div>
+            <div className="rounded-md border border-border/60 p-3">
+              <p className="text-xs text-muted-foreground">LiveAct</p>
+              <p className="text-sm" data-lobby-liveact-status>
+                {lobbyLiveActStatusLabelDe(liveActStatus)}
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="mt-2 min-h-11 w-full"
+                onClick={probeLiveAct}
+                data-session-lobby-probe-liveact
+              >
+                LiveAct prüfen
+              </Button>
+            </div>
+          </div>
+        </section>
 
         {model ? (
           <>
@@ -214,67 +279,6 @@ export function SessionLobbyScreen({
               >
                 {selfReady ? 'Bereitschaft zurücknehmen' : 'Bereit markieren'}
               </Button>
-            </section>
-
-            <section
-              className="rounded-lg border border-border bg-card/40 p-4"
-              data-session-lobby-media
-            >
-              <h2 className="text-sm font-medium">Geräte & LiveAct</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Kamera, Mikrofon und LiveAct starten nur nach deinem Klick — nie automatisch.
-                Fehlende Geräte blockieren den Session-Start nicht.
-              </p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                <div className="rounded-md border border-border/60 p-3">
-                  <p className="text-xs text-muted-foreground">Kamera</p>
-                  <p className="text-sm" data-lobby-camera-status>
-                    {lobbyMediaStatusLabelDe(model.cameraStatus)}
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 min-h-11 w-full"
-                    onClick={() => void probeCamera()}
-                    data-session-lobby-probe-camera
-                  >
-                    Kamera prüfen
-                  </Button>
-                </div>
-                <div className="rounded-md border border-border/60 p-3">
-                  <p className="text-xs text-muted-foreground">Mikrofon</p>
-                  <p className="text-sm" data-lobby-mic-status>
-                    {lobbyMediaStatusLabelDe(model.microphoneStatus)}
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 min-h-11 w-full"
-                    onClick={() => void probeMicrophone()}
-                    data-session-lobby-probe-mic
-                  >
-                    Mikrofon prüfen
-                  </Button>
-                </div>
-                <div className="rounded-md border border-border/60 p-3">
-                  <p className="text-xs text-muted-foreground">LiveAct</p>
-                  <p className="text-sm" data-lobby-liveact-status>
-                    {lobbyLiveActStatusLabelDe(model.liveActStatus)}
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 min-h-11 w-full"
-                    onClick={probeLiveAct}
-                    data-session-lobby-probe-liveact
-                  >
-                    LiveAct prüfen
-                  </Button>
-                </div>
-              </div>
             </section>
 
             <footer className="mt-auto flex flex-wrap items-center gap-3 border-t border-border pt-4">
