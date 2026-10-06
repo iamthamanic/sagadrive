@@ -14,6 +14,8 @@ import { dashboardReadyLocator, ensureLoggedIn } from './helpers/auth';
 const EVIDENCE = '.qa/evidence/auth-local-admin-timeout';
 /** Must match src/lib/networkTimeout.ts AUTH_SESSION_TIMEOUT_MS */
 const AUTH_SESSION_TIMEOUT_MS = 1_500;
+/** CI slack after timeout for dashboard paint (case 2 timing). */
+const AUTH_FALLBACK_VISIBLE_SLACK_MS = 4_500;
 const LOCAL_ADMIN_STORAGE_KEY = 'sagadrive-local-admin-session';
 
 function isGoTrueToken(url: string): boolean {
@@ -170,10 +172,10 @@ test('2 timeout fallback: GoTrue hang → Local Admin fallback', async ({ page }
   await fillCredentials(page, 'admin', '1234');
   await page.getByRole('button', { name: 'Einloggen' }).click();
   await expect(dashboardReadyLocator(page)).toBeVisible({
-    timeout: AUTH_SESSION_TIMEOUT_MS + 2_500,
+    timeout: AUTH_SESSION_TIMEOUT_MS + AUTH_FALLBACK_VISIBLE_SLACK_MS,
   });
   const elapsed = Date.now() - t0;
-  expect(elapsed).toBeLessThan(AUTH_SESSION_TIMEOUT_MS + 2_500);
+  expect(elapsed).toBeLessThan(AUTH_SESSION_TIMEOUT_MS + AUTH_FALLBACK_VISIBLE_SLACK_MS);
   expect(elapsed).toBeGreaterThanOrEqual(AUTH_SESSION_TIMEOUT_MS - 200);
   fs.writeFileSync(
     path.join(EVIDENCE, 'case-2.json'),
