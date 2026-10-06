@@ -544,6 +544,14 @@ function checkPlayerCharacterLookOverride() {
   });
 }
 
+function checkBasicLookReferenceAnalysis() {
+  console.log('Basic Look reference analysis (#352): provider-neutral contract + edge path...');
+  execFileSync(process.execPath, ['scripts/basic-look-reference-analysis-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1751,6 +1759,7 @@ checkCharacterLookPreview();
 checkSessionLookOverride();
 checkWorldLookPreview();
 checkPlayerCharacterLookOverride();
+checkBasicLookReferenceAnalysis();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();

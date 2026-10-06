@@ -42,6 +42,15 @@ A **LookProfile** describes a visual look (style + optional content references) 
 
 Missing saga default → system default. Unknown capability values must not crash resolution (ignored / unsupported flag).
 
+## Reference analysis (#352)
+
+- Contract: `LookReferenceAnalyzer` + `normalizeLookReferenceAnalysisPayload` in `src/domains/look/reference-analysis.ts`
+- Input: 1–10 PNG/JPEG/WebP refs with `style` | `content` (+ optional weight)
+- Content refs inform motif notes only — never automatic style sources
+- Output: validated draft (palette, character/lighting/postFx knobs) + provenance `look-ref-analysis-v1`
+- First vision provider is Edge/Infrastructure only (`supabase/functions/look-reference-analysis`); domain never imports provider types
+- Invalid / leaked provider payloads must not become persisted LookProfiles
+
 ## Non-goals (this slice)
 
 Persistence, UI, renderer adapters, ToonLab, environment renderers.
