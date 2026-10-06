@@ -5,11 +5,13 @@
  * Deep-linkable Saga sections; full redesign is out of scope for this issue.
  * #302: overview + sessions link to SessionJoin (mounted in App) — no session import (cycle).
  * #348: settings hosts SagaVisualStyleSettings (default Look + player override).
+ * #350: world hosts WorldLookPreviewPanel (temp preview / apply / reset).
  */
 import { Button } from '../../shared/ui/button';
 import { buildSessionJoinPath } from '../../domains/session/contracts/session-entry-routing';
 import type { SagaSectionId } from '../shell';
 import { SagaVisualStyleSettings } from './SagaVisualStyleSettings';
+import { WorldLookPreviewPanel } from './WorldLookPreviewPanel';
 
 type SagaResourceScreenProps = {
   mode: 'list' | 'new' | 'section';
@@ -103,6 +105,32 @@ export function SagaResourceScreen({
         </div>
         {sagaPublicId ? (
           <SagaVisualStyleSettings sagaPublicId={sagaPublicId} onNavigate={onNavigate} />
+        ) : (
+          <p className="text-sm text-muted-foreground">Keine Saga-Public-ID.</p>
+        )}
+        <Button variant="ghost" className="self-start" onClick={onNavigateHome}>
+          Zurück
+        </Button>
+      </div>
+    );
+  }
+
+  if (section === 'world') {
+    return (
+      <div className="mx-auto flex max-w-3xl flex-col gap-6 p-6" data-saga-section="world">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Saga</p>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {sagaPublicId ?? 'Unbekannte Saga'}
+            {' '}
+            · Welt
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Look-Preview in der Weltansicht — ohne zweiten Look-Editor.
+          </p>
+        </div>
+        {sagaPublicId ? (
+          <WorldLookPreviewPanel sagaPublicId={sagaPublicId} onNavigate={onNavigate} />
         ) : (
           <p className="text-sm text-muted-foreground">Keine Saga-Public-ID.</p>
         )}
