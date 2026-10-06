@@ -536,6 +536,14 @@ function checkWorldLookPreview() {
   });
 }
 
+function checkPlayerCharacterLookOverride() {
+  console.log('Player character Look override (#351): write gate + resolution ignore when forbidden...');
+  execFileSync(process.execPath, ['scripts/player-character-look-override-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1742,6 +1750,7 @@ checkSagaDefaultLook();
 checkCharacterLookPreview();
 checkSessionLookOverride();
 checkWorldLookPreview();
+checkPlayerCharacterLookOverride();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();

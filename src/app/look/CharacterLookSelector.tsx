@@ -132,15 +132,7 @@ export function CharacterLookSelector({
               if (characterId && !persistLock.current) {
                 persistLock.current = true;
                 try {
-                  const current = await characterService.getCharacterById(characterId);
-                  if (!cancelled) {
-                    await characterService.updateCharacter(characterId, {
-                      appearance: {
-                        ...current.appearance,
-                        personal_look_profile_id: null,
-                      },
-                    });
-                  }
+                  await characterService.updateCharacterPersonalLook(characterId, null);
                 } catch {
                   // Soft-fail: local state already cleared; next save will persist.
                 } finally {
@@ -206,13 +198,7 @@ export function CharacterLookSelector({
     setSaving(true);
     setError(null);
     try {
-      const current = await characterService.getCharacterById(characterId);
-      await characterService.updateCharacter(characterId, {
-        appearance: {
-          ...current.appearance,
-          personal_look_profile_id: nextId,
-        },
-      });
+      await characterService.updateCharacterPersonalLook(characterId, nextId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Look-Auswahl konnte nicht gespeichert werden.');
     } finally {

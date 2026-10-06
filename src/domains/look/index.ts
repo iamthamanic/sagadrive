@@ -82,6 +82,12 @@ export {
 } from './system-default';
 
 export {
+  assertPersonalLookOverrideWrite,
+  type PersonalLookOverrideWriteInput,
+  type PersonalLookOverrideWriteResult,
+} from './personal-look-override';
+
+export {
   assertLookCapabilitiesSupported,
   assertLookProfileVersionInvariants,
   assertLookReferenceKindSemantics,
