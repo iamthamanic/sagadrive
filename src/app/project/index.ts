@@ -7,3 +7,4 @@ export { useProjectSummaries } from './hooks/useProjectSummaries';
 export { ProjectJoin } from './ProjectJoin';
 export { SagaResourceScreen } from './SagaResourceScreen';
 export { SagaVisualStyleSettings } from './SagaVisualStyleSettings';
+export { WorldLookPreviewPanel } from './WorldLookPreviewPanel';

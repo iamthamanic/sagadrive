@@ -12,7 +12,7 @@ import { AuthGate, Layout, ViewLoadingFallback, useAppLocation } from './app/she
 import { Dashboard } from './app/dashboard';
 import { Toaster } from './shared/ui/sonner';
 import { NotFoundPlaceholder, ItemWorkbenchScreen } from './app/items';
-import { LookCreateScreen, LookEditScreen } from './app/look';
+import { LookCreateScreen, LookEditScreen, takeLookEditorReturnPath } from './app/look';
 import { NpcCreatureCreateScreen, NpcCreatureEditorScreen } from './app/npc-creature';
 import { SagaResourceScreen } from './app/project';
 import { SessionResourceScreen } from './app/session';
@@ -265,7 +265,10 @@ function AppShell() {
           <LookEditScreen
             key={lookId ?? 'missing'}
             lookId={lookId ?? ''}
-            onBack={() => handleNavigate('library')}
+            onBack={() => {
+              const returnPath = takeLookEditorReturnPath();
+              handleNavigate(returnPath ?? 'library');
+            }}
             onNavigateToLookEdit={(id) => navigateToLookEdit(id, { replace: true })}
           />
         );

@@ -528,6 +528,14 @@ function checkSessionLookOverride() {
   });
 }
 
+function checkWorldLookPreview() {
+  console.log('World Look preview (#350): Saga world panel, temp preview, apply/reset, return context...');
+  execFileSync(process.execPath, ['scripts/world-look-preview-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1733,6 +1741,7 @@ checkLookPreviewStage();
 checkSagaDefaultLook();
 checkCharacterLookPreview();
 checkSessionLookOverride();
+checkWorldLookPreview();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();

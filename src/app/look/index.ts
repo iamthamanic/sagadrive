@@ -8,3 +8,8 @@ export { LookEditScreen } from './LookEditScreen';
 export { CharacterLookSelector } from './CharacterLookSelector';
 export type { CharacterLookSelectorProps } from './CharacterLookSelector';
 export { lookOriginLabelDe, LOOK_ORIGIN_LABELS_DE } from './look-origin-labels';
+export {
+  setLookEditorReturnPath,
+  takeLookEditorReturnPath,
+  peekLookEditorReturnPath,
+} from './look-editor-return';
