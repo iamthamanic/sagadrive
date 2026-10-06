@@ -2,7 +2,7 @@
 
 - Issue: #350
 - Feature slug: world-look-preview
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 8740861f2bc3c5e79a1f6b100a9654916c5cb3b4
 - BASE_SHA: 619ef971bfe15f1f7f5acf56182eaef40b9107a3
 - Verdict: CLEAR
 
