@@ -568,6 +568,14 @@ function checkCanonicalSagaWorkspace() {
   });
 }
 
+function checkSessionInviteShareEntry() {
+  console.log('Session invite share entry (#490): create/resolve/copy journey...');
+  execFileSync(process.execPath, ['scripts/session-invite-share-entry-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1778,6 +1786,7 @@ checkPlayerCharacterLookOverride();
 checkBasicLookReferenceAnalysis();
 checkBasicLookAdaptionUx();
 checkCanonicalSagaWorkspace();
+checkSessionInviteShareEntry();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();

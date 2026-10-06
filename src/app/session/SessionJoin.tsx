@@ -18,6 +18,7 @@ import { useProjects } from '../project';
 import { useCharacterSummaries } from '../character';
 import { useSessions } from './hooks/useSessions';
 import { PreparedAdventureFixturePanel } from './PreparedAdventureFixturePanel';
+import { SessionInviteShareButton } from './SessionInviteShareButton';
 import {
   assertOwnedCharacterId,
   resolveCharacterAssignmentPick,
@@ -334,6 +335,7 @@ export function SessionJoin({
                     <Button
                       variant="outline"
                       size="icon"
+                      className="min-h-11 min-w-11"
                       onClick={copyToClipboard}
                     >
                       {copied ? (
@@ -343,6 +345,8 @@ export function SessionJoin({
                       )}
                     </Button>
                   </div>
+
+                  <SessionInviteShareButton sessionId={createdSession.id} />
 
                   <div className="bg-muted rounded-lg p-3 md:p-4">
                     <p className="text-xs md:text-sm text-muted-foreground mb-2">

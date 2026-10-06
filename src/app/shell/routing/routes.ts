@@ -20,6 +20,7 @@ export type ShellViewId =
   | 'profile'
   | 'join'
   | 'session-join'
+  | 'session-invite'
   | 'rulesets-test'
   | 'item-create'
   | 'item-detail'
@@ -135,6 +136,7 @@ const VIEW_PATHS: Record<
   profile: '/profile',
   join: '/join',
   'session-join': '/session-join',
+  'session-invite': '/session-invite',
   'rulesets-test': '/rulesets-test',
 };
 

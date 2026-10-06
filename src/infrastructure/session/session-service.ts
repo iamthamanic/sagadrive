@@ -23,6 +23,13 @@ import {
   normalizePlaySessionStatus,
   normalizeSessionJoinCode,
 } from '../../domains/session/contracts/session-lifecycle';
+import {
+  mapInviteCreatePayload,
+  mapInviteResolvePayload,
+  normalizeInviteToken,
+  type SessionInviteCreateResult,
+  type SessionInviteResolveResult,
+} from '../../domains/session/contracts/session-invite';
 
 type SessionRow = {
   id: string;
@@ -283,6 +290,56 @@ class SessionService {
 
     if (error) {
       throw new Error(`Failed to leave session: ${error.message}`);
+    }
+  }
+
+  /**
+   * GM creates (and rotates) an opaque invite token for share links (#490).
+   */
+  async createSessionInvite(sessionId: string): Promise<SessionInviteCreateResult> {
+    await this.requireAuthUser();
+    const { data, error } = await supabase.rpc('create_session_invite', {
+      p_session_id: sessionId,
+    });
+    if (error) {
+      throw new Error(`Einladung konnte nicht erstellt werden: ${error.message}`);
+    }
+    const mapped = mapInviteCreatePayload(data);
+    if (!mapped) {
+      throw new Error('Einladung konnte nicht erstellt werden: ungültige Server-Antwort');
+    }
+    return mapped;
+  }
+
+  /**
+   * Authenticated resolve of invite token → saga/session facts (no role grant).
+   */
+  async resolveSessionInvite(token: string): Promise<SessionInviteResolveResult> {
+    await this.requireAuthUser();
+    const normalized = normalizeInviteToken(token);
+    if (!normalized) {
+      return { ok: false, errorCode: 'missing_token' };
+    }
+    const { data, error } = await supabase.rpc('resolve_session_invite', {
+      p_token: normalized,
+    });
+    if (error) {
+      throw new Error(`Einladung konnte nicht gelesen werden: ${error.message}`);
+    }
+    return mapInviteResolvePayload(data);
+  }
+
+  async revokeSessionInvite(token: string): Promise<void> {
+    await this.requireAuthUser();
+    const normalized = normalizeInviteToken(token);
+    if (!normalized) {
+      throw new Error('Token fehlt');
+    }
+    const { error } = await supabase.rpc('revoke_session_invite', {
+      p_token: normalized,
+    });
+    if (error) {
+      throw new Error(`Einladung konnte nicht widerrufen werden: ${error.message}`);
     }
   }
 }

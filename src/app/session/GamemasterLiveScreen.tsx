@@ -14,6 +14,7 @@ import { useProjectSummaries } from '../project';
 import { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
 import { AdventureRuntimeControls } from './AdventureRuntimeControls';
 import { SessionLookSettings } from './SessionLookSettings';
+import { SessionInviteShareButton } from './SessionInviteShareButton';
 import { GoldenAdventureDornhainPanel } from './GoldenAdventureDornhainPanel';
 import { CombatEncounterGmPanel } from './CombatEncounterGmPanel';
 import { GmActionPalette } from './GmActionPalette';
@@ -242,6 +243,10 @@ export function GamemasterLiveScreen({
           {combat.encounter?.round != null ? ` · Runde ${combat.encounter.round}` : ''}
         </p>
       </div>
+
+      {runtimeSessionId ? (
+        <SessionInviteShareButton sessionId={runtimeSessionId} />
+      ) : null}
 
       <Button type="button" variant="outline" className="min-h-11" onClick={onNavigateHome}>
         Zurück

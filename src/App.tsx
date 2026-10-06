@@ -5,7 +5,7 @@
  * App-area imports must go through each area's public barrel (`app/<area>`) or
  * heavy screen entry (`app/<area>/root`) — enforced by architecture-boundary-check.
  */
-import { lazy, Suspense, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { AuthProvider } from './lib/auth-context';
 import { ThemeProvider } from './lib/theme-provider';
 import { AuthGate, Layout, ViewLoadingFallback, useAppLocation } from './app/shell';
@@ -20,6 +20,7 @@ import {
   assertPlayerNotRoutedToGamemaster,
   resolveCanonicalLiveEntry,
 } from './domains/session/contracts/session-entry-routing';
+import { takeInviteReturnPath } from './domains/session/contracts/session-invite';
 
 const CharacterEditor = lazy(() =>
   import('./app/character/root').then((module) => ({ default: module.CharacterEditor })),
@@ -35,6 +36,9 @@ const ProjectJoin = lazy(() =>
 );
 const SessionJoin = lazy(() =>
   import('./app/session').then((module) => ({ default: module.SessionJoin })),
+);
+const SessionInviteResolve = lazy(() =>
+  import('./app/session').then((module) => ({ default: module.SessionInviteResolve })),
 );
 const Library = lazy(() =>
   import('./app/library/root').then((module) => ({ default: module.Library })),
@@ -99,6 +103,13 @@ function AppShell() {
     navigateToView(view);
   };
 
+  useEffect(() => {
+    const inviteReturn = takeInviteReturnPath();
+    if (inviteReturn) {
+      navigateToPath(inviteReturn);
+    }
+  }, [navigateToPath]);
+
   const layoutView =
     currentView === 'item-create'
     || currentView === 'item-detail'
@@ -111,6 +122,7 @@ function AppShell() {
     || currentView === 'saga-section'
     || currentView === 'session-phase'
     || currentView === 'session-live'
+    || currentView === 'session-invite'
     || currentView === 'character-public'
       ? (currentView.startsWith('saga') || currentView.startsWith('session')
         ? 'dashboard'
@@ -223,6 +235,15 @@ function AppShell() {
                 );
               }}
               onNavigateToCharacterEditor={() => handleNavigate('character-editor')}
+            />
+          </LazyView>
+        );
+      case 'session-invite':
+        return (
+          <LazyView>
+            <SessionInviteResolve
+              onNavigate={handleNavigate}
+              onNavigateHome={() => handleNavigate('dashboard')}
             />
           </LazyView>
         );
