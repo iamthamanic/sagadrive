@@ -5,7 +5,7 @@
 
 ## Phases
 - A test-gate: PASS
-- B composition-gate: CLEAR (WORKTREE → restamp after commit)
+- B composition-gate: CLEAR (HEAD 0a36a42765b541ad57ec96fa457cd8c14a925bfa)
 - C review: ACCEPT
 - D typed-strict / architecture: PASS
 - E UI guidelines / verify-ui: SKIPPED (no UI diff)

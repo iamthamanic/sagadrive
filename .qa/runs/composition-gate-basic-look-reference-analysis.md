@@ -1,6 +1,6 @@
 # Composition Gate — basic-look-reference-analysis
 
-- HEAD_SHA: WORKTREE (pre-commit; base 02b6913facebf067c0e90da97bc5a48c7c94c12c)
+- HEAD_SHA: 0a36a42765b541ad57ec96fa457cd8c14a925bfa
 - Date: 2026-10-06
 - Verdict: CLEAR
 
