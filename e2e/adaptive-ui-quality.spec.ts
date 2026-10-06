@@ -75,7 +75,7 @@ async function openLibraryAdventures(page: Page) {
   await ensureLoggedIn(page);
   await page.getByRole('button', { name: 'Bibliothek' }).first().click();
   await expect(page.getByRole('heading', { name: 'Meine Bibliothek' })).toBeVisible();
-  await page.getByRole('tab', { name: 'Abenteuer' }).first().click();
+  await page.getByRole('tab', { name: 'Sagas' }).first().click();
   await expect(page.getByText('Das vergessene Königreich').first()).toBeVisible();
 }
 
@@ -90,7 +90,7 @@ test.describe('Adaptive UI quality gates', () => {
 
     const primaryActions = [
       page.getByRole('button', { name: 'Bibliothek' }).first(),
-      page.getByRole('tab', { name: 'Abenteuer' }).first(),
+      page.getByRole('tab', { name: 'Sagas' }).first(),
     ];
     // Phone/Tablet: AU-02 hard gate (≥44). Desktop chromium: denser chrome allowed (≥32).
     const minPx = testInfo.project.name === 'chromium' ? 32 : 44;

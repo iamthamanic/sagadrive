@@ -113,8 +113,8 @@ test('library adventures tab lists real projects with meta chips', async ({ page
   await page.getByRole('button', { name: 'Bibliothek' }).first().click();
   await expect(page.getByRole('heading', { name: 'Meine Bibliothek' })).toBeVisible();
 
-  await page.getByRole('tab', { name: 'Abenteuer' }).first().click();
-  await expect(page.getByText('2 Abenteuer').first()).toBeVisible();
+  await page.getByRole('tab', { name: 'Sagas' }).first().click();
+  await expect(page.getByText('2 Sagas').first()).toBeVisible();
 
   await expect(page.getByText('Das vergessene Königreich').first()).toBeVisible();
   await expect(page.getByText('Schatten über Nehren').first()).toBeVisible();
@@ -157,8 +157,8 @@ test('library adventures empty state offers join CTA', async ({ page }) => {
   await page.getByRole('button', { name: 'Bibliothek' }).first().click();
   await expect(page.getByRole('heading', { name: 'Meine Bibliothek' })).toBeVisible();
 
-  await page.getByRole('tab', { name: 'Abenteuer' }).first().click();
-  await expect(page.getByText('Noch keine Abenteuer gestartet').first()).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Projekt starten' }).first()).toBeVisible();
+  await page.getByRole('tab', { name: 'Sagas' }).first().click();
+  await expect(page.getByText('Noch keine Sagas gestartet').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Saga erstellen' }).first()).toBeVisible();
   await page.screenshot({ path: path.join(EVIDENCE_DIR, '05-adventures-empty.png'), fullPage: true });
 });
