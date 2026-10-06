@@ -2,7 +2,7 @@
 
 - Issue: #351
 - Feature slug: player-character-look-override
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: dec87c913fcc910339acbfa4e45133c5d8d6e466
 - BASE_SHA: 0be228ebfb3b75b5f06782e5a13a99095ae87f5b
 - Verdict: CLEAR
 
