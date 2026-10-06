@@ -8,15 +8,14 @@ import { Plus, Users, Gamepad2, TrendingUp, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import { useProjectSummaries } from '../project';
 import { useCharacterSummaries, CreateCharacterEntryDialog } from '../character';
-import { useAuth } from '../../lib/auth-context';
 import { AdaptivePage } from '../../shared/ui/adaptive';
+import { pathForSagaNew, pathForSagaSection } from '../shell';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const { user } = useAuth();
   const { projects, isLoading: projectsLoading } = useProjectSummaries();
   const { characters, isLoading: charactersLoading } = useCharacterSummaries();
   const [createCharacterOpen, setCreateCharacterOpen] = useState(false);
@@ -32,7 +31,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <div>
           <h1 className="text-2xl md:text-3xl lg:text-4xl mb-2">Dashboard</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Willkommen zurück! Starte ein neues Projekt oder arbeite an deinen Inhalten.
+            Willkommen zurück! Starte eine neue Saga oder arbeite an deinen Inhalten.
           </p>
         </div>
 
@@ -40,7 +39,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardDescription className="text-xs md:text-sm">Aktive Projekte</CardDescription>
+              <CardDescription className="text-xs md:text-sm">Aktive Sagas</CardDescription>
               <CardTitle className="text-2xl md:text-3xl">{activeProjects.length}</CardTitle>
             </CardHeader>
           </Card>
@@ -70,15 +69,16 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             <Card 
               className="cursor-pointer hover:bg-accent/10 hover:border-accent/40 transition-all" 
-              onClick={() => onNavigate('project-join')}
+              onClick={() => onNavigate(pathForSagaNew())}
+              data-dashboard-saga-create
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                   <Gamepad2 className="w-5 h-5" />
-                  Projekt starten
+                  Saga erstellen
                 </CardTitle>
                 <CardDescription className="text-xs md:text-sm">
-                  Erstelle ein neues Projekt oder trete einem bei
+                  Neue Kampagne anlegen und zur Übersicht öffnen
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -145,11 +145,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         {activeProjects.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg md:text-xl">Deine Projekte</h2>
+              <h2 className="text-lg md:text-xl">Deine Sagas</h2>
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => onNavigate('library')}
+                onClick={() => onNavigate('/sagas')}
               >
                 Alle anzeigen
               </Button>
@@ -180,12 +180,12 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                       </span>
                     </div>
                     <Button 
-                      className="w-full" 
+                      className="w-full min-h-11" 
                       size="sm"
-                      onClick={() => {
-                        const isGM = user !== null && project.gmUserId === user.id;
-                        onNavigate(isGM ? 'gamemaster' : 'join');
-                      }}
+                      onClick={() =>
+                        onNavigate(pathForSagaSection(project.publicId, 'overview'))
+                      }
+                      data-dashboard-saga-open={project.publicId}
                     >
                       Öffnen
                     </Button>
@@ -242,14 +242,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                 <Gamepad2 className="w-6 h-6 text-muted-foreground" />
               </div>
-              <CardTitle>Bereit für dein erstes Abenteuer?</CardTitle>
+              <CardTitle>Bereit für deine erste Saga?</CardTitle>
               <CardDescription className="mt-2">
-                Erstelle ein Projekt oder einen Charakter, um loszulegen.
+                Erstelle eine Saga oder einen Charakter, um loszulegen.
               </CardDescription>
               <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-                <Button onClick={() => onNavigate('project-join')}>
+                <Button
+                  className="min-h-11"
+                  onClick={() => onNavigate(pathForSagaNew())}
+                  data-dashboard-saga-create-empty
+                >
                   <Gamepad2 className="w-4 h-4 mr-2" />
-                  Projekt erstellen
+                  Saga erstellen
                 </Button>
                 <Button
                   variant="outline"

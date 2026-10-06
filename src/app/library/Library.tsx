@@ -9,6 +9,7 @@ import { resolveAvatarSurfaceView } from '../../domains/character/avatar';
 import { useProjectSummaries } from '../project';
 import type { ProjectSummaryVm } from '../../domains/project/contracts/project.types';
 import { useAuth } from '../../lib/auth-context';
+import { pathForSagaNew } from '../shell';
 import { EntityBrowser, type EntityBrowserRenderContext } from './EntityBrowser';
 import { EntityBrowserCard } from './EntityBrowserCard';
 import { getSpeciesDevelopmentMode } from '../../domains/world/worldModuleRegistry';
@@ -248,7 +249,7 @@ export function Library({
       title={project.name}
       meta={project.description || 'Keine Beschreibung'}
       imageFallback={project.name}
-      imageAlt={`Abenteuer ${project.name}`}
+      imageAlt={`Saga ${project.name}`}
       metaChips={[
         PROJECT_STATUS_LABELS[project.status],
         `${project.memberCount} Mitglied${project.memberCount !== 1 ? 'er' : ''}`,
@@ -422,12 +423,12 @@ export function Library({
     <div className="text-center py-12">
       <BookOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
       <p className="text-muted-foreground mb-4">
-        {searchQuery ? 'Keine Abenteuer gefunden' : 'Noch keine Abenteuer gestartet'}
+        {searchQuery ? 'Keine Sagas gefunden' : 'Noch keine Sagas gestartet'}
       </p>
       {!searchQuery && (
-        <Button onClick={() => onNavigate('join')}>
+        <Button className="min-h-11" onClick={() => onNavigate(pathForSagaNew())} data-library-saga-create>
           <Plus className="w-4 h-4 mr-2" />
-          Projekt starten
+          Saga erstellen
         </Button>
       )}
     </div>
@@ -439,7 +440,7 @@ export function Library({
         <div className="min-w-0">
           <h1 className="text-xl md:text-2xl">Meine Bibliothek</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Verwalte deine Charaktere, NPCs & Kreaturen, Abenteuer, Welten, Gegenstände und Looks
+            Verwalte deine Charaktere, NPCs & Kreaturen, Sagas, Welten, Gegenstände und Looks
           </p>
         </div>
 
@@ -476,7 +477,7 @@ export function Library({
               className="min-h-11 min-w-0 max-w-full px-2 text-xs sm:text-sm"
             >
               <BookOpen className="mr-1.5 size-4 shrink-0 sm:mr-2" />
-              <span className="truncate">Abenteuer</span>
+              <span className="truncate">Sagas</span>
             </TabsTrigger>
             <TabsTrigger
               value="worlds"
@@ -578,13 +579,18 @@ export function Library({
                 emptyState={adventuresEmptyState}
                 toolbarLeft={
                   <span>
-                    {filteredProjects.length} Abenteuer{filteredProjects.length !== 1 ? 'er' : ''}
+                    {filteredProjects.length} Saga{filteredProjects.length !== 1 ? 's' : ''}
                   </span>
                 }
                 toolbarRight={
-                  <Button size="sm" onClick={() => onNavigate('join')}>
+                  <Button
+                    size="sm"
+                    className="min-h-11"
+                    onClick={() => onNavigate(pathForSagaNew())}
+                    data-library-saga-create
+                  >
                     <Plus className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Projekt starten</span>
+                    <span className="hidden sm:inline">Saga erstellen</span>
                     <span className="sm:hidden">Neu</span>
                   </Button>
                 }

@@ -36,7 +36,7 @@ test('GM panel shows adventure NPC instances empty/loading hooks', async ({ page
   // Navigate via Library → Abenteuer → Leiten when possible; else direct route
   await page.getByRole('button', { name: 'Bibliothek' }).first().click();
   await expect(page.getByRole('heading', { name: 'Meine Bibliothek' })).toBeVisible();
-  await page.getByRole('tab', { name: 'Abenteuer' }).click();
+  await page.getByRole('tab', { name: 'Sagas' }).click();
 
   const leiten = page.getByRole('button', { name: /Leiten/i }).first();
   if (await leiten.count()) {

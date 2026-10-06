@@ -1,69 +1,44 @@
 /**
- * ProjectJoin — Vertical slice: create or join a project by code.
+ * ProjectJoin — Join an existing Saga by invite code (#489).
  * Location: src/app/project/ProjectJoin.tsx
+ *
+ * Create/open journeys use /sagas and /sagas/new. This surface is join-only.
+ * Internal domain remains project-service / projects table.
  */
 import { useState } from 'react';
+import { ArrowLeft, Check, Copy, LogIn, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
-import { Plus, LogIn, Copy, Check, ArrowLeft } from 'lucide-react';
+import { AdaptivePage } from '../../shared/ui/adaptive';
+import { pathForSagaNew, pathForSagaSection } from '../shell';
 import { useProjects } from './hooks/useProjects';
-import { useWorldProfiles } from '../world';
-import { toast } from 'sonner';
 
 interface ProjectJoinProps {
   onBack: () => void;
-  onJoinAsGM: (projectId: string) => void;
-  onJoinAsPlayer: (projectId: string) => void;
+  onNavigate: (view: string) => void;
 }
 
-export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinProps) {
-  const { projects, createProject, joinProject } = useProjects();
-  const { worlds, isLoading: worldsLoading } = useWorldProfiles({ enabled: true });
-  const [projectName, setProjectName] = useState('');
-  const [projectDescription, setProjectDescription] = useState('');
-  const [worldProfileId, setWorldProfileId] = useState('');
+export function ProjectJoin({ onBack, onNavigate }: ProjectJoinProps) {
+  const { projects, joinProject, isLoading } = useProjects();
   const [joinCode, setJoinCode] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  const handleCreateProject = async () => {
-    if (!projectName.trim()) {
-      toast.error('Bitte gib einen Projektnamen ein');
+  const activeSagas = projects.filter((p) => p.status === 'active');
+
+  const openSaga = (publicId: string | null | undefined) => {
+    const id = publicId?.trim();
+    if (!id) {
+      toast.error('Diese Saga hat keine Public ID.');
       return;
     }
-
-    setIsCreating(true);
-    try {
-      const newProject = await createProject({
-        name: projectName,
-        description: projectDescription || undefined,
-        world_profile_id: worldProfileId || undefined,
-      });
-      
-      toast.success(`Projekt erstellt! Code: ${newProject.code}`, {
-        duration: 8000,
-        description: 'Teile diesen Code mit deinen Spielern zum Beitreten',
-      });
-      setProjectName('');
-      setProjectDescription('');
-      setWorldProfileId('');
-      
-      // Go back to dashboard to see the new project
-      setTimeout(() => {
-        onBack();
-      }, 500);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Fehler beim Erstellen');
-    } finally {
-      setIsCreating(false);
-    }
+    onNavigate(pathForSagaSection(id, 'overview'));
   };
 
-  const handleJoinProject = async () => {
+  const handleJoinSaga = async () => {
     if (!joinCode.trim()) {
       toast.error('Bitte gib einen Beitrittscode ein');
       return;
@@ -71,16 +46,15 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
 
     setIsJoining(true);
     try {
-      const project = await joinProject({ code: joinCode });
-      toast.success(`Projekt "${project.name}" beigetreten!`, {
-        duration: 5000,
-      });
+      const saga = await joinProject({ code: joinCode.trim() });
+      toast.success(`Saga „${saga.name}“ beigetreten!`, { duration: 5000 });
       setJoinCode('');
-      
-      // Go back to dashboard
-      setTimeout(() => {
-        onBack();
-      }, 500);
+      const publicId = saga.publicId?.trim();
+      if (publicId) {
+        onNavigate(pathForSagaSection(publicId, 'overview'));
+        return;
+      }
+      toast.error('Beigetreten, aber ohne Public ID — öffne die Saga über die Liste.');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Fehler beim Beitreten');
     } finally {
@@ -90,14 +64,9 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
 
   const handleCopyCode = async (code: string) => {
     try {
-      // Try modern Clipboard API first
-      if (navigator.clipboard && navigator.clipboard.writeText) {
+      if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(code);
-        setCopiedCode(code);
-        toast.success('Code kopiert!');
-        setTimeout(() => setCopiedCode(null), 2000);
       } else {
-        // Fallback: Create temporary textarea
         const textarea = document.createElement('textarea');
         textarea.value = code;
         textarea.style.position = 'fixed';
@@ -106,200 +75,137 @@ export function ProjectJoin({ onBack, onJoinAsGM, onJoinAsPlayer }: ProjectJoinP
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        setCopiedCode(code);
-        toast.success('Code kopiert!');
-        setTimeout(() => setCopiedCode(null), 2000);
       }
+      setCopiedCode(code);
+      toast.success('Code kopiert!');
+      setTimeout(() => setCopiedCode(null), 2000);
     } catch (error) {
       console.error('Copy failed:', error);
-      // Show code in toast as fallback
       toast.info(`Code: ${code}`, {
         duration: 5000,
-        description: 'Manuell kopieren (Clipboard API nicht verfügbar)'
+        description: 'Manuell kopieren (Clipboard API nicht verfügbar)',
       });
       setCopiedCode(code);
       setTimeout(() => setCopiedCode(null), 2000);
     }
   };
 
-  const activeProjects = projects.filter(p => p.status === 'active');
-
   return (
-    <div className="w-full h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto p-4 md:p-8">
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+    <AdaptivePage data-au-surface="saga-join" className="h-full w-full">
+      <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-8">
+        <Button variant="ghost" onClick={onBack} className="min-h-11">
+          <ArrowLeft className="mr-2 size-4" />
           Zurück
         </Button>
 
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl mb-2">Projekt starten oder beitreten</h1>
-          <p className="text-muted-foreground text-sm md:text-base">
-            Erstelle ein neues Abenteuer oder trete einem bestehenden bei
+        <div>
+          <h1 className="mb-2 text-2xl md:text-3xl">Saga beitreten</h1>
+          <p className="text-sm text-muted-foreground md:text-base">
+            Mit einem Einladungscode einer bestehenden Saga beitreten. Neue Sagas erstellst du unter
+            „Saga erstellen“.
           </p>
         </div>
 
-        <Tabs defaultValue="create" className="mb-8">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="create">Neues Projekt</TabsTrigger>
-            <TabsTrigger value="join">Beitreten</TabsTrigger>
-          </TabsList>
+        <Card data-saga-join-panel>
+          <CardHeader>
+            <CardTitle>Mit Code beitreten</CardTitle>
+            <CardDescription>Gib den 6-stelligen Code ein, den dir die Spielleitung geteilt hat.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="saga-join-code">Beitrittscode</Label>
+              <Input
+                id="saga-join-code"
+                className="min-h-11"
+                placeholder="ABC123"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void handleJoinSaga();
+                }}
+                maxLength={6}
+                disabled={isJoining}
+                data-saga-join-code
+              />
+            </div>
+            <Button
+              onClick={() => void handleJoinSaga()}
+              disabled={isJoining}
+              className="min-h-11 w-full"
+              data-saga-join-submit
+            >
+              <LogIn className="mr-2 size-4" />
+              {isJoining ? 'Trete bei…' : 'Beitreten'}
+            </Button>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="create" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Projekt erstellen</CardTitle>
-                <CardDescription>
-                  Starte ein neues Abenteuer als Game Master
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Projektname *</Label>
-                  <Input
-                    id="name"
-                    placeholder="z.B. Die Helden von Eldoria"
-                    value={projectName}
-                    onChange={(e) => setProjectName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Beschreibung (optional)</Label>
-                  <Input
-                    id="description"
-                    placeholder="Ein episches Abenteuer in einer Fantasy-Welt..."
-                    value={projectDescription}
-                    onChange={(e) => setProjectDescription(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="world-profile">Weltprofil (optional)</Label>
-                  <select
-                    id="world-profile"
-                    value={worldProfileId}
-                    onChange={(e) => setWorldProfileId(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                    disabled={isCreating || worldsLoading}
-                    data-project-world-profile
-                  >
-                    <option value="">Kein Weltprofil</option>
-                    {worlds.map((world) => (
-                      <option key={world.id} value={world.id}>
-                        {world.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-muted-foreground">
-                    Bindet Kataloge (Items/NSCs) an dieses Abenteuer. Für den Player-Test empfohlen.
-                  </p>
-                </div>
-                <Button
-                  onClick={handleCreateProject}
-                  disabled={isCreating}
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {isCreating ? 'Erstelle...' : 'Projekt erstellen'}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            className="min-h-11"
+            onClick={() => onNavigate(pathForSagaNew())}
+            data-saga-join-create-cta
+          >
+            <Plus className="mr-2 size-4" />
+            Saga erstellen
+          </Button>
+        </div>
 
-          <TabsContent value="join" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Projekt beitreten</CardTitle>
-                <CardDescription>
-                  Trete einem bestehenden Projekt mit einem Code bei
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="code">Beitrittscode</Label>
-                  <Input
-                    id="code"
-                    placeholder="ABC123"
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => e.key === 'Enter' && handleJoinProject()}
-                    maxLength={6}
-                  />
-                </div>
-                <Button
-                  onClick={handleJoinProject}
-                  disabled={isJoining}
-                  className="w-full"
-                >
-                  <LogIn className="w-4 h-4 mr-2" />
-                  {isJoining ? 'Trete bei...' : 'Beitreten'}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Lade deine Sagas…</p>
+        ) : null}
 
-        {/* Active Projects List */}
-        {activeProjects.length > 0 && (
-          <div>
-            <h2 className="text-xl mb-4">Deine aktiven Projekte</h2>
+        {!isLoading && activeSagas.length > 0 ? (
+          <div data-saga-join-list>
+            <h2 className="mb-4 text-xl">Deine Sagas</h2>
             <div className="grid gap-4">
-              {activeProjects.map((project) => (
-                <Card key={project.id}>
+              {activeSagas.map((saga) => (
+                <Card key={saga.id}>
                   <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle>{project.name}</CardTitle>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="truncate">{saga.name}</CardTitle>
                         <CardDescription>
-                          {project.description || 'Kein Beschreibung'}
+                          {saga.description || 'Keine Beschreibung'}
+                          {saga.publicId ? ` · ${saga.publicId}` : ''}
                         </CardDescription>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCopyCode(project.code)}
-                      >
-                        {copiedCode === project.code ? (
-                          <Check className="w-4 h-4 mr-2" />
-                        ) : (
-                          <Copy className="w-4 h-4 mr-2" />
-                        )}
-                        {project.code}
-                      </Button>
+                      {saga.code ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="min-h-11 shrink-0"
+                          onClick={() => void handleCopyCode(saga.code)}
+                        >
+                          {copiedCode === saga.code ? (
+                            <Check className="mr-2 size-4" />
+                          ) : (
+                            <Copy className="mr-2 size-4" />
+                          )}
+                          {saga.code}
+                        </Button>
+                      ) : null}
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex gap-4 text-muted-foreground">
-                        <span>{project.members.length} Mitglieder</span>
-                        <span>{project.totalSessions} Sessions</span>
-                      </div>
-                      <Button
-                        onClick={() => {
-                          const isGM = project.members.some(
-                            m => m.role === 'gm'
-                          );
-                          if (isGM) {
-                            onJoinAsGM(project.id);
-                          } else {
-                            onJoinAsPlayer(project.id);
-                          }
-                        }}
-                      >
-                        Öffnen
-                      </Button>
-                    </div>
+                  <CardContent className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {saga.members.length} Mitglieder · {saga.totalSessions} Sessions
+                    </span>
+                    <Button
+                      className="min-h-11"
+                      onClick={() => openSaga(saga.publicId)}
+                      data-saga-join-open={saga.publicId}
+                    >
+                      Öffnen
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </div>
-        )}
+        ) : null}
       </div>
-    </div>
+    </AdaptivePage>
   );
 }

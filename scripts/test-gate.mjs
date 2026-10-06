@@ -560,6 +560,14 @@ function checkBasicLookAdaptionUx() {
   });
 }
 
+function checkCanonicalSagaWorkspace() {
+  console.log('Canonical Saga workspace (#489): list/create/join terminology...');
+  execFileSync(process.execPath, ['scripts/canonical-saga-workspace-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1769,6 +1777,7 @@ checkWorldLookPreview();
 checkPlayerCharacterLookOverride();
 checkBasicLookReferenceAnalysis();
 checkBasicLookAdaptionUx();
+checkCanonicalSagaWorkspace();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();

@@ -154,7 +154,7 @@ test('GM Teilnehmen keeps adventure id + join intent on session-join', async ({ 
 
   await page.getByRole('button', { name: 'Bibliothek' }).first().click();
   await expect(page.getByRole('heading', { name: 'Meine Bibliothek' })).toBeVisible();
-  await page.getByRole('tab', { name: 'Abenteuer' }).first().click();
+  await page.getByRole('tab', { name: 'Sagas' }).first().click();
   await expect(page.getByText('Teilnehmen Regression Saga').first()).toBeVisible();
 
   await page.getByRole('button', { name: /Teilnehmen/i }).first().click();

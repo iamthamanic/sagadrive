@@ -48,7 +48,7 @@ test('library NPCs tab order, empty state, filters, and keyboard focus', async (
   const tabs = page.getByRole('tab');
   await expect(tabs.nth(0)).toHaveText(/Charaktere/);
   await expect(tabs.nth(1)).toHaveText(/NPCs & Kreaturen/);
-  await expect(tabs.nth(2)).toHaveText(/Abenteuer/);
+  await expect(tabs.nth(2)).toHaveText(/Sagas/);
   await expect(tabs.nth(3)).toHaveText(/Welten/);
   await expect(tabs.nth(4)).toHaveText(/Items/);
 
