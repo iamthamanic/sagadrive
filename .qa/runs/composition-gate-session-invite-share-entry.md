@@ -14,10 +14,10 @@ SessionInviteShareButton → `create_session_invite` (rotate prior) → clipboar
 ## Simulations
 | Case | Intended | Composed | Result |
 |------|----------|----------|--------|
-| 1 invitee | session-join intent=join | decide → session-join | pass |
+| N-actors | Each invitee resolves under own auth; membership upserts once | resolve facts + existing join upsert | pass |
+| Invalid/missing | missing/revoked/expired token → German error, no live nav | error_code path, stay on resolve | pass |
+| Two consumers / crash | Crash after resolve before join leaves no forced membership; re-open invite safe | resolve only updates last_resolved_at | pass |
 | GM rejoin | live gamemaster | already_member + is_project_gm | pass |
-| Player rejoin w/ character | live player + CH | character_public_id | pass |
-| Expired/revoked | German error, no live | error_code path | pass |
 | Auth interrupt | return to invite path | setInviteReturnPath / takeInviteReturnPath | pass |
 
 ## Flags
