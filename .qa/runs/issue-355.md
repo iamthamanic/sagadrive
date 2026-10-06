@@ -11,13 +11,13 @@
 
 | Phase | Result | SHA |
 |-------|--------|-----|
-| verify-ticket | PASS | c7e215c |
-| composition-gate | SKIPPED | c7e215c |
-| review-ticket | ACCEPT | c7e215c |
-| ecc-check | READY | c7e215c |
+| verify-ticket | PASS | ab9773e80fbd3f9304d0f543adeec934c16a78b3 |
+| composition-gate | SKIPPED | ab9773e80fbd3f9304d0f543adeec934c16a78b3 |
+| review-ticket | ACCEPT | ab9773e80fbd3f9304d0f543adeec934c16a78b3 |
+| ecc-check | READY | ab9773e80fbd3f9304d0f543adeec934c16a78b3 |
 
 ## Ship
 
-- Commit: c7e215c38f316c7b01b6c674121d43dca6f8f150
+- Commit: ab9773e80fbd3f9304d0f543adeec934c16a78b3
 - PR: (pending)
 - Merge: (pending)
