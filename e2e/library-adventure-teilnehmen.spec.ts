@@ -137,6 +137,11 @@ async function stubPlayerJoinCharacters(page: Page) {
       await route.fallback();
       return;
     }
+    const accept = route.request().headers()['accept'] ?? '';
+    if (accept.includes('vnd.pgrst.object') || route.request().url().includes('id=eq.')) {
+      await json(route, JOINED_SESSION);
+      return;
+    }
     await json(route, [JOINED_SESSION]);
   });
 }
