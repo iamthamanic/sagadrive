@@ -88,6 +88,27 @@ export {
 } from './personal-look-override';
 
 export {
+  LOOK_REFERENCE_ANALYSIS_MAX_IMAGES,
+  LOOK_REFERENCE_ANALYSIS_MIME_TYPES,
+  LOOK_REFERENCE_ANALYSIS_MIN_IMAGES,
+  LOOK_REFERENCE_ANALYSIS_VERSION,
+  assertLookReferenceAnalysisInput,
+  buildLookProfileWriteDraftFromAnalysis,
+  isLookReferenceAnalysisMime,
+  normalizeLookReferenceAnalysisPayload,
+  type LookAnalysisKnobs,
+  type LookAnalysisPalette,
+  type LookReferenceAnalysisDraft,
+  type LookReferenceAnalysisFailure,
+  type LookReferenceAnalysisImageInput,
+  type LookReferenceAnalysisMime,
+  type LookReferenceAnalysisOutcome,
+  type LookReferenceAnalysisProvenance,
+  type LookReferenceAnalysisSuccess,
+  type LookReferenceAnalyzer,
+} from './reference-analysis';
+
+export {
   assertLookCapabilitiesSupported,
   assertLookProfileVersionInvariants,
   assertLookReferenceKindSemantics,

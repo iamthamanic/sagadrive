@@ -10,7 +10,14 @@ import type {
   DuplicateLookProfileInput,
   LookProfileRecord,
   LookProfileVersion,
+  LookReferenceAnalysisDraft,
+  LookReferenceAnalysisOutcome,
 } from '../../domains/look';
+import { buildLookProfileWriteDraftFromAnalysis } from '../../domains/look';
+import {
+  analyzeLookReferences,
+  type LookReferenceAnalysisRequest,
+} from './look-reference-analysis-service';
 import { supabaseLookProfileRepository } from './supabase-look.repository';
 
 export async function listLookProfiles(options?: {
@@ -53,4 +60,25 @@ export async function listLookProfileVersions(
   profileId: string,
 ): Promise<LookProfileVersion[]> {
   return supabaseLookProfileRepository.listVersions(profileId);
+}
+
+/** Provider-neutral analysis — does not persist. */
+export async function analyzeLookReferencesForDraft(
+  request: LookReferenceAnalysisRequest,
+): Promise<LookReferenceAnalysisOutcome> {
+  return analyzeLookReferences(request);
+}
+
+/**
+ * Persist only a previously normalized analysis draft.
+ * Invalid / foreign analysis versions throw — nothing is written.
+ */
+export async function createLookProfileFromReferenceAnalysis(
+  draft: LookReferenceAnalysisDraft,
+): Promise<LookProfileRecord> {
+  const writeDraft = buildLookProfileWriteDraftFromAnalysis(draft);
+  if (writeDraft.source !== 'reference-analysis') {
+    throw new Error('Look analysis draft rejected: invalid source');
+  }
+  return supabaseLookProfileRepository.createProfile({ draft: writeDraft });
 }

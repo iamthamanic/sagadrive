@@ -4,14 +4,23 @@
  */
 
 export {
+  analyzeLookReferencesForDraft,
   archiveLookProfile,
   appendLookProfileVersion,
   createLookProfile,
+  createLookProfileFromReferenceAnalysis,
   duplicateLookProfile,
   getLookProfile,
   listLookProfileVersions,
   listLookProfiles,
 } from './look-service';
+
+export {
+  analyzeLookReferences,
+  createEdgeLookReferenceAnalyzer,
+  type LookReferenceAnalysisRequest,
+  type LookReferenceAnalysisRequestImage,
+} from './look-reference-analysis-service';
 
 export {
   LOOK_PROFILE_COLUMNS,
