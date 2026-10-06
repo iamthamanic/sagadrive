@@ -173,8 +173,7 @@ function AppShell() {
           <LazyView>
             <ProjectJoin
               onBack={() => handleNavigate('dashboard')}
-              onJoinAsGM={() => undefined}
-              onJoinAsPlayer={() => undefined}
+              onNavigate={handleNavigate}
             />
           </LazyView>
         );

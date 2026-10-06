@@ -85,8 +85,8 @@ mustNotInclude(
 
 mustInclude(
   'src/app/session/SessionJoin.tsx',
-  ['project_id', 'useProjects', 'Abenteuer (Projekt)'],
-  'SessionJoin requires project',
+  ['project_id', 'useProjects', 'Saga *', 'data-session-join-project'],
+  'SessionJoin requires Saga (project_id)',
 );
 
 const esbuild = require('esbuild');

@@ -125,7 +125,7 @@ export function SessionJoin({
       return;
     }
     if (!selectedProjectId) {
-      toast.error('Bitte wähle ein Abenteuer (Projekt) aus');
+      toast.error('Bitte wähle eine Saga aus');
       return;
     }
 
@@ -228,7 +228,7 @@ export function SessionJoin({
         <div>
           <h1 className="text-xl md:text-2xl">Session</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Starte ein neues Abenteuer oder tritt einer Session bei
+            Starte eine Session für eine Saga oder tritt mit einem Code bei
           </p>
         </div>
 
@@ -271,16 +271,16 @@ export function SessionJoin({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="project">Abenteuer (Projekt) *</Label>
+                    <Label htmlFor="project">Saga *</Label>
                     <select
                       id="project"
                       data-session-join-project
                       value={selectedProjectId}
                       onChange={(e) => setSelectedProjectId(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm md:text-base"
+                      className="min-h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm md:text-base"
                       disabled={isCreating}
                     >
-                      <option value="">Projekt wählen</option>
+                      <option value="">Saga wählen</option>
                       {gmProjects.map((project) => (
                         <option key={project.id} value={project.id}>
                           {project.name}
@@ -290,7 +290,7 @@ export function SessionJoin({
                     </select>
                     {gmProjects.length === 0 ? (
                       <p className="text-xs text-muted-foreground">
-                        Lege zuerst ein Abenteuer unter Projekte an, um eine Session zu starten.
+                        Erstelle zuerst eine Saga, um eine Session zu starten.
                       </p>
                     ) : null}
                   </div>

@@ -70,9 +70,9 @@ mustInclude(
 );
 
 mustInclude(
-  'src/app/project/ProjectJoin.tsx',
-  ['world_profile_id', 'Weltprofil', 'useWorldProfiles'],
-  'ProjectJoin world profile select',
+  'src/app/project/SagaCreateForm.tsx',
+  ['world_profile_id', 'Weltprofil', 'useWorldProfiles', 'data-saga-create-world'],
+  'Saga create world profile select',
 );
 
 mustInclude(
