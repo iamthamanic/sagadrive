@@ -360,6 +360,14 @@ function checkAdvancedLookContract() {
   });
 }
 
+function checkAdvancedLookAdaptionUx() {
+  console.log('Advanced Look Adaption UX (#356): capability status in Look Editor...');
+  execFileSync(process.execPath, ['scripts/advanced-look-adaption-ux-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkCharacterStartingTemplatesDesignV1() {
   console.log('Character starting templates design V1 (#465): ten Level-1 build contracts...');
   execFileSync(process.execPath, ['scripts/character-starting-templates-design-v1-check.mjs'], {
@@ -1807,6 +1815,7 @@ checkLookProfilePersistence();
 checkLookLibrary();
 checkLookWorldCapabilityStubs();
 checkAdvancedLookContract();
+checkAdvancedLookAdaptionUx();
 checkToonLabCompatibilitySpike();
 checkLookRuntimeAdapter();
 checkLookEditorWorkspace();

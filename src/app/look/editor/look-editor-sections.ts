@@ -12,6 +12,7 @@ export type LookEditorSectionId =
   | 'character'
   | 'lighting'
   | 'postFx'
+  | 'advanced'
   | 'world';
 
 export type LookEditorNavItem = {
@@ -25,6 +26,7 @@ export const LOOK_EDITOR_NAV: readonly LookEditorNavItem[] = [
   { id: 'character', labelDe: 'Charakter' },
   { id: 'lighting', labelDe: 'Licht' },
   { id: 'postFx', labelDe: 'Effekte' },
+  { id: 'advanced', labelDe: 'Advanced' },
   { id: 'world', labelDe: 'Welt', reserved: true },
 ];
 

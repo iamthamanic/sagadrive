@@ -51,16 +51,18 @@ Missing saga default → system default. Unknown capability values must not cras
 - First vision provider is Edge/Infrastructure only (`supabase/functions/look-reference-analysis`); domain never imports provider types
 - Invalid / leaked provider payloads must not become persisted LookProfiles
 
-## Advanced Look Adaption (#355)
+## Advanced Look Adaption (#355 / #356)
 
-Provider-neutral future contract for AI/neural rendering — **define only**, no engine/UI (#356).
+Provider-neutral future contract for AI/neural rendering.
 
 - Domain: `src/domains/look/advanced-adaption.ts` + `advanced-look-provider-registry.ts`
+- UI status (#356): Look Editor section **Advanced** via `advanced-look-capability-status.ts` + `AdvancedLookAdaptionPanel`
 - Docs: [docs/advanced-look-adaption.md](../../docs/advanced-look-adaption.md)
 - Capabilities: `supportsRendered` and `supportsRealtime` negotiate independently; missing → explicit degrade
 - Guide inputs reserved: beauty, clay, depth, normals, edges, segmentation, camera, temporal, motion
 - Reuses the same `LookProfile` / `LookReference` / `LookExecutionMode` contracts as Basic — no parallel style object
 - No neural provider registered by default; registry is empty until a later slice
+- UI never fake-runs: run CTAs stay disabled until an engine slice exists
 
 ## Non-goals (this slice)
 
