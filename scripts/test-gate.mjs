@@ -592,6 +592,14 @@ function checkSessionLobbyPreflight() {
   });
 }
 
+function checkSessionPrepareRecap() {
+  console.log('Session prepare/recap (#492): lifecycle screens + status resolution...');
+  execFileSync(process.execPath, ['scripts/session-prepare-recap-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1805,6 +1813,7 @@ checkBasicLookAdaptionUx();
 checkCanonicalSagaWorkspace();
 checkSessionInviteShareEntry();
 checkSessionLobbyPreflight();
+checkSessionPrepareRecap();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();

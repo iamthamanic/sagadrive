@@ -1,5 +1,5 @@
 /**
- * SessionResourceScreen — foundation shell for Saga session lifecycle / live views (#276/#301).
+ * SessionResourceScreen — foundation shell for Saga session lifecycle / live views (#276/#301/#492).
  * Location: src/app/session/SessionResourceScreen.tsx
  */
 import { Button } from '../../shared/ui/button';
@@ -9,6 +9,9 @@ import { PlayerLiveScreen } from './PlayerLiveScreen';
 import { PlayerCharacterResolve } from './PlayerCharacterResolve';
 import { ViewerLiveScreen } from './ViewerLiveScreen';
 import { SessionLobbyScreen } from './SessionLobbyScreen';
+import { SessionPrepareScreen } from './SessionPrepareScreen';
+import { SessionRecapScreen } from './SessionRecapScreen';
+import { SessionAutoPhaseRedirect } from './SessionAutoPhaseRedirect';
 import { ProgramDisplayShell } from './program/ProgramDisplayShell';
 import { useProgramPresentation } from './hooks/useProgramPresentation';
 import type { LiveViewId, SessionPhaseRouteId } from '../shell';
@@ -23,6 +26,13 @@ type SessionResourceScreenProps = {
   onNavigate?: (path: string) => void;
 };
 
+function defaultNavigate(path: string): void {
+  if (typeof window !== 'undefined') {
+    window.history.pushState(null, '', path);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }
+}
+
 export function SessionResourceScreen({
   sagaPublicId,
   sessionPublicId,
@@ -32,22 +42,47 @@ export function SessionResourceScreen({
   onNavigateHome,
   onNavigate,
 }: SessionResourceScreenProps) {
+  const navigate = onNavigate ?? defaultNavigate;
+
+  if (phase === 'auto' && !liveView) {
+    return (
+      <SessionAutoPhaseRedirect
+        sagaPublicId={sagaPublicId}
+        sessionPublicId={sessionPublicId}
+        onNavigateHome={onNavigateHome}
+      />
+    );
+  }
+
+  if (phase === 'prepare' && !liveView) {
+    return (
+      <SessionPrepareScreen
+        sagaPublicId={sagaPublicId}
+        sessionPublicId={sessionPublicId}
+        onNavigateHome={onNavigateHome}
+        onNavigate={navigate}
+      />
+    );
+  }
+
+  if (phase === 'recap' && !liveView) {
+    return (
+      <SessionRecapScreen
+        sagaPublicId={sagaPublicId}
+        sessionPublicId={sessionPublicId}
+        onNavigateHome={onNavigateHome}
+        onNavigate={navigate}
+      />
+    );
+  }
+
   if (phase === 'lobby' && !liveView) {
     return (
       <SessionLobbyScreen
         sagaPublicId={sagaPublicId}
         sessionPublicId={sessionPublicId}
         onNavigateHome={onNavigateHome}
-        onNavigate={(path) => {
-          if (onNavigate) {
-            onNavigate(path);
-            return;
-          }
-          if (typeof window !== 'undefined') {
-            window.history.pushState(null, '', path);
-            window.dispatchEvent(new PopStateEvent('popstate'));
-          }
-        }}
+        onNavigate={navigate}
       />
     );
   }
