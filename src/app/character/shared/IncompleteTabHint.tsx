@@ -33,10 +33,14 @@ export function IncompleteTabHint({
   return (
     <Tooltip pinOnClick={false}>
       <TooltipTrigger asChild>
+        {/*
+          Decorative only for a11y name: keep tab accessible names like "Spezies"
+          for Playwright/role queries; hover tooltip carries the gap copy.
+        */}
         <span
-          role="img"
-          aria-label={`${label}: noch Angaben nötig`}
+          aria-hidden="true"
           data-testid="incomplete-tab-hint"
+          data-incomplete-tab={label}
           className={`inline-flex size-4 shrink-0 items-center justify-center text-destructive ${className}`}
           onClick={stopHelpEvent}
           onPointerDown={stopHelpEvent}
