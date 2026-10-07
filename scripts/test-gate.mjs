@@ -600,6 +600,14 @@ function checkSessionPrepareRecap() {
   });
 }
 
+function checkProductionUxIntegrity() {
+  console.log('Production UX integrity (#493): dead controls / demo / deferred CTAs...');
+  execFileSync(process.execPath, ['scripts/production-ux-integrity-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkBackgroundFrameworkRegressions() {
   console.log('Background framework regression contract: checking universal catalog and legacy IDs...');
   execFileSync(process.execPath, ['scripts/background-framework-regression-check.mjs'], {
@@ -1814,6 +1822,7 @@ checkCanonicalSagaWorkspace();
 checkSessionInviteShareEntry();
 checkSessionLobbyPreflight();
 checkSessionPrepareRecap();
+checkProductionUxIntegrity();
 checkCharacterStartingTemplatesDesignV1();
 checkCharacterStartingTemplatesV1();
 checkReleaseReadinessContract();

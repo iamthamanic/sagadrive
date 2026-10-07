@@ -28,6 +28,7 @@ import { useAuth } from '../../lib/auth-context';
 import { useTheme } from '../../lib/theme-provider';
 import { toast } from 'sonner';
 import { AiProviderCredentialsPanel } from './AiProviderCredentialsPanel';
+import { DEFERRED_SETTING_HINT_DE } from '../../domains/session/contracts/production-ux-integrity';
 
 type SettingsTab =
   | 'profil'
@@ -140,7 +141,12 @@ export function Profile() {
                   </div>
                 </div>
 
-                <Button onClick={handleSignOut} variant="outline" className="w-full">
+                <Button
+                  onClick={handleSignOut}
+                  variant="outline"
+                  className="w-full"
+                  data-profile-sign-out
+                >
                   <LogOut className="mr-2 size-4" />
                   Abmelden
                 </Button>
@@ -174,14 +180,19 @@ export function Profile() {
                   />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-3 opacity-70">
                   <div>
                     <p className="text-sm font-medium md:text-base">Kompakte Ansicht</p>
                     <p className="text-xs text-muted-foreground md:text-sm">
-                      Weniger Abstände verwenden
+                      {DEFERRED_SETTING_HINT_DE}
                     </p>
                   </div>
-                  <Switch aria-label="Kompakte Ansicht umschalten" />
+                  <Switch
+                    disabled
+                    aria-label="Kompakte Ansicht umschalten"
+                    title={DEFERRED_SETTING_HINT_DE}
+                    data-settings-deferred="compact"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -199,24 +210,34 @@ export function Profile() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-3 opacity-70">
                   <div>
                     <p className="text-sm font-medium md:text-base">Session-Einladungen</p>
                     <p className="text-xs text-muted-foreground md:text-sm">
-                      Benachrichtigung bei neuen Einladungen
+                      {DEFERRED_SETTING_HINT_DE}
                     </p>
                   </div>
-                  <Switch defaultChecked aria-label="Session-Einladungen" />
+                  <Switch
+                    disabled
+                    aria-label="Session-Einladungen"
+                    title={DEFERRED_SETTING_HINT_DE}
+                    data-settings-deferred="session-invites"
+                  />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-3 opacity-70">
                   <div>
                     <p className="text-sm font-medium md:text-base">Community-Updates</p>
                     <p className="text-xs text-muted-foreground md:text-sm">
-                      Neuigkeiten vom Marktplatz
+                      {DEFERRED_SETTING_HINT_DE}
                     </p>
                   </div>
-                  <Switch defaultChecked aria-label="Community-Updates" />
+                  <Switch
+                    disabled
+                    aria-label="Community-Updates"
+                    title={DEFERRED_SETTING_HINT_DE}
+                    data-settings-deferred="community-updates"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -234,24 +255,34 @@ export function Profile() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-3 opacity-70">
                   <div>
                     <p className="text-sm font-medium md:text-base">Mikrofon aktivieren</p>
                     <p className="text-xs text-muted-foreground md:text-sm">
-                      Automatisch in Sessions
+                      {DEFERRED_SETTING_HINT_DE}
                     </p>
                   </div>
-                  <Switch defaultChecked aria-label="Mikrofon aktivieren" />
+                  <Switch
+                    disabled
+                    aria-label="Mikrofon aktivieren"
+                    title={DEFERRED_SETTING_HINT_DE}
+                    data-settings-deferred="mic-auto"
+                  />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-3 opacity-70">
                   <div>
                     <p className="text-sm font-medium md:text-base">Kamera aktivieren</p>
                     <p className="text-xs text-muted-foreground md:text-sm">
-                      Automatisch in Sessions
+                      {DEFERRED_SETTING_HINT_DE}
                     </p>
                   </div>
-                  <Switch aria-label="Kamera aktivieren" />
+                  <Switch
+                    disabled
+                    aria-label="Kamera aktivieren"
+                    title={DEFERRED_SETTING_HINT_DE}
+                    data-settings-deferred="camera-auto"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -266,20 +297,24 @@ export function Profile() {
                 </CardTitle>
                 <CardDescription className="text-xs md:text-sm">App-Sprache ändern</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-2">
                 <Label htmlFor="app-language" className="sr-only">
                   App-Sprache
                 </Label>
                 <select
                   id="app-language"
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 opacity-70"
                   defaultValue="de"
+                  disabled
+                  title={DEFERRED_SETTING_HINT_DE}
+                  data-settings-deferred="language"
                 >
                   <option value="de">Deutsch</option>
                   <option value="en">English</option>
                   <option value="es">Español</option>
                   <option value="fr">Français</option>
                 </select>
+                <p className="text-xs text-muted-foreground">{DEFERRED_SETTING_HINT_DE}</p>
               </CardContent>
             </Card>
           </TabsContent>

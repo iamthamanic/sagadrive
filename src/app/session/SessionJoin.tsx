@@ -18,6 +18,7 @@ import { useProjects } from '../project';
 import { useCharacterSummaries } from '../character';
 import { useSessions } from './hooks/useSessions';
 import { PreparedAdventureFixturePanel } from './PreparedAdventureFixturePanel';
+import { mayShowPreparedAdventureFixturePanel } from '../../domains/session/contracts/production-ux-integrity';
 import { SessionInviteShareButton } from './SessionInviteShareButton';
 import {
   assertOwnedCharacterId,
@@ -312,10 +313,12 @@ export function SessionJoin({
                   </Button>
                 </CardContent>
               </Card>
-              <PreparedAdventureFixturePanel
-                initialProjectId={selectedProjectId || null}
-                onNavigateToCharacterEditor={onNavigateToCharacterEditor}
-              />
+              {mayShowPreparedAdventureFixturePanel(import.meta.env.DEV === true) ? (
+                <PreparedAdventureFixturePanel
+                  initialProjectId={selectedProjectId || null}
+                  onNavigateToCharacterEditor={onNavigateToCharacterEditor}
+                />
+              ) : null}
               </>
             ) : (
               <Card className="border-primary">

@@ -114,13 +114,14 @@ export function PreparedAdventureFixturePanel({
   };
 
   return (
-    <Card data-prepared-adventure-fixture="v1">
+    <Card data-prepared-adventure-fixture="v1" data-dev-only-fixture="true">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base md:text-lg">
           <Sparkles className="size-5" aria-hidden="true" />
-          {fixture.adventureName}
+          DEV · {fixture.adventureName}
         </CardTitle>
         <CardDescription className="text-xs md:text-sm">
+          Expliziter Developer-/Player-Test-Kontext — nicht Teil der normalen Session-Erstellung.{' '}
           {fixture.adventureDescription}
           {' '}
           Pack:
