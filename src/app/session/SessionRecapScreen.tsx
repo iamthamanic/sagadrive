@@ -47,9 +47,10 @@ export function SessionRecapScreen({
   };
 
   return (
-    <AdaptivePage data-au-surface="session-recap" className="h-full w-full">
+    <AdaptivePage className="h-full w-full min-h-[50vh]">
       <div
-        className="mx-auto flex h-full max-w-3xl flex-col gap-4 overflow-y-auto p-4 sm:p-6"
+        className="mx-auto flex h-full min-h-[50vh] max-w-3xl flex-col gap-4 overflow-y-auto p-4 sm:p-6"
+        data-au-surface="session-recap"
         data-session-recap="v1"
       >
         <header className="flex flex-wrap items-start justify-between gap-3">
@@ -136,42 +137,9 @@ export function SessionRecapScreen({
             </section>
 
             <section
-              className="rounded-lg border border-border bg-card/40 p-4"
-              data-session-recap-highlights
-            >
-              <h2 className="text-sm font-medium">Wichtige Ereignisse</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Nur für deine Rolle freigegebene Adventure-Ereignisse (#374).
-              </p>
-              <ul className="mt-3 space-y-2 text-sm">
-                {model.highlights.map((h) => (
-                  <li
-                    key={h.id}
-                    className="rounded-md border border-border/50 px-3 py-2"
-                    data-session-recap-highlight={h.kind}
-                  >
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                      {h.kind}
-                    </span>
-                    <p>{h.summary}</p>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section
               className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
               data-session-recap-actions
             >
-              <Button
-                type="button"
-                className="min-h-11"
-                disabled={isCreatingNext}
-                onClick={() => void handlePrimary()}
-                data-session-recap-primary
-              >
-                {isCreatingNext ? 'Wird erstellt…' : model.recapCta.labelDe}
-              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -195,6 +163,53 @@ export function SessionRecapScreen({
             </section>
           </>
         ) : null}
+
+        <section
+          className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
+          data-session-recap-actions-shell
+        >
+          <Button
+            type="button"
+            className="min-h-11"
+            disabled={!model || isCreatingNext}
+            onClick={() => void handlePrimary()}
+            data-session-recap-primary
+          >
+            {isCreatingNext
+              ? 'Wird erstellt…'
+              : (model?.recapCta.labelDe ?? 'Zur Saga')}
+          </Button>
+        </section>
+
+        <section
+          className="rounded-lg border border-border bg-card/40 p-4"
+          data-session-recap-highlights
+        >
+          <h2 className="text-sm font-medium">Wichtige Ereignisse</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Nur für deine Rolle freigegebene Adventure-Ereignisse (#374).
+          </p>
+          <ul className="mt-3 space-y-2 text-sm">
+            {(model?.highlights ?? [
+              {
+                id: 'pending',
+                kind: 'empty',
+                summary: 'Ereignisse werden geladen…',
+              },
+            ]).map((h) => (
+              <li
+                key={h.id}
+                className="rounded-md border border-border/50 px-3 py-2"
+                data-session-recap-highlight={h.kind}
+              >
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {h.kind}
+                </span>
+                <p>{h.summary}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </AdaptivePage>
   );

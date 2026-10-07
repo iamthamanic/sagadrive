@@ -94,8 +94,8 @@ export function useSessionPrepareRecap(
     setIsLoading(true);
     try {
       const { session, project } = await projectService.getSessionByPublicIds(
-        input.sagaPublicId,
-        input.sessionPublicId,
+        input.sagaPublicId.trim().toUpperCase(),
+        input.sessionPublicId.trim().toUpperCase(),
       );
       setSessionId(session.id);
       setProjectId(project.id);
@@ -248,8 +248,9 @@ export function useSessionPrepareRecap(
 
   return {
     model,
-    isLoading: isLoading || (Boolean(sessionId) && runtime.isLoading && !runtime.state),
-    error: error ?? runtime.error,
+    // Do not block shell paint on realtime runtime subscribe.
+    isLoading,
+    error: error ?? (runtime.error && !model ? runtime.error : null),
     isCreatingNext,
     createNextSession,
     refresh: loadBase,

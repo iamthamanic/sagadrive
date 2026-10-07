@@ -43,9 +43,10 @@ export function SessionPrepareScreen({
   };
 
   return (
-    <AdaptivePage data-au-surface="session-prepare" className="h-full w-full">
+    <AdaptivePage className="h-full w-full min-h-[50vh]">
       <div
-        className="mx-auto flex h-full max-w-3xl flex-col gap-4 overflow-y-auto p-4 sm:p-6"
+        className="mx-auto flex h-full min-h-[50vh] max-w-3xl flex-col gap-4 overflow-y-auto p-4 sm:p-6"
+        data-au-surface="session-prepare"
         data-session-prepare="v1"
       >
         <header className="flex flex-wrap items-start justify-between gap-3">
@@ -146,14 +147,6 @@ export function SessionPrepareScreen({
               className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
               data-session-prepare-actions
             >
-              <Button
-                type="button"
-                className="min-h-11"
-                onClick={handlePrimary}
-                data-session-prepare-primary
-              >
-                {model.prepareCta.labelDe}
-              </Button>
               {model.selfRole === 'gamemaster' ? (
                 <SessionInviteShareButton
                   sessionId={model.summary.sessionId}
@@ -173,6 +166,21 @@ export function SessionPrepareScreen({
             </section>
           </>
         ) : null}
+
+        <section
+          className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
+          data-session-prepare-actions-shell
+        >
+          <Button
+            type="button"
+            className="min-h-11"
+            disabled={!model}
+            onClick={handlePrimary}
+            data-session-prepare-primary
+          >
+            {model?.prepareCta.labelDe ?? 'Zur Lobby'}
+          </Button>
+        </section>
       </div>
     </AdaptivePage>
   );
