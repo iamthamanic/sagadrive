@@ -1,6 +1,6 @@
 /**
- * Avatar V2 Identity Transfer Spike — pure domain decision contract (#262 / Epic #248).
- * Location: src/domains/character/avatar/identity-transfer-spike-v1.ts
+ * Avatar V2 Identity Transfer — pure domain decision contract (#262 / Epic #248; promoted #323).
+ * Location: src/domains/character/avatar/identity-transfer-v1.ts
  *
  * Encodes reproducible approach comparison + default/fallback for #263 Conversion.
  * No React / Three / Supabase / provider SDKs. No invented capabilities.
@@ -8,8 +8,8 @@
 
 import type { AvatarV2BodyFamily } from './composition-contract-v2';
 
-export const IDENTITY_TRANSFER_SPIKE_CONTRACT_VERSION =
-  'SagaDriveIdentityTransferSpikeV1' as const;
+export const IDENTITY_TRANSFER_CONTRACT_VERSION =
+  'SagaDriveIdentityTransferV1' as const;
 
 /** Controlled golden fixtures — never private user assets. */
 export const IDENTITY_TRANSFER_GOLDEN_FIXTURE_IDS = [
@@ -22,7 +22,7 @@ export type IdentityTransferGoldenFixtureId =
   (typeof IDENTITY_TRANSFER_GOLDEN_FIXTURE_IDS)[number];
 
 /**
- * Transfer approaches evaluated in the spike.
+ * Transfer approaches evaluated for conversion.
  * `ai-assisted` is scored for completeness but must not become default
  * (non-reproducible / license / self-host fit).
  */
@@ -61,7 +61,7 @@ export interface IdentityTransferApproachScoreV1 {
 }
 
 export interface IdentityTransferDecisionV1 {
-  contractVersion: typeof IDENTITY_TRANSFER_SPIKE_CONTRACT_VERSION;
+  contractVersion: typeof IDENTITY_TRANSFER_CONTRACT_VERSION;
   /** Primary pipeline for #263 — must be fully local/reproducible. */
   defaultApproachIds: readonly IdentityTransferApproachId[];
   /** When identity fidelity below threshold — fixed, no user gate. */
@@ -76,7 +76,7 @@ export interface IdentityTransferDecisionV1 {
  * Conversion contract handoff for #263 — concrete steps, not recommendation prose.
  */
 export interface IdentityTransferConversionPlanV1 {
-  contractVersion: typeof IDENTITY_TRANSFER_SPIKE_CONTRACT_VERSION;
+  contractVersion: typeof IDENTITY_TRANSFER_CONTRACT_VERSION;
   targetFamilies: readonly Exclude<AvatarV2BodyFamily, 'custom'>[];
   inputs: readonly string[];
   outputs: readonly string[];
@@ -349,7 +349,7 @@ export function meanAggregate(
  */
 export function resolveIdentityTransferDecision(): IdentityTransferDecisionV1 {
   return {
-    contractVersion: IDENTITY_TRANSFER_SPIKE_CONTRACT_VERSION,
+    contractVersion: IDENTITY_TRANSFER_CONTRACT_VERSION,
     defaultApproachIds: [
       'landmark-morph-fitting',
       'material-trait-transfer',
@@ -374,7 +374,7 @@ export function resolveIdentityTransferDecision(): IdentityTransferDecisionV1 {
 export function buildIdentityTransferConversionPlan(): IdentityTransferConversionPlanV1 {
   const decision = resolveIdentityTransferDecision();
   return {
-    contractVersion: IDENTITY_TRANSFER_SPIKE_CONTRACT_VERSION,
+    contractVersion: IDENTITY_TRANSFER_CONTRACT_VERSION,
     targetFamilies: ['standard', 'compact', 'heavy'],
     inputs: [
       'sourceArtifactId (owner-scoped import/generate)',
@@ -432,7 +432,7 @@ export function selectTransferPipelineForFixture(
   return { mode: 'degraded', approachIds: decision.degradedFallbackApproachIds };
 }
 
-export function assertIdentityTransferSpikeInvariants(): {
+export function assertIdentityTransferInvariants(): {
   ok: boolean;
   issues: string[];
 } {

@@ -28,7 +28,7 @@
 
 ## Job graph / cost
 
-See `modular-generate-decomposition-spike-v1.ts` → `jobGraph`. Max 1 paid retry per stage; cost confirm required. Provider answers never authoritatively set SagaDrive roles/slots/capabilities.
+See `modular-generate-decomposition-v1.ts` → `jobGraph`. Max 1 paid retry per stage; cost confirm required. Provider answers never authoritatively set SagaDrive roles/slots/capabilities.
 
 ## Golden fixtures
 

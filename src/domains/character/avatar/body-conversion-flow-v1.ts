@@ -14,7 +14,7 @@ import {
   buildIdentityTransferConversionPlan,
   resolveIdentityTransferDecision,
   type IdentityTransferApproachId,
-} from './identity-transfer-spike-v1';
+} from './identity-transfer-v1';
 import type {
   AvatarV2Anatomy,
   AvatarV2BodyFamily,

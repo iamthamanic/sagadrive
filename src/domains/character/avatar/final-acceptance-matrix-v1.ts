@@ -202,7 +202,7 @@ export const AVATAR_V2_GOLDEN_MATRIX_V1: readonly AvatarV2GoldenJourneyV1[] = [
     fixtureRef: 'domain:body-conversion-flow',
     requiredChecks: [
       'avatar-v2-body-conversion-flow-check.mjs',
-      'avatar-v2-identity-transfer-spike-check.mjs',
+      'avatar-v2-identity-transfer-check.mjs',
     ],
     expectedOutcome: 'ready',
     notesDe: 'Humanoide Interpretation bei Custom.',

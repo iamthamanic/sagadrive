@@ -40,8 +40,8 @@ Ermittelt reproduzierbar, welcher Rigging-Ansatz für Humanoide und stark abweic
 - Verdict: CLEAR
 
 ## Implementation Notes
-- Domain: `custom-rig-benchmark-v1.ts` — matrix + humanoid/custom strategies
+- Domain: `custom-rig-decision-v1.ts` — matrix + humanoid/custom strategies
 - Design: `.qa/design/avatar-v2-custom-rig-benchmark.md` + pipeline §6
 - Fixtures: gumo-like + alien golden profiles
-- Check: `avatar-v2-custom-rig-benchmark-check.mjs`
+- Check: `avatar-v2-custom-rig-decision-check.mjs`
 

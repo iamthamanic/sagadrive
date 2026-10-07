@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * avatar-v2-identity-transfer-spike-check — deterministic tests for #262.
- * Location: scripts/avatar-v2-identity-transfer-spike-check.mjs
+ * avatar-v2-identity-transfer-check — deterministic tests for #262 (promoted #323).
+ * Location: scripts/avatar-v2-identity-transfer-check.mjs
  */
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -17,17 +17,17 @@ function read(rel) {
 
 function check(cond, msg) {
   if (!cond) {
-    console.error(`avatar-v2-identity-transfer-spike-check FAIL: ${msg}`);
+    console.error(`avatar-v2-identity-transfer-check FAIL: ${msg}`);
     process.exit(1);
   }
 }
 
-const domain = read('src/domains/character/avatar/identity-transfer-spike-v1.ts');
+const domain = read('src/domains/character/avatar/identity-transfer-v1.ts');
 const index = read('src/domains/character/avatar/index.ts');
 const design = read('.qa/design/avatar-v2-identity-transfer-spike.md');
 const pipeline = read('.qa/design/avatar-v2-modular-pipeline.md');
 
-check(/IDENTITY_TRANSFER_SPIKE_CONTRACT_VERSION/.test(domain), 'version');
+check(/IDENTITY_TRANSFER_CONTRACT_VERSION/.test(domain), 'version');
 check(/IDENTITY_TRANSFER_GOLDEN_MATRIX_V1/.test(domain), 'matrix');
 check(/landmark-morph-fitting/.test(domain), 'morph approach');
 check(/texture-projection-bake/.test(domain), 'texture approach');
@@ -41,13 +41,13 @@ check(/resolveIdentityTransferDecision/.test(index), 'barrel decision');
 check(/buildIdentityTransferConversionPlan/.test(index), 'barrel plan');
 check(/Default pipeline/.test(design) || /Default =/.test(design), 'design default');
 check(/Degraded fallback/.test(design) || /degraded/.test(design), 'design fallback');
-check(/identity-transfer-spike/.test(pipeline), 'pipeline links spike');
+check(/identity-transfer-v1/.test(pipeline), 'pipeline links domain');
 
-const outDir = join(root, 'node_modules/.cache/avatar-v2-identity-transfer-spike-check');
+const outDir = join(root, 'node_modules/.cache/avatar-v2-identity-transfer-check');
 mkdirSync(outDir, { recursive: true });
-const outfile = join(outDir, 'spike.mjs');
+const outfile = join(outDir, 'identity-transfer.mjs');
 await build({
-  entryPoints: [join(root, 'src/domains/character/avatar/identity-transfer-spike-v1.ts')],
+  entryPoints: [join(root, 'src/domains/character/avatar/identity-transfer-v1.ts')],
   bundle: true,
   platform: 'node',
   format: 'esm',
@@ -56,7 +56,7 @@ await build({
 });
 const m = await import(outfile + `?t=${Date.now()}`);
 
-const assert = m.assertIdentityTransferSpikeInvariants();
+const assert = m.assertIdentityTransferInvariants();
 check(assert.ok, `invariants: ${assert.issues.join('; ')}`);
 
 const decision = m.resolveIdentityTransferDecision();
@@ -82,4 +82,4 @@ check(human.mode === 'default', 'human default');
 
 check(existsSync(join(root, '.qa/acceptance/avatar-v2-identity-transfer-spike.md')), 'acceptance');
 
-console.log('avatar-v2-identity-transfer-spike-check PASS');
+console.log('avatar-v2-identity-transfer-check PASS');

@@ -22,6 +22,6 @@ Reproduzierbare Entscheidung: provider-neutraler Ablauf für editierbare Generat
 - Verdict: CLEAR
 
 ## Implementation Notes
-- Domain: `modular-generate-decomposition-spike-v1.ts` (matrix, decision, handoff for #269)
+- Domain: `modular-generate-decomposition-v1.ts` (matrix, decision, handoff for #269)
 - Design: `.qa/design/avatar-v2-generate-decomposition-spike.md` + pipeline link
-- Check: `scripts/avatar-v2-generate-decomposition-spike-check.mjs` via test-gate
+- Check: `scripts/avatar-v2-generate-decomposition-check.mjs` via test-gate

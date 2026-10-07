@@ -1,6 +1,6 @@
 /**
- * Avatar V2 Custom Rig Benchmark — pure domain decision (#265 / Epic #248).
- * Location: src/domains/character/avatar/custom-rig-benchmark-v1.ts
+ * Avatar V2 Custom Rig Decision — pure domain path matrix (#265 / Epic #248; promoted #323).
+ * Location: src/domains/character/avatar/custom-rig-decision-v1.ts
  *
  * Reproducible provider/path comparison for Humanoid vs Custom Creature.
  * Provider success never elevates capabilities — Analyzer/Revalidation owns that.
@@ -13,7 +13,7 @@ import type { AvatarRiggingProviderId } from './rigging-provider-contract';
 export const CUSTOM_RIG_BENCHMARK_CONTRACT_VERSION =
   'SagaDriveCustomRigBenchmarkV1' as const;
 
-/** Golden fixtures for the rigging spike (controlled assets only). */
+/** Golden fixtures for the rigging decision matrix (controlled assets only). */
 export const CUSTOM_RIG_BENCHMARK_FIXTURE_IDS = [
   'human',
   'dwarf',

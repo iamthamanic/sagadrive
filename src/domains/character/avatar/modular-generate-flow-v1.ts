@@ -11,7 +11,7 @@ import {
   buildModularGenerateHandoffFor269,
   type ModularGenerateApproachId,
   type ModularGenerateGoldenFixtureId,
-} from './modular-generate-decomposition-spike-v1';
+} from './modular-generate-decomposition-v1';
 import {
   buildGenerateEditorSeed,
   type GenerateProductModeId,
