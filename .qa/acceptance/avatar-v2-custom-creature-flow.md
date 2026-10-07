@@ -44,4 +44,4 @@ Faruk-artige freie Körperformen bleiben first-class: Originalgeometrie, nur ver
 - Editor keep toast + morph evidence fail-closed for custom-creature
 - Check: `scripts/avatar-v2-custom-creature-flow-check.mjs` (test-gate)
 - Design: `.qa/design/avatar-v2-custom-creature-flow.md` + pipeline §6
-- Boy Scout: barrel-export `#265` `custom-rig-benchmark-v1` (was missing on main)
+- Boy Scout: barrel-export `#265` `custom-rig-decision-v1` (promoted from benchmark filename in #323)

@@ -1,14 +1,14 @@
 /**
- * Avatar V2 Modular Generate Decomposition Spike — pure domain (#268 / Epic #248).
- * Location: src/domains/character/avatar/modular-generate-decomposition-spike-v1.ts
+ * Avatar V2 Modular Generate Decomposition — pure domain (#268 / Epic #248; promoted #323).
+ * Location: src/domains/character/avatar/modular-generate-decomposition-v1.ts
  *
  * Encodes approach comparison + default/degraded pipeline for #269.
  * Provider part-split is adapter-only — never a domain capability claim.
  * No React / Three / Supabase / live provider calls.
  */
 
-export const MODULAR_GENERATE_DECOMPOSITION_SPIKE_VERSION =
-  'SagaDriveModularGenerateDecompositionSpikeV1' as const;
+export const MODULAR_GENERATE_DECOMPOSITION_VERSION =
+  'SagaDriveModularGenerateDecompositionV1' as const;
 
 export const MODULAR_GENERATE_GOLDEN_FIXTURE_IDS = [
   'human',
@@ -81,7 +81,7 @@ export interface ModularGenerateRolePlanV1 {
 }
 
 export interface ModularGenerateJobGraphV1 {
-  contractVersion: typeof MODULAR_GENERATE_DECOMPOSITION_SPIKE_VERSION;
+  contractVersion: typeof MODULAR_GENERATE_DECOMPOSITION_VERSION;
   /** Ordered job stages for #269 — concrete, not open R&D. */
   stages: readonly {
     stageId: string;
@@ -95,7 +95,7 @@ export interface ModularGenerateJobGraphV1 {
 }
 
 export interface ModularGenerateDecompositionDecisionV1 {
-  contractVersion: typeof MODULAR_GENERATE_DECOMPOSITION_SPIKE_VERSION;
+  contractVersion: typeof MODULAR_GENERATE_DECOMPOSITION_VERSION;
   defaultApproachId: ModularGenerateApproachId;
   degradedFallbackApproachId: ModularGenerateApproachId;
   bannedFromDefault: readonly ModularGenerateApproachId[];
@@ -408,7 +408,7 @@ function buildDefaultRolePlan(): readonly ModularGenerateRolePlanV1[] {
 
 function buildJobGraph(): ModularGenerateJobGraphV1 {
   return {
-    contractVersion: MODULAR_GENERATE_DECOMPOSITION_SPIKE_VERSION,
+    contractVersion: MODULAR_GENERATE_DECOMPOSITION_VERSION,
     stages: [
       {
         stageId: 'parse-intent',
@@ -466,7 +466,7 @@ function buildJobGraph(): ModularGenerateJobGraphV1 {
 
 export function resolveModularGenerateDecompositionDecision(): ModularGenerateDecompositionDecisionV1 {
   return {
-    contractVersion: MODULAR_GENERATE_DECOMPOSITION_SPIKE_VERSION,
+    contractVersion: MODULAR_GENERATE_DECOMPOSITION_VERSION,
     defaultApproachId: 'vision-parse-library-body-catalog-wearables',
     degradedFallbackApproachId: 'generate-body-only-catalog-wearables',
     bannedFromDefault: ['provider-part-split', 'full-mesh-autosplit', 'free-form-blob'],

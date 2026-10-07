@@ -1225,9 +1225,17 @@ function checkAvatarV2ImportOriginalFlow() {
   });
 }
 
-function checkAvatarV2IdentityTransferSpike() {
-  console.log('Avatar V2 identity transfer spike (#262): default + degraded conversion plan...');
-  execFileSync(process.execPath, ['scripts/avatar-v2-identity-transfer-spike-check.mjs'], {
+function checkAvatarSpikePromote() {
+  console.log('Avatar spike/benchmark promote (#323): production filenames...');
+  execFileSync(process.execPath, ['scripts/avatar-spike-promote-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkAvatarV2IdentityTransfer() {
+  console.log('Avatar V2 identity transfer (#262/#323): default + degraded conversion plan...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-identity-transfer-check.mjs'], {
     cwd: root,
     stdio: 'inherit',
   });
@@ -1249,9 +1257,9 @@ function checkAvatarV2CustomCreatureContract() {
   });
 }
 
-function checkAvatarV2CustomRigBenchmark() {
-  console.log('Avatar V2 custom rig benchmark (#265): Meshy/SkinTokens/Import defaults...');
-  execFileSync(process.execPath, ['scripts/avatar-v2-custom-rig-benchmark-check.mjs'], {
+function checkAvatarV2CustomRigDecision() {
+  console.log('Avatar V2 custom rig decision (#265/#323): Meshy/SkinTokens/Import defaults...');
+  execFileSync(process.execPath, ['scripts/avatar-v2-custom-rig-decision-check.mjs'], {
     cwd: root,
     stdio: 'inherit',
   });
@@ -1273,11 +1281,11 @@ function checkAvatarV2GenerateUx() {
   });
 }
 
-function checkAvatarV2GenerateDecompositionSpike() {
-  console.log('Avatar V2 modular generate decomposition spike (#268)...');
+function checkAvatarV2GenerateDecomposition() {
+  console.log('Avatar V2 modular generate decomposition (#268/#323)...');
   execFileSync(
     process.execPath,
-    ['scripts/avatar-v2-generate-decomposition-spike-check.mjs'],
+    ['scripts/avatar-v2-generate-decomposition-check.mjs'],
     {
       cwd: root,
       stdio: 'inherit',
@@ -1934,13 +1942,14 @@ checkAvatarV2CapabilityEditor();
 checkAvatarV2TemplateCreatorFlow();
 checkSpeciesTemplateGenderModelPreview();
 checkAvatarV2ImportOriginalFlow();
-checkAvatarV2IdentityTransferSpike();
+checkAvatarSpikePromote();
+checkAvatarV2IdentityTransfer();
 checkAvatarV2BodyConversionFlow();
 checkAvatarV2CustomCreatureContract();
-checkAvatarV2CustomRigBenchmark();
+checkAvatarV2CustomRigDecision();
 checkAvatarV2CustomCreatureFlow();
 checkAvatarV2GenerateUx();
-checkAvatarV2GenerateDecompositionSpike();
+checkAvatarV2GenerateDecomposition();
 checkAvatarV2ModularGenerateFlow();
 checkAvatarV2FinalAcceptance();
 checkAvatarContentPack();

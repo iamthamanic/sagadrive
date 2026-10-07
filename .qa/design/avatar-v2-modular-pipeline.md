@@ -59,10 +59,10 @@ Verbote: neue `src/modules`, `src/components`, `src/features`, generische `servi
 - Auto-Rig explizit optional: Ohne Auto-Rig vorhandenes Rig bzw. begrenzte Capabilities; Avatar bleibt nutzbar wo möglich.
 - „Original behalten“ ist ein gültiger Pfad (kein Zwang zu Standard/Compact/Heavy).
 - **Custom Rig Benchmark (#265):** `.qa/design/avatar-v2-custom-rig-benchmark.md` +
-  `custom-rig-benchmark-v1.ts` — Default Custom-Pfad `import-existing-rig`; Provider-Erfolg
+  `custom-rig-decision-v1.ts` — Default Custom-Pfad `import-existing-rig`; Provider-Erfolg
   setzt nie Capabilities.
 - **Modular Generate Decomposition (#268):** `.qa/design/avatar-v2-generate-decomposition-spike.md`
-  + `modular-generate-decomposition-spike-v1.ts` — Default:
+  + `modular-generate-decomposition-v1.ts` — Default:
   Vision/Parse → Library Body → Identity Transfer → Katalog-Wearables/Props.
   Bekleideter Blob nie als full modular; ungewöhnliche Anatomie → Freie Form.
 - **Modular Generate Flow (#269):** `modular-generate-flow-v1.ts` +
@@ -83,11 +83,11 @@ Verbote: neue `src/modules`, `src/components`, `src/features`, generische `servi
 - Persistierte Artefakte: owner-scoped, validiert vor Aktivierung.
 - Unsupported/kaputter GLB blockiert den **vorherigen gültigen** Avatar nicht.
 - Wearables: Rigid (Anker) vs Skinned (Family Fit) — bestehende Contracts wiederverwenden; keine zweite Equipment-State-Machine.
-- Conversion Import → Family (#263) folgt der Spike-Entscheidung in
+- Conversion Import → Family (#263) folgt der Domain-Entscheidung in
   `.qa/design/avatar-v2-identity-transfer-spike.md` und
-  `identity-transfer-spike-v1.ts` (Default: Morph-Fitting + Traits/Materials + optionale Texture Projection;
+  `identity-transfer-v1.ts` (Default: Morph-Fitting + Traits/Materials + optionale Texture Projection;
   Degraded: ohne Bake; AI-assisted nie Default).
-- Identity Transfer Spike: #262 (dieses Binding).
+- Identity Transfer: #262 (dieses Binding; Dateiname promoted in #323).
 
 ## 8. UX-Journey (Zielbild)
 

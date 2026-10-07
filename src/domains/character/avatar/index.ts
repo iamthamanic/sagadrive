@@ -77,8 +77,8 @@ export {
   IDENTITY_TRANSFER_GOLDEN_MATRIX_V1,
   IDENTITY_TRANSFER_IDENTITY_FIDELITY_THRESHOLD,
   IDENTITY_TRANSFER_SCORE_WEIGHTS,
-  IDENTITY_TRANSFER_SPIKE_CONTRACT_VERSION,
-  assertIdentityTransferSpikeInvariants,
+  IDENTITY_TRANSFER_CONTRACT_VERSION,
+  assertIdentityTransferInvariants,
   buildIdentityTransferConversionPlan,
   listScoresForApproach,
   meanAggregate,
@@ -93,7 +93,7 @@ export {
   type IdentityTransferGoldenFixtureId,
   type IdentityTransferScoreAxis,
   type IdentityTransferScoreRow,
-} from './identity-transfer-spike-v1';
+} from './identity-transfer-v1';
 export {
   BODY_CONVERSION_FLOW_CONTRACT_VERSION,
   BODY_CONVERSION_TARGET_FAMILIES,
@@ -123,7 +123,7 @@ export {
   type CustomRigBenchmarkScoreAxis,
   type CustomRigBenchmarkScoreRow,
   type CustomRigProfileStrategyV1,
-} from './custom-rig-benchmark-v1';
+} from './custom-rig-decision-v1';
 export {
   CUSTOM_CREATURE_FLOW_CONTRACT_VERSION,
   assertCustomCreatureFlowInvariants,
@@ -152,7 +152,7 @@ export {
 export {
   MODULAR_GENERATE_APPROACH_IDS,
   MODULAR_GENERATE_DECOMPOSITION_MATRIX_V1,
-  MODULAR_GENERATE_DECOMPOSITION_SPIKE_VERSION,
+  MODULAR_GENERATE_DECOMPOSITION_VERSION,
   MODULAR_GENERATE_GOLDEN_FIXTURE_IDS,
   assertModularGenerateDecompositionInvariants,
   buildModularGenerateHandoffFor269,
@@ -165,7 +165,7 @@ export {
   type ModularGenerateRolePlanV1,
   type ModularGenerateScoreAxis,
   type ModularGenerateScoreRow,
-} from './modular-generate-decomposition-spike-v1';
+} from './modular-generate-decomposition-v1';
 export {
   MODULAR_GENERATE_FLOW_CONTRACT_VERSION,
   assertModularGenerateFlowInvariants,

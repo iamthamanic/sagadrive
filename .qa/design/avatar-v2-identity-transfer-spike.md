@@ -3,7 +3,7 @@
 **Status:** Binding for #263 Conversion  
 **Slug:** `avatar-v2-identity-transfer-spike`  
 **Parent:** `.qa/design/avatar-v2-modular-pipeline.md` / Epic #248  
-**Domain contract:** `src/domains/character/avatar/identity-transfer-spike-v1.ts`
+**Domain contract:** `src/domains/character/avatar/identity-transfer-v1.ts`
 
 ## 1. Intent
 

@@ -17,7 +17,7 @@ import {
 import {
   selectRigPathForFixture,
   type CustomRigBenchmarkFixtureId,
-} from './custom-rig-benchmark-v1';
+} from './custom-rig-decision-v1';
 import type { AvatarRigCapabilityFlagV2 } from './rig-capability-contract-v2';
 import { resolveMorphEvidenceForComposition } from './editor-surface-resolver-v1';
 

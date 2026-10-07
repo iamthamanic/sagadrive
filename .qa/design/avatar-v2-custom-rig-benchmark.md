@@ -2,7 +2,7 @@
 
 **Status:** Binding for #266+ Custom Creature Original slice  
 **Slug:** `avatar-v2-custom-rig-benchmark`  
-**Domain:** `src/domains/character/avatar/custom-rig-benchmark-v1.ts`  
+**Domain:** `src/domains/character/avatar/custom-rig-decision-v1.ts`  
 **Parent:** `.qa/design/avatar-v2-modular-pipeline.md` §6
 
 ## 1. Intent

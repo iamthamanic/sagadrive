@@ -21,7 +21,7 @@ gekennzeichnet — nie stillschweigend erzwungen.
 ## Domain
 
 - `custom-creature-flow-v1.ts` — Guidance + Editor-Seed + Faruk fixture slice
-- Reuse: `import-original-flow-v1`, `custom-rig-benchmark-v1`, `editor-surface-resolver-v1`
+- Reuse: `import-original-flow-v1`, `custom-rig-decision-v1`, `editor-surface-resolver-v1`
 
 ## UI
 

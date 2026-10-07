@@ -40,8 +40,8 @@ Entscheidet technisch belastbar, wie ein Import-/Generate-Look auf Standard/Comp
 - Verdict: CLEAR
 
 ## Implementation Notes
-- Domain: `src/domains/character/avatar/identity-transfer-spike-v1.ts` — golden matrix (4 fixtures × 4 approaches), weighted ranking, `resolveIdentityTransferDecision`, `buildIdentityTransferConversionPlan`, `selectTransferPipelineForFixture`, invariants.
+- Domain: `src/domains/character/avatar/identity-transfer-v1.ts` — golden matrix (4 fixtures × 4 approaches), weighted ranking, `resolveIdentityTransferDecision`, `buildIdentityTransferConversionPlan`, `selectTransferPipelineForFixture`, invariants.
 - Design: `.qa/design/avatar-v2-identity-transfer-spike.md` (binding for #263); linked from modular pipeline §7.
-- Check: `scripts/avatar-v2-identity-transfer-spike-check.mjs` wired into `npm run test-gate`.
+- Check: `scripts/avatar-v2-identity-transfer-check.mjs` wired into `npm run test-gate`.
 - Default: morph-fitting + material/trait + optional texture bake; degraded skips bake; `ai-assisted` banned from default.
 - Barrel exports via `src/domains/character/avatar/index.ts`.

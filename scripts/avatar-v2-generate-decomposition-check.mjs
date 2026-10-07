@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * avatar-v2-generate-decomposition-spike-check — deterministic tests for #268.
- * Location: scripts/avatar-v2-generate-decomposition-spike-check.mjs
+ * avatar-v2-generate-decomposition-check — deterministic tests for #268 (promoted #323).
+ * Location: scripts/avatar-v2-generate-decomposition-check.mjs
  */
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -15,12 +15,12 @@ function read(rel) {
 }
 function check(cond, msg) {
   if (!cond) {
-    console.error(`avatar-v2-generate-decomposition-spike-check FAIL: ${msg}`);
+    console.error(`avatar-v2-generate-decomposition-check FAIL: ${msg}`);
     process.exit(1);
   }
 }
 
-const domain = read('src/domains/character/avatar/modular-generate-decomposition-spike-v1.ts');
+const domain = read('src/domains/character/avatar/modular-generate-decomposition-v1.ts');
 const index = read('src/domains/character/avatar/index.ts');
 const design = read('.qa/design/avatar-v2-generate-decomposition-spike.md');
 const pipeline = read('.qa/design/avatar-v2-modular-pipeline.md');
@@ -36,12 +36,12 @@ check(/Vision\/Parse|vision-parse|Library Body/.test(design + pipeline), 'design
 check(/generate-decomposition/.test(pipeline), 'pipeline link');
 check(/full modular|full modular/i.test(design), 'honest modularity');
 
-const outDir = join(root, 'node_modules/.cache/avatar-v2-generate-decomposition-spike-check');
+const outDir = join(root, 'node_modules/.cache/avatar-v2-generate-decomposition-check');
 mkdirSync(outDir, { recursive: true });
-const outfile = join(outDir, 'spike.mjs');
+const outfile = join(outDir, 'decomposition.mjs');
 await build({
   entryPoints: [
-    join(root, 'src/domains/character/avatar/modular-generate-decomposition-spike-v1.ts'),
+    join(root, 'src/domains/character/avatar/modular-generate-decomposition-v1.ts'),
   ],
   bundle: true,
   platform: 'node',
@@ -67,4 +67,4 @@ check(
   existsSync(join(root, '.qa/acceptance/avatar-v2-generate-decomposition-spike.md')),
   'acceptance',
 );
-console.log('avatar-v2-generate-decomposition-spike-check PASS');
+console.log('avatar-v2-generate-decomposition-check PASS');
