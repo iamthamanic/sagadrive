@@ -133,9 +133,12 @@ export function LoginScreen() {
                       required
                       disabled={isLoading}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Demo-Login: <span className="font-mono">admin</span> / <span className="font-mono">1234</span>
-                    </p>
+                    {import.meta.env.DEV ? (
+                      <p className="text-xs text-muted-foreground" data-dev-demo-login-hint>
+                        DEV Demo-Login:{' '}
+                        <span className="font-mono">admin</span> / <span className="font-mono">1234</span>
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="space-y-2">

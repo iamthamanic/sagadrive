@@ -13,6 +13,10 @@ import { Search, Download, Star, TrendingUp, Loader2, Package, Plus } from 'luci
 import { useMarketplace } from './useMarketplace';
 import type { MarketplaceItemType } from '../../../domains/marketplace/contracts/marketplace.types';
 import { toast } from 'sonner';
+import {
+  marketplacePaidActionEnabled,
+  marketplacePaidCtaLabelDe,
+} from '../../../domains/session/contracts/production-ux-integrity';
 
 export function Marketplace() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,15 +30,14 @@ export function Marketplace() {
   });
 
   const handleDownload = async (itemId: string, title: string, price: number) => {
-    if (price > 0) {
-      toast.info(`Kaufprozess für "${title}" wird implementiert`);
+    if (!marketplacePaidActionEnabled(price)) {
       return;
     }
 
     try {
       await downloadItem(itemId);
       toast.success(`"${title}" heruntergeladen!`);
-    } catch (error) {
+    } catch {
       toast.error('Download fehlgeschlagen');
     }
   };
@@ -208,9 +211,16 @@ export function Marketplace() {
                       <Button 
                         className="w-full" 
                         size="sm"
+                        disabled={!marketplacePaidActionEnabled(item.price)}
+                        title={
+                          marketplacePaidActionEnabled(item.price)
+                            ? undefined
+                            : 'Bezahlter Kauf ist noch nicht verfügbar'
+                        }
+                        data-marketplace-cta={item.price > 0 ? 'paid-deferred' : 'free'}
                         onClick={() => handleDownload(item.id, item.title, item.price)}
                       >
-                        {item.price === 0 ? 'Herunterladen' : 'Kaufen'}
+                        {marketplacePaidCtaLabelDe(item.price)}
                       </Button>
                     </div>
                   </div>
@@ -365,9 +375,16 @@ export function Marketplace() {
                         </div>
                         <Button
                           size="sm"
+                          disabled={!marketplacePaidActionEnabled(item.price)}
+                          title={
+                            marketplacePaidActionEnabled(item.price)
+                              ? undefined
+                              : 'Bezahlter Kauf ist noch nicht verfügbar'
+                          }
+                          data-marketplace-cta={item.price > 0 ? 'paid-deferred' : 'free'}
                           onClick={() => handleDownload(item.id, item.title, item.price)}
                         >
-                          {item.price === 0 ? 'Herunterladen' : 'Kaufen'}
+                          {marketplacePaidCtaLabelDe(item.price)}
                         </Button>
                       </div>
                     ))}
