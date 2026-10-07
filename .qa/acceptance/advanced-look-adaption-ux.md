@@ -40,4 +40,4 @@ capability status from the provider registry — never fake-executes.
 ## Composition Gate
 - Verdict: SKIPPED (single-hop registry → UI; no side-effect path)
 - Proof: `.qa/runs/composition-gate-advanced-look-adaption-ux.md`
-- HEAD_SHA: WORKTREE (pre-commit)
+- HEAD_SHA: e71e6d738705d2ee558041a5215d36f5812a3a57

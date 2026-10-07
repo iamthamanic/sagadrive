@@ -2,7 +2,7 @@
 
 - Date: 2026-10-07
 - Branch: feat/issue-356-look-adaption-capability-states
-- HEAD_SHA: WORKTREE (uncommitted scoped #356)
+- HEAD_SHA: e71e6d738705d2ee558041a5215d36f5812a3a57 (uncommitted scoped #356)
 
 ## Ergebnis
 PASS
