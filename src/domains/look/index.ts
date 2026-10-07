@@ -151,6 +151,13 @@ export {
 } from './advanced-adaption';
 
 export {
+  buildAdvancedLookCapabilityStatusView,
+  type AdvancedLookCapabilityStatusView,
+  type AdvancedLookModeStatusId,
+  type AdvancedLookModeStatusRow,
+} from './advanced-look-capability-status';
+
+export {
   getAdvancedLookProvider,
   listAdvancedLookProviders,
   registerAdvancedLookProvider,

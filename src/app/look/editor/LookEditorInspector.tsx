@@ -12,6 +12,7 @@ import { CharacterLookInspector } from './inspectors/CharacterLookInspector';
 import { LightingLookInspector } from './inspectors/LightingLookInspector';
 import { PostFxLookInspector } from './inspectors/PostFxLookInspector';
 import { WorldLookReservedPanel } from './inspectors/WorldLookReservedPanel';
+import { AdvancedLookAdaptionPanel } from './inspectors/AdvancedLookAdaptionPanel';
 
 type Props = {
   section: LookEditorSectionId;
@@ -105,6 +106,7 @@ export function LookEditorInspector({
       {section === 'postFx' ? (
         <PostFxLookInspector draft={draft} disabled={disabled} onChange={onChange} />
       ) : null}
+      {section === 'advanced' ? <AdvancedLookAdaptionPanel /> : null}
       {section === 'world' ? <WorldLookReservedPanel /> : null}
     </div>
   );
