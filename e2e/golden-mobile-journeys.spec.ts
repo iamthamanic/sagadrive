@@ -129,6 +129,33 @@ test.describe('Golden Mobile Journeys (#484)', () => {
     await expect(page.locator('[data-session-lobby-probe-liveact]')).toBeVisible();
   });
 
+  test('session-prepare-recap: prepare + recap AU surfaces', async ({ page }, testInfo) => {
+    test.setTimeout(90_000);
+    await ensureLoggedIn(page);
+
+    await page.goto(`/sagas/${SAGA_PUBLIC_ID}/sessions/${SESSION_PUBLIC_ID}/prepare`);
+    await expect(page.locator('[data-au-surface="session-prepare"]')).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.locator('[data-session-prepare="v1"]')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    const prepareBack = page.getByRole('button', { name: 'Zurück' }).first();
+    await expect(prepareBack).toBeVisible();
+    await expectMinTouchTargets([prepareBack], minTouchPx(testInfo.project.name));
+    await expect(page.locator('[data-session-prepare-primary]')).toBeVisible();
+
+    await page.goto(`/sagas/${SAGA_PUBLIC_ID}/sessions/${SESSION_PUBLIC_ID}/recap`);
+    await expect(page.locator('[data-au-surface="session-recap"]')).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.locator('[data-session-recap="v1"]')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    const recapPrimary = page.locator('[data-session-recap-primary]');
+    await expect(recapPrimary).toBeVisible();
+    await expectMinTouchTargets([recapPrimary], minTouchPx(testInfo.project.name));
+    await expect(page.locator('[data-session-recap-highlights]')).toBeVisible();
+  });
+
   test('player-live-private: LiveStage + private tabs playable', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     await ensureLoggedIn(page);
