@@ -219,6 +219,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-10-07** — Starttemplates: Icons + Playstyle-Tooltips im Create-Picker; Editor zeigt Vorlage-Badge und pulsierende Tab-Hinweise bei offenen Lücken (`agent/starting-template-editor-ux`)
 - **2026-09-30** — Bibliothek Abenteuer: GM kann **Leiten** und **Teilnehmen** (Session-Join) von derselben Karte (`fix/library-adventure-gm-teilnehmen`)
 - **2026-09-25** — LiveAct Face Setup 3/6: Auto Mapping (MediaPipe IMAGE + shared mesh raycast → proposed draft; #421)
 - **2026-09-25** — LiveAct: Kopfachsen/L/R-Spiegel/LookAt-Korrektur, gestufte Kalibrierung, Motion-Test + Peak-Export, Full-Detail-Overlay; Neutral/Gaze-Restbias offen (`#443`)

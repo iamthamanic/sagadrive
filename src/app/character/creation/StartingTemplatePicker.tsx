@@ -1,13 +1,24 @@
 /**
  * StartingTemplatePicker — lists the ten SagaDrive Level-1 system starttemplates (#464).
  * Location: src/app/character/creation/StartingTemplatePicker.tsx
+ *
+ * Each row shows a template icon; playstyle summary lives in a help tooltip (keeps the list compact).
  */
+import type { SyntheticEvent } from 'react';
+import { CircleHelp } from 'lucide-react';
 import { listSagaDriveStartingTemplates } from '../../../domains/rules/sagadrive/starting-templates';
 import type { SagaDriveStartingTemplateKey } from '../../../domains/rules/sagadrive/starting-templates';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../../shared/ui/tooltip';
+import { StartingTemplateIcon } from './StartingTemplateIcon';
 
 type StartingTemplatePickerProps = {
   onSelect: (templateKey: SagaDriveStartingTemplateKey) => void;
 };
+
+function stopHelpEvent(event: SyntheticEvent) {
+  event.preventDefault();
+  event.stopPropagation();
+}
 
 export function StartingTemplatePicker({ onSelect }: StartingTemplatePickerProps) {
   const templates = listSagaDriveStartingTemplates();
@@ -21,10 +32,35 @@ export function StartingTemplatePicker({ onSelect }: StartingTemplatePickerProps
             <button
               type="button"
               onClick={() => onSelect(template.key)}
-              className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary"
+              className="flex w-full items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary"
             >
-              <span className="font-medium">{template.labelDe}</span>
-              <span className="text-xs text-muted-foreground">Stufe 1</span>
+              <StartingTemplateIcon
+                templateKey={template.key}
+                className="h-5 w-5 shrink-0 text-muted-foreground"
+              />
+              <span className="min-w-0 flex-1 font-medium">{template.labelDe}</span>
+              <Tooltip pinOnClick={false}>
+                <TooltipTrigger asChild>
+                  <span
+                    role="img"
+                    aria-label={`${template.labelDe} erklären`}
+                    data-testid={`starting-template-help-${template.key}`}
+                    className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+                    onClick={stopHelpEvent}
+                    onPointerDown={stopHelpEvent}
+                  >
+                    <CircleHelp className="pointer-events-none size-3.5" aria-hidden />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="left"
+                  sideOffset={8}
+                  className="max-w-[280px] text-left text-xs leading-relaxed"
+                >
+                  {template.summaryDe}
+                </TooltipContent>
+              </Tooltip>
+              <span className="shrink-0 text-xs text-muted-foreground">Stufe 1</span>
             </button>
           </li>
         ))}

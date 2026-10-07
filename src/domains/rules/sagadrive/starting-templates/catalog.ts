@@ -34,6 +34,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'berserker',
     labelDe: 'Berserker',
+    summaryDe:
+      'Körperlicher Nahkämpfer: Druck im Nahkampf, Stärke und Athletik. Wähle ihn, wenn du frontal gehst und körperlich dominant spielen willst — nicht den distanzierten Soldaten.',
     archetype: 'fighter',
     essence: 'physical',
     attributes: {
@@ -59,6 +61,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'vanguard',
     labelDe: 'Vanguard',
+    summaryDe:
+      'Tech-Kämpfer mit Feuerdisziplin: Ausdauer, Fernkampf und soldatische Haltung. Wähle ihn, um Position zu halten, Deckung zu nutzen und mit Ausrüstung zu kämpfen.',
     archetype: 'fighter',
     essence: 'technological',
     attributes: {
@@ -83,6 +87,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'mage',
     labelDe: 'Zauberer',
+    summaryDe:
+      'Akademischer Denker mit spirituellem Fokus: Wissen, Recherche und Okkultes. Wähle ihn für Analyse, Geisteswelt und Argumentation — nicht für Gadgets und Systeme.',
     archetype: 'thinker',
     essence: 'spiritual',
     attributes: {
@@ -107,6 +113,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'technomancer',
     labelDe: 'Technomant',
+    summaryDe:
+      'System-Denker: Technik, Archive und präzise Analyse. Wähle ihn, wenn Probleme über Geräte, Netze und Hacking gelöst werden sollen statt über Okkultes.',
     archetype: 'thinker',
     essence: 'technological',
     attributes: {
@@ -132,6 +140,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'medicus',
     labelDe: 'Medicus',
+    summaryDe:
+      'Feldarzt unter Druck: Notfallmedizin, Überleben und Wachsamkeit. Wähle ihn als Versorger in Action-Szenen — praktisch und körperlich, nicht spirituell.',
     archetype: 'healer',
     essence: 'physical',
     attributes: {
@@ -156,6 +166,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'mystic',
     labelDe: 'Mystiker',
+    summaryDe:
+      'Spiritueller Stabilisator: Menschen lesen, Motivation und leichter Heil-Support. Wähle ihn für Glauben, Insight und seelische Stabilität — nicht als Notfallchirurg.',
     archetype: 'healer',
     essence: 'spiritual',
     attributes: {
@@ -181,6 +193,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'assassin',
     labelDe: 'Assassine',
+    summaryDe:
+      'Körperlicher Infiltrator: Heimlichkeit, Akrobatik und Unterwelt. Wähle ihn für unbemerktes Vorgehen, urbane Tarnung und körperliche Präzision.',
     archetype: 'rebel',
     essence: 'physical',
     attributes: {
@@ -206,6 +220,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'mechanom',
     labelDe: 'Mechanom',
+    summaryDe:
+      'Tech-Rebell und Saboteur: Fingerfertigkeit, Mechanik und Geräte. Wähle ihn, um Türen, Systeme und Werkstatt-Tricks zu nutzen statt reiner Körper-Stealth.',
     archetype: 'rebel',
     essence: 'technological',
     attributes: {
@@ -232,6 +248,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'mentalist',
     labelDe: 'Mentalist',
+    summaryDe:
+      'Leiser Einfluss: Insight, Ermittlung und Lügen erkennen. Wähle ihn für Verhöre, Menschen lesen und stille Kontrolle — nicht für große Bühnenauftritte.',
     archetype: 'diplomat',
     essence: 'mental',
     attributes: {
@@ -257,6 +275,8 @@ export const sagaDriveStartingTemplates: readonly SagaDriveStartingTemplate[] = 
   {
     key: 'herald',
     labelDe: 'Herold',
+    summaryDe:
+      'Öffentliche Stimme mit gebundener Autorität: Überzeugung, Performance und Rede. Wähle ihn für Bühne, Ansprachen und sichtbare Führung statt stiller Ermittlung.',
     archetype: 'diplomat',
     essence: 'bound',
     attributes: {

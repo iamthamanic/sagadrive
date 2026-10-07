@@ -92,6 +92,9 @@ requireMatch(dialog, /setCharacterEditorBootstrap/, 'bootstrap wiring from dialo
 requireMatch(dialog, /assertValidSnapshot/, 'assert before bootstrap handoff');
 requireMatch(startingTemplatePicker, /SagaDrive-Starttemplates/, 'system starttemplates section');
 requireMatch(startingTemplatePicker, /listSagaDriveStartingTemplates/, 'catalog list in picker');
+requireMatch(startingTemplatePicker, /StartingTemplateIcon/, 'starttemplate icon per row');
+requireMatch(startingTemplatePicker, /summaryDe/, 'starttemplate playstyle tooltip');
+requireMatch(startingTemplatePicker, /CircleHelp/, 'starttemplate help trigger');
 requireMatch(bootstrap, /kind: 'starting-template'/, 'bootstrap union includes starting-template');
 
 requireMatch(editor, /value="settings"/, 'Einstellungen editor tab');
@@ -100,6 +103,10 @@ requireMatch(editor, /takeCharacterEditorBootstrap/, 'bootstrap consume');
 requireMatch(editor, /kind === 'starting-template'/, 'starting-template bootstrap consume');
 requireMatch(editor, /getSagaDriveStartingTemplate/, 'catalog resolve for starttemplate');
 requireMatch(editor, /validateSagaDriveStartingTemplate/, 'fail-closed starttemplate validate');
+requireMatch(editor, /AppliedVorlageBadge/, 'vorlage badge in editor header');
+requireMatch(editor, /setAppliedVorlage/, 'vorlage origin tracked after bootstrap');
+requireMatch(editor, /IncompleteTabHint/, 'pulsing incomplete tab hints');
+requireMatch(editor, /tabsWithOpenGaps/, 'open gaps drive tab alert icons');
 requireMatch(editor, /assertValidSnapshot/, 'assert before editor hydrate');
 requireMatch(editor, /normalizeSafeUrl/, 'portrait bootstrap URL sanitize');
 requireMatch(editor, /updateCharacter\(savedCharacterId/, 'update existing character on save');

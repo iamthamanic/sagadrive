@@ -39,6 +39,14 @@ function attributeValuesMatchStartArray(template: SagaDriveStartingTemplate): bo
 export function validateSagaDriveStartingTemplate(
   template: SagaDriveStartingTemplate,
 ): SagaDriveStartingTemplateValidation {
+  if (!template.labelDe.trim() || !template.summaryDe.trim()) {
+    return {
+      ok: false,
+      code: 'starting-template-copy',
+      message: `${template.key}: labelDe and summaryDe are required`,
+    };
+  }
+
   if (!isValidSagaDriveBaseAttributeDistribution(template.attributes)) {
     return {
       ok: false,
