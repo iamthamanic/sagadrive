@@ -1,6 +1,6 @@
 # Composition gate — #492 Session Prepare/Recap
 
-**HEAD (at gate):** will match commit after ship  
+**HEAD (at gate):** 2268f57ece247b361457e0a73d5568e5b316894f  
 **Verdict:** CLEAR
 
 ## Path reconstructed
