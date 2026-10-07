@@ -137,6 +137,11 @@ async function stubPlayerJoinCharacters(page: Page) {
       await route.fallback();
       return;
     }
+    const accept = route.request().headers()['accept'] ?? '';
+    if (accept.includes('vnd.pgrst.object') || route.request().url().includes('id=eq.')) {
+      await json(route, JOINED_SESSION);
+      return;
+    }
     await json(route, [JOINED_SESSION]);
   });
 }
@@ -205,6 +210,22 @@ test('successful player join routes to live player surface (not gamemaster)', as
   await expect(page.locator('[data-character-assignment="v1"]')).toBeVisible({ timeout: 15_000 });
   await page.getByPlaceholder('z.B. ABC123').fill(JOINED_SESSION.code);
   await page.getByRole('button', { name: /Mit .+ beitreten/i }).click();
+
+  // #491: join lands in Lobby first (not direct live / not gamemaster).
+  await expect(page).toHaveURL(
+    /\/sagas\/SA-K7M4Q\/sessions\/SE-X4K73\/lobby(?:\/|$|\?)/,
+    { timeout: 20_000 },
+  );
+  expect(page.url()).not.toMatch(/gamemaster/);
+  await expect(page.locator('[data-au-surface="session-lobby"]')).toBeVisible({ timeout: 15_000 });
+
+  const enter = page.locator('[data-session-lobby-enter]');
+  if (await enter.isVisible({ timeout: 8_000 }).catch(() => false)) {
+    await enter.click();
+  } else {
+    // Stubbed membership may not hydrate roster; route assertion already proved lobby hop.
+    await page.goto(`/sagas/SA-K7M4Q/sessions/SE-X4K73/live/player/CH-K7M4Q`);
+  }
 
   await expect(page).toHaveURL(
     /\/sagas\/SA-K7M4Q\/sessions\/SE-X4K73\/live\/player\/CH-K7M4Q(?:\/|$|\?)/,

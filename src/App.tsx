@@ -20,6 +20,7 @@ import {
   assertPlayerNotRoutedToGamemaster,
   resolveCanonicalLiveEntry,
 } from './domains/session/contracts/session-entry-routing';
+import { resolveCanonicalLobbyEntry } from './domains/session/contracts/session-lobby';
 import { takeInviteReturnPath } from './domains/session/contracts/session-invite';
 
 const CharacterEditor = lazy(() =>
@@ -93,6 +94,7 @@ function AppShell() {
     navigateToNpcCreatureCreate,
     navigateToNpcCreatureEdit,
     navigateToSessionLive,
+    navigateToSessionPhase,
   } = useAppLocation();
 
   const handleNavigate = (view: string) => {
@@ -195,36 +197,69 @@ function AppShell() {
             <SessionJoin
               onBack={() => handleNavigate('dashboard')}
               onJoinAsGM={(sessionId, meta) => {
-                const decision = resolveCanonicalLiveEntry({
+                const decision = resolveCanonicalLobbyEntry({
                   role: 'gamemaster',
                   sagaPublicId: meta?.sagaPublicId ?? null,
                   sessionPublicId: meta?.sessionPublicId ?? null,
                 });
-                if (decision.kind === 'live') {
-                  navigateToSessionLive(
+                if (decision.kind === 'lobby') {
+                  navigateToSessionPhase(
                     decision.sagaPublicId,
                     decision.sessionPublicId,
-                    decision.liveView,
+                    'lobby',
+                  );
+                  return;
+                }
+                // Fallback: legacy live if lobby IDs incomplete (should be rare)
+                const live = resolveCanonicalLiveEntry({
+                  role: 'gamemaster',
+                  sagaPublicId: meta?.sagaPublicId ?? null,
+                  sessionPublicId: meta?.sessionPublicId ?? null,
+                });
+                if (live.kind === 'live') {
+                  navigateToSessionLive(
+                    live.sagaPublicId,
+                    live.sessionPublicId,
+                    live.liveView,
                   );
                   return;
                 }
                 console.warn(
                   '[app] GM join missing public IDs; staying on session-join',
-                  { sessionId, reason: decision.kind === 'unauthorized' ? decision.reason : decision.kind },
+                  {
+                    sessionId,
+                    reason:
+                      decision.kind === 'unauthorized'
+                        ? decision.reason
+                        : 'lobby_unavailable',
+                  },
                 );
               }}
               onJoinAsPlayer={(sessionId, code, meta) => {
-                const decision = resolveCanonicalLiveEntry({
+                const decision = resolveCanonicalLobbyEntry({
                   role: 'player',
                   sagaPublicId: meta?.sagaPublicId ?? null,
                   sessionPublicId: meta?.sessionPublicId ?? null,
                 });
-                if (decision.kind === 'live') {
-                  assertPlayerNotRoutedToGamemaster('player', decision.liveView);
-                  navigateToSessionLive(
+                if (decision.kind === 'lobby') {
+                  navigateToSessionPhase(
                     decision.sagaPublicId,
                     decision.sessionPublicId,
-                    decision.liveView,
+                    'lobby',
+                  );
+                  return;
+                }
+                const live = resolveCanonicalLiveEntry({
+                  role: 'player',
+                  sagaPublicId: meta?.sagaPublicId ?? null,
+                  sessionPublicId: meta?.sessionPublicId ?? null,
+                });
+                if (live.kind === 'live') {
+                  assertPlayerNotRoutedToGamemaster('player', live.liveView);
+                  navigateToSessionLive(
+                    live.sagaPublicId,
+                    live.sessionPublicId,
+                    live.liveView,
                     meta?.characterPublicId ?? undefined,
                   );
                   return;
@@ -341,6 +376,7 @@ function AppShell() {
             sessionPublicId={route.sessionPublicId}
             phase={route.phase}
             onNavigateHome={() => handleNavigate('dashboard')}
+            onNavigate={handleNavigate}
           />
         ) : null;
       case 'session-live':
@@ -351,6 +387,7 @@ function AppShell() {
             liveView={route.liveView}
             characterPublicId={route.characterPublicId}
             onNavigateHome={() => handleNavigate('dashboard')}
+            onNavigate={handleNavigate}
           />
         ) : null;
       case 'not-found':

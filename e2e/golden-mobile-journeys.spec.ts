@@ -112,6 +112,23 @@ test.describe('Golden Mobile Journeys (#484)', () => {
     await expectAccessiblePrimaryControls(page);
   });
 
+  test('session-lobby-preflight: lobby AU + explicit media probes', async ({ page }, testInfo) => {
+    test.setTimeout(90_000);
+    await ensureLoggedIn(page);
+    await page.goto(`/sagas/${SAGA_PUBLIC_ID}/sessions/${SESSION_PUBLIC_ID}/lobby`);
+    await expect(page.locator('[data-au-surface="session-lobby"]')).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.locator('[data-session-lobby="v1"]')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    const leave = page.getByRole('button', { name: 'Verlassen' });
+    await expect(leave).toBeVisible();
+    await expectMinTouchTargets([leave], minTouchPx(testInfo.project.name));
+    await expect(page.locator('[data-session-lobby-probe-camera]')).toBeVisible();
+    await expect(page.locator('[data-session-lobby-probe-mic]')).toBeVisible();
+    await expect(page.locator('[data-session-lobby-probe-liveact]')).toBeVisible();
+  });
+
   test('player-live-private: LiveStage + private tabs playable', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     await ensureLoggedIn(page);
