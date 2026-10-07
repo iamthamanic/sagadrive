@@ -36,6 +36,8 @@ export type SagaDriveStartingTemplateKey =
 export type SagaDriveStartingTemplate = {
   readonly key: SagaDriveStartingTemplateKey;
   readonly labelDe: string;
+  /** Short DE playstyle blurb for picker tooltips (what / how / when to pick). */
+  readonly summaryDe: string;
   readonly archetype: SagaDriveArchetypeKey;
   readonly essence: SagaDriveEssenceKey;
   /** Base attributes — permutation of [4,3,3,2,2,1]. */

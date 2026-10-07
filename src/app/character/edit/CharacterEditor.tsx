@@ -32,6 +32,8 @@ import type { CharacterLoreContext } from '../../../domains/character/contracts/
 import { AttributeD20Icon } from '../../../shared/ui/AttributeD20Icon';
 import { DerivedStatCard } from '../shared/DerivedStatCard';
 import { AttributeDerivedConnector } from '../../../shared/ui/AttributeDerivedConnector';
+import { AppliedVorlageBadge, type AppliedVorlage } from '../shared/AppliedVorlageBadge';
+import { IncompleteTabHint } from '../shared/IncompleteTabHint';
 import { IdentityPreviewPills } from '../shared/IdentityPreviewPills';
 import { CharacterAssistantButton } from '../assistant/CharacterAssistantButton';
 import {
@@ -294,6 +296,7 @@ export function CharacterEditor() {
   const [speciesProfileName, setSpeciesProfileName] = useState('');
   const [speciesBodyDescription, setSpeciesBodyDescription] = useState('');
   const [presetReleaseMode, setPresetReleaseMode] = useState<CharacterPresetReleaseMode>('manual');
+  const [appliedVorlage, setAppliedVorlage] = useState<AppliedVorlage | null>(null);
 
   const [baseAttributes, setBaseAttributes] = useState<CharacterAttributesDto>(INITIAL_ATTRIBUTES);
   const [attributeAdvances, setAttributeAdvances] = useState<SagaDriveAttributeAdvances>({});
@@ -513,6 +516,7 @@ export function CharacterEditor() {
     && Boolean(genderReading)
     && speciesTraitsComplete;
   const highlightGaps = validationAttempted;
+  const tabsWithOpenGaps = new Set(validationProblems.map((problem) => problem.tab));
   const incompleteMainTabs = new Set(
     highlightGaps ? validationProblems.map((problem) => problem.tab) : [],
   );
@@ -523,6 +527,12 @@ export function CharacterEditor() {
           .filter((sub): sub is ValuesSubTab => Boolean(sub))
       : [],
   );
+  const messagesForTab = (tab: EditorTab): string[] =>
+    validationProblems.filter((problem) => problem.tab === tab).map((problem) => problem.message);
+  const messagesForValuesSubTab = (sub: ValuesSubTab): string[] =>
+    validationProblems
+      .filter((problem) => problem.valuesSubTab === sub)
+      .map((problem) => problem.message);
   const tabGapClass = (tab: EditorTab) =>
     incompleteMainTabs.has(tab)
       ? 'text-destructive data-[state=active]:text-destructive'
@@ -746,6 +756,10 @@ export function CharacterEditor() {
         portraitUrl: snapshot.portrait_url,
         successMessage: 'Preset geladen — neuer Charakter im Editor.',
       });
+      setAppliedVorlage({
+        kind: 'preset',
+        labelDe: bootstrap.characterName || snapshot.name,
+      });
       return;
     }
 
@@ -793,6 +807,11 @@ export function CharacterEditor() {
       setSpecializationSkill(template.backgroundSpecialization.skill);
       setSpecializationName(template.backgroundSpecialization.name);
       setSpecializations([template.backgroundSpecialization]);
+      setAppliedVorlage({
+        kind: 'starting-template',
+        templateKey: template.key,
+        labelDe: template.labelDe,
+      });
       clearCharacterEditorBootstrap();
       toast.success(`Starttemplate „${template.labelDe}“ geladen — mechanischer Level-1-Build.`);
       return;
@@ -1330,7 +1349,13 @@ export function CharacterEditor() {
         <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
           <Card className="lg:sticky lg:top-4 lg:col-span-1 lg:self-start">
             <CardHeader className="space-y-3 pb-3">
-              <div className="flex items-start justify-between gap-2"><p className="text-xs text-muted-foreground">{rulesetLabel}</p><Badge variant="outline">Drive 3 / 5</Badge></div>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <p className="text-xs text-muted-foreground">{rulesetLabel}</p>
+                  {appliedVorlage ? <AppliedVorlageBadge vorlage={appliedVorlage} /> : null}
+                </div>
+                <Badge variant="outline">Drive 3 / 5</Badge>
+              </div>
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="name">Name</Label>
@@ -1464,11 +1489,46 @@ export function CharacterEditor() {
             <CardContent className="pt-6">
               <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-3 xl:grid-cols-5">
-                  <TabsTrigger value="info" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('info'))}>Spezies</TabsTrigger>
-                  <TabsTrigger value="values" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('values'))}>Charakter</TabsTrigger>
-                  <TabsTrigger value="appearance" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('appearance'))}>Look</TabsTrigger>
-                  <TabsTrigger value="inventory" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('inventory'))}>Inventar</TabsTrigger>
-                  <TabsTrigger value="settings" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('settings'))}>Einstellungen</TabsTrigger>
+                  <TabsTrigger value="info" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('info'))}>
+                    <span className="inline-flex items-center gap-1.5">
+                      Spezies
+                      {tabsWithOpenGaps.has('info') ? (
+                        <IncompleteTabHint label="Spezies" messages={messagesForTab('info')} />
+                      ) : null}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger value="values" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('values'))}>
+                    <span className="inline-flex items-center gap-1.5">
+                      Charakter
+                      {tabsWithOpenGaps.has('values') ? (
+                        <IncompleteTabHint label="Charakter" messages={messagesForTab('values')} />
+                      ) : null}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger value="appearance" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('appearance'))}>
+                    <span className="inline-flex items-center gap-1.5">
+                      Look
+                      {tabsWithOpenGaps.has('appearance') ? (
+                        <IncompleteTabHint label="Look" messages={messagesForTab('appearance')} />
+                      ) : null}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger value="inventory" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('inventory'))}>
+                    <span className="inline-flex items-center gap-1.5">
+                      Inventar
+                      {tabsWithOpenGaps.has('inventory') ? (
+                        <IncompleteTabHint label="Inventar" messages={messagesForTab('inventory')} />
+                      ) : null}
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" className={cn('px-1 py-2 text-xs md:px-2 md:text-sm', tabGapClass('settings'))}>
+                    <span className="inline-flex items-center gap-1.5">
+                      Einstellungen
+                      {tabsWithOpenGaps.has('settings') ? (
+                        <IncompleteTabHint label="Einstellungen" messages={messagesForTab('settings')} />
+                      ) : null}
+                    </span>
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="info" className="space-y-6">
@@ -1482,31 +1542,49 @@ export function CharacterEditor() {
                       <TabsTrigger value="archetype" className={cn('px-2 py-2 text-xs md:px-3 md:text-sm', valuesSubGapClass('archetype'))}>
                         <span className="inline-flex items-center gap-1.5">
                           Archetype
-                          {valuesSubTabComplete.archetype ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                          {valuesSubTabComplete.archetype ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+                          ) : (
+                            <IncompleteTabHint label="Archetype" messages={messagesForValuesSubTab('archetype')} />
+                          )}
                         </span>
                       </TabsTrigger>
                       <TabsTrigger value="essenz" className={cn('px-2 py-2 text-xs md:px-3 md:text-sm', valuesSubGapClass('essenz'))}>
                         <span className="inline-flex items-center gap-1.5">
                           Essenz
-                          {valuesSubTabComplete.essenz ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                          {valuesSubTabComplete.essenz ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+                          ) : (
+                            <IncompleteTabHint label="Essenz" messages={messagesForValuesSubTab('essenz')} />
+                          )}
                         </span>
                       </TabsTrigger>
                       <TabsTrigger value="attributes" className={cn('px-2 py-2 text-xs md:px-3 md:text-sm', valuesSubGapClass('attributes'))}>
                         <span className="inline-flex items-center gap-1.5">
                           Attribute
-                          {valuesSubTabComplete.attributes ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                          {valuesSubTabComplete.attributes ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+                          ) : (
+                            <IncompleteTabHint label="Attribute" messages={messagesForValuesSubTab('attributes')} />
+                          )}
                         </span>
                       </TabsTrigger>
                       <TabsTrigger value="background" className={cn('px-2 py-2 text-xs md:px-3 md:text-sm', valuesSubGapClass('background'))}>
                         <span className="inline-flex items-center gap-1.5">
                           Hintergrund
-                          {valuesSubTabComplete.background ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                          {valuesSubTabComplete.background ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+                          ) : (
+                            <IncompleteTabHint label="Hintergrund" messages={messagesForValuesSubTab('background')} />
+                          )}
                         </span>
                       </TabsTrigger>
                       <TabsTrigger value="details" className={cn('px-2 py-2 text-xs md:px-3 md:text-sm', valuesSubGapClass('details'))}>
                         <span className="inline-flex items-center gap-1.5">
                           Details
-                          {valuesSubTabComplete.details ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                          {valuesSubTabComplete.details ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+                          ) : null}
                         </span>
                       </TabsTrigger>
                     </TabsList>
