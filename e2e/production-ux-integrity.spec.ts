@@ -40,7 +40,9 @@ test.describe('Production UX Integrity (#493)', () => {
     test.setTimeout(90_000);
     await ensureLoggedIn(page);
     await page.goto('/profile');
-    await expect(page.getByRole('heading', { name: /Profil/i })).toBeVisible({ timeout: 20_000 });
+    await expect(
+      page.getByRole('heading', { name: 'Profil & Einstellungen' }),
+    ).toBeVisible({ timeout: 20_000 });
     await page.getByRole('tab', { name: /Benachrichtigungen/i }).click();
     await expect(page.locator('[data-settings-deferred="session-invites"]')).toBeDisabled();
     await page.getByRole('tab', { name: /^Profil$/i }).click();
