@@ -141,7 +141,12 @@ export function Profile() {
                   </div>
                 </div>
 
-                <Button onClick={handleSignOut} variant="outline" className="w-full">
+                <Button
+                  onClick={handleSignOut}
+                  variant="outline"
+                  className="w-full"
+                  data-profile-sign-out
+                >
                   <LogOut className="mr-2 size-4" />
                   Abmelden
                 </Button>

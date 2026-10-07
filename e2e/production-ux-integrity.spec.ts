@@ -46,6 +46,6 @@ test.describe('Production UX Integrity (#493)', () => {
     await page.getByRole('tab', { name: /Benachrichtigungen/i }).click();
     await expect(page.locator('[data-settings-deferred="session-invites"]')).toBeDisabled();
     await page.getByRole('tab', { name: /^Profil$/i }).click();
-    await expect(page.getByRole('button', { name: /Abmelden/i })).toBeEnabled();
+    await expect(page.locator('[data-profile-sign-out]')).toBeEnabled();
   });
 });
