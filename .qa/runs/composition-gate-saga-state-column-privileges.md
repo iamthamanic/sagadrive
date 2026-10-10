@@ -2,7 +2,7 @@
 
 **Verdict:** SKIPPED  
 **Reason:** Single-hop security hardening — column privilege REVOKE/GRANT allow-list + infrastructure SELECT lists. No multi-actor producer→consumer hop chain, no bulk side-effects, no dual fields.  
-**HEAD_SHA:** 7b42e36ebc5e23e064633839f2f03e29ce85ce24  
+**HEAD_SHA:** dff793225a07b23a4c8416658e5b9387f40a4fb3  
 **Issue:** #569  
 **Date:** 2026-10-11
 
