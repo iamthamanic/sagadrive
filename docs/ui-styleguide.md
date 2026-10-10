@@ -6,6 +6,34 @@ Dieses Dokument beschreibt wiederverwendbare UI/UX-Muster aus dem Feature-Branch
 
 **Charakter-3D-/Art-Look (nicht UI):** siehe [`docs/character-visual-styleguide.md`](character-visual-styleguide.md) — Palworld × Overwatch soft-real, Golden-Refs, Generation-Prompts. Dieses UI-Dokument deckt **keinen** Avatar-Mesh-Stil ab.
 
+**Adaptive / Content-Width:** siehe [`docs/concepts/adaptive-ui-experience-contract.md`](concepts/adaptive-ui-experience-contract.md) (`AU-CONTENT-WIDTH`) und Abschnitt **Page width** unten.
+
+---
+
+## 0. Page width (Journey / Adaptive)
+
+**Wann:** Alle Journey-Screens (Session Join, Library forms, onboarding-ähnliche Flows).
+
+| Regel | Umsetzung |
+|---|---|
+| Shell main ist Container | Layout: `@container/main` + `data-adaptive-main` |
+| Viewport vs Content | Shell-Chrome: `useAdaptiveBand()`; Spalten/Forms: Content-Breite (`useAdaptiveContentBand`, `@[…]/main:…`) |
+| Journey-Spalte | `AdaptiveJourneyColumn` → `w-full min-w-0 max-w-2xl` (Soft-Cap, füllt schmale Panes) |
+| Page-Shell | `AdaptivePage` — engere Gutters unter `@[40rem]/main`, breitere ab Container-Breite |
+| Verboten | Hartes Zentrieren mit großen Seitenrändern + Viewport-`md:` so, dass Primary-CTAs im IDE-Split abgeschnitten werden |
+
+```tsx
+import { AdaptiveJourneyColumn, AdaptivePage } from '@/shared/ui/adaptive';
+
+<AdaptivePage data-au-surface="session-join">
+  <AdaptiveJourneyColumn className="space-y-4">
+    {/* form */}
+  </AdaptiveJourneyColumn>
+</AdaptivePage>
+```
+
+Testflächen: Phone, Tablet, Desktop **und** schmale Main-Panes (Cursor/IDE Split ~360–720 px).
+
 ---
 
 ## 1. AttributeD20Icon

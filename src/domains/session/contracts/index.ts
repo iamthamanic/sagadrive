@@ -4,6 +4,7 @@
  */
 export * from './session.types';
 export * from './session-lifecycle';
+export * from './session-episode-name';
 export * from './session-runtime';
 export * from './player-panel';
 export * from './shared-rolls';

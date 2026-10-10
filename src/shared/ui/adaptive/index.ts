@@ -5,15 +5,22 @@
  * Presentation-only. No auth, session, or feature business rules.
  */
 export {
+  ADAPTIVE_JOURNEY_COLUMN_MAX_PX,
   ADAPTIVE_PHONE_MAX_PX,
   ADAPTIVE_TABLET_MAX_PX,
   isCompactBand,
   isPhoneBand,
   resolveAdaptiveBand,
+  resolveAdaptiveContentBand,
   useAdaptiveBand,
+  useAdaptiveContentBand,
   type AdaptiveBand,
 } from './bands';
 export { AdaptivePage, type AdaptivePageProps } from './AdaptivePage';
+export {
+  AdaptiveJourneyColumn,
+  type AdaptiveJourneyColumnProps,
+} from './AdaptiveJourneyColumn';
 export {
   AdaptiveActionBar,
   type AdaptiveActionBarProps,

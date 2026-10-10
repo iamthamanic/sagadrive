@@ -67,7 +67,16 @@ Use these product bands (CSS breakpoints may map to tokens later; do not invent 
 
 Existing technical baseline: `useIsMobile()` treats `<768px` as mobile; `THEME_GUIDE` requires multi-column editors to collapse under 768px. This contract **keeps that 768px mobile cutoff** and adds an explicit Tablet band for composition rules.
 
-**Narrow floor:** 320px width must remain usable (no required horizontal page scroll for primary tasks).
+**Two measurement surfaces (architecture):**
+
+| Surface | API / marker | Owns |
+|---|---|---|
+| **Viewport** | `useAdaptiveBand()` / `window.innerWidth` | Shell chrome (sidebar vs bottom nav, `md:` visibility) |
+| **Main content** | `data-adaptive-main` + `@container/main`, `useAdaptiveContentBand(ref)`, `AdaptiveJourneyColumn` | Journey column width, gutters, form recomposition inside the pane |
+
+Agents MUST NOT treat viewport Desktop as permission to ignore a narrow main pane (Cursor/IDE split, collapsed rail, embedded preview). Layout follows **available content width** for primary Journey tasks.
+
+**Narrow floor:** 320px width must remain usable (no required horizontal page scroll for primary tasks). Same floor applies to the main content container when it is the constraining box.
 
 **Landscape:** only when Media/LiveStage/maps clearly benefit; otherwise preserve portrait-first task completion on Phone.
 
@@ -178,10 +187,10 @@ Silent deviation is a failed review.
 Before implementing user-facing UI:
 
 1. Classify surface (Journey / Workstation / Live / Overlay).
-2. List target device bands for this slice.
-3. Read this contract and apply relevant `AU-*` gates in acceptance.
+2. List target device bands for this slice (viewport **and** expected main-pane widths).
+3. Read this contract and apply relevant `AU-*` gates in acceptance (include `AU-CONTENT-WIDTH` for Journey).
 4. For Performance/Live also apply `CE-*`; for visualization also apply `IV-*`.
-5. Prefer existing `src/shared/ui` primitives; do not add a parallel component system.
+5. Prefer existing `src/shared/ui/adaptive` primitives (`AdaptivePage`, `AdaptiveJourneyColumn`, band hooks); do not add a parallel component system.
 6. If a Hard Gate cannot be met, document a deviation per §9.
 
 Subjective acceptance text such as "looks premium on mobile" is insufficient.
@@ -202,6 +211,7 @@ Subjective acceptance text such as "looks premium on mobile" is insufficient.
 - **AU-08 Accessibility basics:** Visible focus, WCAG AA text contrast for primary copy, and accessible names on icon-only controls.
 - **AU-09 States:** Loading / empty / error (and reconnecting when networked) are designed states, not blank screens.
 - **AU-10 Token fidelity:** Colors/spacing use theme tokens / shared primitives; no conflicting local brand system.
+- **AU-CONTENT-WIDTH:** Primary Journey tasks remain usable when the **main content container** is narrow (≈360–720 px wide) even if the viewport reports Tablet/Desktop — no required horizontal page scroll; no large empty side gutters that push critical controls out of the visible pane. Prefer `@container/main` / `AdaptiveJourneyColumn` / `useAdaptiveContentBand` over viewport-only `md:` assumptions for column width.
 
 ### Quality Gates
 

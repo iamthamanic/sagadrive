@@ -6,25 +6,40 @@
  *   /session-join?project_id=<uuid>&saga=<SA-…>&intent=join
  * so the clicked adventure and participant intent are preserved.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
-import { ArrowLeft, Users, Gamepad2, Copy, Check, Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectItemText,
+  SelectTrigger,
+  SelectValue,
+} from '../../shared/ui/select';
+import { ArrowLeft, Users, Gamepad2, Copy, Check, Loader2, History } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
-import { AdaptivePage } from '../../shared/ui/adaptive';
+import { AdaptiveJourneyColumn, AdaptivePage } from '../../shared/ui/adaptive';
 import { useProjectSummaries } from '../project';
 import { useCharacterSummaries } from '../character';
 import { useSessions } from './hooks/useSessions';
-import { PreparedAdventureFixturePanel } from './PreparedAdventureFixturePanel';
-import { mayShowPreparedAdventureFixturePanel } from '../../domains/session/contracts/production-ux-integrity';
+import { SessionPastSessionsPanel } from './SessionPastSessionsPanel';
+import { nextEpisodeSessionName } from '../../domains/session/contracts/session-episode-name';
 import { SessionInviteShareButton } from './SessionInviteShareButton';
 import {
   assertOwnedCharacterId,
   resolveCharacterAssignmentPick,
 } from '../../domains/session/contracts/player-character-assignment';
 import { toast } from 'sonner';
+
+type SessionJoinTab = 'create' | 'join' | 'past';
+
+function parseSessionJoinTab(value: string): SessionJoinTab {
+  if (value === 'join' || value === 'past') return value;
+  return 'create';
+}
 
 export type SessionJoinSurfaceMeta = {
   sagaPublicId: string | null;
@@ -60,19 +75,24 @@ export function SessionJoin({
 }: SessionJoinProps) {
   const initialSearch = readSessionJoinSearch();
   const [sessionCode, setSessionCode] = useState('');
-  const [newSessionName, setNewSessionName] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(initialSearch.projectId);
   const [sagaPublicId, setSagaPublicId] = useState(initialSearch.sagaPublicId);
-  const [activeTab, setActiveTab] = useState<'create' | 'join'>(
+  const [activeTab, setActiveTab] = useState<SessionJoinTab>(
     initialSearch.intentJoin ? 'join' : 'create',
   );
   const [copied, setCopied] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  const [createdSession, setCreatedSession] = useState<{ id: string; code: string } | null>(null);
+  const [createdSession, setCreatedSession] = useState<{
+    id: string;
+    code: string;
+    name: string;
+  } | null>(null);
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>('');
+  const [sessionName, setSessionName] = useState('');
+  const [sessionNameDirty, setSessionNameDirty] = useState(false);
 
-  const { sessions, createSession, joinSession } = useSessions();
+  const { sessions, isLoading: sessionsLoading, createSession, joinSession } = useSessions();
   const { projects } = useProjectSummaries({ enabled: true });
   const { characters, isLoading: charactersLoading } = useCharacterSummaries({ enabled: true });
   const assignable = characters
@@ -80,25 +100,56 @@ export function SessionJoin({
     .map((c) => ({
       id: c.id,
       publicId: c.publicId ?? null,
-      name: c.name || 'Charakter',
+      name: c.isSagaDriveNative
+        ? `${c.name || 'Charakter'} · SagaDrive Native`
+        : (c.name || 'Charakter'),
     }));
   const pick = resolveCharacterAssignmentPick({ owned: assignable });
   const gmProjects = projects.filter(
     (project) => project.status === 'active' || project.status === 'paused',
   );
+  const selectedProject = gmProjects.find((project) => project.id === selectedProjectId) ?? null;
+  const sagaNameByProjectId = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const project of projects) {
+      map[project.id] = project.name;
+    }
+    return map;
+  }, [projects]);
+  const suggestedSessionName = useMemo(() => {
+    if (!selectedProject) return '';
+    const namesForSaga = sessions
+      .filter((session) => session.projectId === selectedProject.id)
+      .map((session) => session.name);
+    return nextEpisodeSessionName(selectedProject.name, namesForSaga);
+  }, [selectedProject, sessions]);
 
   useEffect(() => {
     const next = readSessionJoinSearch();
-    if (next.projectId) setSelectedProjectId(next.projectId);
+    if (next.projectId) {
+      setSelectedProjectId(next.projectId);
+      setSessionNameDirty(false);
+    }
     if (next.sagaPublicId) setSagaPublicId(next.sagaPublicId);
     if (next.intentJoin) setActiveTab('join');
   }, []);
 
   useEffect(() => {
-    if (sagaPublicId || !selectedProjectId) return;
+    if (selectedProjectId || gmProjects.length === 0) return;
+    setSelectedProjectId(gmProjects[0].id);
+    setSessionNameDirty(false);
+  }, [gmProjects, selectedProjectId]);
+
+  useEffect(() => {
+    if (sessionNameDirty || !suggestedSessionName) return;
+    setSessionName(suggestedSessionName);
+  }, [suggestedSessionName, sessionNameDirty]);
+
+  useEffect(() => {
+    if (!selectedProjectId) return;
     const match = projects.find((project) => project.id === selectedProjectId);
     if (match?.publicId) setSagaPublicId(match.publicId.trim().toUpperCase());
-  }, [projects, selectedProjectId, sagaPublicId]);
+  }, [projects, selectedProjectId]);
 
   useEffect(() => {
     if (pick.kind === 'single') {
@@ -122,26 +173,30 @@ export function SessionJoin({
   };
 
   const handleCreateSession = async () => {
-    if (!newSessionName.trim()) {
-      toast.error('Bitte gib einen Session-Namen ein');
+    if (!selectedProjectId || !selectedProject) {
+      toast.error('Bitte wähle eine Saga aus');
       return;
     }
-    if (!selectedProjectId) {
-      toast.error('Bitte wähle eine Saga aus');
+    const nameToCreate =
+      sessionName.trim() ||
+      suggestedSessionName ||
+      nextEpisodeSessionName(selectedProject.name, []);
+    if (!nameToCreate.trim()) {
+      toast.error('Bitte gib einen Session-Namen ein');
       return;
     }
 
     setIsCreating(true);
     try {
       const session = await createSession({
-        name: newSessionName,
+        name: nameToCreate,
         project_id: selectedProjectId,
       });
 
       if (session) {
-        setCreatedSession({ id: session.id, code: session.code });
+        setCreatedSession({ id: session.id, code: session.code, name: session.name });
         toast.success('Session erstellt!');
-        
+
         // Auto-navigate after 2 seconds
         setTimeout(() => {
           onJoinAsGM(session.id, resolveSurfaceMeta(session));
@@ -215,7 +270,7 @@ export function SessionJoin({
 
   return (
     <AdaptivePage data-au-surface="session-join" className="h-full w-full">
-      <div className="mx-auto max-w-2xl space-y-4 md:space-y-6">
+      <AdaptiveJourneyColumn className="space-y-4 md:space-y-6">
         {/* Back Button */}
         <Button 
           variant="ghost" 
@@ -230,21 +285,30 @@ export function SessionJoin({
         <div>
           <h1 className="text-xl md:text-2xl">Session</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Starte eine Session für eine Saga oder tritt mit einem Code bei
+            Session hosten, beitreten oder vergangene Episoden öffnen
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v === 'join' ? 'join' : 'create')} className="w-full">
-          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 p-1">
-            <TabsTrigger value="create" className="min-h-11" data-session-join-tab="create">
-              <Gamepad2 className="w-4 h-4 mr-2" />
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(parseSessionJoinTab(v))}
+          className="w-full"
+        >
+          <TabsList className="grid h-auto w-full grid-cols-3 gap-1 p-1">
+            <TabsTrigger value="create" className="min-h-11 px-2" data-session-join-tab="create">
+              <Gamepad2 className="w-4 h-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Session erstellen</span>
               <span className="sm:hidden">Erstellen</span>
             </TabsTrigger>
-            <TabsTrigger value="join" className="min-h-11" data-session-join-tab="join">
-              <Users className="w-4 h-4 mr-2" />
+            <TabsTrigger value="join" className="min-h-11 px-2" data-session-join-tab="join">
+              <Users className="w-4 h-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Session beitreten</span>
               <span className="sm:hidden">Beitreten</span>
+            </TabsTrigger>
+            <TabsTrigger value="past" className="min-h-11 px-2" data-session-join-tab="past">
+              <History className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Vergangene Sessions</span>
+              <span className="sm:hidden">Vergangen</span>
             </TabsTrigger>
           </TabsList>
 
@@ -256,40 +320,46 @@ export function SessionJoin({
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base md:text-lg">Neue Session erstellen</CardTitle>
                   <CardDescription className="text-xs md:text-sm">
-                    Du wirst als Gamemaster starten
+                    Du wirst als Gamemaster starten. Der Session-Name wird automatisch vergeben.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="session-name">Session Name</Label>
-                    <Input
-                      id="session-name"
-                      placeholder="z.B. Die vergessene Krypta"
-                      value={newSessionName}
-                      onChange={(e) => setNewSessionName(e.target.value)}
-                      className="text-sm md:text-base"
-                      disabled={isCreating}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
                     <Label htmlFor="project">Saga *</Label>
-                    <select
-                      id="project"
-                      data-session-join-project
-                      value={selectedProjectId}
-                      onChange={(e) => setSelectedProjectId(e.target.value)}
-                      className="min-h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm md:text-base"
-                      disabled={isCreating}
+                    <Select
+                      value={selectedProjectId || undefined}
+                      onValueChange={(value) => {
+                        setSelectedProjectId(value);
+                        setSessionNameDirty(false);
+                      }}
+                      disabled={isCreating || gmProjects.length === 0}
                     >
-                      <option value="">Saga wählen</option>
-                      {gmProjects.map((project) => (
-                        <option key={project.id} value={project.id}>
-                          {project.name}
-                          {project.publicId ? ` (${project.publicId})` : ''}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger
+                        id="project"
+                        data-session-join-project
+                        data-selected-project={selectedProjectId || ''}
+                        className="min-h-11 w-full justify-between gap-3 pr-3 text-sm md:text-base *:data-[slot=select-value]:line-clamp-none"
+                        aria-label="Saga wählen"
+                      >
+                        <SelectValue placeholder="Saga wählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {gmProjects.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            <SelectItemText>
+                              <span className="flex min-w-0 items-center gap-2">
+                                <span className="truncate font-medium">{project.name}</span>
+                                {project.publicId ? (
+                                  <span className="shrink-0 text-muted-foreground">
+                                    ({project.publicId})
+                                  </span>
+                                ) : null}
+                              </span>
+                            </SelectItemText>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {gmProjects.length === 0 ? (
                       <p className="text-xs text-muted-foreground">
                         Erstelle zuerst eine Saga, um eine Session zu starten.
@@ -297,10 +367,30 @@ export function SessionJoin({
                     ) : null}
                   </div>
 
+                  <div className="space-y-2">
+                    <Label htmlFor="session-name">Session Name</Label>
+                    <Input
+                      id="session-name"
+                      value={sessionName}
+                      onChange={(e) => {
+                        setSessionNameDirty(true);
+                        setSessionName(e.target.value);
+                      }}
+                      placeholder={suggestedSessionName || 'z.B. Dornhain Saga E001'}
+                      className="text-sm md:text-base font-medium"
+                      disabled={isCreating || !selectedProjectId}
+                      data-session-auto-name
+                      aria-describedby="session-name-hint"
+                    />
+                    <p id="session-name-hint" className="text-xs text-muted-foreground">
+                      Vorschlag: Saga-Name + Episode (E001, E002, …) — frei änderbar
+                    </p>
+                  </div>
+
                   <Button 
                     className="min-h-11 w-full" 
                     onClick={handleCreateSession}
-                    disabled={!newSessionName.trim() || !selectedProjectId || isCreating}
+                    disabled={!sessionName.trim() || !selectedProjectId || isCreating}
                   >
                     {isCreating ? (
                       <>
@@ -313,12 +403,6 @@ export function SessionJoin({
                   </Button>
                 </CardContent>
               </Card>
-              {mayShowPreparedAdventureFixturePanel(import.meta.env.DEV === true) ? (
-                <PreparedAdventureFixturePanel
-                  initialProjectId={selectedProjectId || null}
-                  onNavigateToCharacterEditor={onNavigateToCharacterEditor}
-                />
-              ) : null}
               </>
             ) : (
               <Card className="border-primary">
@@ -355,7 +439,7 @@ export function SessionJoin({
                     <p className="text-xs md:text-sm text-muted-foreground mb-2">
                       Session Details:
                     </p>
-                    <p className="text-sm md:text-base font-medium">{newSessionName}</p>
+                    <p className="text-sm md:text-base font-medium">{createdSession.name}</p>
                   </div>
 
                   <p className="text-xs md:text-sm text-muted-foreground">
@@ -457,62 +541,40 @@ export function SessionJoin({
               </CardContent>
             </Card>
 
-            {/* Active Sessions */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base md:text-lg">Aktive Sessions</CardTitle>
-                <CardDescription className="text-xs md:text-sm">
-                  Verfügbare Sessions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {sessions.length === 0 ? (
-                  <p className="text-xs md:text-sm text-muted-foreground text-center py-4">
-                    Keine aktiven Sessions
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {sessions.map((session) => (
-                      <div
-                        key={session.id}
-                        className="flex items-center justify-between p-3 border border-border rounded-lg hover:border-primary transition-colors cursor-pointer"
-                        onClick={() => {
-                          void (async () => {
-                            try {
-                              const character = resolveSelectedCharacter();
-                              const joined = await joinSession({
-                                code: session.code,
-                                character_id: character.id,
-                              });
-                              if (!joined) return;
-                              onJoinAsPlayer(joined.id, joined.code, {
-                                ...resolveSurfaceMeta(joined),
-                                characterPublicId: character.publicId,
-                              });
-                            } catch (err) {
-                              toast.error(
-                                err instanceof Error ? err.message : 'Beitritt fehlgeschlagen',
-                              );
-                            }
-                          })();
-                        }}
-                      >
-                        <div>
-                          <p className="font-medium text-sm md:text-base">{session.name}</p>
-                          <p className="text-xs md:text-sm text-muted-foreground">
-                            {session.players.length} Spieler • {session.status}
-                          </p>
-                        </div>
-                        <Button size="sm">Beitreten</Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          </TabsContent>
+
+          <TabsContent value="past" className="space-y-4">
+            <SessionPastSessionsPanel
+              sessions={sessions}
+              isLoading={sessionsLoading}
+              sagaNameByProjectId={sagaNameByProjectId}
+              onOpenAsGm={(session) => {
+                onJoinAsGM(session.id, resolveSurfaceMeta(session));
+              }}
+              onJoinAsPlayer={(session) => {
+                void (async () => {
+                  try {
+                    const character = resolveSelectedCharacter();
+                    const joined = await joinSession({
+                      code: session.code,
+                      character_id: character.id,
+                    });
+                    if (!joined) return;
+                    onJoinAsPlayer(joined.id, joined.code, {
+                      ...resolveSurfaceMeta(joined),
+                      characterPublicId: character.publicId,
+                    });
+                  } catch (err) {
+                    toast.error(
+                      err instanceof Error ? err.message : 'Beitritt fehlgeschlagen',
+                    );
+                  }
+                })();
+              }}
+            />
           </TabsContent>
         </Tabs>
-      </div>
+      </AdaptiveJourneyColumn>
     </AdaptivePage>
   );
 }

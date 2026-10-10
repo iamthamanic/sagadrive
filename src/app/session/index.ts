@@ -9,6 +9,7 @@ export { SessionJoin } from './SessionJoin';
 export { SessionInviteResolve } from './SessionInviteResolve';
 export { SessionInviteShareButton } from './SessionInviteShareButton';
 export { PreparedAdventureFixturePanel } from './PreparedAdventureFixturePanel';
+export { SessionPastSessionsPanel } from './SessionPastSessionsPanel';
 export { AdventureNpcCreatureInstancesPanel } from './AdventureNpcCreatureInstancesPanel';
 export { SessionAvatarStrip } from './SessionAvatarStrip';
 export { SessionResourceScreen } from './SessionResourceScreen';

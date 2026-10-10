@@ -119,6 +119,8 @@ For visualization work, agents MUST read and apply `docs/concepts/imagination-fi
 
 For **any new user-facing UI**, agents MUST read and apply `docs/concepts/adaptive-ui-experience-contract.md`. Relevant acceptance criteria must reference its `AU-*` gates (device bands, touch targets, safe areas, recomposition, states). Subjective "responsive" / "mobile-first" / "Apple-like" wording is never enough.
 
+**Content width (not only viewport):** Shell chrome may use the viewport band (`useAdaptiveBand`). Journey / form recomposition MUST also respect **available main-pane width** (`@container/main` on shell `<main>`, `useAdaptiveContentBand`, `AdaptiveJourneyColumn`). Split IDE previews and collapsed sidebars are first-class test surfaces. Do not ship Journey screens that assume a full-monitor width while leaving large empty gutters or clipping primary controls in a narrow main pane. Soft `max-w-*` caps are for readability; columns must still be `w-full min-w-0` inside the main container. See gate **AU-CONTENT-WIDTH** and `docs/ui-styleguide.md` § Page width.
+
 Subjective words such as "premium", "cinematic", "immersive", "smooth", "magical" or "high quality" are never sufficient acceptance criteria. Translate them into observable behavior, quantitative thresholds, state rules and the applicable CE/IV/AU gates.
 
 If a ticket intentionally violates a contract baseline, the deviation and reason MUST be explicit in the ticket/acceptance (Adaptive UI: named `AU-*` Hard Gate + supported device bands).
