@@ -200,6 +200,14 @@ function checkSagaOverviewRpc() {
   });
 }
 
+function checkSagaOverviewHubUi() {
+  console.log('Saga overview hub UI (#571): checking 4 sections + Library primary CTA...');
+  execFileSync(process.execPath, ['scripts/saga-overview-hub-ui-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkCharacterEditorRegressions() {
   console.log('Character editor regression contract: checking persistence, avatar replay, and legacy project status...');
   execFileSync(process.execPath, ['scripts/character-editor-regression-check.mjs'], {
@@ -1873,6 +1881,7 @@ checkPlayerTestInstrumentationRunbook();
 checkProjectMembershipSecurity();
 checkSagaStateColumnPrivileges();
 checkSagaOverviewRpc();
+checkSagaOverviewHubUi();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();
 checkInventoryV2Domain();

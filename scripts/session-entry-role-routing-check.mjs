@@ -71,8 +71,8 @@ mustInclude(
 
 mustInclude(
   'src/app/library/Library.tsx',
-  ['/sagas/', '/sessions'],
-  'Library GM opens saga sessions not /gamemaster',
+  ['pathForSagaSection', 'Saga öffnen', 'overview'],
+  'Library opens saga overview (not legacy /gamemaster) — #571',
 );
 
 mustNotInclude(
