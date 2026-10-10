@@ -184,6 +184,14 @@ function checkProjectMembershipSecurity() {
   });
 }
 
+function checkSagaStateColumnPrivileges() {
+  console.log('Saga state column privileges (#569): checking REVOKE + safe selects...');
+  execFileSync(process.execPath, ['scripts/saga-state-column-privileges-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkCharacterEditorRegressions() {
   console.log('Character editor regression contract: checking persistence, avatar replay, and legacy project status...');
   execFileSync(process.execPath, ['scripts/character-editor-regression-check.mjs'], {
@@ -1855,6 +1863,7 @@ checkPlayerTestCombatEncounter();
 checkPlayerTestMultiuserE2eSecurity();
 checkPlayerTestInstrumentationRunbook();
 checkProjectMembershipSecurity();
+checkSagaStateColumnPrivileges();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();
 checkInventoryV2Domain();
