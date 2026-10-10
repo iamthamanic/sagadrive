@@ -214,18 +214,27 @@ export function useCharacterAvatarEditor({
   const comparisonFaceAnchorsManifest = comparisonFaceAnchorsByVariant[humanMeshVariant] ?? null;
 
   const currentAvatar = useMemo(() => {
+    // Editor critical path: light preview mesh (canonical). Never put face3 HQ on first paint.
     const templatePreviewUrl =
       avatarSource === 'sagadrive'
         ? resolveSpeciesTemplateModelUrl({
             speciesId: selectedTemplateSpeciesId,
             genderReading,
+            quality: 'preview',
           })
         : undefined;
     // Comparison mesh: session anchors or none → runtime loads the asset sidecar face-anchors.json.
     const activeFaceAnchors = useComparisonMesh
       ? comparisonFaceAnchorsManifest
       : faceAnchorsManifest;
-    const modelUrl = comparisonModelUrl ?? importedModelUrl ?? templatePreviewUrl;
+    // Native template preview wins over a persisted face3 model_url so reopen stays light.
+    const modelUrl =
+      comparisonModelUrl ??
+      (avatarSource === 'sagadrive' && selectedTemplateSpeciesId
+        ? templatePreviewUrl
+        : undefined) ??
+      importedModelUrl ??
+      templatePreviewUrl;
     const base = createCharacterStudioAvatar({
       race: characterRace,
       head: headStyle,
@@ -312,19 +321,39 @@ export function useCharacterAvatarEditor({
   ]);
 
   const avatarForPersist = useMemo(() => {
-    if (!useComparisonMesh) return currentAvatar;
-    const sagadriveUrl = resolveSpeciesTemplateModelUrl({
-      speciesId: 'human',
-      genderReading,
-    });
-    // Comparison meshes are session-only: persist the SagaDrive mesh + its own anchors, never theirs.
-    const { face_anchors: _comparisonAnchors, ...rest } = currentAvatar;
-    return {
-      ...rest,
-      model_url: sagadriveUrl ?? currentAvatar.model_url,
-      ...(faceAnchorsManifest ? { face_anchors: faceAnchorsManifest } : {}),
-    };
-  }, [currentAvatar, faceAnchorsManifest, genderReading, useComparisonMesh]);
+    // Always persist fidelity (face3) for SagaDrive templates — never the light preview URL.
+    const fidelitySpeciesId =
+      selectedTemplateSpeciesId ??
+      (useComparisonMesh && avatarSource === 'sagadrive' ? ('human' as const) : null);
+    const fidelityUrl =
+      avatarSource === 'sagadrive'
+        ? resolveSpeciesTemplateModelUrl({
+            speciesId: fidelitySpeciesId,
+            genderReading,
+            quality: 'fidelity',
+          })
+        : undefined;
+    if (useComparisonMesh) {
+      // Comparison meshes are session-only: persist the SagaDrive mesh + its own anchors, never theirs.
+      const { face_anchors: _comparisonAnchors, ...rest } = currentAvatar;
+      return {
+        ...rest,
+        model_url: fidelityUrl ?? currentAvatar.model_url,
+        ...(faceAnchorsManifest ? { face_anchors: faceAnchorsManifest } : {}),
+      };
+    }
+    if (fidelityUrl && currentAvatar.model_url !== fidelityUrl) {
+      return { ...currentAvatar, model_url: fidelityUrl };
+    }
+    return currentAvatar;
+  }, [
+    avatarSource,
+    currentAvatar,
+    faceAnchorsManifest,
+    genderReading,
+    selectedTemplateSpeciesId,
+    useComparisonMesh,
+  ]);
 
   const setHumanMeshVariantSafe = (next: LiveActHumanMeshVariantId) => {
     setHumanMeshVariant(next);
@@ -662,14 +691,12 @@ export function useCharacterAvatarEditor({
     setSkinTone(appearance.skin_tone || appearance.avatar?.colors.skin || '#c58c6a');
     setClothing(appearance.clothing || appearance.avatar?.traits.clothing || 'casual');
     setAccessory(appearance.avatar?.traits.accessory ?? 'none');
-    setImportedModelUrl(appearance.avatar?.model_url);
-    setAvatarSource(
-      resolveAvatarSource({
-        source: appearance.avatar?.source,
-        provider: appearance.avatar?.provider,
-        modelUrl: appearance.avatar?.model_url,
-      }),
-    );
+    const restoredSource = resolveAvatarSource({
+      source: appearance.avatar?.source,
+      provider: appearance.avatar?.provider,
+      modelUrl: appearance.avatar?.model_url,
+    });
+    setAvatarSource(restoredSource);
     setSagaDriveDirty(false);
     setFaceAnchorsManifest(readFaceAnchorsFromAvatar(appearance.avatar ?? null));
     setAvatarMorph(
@@ -680,6 +707,12 @@ export function useCharacterAvatarEditor({
     const restoredTemplateId =
       typeof appearance.avatar?.template_id === 'string' ? appearance.avatar.template_id : null;
     const restoredSpecies = parseSpeciesTemplatePersistenceId(restoredTemplateId);
+    // Native template: clear imported URL so editor uses light preview, not persisted face3 HQ.
+    if (restoredSpecies && restoredSource === 'sagadrive') {
+      setImportedModelUrl(undefined);
+    } else {
+      setImportedModelUrl(appearance.avatar?.model_url);
+    }
     if (restoredSpecies) {
       setSpeciesTemplateId(restoredTemplateId);
       setAvatarBodyFamily(
@@ -711,11 +744,6 @@ export function useCharacterAvatarEditor({
       setStarterWardrobeIds([]);
       setTemplateWarningsDe([]);
     }
-    const restoredSource = resolveAvatarSource({
-      source: appearance.avatar?.source,
-      provider: appearance.avatar?.provider,
-      modelUrl: appearance.avatar?.model_url,
-    });
     if (restoredSource === 'import' && appearance.avatar) {
       const anatomy =
         appearance.avatar.anatomy === 'custom-creature' ||

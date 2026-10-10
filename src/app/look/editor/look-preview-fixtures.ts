@@ -33,6 +33,7 @@ function playerHumanoidUrl(): string | null {
     resolveSpeciesTemplateModelUrl({
       speciesId: 'human',
       genderReading: 'masculine-read',
+      quality: 'preview',
     }) ?? null
   );
 }

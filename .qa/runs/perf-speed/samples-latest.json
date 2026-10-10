@@ -1,0 +1,433 @@
+{
+  "login_to_dashboard_cold": [
+    {
+      "interaction": "login_to_dashboard_cold",
+      "ms": 2259,
+      "ok": true,
+      "perceived_ms": 2258,
+      "fully_ms": 2259,
+      "network_ms": 2209,
+      "transfer_bytes": 19674057,
+      "long_tasks_ms": 62,
+      "asset_requests": 23
+    }
+  ],
+  "dashboard_ready_warm_nav": [
+    {
+      "interaction": "dashboard_ready_warm_nav",
+      "ms": 460,
+      "ok": true,
+      "perceived_ms": 158,
+      "fully_ms": 460,
+      "network_ms": 156,
+      "transfer_bytes": 6762496,
+      "long_tasks_ms": 0,
+      "asset_requests": 23
+    },
+    {
+      "interaction": "dashboard_ready_warm_nav",
+      "ms": 457,
+      "ok": true,
+      "perceived_ms": 156,
+      "fully_ms": 457,
+      "network_ms": 157,
+      "transfer_bytes": 6762496,
+      "long_tasks_ms": 0,
+      "asset_requests": 23
+    },
+    {
+      "interaction": "dashboard_ready_warm_nav",
+      "ms": 453,
+      "ok": true,
+      "perceived_ms": 151,
+      "fully_ms": 453,
+      "network_ms": 158,
+      "transfer_bytes": 6762496,
+      "long_tasks_ms": 0,
+      "asset_requests": 23
+    },
+    {
+      "interaction": "dashboard_ready_warm_nav",
+      "ms": 556,
+      "ok": true,
+      "perceived_ms": 255,
+      "fully_ms": 556,
+      "network_ms": 165,
+      "transfer_bytes": 6762496,
+      "long_tasks_ms": 0,
+      "asset_requests": 23
+    },
+    {
+      "interaction": "dashboard_ready_warm_nav",
+      "ms": 461,
+      "ok": true,
+      "perceived_ms": 159,
+      "fully_ms": 461,
+      "network_ms": 164,
+      "transfer_bytes": 6762496,
+      "long_tasks_ms": 0,
+      "asset_requests": 23
+    }
+  ],
+  "open_blank_character_editor": [
+    {
+      "interaction": "open_blank_character_editor",
+      "ms": 1089,
+      "ok": true,
+      "perceived_ms": 675,
+      "fully_ms": 1089,
+      "network_ms": 672,
+      "transfer_bytes": 12719133,
+      "long_tasks_ms": 56,
+      "asset_requests": 52,
+      "notes": "no_3d_placeholder"
+    },
+    {
+      "interaction": "open_blank_character_editor",
+      "ms": 1077,
+      "ok": true,
+      "perceived_ms": 656,
+      "fully_ms": 1077,
+      "network_ms": 597,
+      "transfer_bytes": 7058965,
+      "long_tasks_ms": 0,
+      "asset_requests": 52,
+      "notes": "no_3d_placeholder"
+    },
+    {
+      "interaction": "open_blank_character_editor",
+      "ms": 1067,
+      "ok": true,
+      "perceived_ms": 647,
+      "fully_ms": 1067,
+      "network_ms": 585,
+      "transfer_bytes": 7058965,
+      "long_tasks_ms": 0,
+      "asset_requests": 52,
+      "notes": "no_3d_placeholder"
+    },
+    {
+      "interaction": "open_blank_character_editor",
+      "ms": 1030,
+      "ok": true,
+      "perceived_ms": 617,
+      "fully_ms": 1030,
+      "network_ms": 566,
+      "transfer_bytes": 7058965,
+      "long_tasks_ms": 0,
+      "asset_requests": 52,
+      "notes": "no_3d_placeholder"
+    },
+    {
+      "interaction": "open_blank_character_editor",
+      "ms": 996,
+      "ok": true,
+      "perceived_ms": 590,
+      "fully_ms": 996,
+      "network_ms": 566,
+      "transfer_bytes": 7058965,
+      "long_tasks_ms": 0,
+      "asset_requests": 52,
+      "notes": "no_3d_placeholder"
+    }
+  ],
+  "editor_select_gender_female": [
+    {
+      "interaction": "editor_select_gender_female",
+      "ms": 62344,
+      "ok": true,
+      "perceived_ms": 336,
+      "fully_ms": 62344,
+      "network_ms": 6006,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0,
+      "notes": "still_no_canvas"
+    }
+  ],
+  "editor_tab_charakter": [
+    {
+      "interaction": "editor_tab_charakter",
+      "ms": 310,
+      "ok": true,
+      "perceived_ms": 107,
+      "fully_ms": 310,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_charakter",
+      "ms": 461,
+      "ok": true,
+      "perceived_ms": 259,
+      "fully_ms": 461,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_charakter",
+      "ms": 452,
+      "ok": true,
+      "perceived_ms": 251,
+      "fully_ms": 452,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_charakter",
+      "ms": 226,
+      "ok": true,
+      "perceived_ms": 25,
+      "fully_ms": 226,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_charakter",
+      "ms": 232,
+      "ok": true,
+      "perceived_ms": 29,
+      "fully_ms": 232,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    }
+  ],
+  "editor_tab_look": [
+    {
+      "interaction": "editor_tab_look",
+      "ms": 31090,
+      "ok": true,
+      "perceived_ms": 84,
+      "fully_ms": 31090,
+      "network_ms": 7007,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_look",
+      "ms": 31042,
+      "ok": true,
+      "perceived_ms": 36,
+      "fully_ms": 31042,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_look",
+      "ms": 31053,
+      "ok": true,
+      "perceived_ms": 44,
+      "fully_ms": 31053,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_look",
+      "ms": 31051,
+      "ok": true,
+      "perceived_ms": 47,
+      "fully_ms": 31051,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_look",
+      "ms": 31041,
+      "ok": true,
+      "perceived_ms": 36,
+      "fully_ms": 31041,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    }
+  ],
+  "editor_tab_inventar": [
+    {
+      "interaction": "editor_tab_inventar",
+      "ms": 343,
+      "ok": true,
+      "perceived_ms": 141,
+      "fully_ms": 343,
+      "network_ms": 25,
+      "transfer_bytes": 83095,
+      "long_tasks_ms": 72,
+      "asset_requests": 9
+    },
+    {
+      "interaction": "editor_tab_inventar",
+      "ms": 308,
+      "ok": true,
+      "perceived_ms": 106,
+      "fully_ms": 308,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_inventar",
+      "ms": 234,
+      "ok": true,
+      "perceived_ms": 34,
+      "fully_ms": 234,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_inventar",
+      "ms": 233,
+      "ok": true,
+      "perceived_ms": 32,
+      "fully_ms": 233,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_inventar",
+      "ms": 242,
+      "ok": true,
+      "perceived_ms": 40,
+      "fully_ms": 242,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    }
+  ],
+  "editor_tab_spezies": [
+    {
+      "interaction": "editor_tab_spezies",
+      "ms": 272,
+      "ok": true,
+      "perceived_ms": 70,
+      "fully_ms": 272,
+      "network_ms": 7,
+      "transfer_bytes": 2646395,
+      "long_tasks_ms": 0,
+      "asset_requests": 14
+    },
+    {
+      "interaction": "editor_tab_spezies",
+      "ms": 247,
+      "ok": true,
+      "perceived_ms": 45,
+      "fully_ms": 247,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_spezies",
+      "ms": 238,
+      "ok": true,
+      "perceived_ms": 37,
+      "fully_ms": 238,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_spezies",
+      "ms": 237,
+      "ok": true,
+      "perceived_ms": 36,
+      "fully_ms": 237,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "editor_tab_spezies",
+      "ms": 236,
+      "ok": true,
+      "perceived_ms": 35,
+      "fully_ms": 236,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    }
+  ],
+  "open_library": [
+    {
+      "interaction": "open_library",
+      "ms": 31,
+      "ok": true,
+      "perceived_ms": 31,
+      "fully_ms": 31,
+      "network_ms": 0,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "open_library",
+      "ms": 552,
+      "ok": true,
+      "perceived_ms": 29,
+      "fully_ms": 552,
+      "network_ms": 26,
+      "transfer_bytes": 120433,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "open_library",
+      "ms": 662,
+      "ok": true,
+      "perceived_ms": 94,
+      "fully_ms": 662,
+      "network_ms": 47,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "open_library",
+      "ms": 579,
+      "ok": true,
+      "perceived_ms": 54,
+      "fully_ms": 579,
+      "network_ms": 32,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    },
+    {
+      "interaction": "open_library",
+      "ms": 559,
+      "ok": true,
+      "perceived_ms": 36,
+      "fully_ms": 559,
+      "network_ms": 28,
+      "transfer_bytes": 0,
+      "long_tasks_ms": 0,
+      "asset_requests": 0
+    }
+  ]
+}

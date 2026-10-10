@@ -8,6 +8,7 @@ import { raceWithTimeoutReject, SUPABASE_QUERY_TIMEOUT_MS } from '../../lib/netw
 import { normalizeCharacterAppearance } from '../../domains/character/use-cases/avatar-presets';
 import type { CreateCharacterDto, UpdateCharacterDto } from '../../domains/character/contracts/character.commands';
 import type {
+  CharacterRosterMetaVm,
   CharacterSheetStatus,
   CharacterSummaryVm,
   CharacterVm,
@@ -149,6 +150,31 @@ export class SupabaseCharacterRepository {
     if (error) throw new Error(`Failed to fetch character: ${error.message}`);
     if (!data) throw new Error('Character not found');
     return this.mapToViewModel(data as CharacterDto);
+  }
+
+  /**
+   * Batch roster meta for lobby — one `in(id)` select, owner-scoped, no full sheet JSONB.
+   * Missing / non-owned ids are omitted (caller applies fallbacks).
+   */
+  async getCharacterRosterMetaByIds(ids: readonly string[]): Promise<CharacterRosterMetaVm[]> {
+    const unique = [...new Set(ids.filter((id) => typeof id === 'string' && id.length > 0))];
+    if (unique.length === 0) return [];
+    const userId = await getAuthenticatedUserId();
+    const { data, error } = await raceWithTimeoutReject(
+      supabase
+        .from(this.tableName)
+        .select('id, public_id, name')
+        .eq('owner_user_id', userId)
+        .in('id', unique),
+      SUPABASE_QUERY_TIMEOUT_MS,
+      'Failed to fetch character roster meta: request timed out',
+    );
+    if (error) throw new Error(`Failed to fetch character roster meta: ${error.message}`);
+    return (data ?? []).map((row) => ({
+      id: row.id as string,
+      publicId: typeof row.public_id === 'string' ? row.public_id : null,
+      name: typeof row.name === 'string' && row.name.length > 0 ? row.name : 'Charakter',
+    }));
   }
 
   async getCharacterByPublicId(publicId: string): Promise<CharacterVm> {

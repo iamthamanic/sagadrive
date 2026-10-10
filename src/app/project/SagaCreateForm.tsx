@@ -10,7 +10,8 @@ import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
 import { useWorldProfiles } from '../world';
-import { useProjects } from './hooks/useProjects';
+import { projectService } from '../../infrastructure/project/project-service';
+import { ENTITY_CACHE_KEYS, entityCache } from '../../lib/entityCache';
 
 export type SagaCreateFormProps = {
   onCancel: () => void;
@@ -18,7 +19,6 @@ export type SagaCreateFormProps = {
 };
 
 export function SagaCreateForm({ onCancel, onCreated }: SagaCreateFormProps) {
-  const { createProject } = useProjects();
   const { worlds, isLoading: worldsLoading } = useWorldProfiles({ enabled: true });
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -33,11 +33,12 @@ export function SagaCreateForm({ onCancel, onCreated }: SagaCreateFormProps) {
     }
     setSaving(true);
     try {
-      const created = await createProject({
+      const created = await projectService.createProject({
         name: name.trim(),
         description: description.trim() || undefined,
         world_profile_id: worldProfileId || undefined,
       });
+      entityCache.invalidate(ENTITY_CACHE_KEYS.projectSummaries);
       const publicId = created.publicId?.trim();
       if (!publicId) {
         throw new Error('Saga wurde erstellt, aber ohne Public ID.');

@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '../../../shared/ui/select';
 import { Textarea } from '../../../shared/ui/textarea';
-import { useProjects } from '../../project';
+import { useProjectSummaries } from '../../project';
 import { buildCharacterBackgroundExamples } from '../../../domains/character/use-cases/character-lore-examples';
 import { characterLoreService } from '../../../infrastructure/character/character-lore-service';
 import type { CharacterLoreContext } from '../../../domains/character/contracts/character-lore.types';
@@ -41,7 +41,9 @@ export function CharacterBackgroundComposer({
   onChange,
 }: CharacterBackgroundComposerProps) {
   const examples = useMemo(() => buildCharacterBackgroundExamples(context), [context]);
-  const { projects, isLoading: projectsLoading, error: projectsError } = useProjects();
+  const { projects, isLoading: projectsLoading, error: projectsError } = useProjectSummaries({
+    enabled: true,
+  });
   const [selectedProjectId, setSelectedProjectId] = useState(
     context.projectId ?? NO_PROJECT_CONTEXT,
   );

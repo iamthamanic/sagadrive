@@ -19,7 +19,7 @@ import {
 } from '../../domains/session/contracts/prepared-adventure-fixture';
 import { projectService } from '../../infrastructure/project/project-service';
 import { spawnNpcCreatureInstance } from '../../infrastructure/npc-creature/npc-creature-service';
-import { useProjects } from '../project';
+import { useProjectSummaries } from '../project';
 import { useWorldProfiles } from '../world';
 import { setCharacterEditorBootstrap } from '../character';
 
@@ -36,7 +36,7 @@ export function PreparedAdventureFixturePanel({
   const fixture = getPreparedAdventureFixture();
   const pregens = listPreparedAdventurePregens();
   const npcPlan = listPreparedAdventureNpcSpawnPlan();
-  const { projects } = useProjects();
+  const { projects } = useProjectSummaries({ enabled: true });
   const { worlds } = useWorldProfiles({ enabled: true });
   const gmProjects = projects.filter(
     (project) => project.status === 'active' || project.status === 'paused',

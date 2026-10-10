@@ -5,12 +5,17 @@
  * Pure domain: no React. Only fixed relative /assets paths (never free client URLs).
  * Divers / unset gender → no mesh. Missing species assets fail closed (undefined).
  *
- * Human active bases: quality-20260921 m5/f5 face3 current-HEAD reauthor VRM 1.0 primary (#423).
+ * Dual quality (#perf-speed):
+ * - preview: light editor mesh (canonical ≤~10 MB) — default critical path
+ * - fidelity: face3 HQ VRM — persist / LiveAct face work / explicit HQ
+ *
+ * Human fidelity bases: quality-20260921 m5/f5 face3 current-HEAD reauthor VRM 1.0 (#423).
  * Generic GLB remains published as fallback/source; no rollback picker.
  */
 import type { CharacterGenderReading } from '../domain/character.entity';
 import type { BaseBodySpeciesId } from './base-body-contract';
 import { listSpeciesTemplateIds } from './species-template-pack-v1';
+import { resolveSagaHumanCanonicalV1ModelUrl } from './saga-human-canonical-v1';
 
 export const SPECIES_TEMPLATE_MODELS_CONTRACT_VERSION =
   'SagaDriveSpeciesTemplateModelsV1' as const;
@@ -18,10 +23,18 @@ export const SPECIES_TEMPLATE_MODELS_CONTRACT_VERSION =
 /** Public Vite base for pilot species meshes (VRM primary / GLB fallback). */
 export const SPECIES_TEMPLATE_MODEL_PUBLIC_BASE = '/assets/avatars/species' as const;
 
+/** Allowlisted public bases for template mesh URLs (species + canonical preview). */
+const SPECIES_TEMPLATE_ALLOWED_BASES = [
+  SPECIES_TEMPLATE_MODEL_PUBLIC_BASE,
+  '/assets/avatars/canonical',
+] as const;
+
+export type SpeciesTemplateMeshQuality = 'preview' | 'fidelity';
+
 type GenderMeshKey = 'masculine-read' | 'feminine-read';
 
-/** First-party pilot meshes — extend as more species are authored. */
-const SPECIES_GENDER_MESH: Readonly<
+/** HQ / fidelity Human meshes — persist + LiveAct face fidelity. */
+const SPECIES_GENDER_MESH_FIDELITY: Readonly<
   Partial<Record<BaseBodySpeciesId, Readonly<Record<GenderMeshKey, string>>>>
 > = {
   human: {
@@ -30,26 +43,44 @@ const SPECIES_GENDER_MESH: Readonly<
   },
 };
 
+/**
+ * Light editor preview — same canonical body for m/w until per-gender LODs exist.
+ * Bytes ~9.8 MB vs 28–34 MB face3.
+ */
+const SPECIES_GENDER_MESH_PREVIEW: Readonly<
+  Partial<Record<BaseBodySpeciesId, Readonly<Record<GenderMeshKey, string>>>>
+> = {
+  human: {
+    'masculine-read': resolveSagaHumanCanonicalV1ModelUrl(),
+    'feminine-read': resolveSagaHumanCanonicalV1ModelUrl(),
+  },
+};
+
 export function isBaseBodySpeciesId(value: string): value is BaseBodySpeciesId {
   return (listSpeciesTemplateIds() as readonly string[]).includes(value);
 }
 
-/**
- * Resolve allowlisted template preview model for sheet viewer.
- * Returns undefined when no mesh should load (divers, unset, missing asset).
- */
-export function resolveSpeciesTemplateModelUrl(input: {
-  speciesId: BaseBodySpeciesId | null;
-  genderReading: CharacterGenderReading | undefined;
-}): string | undefined {
+function isAllowlistedTemplatePath(path: string): boolean {
+  return SPECIES_TEMPLATE_ALLOWED_BASES.some((base) => path.startsWith(`${base}/`));
+}
+
+function resolveFromCatalog(
+  catalog: Readonly<
+    Partial<Record<BaseBodySpeciesId, Readonly<Record<GenderMeshKey, string>>>>
+  >,
+  input: {
+    speciesId: BaseBodySpeciesId | null;
+    genderReading: CharacterGenderReading | undefined;
+  },
+): string | undefined {
   if (!input.speciesId) return undefined;
   if (!input.genderReading || input.genderReading === 'diverse') return undefined;
 
-  const byGender = SPECIES_GENDER_MESH[input.speciesId];
+  const byGender = catalog[input.speciesId];
   if (!byGender) return undefined;
 
   const path = byGender[input.genderReading];
-  if (typeof path !== 'string' || !path.startsWith(`${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/`)) {
+  if (typeof path !== 'string' || !isAllowlistedTemplatePath(path)) {
     return undefined;
   }
   // Cache-bust (?v=…) must not fail the extension gate — strip query/hash like normalizeAvatarModelUrl.
@@ -58,12 +89,34 @@ export function resolveSpeciesTemplateModelUrl(input: {
   return path;
 }
 
+/**
+ * Resolve allowlisted template model for sheet viewer / persist.
+ * Default quality is `preview` (editor critical path). Use `fidelity` for save / LiveAct HQ.
+ * Returns undefined when no mesh should load (divers, unset, missing asset).
+ */
+export function resolveSpeciesTemplateModelUrl(input: {
+  speciesId: BaseBodySpeciesId | null;
+  genderReading: CharacterGenderReading | undefined;
+  quality?: SpeciesTemplateMeshQuality;
+}): string | undefined {
+  const quality = input.quality ?? 'preview';
+  const catalog =
+    quality === 'fidelity' ? SPECIES_GENDER_MESH_FIDELITY : SPECIES_GENDER_MESH_PREVIEW;
+  return resolveFromCatalog(catalog, input);
+}
+
+/** All allowlisted template paths (preview + fidelity) for QA / asset gates. */
 export function listSpeciesTemplateModelPaths(): readonly string[] {
   const paths: string[] = [];
   for (const speciesId of listSpeciesTemplateIds()) {
-    const byGender = SPECIES_GENDER_MESH[speciesId];
-    if (!byGender) continue;
-    paths.push(byGender['masculine-read'], byGender['feminine-read']);
+    const fidelity = SPECIES_GENDER_MESH_FIDELITY[speciesId];
+    const preview = SPECIES_GENDER_MESH_PREVIEW[speciesId];
+    if (fidelity) {
+      paths.push(fidelity['masculine-read'], fidelity['feminine-read']);
+    }
+    if (preview) {
+      paths.push(preview['masculine-read'], preview['feminine-read']);
+    }
   }
   return paths;
 }
