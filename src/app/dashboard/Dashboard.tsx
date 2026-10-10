@@ -9,7 +9,7 @@ import { Button } from '../../shared/ui/button';
 import { AdaptivePage } from '../../shared/ui/adaptive';
 import { CreateCharacterEntryDialog } from '../character';
 import { useProjectSummaries } from '../project';
-import { pathForSagaNew, pathForSagaSection } from '../shell';
+import { pathForSagaList, pathForSagaNew, pathForSagaSection } from '../shell';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
@@ -81,19 +81,31 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </Button>
         </div>
 
-        {resumeSagaId ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+          {resumeSagaId ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="min-h-11 gap-2 text-muted-foreground"
+              onClick={() => onNavigate(pathForSagaSection(resumeSagaId, 'overview'))}
+              aria-label="Letzte Saga öffnen"
+              data-dashboard-saga-open={resumeSagaId}
+            >
+              <BookOpen className="size-4 shrink-0" />
+              Letzte Saga öffnen
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="ghost"
-            className="min-h-11 w-full gap-2 text-muted-foreground"
-            onClick={() => onNavigate(pathForSagaSection(resumeSagaId, 'overview'))}
-            aria-label="Letzte Saga öffnen"
-            data-dashboard-saga-open={resumeSagaId}
+            className="min-h-11 gap-2 text-muted-foreground"
+            onClick={() => onNavigate(pathForSagaList())}
+            aria-label="Alle Sagas anzeigen"
+            data-dashboard-saga-list
           >
-            <BookOpen className="size-4 shrink-0" />
-            Letzte Saga öffnen
+            Alle Sagas
           </Button>
-        ) : null}
+        </div>
       </div>
 
       <CreateCharacterEntryDialog

@@ -33,6 +33,7 @@ import {
   resolveCharacterAssignmentPick,
 } from '../../domains/session/contracts/player-character-assignment';
 import { toast } from 'sonner';
+import { useAuth } from '../../lib/auth-context';
 
 type SessionJoinTab = 'create' | 'join' | 'past';
 
@@ -92,6 +93,7 @@ export function SessionJoin({
   const [sessionName, setSessionName] = useState('');
   const [sessionNameDirty, setSessionNameDirty] = useState(false);
 
+  const { user } = useAuth();
   const { sessions, isLoading: sessionsLoading, createSession, joinSession } = useSessions();
   const { projects } = useProjectSummaries({ enabled: true });
   const { characters, isLoading: charactersLoading } = useCharacterSummaries({ enabled: true });
@@ -100,9 +102,7 @@ export function SessionJoin({
     .map((c) => ({
       id: c.id,
       publicId: c.publicId ?? null,
-      name: c.isSagaDriveNative
-        ? `${c.name || 'Charakter'} · SagaDrive Native`
-        : (c.name || 'Charakter'),
+      name: c.name || 'Charakter',
     }));
   const pick = resolveCharacterAssignmentPick({ owned: assignable });
   const gmProjects = projects.filter(
@@ -163,11 +163,14 @@ export function SessionJoin({
     publicId: string | null;
     projectId: string | null;
   }): SessionJoinSurfaceMeta => {
+    // Prefer the session's project — create-form / URL saga selection must not
+    // override participant routing for a different joined session (P1).
     const fromSessionProject = session.projectId
       ? projects.find((project) => project.id === session.projectId)?.publicId
       : null;
     return {
-      sagaPublicId: (sagaPublicId || fromSessionProject || '').trim().toUpperCase() || null,
+      sagaPublicId:
+        (fromSessionProject || sagaPublicId || '').trim().toUpperCase() || null,
       sessionPublicId: session.publicId ? session.publicId.trim().toUpperCase() : null,
     };
   };
@@ -547,6 +550,7 @@ export function SessionJoin({
             <SessionPastSessionsPanel
               sessions={sessions}
               isLoading={sessionsLoading}
+              currentUserId={user?.id ?? null}
               sagaNameByProjectId={sagaNameByProjectId}
               onOpenAsGm={(session) => {
                 onJoinAsGM(session.id, resolveSurfaceMeta(session));

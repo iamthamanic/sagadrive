@@ -31,6 +31,8 @@ const STATUS_LABELS: Record<PlaySessionStatus, string> = {
 type SessionPastSessionsPanelProps = {
   sessions: SessionVm[];
   isLoading: boolean;
+  /** Authenticated user — GM action only when session.gmUserId matches. */
+  currentUserId: string | null;
   sagaNameByProjectId: Record<string, string>;
   onOpenAsGm: (session: SessionVm) => void;
   onJoinAsPlayer: (session: SessionVm) => void;
@@ -55,6 +57,7 @@ function matchesQuery(session: SessionVm, query: string, sagaName: string): bool
 export function SessionPastSessionsPanel({
   sessions,
   isLoading,
+  currentUserId,
   sagaNameByProjectId,
   onOpenAsGm,
   onJoinAsPlayer,
@@ -83,7 +86,7 @@ export function SessionPastSessionsPanel({
           Vergangene Sessions
         </CardTitle>
         <CardDescription className="text-xs md:text-sm">
-          Alle deine Sessions — filtern und durchsuchen
+          Offene Sessions — filtern und durchsuchen
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -116,11 +119,11 @@ export function SessionPastSessionsPanel({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Alle</SelectItem>
+                <SelectItem value="all">Alle (offen)</SelectItem>
                 <SelectItem value="waiting">{STATUS_LABELS.waiting}</SelectItem>
                 <SelectItem value="active">{STATUS_LABELS.active}</SelectItem>
                 <SelectItem value="paused">{STATUS_LABELS.paused}</SelectItem>
-                <SelectItem value="completed">{STATUS_LABELS.completed}</SelectItem>
+                {/* completed omitted: getUserSessions() excludes completed rows */}
               </SelectContent>
             </Select>
           </div>
@@ -142,6 +145,7 @@ export function SessionPastSessionsPanel({
                 ? sagaNameByProjectId[session.projectId]
                 : undefined;
               const canResume = session.status !== 'completed';
+              const isGm = Boolean(currentUserId && session.gmUserId === currentUserId);
               return (
                 <li
                   key={session.id}
@@ -165,22 +169,24 @@ export function SessionPastSessionsPanel({
                   <div className="flex shrink-0 flex-wrap gap-2">
                     {canResume ? (
                       <>
+                        {isGm ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="min-h-11"
+                            onClick={() => onOpenAsGm(session)}
+                          >
+                            Als GM öffnen
+                          </Button>
+                        ) : null}
                         <Button
                           type="button"
                           size="sm"
-                          className="min-h-11"
-                          onClick={() => onOpenAsGm(session)}
-                        >
-                          Als GM öffnen
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
+                          variant={isGm ? 'outline' : 'default'}
                           className="min-h-11"
                           onClick={() => onJoinAsPlayer(session)}
                         >
-                          Als Spieler
+                          {isGm ? 'Als Spieler' : 'Öffnen'}
                         </Button>
                       </>
                     ) : (
