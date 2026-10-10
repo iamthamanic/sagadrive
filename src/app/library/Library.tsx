@@ -9,7 +9,7 @@ import { resolveAvatarSurfaceView } from '../../domains/character/avatar';
 import { useProjectSummaries } from '../project';
 import type { ProjectSummaryVm } from '../../domains/project/contracts/project.types';
 import { useAuth } from '../../lib/auth-context';
-import { pathForSagaNew } from '../shell';
+import { pathForSagaNew, pathForSagaSection } from '../shell';
 import { EntityBrowser, type EntityBrowserRenderContext } from './EntityBrowser';
 import { EntityBrowserCard } from './EntityBrowserCard';
 import { getSpeciesDevelopmentMode } from '../../domains/world/worldModuleRegistry';
@@ -202,15 +202,12 @@ export function Library({
     }
   };
 
-  const isProjectGm = (project: ProjectSummaryVm) =>
-    user !== null && project.gmUserId === user.id;
-
-  const openProjectAsGm = (project: ProjectSummaryVm) => {
-    // Canonical: Saga sessions section — not legacy /gamemaster (#477).
-    onNavigate(`/sagas/${encodeURIComponent(project.publicId.trim().toUpperCase())}/sessions`);
+  /** #571 — Library primary entry is always saga overview (not Leiten/Teilnehmen). */
+  const openSagaOverview = (project: ProjectSummaryVm) => {
+    onNavigate(pathForSagaSection(project.publicId, 'overview'));
   };
 
-  /** Player / session join surface — keep clicked adventure + participant intent. */
+  /** Secondary: session join with participant intent (kept beside primary). */
   const openProjectAsParticipant = (project: ProjectSummaryVm) => {
     const params = new URLSearchParams({
       project_id: project.id,
@@ -221,11 +218,7 @@ export function Library({
   };
 
   const openProject = (project: ProjectSummaryVm) => {
-    if (isProjectGm(project)) {
-      openProjectAsGm(project);
-      return;
-    }
-    openProjectAsParticipant(project);
+    openSagaOverview(project);
   };
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
@@ -259,38 +252,28 @@ export function Library({
       isCenter={context.isCenter}
       onOpen={context.variant === 'list' || context.isCenter ? () => openProject(project) : undefined}
       actions={
-        isProjectGm(project) ? (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={() => openProjectAsGm(project)}
-            >
-              <BookOpen className="w-3 h-3 mr-1" />
-              <span className="text-xs">Leiten</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={() => openProjectAsParticipant(project)}
-            >
-              <Gamepad2 className="w-3 h-3 mr-1" />
-              <span className="text-xs">Teilnehmen</span>
-            </Button>
-          </>
-        ) : (
+        <>
+          <Button
+            variant="default"
+            size="sm"
+            className="min-h-11 flex-1 bg-cyan-600 text-white hover:bg-cyan-500"
+            onClick={() => openSagaOverview(project)}
+            data-library-saga-open={project.publicId}
+          >
+            <BookOpen className="mr-1 h-3 w-3" />
+            <span className="text-xs">Saga öffnen</span>
+          </Button>
           <Button
             variant="outline"
             size="sm"
-            className="flex-1"
+            className="min-h-11 flex-1"
             onClick={() => openProjectAsParticipant(project)}
+            data-library-saga-join={project.publicId}
           >
-            <Gamepad2 className="w-3 h-3 mr-1" />
+            <Gamepad2 className="mr-1 h-3 w-3" />
             <span className="text-xs">Teilnehmen</span>
           </Button>
-        )
+        </>
       }
     />
   );
