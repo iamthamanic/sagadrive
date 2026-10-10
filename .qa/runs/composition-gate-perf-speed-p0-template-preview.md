@@ -1,6 +1,6 @@
 # Composition Gate — perf-speed-p0-template-preview
 
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 4a08c65561afdc3d61b3634dd404cfc049f383a6
 - Date: 2026-10-10
 - Verdict: CLEAR
 
