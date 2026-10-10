@@ -15,10 +15,10 @@ controls that look live but have no end-to-end action.
 - And character roster never lists unmarked demo IDs (`demo-*`)
 
 ### Session create without fixture UI
-- Given production (non-DEV) Session Join create flow
+- Given Session Join create flow (DEV or production)
 - When the create tab renders
 - Then `PreparedAdventureFixturePanel` is not mounted
-- And in DEV it is labeled as developer/player-test context
+- And only the normal saga session-create card is shown (same UX for every saga)
 
 ### Marketplace paid CTA
 - Given a marketplace item with `price > 0`

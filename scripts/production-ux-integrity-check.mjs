@@ -52,13 +52,13 @@ section('2 · GM panel — no demo roster / no-op primaries');
   check(!/<Button>\s*<Wand2/.test(gm), 'no bare Wand2 generate CTA');
 }
 
-section('3 · SessionJoin fixture DEV-gated');
+section('3 · SessionJoin has no fixture panel');
 {
   const join = read('src/app/session/SessionJoin.tsx');
-  check(/mayShowPreparedAdventureFixturePanel/.test(join), 'DEV gate helper');
-  check(/import\.meta\.env\.DEV/.test(join), 'DEV env check');
+  check(!/PreparedAdventureFixturePanel/.test(join), 'fixture panel not mounted on SessionJoin');
+  check(!/mayShowPreparedAdventureFixturePanel/.test(join), 'no DEV fixture gate on SessionJoin');
   const panel = read('src/app/session/PreparedAdventureFixturePanel.tsx');
-  check(/DEV ·/.test(panel) || /data-dev-only-fixture/.test(panel), 'fixture labeled DEV');
+  check(/DEV ·/.test(panel) || /data-dev-only-fixture/.test(panel), 'fixture component remains DEV-labeled');
 }
 
 section('4 · Marketplace paid CTA');
@@ -100,7 +100,7 @@ section('6 · domain behaviour');
     logLevel: 'silent',
   });
   const mod = await import(pathToFileURL(outfile).href);
-  check(mod.mayShowPreparedAdventureFixturePanel(true) === true, 'DEV shows fixture');
+  check(mod.mayShowPreparedAdventureFixturePanel(true) === false, 'DEV also hides fixture on product join');
   check(mod.mayShowPreparedAdventureFixturePanel(false) === false, 'prod hides fixture');
   check(mod.marketplacePaidActionEnabled(0) === true, 'free download enabled');
   check(mod.marketplacePaidActionEnabled(9.99) === false, 'paid disabled');
