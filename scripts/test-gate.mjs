@@ -192,6 +192,14 @@ function checkSagaStateColumnPrivileges() {
   });
 }
 
+function checkSagaOverviewRpc() {
+  console.log('Saga overview RPC (#570): checking migration, domain VM, hook, audience safety...');
+  execFileSync(process.execPath, ['scripts/saga-overview-rpc-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkCharacterEditorRegressions() {
   console.log('Character editor regression contract: checking persistence, avatar replay, and legacy project status...');
   execFileSync(process.execPath, ['scripts/character-editor-regression-check.mjs'], {
@@ -1864,6 +1872,7 @@ checkPlayerTestMultiuserE2eSecurity();
 checkPlayerTestInstrumentationRunbook();
 checkProjectMembershipSecurity();
 checkSagaStateColumnPrivileges();
+checkSagaOverviewRpc();
 checkCharacterEditorRegressions();
 checkCharacterPresetsRegressions();
 checkInventoryV2Domain();

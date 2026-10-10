@@ -55,6 +55,7 @@ migrations=(
   038_character_avatar_body_profile.sql
   045_character_avatar_meshy_pending_glb.sql
   059_saga_state_column_privileges.sql
+  060_saga_overview.sql
 )
 
 only="${1:-}"
