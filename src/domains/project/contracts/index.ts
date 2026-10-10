@@ -3,3 +3,4 @@
  * Location: src/domains/project/contracts/index.ts
  */
 export * from './project.types';
+export * from './saga-overview';

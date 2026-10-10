@@ -43,4 +43,11 @@ export const ENTITY_CACHE_KEYS = {
   characterSummaries: 'characters:summary',
   projectSummaries: 'projects:summary',
   worldSummaries: 'worlds:summary',
+  /** Prefix for per-saga hub overview cache keys (#570). */
+  sagaOverviewPrefix: 'sagaOverview:',
 } as const;
+
+/** Cache key for `useSagaOverview` — `sagaOverview:{PUBLIC_ID}`. */
+export function sagaOverviewCacheKey(publicId: string): string {
+  return `${ENTITY_CACHE_KEYS.sagaOverviewPrefix}${publicId.trim().toUpperCase()}`;
+}
