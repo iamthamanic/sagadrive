@@ -1,5 +1,6 @@
 /**
  * AdaptivePage — Journey/Workstation page shell with AU gutters + safe areas (#482).
+ * Gutters tighten in narrow main-pane containers (@container/main from Layout).
  * Location: src/shared/ui/adaptive/AdaptivePage.tsx
  */
 import * as React from 'react';
@@ -24,7 +25,7 @@ export function AdaptivePage({
       data-slot="adaptive-page"
       data-au-pattern="page"
       className={cn(
-        'flex min-h-0 min-w-0 flex-1 flex-col bg-background text-foreground',
+        'flex min-h-0 min-w-0 w-full flex-1 flex-col bg-background text-foreground',
         className,
       )}
       {...props}
@@ -32,14 +33,14 @@ export function AdaptivePage({
       {header ? (
         <div
           data-slot="adaptive-page-header"
-          className="shrink-0 border-b border-border px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 sm:px-6"
+          className="shrink-0 border-b border-border px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 @[40rem]/main:px-6"
         >
           {header}
         </div>
       ) : null}
       <div
         data-slot="adaptive-page-body"
-        className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 sm:px-6"
+        className="min-h-0 min-w-0 w-full flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 @[40rem]/main:px-6"
       >
         {children}
       </div>

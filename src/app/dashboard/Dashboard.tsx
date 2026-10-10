@@ -1,273 +1,111 @@
 /**
- * Dashboard — Authenticated home journey with adaptive page shell (#484).
+ * Dashboard — Authenticated home hub: four primary entry actions.
+ * Saga create → /sagas/new; resume → saga overview (#489).
  * Location: src/app/dashboard/Dashboard.tsx
  */
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
-import { Button } from '../../shared/ui/button';
-import { Plus, Users, Gamepad2, TrendingUp, Calendar } from 'lucide-react';
 import { useState } from 'react';
-import { useProjectSummaries } from '../project';
-import { useCharacterSummaries, CreateCharacterEntryDialog } from '../character';
+import { BookOpen, BookPlus, LogIn, Radio, UserPlus } from 'lucide-react';
+import { Button } from '../../shared/ui/button';
 import { AdaptivePage } from '../../shared/ui/adaptive';
-import { pathForSagaNew, pathForSagaSection } from '../shell';
+import { CreateCharacterEntryDialog } from '../character';
+import { useProjectSummaries } from '../project';
+import { pathForSagaList, pathForSagaNew, pathForSagaSection } from '../shell';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
 }
 
-export function Dashboard({ onNavigate }: DashboardProps) {
-  const { projects, isLoading: projectsLoading } = useProjectSummaries();
-  const { characters, isLoading: charactersLoading } = useCharacterSummaries();
-  const [createCharacterOpen, setCreateCharacterOpen] = useState(false);
+const actionButtonClass =
+  'h-auto min-h-14 w-full flex-col gap-2 px-4 py-6 text-base sm:min-h-28 sm:text-lg';
 
-  const activeProjects = projects.filter(p => p.status === 'active');
-  const totalSessions = projects.reduce((sum, p) => sum + p.sessionCount, 0);
-  const totalMembers = projects.reduce((sum, p) => sum + p.memberCount, 0);
+export function Dashboard({ onNavigate }: DashboardProps) {
+  const [createCharacterOpen, setCreateCharacterOpen] = useState(false);
+  const { projects } = useProjectSummaries();
+  const resumeSagaId =
+    projects.find((p) => p.status === 'active' && p.publicId)?.publicId ??
+    projects.find((p) => Boolean(p.publicId))?.publicId ??
+    null;
 
   return (
     <AdaptivePage data-au-surface="dashboard" className="h-full w-full">
-      <div className="mx-auto max-w-7xl space-y-6 md:space-y-8">
-        {/* Welcome Section */}
-        <div>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl mb-2">Dashboard</h1>
-          <p className="text-muted-foreground text-sm md:text-base">
-            Willkommen zurück! Starte eine neue Saga oder arbeite an deinen Inhalten.
-          </p>
+      <div className="mx-auto flex max-w-3xl flex-col justify-center gap-4 py-4 sm:gap-5 md:min-h-[60vh]">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            className={actionButtonClass}
+            onClick={() => setCreateCharacterOpen(true)}
+            aria-label="Spieler Charakter erstellen"
+            data-dashboard-character-create
+          >
+            <UserPlus className="size-7 sm:size-8" />
+            <span className="text-center whitespace-normal leading-snug">
+              Spieler Charakter erstellen
+            </span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className={actionButtonClass}
+            onClick={() => onNavigate('/session-join?intent=join')}
+            aria-label="Session beitreten"
+            data-dashboard-session-join
+          >
+            <LogIn className="size-7 sm:size-8" />
+            <span className="text-center whitespace-normal leading-snug">Session beitreten</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className={actionButtonClass}
+            onClick={() => onNavigate(pathForSagaNew())}
+            aria-label="Saga erstellen"
+            data-dashboard-saga-create
+          >
+            <BookPlus className="size-7 sm:size-8" />
+            <span className="text-center whitespace-normal leading-snug">Saga erstellen</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            className={actionButtonClass}
+            onClick={() => onNavigate('/session-join')}
+            aria-label="Session starten"
+            data-dashboard-session-host
+          >
+            <Radio className="size-7 sm:size-8" />
+            <span className="text-center whitespace-normal leading-snug">Session starten</span>
+          </Button>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription className="text-xs md:text-sm">Aktive Sagas</CardDescription>
-              <CardTitle className="text-2xl md:text-3xl">{activeProjects.length}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription className="text-xs md:text-sm">Sessions gespielt</CardDescription>
-              <CardTitle className="text-2xl md:text-3xl">{totalSessions}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription className="text-xs md:text-sm">Mitspieler</CardDescription>
-              <CardTitle className="text-2xl md:text-3xl">{totalMembers}</CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription className="text-xs md:text-sm">Charaktere</CardDescription>
-              <CardTitle className="text-2xl md:text-3xl">{characters.length}</CardTitle>
-            </CardHeader>
-          </Card>
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+          {resumeSagaId ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="min-h-11 gap-2 text-muted-foreground"
+              onClick={() => onNavigate(pathForSagaSection(resumeSagaId, 'overview'))}
+              aria-label="Letzte Saga öffnen"
+              data-dashboard-saga-open={resumeSagaId}
+            >
+              <BookOpen className="size-4 shrink-0" />
+              Letzte Saga öffnen
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            className="min-h-11 gap-2 text-muted-foreground"
+            onClick={() => onNavigate(pathForSagaList())}
+            aria-label="Alle Sagas anzeigen"
+            data-dashboard-saga-list
+          >
+            Alle Sagas
+          </Button>
         </div>
-
-        {/* Quick Actions */}
-        <div>
-          <h2 className="text-lg md:text-xl mb-4">Schnellaktionen</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-            <Card 
-              className="cursor-pointer hover:bg-accent/10 hover:border-accent/40 transition-all" 
-              onClick={() => onNavigate(pathForSagaNew())}
-              data-dashboard-saga-create
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-                  <Gamepad2 className="w-5 h-5" />
-                  Saga erstellen
-                </CardTitle>
-                <CardDescription className="text-xs md:text-sm">
-                  Neue Kampagne anlegen und zur Übersicht öffnen
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card 
-              className="min-h-11 cursor-pointer hover:bg-accent/10 hover:border-accent/40 transition-all" 
-              onClick={() => setCreateCharacterOpen(true)}
-              role="button"
-              tabIndex={0}
-              data-dashboard-character-create
-              aria-label="Neuer Charakter"
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  setCreateCharacterOpen(true);
-                }
-              }}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-                  <Plus className="w-5 h-5" />
-                  Neuer Charakter
-                </CardTitle>
-                <CardDescription className="text-xs md:text-sm">
-                  Erstelle einen Charakter für deine Abenteuer
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card 
-              className="cursor-pointer hover:bg-accent/10 hover:border-accent/40 transition-all" 
-              onClick={() => onNavigate('session-join')}
-              data-dashboard-session-start
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-                  <Users className="w-5 h-5" />
-                  Session starten
-                </CardTitle>
-                <CardDescription className="text-xs md:text-sm">
-                  Spielsession erstellen oder mit Code beitreten
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card 
-              className="cursor-pointer hover:bg-accent/10 hover:border-accent/40 transition-all" 
-              onClick={() => onNavigate('marketplace')}
-            >
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-                  <TrendingUp className="w-5 h-5" />
-                  Marktplatz
-                </CardTitle>
-                <CardDescription className="text-xs md:text-sm">
-                  Entdecke Community-Inhalte
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-        </div>
-
-        {/* Active Projects Section */}
-        {activeProjects.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg md:text-xl">Deine Sagas</h2>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onNavigate('/sagas')}
-              >
-                Alle anzeigen
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-              {activeProjects.slice(0, 6).map((project) => (
-                <Card key={project.id} className="hover:bg-accent/50 transition-colors">
-                  <CardHeader>
-                    <CardTitle className="text-base md:text-lg">{project.name}</CardTitle>
-                    <CardDescription className="text-xs md:text-sm line-clamp-2">
-                      {project.description || 'Keine Beschreibung'}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground mb-3">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          {project.memberCount}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          {project.sessionCount}
-                        </span>
-                      </div>
-                      <span className="text-xs px-2 py-1 bg-muted rounded">
-                        {project.code}
-                      </span>
-                    </div>
-                    <Button 
-                      className="w-full min-h-11" 
-                      size="sm"
-                      onClick={() =>
-                        onNavigate(pathForSagaSection(project.publicId, 'overview'))
-                      }
-                      data-dashboard-saga-open={project.publicId}
-                    >
-                      Öffnen
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Recent Characters */}
-        {characters.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg md:text-xl">Deine Charaktere</h2>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onNavigate('library')}
-              >
-                Alle anzeigen
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
-              {characters.slice(0, 6).map((character) => (
-                <Card 
-                  key={character.id} 
-                  className="cursor-pointer hover:bg-accent/50 transition-colors"
-                  onClick={() => onNavigate('character-editor')}
-                >
-                  <CardHeader className="p-4">
-                    <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center">
-                      <span className="text-2xl md:text-3xl">
-                        {character.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <CardTitle className="text-sm md:text-base truncate">
-                      {character.name}
-                    </CardTitle>
-                    <CardDescription className="text-xs truncate">
-                      {character.race} {character.class}
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {activeProjects.length === 0 && characters.length === 0 && !projectsLoading && !charactersLoading && (
-          <Card className="border-dashed">
-            <CardHeader className="text-center py-12">
-              <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                <Gamepad2 className="w-6 h-6 text-muted-foreground" />
-              </div>
-              <CardTitle>Bereit für deine erste Saga?</CardTitle>
-              <CardDescription className="mt-2">
-                Erstelle eine Saga oder einen Charakter, um loszulegen.
-              </CardDescription>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-                <Button
-                  className="min-h-11"
-                  onClick={() => onNavigate(pathForSagaNew())}
-                  data-dashboard-saga-create-empty
-                >
-                  <Gamepad2 className="w-4 h-4 mr-2" />
-                  Saga erstellen
-                </Button>
-                <Button
-                  variant="outline"
-                  className="min-h-11"
-                  onClick={() => setCreateCharacterOpen(true)}
-                  data-dashboard-character-create-secondary
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Charakter erstellen
-                </Button>
-              </div>
-            </CardHeader>
-          </Card>
-        )}
       </div>
 
       <CreateCharacterEntryDialog

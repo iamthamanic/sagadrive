@@ -17,9 +17,13 @@ export function disposeDeferredPrimaryAction(input: {
   return input.implemented ? 'live' : 'disabled-deferred';
 }
 
-/** Fixture / player-test panels belong only in explicit developer mode. */
-export function mayShowPreparedAdventureFixturePanel(isDev: boolean): boolean {
-  return isDev === true;
+/**
+ * Prepared-adventure fixture UI must not appear on product Session Join.
+ * Session start must match the real saga flow (create/join only) so player-tests
+ * exercise the same UX as production. Helper kept for honesty gates (#493).
+ */
+export function mayShowPreparedAdventureFixturePanel(_isDev: boolean): boolean {
+  return false;
 }
 
 export function marketplacePaidCtaLabelDe(price: number): string {

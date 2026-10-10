@@ -40,12 +40,13 @@ async function openItemsTab(page: Page) {
 }
 
 async function openNewCharacterInventory(page: Page) {
-  const createViaEmptyState = page.getByRole('button', { name: 'Charakter erstellen' });
-  if (await createViaEmptyState.count()) {
-    await createViaEmptyState.first().click();
-  } else {
-    await page.getByRole('heading', { name: 'Neuer Charakter' }).first().click();
-  }
+  // Wait for hub CTA (do not use count() right after goto — SPA mount race).
+  const createEntry = page
+    .locator('[data-dashboard-character-create]')
+    .or(page.getByRole('button', { name: /Spieler Charakter erstellen|Charakter erstellen/i }))
+    .or(page.getByRole('heading', { name: 'Neuer Charakter' }));
+  await expect(createEntry.first()).toBeVisible({ timeout: 20_000 });
+  await createEntry.first().click();
   await expect(page.getByRole('heading', { name: 'Charakter erstellen' })).toBeVisible();
   await page.getByRole('button', { name: /Eigenen Charakter erstellen/i }).click();
   await expect(page.getByRole('heading', { name: 'Charakter Editor' }).first()).toBeVisible({

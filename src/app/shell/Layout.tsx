@@ -2,6 +2,8 @@
  * Layout — single shell with CSS desktop/mobile chrome; one children mount.
  * Chrome toggles via Tailwind `md:` so resize does not remount route state.
  * `data-app-shell` tracks viewport for e2e; Radix portals stay unduplicated.
+ * Shows a compact logged-in name pill next to Settings (mobile header + desktop sidebar).
+ * Page views own their titles — no duplicate desktop chrome title bar.
  * Location: src/app/shell/Layout.tsx
  */
 import { useEffect, useState, type ReactNode } from 'react';
@@ -17,32 +19,34 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth-context';
 import { toast } from 'sonner';
+import { Badge } from '../../shared/ui/badge';
+import { isCompactBand, useAdaptiveBand } from '../../shared/ui/adaptive';
 import { ImageWithFallback } from '../../shared/ui/figma/ImageWithFallback';
 import logoImage from 'figma:asset/5cdcbab5ea0860d6cbb920fecd888377cdc015a0.png';
+
+/** Minimal auth shape for chrome identity — avoid app→@supabase import (#94). */
+type AuthDisplayUser = {
+  email?: string | null;
+  user_metadata?: Record<string, unknown> | null;
+};
+
+/** Prefer display_name → username → email local-part for chrome identity chip. */
+function resolveAuthDisplayName(user: AuthDisplayUser | null): string | null {
+  if (!user) return null;
+  const meta = user.user_metadata ?? {};
+  for (const key of ['display_name', 'username'] as const) {
+    const value = meta[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  const local = user.email?.split('@')[0]?.trim();
+  return local || null;
+}
 
 interface LayoutProps {
   children: ReactNode;
   currentView: string;
   onNavigate: (view: string) => void;
 }
-
-const VIEW_LABELS: Record<string, string> = {
-  dashboard: 'Dashboard',
-  library: 'Bibliothek',
-  'character-editor': 'Charakter Editor',
-  'adventure-editor': 'Abenteuer Editor',
-  marketplace: 'Marktplatz',
-  profile: 'Einstellungen',
-  join: 'Beitreten',
-  gamemaster: 'Spielleitung',
-  'item-create': 'Neues Item',
-  'item-detail': 'Item',
-  'look-create': 'Look erstellen',
-  'look-edit': 'Look bearbeiten',
-  'npc-creature-create': 'Figur erstellen',
-  'npc-creature-edit': 'Statblock Editor',
-  'not-found': 'Nicht gefunden',
-};
 
 const SIDEBAR_COLLAPSED_KEY = 'sagadrive-sidebar-collapsed';
 /** Tailwind `md` breakpoint — keep in sync with CSS. */
@@ -65,9 +69,12 @@ function useIsDesktop(): boolean {
 }
 
 export function Layout({ children, currentView, onNavigate }: LayoutProps) {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [userExpandedDesktop, setUserExpandedDesktop] = useState(false);
   const isDesktop = useIsDesktop();
+  const viewportBand = useAdaptiveBand();
+  const displayName = resolveAuthDisplayName(user);
 
   useEffect(() => {
     try {
@@ -77,9 +84,28 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
     }
   }, []);
 
+  // Compact viewport bands: keep rail collapsed so Journey content keeps width
+  // (IDE split panes / tablet). Desktop restores stored preference unless the
+  // user explicitly expanded during this session.
+  useEffect(() => {
+    if (isCompactBand(viewportBand)) {
+      setSidebarCollapsed(true);
+      return;
+    }
+    if (userExpandedDesktop) return;
+    try {
+      setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1');
+    } catch {
+      setSidebarCollapsed(false);
+    }
+  }, [viewportBand, userExpandedDesktop]);
+
   const toggleSidebar = () => {
     setSidebarCollapsed((current) => {
       const next = !current;
+      if (viewportBand === 'desktop' && !next) {
+        setUserExpandedDesktop(true);
+      }
       try {
         localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? '1' : '0');
       } catch {
@@ -193,6 +219,27 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
                 <LogOut className="w-5 h-5 flex-shrink-0" />
                 {!sidebarCollapsed && <span>Abmelden</span>}
               </button>
+              {displayName ? (
+                <button
+                  type="button"
+                  onClick={() => onNavigate('profile')}
+                  className={`min-w-0 ${sidebarCollapsed ? 'flex justify-center' : ''}`}
+                  title={displayName}
+                  aria-label={`Angemeldet als ${displayName}`}
+                  data-shell-user-pill="desktop"
+                >
+                  <Badge
+                    variant="outline"
+                    className={`rounded-full border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground ${
+                      sidebarCollapsed
+                        ? 'size-9 justify-center px-0 text-xs uppercase'
+                        : 'max-w-[7.5rem] truncate px-2.5 py-1'
+                    }`}
+                  >
+                    {sidebarCollapsed ? displayName.slice(0, 1) : displayName}
+                  </Badge>
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => onNavigate('profile')}
@@ -226,6 +273,23 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
                 <h1 className="text-base">SagaDrive</h1>
               </div>
               <div className="flex items-center gap-2">
+                {displayName ? (
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('profile')}
+                    className="min-w-0"
+                    title={displayName}
+                    aria-label={`Angemeldet als ${displayName}`}
+                    data-shell-user-pill="mobile"
+                  >
+                    <Badge
+                      variant="outline"
+                      className="max-w-[9rem] truncate rounded-full bg-muted/50 px-2.5 py-1"
+                    >
+                      {displayName}
+                    </Badge>
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => onNavigate('profile')}
@@ -246,13 +310,13 @@ export function Layout({ children, currentView, onNavigate }: LayoutProps) {
             </div>
           </header>
 
-          <header className="hidden md:flex h-16 bg-card border-b border-border px-6 items-center flex-shrink-0">
-            <h2 className="text-foreground font-[Darker_Grotesque]">
-              {VIEW_LABELS[currentView] || 'Dashboard'}
-            </h2>
-          </header>
-
-          <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden pb-20 md:pb-0">{children}</main>
+          <main
+            className="@container/main min-w-0 flex-1 overflow-y-auto overflow-x-hidden pb-20 md:pb-0"
+            data-adaptive-main
+            data-adaptive-viewport-band={viewportBand}
+          >
+            {children}
+          </main>
         </div>
 
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-pb">

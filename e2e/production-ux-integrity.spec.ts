@@ -19,21 +19,15 @@ test.describe('Production UX Integrity (#493)', () => {
     await expect(page.getByText('Aria Windwhisper')).toHaveCount(0);
   });
 
-  test('session-join create: fixture panel absent or DEV-labeled', async ({ page }) => {
+  test('session-join create: fixture panel never mounted', async ({ page }) => {
     test.setTimeout(90_000);
     await ensureLoggedIn(page);
     await page.goto('/session-join');
     await expect(page.getByRole('button', { name: /erstellen|Session erstellen/i }).first()).toBeVisible({
       timeout: 20_000,
     });
-    const fixture = page.locator('[data-prepared-adventure-fixture="v1"]');
-    const count = await fixture.count();
-    if (count > 0) {
-      await expect(fixture).toHaveAttribute('data-dev-only-fixture', 'true');
-      await expect(page.getByText(/DEV ·/)).toBeVisible();
-    } else {
-      expect(count).toBe(0);
-    }
+    await expect(page.locator('[data-prepared-adventure-fixture="v1"]')).toHaveCount(0);
+    await expect(page.getByText(/DEV ·/)).toHaveCount(0);
   });
 
   test('profile: deferred settings disabled; sign-out remains', async ({ page }) => {
