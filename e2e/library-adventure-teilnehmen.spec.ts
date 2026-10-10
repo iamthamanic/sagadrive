@@ -177,7 +177,10 @@ test('GM Teilnehmen keeps adventure id + join intent on session-join', async ({ 
 
   // Create tab holds the adventure select — switch briefly to assert preselection.
   await page.getByRole('tab', { name: /Session erstellen|Erstellen/i }).click();
-  await expect(page.locator('[data-session-join-project]')).toHaveValue(MOCK_PROJECT.id);
+  await expect(page.locator('[data-session-join-project]')).toHaveAttribute(
+    'data-selected-project',
+    MOCK_PROJECT.id,
+  );
   await page.getByRole('tab', { name: /Session beitreten|Beitreten/i }).click();
 
   await page.screenshot({

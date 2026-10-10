@@ -40,9 +40,14 @@ async function openItemsTab(page: Page) {
 }
 
 async function openNewCharacterInventory(page: Page) {
-  const createViaEmptyState = page.getByRole('button', { name: 'Charakter erstellen' });
-  if (await createViaEmptyState.count()) {
-    await createViaEmptyState.first().click();
+  // Dashboard hub CTA (#489 / adaptive): data-dashboard-character-create.
+  // Fallback: legacy library empty-state "Charakter erstellen".
+  const dashboardCreate = page.locator('[data-dashboard-character-create]');
+  const legacyCreate = page.getByRole('button', { name: /^Charakter erstellen$/i });
+  if (await dashboardCreate.count()) {
+    await dashboardCreate.first().click();
+  } else if (await legacyCreate.count()) {
+    await legacyCreate.first().click();
   } else {
     await page.getByRole('heading', { name: 'Neuer Charakter' }).first().click();
   }
