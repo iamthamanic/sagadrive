@@ -1,6 +1,6 @@
 # Composition Gate — perf-speed-p0-template-preview
 
-- HEAD_SHA: 4a08c65561afdc3d61b3634dd404cfc049f383a6
+- HEAD_SHA: 0c54f9d46ff34c4491829bcee724dd8a424d8715
 - BASE_SHA: 6532615b07aae662e2f792169bbedba9f1f5280b
 - Date: 2026-10-10
 - Verdict: CLEAR
