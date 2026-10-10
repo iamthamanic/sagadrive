@@ -1,7 +1,7 @@
 # ECC Check — saga-overview-rpc (#570)
 
 - Date: 2026-10-11
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 837e68e5a642f8e640e837c0f9e28f4599a19abf
 - Verdict: READY
 
 ## Phase A — test-gate

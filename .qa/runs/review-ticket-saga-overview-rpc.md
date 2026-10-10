@@ -1,7 +1,7 @@
 # Review Ticket — saga-overview-rpc (#570)
 
 - BASE_SHA: e9460aa06bfac48622057f1bfccafbe3ba87ac03 (main)
-- HEAD_SHA: WORKTREE
+- HEAD_SHA: 837e68e5a642f8e640e837c0f9e28f4599a19abf
 - Date: 2026-10-11
 
 ## Prerequisites
