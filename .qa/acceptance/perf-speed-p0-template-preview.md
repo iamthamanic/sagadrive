@@ -8,7 +8,7 @@ Editor species-template preview must not download the full face3 HQ VRM (~28–3
 - Human Vorlage + Geschlecht selected
 
 ## Happy Path
-1. Given a blank Character Editor with Human Vorlage + feminine/masculine reading, when the 3D preview loads, then the network requests the **preview** mesh (canonical ≤~10 MB), not the face3 HQ VRM.
+1. Given a blank Character Editor with Human Vorlage + feminine/masculine reading, when the 3D preview loads, then the network requests the **preview** LOD (`human-preview-lod-v1.vrm` ≤~10 MB), not the face3 HQ VRM.
 2. Given the same character is saved / fidelity resolved, when persistence asks for the SagaDrive template URL, then the **fidelity** face3 VRM URL is used.
 3. Given LiveAct tracking is enabled (or fidelity quality requested), when the mesh is resolved with `quality: 'fidelity'`, then face3 paths remain allowlisted and loadable.
 

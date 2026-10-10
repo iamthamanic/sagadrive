@@ -6,7 +6,7 @@
  * Divers / unset gender → no mesh. Missing species assets fail closed (undefined).
  *
  * Dual quality (#perf-speed):
- * - preview: light editor mesh (canonical ≤~10 MB) — default critical path
+ * - preview: light editor LOD under species/ (≤~10 MB) — default critical path; committed for CI/prod
  * - fidelity: face3 HQ VRM — persist / LiveAct face work / explicit HQ
  *
  * Human fidelity bases: quality-20260921 m5/f5 face3 current-HEAD reauthor VRM 1.0 (#423).
@@ -15,19 +15,12 @@
 import type { CharacterGenderReading } from '../domain/character.entity';
 import type { BaseBodySpeciesId } from './base-body-contract';
 import { listSpeciesTemplateIds } from './species-template-pack-v1';
-import { resolveSagaHumanCanonicalV1ModelUrl } from './saga-human-canonical-v1';
 
 export const SPECIES_TEMPLATE_MODELS_CONTRACT_VERSION =
   'SagaDriveSpeciesTemplateModelsV1' as const;
 
 /** Public Vite base for pilot species meshes (VRM primary / GLB fallback). */
 export const SPECIES_TEMPLATE_MODEL_PUBLIC_BASE = '/assets/avatars/species' as const;
-
-/** Allowlisted public bases for template mesh URLs (species + canonical preview). */
-const SPECIES_TEMPLATE_ALLOWED_BASES = [
-  SPECIES_TEMPLATE_MODEL_PUBLIC_BASE,
-  '/assets/avatars/canonical',
-] as const;
 
 export type SpeciesTemplateMeshQuality = 'preview' | 'fidelity';
 
@@ -44,24 +37,21 @@ const SPECIES_GENDER_MESH_FIDELITY: Readonly<
 };
 
 /**
- * Light editor preview — same canonical body for m/w until per-gender LODs exist.
+ * Light editor preview — shared LOD for m/w until per-gender LODs exist.
+ * Published under species/ (committed) — not the gitignored canonical PoC path.
  * Bytes ~9.8 MB vs 28–34 MB face3.
  */
 const SPECIES_GENDER_MESH_PREVIEW: Readonly<
   Partial<Record<BaseBodySpeciesId, Readonly<Record<GenderMeshKey, string>>>>
 > = {
   human: {
-    'masculine-read': resolveSagaHumanCanonicalV1ModelUrl(),
-    'feminine-read': resolveSagaHumanCanonicalV1ModelUrl(),
+    'masculine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-preview-lod-v1.vrm?v=preview-lod1`,
+    'feminine-read': `${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/human-preview-lod-v1.vrm?v=preview-lod1`,
   },
 };
 
 export function isBaseBodySpeciesId(value: string): value is BaseBodySpeciesId {
   return (listSpeciesTemplateIds() as readonly string[]).includes(value);
-}
-
-function isAllowlistedTemplatePath(path: string): boolean {
-  return SPECIES_TEMPLATE_ALLOWED_BASES.some((base) => path.startsWith(`${base}/`));
 }
 
 function resolveFromCatalog(
@@ -80,7 +70,7 @@ function resolveFromCatalog(
   if (!byGender) return undefined;
 
   const path = byGender[input.genderReading];
-  if (typeof path !== 'string' || !isAllowlistedTemplatePath(path)) {
+  if (typeof path !== 'string' || !path.startsWith(`${SPECIES_TEMPLATE_MODEL_PUBLIC_BASE}/`)) {
     return undefined;
   }
   // Cache-bust (?v=…) must not fail the extension gate — strip query/hash like normalizeAvatarModelUrl.

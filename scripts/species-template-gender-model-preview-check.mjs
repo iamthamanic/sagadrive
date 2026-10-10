@@ -42,9 +42,8 @@ check(
   'human gender paths m5-face3/f5-face3 VRM primary (fidelity)',
 );
 check(
-  /resolveSagaHumanCanonicalV1ModelUrl/.test(domain) ||
-    /saga-human-canonical-v1\.vrm/.test(domain),
-  'preview path uses canonical light mesh',
+  /human-preview-lod-v1\.vrm/.test(domain),
+  'preview path uses committed species LOD mesh',
 );
 check(!/\.glb\?v=quality5-face3-repro1/.test(domain), 'primary resolver is not GLB');
 check(!/HUMAN_MALE_PREVIEW_VERSIONS/.test(domain), 'no male version picker catalog');
@@ -102,8 +101,8 @@ check(
   'baseline human-female quality f5 GLB retained',
 );
 check(
-  existsSync(join(root, 'public/assets/avatars/canonical/saga-human-canonical-v1.vrm')),
-  'public canonical preview VRM exists',
+  existsSync(join(root, 'public/assets/avatars/species/human-preview-lod-v1.vrm')),
+  'public human-preview-lod-v1 VRM exists (committed editor LOD)',
 );
 check(
   !existsSync(join(root, 'public/assets/avatars/species/human-male-quality-20260921-m4.glb')),
@@ -124,8 +123,7 @@ const FIDELITY = {
   'feminine-read':
     '/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm?v=quality5-face3-repro1',
 };
-const PREVIEW =
-  '/assets/avatars/canonical/saga-human-canonical-v1.vrm?v=4628e5edca86';
+const PREVIEW = '/assets/avatars/species/human-preview-lod-v1.vrm?v=preview-lod1';
 
 function resolveReplica(speciesId, genderReading, quality = 'preview') {
   if (!speciesId) return undefined;
@@ -133,10 +131,7 @@ function resolveReplica(speciesId, genderReading, quality = 'preview') {
   if (speciesId !== 'human') return undefined;
   const path = quality === 'fidelity' ? FIDELITY[genderReading] : PREVIEW;
   if (typeof path !== 'string') return undefined;
-  if (
-    !path.startsWith('/assets/avatars/species/') &&
-    !path.startsWith('/assets/avatars/canonical/')
-  ) {
+  if (!path.startsWith('/assets/avatars/species/')) {
     return undefined;
   }
   const pathWithoutQuery = path.replace(/[?#].*$/, '').toLowerCase();
@@ -156,12 +151,12 @@ check(
   'female fidelity VRM path',
 );
 check(
-  resolveReplica('human', 'masculine-read', 'preview')?.includes('saga-human-canonical-v1.vrm'),
-  'male preview canonical path',
+  resolveReplica('human', 'masculine-read', 'preview')?.includes('human-preview-lod-v1.vrm'),
+  'male preview LOD path',
 );
 check(
-  resolveReplica('human', 'feminine-read', 'preview')?.includes('saga-human-canonical-v1.vrm'),
-  'female preview canonical path',
+  resolveReplica('human', 'feminine-read', 'preview')?.includes('human-preview-lod-v1.vrm'),
+  'female preview LOD path',
 );
 check(resolveReplica('human', 'masculine-read', 'fidelity')?.includes('?v='), 'cache-bust query preserved');
 check(resolveReplica('human', 'diverse') === undefined, 'diverse no mesh');

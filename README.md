@@ -219,7 +219,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
-- **2026-10-10** — Character-Editor: Human-Vorlage lädt leichte Canonical-Vorschau (~10 MB) statt face3-HQ (~28–34 MB); Speichern bleibt face3 (`perf/template-preview-lod`)
+- **2026-10-10** — Character-Editor: Human-Vorlage lädt leichte Preview-LOD (~10 MB) statt face3-HQ (~28–34 MB); Speichern bleibt face3 (`perf/template-preview-lod`)
 - **2026-10-07** — Starttemplates: Icons + Playstyle-Tooltips im Create-Picker; Editor zeigt Vorlage-Badge und pulsierende Tab-Hinweise bei offenen Lücken (`agent/starting-template-editor-ux`)
 - **2026-09-30** — Bibliothek Abenteuer: GM kann **Leiten** und **Teilnehmen** (Session-Join) von derselben Karte (`fix/library-adventure-gm-teilnehmen`)
 - **2026-09-25** — LiveAct Face Setup 3/6: Auto Mapping (MediaPipe IMAGE + shared mesh raycast → proposed draft; #421)
