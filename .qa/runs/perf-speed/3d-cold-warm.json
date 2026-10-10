@@ -1,0 +1,50 @@
+{
+  "cold": {
+    "label": "cold_cache_disabled",
+    "clearCache": true,
+    "perceived_ms": 352,
+    "fully_ms": 862,
+    "assets": [
+      {
+        "url": "/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm",
+        "len": 0,
+        "fromServiceWorker": false,
+        "timing": {
+          "startTime": 1791405788726.6692,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": 0.212,
+          "responseStart": 1.053,
+          "responseEnd": -1
+        }
+      }
+    ]
+  },
+  "warm": {
+    "label": "warm_cache",
+    "clearCache": false,
+    "perceived_ms": 570,
+    "fully_ms": 1077,
+    "assets": [
+      {
+        "url": "/assets/avatars/species/human-female-quality-20260921-f5-face3.vrm",
+        "len": 0,
+        "fromServiceWorker": false,
+        "timing": {
+          "startTime": 1791405795006.7139,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": 0.235,
+          "responseStart": 1.168,
+          "responseEnd": 318.746
+        }
+      }
+    ]
+  }
+}

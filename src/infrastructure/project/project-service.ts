@@ -66,17 +66,32 @@ function isProjectDto(value: unknown): value is ProjectDto {
  */
 function isProjectSummaryRow(
   value: unknown,
-): value is Pick<ProjectDto, 'id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'> & {
+): value is Pick<
+  ProjectDto,
+  'id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'
+> & {
   public_id?: string | null;
+  world_id?: string | null;
+  world_profile_id?: string | null;
 } {
   if (!isRecord(value)) return false;
   const publicIdOk =
     typeof value.public_id === 'string'
     || value.public_id === undefined
     || value.public_id === null;
+  const worldIdOk =
+    typeof value.world_id === 'string'
+    || value.world_id === undefined
+    || value.world_id === null;
+  const worldProfileIdOk =
+    typeof value.world_profile_id === 'string'
+    || value.world_profile_id === undefined
+    || value.world_profile_id === null;
   return (
     typeof value.id === 'string' &&
     publicIdOk &&
+    worldIdOk &&
+    worldProfileIdOk &&
     typeof value.code === 'string' &&
     typeof value.name === 'string' &&
     (typeof value.description === 'string' || value.description === null) &&
@@ -287,7 +302,7 @@ class ProjectService {
 
     const { data: gmProjects, error: gmError } = await supabase
       .from(this.tableName)
-      .select('id, public_id, code, name, description, gm_user_id, status')
+      .select('id, public_id, code, name, description, world_id, world_profile_id, gm_user_id, status')
       .eq('gm_user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -297,7 +312,9 @@ class ProjectService {
 
     const { data: memberRecords, error: memberError } = await supabase
       .from(this.membersTableName)
-      .select('projects!inner(id, public_id, code, name, description, gm_user_id, status)')
+      .select(
+        'projects!inner(id, public_id, code, name, description, world_id, world_profile_id, gm_user_id, status)',
+      )
       .eq('user_id', userId)
       .eq('status', 'active');
 
@@ -308,7 +325,11 @@ class ProjectService {
     type ProjectSummaryRow = Pick<
       ProjectDto,
       'id' | 'code' | 'name' | 'description' | 'gm_user_id' | 'status'
-    > & { public_id?: string | null };
+    > & {
+      public_id?: string | null;
+      world_id?: string | null;
+      world_profile_id?: string | null;
+    };
     const combined = new Map<string, ProjectSummaryRow>();
 
     for (const project of gmProjects ?? []) {
@@ -350,6 +371,9 @@ class ProjectService {
         code: project.code,
         name: project.name,
         description: project.description,
+        worldId: typeof project.world_id === 'string' ? project.world_id : null,
+        worldProfileId:
+          typeof project.world_profile_id === 'string' ? project.world_profile_id : null,
         gmUserId: project.gm_user_id,
         status: project.status,
         memberCount: memberCounts.get(id) ?? 0,

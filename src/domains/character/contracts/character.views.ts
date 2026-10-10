@@ -67,3 +67,10 @@ export interface CharacterSummaryVm {
   sheetStatus: CharacterSheetStatus;
   portraitUrl?: string;
 }
+
+/** Slim roster row for session lobby — id/name/publicId only (no full sheet). */
+export interface CharacterRosterMetaVm {
+  id: string;
+  publicId: string | null;
+  name: string;
+}

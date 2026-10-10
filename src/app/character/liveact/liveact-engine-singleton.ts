@@ -6,7 +6,8 @@
  * disposes only when no surface consumer remains mounted.
  */
 
-import { LiveActEngine } from '../../../infrastructure/character/liveact';
+/** Deep import — avoid pulling the liveact barrel (MediaPipe side modules) into unrelated chunks. */
+import { LiveActEngine } from '../../../infrastructure/character/liveact/liveact-engine';
 
 let sharedEngine: LiveActEngine | null = null;
 let consumerCount = 0;

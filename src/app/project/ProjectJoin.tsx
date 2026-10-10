@@ -14,7 +14,9 @@ import { Input } from '../../shared/ui/input';
 import { Label } from '../../shared/ui/label';
 import { AdaptivePage } from '../../shared/ui/adaptive';
 import { pathForSagaNew, pathForSagaSection } from '../shell';
-import { useProjects } from './hooks/useProjects';
+import { projectService } from '../../infrastructure/project/project-service';
+import { ENTITY_CACHE_KEYS, entityCache } from '../../lib/entityCache';
+import { useProjectSummaries } from './hooks/useProjectSummaries';
 
 interface ProjectJoinProps {
   onBack: () => void;
@@ -22,7 +24,7 @@ interface ProjectJoinProps {
 }
 
 export function ProjectJoin({ onBack, onNavigate }: ProjectJoinProps) {
-  const { projects, joinProject, isLoading } = useProjects();
+  const { projects, isLoading, refreshProjects } = useProjectSummaries({ enabled: true });
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -46,7 +48,9 @@ export function ProjectJoin({ onBack, onNavigate }: ProjectJoinProps) {
 
     setIsJoining(true);
     try {
-      const saga = await joinProject({ code: joinCode.trim() });
+      const saga = await projectService.joinProject({ code: joinCode.trim() });
+      entityCache.invalidate(ENTITY_CACHE_KEYS.projectSummaries);
+      void refreshProjects();
       toast.success(`Saga „${saga.name}“ beigetreten!`, { duration: 5000 });
       setJoinCode('');
       const publicId = saga.publicId?.trim();
@@ -190,7 +194,7 @@ export function ProjectJoin({ onBack, onNavigate }: ProjectJoinProps) {
                   </CardHeader>
                   <CardContent className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">
-                      {saga.members.length} Mitglieder · {saga.totalSessions} Sessions
+                      {saga.memberCount} Mitglieder · {saga.sessionCount} Sessions
                     </span>
                     <Button
                       className="min-h-11"

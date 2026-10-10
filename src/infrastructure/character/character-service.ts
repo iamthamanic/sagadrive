@@ -3,7 +3,11 @@
  * Location: src/infrastructure/character/character-service.ts
  */
 import type { CreateCharacterDto, UpdateCharacterDto } from '../../domains/character/contracts/character.commands';
-import type { CharacterSummaryVm, CharacterVm } from '../../domains/character/contracts/character.views';
+import type {
+  CharacterRosterMetaVm,
+  CharacterSummaryVm,
+  CharacterVm,
+} from '../../domains/character/contracts/character.views';
 import { migrateLegacyInventory } from '../../domains/character/inventory-v2';
 import type { InventoryState } from '../../domains/character/inventory-v2';
 import { assertPersonalLookOverrideWrite } from '../../domains/look';
@@ -30,6 +34,11 @@ class CharacterService {
 
   getCharacterById(id: string): Promise<CharacterVm> {
     return supabaseCharacterRepository.getCharacterById(id);
+  }
+
+  /** Batch lobby roster names — avoids N× getCharacterById(select('*')). */
+  getCharacterRosterMetaByIds(ids: readonly string[]): Promise<CharacterRosterMetaVm[]> {
+    return supabaseCharacterRepository.getCharacterRosterMetaByIds(ids);
   }
 
   getCharacterByPublicId(publicId: string): Promise<CharacterVm> {

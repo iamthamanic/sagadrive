@@ -351,9 +351,17 @@ export function useLiveActViewport({
     setBonesEnabledState(false);
   }, [bonesAvailable]);
 
+  // Defer LiveActEngine (+ MediaPipe factory graph) until Tracking is requested — not on editor open.
   useEffect(() => {
-    if (!enabled) {
-      setComposedCapabilities(null);
+    const e2eLiveAct =
+      typeof window !== 'undefined' &&
+      (new URLSearchParams(window.location.search).get('liveactE2e') === '1' ||
+        (window as Window & { __SAGA_ENABLE_LIVEACT_E2E__?: boolean }).__SAGA_ENABLE_LIVEACT_E2E__ ===
+          true);
+    if (!enabled || (!trackingEnabled && !e2eLiveAct)) {
+      if (!trackingEnabled && !e2eLiveAct) {
+        setComposedCapabilities(null);
+      }
       return;
     }
     const engine = acquireSharedLiveActEngine();
@@ -492,7 +500,7 @@ export function useLiveActViewport({
       setPreviewVideo(null);
       setComposedCapabilities(null);
     };
-  }, [enabled]);
+  }, [enabled, trackingEnabled]);
 
   useEffect(() => {
     const engine = engineRef.current;

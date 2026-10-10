@@ -134,19 +134,22 @@ export function useSessionLobby(input: UseSessionLobbyInput): UseSessionLobbyRes
           string,
           { name: string; publicId: string | null }
         >();
-        await Promise.all(
-          characterIds.map(async (id) => {
-            try {
-              const c = await characterService.getCharacterById(id);
-              characterMeta.set(id, {
-                name: c.name,
-                publicId: c.publicId ?? null,
-              });
-            } catch {
-              characterMeta.set(id, { name: 'Charakter', publicId: null });
-            }
-          }),
-        );
+        try {
+          const rows = await characterService.getCharacterRosterMetaByIds(characterIds);
+          for (const row of rows) {
+            characterMeta.set(row.id, {
+              name: row.name,
+              publicId: row.publicId,
+            });
+          }
+        } catch (err) {
+          console.error('Lobby character roster meta batch failed:', err);
+        }
+        for (const id of characterIds) {
+          if (!characterMeta.has(id)) {
+            characterMeta.set(id, { name: 'Charakter', publicId: null });
+          }
+        }
 
         const roster: LobbyRosterMember[] = detail.players.map((p) => {
           const meta = p.characterId ? characterMeta.get(p.characterId) : null;

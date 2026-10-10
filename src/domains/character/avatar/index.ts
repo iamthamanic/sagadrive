@@ -937,6 +937,7 @@ export {
   isBaseBodySpeciesId,
   listSpeciesTemplateModelPaths,
   resolveSpeciesTemplateModelUrl,
+  type SpeciesTemplateMeshQuality,
 } from './species-template-models-v1';
 export {
   LIVEACT_GOLDEN_REFERENCE_AVATAR_ID,

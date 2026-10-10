@@ -85,7 +85,7 @@ mustNotInclude(
 
 mustInclude(
   'src/app/session/SessionJoin.tsx',
-  ['project_id', 'useProjects', 'Saga *', 'data-session-join-project'],
+  ['project_id', 'useProjectSummaries', 'Saga *', 'data-session-join-project'],
   'SessionJoin requires Saga (project_id)',
 );
 

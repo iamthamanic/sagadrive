@@ -219,6 +219,7 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 
 ## Recent changes
 
+- **2026-10-10** — Character-Editor: Human-Vorlage lädt leichte Preview-LOD (~10 MB) statt face3-HQ (~28–34 MB); Speichern bleibt face3 (`perf/template-preview-lod`)
 - **2026-10-07** — Starttemplates: Icons + Playstyle-Tooltips im Create-Picker; Editor zeigt Vorlage-Badge und pulsierende Tab-Hinweise bei offenen Lücken (`agent/starting-template-editor-ux`)
 - **2026-09-30** — Bibliothek Abenteuer: GM kann **Leiten** und **Teilnehmen** (Session-Join) von derselben Karte (`fix/library-adventure-gm-teilnehmen`)
 - **2026-09-25** — LiveAct Face Setup 3/6: Auto Mapping (MediaPipe IMAGE + shared mesh raycast → proposed draft; #421)
@@ -229,7 +230,6 @@ Die Browser-Evidence und Playwright-Berichte werden im CI-Lauf als Artifact `cha
 - **2026-09-21** — LiveAct: Kameravorschau verschiebbar (Default unten links), Bones-Debug sichtbar durch Mesh, GLB Capability Input-Flags; Species-Authoring-Scripts (`feat/liveact-pip-drag-and-rig-visibility`)
 - **2026-09-20** — Human species soft-real base (Palworld×Overwatch), gender→GLB preview, MToon toggle, Meshy rigging CPU step-split (`feat/avatar-human-softreal-mtoon-meshy`)
 - **2026-09-19** — Avatar V2: Modular GLB Contract v1 (`extras.sagadrive` Rollen/Slots + Upload-Spec) (`feat/avatar-v2-modular-glb-contract`, #250)
-- **2026-09-19** — Avatar V2: Composition Contract + kanonisches Design (Source/Anatomy/Family/Modularity/Capabilities orthogonal; Legacy-DTO lesbar) (`feat/avatar-v2-composition-contract`, #249)
 
 Lokal kann dieselbe Browser-Regression ausgeführt werden:
 

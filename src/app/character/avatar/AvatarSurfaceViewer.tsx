@@ -16,7 +16,7 @@ import {
   type AvatarSurfaceId,
   type AvatarSurfaceRef,
 } from '../../../domains/character/avatar';
-import { resolveLiveActRetargetProfile } from '../../../infrastructure/character/liveact';
+import { resolveLiveActRetargetProfile } from '../../../infrastructure/character/liveact/liveact-retarget-profile-registry';
 import { getAuthenticatedUserId } from '../../../lib/authenticatedUser';
 import { AvatarCanvas, type AvatarPortraitCaptureHandle } from './AvatarCanvas';
 import { AvatarPreviewExpandDialog } from './AvatarPreviewExpandDialog';

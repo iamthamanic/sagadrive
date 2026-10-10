@@ -14,7 +14,7 @@ import { Label } from '../../shared/ui/label';
 import { ArrowLeft, Users, Gamepad2, Copy, Check, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { AdaptivePage } from '../../shared/ui/adaptive';
-import { useProjects } from '../project';
+import { useProjectSummaries } from '../project';
 import { useCharacterSummaries } from '../character';
 import { useSessions } from './hooks/useSessions';
 import { PreparedAdventureFixturePanel } from './PreparedAdventureFixturePanel';
@@ -73,7 +73,7 @@ export function SessionJoin({
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>('');
 
   const { sessions, createSession, joinSession } = useSessions();
-  const { projects } = useProjects();
+  const { projects } = useProjectSummaries({ enabled: true });
   const { characters, isLoading: charactersLoading } = useCharacterSummaries({ enabled: true });
   const assignable = characters
     .filter((c) => Boolean(c.id) && Boolean(c.publicId))

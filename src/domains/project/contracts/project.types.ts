@@ -121,6 +121,10 @@ export interface ProjectSummaryVm {
   code: string;
   name: string;
   description: string | null;
+  /** Optional world binding for lore/context pickers — no members/sessions arrays. */
+  worldId: string | null;
+  /** Optional world-profile binding hint for fixture/prepare UIs. */
+  worldProfileId: string | null;
   gmUserId: string;
   status: 'active' | 'paused' | 'completed' | 'archived';
   memberCount: number;
