@@ -3,6 +3,9 @@
  * Location: src/infrastructure/session/session-service.ts
  * Hides: Supabase RPC/table transport for play-session create/join/leave/status.
  * No Hosted make-server URLs; no client-generated session codes.
+ *
+ * #569: Never select sessions.world_state or sessions.notes — revoked for
+ * authenticated; use get_session_runtime_snapshot for projected runtime.
  */
 import { supabase } from '../../lib/supabase';
 import {
@@ -31,9 +34,14 @@ import {
   type SessionInviteResolveResult,
 } from '../../domains/session/contracts/session-invite';
 
+/** Safe session columns for authenticated SELECT (#569 — excludes world_state, notes). */
+const SESSION_SAFE_COLUMNS =
+  'id, public_id, project_id, session_number, name, description, status, started_at, ended_at, look_profile_id, created_at, updated_at';
+
 type SessionRow = {
   id: string;
-  code: string | null;
+  /** Join code — optional; not always present on older schemas / safe selects. */
+  code?: string | null;
   name: string | null;
   project_id: string | null;
   public_id?: string | null;
@@ -98,7 +106,7 @@ class SessionService {
       updated_at: row.updated_at,
       started_at: row.started_at,
       ended_at: row.ended_at,
-    };
+    } satisfies SessionDto;
   }
 
   private mapToViewModel(dto: SessionDto, players: SessionPlayerDto[] = []): SessionVm {
@@ -186,7 +194,7 @@ class SessionService {
   async getSessionById(id: string): Promise<SessionVm> {
     const { data: session, error: sessionError } = await supabase
       .from(this.tableName)
-      .select('*')
+      .select(SESSION_SAFE_COLUMNS)
       .eq('id', id)
       .single();
 
@@ -194,7 +202,7 @@ class SessionService {
       throw new Error('Session not found');
     }
 
-    const dto = await this.mapRowToDto(session as SessionRow);
+    const dto = await this.mapRowToDto(session as unknown as SessionRow);
     const players = await this.loadPlayers(id);
     return this.mapToViewModel(dto, players);
   }
@@ -217,19 +225,19 @@ class SessionService {
     if (gmProjectIds.length > 0) {
       const { data, error } = await supabase
         .from(this.tableName)
-        .select('*')
+        .select(SESSION_SAFE_COLUMNS)
         .in('project_id', gmProjectIds)
         .neq('status', 'completed')
         .order('created_at', { ascending: false });
       if (error) {
         throw new Error(`Failed to fetch GM sessions: ${error.message}`);
       }
-      gmSessions = (data ?? []) as SessionRow[];
+      gmSessions = (data ?? []) as unknown as SessionRow[];
     }
 
     const { data: playerRecords, error: playerError } = await supabase
       .from(this.playersTableName)
-      .select('*, sessions!inner(*)')
+      .select(`*, sessions!inner(${SESSION_SAFE_COLUMNS})`)
       .eq('user_id', user.id);
 
     if (playerError) {

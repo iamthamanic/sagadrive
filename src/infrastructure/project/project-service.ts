@@ -1,6 +1,9 @@
 /**
  * project-service — Supabase adapter for projects/campaigns.
  * Location: src/infrastructure/project/project-service.ts
+ *
+ * #569: Never select projects.adventure_runtime or sessions.world_state/notes —
+ * those columns are revoked for authenticated; use projected session RPCs.
  */
 import { supabase } from '../../lib/supabase';
 import { getAuthenticatedUserId } from '../../lib/authenticatedUser';
@@ -17,6 +20,14 @@ import type {
   SessionDto,
   SessionVm,
 } from '../../domains/project/contracts/project.types';
+
+/** Safe project columns for authenticated SELECT (#569 — excludes adventure_runtime). */
+const PROJECT_SAFE_COLUMNS =
+  'id, public_id, code, name, description, world_id, world_profile_id, default_look_profile_id, allow_player_character_look_override, gm_user_id, status, created_at, updated_at';
+
+/** Safe session columns for authenticated SELECT (#569 — excludes world_state, notes). */
+const SESSION_SAFE_COLUMNS =
+  'id, public_id, project_id, session_number, name, description, status, started_at, ended_at, look_profile_id, created_at, updated_at';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -124,13 +135,17 @@ function isSessionDto(value: unknown): value is SessionDto {
     value.look_profile_id === undefined
     || value.look_profile_id === null
     || typeof value.look_profile_id === 'string';
+  const notesOk =
+    value.notes === undefined
+    || typeof value.notes === 'string'
+    || value.notes === null;
   return (
     typeof value.id === 'string'
     && publicIdOk
     && typeof value.project_id === 'string'
     && typeof value.session_number === 'number'
     && (typeof value.name === 'string' || value.name === null)
-    && (typeof value.notes === 'string' || value.notes === null)
+    && notesOk
     && isSessionStatus(value.status)
     && (typeof value.started_at === 'string' || value.started_at === null)
     && (typeof value.ended_at === 'string' || value.ended_at === null)
@@ -144,6 +159,8 @@ function isSessionDto(value: unknown): value is SessionDto {
 function normalizeSessionDto(value: SessionDto): SessionDto {
   return {
     ...value,
+    // #569: notes column not selectable by authenticated — treat missing as null.
+    notes: value.notes ?? null,
     duration_minutes: value.duration_minutes ?? null,
   };
 }
@@ -387,7 +404,7 @@ class ProjectService {
 
     const { data: gmProjects, error: gmError } = await supabase
       .from(this.tableName)
-      .select('*')
+      .select(PROJECT_SAFE_COLUMNS)
       .eq('gm_user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -397,7 +414,7 @@ class ProjectService {
 
     const { data: memberRecords, error: memberError } = await supabase
       .from(this.membersTableName)
-      .select('*, projects!inner(*)')
+      .select(`*, projects!inner(${PROJECT_SAFE_COLUMNS})`)
       .eq('user_id', userId)
       .eq('status', 'active');
 
@@ -429,11 +446,21 @@ class ProjectService {
 
         const { data: sessions } = await supabase
           .from(this.sessionsTableName)
-          .select('*')
+          .select(SESSION_SAFE_COLUMNS)
           .eq('project_id', project.id)
           .order('session_number', { ascending: true });
 
-        return this.mapToViewModel(project, members || [], sessions || []);
+        const sessionRows: SessionDto[] = [];
+        for (const row of sessions || []) {
+          if (!isSessionDto(row)) continue;
+          sessionRows.push(
+            normalizeSessionDto({
+              ...row,
+              notes: row.notes ?? null,
+            }),
+          );
+        }
+        return this.mapToViewModel(project, members || [], sessionRows);
       })
     );
   }
@@ -453,7 +480,7 @@ class ProjectService {
   async getProjectById(id: string): Promise<ProjectVm> {
     const { data: project, error: projectError } = await supabase
       .from(this.tableName)
-      .select('*')
+      .select(PROJECT_SAFE_COLUMNS)
       .eq('id', id)
       .single();
 
@@ -468,11 +495,21 @@ class ProjectService {
 
     const { data: sessions } = await supabase
       .from(this.sessionsTableName)
-      .select('*')
+      .select(SESSION_SAFE_COLUMNS)
       .eq('project_id', id)
       .order('session_number', { ascending: true });
 
-    return this.mapToViewModel(project, members || [], sessions || []);
+    const sessionRows: SessionDto[] = [];
+    for (const row of sessions || []) {
+      if (!isSessionDto(row)) continue;
+      sessionRows.push(
+        normalizeSessionDto({
+          ...row,
+          notes: row.notes ?? null,
+        }),
+      );
+    }
+    return this.mapToViewModel(project, members || [], sessionRows);
   }
 
   /**
@@ -529,7 +566,7 @@ class ProjectService {
       .from(this.sessionsTableName)
       .update({ look_profile_id: settings.lookProfileId })
       .eq('id', sessionId)
-      .select('*')
+      .select(SESSION_SAFE_COLUMNS)
       .single();
 
     if (error) {
@@ -584,7 +621,7 @@ class ProjectService {
   async getProjectByPublicId(publicId: string): Promise<ProjectVm> {
     const { data: project, error } = await supabase
       .from(this.tableName)
-      .select('*')
+      .select(PROJECT_SAFE_COLUMNS)
       .eq('public_id', publicId.trim().toUpperCase())
       .single();
 
