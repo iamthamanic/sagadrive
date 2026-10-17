@@ -35,8 +35,30 @@ mustInclude(
 
 mustInclude(
   'src/app/world/atlas/unified/UnifiedAtlasEditor.tsx',
-  ['data-unified-atlas-viewport', 'data-unified-atlas-demo-badge', 'Pinsel', 'Stempel'],
+  [
+    'data-unified-atlas-viewport',
+    'data-unified-atlas-demo-badge',
+    'Pinsel',
+    'Stempel',
+    'Draufsicht',
+    '3D-Ansicht',
+    'AtlasSpatialViewport',
+    'data-atlas-dungeon-forge',
+    'data-atlas-missing-detail',
+  ],
   'unified canvas editor',
+);
+
+mustInclude(
+  'src/app/world/atlas/WorldAtlasWorkbench.tsx',
+  ['data-atlas-focus-toggle', 'Fokusmodus', 'Gespeicherte Karten'],
+  'atlas focus mode',
+);
+
+mustInclude(
+  'src/app/world/atlas/unified/AtlasSpatialViewport.tsx',
+  ['data-atlas-spatial-viewport', 'applyMapEdit', 'three'],
+  'spatial 3d viewport',
 );
 
 mustInclude(

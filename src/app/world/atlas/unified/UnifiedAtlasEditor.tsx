@@ -4,7 +4,13 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  applyMapEdit,
+  buildDungeonGeneratorMeta,
+  dungeonNeedsReforgeConfirm,
   emptyUnifiedCanvasDoc,
+  generateDungeon,
+  pickObjectAt,
+  type DungeonGeneratorMeta,
   type UnifiedCanvasDoc,
   type UnifiedCanvasLayerId,
   type UnifiedCanvasMaterial,
@@ -21,6 +27,8 @@ import {
   type AtlasRect,
 } from '../../../../domains/world/map';
 import { Button } from '../../../../shared/ui/button';
+import { Input } from '../../../../shared/ui/input';
+import { Label } from '../../../../shared/ui/label';
 import {
   CITY_RECT,
   ELDORIA_NODES,
@@ -35,11 +43,15 @@ import {
   pointInRect,
 } from './eldoria-scene';
 import { getEldoriaArt } from './procedural-eldoria';
+import { AtlasSpatialViewport } from './AtlasSpatialViewport';
 
 export type UnifiedAtlasEditorProps = {
   readonly doc: UnifiedCanvasDoc;
   readonly canEdit: boolean;
   readonly onDocChange: (next: UnifiedCanvasDoc) => void;
+  /** Persisted generator_meta.dungeon for reforge guard. */
+  readonly dungeonMeta?: DungeonGeneratorMeta | null;
+  readonly onDungeonMetaChange?: (next: DungeonGeneratorMeta | null) => void;
 };
 
 type DragState =
@@ -53,7 +65,17 @@ type DragState =
       readonly start: { x: number; y: number };
       readonly kind: 'room' | 'wall' | 'road';
     }
+  | {
+      readonly mode: 'move_object';
+      readonly id: string;
+      readonly ox: number;
+      readonly oy: number;
+      readonly sx: number;
+      readonly sy: number;
+    }
   | null;
+
+type AtlasViewMode = '2d' | '3d';
 
 function uid(): string {
   return Math.random().toString(36).slice(2, 11);
@@ -76,10 +98,10 @@ type EldoriaStage = 'world' | 'north' | 'region' | 'city' | 'inn';
 
 const STAGE_LABEL: Record<EldoriaStage, [string, string]> = {
   world: ['WELT', 'Weltkarte'],
-  north: ['LAND', 'Nordreich'],
-  region: ['REGION', 'Dornhainer Mark'],
+  north: ['LAND', 'Demo-Nordreich'],
+  region: ['REGION', 'Demo-Mark'],
   city: ['STADT', 'Dornhain'],
-  inn: ['INNENRAUM', 'Kupferlaterne'],
+  inn: ['INNENRAUM', 'Demo-Kupferlaterne'],
 };
 
 const PAINT_HEIGHT: Record<EldoriaStage, number> = {
@@ -162,7 +184,13 @@ function drawStamp(
   c.restore();
 }
 
-export function UnifiedAtlasEditor({ doc, canEdit, onDocChange }: UnifiedAtlasEditorProps) {
+export function UnifiedAtlasEditor({
+  doc,
+  canEdit,
+  onDocChange,
+  dungeonMeta = null,
+  onDungeonMetaChange,
+}: UnifiedAtlasEditorProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const camRef = useRef<AtlasCamera>({ center: { x: 720, y: 450 }, pixelsPerUnit: 1 });
@@ -171,6 +199,8 @@ export function UnifiedAtlasEditor({ doc, canEdit, onDocChange }: UnifiedAtlasEd
   const animRef = useRef<number | null>(null);
   const docRef = useRef(doc);
   docRef.current = doc;
+  const dungeonMetaRef = useRef(dungeonMeta);
+  dungeonMetaRef.current = dungeonMeta;
 
   const [tool, setTool] = useState<UnifiedCanvasTool>('hand');
   const [material, setMaterial] = useState<UnifiedCanvasMaterial>('gras');
@@ -178,6 +208,12 @@ export function UnifiedAtlasEditor({ doc, canEdit, onDocChange }: UnifiedAtlasEd
   const [brushSize, setBrushSize] = useState(45);
   const [objectSize, setObjectSize] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<AtlasViewMode>('2d');
+  const [camLive, setCamLive] = useState<AtlasCamera>({ center: { x: 720, y: 450 }, pixelsPerUnit: 1 });
+  const [dungeonSeed, setDungeonSeed] = useState('4242');
+  const [dungeonRooms, setDungeonRooms] = useState(16);
+  const [dungeonPreview, setDungeonPreview] = useState<ReturnType<typeof generateDungeon> | null>(null);
+  const [dungeonError, setDungeonError] = useState<string | null>(null);
   const [coords, setCoords] = useState('X 0 · Y 0');
   const [zoomPct, setZoomPct] = useState('100%');
   const [level, setLevel] = useState('WELT');
@@ -186,7 +222,10 @@ export function UnifiedAtlasEditor({ doc, canEdit, onDocChange }: UnifiedAtlasEd
   const [history, setHistory] = useState<string[]>([]);
   const [future, setFuture] = useState<string[]>([]);
   const [, bump] = useState(0);
-  const refresh = useCallback(() => bump((n) => n + 1), []);
+  const refresh = useCallback(() => {
+    setCamLive({ ...camRef.current });
+    bump((n) => n + 1);
+  }, []);
 
   const workingDoc = useMemo(() => {
     if (doc.objects.length > 0 || doc.strokes.length > 0 || !doc.demoSeed) return doc;
@@ -203,10 +242,20 @@ export function UnifiedAtlasEditor({ doc, canEdit, onDocChange }: UnifiedAtlasEd
 
   const commit = useCallback(
     (next: UnifiedCanvasDoc, recordHistory: boolean) => {
-      if (recordHistory) pushHistory(docRef.current);
-      onDocChange({ ...next, demoSeed: next.demoSeed === false ? false : next.strokes.length === 0 && next.objects.length === 0 });
+      if (recordHistory) {
+        pushHistory(docRef.current);
+        const meta = dungeonMetaRef.current;
+        if (meta?.confirmed && !meta.manualDirty) {
+          onDungeonMetaChange?.({ ...meta, manualDirty: true });
+        }
+      }
+      onDocChange({
+        ...next,
+        demoSeed:
+          next.demoSeed === false ? false : next.strokes.length === 0 && next.objects.length === 0,
+      });
     },
-    [onDocChange, pushHistory],
+    [onDocChange, onDungeonMetaChange, pushHistory],
   );
 
   const undo = useCallback(() => {
@@ -539,11 +588,20 @@ export function UnifiedAtlasEditor({ doc, canEdit, onDocChange }: UnifiedAtlasEd
     }
 
     if (tool === 'select') {
-      const hit = workingDoc.objects.find(
-        (o) => (o.x - p.x) ** 2 + (o.y - p.y) ** 2 < (30 / camRef.current.pixelsPerUnit) ** 2,
-      );
+      const hit = pickObjectAt(workingDoc, p.x, p.y);
       setSelectedId(hit?.id ?? null);
-      dragRef.current = { mode: 'pan', px: p.px, py: p.py, cam: camRef.current };
+      if (hit && canEdit) {
+        dragRef.current = {
+          mode: 'move_object',
+          id: hit.id,
+          ox: hit.x,
+          oy: hit.y,
+          sx: p.x,
+          sy: p.y,
+        };
+      } else {
+        dragRef.current = { mode: 'pan', px: p.px, py: p.py, cam: camRef.current };
+      }
       return;
     }
 
@@ -577,6 +635,17 @@ export function UnifiedAtlasEditor({ doc, canEdit, onDocChange }: UnifiedAtlasEd
     if (!drag) return;
     if (drag.mode === 'pan') {
       camRef.current = atlasPanBy(drag.cam, { x: p.px - drag.px, y: p.py - drag.py });
+      refresh();
+      return;
+    }
+    if (drag.mode === 'move_object') {
+      const next = applyMapEdit(workingDoc, {
+        op: 'move_object',
+        id: drag.id,
+        x: drag.ox + (p.x - drag.sx),
+        y: drag.oy + (p.y - drag.sy),
+      });
+      onDocChange(next);
       refresh();
       return;
     }
@@ -735,39 +804,99 @@ export function UnifiedAtlasEditor({ doc, canEdit, onDocChange }: UnifiedAtlasEd
         </aside>
 
         <section className="flex min-h-0 min-w-0 flex-col">
-          <div className="flex items-center justify-between gap-2 border-b border-border pb-2 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2 text-sm">
             <div className="truncate text-muted-foreground">
               Eldoria › <strong className="text-foreground">{crumb}</strong>
             </div>
-            <span className="shrink-0 rounded-full border border-primary/50 bg-primary/15 px-2 py-1 text-xs font-bold text-primary">
-              {level}
-            </span>
+            <div className="flex shrink-0 items-center gap-2">
+              <div
+                className="flex rounded-md border border-border p-0.5"
+                role="group"
+                aria-label="Kartenansicht"
+                data-atlas-view-mode={viewMode}
+              >
+                <button
+                  type="button"
+                  className={`min-h-11 rounded px-3 text-xs font-semibold ${
+                    viewMode === '2d' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                  }`}
+                  aria-pressed={viewMode === '2d'}
+                  onClick={() => setViewMode('2d')}
+                >
+                  Draufsicht
+                </button>
+                <button
+                  type="button"
+                  className={`min-h-11 rounded px-3 text-xs font-semibold ${
+                    viewMode === '3d' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                  }`}
+                  aria-pressed={viewMode === '3d'}
+                  onClick={() => {
+                    setCamLive({ ...camRef.current });
+                    setViewMode('3d');
+                  }}
+                >
+                  3D-Ansicht
+                </button>
+              </div>
+              <span className="rounded-full border border-primary/50 bg-primary/15 px-2 py-1 text-xs font-bold text-primary">
+                {level}
+              </span>
+            </div>
           </div>
           <div
             ref={stageRef}
-            className="relative min-h-[20rem] flex-1 touch-none overflow-hidden rounded-lg border border-border bg-[#10212a]"
+            className="relative min-h-[min(70vh,40rem)] flex-1 touch-none overflow-hidden rounded-lg border border-border bg-[#10212a]"
             data-unified-atlas-viewport
             data-tool={tool}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
-            onWheel={onWheel}
-            onDoubleClick={(e) => {
-              const p = worldFromEvent(e);
-              const dest = pointInRect(p, INN_RECT)
-                ? ELDORIA_NODES[5].area
-                : pointInRect(p, CITY_RECT)
-                  ? INN_RECT
-                  : pointInRect(p, REGION_RECT)
-                    ? CITY_RECT
-                    : pointInRect(p, NORTH_RECT)
-                      ? REGION_RECT
-                      : NORTH_RECT;
-              goToRect(dest);
-            }}
+            data-view-mode={viewMode}
+            onPointerDown={viewMode === '2d' ? onPointerDown : undefined}
+            onPointerMove={viewMode === '2d' ? onPointerMove : undefined}
+            onPointerUp={viewMode === '2d' ? onPointerUp : undefined}
+            onPointerCancel={viewMode === '2d' ? onPointerUp : undefined}
+            onWheel={viewMode === '2d' ? onWheel : undefined}
+            onDoubleClick={
+              viewMode === '2d'
+                ? (e) => {
+                    const p = worldFromEvent(e);
+                    const dest = pointInRect(p, INN_RECT)
+                      ? ELDORIA_NODES[5].area
+                      : pointInRect(p, CITY_RECT)
+                        ? INN_RECT
+                        : pointInRect(p, REGION_RECT)
+                          ? CITY_RECT
+                          : pointInRect(p, NORTH_RECT)
+                            ? REGION_RECT
+                            : NORTH_RECT;
+                    goToRect(dest);
+                  }
+                : undefined
+            }
           >
-            <canvas ref={canvasRef} className="block h-full w-full" aria-label="Interaktive Weltkarte" />
+            {viewMode === '2d' ? (
+              <canvas ref={canvasRef} className="block h-full w-full" aria-label="Interaktive Weltkarte" />
+            ) : (
+              <AtlasSpatialViewport
+                className="absolute inset-0"
+                doc={workingDoc}
+                canEdit={canEdit}
+                camera2d={camLive}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                onDocChange={(next) => commit(next, true)}
+              />
+            )}
+            {viewMode === '2d' && level === 'INNENRAUM' && workingDoc.rooms.length === 0 ? (
+              <div
+                className="pointer-events-none absolute inset-x-4 top-16 z-[3] rounded-lg border border-border bg-card/95 p-3 text-sm shadow"
+                data-atlas-missing-detail
+                role="status"
+              >
+                Für diesen Ort ist noch keine Detailkarte festgelegt. Zoomen endet hier absichtlich ohne
+                erfundene Innenraum-Kunst (Imagination-First). Als GM kannst du Räume, Wände oder den
+                Dungeon-Generator nutzen.
+              </div>
+            ) : null}
             <div
               className="absolute left-1/2 top-3 z-[2] flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 gap-1 overflow-auto rounded-lg border border-border bg-card/95 p-1 shadow"
               data-unified-chrome
@@ -855,11 +984,23 @@ export function UnifiedAtlasEditor({ doc, canEdit, onDocChange }: UnifiedAtlasEd
 
         <aside className="min-h-0 space-y-3 overflow-auto rounded-lg border border-border p-3" data-unified-chrome>
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Kartenwerkzeuge
+            Kontext
           </p>
-          <h2 className="font-heading text-xl font-bold">Welt gestalten</h2>
+          <h2 className="font-heading text-xl font-bold">
+            {tool === 'stamp'
+              ? 'Objekte'
+              : tool === 'brush' || tool === 'road'
+                ? 'Pinsel'
+                : tool === 'room' || tool === 'wall'
+                  ? 'Geometrie'
+                  : selectedId
+                    ? 'Auswahl'
+                    : 'Navigation'}
+          </h2>
           <p className="text-sm text-muted-foreground">
-            Zoomen und auf der aktuellen Ebene zeichnen. Demo-Kunst blendet sich mit dem Maßstab ein.
+            {viewMode === '3d'
+              ? '3D-Ansicht: Objekte per Drag verschieben — Änderungen gelten auch für die Draufsicht.'
+              : 'Zoomen und auf der aktuellen Ebene zeichnen. Demo-Kunst blendet sich mit dem Maßstab ein.'}
           </p>
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" className="min-h-11" disabled={!canEdit} onClick={undo}>
@@ -868,7 +1009,132 @@ export function UnifiedAtlasEditor({ doc, canEdit, onDocChange }: UnifiedAtlasEd
             <Button type="button" variant="outline" className="min-h-11" disabled={!canEdit} onClick={redo}>
               ↷ Redo
             </Button>
+            {selectedId && canEdit ? (
+              <Button
+                type="button"
+                variant="destructive"
+                className="min-h-11"
+                onClick={() => {
+                  commit(applyMapEdit(workingDoc, { op: 'remove_object', id: selectedId }), true);
+                  setSelectedId(null);
+                }}
+              >
+                Löschen
+              </Button>
+            ) : null}
           </div>
+          {canEdit ? (
+            <div className="space-y-2 rounded-md border border-border p-2" data-atlas-dungeon-forge>
+              <p className="text-xs font-semibold">Dungeon-Generator</p>
+              <p className="text-[11px] text-muted-foreground">
+                Seed-basiert (Dungeon Forge MIT). Vorschau erst nach Bestätigung kanonisch.
+              </p>
+              <Label htmlFor="atlas-dungeon-seed">Seed</Label>
+              <Input
+                id="atlas-dungeon-seed"
+                className="min-h-11"
+                value={dungeonSeed}
+                onChange={(e) => setDungeonSeed(e.target.value)}
+              />
+              <Label htmlFor="atlas-dungeon-rooms">Räume ({dungeonRooms})</Label>
+              <input
+                id="atlas-dungeon-rooms"
+                type="range"
+                className="w-full accent-primary"
+                min={8}
+                max={40}
+                value={dungeonRooms}
+                onChange={(e) => setDungeonRooms(Number(e.target.value))}
+              />
+              {dungeonNeedsReforgeConfirm(dungeonMeta) ? (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400" data-atlas-dungeon-dirty>
+                  Bestätigter/manuell bearbeiteter Dungeon — erneutes Generieren überschreibt nur nach
+                  Bestätigung.
+                </p>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11 w-full"
+                onClick={() => {
+                  setDungeonError(null);
+                  if (dungeonNeedsReforgeConfirm(dungeonMeta)) {
+                    if (
+                      !window.confirm(
+                        'Dungeon neu generieren? Bestätigte oder manuell geänderte Geometrie kann überschrieben werden, wenn du danach „Bestätigen“ wählst.',
+                      )
+                    ) {
+                      return;
+                    }
+                  }
+                  const seedNum = Number.parseInt(dungeonSeed, 10);
+                  const result = generateDungeon({
+                    seed: Number.isFinite(seedNum) ? seedNum : 4242,
+                    roomCount: dungeonRooms,
+                    loopChance: 0.18,
+                    themeKey: 'ancient',
+                    originX: CITY_RECT.x + 8,
+                    originY: CITY_RECT.y + CITY_RECT.height + 4,
+                    unitScale: 1.1,
+                  });
+                  if (!result.valid) {
+                    setDungeonPreview(null);
+                    setDungeonError(result.error ?? 'Generierung fehlgeschlagen');
+                    return;
+                  }
+                  setDungeonPreview(result);
+                }}
+              >
+                Generieren
+              </Button>
+              {dungeonError ? (
+                <p className="text-xs text-destructive" role="alert">
+                  {dungeonError}
+                </p>
+              ) : null}
+              {dungeonPreview?.valid ? (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    {dungeonPreview.stats.roomCount} Räume · {dungeonPreview.stats.edgeCount} Verbindungen ·{' '}
+                    {dungeonPreview.stats.genMs.toFixed(1)} ms
+                  </p>
+                  <Button
+                    type="button"
+                    className="min-h-11 w-full"
+                    onClick={() => {
+                      if (!dungeonPreview?.valid) return;
+                      if (
+                        !window.confirm(
+                          'Dungeon als editierbare Räume/Wände übernehmen? Bestehende manuelle Geometry bleibt; Generator-Inhalt wird angehängt.',
+                        )
+                      ) {
+                        return;
+                      }
+                      const meta = buildDungeonGeneratorMeta(dungeonPreview, true);
+                      onDungeonMetaChange?.(meta);
+                      pushHistory(docRef.current);
+                      onDocChange({
+                        ...workingDoc,
+                        demoSeed: false,
+                        rooms: [...workingDoc.rooms, ...dungeonPreview.canvasRooms],
+                        walls: [...workingDoc.walls, ...dungeonPreview.canvasWalls],
+                        objects: [...workingDoc.objects, ...dungeonPreview.canvasObjects],
+                      });
+                      setDungeonPreview(null);
+                      goToRect({
+                        x: CITY_RECT.x + 4,
+                        y: CITY_RECT.y + CITY_RECT.height,
+                        width: 48,
+                        height: 36,
+                      });
+                    }}
+                  >
+                    Bestätigen & übernehmen
+                  </Button>
+                </>
+              ) : null}
+            </div>
+          ) : null}
           <p className="text-xs font-semibold">Textur</p>
           <div className="grid grid-cols-3 gap-1">
             {(Object.keys(MATERIAL_COLORS) as UnifiedCanvasMaterial[]).map((id) => (

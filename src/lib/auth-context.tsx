@@ -9,7 +9,15 @@
  * signInWithPassword has no AbortSignal — stale results use generation + scrub.
  */
 
-import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { supabase } from './supabase';
 import {
   isLocalAdminEnabled,
@@ -37,6 +45,13 @@ import { projectService } from '../infrastructure/project/project-service';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  /** True when supabase.auth holds an access_token (PostgREST RLS-ready). */
+  hasJwtSession: boolean;
+  /**
+   * Force GoTrue login for Local Admin (or confirm existing JWT).
+   * Used by Welt/Atlas when offline fallback blocked API calls.
+   */
+  ensureJwtSession: () => Promise<boolean>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -100,6 +115,7 @@ function isSeededLocalAdminUser(user: User | null | undefined): boolean {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasJwtSession, setHasJwtSession] = useState(false);
   /** Monotonic generation: only the live generation may apply Auth UI state. */
   const authGenerationRef = useRef(0);
   const userRef = useRef<User | null>(null);
@@ -187,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     fallbackGenerationsRef.current.delete(generation);
     applyUser(next, generation);
+    setHasJwtSession(true);
     provisionDornhainDefaultForSession();
     return true;
   };
@@ -221,9 +238,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const bootstrapGeneration = bumpAuthGeneration();
     const SESSION_TIMEOUT_MS = AUTH_SESSION_TIMEOUT_MS;
 
-    const finish = (nextUser: User | null) => {
+    const finish = (nextUser: User | null, withJwt: boolean) => {
       if (cancelled) return;
       applyUser(nextUser, bootstrapGeneration);
+      setHasJwtSession(Boolean(nextUser && withJwt && !isLocalAdminFallbackUser(nextUser)));
       setIsLoading(false);
     };
 
@@ -233,15 +251,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .then(async (sessionResult) => {
           if (isTimedOut(sessionResult)) {
             fallbackGenerationsRef.current.add(bootstrapGeneration);
-            finish(getStoredLocalAdminUser());
+            finish(getStoredLocalAdminUser(), false);
             return;
           }
 
           const {
             data: { session },
           } = sessionResult;
-          if (session?.user) {
-            finish(session.user);
+          if (session?.user && session.access_token) {
+            finish(session.user, true);
             return;
           }
 
@@ -265,15 +283,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             const { data, error } = loginResult;
             if (error || !data.user) throw error ?? new Error('local re-login failed');
-            finish(data.user);
+            finish(data.user, Boolean(data.session?.access_token));
           } catch {
             fallbackGenerationsRef.current.add(bootstrapGeneration);
-            finish(getStoredLocalAdminUser());
+            finish(getStoredLocalAdminUser(), false);
           }
         })
         .catch(() => {
           fallbackGenerationsRef.current.add(bootstrapGeneration);
-          finish(getStoredLocalAdminUser());
+          finish(getStoredLocalAdminUser(), false);
         });
     } else {
       raceWithTimeout(
@@ -282,10 +300,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         SESSION_TIMEOUT_MS,
       )
         .then(({ data: { session } }) => {
-          finish(session?.user ?? null);
+          finish(session?.user ?? null, Boolean(session?.access_token));
         })
         .catch(() => {
-          finish(null);
+          finish(null, false);
         });
     }
 
@@ -332,6 +350,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (current && !isSeededLocalAdminUser(current)) return;
         if (current === null) return;
         applyUser(null, generation);
+        setHasJwtSession(false);
         return;
       }
 
@@ -342,10 +361,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         applyUser(null, generation);
+        setHasJwtSession(false);
         return;
       }
 
       applyUser(session.user, generation);
+      setHasJwtSession(Boolean(session.access_token));
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         provisionDornhainDefaultForSession();
       }
@@ -389,6 +410,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           expectingGoTrueLocalAdminRef.current = null;
           applyUser(data.user, generation);
+          setHasJwtSession(Boolean(data.session?.access_token));
           provisionDornhainDefaultForSession();
           return;
         }
@@ -404,6 +426,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fallbackGenerationsRef.current.add(generation);
         watchStaleLocalAdminPasswordLogin(generation, loginPromise);
         applyUser(createLocalAdminUser(), generation);
+        setHasJwtSession(false);
         return;
       }
       if (expectingGoTrueLocalAdminRef.current === generation) {
@@ -413,6 +436,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fallbackGenerationsRef.current.add(generation);
       watchStaleLocalAdminPasswordLogin(generation, loginPromise);
       applyUser(createLocalAdminUser(), generation);
+      setHasJwtSession(false);
       return;
     }
 
@@ -433,9 +457,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isLiveGeneration(generation)) return;
     if (data.user) {
       applyUser(data.user, generation);
+      setHasJwtSession(Boolean(data.session?.access_token));
       provisionDornhainDefaultForSession();
     }
   };
+
+  const ensureJwtSession = useCallback(async (): Promise<boolean> => {
+    const existing = await supabase.auth.getSession();
+    if (existing.data.session?.access_token && existing.data.session.user) {
+      if (isLiveGeneration(authGenerationRef.current)) {
+        applyUser(existing.data.session.user, authGenerationRef.current);
+        setHasJwtSession(true);
+      }
+      return true;
+    }
+    if (!isLocalAdminSession()) {
+      setHasJwtSession(false);
+      return false;
+    }
+    const generation = authGenerationRef.current;
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: LOCAL_ADMIN_EMAIL,
+      password: LOCAL_ADMIN_PASSWORD,
+    });
+    if (error || !data.user || !data.session?.access_token) {
+      setHasJwtSession(false);
+      return false;
+    }
+    if (!isLiveGeneration(generation)) return Boolean(data.session?.access_token);
+    fallbackGenerationsRef.current.delete(generation);
+    applyUser(data.user, generation);
+    setHasJwtSession(true);
+    provisionDornhainDefaultForSession();
+    return true;
+  }, []);
 
   const signUp = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
@@ -454,6 +509,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLocalAdminSession(false);
     userRef.current = null;
     setUser(null);
+    setHasJwtSession(false);
     try {
       await supabase.auth.signOut();
     } catch (error) {
@@ -466,6 +522,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isLoading,
+        hasJwtSession,
+        ensureJwtSession,
         signIn,
         signUp,
         signOut,

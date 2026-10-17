@@ -67,6 +67,7 @@ export function SagaWorldMapPanel({ sagaPublicId, onNavigate }: SagaWorldMapPane
         worldProfileId={worldProfileId}
         canEdit={canEdit}
         playerView={!canEdit}
+        sagaPublicId={sagaPublicId}
         title="Welt → Karte"
       />
     </div>

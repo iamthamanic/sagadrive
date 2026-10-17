@@ -6,13 +6,19 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   DEFAULT_ATLAS_BOUNDS,
   emptyUnifiedCanvasDoc,
+  extractDungeonMetaFromGeneratorMeta,
   extractUnifiedCanvasFromGeneratorMeta,
+  mergeDungeonMetaIntoGeneratorMeta,
   mergeUnifiedCanvasIntoGeneratorMeta,
+  type DungeonGeneratorMeta,
   type UnifiedCanvasDoc,
   type WorldAtlasFeatureCollection,
+  type WorldAtlasMapKind,
   type WorldAtlasMapSummary,
   type WorldAtlasMapVm,
 } from '../../../domains/world/atlas';
+import { useAuth } from '../../../lib/auth-context';
+import { API_AUTH_REQUIRED_DE } from '../../../lib/authenticatedUser';
 import { worldAtlasService } from '../../../infrastructure/world/world-atlas-service';
 
 export type UseWorldAtlasEditorOptions = {
@@ -34,6 +40,7 @@ export function useWorldAtlasEditor({
   playerView = false,
   canEdit = false,
 }: UseWorldAtlasEditorOptions) {
+  const { hasJwtSession, ensureJwtSession, isLoading: authLoading } = useAuth();
   const [summaries, setSummaries] = useState<WorldAtlasMapSummary[]>([]);
   const [activeMapId, setActiveMapId] = useState<string | null>(null);
   const [map, setMap] = useState<WorldAtlasMapVm | null>(null);
@@ -43,6 +50,7 @@ export function useWorldAtlasEditor({
   const [dirtyLayers, setDirtyLayers] = useState<WorldAtlasFeatureCollection | null>(null);
   const [canvasDoc, setCanvasDoc] = useState<UnifiedCanvasDoc>(emptyUnifiedCanvasDoc(true));
   const [dirtyCanvas, setDirtyCanvas] = useState(false);
+  const [dungeonMeta, setDungeonMeta] = useState<DungeonGeneratorMeta | null>(null);
 
   const reloadList = useCallback(async () => {
     const id = worldProfileId?.trim() ?? '';
@@ -51,6 +59,15 @@ export function useWorldAtlasEditor({
       setActiveMapId(null);
       setMap(null);
       return;
+    }
+    if (authLoading) return;
+    if (!hasJwtSession) {
+      const ok = await ensureJwtSession();
+      if (!ok) {
+        setError(API_AUTH_REQUIRED_DE);
+        setSummaries([]);
+        return;
+      }
     }
     setLoading(true);
     setError(null);
@@ -82,7 +99,7 @@ export function useWorldAtlasEditor({
     } finally {
       setLoading(false);
     }
-  }, [worldProfileId, canEdit]);
+  }, [worldProfileId, canEdit, hasJwtSession, ensureJwtSession, authLoading]);
 
   useEffect(() => {
     void reloadList();
@@ -96,6 +113,7 @@ export function useWorldAtlasEditor({
       setDirtyLayers(null);
       setCanvasDoc(emptyUnifiedCanvasDoc(true));
       setDirtyCanvas(false);
+      setDungeonMeta(null);
       return;
     }
     setLoading(true);
@@ -109,6 +127,7 @@ export function useWorldAtlasEditor({
         const parsed = extractUnifiedCanvasFromGeneratorMeta(vm.generatorMeta);
         setCanvasDoc(parsed ?? emptyUnifiedCanvasDoc(true));
         setDirtyCanvas(false);
+        setDungeonMeta(extractDungeonMetaFromGeneratorMeta(vm.generatorMeta));
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -128,12 +147,20 @@ export function useWorldAtlasEditor({
     setDirtyCanvas(true);
   }, []);
 
+  const updateDungeonMeta = useCallback((next: DungeonGeneratorMeta | null) => {
+    setDungeonMeta(next);
+    setDirtyCanvas(true);
+  }, []);
+
   const saveCanvas = useCallback(async () => {
     if (!map || !canEdit) return;
     setSaving(true);
     setError(null);
     try {
-      const generatorMeta = mergeUnifiedCanvasIntoGeneratorMeta(map.generatorMeta, canvasDoc);
+      let generatorMeta = mergeUnifiedCanvasIntoGeneratorMeta(map.generatorMeta, canvasDoc);
+      if (dungeonMeta) {
+        generatorMeta = mergeDungeonMetaIntoGeneratorMeta(generatorMeta, dungeonMeta);
+      }
       const next = await worldAtlasService.upsertMap({
         worldProfileId: map.worldProfileId,
         mapId: map.id,
@@ -151,6 +178,7 @@ export function useWorldAtlasEditor({
       setMap(next);
       const parsed = extractUnifiedCanvasFromGeneratorMeta(next.generatorMeta);
       setCanvasDoc(parsed ?? canvasDoc);
+      setDungeonMeta(extractDungeonMetaFromGeneratorMeta(next.generatorMeta));
       setDirtyCanvas(false);
       await reloadList();
     } catch (err) {
@@ -159,7 +187,7 @@ export function useWorldAtlasEditor({
     } finally {
       setSaving(false);
     }
-  }, [map, canEdit, canvasDoc, dirtyLayers, reloadList]);
+  }, [map, canEdit, canvasDoc, dirtyLayers, dungeonMeta, reloadList]);
 
   const saveLayers = useCallback(
     async (layers: WorldAtlasFeatureCollection) => {
@@ -195,25 +223,37 @@ export function useWorldAtlasEditor({
   );
 
   const createChildMap = useCallback(
-    async (title: string) => {
-      if (!map || !canEdit || !worldProfileId) return;
+    async (
+      title: string,
+      options?: {
+        readonly kind?: WorldAtlasMapKind;
+        readonly generatorMeta?: Readonly<Record<string, unknown>>;
+      },
+    ): Promise<WorldAtlasMapVm | null> => {
+      if (!map || !canEdit || !worldProfileId) return null;
       setSaving(true);
       setError(null);
       try {
+        const kind = options?.kind && options.kind !== 'legacy_tiles' ? options.kind : 'region';
         const next = await worldAtlasService.upsertMap({
           worldProfileId,
           mapId: null,
           parentMapId: map.id,
-          kind: 'region',
+          kind,
           title: title.trim() || 'Detailkarte',
           bounds: map.bounds,
           layers: { type: 'FeatureCollection', features: [] },
-          generatorMeta: { engine: 'unified_canvas' },
+          generatorMeta: {
+            engine: 'unified_canvas',
+            ...(options?.generatorMeta ?? {}),
+          },
         });
         await reloadList();
         setActiveMapId(next.id);
+        return next;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Detailkarte fehlgeschlagen.');
+        return null;
       } finally {
         setSaving(false);
       }
@@ -285,6 +325,8 @@ export function useWorldAtlasEditor({
     canvasDoc,
     updateCanvasDoc,
     dirtyCanvas,
+    dungeonMeta,
+    updateDungeonMeta,
     saveCanvas,
     saveLayers,
     createChildMap,

@@ -192,6 +192,22 @@ function checkLocalAuthEmailSagatree() {
   });
 }
 
+function checkDonaluP0AuthGate() {
+  console.log('Donalu P0 auth gate: world/atlas JWT assert (no anon RLS)...');
+  execFileSync(process.execPath, ['scripts/donalu-p0-auth-gate-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
+function checkDonaluWorldPlaces() {
+  console.log('Donalu world places: domain + migration + UX + dungeon guard...');
+  execFileSync(process.execPath, ['scripts/donalu-world-places-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+}
+
 function checkSagaStateColumnPrivileges() {
   console.log('Saga state column privileges (#569): checking REVOKE + safe selects...');
   execFileSync(process.execPath, ['scripts/saga-state-column-privileges-check.mjs'], {
@@ -363,6 +379,11 @@ function checkWorldMapPartyPosition() {
 function checkWorldAtlasEditor() {
   console.log('World atlas editor (#702): dual nav, Leaflet/Geoman workbench, migration...');
   execFileSync(process.execPath, ['scripts/world-atlas-editor-check.mjs'], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+  console.log('Unified atlas dungeon generator (Dungeon Forge MIT extract)...');
+  execFileSync(process.execPath, ['scripts/unified-atlas-dungeon-check.mjs'], {
     cwd: root,
     stdio: 'inherit',
   });
@@ -2248,6 +2269,8 @@ checkPlayerTestMultiuserE2eSecurity();
 checkPlayerTestInstrumentationRunbook();
 checkProjectMembershipSecurity();
 checkLocalAuthEmailSagatree();
+checkDonaluP0AuthGate();
+checkDonaluWorldPlaces();
 checkSagaStateColumnPrivileges();
 checkSagatreeCoreWorkflowsContract();
 checkRealtimeComposeBootContract();

@@ -101,6 +101,22 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
+      # #672 removed committed anon JWTs; Vite fail-closes without VITE_SUPABASE_*.
+      # Prefer repo secrets (live stack). Else inert DEV placeholders so the app
+      # boots; Local Admin offline path covers auth-bound E2E without GoTrue.
+      - name: Configure Vite Supabase env for Browser E2E
+        env:
+          SECRET_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SECRET_ANON: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          URL="${SECRET_URL:-http://127.0.0.1:9}"
+          KEY="${SECRET_ANON:-ci-e2e-missing-supabase-anon-key}"
+          {
+            echo "VITE_SUPABASE_URL=${URL}"
+            echo "VITE_SUPABASE_ANON_KEY=${KEY}"
+          } >> "$GITHUB_ENV"
+          printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_ANON_KEY=%s\n' "$URL" "$KEY" > .env
+
       - name: Run Browser E2E
         run: npm run test:e2e
 

@@ -24,15 +24,33 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '../../../shared/ui/sheet';
+import type { WorldPlaceKind, WorldPlaceVm } from '../../../domains/world/places';
 import { WorldMapEditorScreen } from '../map';
+import { WorldPlacesPanel } from '../places/WorldPlacesPanel';
 import { useWorldAtlasEditor } from './useWorldAtlasEditor';
 import { UnifiedAtlasEditor } from './unified';
 import { worldAtlasService } from '../../../infrastructure/world/world-atlas-service';
+import { worldPlaceService } from '../../../infrastructure/world/world-place-service';
+
+function detailUsageForPlace(kind: WorldPlaceKind) {
+  if (kind === 'dungeon') return 'dungeon' as const;
+  if (kind === 'building' || kind === 'interior') return 'interior' as const;
+  if (kind === 'settlement') return 'footprint' as const;
+  return 'battlemap' as const;
+}
+
+function mapKindForPlace(kind: WorldPlaceKind) {
+  if (kind === 'settlement') return 'settlement' as const;
+  if (kind === 'region' || kind === 'area' || kind === 'realm') return 'region' as const;
+  return 'scene' as const;
+}
 
 export type WorldAtlasWorkbenchProps = {
   readonly worldProfileId: string;
   readonly canEdit: boolean;
   readonly playerView?: boolean;
+  /** When set, place list can filter by saga reveal for players. */
+  readonly sagaPublicId?: string | null;
   readonly onBack?: () => void;
   readonly title?: string;
 };
@@ -41,6 +59,7 @@ export function WorldAtlasWorkbench({
   worldProfileId,
   canEdit,
   playerView = false,
+  sagaPublicId = null,
   onBack,
   title = 'Weltatlas',
 }: WorldAtlasWorkbenchProps) {
@@ -49,9 +68,33 @@ export function WorldAtlasWorkbench({
   const [childTitle, setChildTitle] = useState('Detailkarte');
   const [hierarchyOpen, setHierarchyOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
 
   const showLegacyTiles = editor.map?.kind === 'legacy_tiles';
   const showUnified = Boolean(editor.map && !showLegacyTiles);
+
+  const handleCreateDetailMap = async (place: WorldPlaceVm) => {
+    if (!canEdit) return;
+    const created = await editor.createChildMap(`${place.name} (Detail)`, {
+      kind: mapKindForPlace(place.kind),
+      generatorMeta: {
+        placeId: place.id,
+        placeSeedKey: place.seedKey,
+        detailMissing: false,
+      },
+    });
+    if (!created) return;
+    try {
+      await worldPlaceService.linkMap({
+        worldProfileId,
+        placeId: place.id,
+        mapId: created.id,
+        usage: detailUsageForPlace(place.kind),
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const hierarchyList = (
     <ul className="space-y-1" data-world-atlas-hierarchy>
@@ -183,16 +226,29 @@ export function WorldAtlasWorkbench({
 
   return (
     <div
-      className="@container/main flex h-full min-h-0 w-full min-w-0 flex-col gap-3"
+      className={`@container/main flex h-full min-h-0 w-full min-w-0 flex-col gap-3 ${
+        focusMode ? 'data-[atlas-focus=true]:gap-1' : ''
+      }`}
       data-world-atlas-workbench
+      data-atlas-focus={focusMode ? 'true' : 'false'}
     >
       <header className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
-        {onBack ? (
+        {onBack && !focusMode ? (
           <Button type="button" variant="outline" className="min-h-11" onClick={onBack}>
             Zurück
           </Button>
         ) : null}
         <h1 className="min-w-0 flex-1 truncate text-xl font-bold">{title}</h1>
+        <Button
+          type="button"
+          variant={focusMode ? 'default' : 'outline'}
+          className="min-h-11"
+          aria-pressed={focusMode}
+          data-atlas-focus-toggle
+          onClick={() => setFocusMode((v) => !v)}
+        >
+          {focusMode ? 'Fokus beenden' : 'Fokusmodus'}
+        </Button>
         <Sheet open={hierarchyOpen} onOpenChange={setHierarchyOpen}>
           <SheetTrigger asChild>
             <Button type="button" variant="outline" className="min-h-11 @[48rem]:hidden">
@@ -247,7 +303,7 @@ export function WorldAtlasWorkbench({
         </div>
       ) : null}
 
-      {editor.breadcrumb.length > 0 ? (
+      {editor.breadcrumb.length > 0 && !focusMode ? (
         <nav
           className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground"
           aria-label="Kartennavigation"
@@ -270,12 +326,14 @@ export function WorldAtlasWorkbench({
 
       <div
         className={
-          showUnified
-            ? 'grid min-h-0 flex-1 gap-3 @[64rem]:grid-cols-[minmax(0,1fr)_14rem]'
-            : 'grid min-h-0 flex-1 gap-3 @[48rem]:grid-cols-[14rem_minmax(0,1fr)_16rem]'
+          focusMode
+            ? 'grid min-h-[70vh] flex-1 grid-cols-1'
+            : showUnified
+              ? 'grid min-h-0 flex-1 gap-3 @[64rem]:grid-cols-[minmax(0,1fr)_14rem]'
+              : 'grid min-h-0 flex-1 gap-3 @[48rem]:grid-cols-[14rem_minmax(0,1fr)_16rem]'
         }
       >
-        {!showUnified ? (
+        {!showUnified && !focusMode ? (
           <aside className="hidden min-h-0 overflow-auto rounded-lg border border-border p-2 @[48rem]:block">
             <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Hierarchie
@@ -284,7 +342,7 @@ export function WorldAtlasWorkbench({
           </aside>
         ) : null}
 
-        <section className="relative min-h-[24rem] min-w-0 overflow-hidden">
+        <section className={`relative min-w-0 overflow-hidden ${focusMode ? 'min-h-[70vh]' : 'min-h-[24rem]'}`}>
           {editor.loading && !editor.map ? (
             <div className="flex h-full min-h-[24rem] items-center justify-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -312,6 +370,8 @@ export function WorldAtlasWorkbench({
               doc={editor.canvasDoc}
               canEdit={canEdit}
               onDocChange={editor.updateCanvasDoc}
+              dungeonMeta={editor.dungeonMeta}
+              onDungeonMetaChange={editor.updateDungeonMeta}
             />
           ) : (
             <div className="flex h-full min-h-[24rem] items-center justify-center text-sm text-muted-foreground">
@@ -322,27 +382,54 @@ export function WorldAtlasWorkbench({
 
         <aside
           className={`min-h-0 space-y-4 overflow-auto rounded-lg border border-border p-3 ${
-            showUnified ? 'hidden @[64rem]:block' : 'hidden @[48rem]:block'
+            focusMode
+              ? 'hidden'
+              : showUnified
+                ? 'hidden @[64rem]:block'
+                : 'hidden @[48rem]:block'
           }`}
         >
           {!showUnified ? (
             <>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Hierarchie
+                Gespeicherte Karten
               </p>
               {hierarchyList}
             </>
           ) : null}
+          <WorldPlacesPanel
+            worldProfileId={worldProfileId}
+            canEdit={canEdit}
+            playerView={playerView}
+            sagaPublicId={sagaPublicId}
+            activeMapId={editor.activeMapId}
+            onOpenMap={(mapId) => editor.setActiveMapId(mapId)}
+            onCreateDetailMap={canEdit ? handleCreateDetailMap : undefined}
+          />
           {metaPanel}
         </aside>
       </div>
 
-      {showUnified ? (
+      {showUnified && !focusMode ? (
         <aside className="hidden rounded-lg border border-border p-2 @[48rem]:block @[64rem]:hidden">
           <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            DB-Karten
+            Gespeicherte Karten
+          </p>
+          <p className="mb-2 px-2 text-[11px] text-muted-foreground">
+            Persistierte DB-Karten (Demo-Eldoria ist nicht kanonisch).
           </p>
           {hierarchyList}
+          <div className="mt-3 border-t border-border pt-2">
+            <WorldPlacesPanel
+              worldProfileId={worldProfileId}
+              canEdit={canEdit}
+              playerView={playerView}
+              sagaPublicId={sagaPublicId}
+              activeMapId={editor.activeMapId}
+              onOpenMap={(mapId) => editor.setActiveMapId(mapId)}
+              onCreateDetailMap={canEdit ? handleCreateDetailMap : undefined}
+            />
+          </div>
         </aside>
       ) : null}
     </div>

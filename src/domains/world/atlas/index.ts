@@ -44,3 +44,27 @@ export {
   type UnifiedCanvasTool,
   type UnifiedCanvasWall,
 } from './unified-canvas-doc';
+
+export {
+  applyMapEdit,
+  applyMapEdits,
+  pickObjectAt,
+  pickRoomAt,
+  type MapEditOperation,
+  type MapTransform,
+} from './map-edit-ops';
+
+export {
+  DUNGEON_GENERATOR_VERSION,
+  DUNGEON_META_KEY,
+  buildDungeonGeneratorMeta,
+  dungeonNeedsReforgeConfirm,
+  extractDungeonMetaFromGeneratorMeta,
+  generateDungeon,
+  mergeDungeonMetaIntoGeneratorMeta,
+  validateDungeonConnectivity,
+  type DungeonGenerateParams,
+  type DungeonGenerateResult,
+  type DungeonGeneratorMeta,
+  type DungeonThemeKey,
+} from './dungeon-generator';
